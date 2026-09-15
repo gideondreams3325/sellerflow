@@ -1,430 +1,721 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SELLERFLOW</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SellerFlow — Sell smarter. Manage easier.</title>
 
-<script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 
-<style>
-*{box-sizing:border-box}
-body{
-  margin:0;
-  background:#080808;
-  color:#fff;
-  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
-}
-button,input,textarea,select{font:inherit}
-button{cursor:pointer}
-.card{
-  background:#111;
-  border:1px solid #292929;
-  border-radius:16px
-}
-.gold{color:#f5b942}
-.btn{
-  padding:11px 15px;
-  border-radius:11px;
-  font-weight:800;
-  border:0
-}
-.g{
-  background:#f5b942;
-  color:#090909
-}
-.d{
-  background:#181818;
-  color:#fff;
-  border:1px solid #333
-}
-.r{
-  background:#391515;
-  color:#ff8888;
-  border:1px solid #592020
-}
-.inp{
-  width:100%;
-  background:#0c0c0c;
-  border:1px solid #333;
-  border-radius:10px;
-  padding:11px;
-  color:#fff;
-  outline:none
-}
-.inp:focus{
-  border-color:#f5b942
-}
-.hide{display:none!important}
-.badge{
-  display:inline-flex;
-  width:20px;
-  height:20px;
-  border-radius:50%;
-  align-items:center;
-  justify-content:center;
-  font-size:12px;
-  font-weight:900;
-  margin-left:5px
-}
-.green{background:#16a34a}
-.blue{background:#1687ff}
-.bottom{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  background:#0b0b0bee;
-  backdrop-filter:blur(10px);
-  border-top:1px solid #292929;
-  z-index:20
-}
-.spinner{
-  width:30px;
-  height:30px;
-  border:3px solid #333;
-  border-top-color:#f5b942;
-  border-radius:50%;
-  animation:spin .8s linear infinite
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-</style>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #080808;
+      color: #fff;
+      font-family: Inter, Arial, sans-serif;
+    }
+
+    .gold { color: #f5b942; }
+    .bg-gold { background: #f5b942; }
+    .border-gold { border-color: #f5b942; }
+
+    .card {
+      background: #111;
+      border: 1px solid #242424;
+      border-radius: 16px;
+    }
+
+    .btn {
+      border: 0;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      opacity: .92;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    input, textarea, select {
+      background: #0d0d0d !important;
+      color: white !important;
+      border: 1px solid #292929 !important;
+      outline: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: #f5b942 !important;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .page {
+      min-height: 100vh;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 99999;
+      max-width: 360px;
+      padding: 14px 17px;
+      border-radius: 12px;
+      background: #171717;
+      border: 1px solid #333;
+      box-shadow: 0 10px 35px rgba(0,0,0,.5);
+      font-size: 14px;
+    }
+
+    .toast.success { border-color: #20c997; }
+    .toast.error { border-color: #ff4d4d; }
+    .toast.warning { border-color: #f5b942; }
+
+    .loader {
+      width: 28px;
+      height: 28px;
+      border: 3px solid #333;
+      border-top-color: #f5b942;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .nav-btn {
+      color: #999;
+      padding: 9px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      background: transparent;
+      border: 0;
+    }
+
+    .nav-btn.active,
+    .nav-btn:hover {
+      background: #1b1b1b;
+      color: #f5b942;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #222;
+    }
+
+    .product-img {
+      width: 100%;
+      height: 190px;
+      object-fit: cover;
+      border-radius: 12px;
+      background: #191919;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.75);
+      z-index: 5000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #111;
+      border: 1px solid #292929;
+      border-radius: 18px;
+      padding: 22px;
+    }
+
+    .verification-green {
+      color: #21d07a;
+    }
+
+    .verification-blue {
+      color: #3d8bff;
+    }
+  </style>
 </head>
 
 <body>
 
-<!-- ================= LANDING ================= -->
+  <!-- GLOBAL LOADING -->
+  <div id="loadingScreen"
+       class="page flex items-center justify-center p-6">
+    <div class="text-center">
+      <div class="loader mx-auto mb-5"></div>
+      <h2 class="text-xl font-bold">SELLER<span class="gold">FLOW</span></h2>
+      <p id="loadingText" class="text-gray-500 mt-2 text-sm">
+        Starting SellerFlow...
+      </p>
+    </div>
+  </div>
 
-<div id="landing" class="min-h-screen">
 
-  <div class="max-w-6xl mx-auto p-5">
+  <!-- LANDING -->
+  <section id="landingPage" class="hidden page">
 
-    <header class="flex justify-between items-center">
-      <button
-        type="button"
-        class="text-xl font-black"
-        onclick="window.showLanding()">
-        SELLER<span class="gold">FLOW</span>
-      </button>
+    <header class="border-b border-[#202020]">
+      <div class="max-w-6xl mx-auto px-5 py-5 flex items-center justify-between">
+        <div>
+          <div class="text-2xl font-black">
+            SELLER<span class="gold">FLOW</span>
+          </div>
+          <div class="text-xs text-gray-500">
+            Ghana's simple online selling platform
+          </div>
+        </div>
 
-      <button
-        type="button"
-        class="btn d"
-        onclick="window.authPage('login')">
-        Sign in
-      </button>
+        <button id="landingLoginBtn"
+                type="button"
+                class="btn px-5 py-2 rounded-lg border border-[#333]">
+          Sign in
+        </button>
+      </div>
     </header>
 
-    <main class="grid md:grid-cols-2 gap-10 items-center min-h-[80vh]">
+    <main class="max-w-6xl mx-auto px-5">
 
-      <div>
+      <section class="py-20 md:py-28 text-center">
+        <div class="inline-block px-4 py-2 rounded-full bg-[#151515] text-sm text-gray-400 mb-6">
+          🇬🇭 Built for Ghanaian sellers
+        </div>
 
-        <h1 class="text-5xl md:text-7xl font-black mt-3">
+        <h1 class="text-4xl md:text-6xl font-black leading-tight">
           Sell smarter.<br>
           <span class="gold">Manage easier.</span>
         </h1>
 
-        <p class="text-gray-400 text-lg mt-5">
-          Online stores, product discovery, orders, reviews and
-          buyer-seller messaging in one place.
+        <p class="text-gray-400 max-w-2xl mx-auto mt-6 text-lg">
+          Turn your products into a real online store and manage customers,
+          products and orders from one place.
         </p>
 
-        <div class="flex flex-wrap gap-3 mt-7">
-
-          <button
-            type="button"
-            class="btn g"
-            onclick="window.authPage('register')">
+        <div class="flex flex-col sm:flex-row gap-3 justify-center mt-9">
+          <button id="landingCreateBtn"
+                  type="button"
+                  class="btn bg-gold text-black font-bold px-7 py-3 rounded-xl">
             Create Free Account
           </button>
 
-          <button
-            type="button"
-            class="btn d"
-            onclick="window.authPage('login')">
-            Sign In
+          <button id="landingSignBtn"
+                  type="button"
+                  class="btn border border-[#333] px-7 py-3 rounded-xl">
+            Sign in
+          </button>
+        </div>
+      </section>
+
+      <section class="grid md:grid-cols-3 gap-5 pb-20">
+
+        <div class="card p-6">
+          <div class="text-3xl mb-4">🛍️</div>
+          <h3 class="font-bold text-lg">Your Online Store</h3>
+          <p class="text-gray-500 text-sm mt-2">
+            Create your own store page and display your products professionally.
+          </p>
+        </div>
+
+        <div class="card p-6">
+          <div class="text-3xl mb-4">📦</div>
+          <h3 class="font-bold text-lg">Manage Orders</h3>
+          <p class="text-gray-500 text-sm mt-2">
+            Track orders from pending all the way to delivery.
+          </p>
+        </div>
+
+        <div class="card p-6">
+          <div class="text-3xl mb-4">✅</div>
+          <h3 class="font-bold text-lg">Build Trust</h3>
+          <p class="text-gray-500 text-sm mt-2">
+            Get verified and display your SellerFlow verification badge.
+          </p>
+        </div>
+
+      </section>
+    </main>
+  </section>
+
+
+  <!-- AUTH -->
+  <section id="authPage" class="hidden min-h-screen p-5">
+
+    <div class="max-w-md mx-auto pt-10">
+
+      <button id="authBackBtn"
+              type="button"
+              class="text-gray-500 hover:text-white mb-8">
+        ← Back
+      </button>
+
+      <div class="text-center mb-8">
+        <div class="text-3xl font-black">
+          SELLER<span class="gold">FLOW</span>
+        </div>
+        <p id="authTitle" class="text-gray-500 mt-2">
+          Create your account
+        </p>
+      </div>
+
+      <!-- MODE -->
+      <div class="grid grid-cols-2 gap-2 bg-[#111] p-1 rounded-xl mb-5">
+        <button id="sellerModeBtn"
+                type="button"
+                class="modeBtn py-3 rounded-lg bg-[#242424] gold font-bold">
+          Seller
+        </button>
+
+        <button id="buyerModeBtn"
+                type="button"
+                class="modeBtn py-3 rounded-lg text-gray-500">
+          Buyer
+        </button>
+      </div>
+
+      <div class="card p-6">
+
+        <div id="registerFields">
+
+          <label class="text-sm text-gray-400">Full name</label>
+          <input id="authName"
+                 class="w-full rounded-lg px-4 py-3 mt-2 mb-4"
+                 placeholder="Your name">
+
+        </div>
+
+        <label class="text-sm text-gray-400">Email</label>
+        <input id="authEmail"
+               type="email"
+               class="w-full rounded-lg px-4 py-3 mt-2 mb-4"
+               placeholder="you@example.com">
+
+        <label class="text-sm text-gray-400">Password</label>
+        <input id="authPassword"
+               type="password"
+               class="w-full rounded-lg px-4 py-3 mt-2 mb-5"
+               placeholder="At least 6 characters">
+
+        <button id="emailAuthBtn"
+                type="button"
+                class="btn w-full bg-gold text-black font-bold py-3 rounded-lg">
+          Create Account
+        </button>
+
+        <div class="flex items-center gap-3 my-5">
+          <div class="h-px bg-[#292929] flex-1"></div>
+          <span class="text-xs text-gray-600">OR</span>
+          <div class="h-px bg-[#292929] flex-1"></div>
+        </div>
+
+        <button id="googleBtn"
+                type="button"
+                class="btn w-full border border-[#333] py-3 rounded-lg">
+          Continue with Google
+        </button>
+
+        <button id="switchAuthBtn"
+                type="button"
+                class="w-full text-sm text-gray-500 mt-5 hover:text-white">
+          Already have an account? Sign in
+        </button>
+
+        <div id="authError"
+             class="hidden mt-4 p-3 rounded-lg bg-red-950 border border-red-900 text-red-300 text-sm">
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- APP -->
+  <section id="appPage" class="hidden min-h-screen">
+
+    <!-- TOP NAV -->
+    <header class="sticky top-0 z-40 bg-[#080808]/95 backdrop-blur border-b border-[#202020]">
+
+      <div class="max-w-7xl mx-auto px-4">
+
+        <div class="h-16 flex items-center justify-between gap-3">
+
+          <button id="logoHomeBtn"
+                  type="button"
+                  class="text-xl font-black">
+            SELLER<span class="gold">FLOW</span>
+          </button>
+
+          <div class="hidden md:flex items-center gap-1">
+            <button class="nav-btn appNav active" data-page="home" type="button">Home</button>
+            <button class="nav-btn appNav" data-page="products" type="button" id="productsNav">Products</button>
+            <button class="nav-btn appNav" data-page="orders" type="button">Orders</button>
+            <button class="nav-btn appNav" data-page="store" type="button" id="storeNav">Store</button>
+            <button class="nav-btn appNav" data-page="profile" type="button">Profile</button>
+          </div>
+
+          <div class="flex items-center gap-2">
+
+            <span id="userBadge"
+                  class="hidden md:inline text-xs text-gray-500"></span>
+
+            <button id="mobileMenuBtn"
+                    type="button"
+                    class="md:hidden border border-[#333] rounded-lg px-3 py-2">
+              ☰
+            </button>
+
+            <button id="logoutBtn"
+                    type="button"
+                    class="hidden md:block text-sm text-red-400 hover:text-red-300">
+              Logout
+            </button>
+
+          </div>
+        </div>
+
+        <div id="mobileMenu"
+             class="hidden md:hidden pb-3 border-t border-[#202020]">
+
+          <div class="grid grid-cols-2 gap-2 pt-3">
+
+            <button class="nav-btn appNav" data-page="home" type="button">Home</button>
+            <button class="nav-btn appNav" data-page="products" type="button">Products</button>
+            <button class="nav-btn appNav" data-page="orders" type="button">Orders</button>
+            <button class="nav-btn appNav" data-page="store" type="button">Store</button>
+            <button class="nav-btn appNav" data-page="profile" type="button">Profile</button>
+            <button id="mobileLogoutBtn" type="button" class="nav-btn text-red-400">Logout</button>
+
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+
+      <!-- SELLER HOME -->
+      <div id="homePage">
+
+        <div class="mb-7">
+          <p class="text-gray-500 text-sm">Welcome back</p>
+          <h1 id="welcomeName" class="text-3xl font-black mt-1"></h1>
+        </div>
+
+        <div id="sellerStats"
+             class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+
+          <div class="card p-5">
+            <p class="text-gray-500 text-sm">Products</p>
+            <p id="statProducts" class="text-2xl font-bold mt-2">0</p>
+          </div>
+
+          <div class="card p-5">
+            <p class="text-gray-500 text-sm">Orders</p>
+            <p id="statOrders" class="text-2xl font-bold mt-2">0</p>
+          </div>
+
+          <div class="card p-5">
+            <p class="text-gray-500 text-sm">Pending</p>
+            <p id="statPending" class="text-2xl font-bold mt-2">0</p>
+          </div>
+
+          <div class="card p-5">
+            <p class="text-gray-500 text-sm">Revenue</p>
+            <p id="statRevenue" class="text-2xl font-bold mt-2">GHS 0</p>
+          </div>
+
+        </div>
+
+
+        <!-- BUYER HOME -->
+        <div id="buyerHome" class="hidden">
+
+          <div class="card p-6 mb-6">
+            <h2 class="text-2xl font-bold">Welcome to SellerFlow 🛍️</h2>
+            <p class="text-gray-500 mt-2">
+              Find products from SellerFlow stores and track your purchases.
+            </p>
+          </div>
+
+          <div class="card p-6">
+            <h3 class="font-bold text-lg">Your purchases</h3>
+            <div id="buyerRecentOrders" class="mt-4"></div>
+          </div>
+
+        </div>
+
+
+        <!-- SELLER HOME -->
+        <div id="sellerHome">
+
+          <div class="grid lg:grid-cols-2 gap-5">
+
+            <div class="card p-6">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <h2 class="font-bold text-lg">Verification</h2>
+                  <p class="text-gray-500 text-sm mt-1">
+                    Verify your seller identity.
+                  </p>
+                </div>
+
+                <span id="homeVerificationBadge"
+                      class="status">
+                  Not submitted
+                </span>
+              </div>
+
+              <button id="homeVerificationBtn"
+                      type="button"
+                      class="btn w-full mt-5 border border-[#333] py-3 rounded-lg">
+                Open Verification
+              </button>
+            </div>
+
+
+            <div class="card p-6">
+              <h2 class="font-bold text-lg">Your store</h2>
+
+              <p id="homeStoreName"
+                 class="text-gray-400 mt-2">
+                Store not created yet
+              </p>
+
+              <button id="homeStoreBtn"
+                      type="button"
+                      class="btn w-full mt-5 bg-gold text-black font-bold py-3 rounded-lg">
+                Manage Store
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- PRODUCTS -->
+      <div id="productsPage" class="hidden">
+
+        <div class="flex items-center justify-between gap-3 mb-6">
+
+          <div>
+            <h1 class="text-2xl font-black">Products</h1>
+            <p class="text-gray-500 text-sm">
+              Manage your products.
+            </p>
+          </div>
+
+          <button id="addProductBtn"
+                  type="button"
+                  class="btn bg-gold text-black font-bold px-4 py-3 rounded-lg">
+            + Add Product
+          </button>
+
+        </div>
+
+        <div id="productsGrid"
+             class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        </div>
+
+      </div>
+
+
+      <!-- ORDERS -->
+      <div id="ordersPage" class="hidden">
+
+        <div class="mb-6">
+          <h1 class="text-2xl font-black">Orders</h1>
+          <p class="text-gray-500 text-sm">
+            Manage your orders.
+          </p>
+        </div>
+
+        <div id="ordersList"></div>
+
+      </div>
+
+
+      <!-- STORE -->
+      <div id="storePage" class="hidden">
+
+        <div class="mb-6">
+          <h1 class="text-2xl font-black">Your Store</h1>
+          <p class="text-gray-500 text-sm">
+            Create and manage your public store.
+          </p>
+        </div>
+
+        <div class="card p-6 max-w-2xl">
+
+          <label class="text-sm text-gray-400">Store name</label>
+          <input id="storeName"
+                 class="w-full rounded-lg px-4 py-3 mt-2 mb-4"
+                 placeholder="Example Store">
+
+          <label class="text-sm text-gray-400">Description</label>
+          <textarea id="storeDescription"
+                    class="w-full rounded-lg px-4 py-3 mt-2 mb-4"
+                    rows="4"
+                    placeholder="Tell customers about your business"></textarea>
+
+          <label class="text-sm text-gray-400">WhatsApp number</label>
+          <input id="storeWhatsapp"
+                 class="w-full rounded-lg px-4 py-3 mt-2 mb-5"
+                 placeholder="233XXXXXXXXX">
+
+          <button id="saveStoreBtn"
+                  type="button"
+                  class="btn bg-gold text-black font-bold px-6 py-3 rounded-lg">
+            Save Store
           </button>
 
         </div>
 
       </div>
 
-      <div class="grid grid-cols-2 gap-3">
 
-        <div class="card p-5">
-          🛍️
-          <b class="block mt-2">Stores</b>
-          <small class="text-gray-500">
-            Build a shareable shop.
-          </small>
+      <!-- PROFILE -->
+      <div id="profilePage" class="hidden">
+
+        <div class="mb-6">
+          <h1 class="text-2xl font-black">Profile</h1>
         </div>
 
-        <div class="card p-5">
-          🔥
-          <b class="block mt-2">For You</b>
-          <small class="text-gray-500">
-            Photos and product videos.
-          </small>
+        <div class="card p-6 max-w-2xl">
+
+          <div class="flex items-center gap-4 mb-6">
+
+            <div id="profileAvatar"
+                 class="w-16 h-16 rounded-full bg-[#222] flex items-center justify-center text-2xl font-bold gold">
+              ?
+            </div>
+
+            <div>
+              <h2 id="profileName" class="font-bold text-xl"></h2>
+              <p id="profileEmail" class="text-gray-500 text-sm"></p>
+              <p id="profileRole" class="text-gray-500 text-sm mt-1"></p>
+            </div>
+
+          </div>
+
+          <div id="profileVerification"></div>
+
         </div>
 
-        <div class="card p-5">
-          💬
-          <b class="block mt-2">Messages</b>
-          <small class="text-gray-500">
-            Talk directly to sellers.
-          </small>
+      </div>
+
+
+      <!-- ADMIN -->
+      <div id="adminPage" class="hidden">
+
+        <div class="mb-7">
+          <p class="text-gray-500 text-sm">SellerFlow Administration</p>
+          <h1 class="text-3xl font-black mt-1">
+            Admin Dashboard
+          </h1>
         </div>
 
-        <div class="card p-5">
-          ✅
-          <b class="block mt-2">Verification</b>
-          <small class="text-gray-500">
-            Manual Ghana Card review.
-          </small>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+
+          <div class="card p-4">
+            <p class="text-gray-500 text-xs">Users</p>
+            <p id="adminUsers" class="text-2xl font-bold mt-2">0</p>
+          </div>
+
+          <div class="card p-4">
+            <p class="text-gray-500 text-xs">Sellers</p>
+            <p id="adminSellers" class="text-2xl font-bold mt-2">0</p>
+          </div>
+
+          <div class="card p-4">
+            <p class="text-gray-500 text-xs">Buyers</p>
+            <p id="adminBuyers" class="text-2xl font-bold mt-2">0</p>
+          </div>
+
+          <div class="card p-4">
+            <p class="text-gray-500 text-xs">Pending</p>
+            <p id="adminPending" class="text-2xl font-bold mt-2">0</p>
+          </div>
+
+          <div class="card p-4">
+            <p class="text-gray-500 text-xs">Verified</p>
+            <p id="adminVerified" class="text-2xl font-bold mt-2">0</p>
+          </div>
+
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-5">
+
+          <div class="card p-5">
+            <h2 class="font-bold mb-4">Pending Verification</h2>
+            <div id="adminVerificationList"></div>
+          </div>
+
+          <div class="card p-5">
+            <h2 class="font-bold mb-4">Users</h2>
+            <div id="adminUsersList"></div>
+          </div>
+
         </div>
 
       </div>
 
     </main>
-
-    <footer class="text-center text-xs text-gray-600 py-5">
-      © SELLERFLOW. All rights reserved.
-    </footer>
-
-  </div>
-</div>
+  </section>
 
 
-<!-- ================= AUTH ================= -->
+  <!-- MODAL -->
+  <div id="modal"
+       class="modal hidden">
 
-<div id="auth" class="hide min-h-screen">
+    <div class="modal-box">
 
-  <div class="max-w-md mx-auto p-5 pt-12">
+      <div class="flex items-center justify-between mb-5">
 
-    <button
-      type="button"
-      class="text-gray-500"
-      onclick="window.showLanding()">
-      ← Back
-    </button>
+        <h2 id="modalTitle" class="text-xl font-bold"></h2>
 
-    <div class="card p-6 mt-6">
-
-      <button
-        type="button"
-        class="text-2xl font-black"
-        onclick="window.showLanding()">
-        SELLER<span class="gold">FLOW</span>
-      </button>
-
-      <h2
-        id="at"
-        class="text-xl font-bold mt-4">
-      </h2>
-
-      <p class="text-gray-500 text-sm mt-2">
-        Choose your account type.
-      </p>
-
-      <div class="grid grid-cols-2 gap-2 mt-4">
-
-        <button
-          id="sm"
-          type="button"
-          class="btn g"
-          onclick="window.setMode('seller')">
-          Seller
-        </button>
-
-        <button
-          id="bm"
-          type="button"
-          class="btn d"
-          onclick="window.setMode('buyer')">
-          Buyer
+        <button id="modalCloseBtn"
+                type="button"
+                class="text-gray-500 text-2xl">
+          ×
         </button>
 
       </div>
 
-      <input
-        id="name"
-        class="inp mt-4"
-        placeholder="Full name"
-        autocomplete="name">
-
-      <input
-        id="email"
-        class="inp mt-3"
-        type="email"
-        placeholder="Email"
-        autocomplete="email">
-
-      <input
-        id="pass"
-        class="inp mt-3"
-        type="password"
-        placeholder="Password"
-        autocomplete="current-password">
-
-      <button
-        id="emailBtn"
-        type="button"
-        class="btn g w-full mt-4"
-        onclick="window.emailAuth()">
-        Continue
-      </button>
-
-      <button
-        id="googleBtn"
-        type="button"
-        class="btn d w-full mt-3"
-        onclick="window.googleLogin()">
-        Continue with Google
-      </button>
-
-      <button
-        id="switch"
-        type="button"
-        class="text-gray-500 text-sm w-full mt-4"
-        onclick="window.toggleAuth()">
-      </button>
-
-      <p
-        id="authError"
-        class="text-red-400 text-sm mt-4 hidden">
-      </p>
+      <div id="modalContent"></div>
 
     </div>
-
-  </div>
-</div>
-
-
-<!-- ================= APP ================= -->
-
-<div id="app" class="hide pb-24">
-
-  <header class="sticky top-0 z-10 bg-[#080808ee] backdrop-blur border-b border-[#222]">
-
-    <div class="max-w-6xl mx-auto p-4 flex justify-between items-center">
-
-      <button
-        type="button"
-        class="font-black"
-        onclick="window.home()">
-        SELLER<span class="gold">FLOW</span>
-      </button>
-
-      <div class="flex gap-2">
-
-        <button
-          type="button"
-          class="btn d"
-          onclick="window.messages()">
-          💬
-        </button>
-
-        <button
-          type="button"
-          class="btn d"
-          onclick="window.profile()">
-          👤
-        </button>
-
-      </div>
-
-    </div>
-
-  </header>
-
-  <main class="max-w-6xl mx-auto p-4">
-
-    <section id="home" class="view"></section>
-
-    <section id="feed" class="view hide"></section>
-
-    <section id="orders" class="view hide"></section>
-
-    <section id="msgs" class="view hide"></section>
-
-    <section id="prof" class="view hide"></section>
-
-    <section id="seller" class="view hide"></section>
-
-    <section id="admin" class="view hide"></section>
-
-    <section id="store" class="view hide"></section>
-
-  </main>
-</div>
-
-
-<!-- ================= NAV ================= -->
-
-<nav id="nav" class="bottom hide">
-
-  <div class="max-w-xl mx-auto grid grid-cols-5 text-center">
-
-    <button
-      type="button"
-      class="p-3 text-xs"
-      onclick="window.home()">
-      🏠<br>Home
-    </button>
-
-    <button
-      type="button"
-      class="p-3 text-xs"
-      onclick="window.forYou()">
-      🔥<br>For You
-    </button>
-
-    <button
-      type="button"
-      class="p-3 text-xs"
-      onclick="window.messages()">
-      💬<br>Messages
-    </button>
-
-    <button
-      type="button"
-      class="p-3 text-xs"
-      onclick="window.orders()">
-      📦<br>Orders
-    </button>
-
-    <button
-      type="button"
-      class="p-3 text-xs"
-      onclick="window.profile()">
-      👤<br>Profile
-    </button>
-
   </div>
 
-</nav>
 
-
-<!-- ================= MODAL ================= -->
-
-<div
-  id="modal"
-  class="fixed inset-0 bg-black/80 z-50 hidden overflow-auto">
-
-  <div
-    id="mb"
-    class="max-w-lg mx-auto p-4 min-h-full flex items-center">
+  <!-- TOAST -->
+  <div id="toast"
+       class="toast hidden">
   </div>
-
-</div>
-
-
-<!-- ================= TOAST ================= -->
-
-<div
-  id="toast"
-  class="fixed bottom-20 right-4 bg-[#222] border border-[#444] rounded-xl p-3 hidden z-[60]">
-</div>
 
 
 <script type="module">
@@ -441,8 +732,8 @@ import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithPopup,
   GoogleAuthProvider,
+  signInWithPopup,
   onAuthStateChanged,
   signOut,
   updateProfile
@@ -450,328 +741,234 @@ import {
 
 import {
   getFirestore,
-  doc,
+  collection,
+  addDoc,
+  getDocs,
   getDoc,
   setDoc,
-  addDoc,
   updateDoc,
   deleteDoc,
-  getDocs,
-  collection,
+  doc,
   query,
   where,
-  limit,
   orderBy,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 
 /* =========================================================
-   YOUR FIREBASE CONFIG
-   KEPT EXACTLY AS PROVIDED
+   YOUR EXACT FIREBASE CONFIG
 ========================================================= */
 
 const firebaseConfig = {
-
-  apiKey:
-    "AIzaSyCyEdrUXAfgThfpSTPY-Yvz8BG3LrhYuWk",
-
-  authDomain:
-    "sellerflow-efaab.firebaseapp.com",
-
-  databaseURL:
-    "https://sellerflow-efaab-default-rtdb.firebaseio.com",
-
-  projectId:
-    "sellerflow-efaab",
-
-  storageBucket:
-    "sellerflow-efaab.firebasestorage.app",
-
-  messagingSenderId:
-    "987175352360",
-
-  appId:
-    "1:987175352360:web:53e44304aaf11b98c61d1d"
-
+  apiKey: "AIzaSyCyEdrUXAfgThfpSTPY-Yvz8BG3LrhYuWk",
+  authDomain: "sellerflow-efaab.firebaseapp.com",
+  databaseURL: "https://sellerflow-efaab-default-rtdb.firebaseio.com",
+  projectId: "sellerflow-efaab",
+  storageBucket: "sellerflow-efaab.firebasestorage.app",
+  messagingSenderId: "987175352360",
+  appId: "1:987175352360:web:53e44304aaf11b98c61d1d"
 };
 
 
-const app = initializeApp(firebaseConfig);
-
-const auth = getAuth(app);
-
-const db = getFirestore(app);
-
-const googleProvider = new GoogleAuthProvider();
-
-
 /* =========================================================
-   SELLERFLOW SETTINGS
+   CONFIG
 ========================================================= */
 
-const API =
+const ADMIN_EMAIL = "gideondreams3325@gmail.com";
+
+const WORKER_URL =
   "https://sellerflow-api.gideondreams3325.workers.dev";
 
-const CLOUD =
-  "xxis0qjp";
-
-const PRESET =
-  "ml_default";
-
-const OWNER =
-  "gideondreams3325@gmail.com";
-
 
 /* =========================================================
-   STATE
+   APP STATE
 ========================================================= */
 
-let u = null;
+let firebaseApp;
+let auth;
+let db;
 
-let ud = null;
+let currentUser = null;
+let currentUserData = null;
 
-let mode = "seller";
-
-let am = "register";
-
-let store = null;
+let authMode = "register";
+let accountMode = "seller";
 
 let products = [];
-
-let cart = [];
-
-let currentSellerId = null;
+let orders = [];
+let currentStore = null;
 
 
 /* =========================================================
-   HELPERS
+   BASIC HELPERS
 ========================================================= */
 
-const $ = id =>
-  document.getElementById(id);
+const $ = id => document.getElementById(id);
 
+function escapeHtml(value) {
 
-const esc = value =>
-  String(value ?? "")
-    .replace(/[&<>"']/g, c => ({
-      "&":"&amp;",
-      "<":"&lt;",
-      ">":"&gt;",
-      '"':"&quot;",
-      "'":"&#39;"
-    }[c]));
+  if (value === null || value === undefined) return "";
 
-
-const money = value =>
-  "GHS " + Number(value || 0).toFixed(2);
-
-
-const isAdmin = () =>
-  !!u &&
-  u.email?.toLowerCase() ===
-  OWNER.toLowerCase();
-
-
-function badge(x){
-
-  if(!x?.verified){
-    return "";
-  }
-
-  return `
-    <span class="badge ${
-      x.badgeColor === "blue"
-      ? "blue"
-      : "green"
-    }">✓</span>
-  `;
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 
-function toast(message){
+function showToast(message, type = "success") {
 
-  const el = $("toast");
+  const toast = $("toast");
 
-  el.textContent = message;
+  toast.textContent = message;
+  toast.className = "toast " + type;
 
-  el.classList.remove("hidden");
+  clearTimeout(window.toastTimer);
 
-  clearTimeout(window.__toastTimer);
-
-  window.__toastTimer =
-    setTimeout(() => {
-      el.classList.add("hidden");
-    }, 2500);
-
+  window.toastTimer = setTimeout(() => {
+    toast.classList.add("hidden");
+  }, 4500);
 }
 
 
-function view(id){
+function showAuthError(message) {
 
-  document
-    .querySelectorAll(".view")
-    .forEach(x =>
-      x.classList.add("hide")
-    );
+  const box = $("authError");
 
-  const el = $(id);
-
-  if(el){
-    el.classList.remove("hide");
-  }
-
+  box.textContent = message;
+  box.classList.remove("hidden");
 }
 
 
-function modal(html){
-
-  $("mb").innerHTML =
-    `<div class="card p-5 w-full">${html}</div>`;
-
-  $("modal").classList.remove("hidden");
-
-}
-
-
-function closeModal(){
-
-  $("modal").classList.add("hidden");
-
-  $("mb").innerHTML = "";
-
-}
-
-
-/* =========================================================
-   LANDING / AUTH
-========================================================= */
-
-window.showLanding = function(){
-
-  $("landing").classList.remove("hide");
-
-  $("auth").classList.add("hide");
-
-  if(!u){
-
-    $("app").classList.add("hide");
-
-    $("nav").classList.add("hide");
-
-  }
-
-};
-
-
-window.authPage = function(page){
-
-  $("landing").classList.add("hide");
-
-  $("auth").classList.remove("hide");
-
-  $("app").classList.add("hide");
-
-  $("nav").classList.add("hide");
-
-  am = page;
-
-  $("at").textContent =
-    page === "register"
-    ? "Create your account"
-    : "Welcome back";
-
-  $("switch").textContent =
-    page === "register"
-    ? "Already have an account? Sign in"
-    : "New here? Create an account";
-
-  $("name").classList.toggle(
-    "hide",
-    page === "login"
-  );
-
-  $("pass").value = "";
+function clearAuthError() {
 
   $("authError").classList.add("hidden");
-
-  window.setMode(mode);
-
-};
-
-
-window.toggleAuth = function(){
-
-  window.authPage(
-    am === "register"
-    ? "login"
-    : "register"
-  );
-
-};
-
-
-window.setMode = function(m){
-
-  mode = m;
-
-  $("sm").className =
-    "btn " +
-    (mode === "seller" ? "g" : "d");
-
-  $("bm").className =
-    "btn " +
-    (mode === "buyer" ? "g" : "d");
-
-};
-
-
-/* =========================================================
-   ERROR HANDLING
-========================================================= */
-
-function authError(message){
-
-  $("authError").textContent = message;
-
-  $("authError").classList.remove("hidden");
-
+  $("authError").textContent = "";
 }
 
 
-function friendlyError(error){
+function setLoadingText(text) {
 
-  const code = error?.code || "";
+  $("loadingText").textContent = text;
+}
 
-  if(code.includes("auth/invalid-credential")){
-    return "Incorrect email or password.";
-  }
 
-  if(code.includes("auth/wrong-password")){
-    return "Incorrect password.";
-  }
+function hideLoading() {
 
-  if(code.includes("auth/user-not-found")){
-    return "No account was found with this email.";
-  }
+  $("loadingScreen").classList.add("hidden");
+}
 
-  if(code.includes("auth/email-already-in-use")){
-    return "This email is already registered.";
-  }
 
-  if(code.includes("auth/weak-password")){
-    return "Password must be at least 6 characters.";
-  }
+function showLanding() {
 
-  if(code.includes("auth/popup-closed-by-user")){
-    return "Google sign-in was cancelled.";
-  }
+  $("landingPage").classList.remove("hidden");
+  $("authPage").classList.add("hidden");
+  $("appPage").classList.add("hidden");
+}
 
-  if(code.includes("auth/popup-blocked")){
-    return "Your browser blocked the Google sign-in window.";
-  }
 
-  return error?.message || "Something went wrong.";
+function showAuth() {
+
+  $("landingPage").classList.add("hidden");
+  $("authPage").classList.remove("hidden");
+  $("appPage").classList.add("hidden");
+
+  updateAuthUI();
+}
+
+
+function showApp() {
+
+  $("landingPage").classList.add("hidden");
+  $("authPage").classList.add("hidden");
+  $("appPage").classList.remove("hidden");
+}
+
+
+/* =========================================================
+   INITIALIZE FIREBASE
+========================================================= */
+
+try {
+
+  setLoadingText("Connecting to Firebase...");
+
+  firebaseApp = initializeApp(firebaseConfig);
+  auth = getAuth(firebaseApp);
+  db = getFirestore(firebaseApp);
+
+  console.log("SellerFlow Firebase initialized.");
+
+} catch (error) {
+
+  console.error("Firebase initialization error:", error);
+
+  hideLoading();
+  showLanding();
+
+  showToast(
+    "Firebase failed to initialize: " + error.message,
+    "error"
+  );
+}
+
+
+/* =========================================================
+   AUTH UI
+========================================================= */
+
+function updateAuthUI() {
+
+  $("authTitle").textContent =
+    authMode === "register"
+      ? "Create your account"
+      : "Sign in to SellerFlow";
+
+  $("registerFields").classList.toggle(
+    "hidden",
+    authMode !== "register"
+  );
+
+  $("emailAuthBtn").textContent =
+    authMode === "register"
+      ? "Create Account"
+      : "Sign In";
+
+  $("switchAuthBtn").textContent =
+    authMode === "register"
+      ? "Already have an account? Sign in"
+      : "Don't have an account? Create one";
+
+  updateAccountModeUI();
+}
+
+
+function updateAccountModeUI() {
+
+  const seller = $("sellerModeBtn");
+  const buyer = $("buyerModeBtn");
+
+  seller.className =
+    "modeBtn py-3 rounded-lg " +
+    (accountMode === "seller"
+      ? "bg-[#242424] gold font-bold"
+      : "text-gray-500");
+
+  buyer.className =
+    "modeBtn py-3 rounded-lg " +
+    (accountMode === "buyer"
+      ? "bg-[#242424] gold font-bold"
+      : "text-gray-500");
+}
+
+
+function setAccountMode(mode) {
+
+  accountMode = mode;
+  updateAccountModeUI();
 }
 
 
@@ -779,76 +976,94 @@ function friendlyError(error){
    EMAIL AUTH
 ========================================================= */
 
-window.emailAuth = async function(){
+async function handleEmailAuth() {
 
-  try{
+  clearAuthError();
 
-    $("authError").classList.add("hidden");
+  if (!auth) {
 
-    const email =
-      $("email").value.trim();
+    showAuthError(
+      "Firebase is not initialized. Refresh the page and try again."
+    );
 
-    const password =
-      $("pass").value;
+    return;
+  }
 
-    const name =
-      $("name").value.trim();
+  const email =
+    $("authEmail").value.trim();
 
-    if(!email || !password){
+  const password =
+    $("authPassword").value;
 
-      return authError(
-        "Enter your email and password."
-      );
+  const name =
+    $("authName").value.trim();
 
-    }
+  if (!email) {
 
-    if(am === "register" && !name){
+    showAuthError("Enter your email address.");
+    return;
+  }
 
-      return authError(
-        "Enter your full name."
-      );
+  if (!password || password.length < 6) {
 
-    }
+    showAuthError(
+      "Password must contain at least 6 characters."
+    );
 
-    $("emailBtn").disabled = true;
+    return;
+  }
 
-    $("emailBtn").textContent =
-      "Please wait...";
+  if (authMode === "register" && !name) {
 
+    showAuthError("Enter your full name.");
+    return;
+  }
 
-    if(am === "register"){
+  const button = $("emailAuthBtn");
 
-      const result =
+  button.disabled = true;
+
+  try {
+
+    if (authMode === "register") {
+
+      const credential =
         await createUserWithEmailAndPassword(
           auth,
           email,
           password
         );
 
+      const user = credential.user;
 
-      if(name){
+      await updateProfile(user, {
+        displayName: name
+      });
 
-        await updateProfile(
-          result.user,
-          {
-            displayName:name
-          }
-        );
-
-      }
-
-
-      await saveUser(
-        result.user,
-        name,
-        mode
+      await setDoc(
+        doc(db, "users", user.uid),
+        {
+          uid: user.uid,
+          name: name,
+          email: email,
+          role: accountMode,
+          verificationStatus:
+            accountMode === "seller"
+              ? "not_submitted"
+              : null,
+          verified: false,
+          plan: "free",
+          badgeColor: "green",
+          blocked: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        },
+        { merge: true }
       );
 
+      showToast("Account created successfully.");
 
-      toast("Account created");
-
-
-    }else{
+    } else {
 
       await signInWithEmailAndPassword(
         auth,
@@ -856,162 +1071,170 @@ window.emailAuth = async function(){
         password
       );
 
+      showToast("Signed in successfully.");
+
     }
 
-  }catch(error){
+  } catch (error) {
 
     console.error(error);
 
-    authError(
-      friendlyError(error)
+    showAuthError(
+      firebaseAuthError(error)
     );
 
-  }finally{
+  } finally {
 
-    $("emailBtn").disabled = false;
-
-    $("emailBtn").textContent =
-      "Continue";
-
+    button.disabled = false;
   }
-
-};
+}
 
 
 /* =========================================================
-   GOOGLE LOGIN
+   GOOGLE AUTH
 ========================================================= */
 
-window.googleLogin = async function(){
+async function googleSignIn() {
 
-  try{
+  clearAuthError();
 
-    $("authError").classList.add("hidden");
+  if (!auth) {
 
-    $("googleBtn").disabled = true;
+    showAuthError(
+      "Firebase is not initialized."
+    );
 
-    $("googleBtn").textContent =
-      "Opening Google...";
+    return;
+  }
 
+  const button = $("googleBtn");
+
+  button.disabled = true;
+
+  try {
+
+    const provider =
+      new GoogleAuthProvider();
+
+    provider.setCustomParameters({
+      prompt: "select_account"
+    });
 
     const result =
       await signInWithPopup(
         auth,
-        googleProvider
+        provider
       );
 
+    const user =
+      result.user;
 
     const userRef =
-      doc(db,"users",result.user.uid);
+      doc(db, "users", user.uid);
 
-    const snap =
+    const existing =
       await getDoc(userRef);
 
+    if (!existing.exists()) {
 
-    if(!snap.exists()){
-
-      await saveUser(
-        result.user,
-        result.user.displayName || "User",
-        mode
+      await setDoc(
+        userRef,
+        {
+          uid: user.uid,
+          name:
+            user.displayName ||
+            user.email?.split("@")[0] ||
+            "SellerFlow User",
+          email: user.email || "",
+          role: accountMode,
+          verificationStatus:
+            accountMode === "seller"
+              ? "not_submitted"
+              : null,
+          verified: false,
+          plan: "free",
+          badgeColor: "green",
+          blocked: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }
       );
 
     }
 
+    showToast("Google sign-in successful.");
 
-  }catch(error){
+  } catch (error) {
 
-    console.error(error);
+    console.error("Google sign-in error:", error);
 
-    authError(
-      friendlyError(error)
+    showAuthError(
+      firebaseAuthError(error)
     );
 
-  }finally{
+  } finally {
 
-    $("googleBtn").disabled = false;
-
-    $("googleBtn").textContent =
-      "Continue with Google";
-
+    button.disabled = false;
   }
-
-};
+}
 
 
 /* =========================================================
-   SAVE USER
+   FIREBASE AUTH ERROR TRANSLATION
 ========================================================= */
 
-async function saveUser(
-  user,
-  name,
-  selectedRole
-){
+function firebaseAuthError(error) {
 
-  const role =
-    user.email?.toLowerCase() ===
-    OWNER.toLowerCase()
-    ? "admin"
-    : selectedRole;
+  const code = error?.code || "";
 
+  const messages = {
 
-  await setDoc(
-    doc(db,"users",user.uid),
-    {
-      uid:user.uid,
+    "auth/invalid-api-key":
+      "Firebase rejected the API key. Check Firebase Project Settings → Your apps → Web app.",
 
-      name:
-        name ||
-        user.displayName ||
-        "User",
+    "auth/api-key-not-valid":
+      "The Firebase API key is not valid for this project.",
 
-      email:user.email,
+    "auth/operation-not-allowed":
+      "This sign-in method is disabled in Firebase Authentication.",
 
-      role,
+    "auth/email-already-in-use":
+      "An account already exists with this email.",
 
-      status:"active",
+    "auth/invalid-email":
+      "The email address is invalid.",
 
-      plan:"free",
+    "auth/weak-password":
+      "The password is too weak. Use at least 6 characters.",
 
-      verified:false,
+    "auth/invalid-credential":
+      "The email or password is incorrect.",
 
-      verificationStatus:
-        "not_submitted",
+    "auth/user-not-found":
+      "No account was found with this email.",
 
-      badgeColor:"green",
+    "auth/wrong-password":
+      "The password is incorrect.",
 
-      createdAt:serverTimestamp()
-    },
-    {merge:true}
-  );
+    "auth/popup-closed-by-user":
+      "Google sign-in was cancelled.",
 
+    "auth/popup-blocked":
+      "Your browser blocked the Google sign-in popup.",
 
-  if(role === "seller"){
+    "auth/unauthorized-domain":
+      "This website domain is not authorized in Firebase Authentication.",
 
-    await setDoc(
-      doc(db,"stores",user.uid),
-      {
-        sellerId:user.uid,
+    "auth/network-request-failed":
+      "Network connection failed. Check your internet connection.",
 
-        name:
-          (name ||
-           user.displayName ||
-           "Seller") +
-          "'s Store",
+    "auth/too-many-requests":
+      "Too many attempts. Wait a little and try again."
+  };
 
-        description:"",
-
-        whatsapp:"",
-
-        createdAt:
-          serverTimestamp()
-      },
-      {merge:true}
-    );
-
-  }
-
+  return messages[code] ||
+    error?.message ||
+    "Authentication failed. Please try again.";
 }
 
 
@@ -1019,3003 +1242,1521 @@ async function saveUser(
    AUTH STATE
 ========================================================= */
 
-onAuthStateChanged(
-  auth,
-  async user => {
+if (auth) {
 
-    try{
+  onAuthStateChanged(
+    auth,
+    async user => {
 
-      u = user;
+      if (!user) {
 
+        currentUser = null;
+        currentUserData = null;
 
-      if(!user){
-
-        ud = null;
-
-        $("app").classList.add("hide");
-
-        $("nav").classList.add("hide");
-
-        if(
-          $("auth").classList.contains("hide")
-        ){
-
-          $("landing").classList.remove("hide");
-
-        }
+        hideLoading();
+        showLanding();
 
         return;
-
       }
 
+      currentUser = user;
 
-      let snap =
-        await getDoc(
-          doc(db,"users",user.uid)
-        );
+      setLoadingText("Loading your SellerFlow account...");
 
+      try {
 
-      if(!snap.exists()){
+        await loadUser();
 
-        await saveUser(
-          user,
-          user.displayName || "User",
-          mode
-        );
+        if (
+          currentUserData?.blocked === true
+        ) {
 
-        snap =
-          await getDoc(
-            doc(db,"users",user.uid)
+          await signOut(auth);
+
+          showLanding();
+
+          showToast(
+            "This account has been blocked.",
+            "error"
           );
 
-      }
+          return;
+        }
 
+        hideLoading();
+        showApp();
 
-      ud = snap.data() || {};
+        await startApp();
 
+      } catch (error) {
 
-      if(isAdmin()){
-
-        ud.role = "admin";
-
-        await setDoc(
-          doc(db,"users",user.uid),
-          {
-            role:"admin"
-          },
-          {merge:true}
+        console.error(
+          "Account loading error:",
+          error
         );
 
+        hideLoading();
+        showLanding();
+
+        showToast(
+          "Could not load your account: " +
+          error.message,
+          "error"
+        );
       }
-
-
-      $("landing").classList.add("hide");
-
-      $("auth").classList.add("hide");
-
-      $("app").classList.remove("hide");
-
-      $("nav").classList.remove("hide");
-
-
-      if(isAdmin()){
-
-        window.adminPage();
-
-      }
-      else if(ud.role === "seller"){
-
-        window.sellerPage();
-
-      }
-      else{
-
-        window.buyerPage();
-
-      }
-
-
-    }catch(error){
-
-      console.error(
-        "AUTH STATE ERROR:",
-        error
-      );
-
-      toast(
-        "Could not load your account."
-      );
 
     }
-
-  }
-);
-
-
-/* =========================================================
-   HOME
-========================================================= */
-
-window.home = function(){
-
-  if(!u || !ud){
-
-    return window.showLanding();
-
-  }
-
-  if(isAdmin()){
-
-    return window.adminPage();
-
-  }
-
-  if(ud.role === "seller"){
-
-    return window.sellerPage();
-
-  }
-
-  window.buyerPage();
-
-};
-
-
-/* =========================================================
-   BUYER HOME
-========================================================= */
-
-window.buyerPage = function(){
-
-  view("home");
-
-  $("home").innerHTML = `
-
-    <div class="card p-5">
-
-      <small class="text-gray-500">
-        Welcome back
-      </small>
-
-      <h1 class="text-2xl font-black mt-1">
-        ${esc(ud.name)}
-      </h1>
-
-      <div class="flex flex-wrap gap-2 mt-4">
-
-        <button
-          type="button"
-          class="btn g"
-          onclick="window.forYou()">
-          🔥 For You
-        </button>
-
-        <button
-          type="button"
-          class="btn d"
-          onclick="window.orders()">
-          📦 My Orders
-        </button>
-
-      </div>
-
-    </div>
-
-    <h2 class="font-black text-xl mt-7">
-      Discover Stores
-    </h2>
-
-    <div
-      id="stores"
-      class="grid md:grid-cols-3 gap-3 mt-3">
-    </div>
-
-  `;
-
-  loadStores();
-
-};
-
-
-async function loadStores(){
-
-  try{
-
-    const q =
-      await getDocs(
-        query(
-          collection(db,"stores"),
-          limit(60)
-        )
-      );
-
-
-    if(!$("stores")) return;
-
-
-    $("stores").innerHTML =
-
-      q.docs.map(d => {
-
-        const s = d.data();
-
-        return `
-
-          <div class="card p-4">
-
-            <b>
-              ${esc(s.name || "Store")}
-            </b>
-
-            <p class="text-gray-500 text-sm mt-1">
-              ${esc(
-                s.description ||
-                "Online store"
-              )}
-            </p>
-
-            <button
-              type="button"
-              class="btn d w-full mt-3"
-              onclick="window.openStore('${d.id}')">
-              Visit Store
-            </button>
-
-          </div>
-
-        `;
-
-      }).join("")
-
-      ||
-
-      `<p class="text-gray-500">
-        No stores yet.
-      </p>`;
-
-  }catch(error){
-
-    console.error(error);
-
-    if($("stores")){
-
-      $("stores").innerHTML =
-        `<p class="text-red-400">
-          Could not load stores.
-        </p>`;
-
-    }
-
-  }
+  );
 
 }
 
 
 /* =========================================================
-   FOR YOU
+   LOAD USER
 ========================================================= */
 
-window.forYou = async function(){
+async function loadUser() {
 
-  view("feed");
+  const ref =
+    doc(db, "users", currentUser.uid);
 
-  $("feed").innerHTML = `
+  const snap =
+    await getDoc(ref);
 
-    <h2 class="text-2xl font-black">
-      For You 🔥
-    </h2>
+  if (!snap.exists()) {
 
-    <div
-      id="posts"
-      class="max-w-xl mx-auto space-y-4 mt-4">
-    </div>
+    currentUserData = {
 
-  `;
+      uid: currentUser.uid,
+
+      name:
+        currentUser.displayName ||
+        currentUser.email?.split("@")[0] ||
+        "User",
+
+      email:
+        currentUser.email || "",
+
+      role: "buyer",
+
+      verificationStatus:
+        "not_submitted",
+
+      verified: false,
+
+      plan: "free",
+
+      badgeColor: "green",
+
+      blocked: false
+
+    };
+
+    await setDoc(
+      ref,
+      {
+        ...currentUserData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }
+    );
+
+  } else {
+
+    currentUserData =
+      snap.data();
+  }
+}
 
 
-  try{
+/* =========================================================
+   START APP
+========================================================= */
+
+async function startApp() {
+
+  $("userBadge").textContent =
+    currentUser.email || "";
+
+  $("welcomeName").textContent =
+    currentUserData.name ||
+    currentUser.displayName ||
+    "Welcome";
+
+  renderProfile();
+
+  if (currentUserData.role === "admin") {
+
+    showAdmin();
+
+    return;
+  }
+
+  if (
+    currentUser.email?.toLowerCase() ===
+    ADMIN_EMAIL.toLowerCase()
+  ) {
+
+    showAdmin();
+
+    return;
+  }
+
+  if (currentUserData.role === "buyer") {
+
+    activateBuyerMode();
+
+  } else {
+
+    activateSellerMode();
+
+  }
+
+  await loadStore();
+  await loadProducts();
+  await loadOrders();
+
+  updateDashboard();
+}
+
+
+/* =========================================================
+   BUYER / SELLER MODE
+========================================================= */
+
+function activateBuyerMode() {
+
+  $("sellerStats").classList.add("hidden");
+  $("sellerHome").classList.add("hidden");
+
+  $("buyerHome").classList.remove("hidden");
+
+  $("productsNav").classList.add("hidden");
+  $("storeNav").classList.add("hidden");
+
+  $("homeStoreBtn").classList.add("hidden");
+  $("homeVerificationBtn").classList.add("hidden");
+
+  document.querySelectorAll(".appNav")
+    .forEach(btn => {
+
+      if (
+        btn.dataset.page === "products" ||
+        btn.dataset.page === "store"
+      ) {
+        btn.classList.add("hidden");
+      }
+
+    });
+}
+
+
+function activateSellerMode() {
+
+  $("sellerStats").classList.remove("hidden");
+  $("sellerHome").classList.remove("hidden");
+
+  $("buyerHome").classList.add("hidden");
+
+  $("productsNav").classList.remove("hidden");
+  $("storeNav").classList.remove("hidden");
+}
+
+
+/* =========================================================
+   PAGE NAVIGATION
+========================================================= */
+
+function navigate(page) {
+
+  const pages = [
+    "homePage",
+    "productsPage",
+    "ordersPage",
+    "storePage",
+    "profilePage",
+    "adminPage"
+  ];
+
+  pages.forEach(id => {
+
+    $(id)?.classList.add("hidden");
+
+  });
+
+  const target =
+    $(page + "Page");
+
+  if (target) {
+    target.classList.remove("hidden");
+  }
+
+  document.querySelectorAll(".appNav")
+    .forEach(btn => {
+
+      btn.classList.toggle(
+        "active",
+        btn.dataset.page === page
+      );
+
+    });
+
+  $("mobileMenu").classList.add("hidden");
+
+  if (page === "products") {
+
+    loadProducts();
+  }
+
+  if (page === "orders") {
+
+    loadOrders();
+  }
+
+  if (page === "store") {
+
+    renderStoreForm();
+  }
+
+  if (page === "profile") {
+
+    renderProfile();
+  }
+
+  if (page === "home") {
+
+    updateDashboard();
+  }
+}
+
+
+/* =========================================================
+   STORE
+========================================================= */
+
+async function loadStore() {
+
+  if (!currentUser || currentUserData?.role === "buyer") {
+    return;
+  }
+
+  try {
+
+    const ref =
+      doc(db, "stores", currentUser.uid);
+
+    const snap =
+      await getDoc(ref);
+
+    if (snap.exists()) {
+
+      currentStore = {
+        id: snap.id,
+        ...snap.data()
+      };
+
+    } else {
+
+      currentStore = null;
+    }
+
+  } catch (error) {
+
+    console.error(error);
+
+    showToast(
+      "Could not load your store.",
+      "error"
+    );
+  }
+
+  renderStoreForm();
+}
+
+
+function renderStoreForm() {
+
+  if (!currentStore) {
+
+    $("storeName").value = "";
+    $("storeDescription").value = "";
+    $("storeWhatsapp").value = "";
+
+    $("homeStoreName").textContent =
+      "Store not created yet";
+
+    return;
+  }
+
+  $("storeName").value =
+    currentStore.name || "";
+
+  $("storeDescription").value =
+    currentStore.description || "";
+
+  $("storeWhatsapp").value =
+    currentStore.whatsapp || "";
+
+  $("homeStoreName").textContent =
+    currentStore.name || "Your store";
+}
+
+
+async function saveStore() {
+
+  if (!currentUser) return;
+
+  const name =
+    $("storeName").value.trim();
+
+  const description =
+    $("storeDescription").value.trim();
+
+  const whatsapp =
+    $("storeWhatsapp").value.trim();
+
+  if (!name) {
+
+    showToast(
+      "Enter a store name.",
+      "warning"
+    );
+
+    return;
+  }
+
+  const button =
+    $("saveStoreBtn");
+
+  button.disabled = true;
+
+  try {
+
+    await setDoc(
+      doc(db, "stores", currentUser.uid),
+      {
+        sellerId: currentUser.uid,
+        name,
+        description,
+        whatsapp,
+        updatedAt: serverTimestamp(),
+        createdAt:
+          currentStore?.createdAt ||
+          serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    await loadStore();
+
+    showToast("Store saved successfully.");
+
+  } catch (error) {
+
+    console.error(error);
+
+    showToast(
+      "Could not save store: " +
+      error.message,
+      "error"
+    );
+
+  } finally {
+
+    button.disabled = false;
+  }
+}
+
+
+/* =========================================================
+   PRODUCTS
+========================================================= */
+
+async function loadProducts() {
+
+  if (!currentUser ||
+      currentUserData?.role !== "seller") {
+    return;
+  }
+
+  try {
 
     const q =
-      await getDocs(
-        query(
-          collection(db,"posts"),
-          limit(50)
+      query(
+        collection(db, "products"),
+        where(
+          "sellerId",
+          "==",
+          currentUser.uid
         )
       );
 
+    const snap =
+      await getDocs(q);
 
-    const area = $("posts");
+    products =
+      snap.docs.map(d => ({
+        id: d.id,
+        ...d.data()
+      }));
 
+    renderProducts();
 
-    if(!q.size){
+  } catch (error) {
 
-      area.innerHTML =
-        `<div class="card p-5 text-gray-500">
-          No posts yet.
-        </div>`;
+    console.error(error);
 
-      return;
-
-    }
-
-
-    for(const d of q.docs){
-
-      const p = d.data();
-
-      let seller = {};
-
-      try{
-
-        seller =
-          (
-            await getDoc(
-              doc(
-                db,
-                "users",
-                p.sellerId
-              )
-            )
-          ).data() || {};
-
-      }catch{}
+    showToast(
+      "Could not load products: " +
+      error.message,
+      "error"
+    );
+  }
+}
 
 
-      area.innerHTML += `
+function renderProducts() {
 
-        <article class="card p-3">
+  const grid =
+    $("productsGrid");
 
-          <b>
-            ${esc(
-              seller.name ||
-              "Seller"
-            )}
+  if (!products.length) {
 
-            ${badge(seller)}
-          </b>
+    grid.innerHTML = `
+      <div class="card p-8 text-center sm:col-span-2 lg:col-span-3">
+        <div class="text-4xl mb-3">📦</div>
+        <h3 class="font-bold">No products yet</h3>
+        <p class="text-gray-500 text-sm mt-2">
+          Add your first product.
+        </p>
+      </div>
+    `;
 
-          ${
-            p.mediaType === "video"
+    return;
+  }
 
-            ?
+  grid.innerHTML =
+    products.map(product => {
 
-            `
-            <video
-              controls
-              class="w-full rounded-xl mt-3 max-h-[520px]"
-              src="${esc(p.mediaUrl)}">
-            </video>
-            `
+      const image =
+        product.imageUrl ||
+        "https://via.placeholder.com/700x500?text=Product";
 
-            :
+      return `
+        <div class="card p-4">
 
-            `
-            <img
-              class="w-full rounded-xl mt-3 max-h-[520px] object-cover"
-              src="${esc(p.mediaUrl)}"
-              alt="Post">
-            `
-          }
+          <img
+            src="${escapeHtml(image)}"
+            class="product-img"
+            onerror="this.src='https://via.placeholder.com/700x500?text=Product'"
+          >
 
-          <p class="mt-3">
-            ${esc(p.caption || "")}
+          <h3 class="font-bold text-lg mt-4">
+            ${escapeHtml(product.name)}
+          </h3>
+
+          <p class="gold font-bold mt-1">
+            GHS ${Number(product.price || 0).toFixed(2)}
           </p>
 
-          <div class="flex gap-5 text-sm text-gray-400 mt-3">
+          <p class="text-gray-500 text-sm mt-2">
+            Stock: ${Number(product.stock || 0)}
+          </p>
+
+          <p class="text-gray-500 text-sm mt-2 line-clamp-2">
+            ${escapeHtml(product.description || "")}
+          </p>
+
+          <div class="flex gap-2 mt-4">
 
             <button
               type="button"
-              onclick="window.likePost('${d.id}')">
-              ♥ ${p.likesCount || 0}
+              class="editProductBtn flex-1 border border-[#333] py-2 rounded-lg text-sm"
+              data-id="${product.id}">
+              Edit
             </button>
 
             <button
               type="button"
-              onclick="window.comments('${d.id}')">
-              💬 ${p.commentsCount || 0}
-            </button>
-
-            <button
-              type="button"
-              onclick="window.savePost('${d.id}')">
-              🔖 ${p.savesCount || 0}
-            </button>
-
-            <button
-              type="button"
-              onclick="window.sharePost('${d.id}')">
-              ↗ Share
+              class="deleteProductBtn flex-1 border border-red-900 text-red-400 py-2 rounded-lg text-sm"
+              data-id="${product.id}">
+              Delete
             </button>
 
           </div>
 
-        </article>
-
+        </div>
       `;
 
-    }
+    }).join("");
 
-  }catch(error){
 
-    console.error(error);
+  document.querySelectorAll(".deleteProductBtn")
+    .forEach(btn => {
 
-    $("posts").innerHTML =
-      `<div class="card p-5 text-red-400">
-        Could not load posts.
-      </div>`;
+      btn.addEventListener(
+        "click",
+        () => deleteProduct(btn.dataset.id)
+      );
 
-  }
+    });
 
-};
+
+  document.querySelectorAll(".editProductBtn")
+    .forEach(btn => {
+
+      btn.addEventListener(
+        "click",
+        () => openProductModal(btn.dataset.id)
+      );
+
+    });
+}
 
 
 /* =========================================================
-   LIKE
+   PRODUCT MODAL
 ========================================================= */
 
-window.likePost = async function(id){
+function openProductModal(productId = null) {
 
-  if(!u){
+  const product =
+    productId
+      ? products.find(p => p.id === productId)
+      : null;
 
-    return toast("Please sign in first.");
+  $("modalTitle").textContent =
+    product
+      ? "Edit Product"
+      : "Add Product";
 
-  }
+  $("modalContent").innerHTML = `
 
+    <form id="productForm">
 
-  try{
-
-    const likeRef =
-      doc(
-        db,
-        "posts",
-        id,
-        "likes",
-        u.uid
-      );
-
-    const postRef =
-      doc(db,"posts",id);
-
-    const likeSnap =
-      await getDoc(likeRef);
-
-    const postSnap =
-      await getDoc(postRef);
-
-    const post =
-      postSnap.data() || {};
-
-    const count =
-      post.likesCount || 0;
-
-
-    if(likeSnap.exists()){
-
-      await deleteDoc(likeRef);
-
-      await updateDoc(
-        postRef,
-        {
-          likesCount:
-            Math.max(0,count - 1)
-        }
-      );
-
-    }else{
-
-      await setDoc(
-        likeRef,
-        {
-          uid:u.uid,
-          createdAt:
-            serverTimestamp()
-        }
-      );
-
-      await updateDoc(
-        postRef,
-        {
-          likesCount:count + 1
-        }
-      );
-
-    }
-
-    window.forYou();
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      "Could not update like."
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   SAVE POST
-========================================================= */
-
-window.savePost = async function(id){
-
-  if(!u){
-
-    return toast("Please sign in first.");
-
-  }
-
-
-  try{
-
-    await setDoc(
-      doc(
-        db,
-        "posts",
-        id,
-        "saves",
-        u.uid
-      ),
-      {
-        uid:u.uid,
-        createdAt:
-          serverTimestamp()
-      }
-    );
-
-    toast("Post saved.");
-
-  }catch(error){
-
-    console.error(error);
-
-    toast("Could not save post.");
-
-  }
-
-};
-
-
-/* =========================================================
-   COMMENTS
-========================================================= */
-
-window.comments = async function(id){
-
-  try{
-
-    const q =
-      await getDocs(
-        query(
-          collection(
-            db,
-            "posts",
-            id,
-            "comments"
-          ),
-          limit(50)
-        )
-      );
-
-
-    modal(`
-
-      <h2 class="text-xl font-black">
-        Comments
-      </h2>
-
-      <div class="mt-4 space-y-3">
-
-        ${
-          q.docs.map(d => {
-
-            const c = d.data();
-
-            return `
-
-              <div class="border-b border-[#222] pb-2">
-
-                <b>
-                  ${esc(
-                    c.userName ||
-                    "User"
-                  )}
-                </b>
-
-                <p class="text-gray-400">
-                  ${esc(c.text)}
-                </p>
-
-              </div>
-
-            `;
-
-          }).join("")
-
-          ||
-
-          `<p class="text-gray-500">
-            No comments yet.
-          </p>`
-        }
-
-      </div>
+      <label class="text-sm text-gray-400">
+        Product name
+      </label>
 
       <input
-        id="commentText"
-        class="inp mt-4"
-        placeholder="Write a comment">
+        id="productName"
+        required
+        class="w-full rounded-lg px-4 py-3 mt-2 mb-4"
+        value="${escapeHtml(product?.name || "")}"
+        placeholder="Product name">
+
+      <label class="text-sm text-gray-400">
+        Price (GHS)
+      </label>
+
+      <input
+        id="productPrice"
+        required
+        type="number"
+        min="0"
+        step="0.01"
+        class="w-full rounded-lg px-4 py-3 mt-2 mb-4"
+        value="${product?.price || ""}"
+        placeholder="100">
+
+      <label class="text-sm text-gray-400">
+        Stock
+      </label>
+
+      <input
+        id="productStock"
+        required
+        type="number"
+        min="0"
+        class="w-full rounded-lg px-4 py-3 mt-2 mb-4"
+        value="${product?.stock ?? 1}"
+        placeholder="10">
+
+      <label class="text-sm text-gray-400">
+        Product image URL
+      </label>
+
+      <input
+        id="productImage"
+        class="w-full rounded-lg px-4 py-3 mt-2 mb-4"
+        value="${escapeHtml(product?.imageUrl || "")}"
+        placeholder="https://...">
+
+      <label class="text-sm text-gray-400">
+        Description
+      </label>
+
+      <textarea
+        id="productDescription"
+        class="w-full rounded-lg px-4 py-3 mt-2 mb-5"
+        rows="4"
+        placeholder="Describe your product">${escapeHtml(product?.description || "")}</textarea>
 
       <button
-        type="button"
-        class="btn g w-full mt-3"
-        onclick="window.commentPost('${id}')">
-        Post Comment
+        type="submit"
+        class="btn w-full bg-gold text-black font-bold py-3 rounded-lg">
+        ${product ? "Save Changes" : "Add Product"}
       </button>
 
-      <button
-        type="button"
-        class="btn d w-full mt-2"
-        onclick="window.closeModal()">
-        Close
-      </button>
+    </form>
+  `;
 
-    `);
+  $("modal").classList.remove("hidden");
 
-  }catch(error){
+  $("productForm").addEventListener(
+    "submit",
+    event => {
 
-    console.error(error);
+      event.preventDefault();
 
-    toast("Could not load comments.");
+      saveProduct(productId);
 
-  }
-
-};
+    }
+  );
+}
 
 
-window.commentPost = async function(id){
+async function saveProduct(productId) {
 
-  const text =
-    $("commentText")?.value.trim();
+  const name =
+    $("productName").value.trim();
 
-  if(!text) return;
+  const price =
+    Number($("productPrice").value);
 
+  const stock =
+    Number($("productStock").value);
 
-  try{
+  const imageUrl =
+    $("productImage").value.trim();
 
-    await addDoc(
-      collection(
-        db,
-        "posts",
-        id,
-        "comments"
-      ),
-      {
-        userId:u.uid,
-        userName:ud.name,
-        text,
-        createdAt:
-          serverTimestamp()
-      }
+  const description =
+    $("productDescription").value.trim();
+
+  if (!name) {
+
+    showToast(
+      "Enter a product name.",
+      "warning"
     );
 
+    return;
+  }
+
+  if (!Number.isFinite(price) || price < 0) {
+
+    showToast(
+      "Enter a valid price.",
+      "warning"
+    );
+
+    return;
+  }
+
+  if (!Number.isFinite(stock) || stock < 0) {
+
+    showToast(
+      "Enter valid stock.",
+      "warning"
+    );
+
+    return;
+  }
+
+  try {
+
+    const data = {
+
+      sellerId: currentUser.uid,
+
+      storeId: currentUser.uid,
+
+      name,
+
+      price,
+
+      stock,
+
+      description,
+
+      imageUrl,
+
+      updatedAt: serverTimestamp()
+
+    };
+
+    if (productId) {
+
+      await updateDoc(
+        doc(db, "products", productId),
+        data
+      );
+
+    } else {
+
+      await addDoc(
+        collection(db, "products"),
+        {
+          ...data,
+          createdAt: serverTimestamp()
+        }
+      );
+    }
 
     closeModal();
 
-    toast("Comment posted.");
+    await loadProducts();
 
-    window.forYou();
+    updateDashboard();
 
-  }catch(error){
+    showToast(
+      productId
+        ? "Product updated."
+        : "Product added."
+    );
+
+  } catch (error) {
 
     console.error(error);
 
-    toast("Could not post comment.");
+    showToast(
+      "Could not save product: " +
+      error.message,
+      "error"
+    );
+  }
+}
 
+
+async function deleteProduct(id) {
+
+  const product =
+    products.find(p => p.id === id);
+
+  if (!product) return;
+
+  const yes =
+    confirm(
+      `Delete "${product.name}"?`
+    );
+
+  if (!yes) return;
+
+  try {
+
+    await deleteDoc(
+      doc(db, "products", id)
+    );
+
+    await loadProducts();
+
+    updateDashboard();
+
+    showToast("Product deleted.");
+
+  } catch (error) {
+
+    console.error(error);
+
+    showToast(
+      "Could not delete product: " +
+      error.message,
+      "error"
+    );
+  }
+}
+
+
+/* =========================================================
+   ORDERS
+========================================================= */
+
+async function loadOrders() {
+
+  if (!currentUser) return;
+
+  try {
+
+    let q;
+
+    if (currentUserData?.role === "buyer") {
+
+      q =
+        query(
+          collection(db, "orders"),
+          where(
+            "buyerId",
+            "==",
+            currentUser.uid
+          )
+        );
+
+    } else {
+
+      q =
+        query(
+          collection(db, "orders"),
+          where(
+            "sellerId",
+            "==",
+            currentUser.uid
+          )
+        );
+    }
+
+    const snap =
+      await getDocs(q);
+
+    orders =
+      snap.docs.map(d => ({
+        id: d.id,
+        ...d.data()
+      }));
+
+    renderOrders();
+
+    if (
+      currentUserData?.role === "buyer"
+    ) {
+
+      renderBuyerOrders();
+    }
+
+  } catch (error) {
+
+    console.error(error);
+
+    showToast(
+      "Could not load orders: " +
+      error.message,
+      "error"
+    );
+  }
+}
+
+
+function renderOrders() {
+
+  const box =
+    $("ordersList");
+
+  if (!orders.length) {
+
+    box.innerHTML = `
+      <div class="card p-8 text-center">
+        <div class="text-4xl mb-3">📦</div>
+        <h3 class="font-bold">
+          No orders yet
+        </h3>
+        <p class="text-gray-500 text-sm mt-2">
+          Orders will appear here.
+        </p>
+      </div>
+    `;
+
+    return;
   }
 
-};
+  box.innerHTML =
+    orders.map(order => {
 
+      const date =
+        formatDate(order.createdAt);
 
-/* =========================================================
-   SHARE POST
-========================================================= */
+      const status =
+        order.status || "pending";
 
-window.sharePost = async function(id){
+      const items =
+        Array.isArray(order.items)
+          ? order.items
+          : [];
 
-  const url =
-    location.href.split("?")[0] +
-    "?post=" + id;
+      return `
+        <div class="card p-5 mb-4">
 
+          <div class="flex flex-wrap items-start justify-between gap-3">
 
-  try{
-
-    if(navigator.share){
-
-      await navigator.share({
-        title:"SellerFlow",
-        url
-      });
-
-    }else{
-
-      await navigator.clipboard.writeText(url);
-
-      toast("Link copied.");
-
-    }
-
-  }catch{}
-
-};
-
-
-/* =========================================================
-   PUBLIC STORE
-========================================================= */
-
-window.openStore = async function(id){
-
-  try{
-
-    currentSellerId = id;
-
-
-    const storeSnap =
-      await getDoc(
-        doc(db,"stores",id)
-      );
-
-
-    if(!storeSnap.exists()){
-
-      return toast(
-        "Store not found."
-      );
-
-    }
-
-
-    store = storeSnap.data();
-
-
-    const productSnap =
-      await getDocs(
-        query(
-          collection(db,"products"),
-          where("sellerId","==",id),
-          limit(100)
-        )
-      );
-
-
-    products =
-      productSnap.docs.map(
-        d => ({
-          id:d.id,
-          ...d.data()
-        })
-      );
-
-
-    const sellerSnap =
-      await getDoc(
-        doc(db,"users",id)
-      );
-
-
-    const seller =
-      sellerSnap.data() || {};
-
-
-    view("store");
-
-
-    $("store").innerHTML = `
-
-      <button
-        type="button"
-        class="text-gray-500"
-        onclick="window.home()">
-        ← Back
-      </button>
-
-      <div class="card p-5 mt-3">
-
-        <h1 class="text-2xl font-black">
-
-          ${esc(
-            store.name ||
-            "Store"
-          )}
-
-          ${badge(seller)}
-
-        </h1>
-
-        <p class="text-gray-500 mt-1">
-          ${esc(
-            store.description ||
-            "Welcome to our store."
-          )}
-        </p>
-
-        <div class="flex flex-wrap gap-2 mt-4">
-
-          <button
-            type="button"
-            class="btn d"
-            onclick="window.startChat('${id}')">
-            💬 Message
-          </button>
-
-          <button
-            type="button"
-            class="btn d"
-            onclick="window.followStore('${id}')">
-            ＋ Follow
-          </button>
-
-          <button
-            type="button"
-            class="btn d"
-            onclick="window.shareStore('${id}')">
-            ↗ Share
-          </button>
-
-        </div>
-
-      </div>
-
-      <div class="grid md:grid-cols-3 gap-3 mt-4">
-
-        ${
-          products.map(p => `
-
-            <div class="card p-3">
-
-              <img
-                class="w-full h-48 object-cover rounded-xl"
-                src="${
-                  esc(
-                    p.imageUrl ||
-                    "https://placehold.co/600x400/111/fff?text=Product"
-                  )
-                }"
-                alt="${esc(p.name)}">
-
-              <b class="block mt-3">
-                ${esc(p.name)}
-              </b>
-
-              <b class="gold">
-                ${money(p.price)}
-              </b>
-
-              <p class="text-gray-500 text-sm mt-1">
-                ${esc(
-                  p.description || ""
-                )}
+            <div>
+              <p class="text-xs text-gray-600">
+                ORDER ${escapeHtml(order.id)}
               </p>
 
-              <button
-                type="button"
-                class="btn g w-full mt-3"
-                onclick="window.buyProduct('${p.id}')">
-                Buy
-              </button>
+              <h3 class="font-bold mt-1">
+                ${escapeHtml(
+                  order.customerName ||
+                  order.buyerEmail ||
+                  "Customer"
+                )}
+              </h3>
 
-              <button
-                type="button"
-                class="text-sm text-gray-500 mt-2"
-                onclick="window.reviews('${p.id}')">
-                ⭐ Reviews
-              </button>
+              <p class="text-gray-500 text-sm mt-1">
+                ${escapeHtml(order.customerPhone || "")}
+              </p>
+
+              <p class="text-gray-600 text-xs mt-2">
+                ${date}
+              </p>
+            </div>
+
+            <div class="text-right">
+
+              <p class="gold font-bold">
+                GHS ${Number(order.total || 0).toFixed(2)}
+              </p>
+
+              ${
+                currentUserData?.role === "seller"
+                ? `
+                  <select
+                    class="orderStatusSelect mt-2 bg-[#0d0d0d] border border-[#333] rounded-lg px-3 py-2 text-sm"
+                    data-id="${order.id}">
+
+                    ${orderStatusOptions(status)}
+
+                  </select>
+                `
+                : `
+                  <span class="status mt-2">
+                    ${formatStatus(status)}
+                  </span>
+                `
+              }
 
             </div>
 
-          `).join("")
-
-          ||
-
-          `
-          <div class="card p-5 text-gray-500">
-            This store has no products yet.
           </div>
-          `
 
-        }
+          <div class="mt-4 border-t border-[#222] pt-4">
 
-      </div>
+            ${
+              items.map(item => `
+                <div class="flex justify-between text-sm py-1">
 
-    `;
+                  <span class="text-gray-400">
+                    ${escapeHtml(item.name)}
+                    × ${Number(item.quantity || 1)}
+                  </span>
 
-  }catch(error){
+                  <span>
+                    GHS ${(
+                      Number(item.price || 0) *
+                      Number(item.quantity || 1)
+                    ).toFixed(2)}
+                  </span>
 
-    console.error(error);
-
-    toast(
-      "Could not open store."
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   BUY PRODUCT
-========================================================= */
-
-window.buyProduct = function(id){
-
-  const product =
-    products.find(
-      p => p.id === id
-    );
-
-
-  if(!product){
-
-    return toast(
-      "Product not found."
-    );
-
-  }
-
-
-  if(!u){
-
-    window.authPage("login");
-
-    return toast(
-      "Please sign in as a buyer to continue."
-    );
-
-  }
-
-
-  if(ud.role !== "buyer"){
-
-    return toast(
-      "Only buyer accounts can place orders."
-    );
-
-  }
-
-
-  cart = [{
-    ...product,
-    qty:1
-  }];
-
-
-  window.checkout();
-
-};
-
-
-/* =========================================================
-   CHECKOUT
-========================================================= */
-
-window.checkout = function(){
-
-  if(!u){
-
-    return toast(
-      "Please sign in as a buyer first."
-    );
-
-  }
-
-
-  if(ud.role !== "buyer"){
-
-    return toast(
-      "Use a buyer account to place an order."
-    );
-
-  }
-
-
-  if(!cart.length){
-
-    return toast(
-      "Your cart is empty."
-    );
-
-  }
-
-
-  const total =
-    cart.reduce(
-      (sum,p) =>
-        sum +
-        Number(p.price || 0) *
-        Number(p.qty || 1),
-      0
-    );
-
-
-  modal(`
-
-    <h2 class="text-xl font-black">
-      Checkout
-    </h2>
-
-    <div class="mt-4 space-y-2">
-
-      ${
-        cart.map(p => `
-
-          <div class="flex justify-between border-b border-[#222] pb-2">
-
-            <span>
-              ${esc(p.name)}
-              × ${p.qty}
-            </span>
-
-            <b>
-              ${money(
-                p.price * p.qty
-              )}
-            </b>
+                </div>
+              `).join("")
+            }
 
           </div>
 
-        `).join("")
-      }
+          <div class="text-xs text-gray-500 mt-3">
+            Delivery:
+            ${escapeHtml(order.deliveryMethod || "Not specified")}
+          </div>
 
-    </div>
+          ${
+            order.address
+              ? `
+                <div class="text-xs text-gray-500 mt-1">
+                  Address: ${escapeHtml(order.address)}
+                </div>
+              `
+              : ""
+          }
 
-    <input
-      id="checkoutPhone"
-      class="inp mt-4"
-      placeholder="Phone / WhatsApp"
-      type="tel">
+        </div>
+      `;
 
-    <select
-      id="checkoutMethod"
-      class="inp mt-3">
-
-      <option value="Pickup">
-        Pickup
-      </option>
-
-      <option value="Delivery">
-        Delivery
-      </option>
-
-    </select>
-
-    <textarea
-      id="checkoutAddress"
-      class="inp mt-3"
-      placeholder="Address / pickup details"></textarea>
-
-    <p class="gold font-black mt-3">
-      Total: ${money(total)}
-    </p>
-
-    <p class="text-gray-500 text-sm mt-2">
-      Payment is arranged directly with the seller.
-    </p>
-
-    <button
-      type="button"
-      class="btn g w-full mt-4"
-      onclick="window.placeOrder()">
-      Place Order
-    </button>
-
-    <button
-      type="button"
-      class="btn d w-full mt-2"
-      onclick="window.closeModal()">
-      Cancel
-    </button>
-
-  `);
-
-};
+    }).join("");
 
 
-/* =========================================================
-   PLACE ORDER
-========================================================= */
+  document.querySelectorAll(".orderStatusSelect")
+    .forEach(select => {
 
-window.placeOrder = async function(){
-
-  try{
-
-    const phone =
-      $("checkoutPhone")?.value.trim();
-
-    const method =
-      $("checkoutMethod")?.value;
-
-    const address =
-      $("checkoutAddress")?.value.trim();
-
-
-    if(!phone){
-
-      return toast(
-        "Enter your phone number."
-      );
-
-    }
-
-
-    const items =
-      cart.map(p => ({
-        productId:p.id,
-        name:p.name,
-        price:Number(p.price || 0),
-        quantity:Number(p.qty || 1)
-      }));
-
-
-    const total =
-      items.reduce(
-        (sum,item) =>
-          sum +
-          item.price *
-          item.quantity,
-        0
-      );
-
-
-    await addDoc(
-      collection(db,"orders"),
-      {
-        sellerId:
-          currentSellerId,
-
-        storeId:
-          currentSellerId,
-
-        buyerId:
-          u.uid,
-
-        buyerEmail:
-          u.email,
-
-        customerName:
-          ud.name,
-
-        customerPhone:
-          phone,
-
-        deliveryMethod:
-          method,
-
-        address:
-          address,
-
-        items,
-
-        total,
-
-        paymentMethod:
-          "physical_payment",
-
-        paymentStatus:
-          "not_applicable",
-
-        status:
-          "pending",
-
-        createdAt:
-          serverTimestamp(),
-
-        updatedAt:
-          serverTimestamp()
-      }
-    );
-
-
-    cart = [];
-
-    closeModal();
-
-    toast(
-      "Order placed successfully."
-    );
-
-    window.orders();
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      "Could not place order."
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   REVIEWS
-========================================================= */
-
-window.reviews = async function(pid){
-
-  try{
-
-    const q =
-      await getDocs(
-        query(
-          collection(db,"reviews"),
-          where("productId","==",pid),
-          limit(50)
+      select.addEventListener(
+        "change",
+        () => updateOrderStatus(
+          select.dataset.id,
+          select.value
         )
       );
 
-
-    modal(`
-
-      <h2 class="text-xl font-black">
-        Reviews
-      </h2>
-
-      <div class="mt-4">
-
-        ${
-          q.docs.map(d => {
-
-            const r = d.data();
-
-            return `
-
-              <div class="border-b border-[#222] py-3">
-
-                ⭐ ${esc(r.rating)}/5
-
-                <b class="ml-2">
-                  ${esc(
-                    r.buyerName ||
-                    "Buyer"
-                  )}
-                </b>
-
-                <p class="text-gray-400 mt-1">
-                  ${esc(r.text || "")}
-                </p>
-
-              </div>
-
-            `;
-
-          }).join("")
-
-          ||
-
-          `<p class="text-gray-500">
-            No reviews yet.
-          </p>`
-        }
-
-      </div>
-
-      <button
-        type="button"
-        class="btn d w-full mt-4"
-        onclick="window.closeModal()">
-        Close
-      </button>
-
-    `);
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      "Could not load reviews."
-    );
-
-  }
-
-};
+    });
+}
 
 
-/* =========================================================
-   FOLLOW
-========================================================= */
+function orderStatusOptions(current) {
 
-window.followStore = async function(id){
+  const statuses = [
+    ["pending", "Pending"],
+    ["confirmed", "Confirmed"],
+    ["processing", "Processing"],
+    ["ready_for_pickup", "Ready for Pickup"],
+    ["out_for_delivery", "Out for Delivery"],
+    ["delivered", "Delivered"],
+    ["cancelled", "Cancelled"]
+  ];
 
-  if(!u){
+  return statuses.map(([value, label]) => `
+    <option
+      value="${value}"
+      ${current === value ? "selected" : ""}>
+      ${label}
+    </option>
+  `).join("");
+}
 
-    return toast(
-      "Please sign in first."
-    );
 
-  }
+async function updateOrderStatus(
+  orderId,
+  status
+) {
 
+  try {
 
-  try{
-
-    await setDoc(
-      doc(
-        db,
-        "follows",
-        u.uid + "_" + id
-      ),
+    await updateDoc(
+      doc(db, "orders", orderId),
       {
-        followerId:u.uid,
-
-        followingSellerId:id,
-
-        createdAt:
-          serverTimestamp()
-      },
-      {merge:true}
+        status,
+        updatedAt: serverTimestamp()
+      }
     );
 
+    await loadOrders();
 
-    toast(
-      "Following store."
+    updateDashboard();
+
+    showToast(
+      "Order status updated."
     );
 
-  }catch(error){
+  } catch (error) {
 
     console.error(error);
 
-    toast(
-      "Could not follow store."
+    showToast(
+      "Could not update order: " +
+      error.message,
+      "error"
+    );
+  }
+}
+
+
+function formatStatus(status) {
+
+  const map = {
+
+    pending: "Pending",
+
+    confirmed: "Confirmed",
+
+    processing: "Processing",
+
+    ready_for_pickup:
+      "Ready for Pickup",
+
+    out_for_delivery:
+      "Out for Delivery",
+
+    delivered: "Delivered",
+
+    cancelled: "Cancelled"
+
+  };
+
+  return map[status] || status;
+}
+
+
+function formatDate(timestamp) {
+
+  if (!timestamp) return "";
+
+  try {
+
+    const date =
+      timestamp.toDate
+        ? timestamp.toDate()
+        : new Date(timestamp);
+
+    return date.toLocaleDateString(
+      "en-GH",
+      {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      }
     );
 
-  }
+  } catch {
 
-};
+    return "";
+  }
+}
 
 
 /* =========================================================
-   SHARE STORE
+   DASHBOARD
 ========================================================= */
 
-window.shareStore = async function(id){
+function updateDashboard() {
 
-  const url =
-    location.href.split("?")[0] +
-    "?store=" + id;
+  if (
+    currentUserData?.role !== "seller"
+  ) return;
 
+  const totalProducts =
+    products.length;
 
-  try{
+  const totalOrders =
+    orders.length;
 
-    if(navigator.share){
+  const pending =
+    orders.filter(
+      o => o.status === "pending"
+    ).length;
 
-      await navigator.share({
-        title:
-          store?.name ||
-          "SellerFlow Store",
+  const revenue =
+    orders
+      .filter(
+        o => o.status !== "cancelled"
+      )
+      .reduce(
+        (sum, o) =>
+          sum + Number(o.total || 0),
+        0
+      );
 
-        url
-      });
+  $("statProducts").textContent =
+    totalProducts;
 
-    }else{
+  $("statOrders").textContent =
+    totalOrders;
 
-      await navigator.clipboard.writeText(url);
+  $("statPending").textContent =
+    pending;
 
-      toast("Store link copied.");
+  $("statRevenue").textContent =
+    "GHS " + revenue.toFixed(2);
 
-    }
-
-  }catch{}
-
-};
+  updateVerificationBadge();
+}
 
 
 /* =========================================================
    BUYER ORDERS
 ========================================================= */
 
-window.orders = async function(){
+function renderBuyerOrders() {
 
-  if(!u){
+  const box =
+    $("buyerRecentOrders");
 
-    return toast(
-      "Please sign in first."
-    );
+  if (!orders.length) {
 
+    box.innerHTML = `
+      <p class="text-gray-500 text-sm">
+        You haven't made any purchases yet.
+      </p>
+    `;
+
+    return;
   }
 
+  box.innerHTML =
+    orders
+      .slice(0, 5)
+      .map(order => `
+        <div class="border-b border-[#222] py-4">
 
-  view("orders");
+          <div class="flex justify-between gap-3">
 
-  $("orders").innerHTML = `
+            <div>
 
-    <h2 class="text-2xl font-black">
-      My Orders
-    </h2>
+              <p class="font-bold">
+                Order #${escapeHtml(
+                  order.id.slice(0, 8)
+                )}
+              </p>
 
-    <div
-      id="buyerOrders"
-      class="space-y-3 mt-4">
-    </div>
+              <p class="text-gray-500 text-sm mt-1">
+                ${formatDate(order.createdAt)}
+              </p>
 
-  `;
+            </div>
 
+            <div class="text-right">
 
-  try{
+              <p class="gold font-bold">
+                GHS ${Number(order.total || 0).toFixed(2)}
+              </p>
 
-    const q =
-      await getDocs(
-        query(
-          collection(db,"orders"),
-          where(
-            "buyerId",
-            "==",
-            u.uid
-          ),
-          limit(100)
-        )
-      );
-
-
-    const area =
-      $("buyerOrders");
-
-
-    if(!q.size){
-
-      area.innerHTML =
-        `<div class="card p-5 text-gray-500">
-          You have no orders yet.
-        </div>`;
-
-      return;
-
-    }
-
-
-    area.innerHTML =
-      q.docs.map(d => {
-
-        const o = d.data();
-
-        return `
-
-          <div class="card p-4">
-
-            <div class="flex justify-between gap-3">
-
-              <b>
-                ${money(o.total)}
-              </b>
-
-              <span class="gold">
-                ${esc(
-                  o.status ||
-                  "pending"
+              <span class="status mt-1">
+                ${formatStatus(
+                  order.status || "pending"
                 )}
               </span>
 
             </div>
 
-            <p class="text-gray-400 text-sm mt-2">
-
-              ${
-                o.items?.map(
-                  item =>
-                    esc(item.name) +
-                    " × " +
-                    item.quantity
-                ).join(", ")
-              }
-
-            </p>
-
-            <p class="text-gray-500 text-xs mt-2">
-              ${esc(
-                o.deliveryMethod ||
-                ""
-              )}
-            </p>
-
           </div>
 
-        `;
-
-      }).join("");
-
-  }catch(error){
-
-    console.error(error);
-
-    $("buyerOrders").innerHTML =
-      `<div class="card p-5 text-red-400">
-        Could not load orders.
-      </div>`;
-
-  }
-
-};
+        </div>
+      `).join("");
+}
 
 
 /* =========================================================
-   MESSAGES
+   VERIFICATION
 ========================================================= */
 
-window.messages = async function(){
+function verificationText(status) {
 
-  if(!u){
+  const map = {
 
-    return toast(
-      "Please sign in first."
-    );
+    not_submitted: "Not submitted",
 
+    pending: "Pending review",
+
+    approved: "Approved",
+
+    rejected: "Rejected",
+
+    resubmit:
+      "Resubmission required",
+
+    suspended:
+      "Verification suspended"
+
+  };
+
+  return map[status] || "Not submitted";
+}
+
+
+function updateVerificationBadge() {
+
+  if (!currentUserData) return;
+
+  const status =
+    currentUserData.verificationStatus ||
+    "not_submitted";
+
+  $("homeVerificationBadge").textContent =
+    verificationText(status);
+
+  if (status === "approved") {
+
+    const badge =
+      currentUserData.plan === "150"
+        ? "✓ Blue Verified"
+        : "✓ Verified";
+
+    $("homeVerificationBadge").textContent =
+      badge;
+
+    $("homeVerificationBadge").className =
+      "status " +
+      (
+        currentUserData.plan === "150"
+          ? "verification-blue"
+          : "verification-green"
+      );
   }
+}
 
 
-  view("msgs");
+function openVerification() {
 
+  const status =
+    currentUserData.verificationStatus ||
+    "not_submitted";
 
-  $("msgs").innerHTML = `
+  $("modalTitle").textContent =
+    "Seller Verification";
 
-    <h2 class="text-2xl font-black">
-      Messages
-    </h2>
+  $("modalContent").innerHTML = `
 
-    <div
-      id="conversationList"
-      class="space-y-2 mt-4">
+    <div class="mb-5">
+
+      <div class="text-sm text-gray-500">
+        Verification status
+      </div>
+
+      <div class="font-bold mt-1">
+        ${verificationText(status)}
+      </div>
+
     </div>
 
-  `;
+    ${
+      currentUserData.verified
+        ? `
+          <div class="p-4 rounded-xl bg-[#101b15] border border-green-900 mb-5">
 
+            <div class="font-bold verification-green">
+              ✓ Your seller account is verified
+            </div>
 
-  try{
-
-    const q =
-      await getDocs(
-        query(
-          collection(
-            db,
-            "conversations"
-          ),
-          where(
-            "participants",
-            "array-contains",
-            u.uid
-          ),
-          limit(50)
-        )
-      );
-
-
-    const area =
-      $("conversationList");
-
-
-    if(!q.size){
-
-      area.innerHTML =
-        `<p class="text-gray-500">
-          No conversations yet.
-        </p>`;
-
-      return;
-
-    }
-
-
-    area.innerHTML =
-      q.docs.map(d => {
-
-        const c = d.data();
-
-        return `
-
-          <button
-            type="button"
-            class="card p-4 w-full text-left"
-            onclick="window.openChat('${d.id}')">
-
-            <b>
-              ${esc(
-                c.otherName ||
-                "Conversation"
-              )}
-            </b>
-
-            <p class="text-gray-500 mt-1">
-              ${esc(
-                c.lastMessage ||
-                ""
-              )}
+            <p class="text-gray-500 text-sm mt-2">
+              Your verification badge can now appear on SellerFlow.
             </p>
 
-          </button>
-
-        `;
-
-      }).join("");
-
-  }catch(error){
-
-    console.error(error);
-
-    $("conversationList").innerHTML =
-      `<p class="text-red-400">
-        Could not load messages.
-      </p>`;
-
-  }
-
-};
-
-
-/* =========================================================
-   START CHAT
-========================================================= */
-
-window.startChat = async function(sellerId){
-
-  if(!u){
-
-    return toast(
-      "Please sign in first."
-    );
-
-  }
-
-
-  if(ud.role !== "buyer"){
-
-    return toast(
-      "Only buyer accounts can message sellers."
-    );
-
-  }
-
-
-  try{
-
-    const id =
-      [u.uid,sellerId]
-        .sort()
-        .join("_");
-
-
-    const sellerSnap =
-      await getDoc(
-        doc(
-          db,
-          "users",
-          sellerId
-        )
-      );
-
-
-    const seller =
-      sellerSnap.data() || {};
-
-
-    await setDoc(
-      doc(
-        db,
-        "conversations",
-        id
-      ),
-      {
-        participants:[
-          u.uid,
-          sellerId
-        ],
-
-        sellerId,
-
-        buyerId:u.uid,
-
-        otherName:
-          seller.name ||
-          "Seller",
-
-        lastMessage:"",
-
-        updatedAt:
-          serverTimestamp()
-      },
-      {merge:true}
-    );
-
-
-    window.openChat(id);
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      "Could not start chat."
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   OPEN CHAT
-========================================================= */
-
-window.openChat = async function(id){
-
-  view("msgs");
-
-
-  try{
-
-    const q =
-      await getDocs(
-        query(
-          collection(
-            db,
-            "conversations",
-            id,
-            "messages"
-          ),
-          orderBy(
-            "createdAt",
-            "asc"
-          ),
-          limit(100)
-        )
-      );
-
-
-    $("msgs").innerHTML = `
-
-      <button
-        type="button"
-        class="text-gray-500"
-        onclick="window.messages()">
-        ← Messages
-      </button>
-
-      <h2 class="text-2xl font-black mt-3">
-        Chat
-      </h2>
-
-      <div class="card p-4 mt-4">
-
-        <div
-          id="chatMessages"
-          class="space-y-2 max-h-80 overflow-auto">
-
-          ${
-            q.docs.map(d => {
-
-              const m =
-                d.data();
-
-              return `
-
-                <p class="${
-                  m.senderId === u.uid
-                  ? "text-right"
-                  : ""
-                }">
-
-                  <span class="inline-block bg-[#202020] rounded-xl px-3 py-2">
-                    ${esc(m.text)}
-                  </span>
-
-                </p>
-
-              `;
-
-            }).join("")
-
-            ||
-
-            `<p class="text-gray-500">
-              Start the conversation.
-            </p>`
-          }
-
-        </div>
-
-        <div class="flex gap-2 mt-4">
-
-          <input
-            id="messageInput"
-            class="inp"
-            placeholder="Message"
-            onkeydown="
-              if(event.key==='Enter'){
-                window.sendMessage('${id}')
-              }
-            ">
-
-          <button
-            type="button"
-            class="btn g"
-            onclick="window.sendMessage('${id}')">
-            Send
-          </button>
-
-        </div>
-
-      </div>
-
-    `;
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      "Could not open conversation."
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   SEND MESSAGE
-========================================================= */
-
-window.sendMessage = async function(id){
-
-  const input =
-    $("messageInput");
-
-  const text =
-    input?.value.trim();
-
-
-  if(!text) return;
-
-
-  try{
-
-    await addDoc(
-      collection(
-        db,
-        "conversations",
-        id,
-        "messages"
-      ),
-      {
-        senderId:u.uid,
-
-        text,
-
-        createdAt:
-          serverTimestamp(),
-
-        read:false
-      }
-    );
-
-
-    await updateDoc(
-      doc(
-        db,
-        "conversations",
-        id
-      ),
-      {
-        lastMessage:text,
-
-        updatedAt:
-          serverTimestamp()
-      }
-    );
-
-
-    window.openChat(id);
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      "Could not send message."
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   SELLER DASHBOARD
-========================================================= */
-
-window.sellerPage = function(){
-
-  view("seller");
-
-  loadSeller();
-
-};
-
-
-async function loadSeller(){
-
-  try{
-
-    const storeSnap =
-      await getDoc(
-        doc(
-          db,
-          "stores",
-          u.uid
-        )
-      );
-
-
-    const sellerStore =
-      storeSnap.data() || {};
-
-
-    products =
-      (
-        await getDocs(
-          query(
-            collection(db,"products"),
-            where(
-              "sellerId",
-              "==",
-              u.uid
-            ),
-            limit(100)
-          )
-        )
-      ).docs.map(
-        d => ({
-          id:d.id,
-          ...d.data()
-        })
-      );
-
-
-    const orderSnap =
-      await getDocs(
-        query(
-          collection(db,"orders"),
-          where(
-            "sellerId",
-            "==",
-            u.uid
-          ),
-          limit(100)
-        )
-      );
-
-
-    const sellerOrders =
-      orderSnap.docs.map(
-        d => ({
-          id:d.id,
-          ...d.data()
-        })
-      );
-
-
-    $("seller").innerHTML = `
-
-      <div class="flex flex-wrap justify-between gap-3">
-
-        <div>
-
-          <h1 class="text-2xl font-black">
-            Seller Dashboard
-          </h1>
-
-          <p class="text-gray-500 mt-1">
-
-            Plan:
-            ${esc(
-              ud.plan || "free"
-            )}
-
-            ·
-
-            ${
-              ud.verified
-              ? "Verified"
-              : "Verification " +
-                esc(
-                  ud.verificationStatus ||
-                  "not_submitted"
-                )
-            }
-
-            ${badge(ud)}
-
-          </p>
-
-        </div>
-
-        <button
-          type="button"
-          class="btn g"
-          onclick="window.openStore('${u.uid}')">
-          View Store
-        </button>
-
-      </div>
-
-
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
-
-        <div class="card p-4">
-          Products
-          <b class="block text-2xl">
-            ${products.length}
-          </b>
-        </div>
-
-        <div class="card p-4">
-          Orders
-          <b class="block text-2xl">
-            ${sellerOrders.length}
-          </b>
-        </div>
-
-        <div class="card p-4">
-          Pending
-          <b class="block text-2xl">
-            ${
-              sellerOrders.filter(
-                x => x.status === "pending"
-              ).length
-            }
-          </b>
-        </div>
-
-        <div class="card p-4">
-          Badge
-          <b class="block mt-2">
-            ${badge(ud) || "—"}
-          </b>
-        </div>
-
-      </div>
-
-
-      <div class="grid md:grid-cols-2 gap-4 mt-5">
-
-
-        <!-- STORE -->
-
-        <div class="card p-5">
-
-          <h2 class="font-black text-xl">
-            Store
-          </h2>
-
-          <input
-            id="storeName"
-            class="inp mt-4"
-            value="${esc(
-              sellerStore.name || ""
-            )}"
-            placeholder="Store name">
-
-          <textarea
-            id="storeDescription"
-            class="inp mt-3"
-            placeholder="Store description">${esc(
-              sellerStore.description || ""
-            )}</textarea>
-
-          <input
-            id="storeWhatsApp"
-            class="inp mt-3"
-            value="${esc(
-              sellerStore.whatsapp || ""
-            )}"
-            placeholder="WhatsApp number">
-
-          <button
-            type="button"
-            class="btn g mt-3"
-            onclick="window.saveStore()">
-            Save Store
-          </button>
-
-        </div>
-
-
-        <!-- PRODUCTS -->
-
-        <div class="card p-5">
-
-          <h2 class="font-black text-xl">
-            Products
-          </h2>
-
-          <button
-            type="button"
-            class="btn g mt-3"
-            onclick="window.productForm()">
-            ＋ Add Product
-          </button>
-
-          <div class="space-y-2 mt-3">
-
-            ${
-              products.map(p => `
-
-                <div class="border-b border-[#222] py-3 flex justify-between gap-3">
-
-                  <span>
-                    ${esc(p.name)}
-                    ·
-                    ${money(p.price)}
-                  </span>
-
-                  <button
-                    type="button"
-                    class="text-red-400"
-                    onclick="window.deleteProduct('${p.id}')">
-                    Delete
-                  </button>
-
-                </div>
-
-              `).join("")
-
-              ||
-
-              `<p class="text-gray-500 mt-3">
-                No products yet.
-              </p>`
-            }
-
           </div>
+        `
+        : ""
+    }
 
-        </div>
-
-
-        <!-- VERIFICATION -->
-
-        <div class="card p-5">
-
-          <h2 class="font-black text-xl">
-            Ghana Card Verification
-          </h2>
-
-          <p class="text-gray-500 text-sm mt-2">
-
-            Status:
-            ${esc(
-              ud.verificationStatus ||
-              "not_submitted"
-            )}
-
-          </p>
-
-          <button
-            type="button"
-            class="btn g mt-3"
-            onclick="window.verifyForm()">
-
-            ${
-              ud.verified
-              ? "View Status"
-              : "Submit Verification"
-            }
-
-          </button>
-
-        </div>
-
-
-        <!-- POSTS -->
-
-        <div class="card p-5">
-
-          <h2 class="font-black text-xl">
-            For You Posts
-          </h2>
-
-          <p class="text-gray-500 text-sm mt-2">
-            Publish product photos and videos.
-          </p>
-
-          <button
-            type="button"
-            class="btn g mt-3"
-            onclick="window.postForm()">
-            ＋ Publish Post
-          </button>
-
-        </div>
-
-
-        <!-- ORDERS -->
-
-        <div class="card p-5 md:col-span-2">
-
-          <h2 class="font-black text-xl">
-            Orders
-          </h2>
-
-          <div class="space-y-3 mt-3">
-
-            ${
-              sellerOrders.map(o => `
-
-                <div class="border-b border-[#222] pb-3">
-
-                  <div class="flex justify-between">
-
-                    <b>
-                      ${esc(
-                        o.customerName ||
-                        "Buyer"
-                      )}
-                    </b>
-
-                    <b class="gold">
-                      ${money(o.total)}
-                    </b>
-
-                  </div>
-
-                  <p class="text-gray-500 text-sm mt-1">
-                    ${esc(
-                      o.customerPhone ||
-                      ""
-                    )}
-                    ·
-                    ${esc(
-                      o.deliveryMethod ||
-                      ""
-                    )}
-                  </p>
-
-                  <select
-                    class="inp mt-2"
-                    onchange="
-                      window.changeOrderStatus(
-                        '${o.id}',
-                        this.value
-                      )
-                    ">
-
-                    <option value="pending"
-                      ${o.status==="pending"?"selected":""}>
-                      Pending
-                    </option>
-
-                    <option value="confirmed"
-                      ${o.status==="confirmed"?"selected":""}>
-                      Confirmed
-                    </option>
-
-                    <option value="processing"
-                      ${o.status==="processing"?"selected":""}>
-                      Processing
-                    </option>
-
-                    <option value="ready"
-                      ${o.status==="ready"?"selected":""}>
-                      Ready for Pickup
-                    </option>
-
-                    <option value="out_for_delivery"
-                      ${o.status==="out_for_delivery"?"selected":""}>
-                      Out for Delivery
-                    </option>
-
-                    <option value="delivered"
-                      ${o.status==="delivered"?"selected":""}>
-                      Delivered
-                    </option>
-
-                    <option value="cancelled"
-                      ${o.status==="cancelled"?"selected":""}>
-                      Cancelled
-                    </option>
-
-                  </select>
-
-                </div>
-
-              `).join("")
-
-              ||
-
-              `<p class="text-gray-500">
-                No orders yet.
-              </p>`
-            }
-
+    ${
+      status === "pending"
+        ? `
+          <div class="p-4 rounded-xl bg-[#17130a] border border-[#5b4617]">
+            <p class="text-sm text-gray-300">
+              Your Ghana Card documents are waiting for manual review.
+            </p>
           </div>
+        `
+        : `
+          <form id="verificationForm">
 
-        </div>
+            <label class="text-sm text-gray-400">
+              Ghana Card ID number
+            </label>
 
-      </div>
+            <input
+              id="ghanaCardNumber"
+              required
+              class="w-full rounded-lg px-4 py-3 mt-2 mb-4"
+              placeholder="GHA-XXXXXXXXX-X"
+              value="${escapeHtml(
+                currentUserData.ghanaCardNumber || ""
+              )}">
 
-    `;
+            <label class="text-sm text-gray-400">
+              Ghana Card front image
+            </label>
 
-  }catch(error){
+            <input
+              id="ghanaFront"
+              required
+              type="file"
+              accept="image/*"
+              class="w-full rounded-lg px-4 py-3 mt-2 mb-4">
 
-    console.error(error);
+            <label class="text-sm text-gray-400">
+              Ghana Card back image
+            </label>
 
-    $("seller").innerHTML = `
+            <input
+              id="ghanaBack"
+              required
+              type="file"
+              accept="image/*"
+              class="w-full rounded-lg px-4 py-3 mt-2 mb-5">
 
-      <div class="card p-5">
+            <div class="text-xs text-gray-600 mb-4">
+              Your Ghana Card information is private and is not displayed publicly.
+            </div>
 
-        <h2 class="text-xl font-black">
-          Seller Dashboard
-        </h2>
+            <button
+              type="submit"
+              class="btn w-full bg-gold text-black font-bold py-3 rounded-lg">
+              Submit for Verification
+            </button>
 
-        <p class="text-red-400 mt-3">
-          Could not load your seller dashboard.
-        </p>
+          </form>
+        `
+    }
+  `;
 
-        <p class="text-gray-500 text-sm mt-2">
-          ${esc(
-            error.message
-          )}
-        </p>
-
-      </div>
-
-    `;
-
-  }
-
-}
-
-
-/* =========================================================
-   SAVE STORE
-========================================================= */
-
-window.saveStore = async function(){
-
-  try{
-
-    await setDoc(
-      doc(
-        db,
-        "stores",
-        u.uid
-      ),
-      {
-        sellerId:u.uid,
-
-        name:
-          $("storeName").value.trim(),
-
-        description:
-          $("storeDescription")
-            .value.trim(),
-
-        whatsapp:
-          $("storeWhatsApp")
-            .value.trim(),
-
-        updatedAt:
-          serverTimestamp()
-      },
-      {merge:true}
-    );
-
-
-    toast(
-      "Store updated successfully."
-    );
-
-    loadSeller();
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      "Could not save store."
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   PRODUCT FORM
-========================================================= */
-
-window.productForm = function(){
-
-  modal(`
-
-    <h2 class="text-xl font-black">
-      Add Product
-    </h2>
-
-    <input
-      id="pn"
-      class="inp mt-4"
-      placeholder="Product name">
-
-    <input
-      id="pp"
-      class="inp mt-3"
-      type="number"
-      min="0"
-      placeholder="Price">
-
-    <input
-      id="ps"
-      class="inp mt-3"
-      type="number"
-      min="0"
-      placeholder="Stock">
-
-    <textarea
-      id="pd"
-      class="inp mt-3"
-      placeholder="Description"></textarea>
-
-    <input
-      id="pi"
-      class="inp mt-3"
-      type="file"
-      accept="image/*">
-
-    <button
-      type="button"
-      class="btn g w-full mt-4"
-      onclick="window.addProduct()">
-      Save Product
-    </button>
-
-    <button
-      type="button"
-      class="btn d w-full mt-2"
-      onclick="window.closeModal()">
-      Cancel
-    </button>
-
-  `);
-
-};
-
-
-/* =========================================================
-   CLOUDINARY
-========================================================= */
-
-async function uploadFile(file){
+  $("modal").classList.remove("hidden");
 
   const form =
-    new FormData();
+    $("verificationForm");
 
-  form.append(
-    "file",
-    file
-  );
+  if (form) {
 
-  form.append(
-    "upload_preset",
-    PRESET
-  );
+    form.addEventListener(
+      "submit",
+      event => {
 
-  form.append(
-    "folder",
-    "sellerflow"
-  );
+        event.preventDefault();
 
+        submitVerification();
 
-  const response =
-    await fetch(
-      `https://api.cloudinary.com/v1_1/${CLOUD}/auto/upload`,
-      {
-        method:"POST",
-        body:form
       }
     );
-
-
-  if(!response.ok){
-
-    throw new Error(
-      "Image upload failed."
-    );
-
   }
-
-
-  const data =
-    await response.json();
-
-
-  return data.secure_url;
-
 }
 
 
 /* =========================================================
-   ADD PRODUCT
+   SECURE GHANA CARD UPLOAD
 ========================================================= */
 
-window.addProduct = async function(){
+async function submitVerification() {
 
-  try{
+  const number =
+    $("ghanaCardNumber")
+      .value
+      .trim();
 
-    const name =
-      $("pn").value.trim();
+  const front =
+    $("ghanaFront")
+      .files[0];
 
-    const price =
-      Number(
-        $("pp").value
-      );
+  const back =
+    $("ghanaBack")
+      .files[0];
 
-    const stock =
-      Number(
-        $("ps").value || 0
-      );
+  if (!number) {
 
-    const description =
-      $("pd").value.trim();
-
-    const file =
-      $("pi").files[0];
-
-
-    if(!name){
-
-      return toast(
-        "Enter product name."
-      );
-
-    }
-
-
-    if(price <= 0){
-
-      return toast(
-        "Enter a valid price."
-      );
-
-    }
-
-
-    let imageUrl = "";
-
-
-    if(file){
-
-      toast(
-        "Uploading image..."
-      );
-
-      imageUrl =
-        await uploadFile(file);
-
-    }
-
-
-    await addDoc(
-      collection(db,"products"),
-      {
-        sellerId:u.uid,
-
-        storeId:u.uid,
-
-        name,
-
-        price,
-
-        stock,
-
-        description,
-
-        imageUrl,
-
-        rating:0,
-
-        reviewCount:0,
-
-        createdAt:
-          serverTimestamp()
-      }
+    showToast(
+      "Enter your Ghana Card number.",
+      "warning"
     );
-
-
-    closeModal();
-
-    toast(
-      "Product added successfully."
-    );
-
-    loadSeller();
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      error.message ||
-      "Could not add product."
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   DELETE PRODUCT
-========================================================= */
-
-window.deleteProduct = async function(id){
-
-  if(!confirm(
-    "Delete this product?"
-  )){
 
     return;
-
   }
 
+  if (!front || !back) {
 
-  try{
-
-    await deleteDoc(
-      doc(
-        db,
-        "products",
-        id
-      )
+    showToast(
+      "Upload both sides of your Ghana Card.",
+      "warning"
     );
-
-
-    toast(
-      "Product deleted."
-    );
-
-    loadSeller();
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      "Could not delete product."
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   ORDER STATUS
-========================================================= */
-
-window.changeOrderStatus =
-async function(id,status){
-
-  try{
-
-    await updateDoc(
-      doc(
-        db,
-        "orders",
-        id
-      ),
-      {
-        status,
-
-        updatedAt:
-          serverTimestamp()
-      }
-    );
-
-
-    toast(
-      "Order status updated."
-    );
-
-    loadSeller();
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      "Could not update order."
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   SELLER POST FORM
-========================================================= */
-
-window.postForm = function(){
-
-  modal(`
-
-    <h2 class="text-xl font-black">
-      For You Post
-    </h2>
-
-    <textarea
-      id="pc"
-      class="inp mt-4"
-      placeholder="Write a caption"></textarea>
-
-    <input
-      id="pf"
-      class="inp mt-3"
-      type="file"
-      accept="image/*,video/*">
-
-    <button
-      type="button"
-      class="btn g w-full mt-4"
-      onclick="window.addPost()">
-      Publish
-    </button>
-
-    <button
-      type="button"
-      class="btn d w-full mt-2"
-      onclick="window.closeModal()">
-      Cancel
-    </button>
-
-  `);
-
-};
-
-
-/* =========================================================
-   ADD POST
-========================================================= */
-
-window.addPost = async function(){
-
-  const file =
-    $("pf").files[0];
-
-
-  if(!file){
-
-    return toast(
-      "Choose an image or video."
-    );
-
-  }
-
-
-  try{
-
-    toast(
-      "Uploading..."
-    );
-
-
-    const url =
-      await uploadFile(file);
-
-
-    await addDoc(
-      collection(db,"posts"),
-      {
-        sellerId:u.uid,
-
-        caption:
-          $("pc").value.trim(),
-
-        mediaUrl:url,
-
-        mediaType:
-          file.type.startsWith("video")
-          ? "video"
-          : "image",
-
-        likesCount:0,
-
-        commentsCount:0,
-
-        savesCount:0,
-
-        createdAt:
-          serverTimestamp(),
-
-        status:"active"
-      }
-    );
-
-
-    closeModal();
-
-    toast(
-      "Post published."
-    );
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      error.message ||
-      "Could not publish post."
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   GHANA CARD FORM
-========================================================= */
-
-window.verifyForm = function(){
-
-  if(ud.verified){
-
-    modal(`
-
-      <h2 class="text-xl font-black">
-        Verification Status
-      </h2>
-
-      <div class="card p-4 mt-4">
-
-        <p class="text-gray-400">
-          Status
-        </p>
-
-        <b class="gold">
-          Approved ✓
-        </b>
-
-        <p class="text-gray-500 text-sm mt-3">
-          Your seller account has been manually verified.
-        </p>
-
-      </div>
-
-      <button
-        type="button"
-        class="btn d w-full mt-4"
-        onclick="window.closeModal()">
-        Close
-      </button>
-
-    `);
 
     return;
-
   }
 
+  if (front.size > 8 * 1024 * 1024 ||
+      back.size > 8 * 1024 * 1024) {
 
-  modal(`
+    showToast(
+      "Each image must be less than 8MB.",
+      "warning"
+    );
 
-    <h2 class="text-xl font-black">
-      Ghana Card Verification
-    </h2>
+    return;
+  }
 
-    <p class="text-gray-500 text-sm mt-2">
+  try {
 
-      Your Ghana Card information is sent to the
-      secure SellerFlow verification API and is not
-      published on your store.
+    showToast(
+      "Uploading documents securely..."
+    );
 
-    </p>
-
-    <input
-      id="gid"
-      class="inp mt-4"
-      placeholder="Ghana Card ID number">
-
-    <label class="block text-sm text-gray-400 mt-3">
-      Ghana Card Front
-    </label>
-
-    <input
-      id="gf"
-      class="inp mt-2"
-      type="file"
-      accept="image/jpeg,image/png,image/webp">
-
-    <label class="block text-sm text-gray-400 mt-3">
-      Ghana Card Back
-    </label>
-
-    <input
-      id="gb"
-      class="inp mt-2"
-      type="file"
-      accept="image/jpeg,image/png,image/webp">
-
-    <button
-      type="button"
-      class="btn g w-full mt-4"
-      onclick="window.submitVerification()">
-      Submit for Review
-    </button>
-
-    <button
-      type="button"
-      class="btn d w-full mt-2"
-      onclick="window.closeModal()">
-      Cancel
-    </button>
-
-  `);
-
-};
-
-
-/* =========================================================
-   GHANA CARD SUBMISSION
-========================================================= */
-
-window.submitVerification =
-async function(){
-
-  try{
-
-    const cardNumber =
-      $("gid").value.trim();
-
-    const front =
-      $("gf").files[0];
-
-    const back =
-      $("gb").files[0];
-
-
-    if(!cardNumber){
-
-      return toast(
-        "Enter your Ghana Card ID."
-      );
-
-    }
-
-
-    if(!front || !back){
-
-      return toast(
-        "Upload both front and back."
-      );
-
-    }
-
+    const token =
+      await currentUser.getIdToken();
 
     const form =
       new FormData();
 
-
-    form.append(
-      "sellerId",
-      u.uid
-    );
-
     form.append(
       "ghanaCardNumber",
-      cardNumber
+      number
     );
 
     form.append(
@@ -4028,989 +2769,777 @@ async function(){
       back
     );
 
-
-    toast(
-      "Submitting verification..."
-    );
-
-
     const response =
       await fetch(
-        API +
+        WORKER_URL +
         "/verification/upload",
         {
-          method:"POST",
-
-          headers:{
+          method: "POST",
+          headers: {
             Authorization:
-              "Bearer " +
-              await u.getIdToken()
+              "Bearer " + token
           },
-
-          body:form
+          body: form
         }
       );
 
+    const result =
+      await response.json()
+        .catch(() => ({}));
 
-    let result = {};
-
-    try{
-
-      result =
-        await response.json();
-
-    }catch{}
-
-
-    if(!response.ok){
+    if (!response.ok) {
 
       throw new Error(
+        result.message ||
         result.error ||
-        "Verification submission failed."
+        "Secure upload failed."
       );
-
     }
 
-
     await updateDoc(
-      doc(
-        db,
-        "users",
-        u.uid
-      ),
+      doc(db, "users", currentUser.uid),
       {
-        verificationStatus:
-          "pending"
+        ghanaCardNumber: number,
+        verificationStatus: "pending",
+        verified: false,
+        verificationSubmittedAt:
+          serverTimestamp(),
+        updatedAt:
+          serverTimestamp()
       }
     );
 
-
-    ud.verificationStatus =
-      "pending";
-
+    await loadUser();
 
     closeModal();
 
-    toast(
-      "Submitted for review."
+    updateVerificationBadge();
+
+    showToast(
+      "Verification submitted successfully."
     );
 
-    loadSeller();
+  } catch (error) {
 
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      error.message ||
-      "Verification failed."
+    console.error(
+      "Verification error:",
+      error
     );
 
+    showToast(
+      "Verification upload failed: " +
+      error.message,
+      "error"
+    );
   }
-
-};
+}
 
 
 /* =========================================================
    PROFILE
 ========================================================= */
 
-window.profile = function(){
+function renderProfile() {
 
-  if(!u || !ud){
-
+  if (!currentUser || !currentUserData) {
     return;
-
   }
 
+  const name =
+    currentUserData.name ||
+    currentUser.displayName ||
+    "User";
 
-  view("prof");
+  $("profileName").textContent =
+    name;
+
+  $("profileEmail").textContent =
+    currentUser.email || "";
+
+  $("profileRole").textContent =
+    "Account: " +
+    (
+      currentUserData.role === "seller"
+        ? "Seller"
+        : "Buyer"
+    );
+
+  $("profileAvatar").textContent =
+    name.charAt(0).toUpperCase();
 
 
-  $("prof").innerHTML = `
+  if (
+    currentUserData.role === "seller"
+  ) {
 
-    <div class="card p-5">
+    const status =
+      currentUserData.verificationStatus ||
+      "not_submitted";
 
-      <h2 class="text-2xl font-black">
+    $("profileVerification").innerHTML = `
 
-        ${esc(ud.name)}
+      <div class="border-t border-[#222] pt-5">
 
-        ${badge(ud)}
+        <div class="flex justify-between gap-4">
 
-      </h2>
+          <div>
+            <p class="text-gray-500 text-sm">
+              Verification
+            </p>
 
-      <p class="text-gray-500">
-        ${esc(u.email)}
-      </p>
+            <p class="font-bold mt-1">
+              ${verificationText(status)}
+            </p>
+          </div>
 
-      <div class="mt-4 space-y-2">
+          ${
+            currentUserData.verified
+              ? `
+                <div class="${
+                  currentUserData.plan === "150"
+                    ? "verification-blue"
+                    : "verification-green"
+                } font-bold">
+                  ✓ ${
+                    currentUserData.plan === "150"
+                      ? "Blue Verified"
+                      : "Verified"
+                  }
+                </div>
+              `
+              : ""
+          }
 
-        <p>
-          Role:
-          <b>${esc(
-            ud.role
-          )}</b>
-        </p>
+        </div>
 
-        <p>
-          Plan:
-          <b>${esc(
-            ud.plan || "free"
-          )}</b>
-        </p>
-
-        ${
-          ud.role === "seller"
-          ?
-
-          `
-          <p>
-            Verification:
-            <b>
-              ${esc(
-                ud.verificationStatus ||
-                "not_submitted"
-              )}
-            </b>
-          </p>
-          `
-
-          :
-
-          ""
-        }
+        <button
+          id="profileVerifyBtn"
+          type="button"
+          class="btn w-full border border-[#333] py-3 rounded-lg mt-5">
+          ${status === "approved"
+            ? "View Verification"
+            : "Open Verification"}
+        </button>
 
       </div>
+    `;
 
+    $("profileVerifyBtn")
+      .addEventListener(
+        "click",
+        openVerification
+      );
 
-      ${
-        ud.role === "seller"
+  } else {
 
-        ?
+    $("profileVerification").innerHTML = `
+      <div class="border-t border-[#222] pt-5">
+        <p class="text-gray-500 text-sm">
+          Buyer account
+        </p>
 
-        `
-        <button
-          type="button"
-          class="btn d w-full mt-4"
-          onclick="window.sellerPage()">
-          Seller Dashboard
-        </button>
-        `
-
-        :
-
-        ""
-      }
-
-
-      ${
-        isAdmin()
-
-        ?
-
-        `
-        <button
-          type="button"
-          class="btn g w-full mt-3"
-          onclick="window.adminPage()">
-          👑 Owner Control Center
-        </button>
-        `
-
-        :
-
-        ""
-      }
-
-
-      <button
-        type="button"
-        class="btn r w-full mt-3"
-        onclick="window.logout()">
-        Sign out
-      </button>
-
-    </div>
-
-  `;
-
-};
-
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-window.logout = async function(){
-
-  try{
-
-    await signOut(auth);
-
-    ud = null;
-
-    u = null;
-
-    $("app").classList.add("hide");
-
-    $("nav").classList.add("hide");
-
-    $("auth").classList.add("hide");
-
-    $("landing").classList.remove("hide");
-
-    toast(
-      "Signed out."
-    );
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      "Could not sign out."
-    );
-
+        <p class="text-gray-400 text-sm mt-2">
+          Use your buyer account to track purchases and orders.
+        </p>
+      </div>
+    `;
   }
-
-};
+}
 
 
 /* =========================================================
    ADMIN
 ========================================================= */
 
-window.adminPage = function(){
+async function showAdmin() {
 
-  if(!isAdmin()){
+  $("homePage").classList.add("hidden");
+  $("productsPage").classList.add("hidden");
+  $("ordersPage").classList.add("hidden");
+  $("storePage").classList.add("hidden");
+  $("profilePage").classList.add("hidden");
 
-    return toast(
-      "Admin access required."
+  $("adminPage").classList.remove("hidden");
+
+  await loadAdmin();
+}
+
+
+async function loadAdmin() {
+
+  if (!currentUser) return;
+
+  if (
+    currentUser.email?.toLowerCase() !==
+    ADMIN_EMAIL.toLowerCase() &&
+    currentUserData?.role !== "admin"
+  ) {
+
+    showToast(
+      "Admin access denied.",
+      "error"
     );
 
-  }
-
-
-  view("admin");
-
-  window.adminLoad("overview");
-
-};
-
-
-window.adminLoad = async function(tab){
-
-  if(!isAdmin()){
-
     return;
-
   }
 
+  try {
 
-  try{
+    const snap =
+      await getDocs(
+        collection(db, "users")
+      );
 
     const users =
-      (
-        await getDocs(
-          query(
-            collection(db,"users"),
-            limit(200)
-          )
-        )
-      ).docs.map(
-        d => ({
-          id:d.id,
-          ...d.data()
-        })
-      );
-
-
-    const products =
-      (
-        await getDocs(
-          query(
-            collection(db,"products"),
-            limit(200)
-          )
-        )
-      ).docs.map(
-        d => ({
-          id:d.id,
-          ...d.data()
-        })
-      );
-
-
-    const reports =
-      (
-        await getDocs(
-          query(
-            collection(db,"reports"),
-            limit(200)
-          )
-        )
-      ).docs.map(
-        d => ({
-          id:d.id,
-          ...d.data()
-        })
-      );
-
-
-    const pending =
-      users.filter(
-        x =>
-          x.verificationStatus ===
-          "pending"
-      );
-
-
-    const buyers =
-      users.filter(
-        x => x.role === "buyer"
-      );
-
+      snap.docs.map(d => ({
+        id: d.id,
+        ...d.data()
+      }));
 
     const sellers =
       users.filter(
-        x => x.role === "seller"
+        u => u.role === "seller"
       );
 
+    const buyers =
+      users.filter(
+        u => u.role === "buyer"
+      );
 
-    $("admin").innerHTML = `
+    const pending =
+      sellers.filter(
+        u =>
+          u.verificationStatus ===
+          "pending"
+      );
 
-      <div class="flex justify-between gap-3">
+    const verified =
+      sellers.filter(
+        u => u.verified === true
+      );
 
-        <div>
+    $("adminUsers").textContent =
+      users.length;
 
-          <h1 class="text-2xl font-black">
-            Owner Control Center 👑
-          </h1>
+    $("adminSellers").textContent =
+      sellers.length;
 
-          <p class="text-gray-500">
-            ${OWNER}
+    $("adminBuyers").textContent =
+      buyers.length;
+
+    $("adminPending").textContent =
+      pending.length;
+
+    $("adminVerified").textContent =
+      verified.length;
+
+
+    $("adminVerificationList").innerHTML =
+      pending.length
+        ? pending.map(renderAdminSeller).join("")
+        : `
+          <p class="text-gray-500 text-sm">
+            No pending verification requests.
           </p>
-
-        </div>
-
-      </div>
+        `;
 
 
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
+    $("adminUsersList").innerHTML =
+      users.slice(0, 50)
+        .map(user => `
 
-        <div class="card p-4">
-          Users
-          <b class="block text-2xl">
-            ${users.length}
-          </b>
-        </div>
-
-        <div class="card p-4">
-          Buyers
-          <b class="block text-2xl">
-            ${buyers.length}
-          </b>
-        </div>
-
-        <div class="card p-4">
-          Sellers
-          <b class="block text-2xl">
-            ${sellers.length}
-          </b>
-        </div>
-
-        <div class="card p-4">
-          Pending
-          <b class="block text-2xl">
-            ${pending.length}
-          </b>
-        </div>
-
-      </div>
-
-
-      <div class="flex gap-2 overflow-auto mt-5 pb-2">
-
-        <button
-          type="button"
-          class="btn d"
-          onclick="window.adminLoad('overview')">
-          Overview
-        </button>
-
-        <button
-          type="button"
-          class="btn d"
-          onclick="window.adminLoad('users')">
-          Users
-        </button>
-
-        <button
-          type="button"
-          class="btn d"
-          onclick="window.adminLoad('verification')">
-          Verification
-        </button>
-
-        <button
-          type="button"
-          class="btn d"
-          onclick="window.adminLoad('products')">
-          Products
-        </button>
-
-        <button
-          type="button"
-          class="btn d"
-          onclick="window.adminLoad('reports')">
-          Reports
-        </button>
-
-      </div>
-
-
-      <div
-        id="adminContent"
-        class="space-y-3 mt-4">
-      </div>
-
-    `;
-
-
-    const area =
-      $("adminContent");
-
-
-    /* OVERVIEW */
-
-    if(tab === "overview"){
-
-      area.innerHTML = `
-
-        <div class="card p-5">
-
-          <h2 class="text-xl font-black">
-            App Overview
-          </h2>
-
-          <div class="grid md:grid-cols-2 gap-3 mt-4">
-
-            <div class="card p-4">
-              Total users:
-              <b>${users.length}</b>
-            </div>
-
-            <div class="card p-4">
-              Sellers:
-              <b>${sellers.length}</b>
-            </div>
-
-            <div class="card p-4">
-              Buyers:
-              <b>${buyers.length}</b>
-            </div>
-
-            <div class="card p-4">
-              Verified sellers:
-              <b>
-                ${
-                  sellers.filter(
-                    x => x.verified
-                  ).length
-                }
-              </b>
-            </div>
-
-          </div>
-
-        </div>
-
-      `;
-
-    }
-
-
-    /* USERS */
-
-    if(tab === "users"){
-
-      area.innerHTML =
-
-        users.map(x => `
-
-          <div class="card p-4">
+          <div class="border-b border-[#222] py-3">
 
             <div class="flex justify-between gap-3">
 
               <div>
 
-                <b>
-
-                  ${esc(x.name)}
-
-                  ${badge(x)}
-
-                </b>
+                <p class="font-bold text-sm">
+                  ${escapeHtml(
+                    user.name ||
+                    "Unnamed"
+                  )}
+                </p>
 
                 <p class="text-gray-500 text-xs mt-1">
-
-                  ${esc(x.email)}
-
-                  ·
-
-                  ${esc(x.role)}
-
-                  ·
-
-                  ${esc(
-                    x.status ||
-                    "active"
+                  ${escapeHtml(
+                    user.email || ""
                   )}
-
                 </p>
 
               </div>
 
-              <div class="flex flex-wrap gap-2">
-
-                ${
-                  x.id !== u.uid
-
-                  ?
-
-                  `
-                  <button
-                    type="button"
-                    class="btn d"
-                    onclick="window.adminUserStatus('${x.id}','warned')">
-                    Warn
-                  </button>
-
-                  <button
-                    type="button"
-                    class="btn r"
-                    onclick="window.adminUserStatus('${x.id}','suspended')">
-                    Suspend
-                  </button>
-                  `
-
-                  :
-
-                  `<span class="text-gray-500 text-sm">
-                    Owner
-                  </span>`
-                }
-
-              </div>
+              <span class="status">
+                ${escapeHtml(
+                  user.role || "user"
+                )}
+              </span>
 
             </div>
 
           </div>
-
         `).join("");
 
-    }
 
-
-    /* VERIFICATION */
-
-    if(tab === "verification"){
-
-      area.innerHTML =
-
-        pending.map(x => `
-
-          <div class="card p-4">
-
-            <b>
-              ${esc(x.name)}
-              ${badge(x)}
-            </b>
-
-            <p class="text-gray-500">
-              ${esc(x.email)}
-            </p>
-
-            <p class="text-gray-500 text-sm mt-2">
-              Verification:
-              ${esc(
-                x.verificationStatus
-              )}
-            </p>
-
-            <div class="flex gap-2 mt-3">
-
-              <button
-                type="button"
-                class="btn g"
-                onclick="window.approveSeller('${x.id}')">
-                Approve
-              </button>
-
-              <button
-                type="button"
-                class="btn r"
-                onclick="window.rejectSeller('${x.id}')">
-                Reject
-              </button>
-
-            </div>
-
-          </div>
-
-        `).join("")
-
-        ||
-
-        `<div class="card p-5 text-gray-500">
-          No pending verification requests.
-        </div>`;
-
-    }
-
-
-    /* PRODUCTS */
-
-    if(tab === "products"){
-
-      area.innerHTML =
-
-        products.map(x => `
-
-          <div class="card p-4 flex justify-between gap-3">
-
-            <div>
-
-              <b>
-                ${esc(x.name)}
-              </b>
-
-              <p class="gold">
-                ${money(x.price)}
-              </p>
-
-            </div>
-
-            <button
-              type="button"
-              class="btn r"
-              onclick="window.adminRemoveProduct('${x.id}')">
-              Remove
-            </button>
-
-          </div>
-
-        `).join("")
-
-        ||
-
-        `<div class="card p-5 text-gray-500">
-          No products found.
-        </div>`;
-
-    }
-
-
-    /* REPORTS */
-
-    if(tab === "reports"){
-
-      area.innerHTML =
-
-        reports.map(x => `
-
-          <div class="card p-4">
-
-            <b>
-              ${esc(
-                x.type ||
-                "Report"
-              )}
-            </b>
-
-            <p class="text-gray-400 mt-1">
-              ${esc(
-                x.reason ||
-                ""
-              )}
-            </p>
-
-            <p class="text-gray-500 text-sm mt-1">
-              ${esc(
-                x.note ||
-                ""
-              )}
-            </p>
-
-          </div>
-
-        `).join("")
-
-        ||
-
-        `<div class="card p-5 text-gray-500">
-          No reports found.
-        </div>`;
-
-    }
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      "Could not load admin dashboard."
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   ADMIN USER STATUS
-========================================================= */
-
-window.adminUserStatus =
-async function(id,status){
-
-  try{
-
-    await updateDoc(
-      doc(
-        db,
-        "users",
-        id
-      ),
-      {
-        status
-      }
-    );
-
-
-    toast(
-      "User status updated."
-    );
-
-    window.adminLoad("users");
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      "Could not update user."
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   ADMIN REMOVE PRODUCT
-========================================================= */
-
-window.adminRemoveProduct =
-async function(id){
-
-  if(!confirm(
-    "Remove this product?"
-  )){
-
-    return;
-
-  }
-
-
-  try{
-
-    await deleteDoc(
-      doc(
-        db,
-        "products",
-        id
-      )
-    );
-
-
-    toast(
-      "Product removed."
-    );
-
-    window.adminLoad("products");
-
-  }catch(error){
-
-    console.error(error);
-
-    toast(
-      "Could not remove product."
-    );
-
-  }
-
-};
-
-
-/* =========================================================
-   ADMIN APPROVE
-========================================================= */
-
-window.approveSeller =
-async function(id){
-
-  try{
-
-    const snap =
-      await getDoc(
-        doc(
-          db,
-          "users",
-          id
-        )
+    document.querySelectorAll(
+      ".adminApproveBtn"
+    ).forEach(btn => {
+
+      btn.addEventListener(
+        "click",
+        () =>
+          adminApprove(
+            btn.dataset.id
+          )
       );
 
-
-    const seller =
-      snap.data() || {};
+    });
 
 
-    const blue =
-      seller.plan === "150";
+    document.querySelectorAll(
+      ".adminRejectBtn"
+    ).forEach(btn => {
 
+      btn.addEventListener(
+        "click",
+        () =>
+          adminReject(
+            btn.dataset.id
+          )
+      );
+
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    showToast(
+      "Admin dashboard failed: " +
+      error.message,
+      "error"
+    );
+  }
+}
+
+
+function renderAdminSeller(user) {
+
+  return `
+    <div class="border-b border-[#222] py-4">
+
+      <div class="flex justify-between gap-3">
+
+        <div>
+
+          <p class="font-bold">
+            ${escapeHtml(
+              user.name ||
+              "Unnamed Seller"
+            )}
+          </p>
+
+          <p class="text-gray-500 text-xs mt-1">
+            ${escapeHtml(
+              user.email || ""
+            )}
+          </p>
+
+          <p class="text-gray-600 text-xs mt-1">
+            Plan: ${escapeHtml(
+              user.plan || "free"
+            )}
+          </p>
+
+        </div>
+
+        <div class="flex gap-2">
+
+          <button
+            type="button"
+            class="adminApproveBtn bg-green-900 text-green-300 px-3 py-2 rounded-lg text-xs"
+            data-id="${user.id}">
+            Approve
+          </button>
+
+          <button
+            type="button"
+            class="adminRejectBtn bg-red-950 text-red-300 px-3 py-2 rounded-lg text-xs"
+            data-id="${user.id}">
+            Reject
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+async function adminApprove(userId) {
+
+  try {
 
     await updateDoc(
-      doc(
-        db,
-        "users",
-        id
-      ),
+      doc(db, "users", userId),
       {
-        verified:true,
-
         verificationStatus:
           "approved",
 
+        verified: true,
+
         badgeColor:
-          blue
-          ? "blue"
-          : "green"
+          "green",
+
+        verifiedAt:
+          serverTimestamp(),
+
+        verifiedBy:
+          currentUser.email,
+
+        updatedAt:
+          serverTimestamp()
       }
     );
 
-
-    await setDoc(
-      doc(
-        db,
-        "stores",
-        id
-      ),
-      {
-        verified:true,
-
-        badgeColor:
-          blue
-          ? "blue"
-          : "green"
-      },
-      {merge:true}
+    showToast(
+      "Seller verified."
     );
 
+    await loadAdmin();
 
-    toast(
-      "Seller approved."
-    );
-
-    window.adminLoad(
-      "verification"
-    );
-
-  }catch(error){
+  } catch (error) {
 
     console.error(error);
 
-    toast(
-      "Could not approve seller."
+    showToast(
+      "Could not approve seller: " +
+      error.message,
+      "error"
     );
-
   }
+}
 
-};
 
+async function adminReject(userId) {
 
-/* =========================================================
-   ADMIN REJECT
-========================================================= */
-
-window.rejectSeller =
-async function(id){
-
-  try{
+  try {
 
     await updateDoc(
-      doc(
-        db,
-        "users",
-        id
-      ),
+      doc(db, "users", userId),
       {
-        verified:false,
-
         verificationStatus:
-          "rejected"
+          "rejected",
+
+        verified: false,
+
+        updatedAt:
+          serverTimestamp()
       }
     );
 
-
-    toast(
+    showToast(
       "Verification rejected."
     );
 
-    window.adminLoad(
-      "verification"
-    );
+    await loadAdmin();
 
-  }catch(error){
+  } catch (error) {
 
     console.error(error);
 
-    toast(
-      "Could not reject verification."
+    showToast(
+      "Could not reject seller: " +
+      error.message,
+      "error"
     );
-
   }
-
-};
+}
 
 
 /* =========================================================
-   MODAL OUTSIDE CLICK
+   MODAL
 ========================================================= */
 
-$("modal").addEventListener(
-  "click",
-  event => {
+function closeModal() {
 
-    if(
-      event.target.id ===
-      "modal"
-    ){
-
-      closeModal();
-
-    }
-
-  }
-);
-
-
-window.closeModal =
-  closeModal;
+  $("modal").classList.add("hidden");
+  $("modalContent").innerHTML = "";
+}
 
 
 /* =========================================================
-   STARTUP
+   LOGOUT
+========================================================= */
+
+async function logoutUser() {
+
+  try {
+
+    await signOut(auth);
+
+    currentUser = null;
+    currentUserData = null;
+    products = [];
+    orders = [];
+    currentStore = null;
+
+    showLanding();
+
+    showToast(
+      "You have been signed out."
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    showToast(
+      "Could not sign out.",
+      "error"
+    );
+  }
+}
+
+
+/* =========================================================
+   EVENT LISTENERS
+========================================================= */
+
+/* Landing */
+
+$("landingLoginBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      authMode = "login";
+      showAuth();
+
+    }
+  );
+
+
+$("landingSignBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      authMode = "login";
+      showAuth();
+
+    }
+  );
+
+
+$("landingCreateBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      authMode = "register";
+      showAuth();
+
+    }
+  );
+
+
+/* Auth */
+
+$("authBackBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      showLanding();
+
+    }
+  );
+
+
+$("sellerModeBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      setAccountMode("seller");
+
+    }
+  );
+
+
+$("buyerModeBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      setAccountMode("buyer");
+
+    }
+  );
+
+
+$("emailAuthBtn")
+  .addEventListener(
+    "click",
+    handleEmailAuth
+  );
+
+
+$("googleBtn")
+  .addEventListener(
+    "click",
+    googleSignIn
+  );
+
+
+$("switchAuthBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      authMode =
+        authMode === "register"
+          ? "login"
+          : "register";
+
+      clearAuthError();
+
+      updateAuthUI();
+
+    }
+  );
+
+
+/* Navigation */
+
+document.querySelectorAll(".appNav")
+  .forEach(btn => {
+
+    btn.addEventListener(
+      "click",
+      () => {
+
+        const page =
+          btn.dataset.page;
+
+        if (
+          currentUserData?.role === "buyer" &&
+          (
+            page === "products" ||
+            page === "store"
+          )
+        ) {
+
+          showToast(
+            "That section is for sellers.",
+            "warning"
+          );
+
+          return;
+        }
+
+        navigate(page);
+
+      }
+    );
+
+  });
+
+
+$("logoHomeBtn")
+  .addEventListener(
+    "click",
+    () => navigate("home")
+  );
+
+
+$("mobileMenuBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      $("mobileMenu")
+        .classList.toggle("hidden");
+
+    }
+  );
+
+
+$("logoutBtn")
+  .addEventListener(
+    "click",
+    logoutUser
+  );
+
+
+$("mobileLogoutBtn")
+  .addEventListener(
+    "click",
+    logoutUser
+  );
+
+
+/* Seller */
+
+$("addProductBtn")
+  .addEventListener(
+    "click",
+    () => openProductModal()
+  );
+
+
+$("saveStoreBtn")
+  .addEventListener(
+    "click",
+    saveStore
+  );
+
+
+$("homeVerificationBtn")
+  .addEventListener(
+    "click",
+    openVerification
+  );
+
+
+$("homeStoreBtn")
+  .addEventListener(
+    "click",
+    () => navigate("store")
+  );
+
+
+/* Modal */
+
+$("modalCloseBtn")
+  .addEventListener(
+    "click",
+    closeModal
+  );
+
+
+$("modal")
+  .addEventListener(
+    "click",
+    event => {
+
+      if (
+        event.target === $("modal")
+      ) {
+
+        closeModal();
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   GLOBAL ERROR DISPLAY
 ========================================================= */
 
 window.addEventListener(
@@ -5018,13 +3547,48 @@ window.addEventListener(
   event => {
 
     console.error(
-      "SELLERFLOW ERROR:",
-      event.error ||
-      event.message
+      "Global JavaScript error:",
+      event.error
+    );
+
+    showToast(
+      "A JavaScript error occurred. Open the browser console for details.",
+      "error"
     );
 
   }
 );
+
+
+window.addEventListener(
+  "unhandledrejection",
+  event => {
+
+    console.error(
+      "Unhandled promise rejection:",
+      event.reason
+    );
+
+  }
+);
+
+
+/* =========================================================
+   STARTUP
+========================================================= */
+
+if (!auth) {
+
+  hideLoading();
+  showLanding();
+
+} else {
+
+  setLoadingText(
+    "Checking your SellerFlow account..."
+  );
+
+}
 
 </script>
 
