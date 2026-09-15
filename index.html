@@ -1,1795 +1,2997 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="theme-color" content="#080808">
-<title>SellerFlow — Sell Smarter. Manage Easier.</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SELLERFLOW</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;padding:0;background:#080808;color:#fff;font-family:Arial,Helvetica,sans-serif}
-body{min-height:100vh}
+body{background:#080808;color:#fff;font-family:system-ui}
 button,input,textarea,select{font:inherit}
-button{cursor:pointer}
+.card{background:#111;border:1px solid #292929;border-radius:16px}
 .gold{color:#f5b942}
-.bg-gold{background:#f5b942}
-.border-gold{border-color:#f5b942}
-.text-muted{color:#a1a1aa}
-.card{
-  background:#111;
-  border:1px solid #242424;
-  border-radius:16px;
-}
-.card-hover:hover{
-  border-color:#555;
-  transform:translateY(-1px);
-}
-.transition{transition:.2s ease}
-.hidden{display:none!important}
-.modal-bg{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.82);
-  z-index:1000;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:16px;
-  overflow:auto;
-}
-.modal{
-  width:100%;
-  max-width:600px;
-  max-height:92vh;
-  overflow:auto;
-  background:#111;
-  border:1px solid #333;
-  border-radius:20px;
-  padding:22px;
-}
-.input{
-  width:100%;
-  background:#080808;
-  border:1px solid #333;
-  color:#fff;
-  border-radius:10px;
-  padding:12px 13px;
-  outline:none;
-}
-.input:focus{border-color:#f5b942}
-.btn{
-  border:0;
-  border-radius:10px;
-  padding:11px 15px;
-  font-weight:700;
-  transition:.2s;
-}
-.btn:hover{transform:translateY(-1px)}
-.btn-gold{background:#f5b942;color:#000}
-.btn-dark{background:#1b1b1b;color:#fff;border:1px solid #333}
-.btn-red{background:#8b1e1e;color:#fff}
-.btn-green{background:#166534;color:#fff}
-.btn-blue{background:#1d4ed8;color:#fff}
-.btn-small{padding:7px 10px;font-size:13px}
+.btn{padding:11px 15px;border-radius:11px;font-weight:800}
+.g{background:#f5b942;color:#090909}
+.d{background:#181818;border:1px solid #333}
+.r{background:#391515;color:#ff8888}
+.inp{width:100%;background:#0c0c0c;border:1px solid #333;border-radius:10px;padding:11px;color:#fff}
+.hide{display:none!important}
 .badge{
-  display:inline-flex;
-  align-items:center;
-  gap:5px;
-  border-radius:999px;
-  padding:4px 9px;
-  font-size:12px;
-  font-weight:700;
+display:inline-flex;
+width:20px;
+height:20px;
+border-radius:50%;
+align-items:center;
+justify-content:center;
+font-size:12px;
+font-weight:900
 }
-.badge-green{background:#12351f;color:#4ade80;border:1px solid #166534}
-.badge-blue{background:#101f45;color:#60a5fa;border:1px solid #1d4ed8}
-.badge-yellow{background:#352b0f;color:#facc15;border:1px solid #705b10}
-.badge-red{background:#3a1212;color:#f87171;border:1px solid #7f1d1d}
-.badge-gray{background:#202020;color:#aaa;border:1px solid #333}
-.nav-btn{
-  width:100%;
-  text-align:left;
-  background:transparent;
-  border:0;
-  color:#aaa;
-  padding:11px 13px;
-  border-radius:9px;
+.green{background:#16a34a}
+.blue{background:#1687ff}
+.bottom{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+background:#0b0b0bee;
+border-top:1px solid #292929;
+z-index:20
 }
-.nav-btn:hover,.nav-btn.active{
-  background:#1b1b1b;
-  color:#f5b942;
-}
-.stat{
-  background:#111;
-  border:1px solid #242424;
-  border-radius:15px;
-  padding:18px;
-}
-.product-img{
-  width:100%;
-  height:190px;
-  object-fit:cover;
-  border-radius:12px;
-  background:#181818;
-}
-.spinner{
-  width:20px;height:20px;border:3px solid #333;border-top-color:#f5b942;
-  border-radius:50%;animation:spin .7s linear infinite;display:inline-block
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-.toast{
-  position:fixed;
-  right:16px;
-  bottom:16px;
-  z-index:3000;
-  background:#181818;
-  border:1px solid #333;
-  color:#fff;
-  padding:13px 17px;
-  border-radius:10px;
-  max-width:360px;
-  box-shadow:0 10px 40px #000;
-}
-#firebaseStatus{
-  position:fixed;
-  bottom:8px;
-  left:8px;
-  z-index:2000;
-  font-size:10px;
-  color:#666;
-}
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:700px}
-th,td{padding:12px 10px;border-bottom:1px solid #242424;text-align:left;font-size:13px}
-th{color:#aaa;font-weight:600}
-td{color:#eee}
-hr{border:0;border-top:1px solid #292929}
 </style>
 </head>
 
 <body>
 
-<div id="firebaseStatus">Firebase: connecting...</div>
-
-<!-- =========================================================
-     LANDING PAGE
-========================================================= -->
-<section id="landingPage" class="min-h-screen">
-
-  <header class="max-w-6xl mx-auto px-5 py-5 flex items-center justify-between">
-    <div class="text-2xl font-black tracking-tight">
-      SELLER<span class="gold">FLOW</span>
-    </div>
-
-    <div class="flex gap-2">
-      <button class="btn btn-dark" onclick="showAuth('login')">Sign In</button>
-      <button class="btn btn-gold" onclick="showAuth('register')">Create Free Store</button>
-    </div>
-  </header>
-
-  <main class="max-w-6xl mx-auto px-5 pt-16 pb-24">
-    <div class="max-w-3xl">
-      <div class="badge badge-yellow mb-5">BUILT FOR ONLINE SELLERS</div>
-
-      <h1 class="text-5xl md:text-7xl font-black leading-tight">
-        Turn your products into a
-        <span class="gold">real online store.</span>
-      </h1>
-
-      <p class="text-zinc-400 text-lg md:text-xl mt-6 max-w-2xl">
-        SellerFlow helps Ghanaian sellers create an online store,
-        manage products, receive orders and build trust with verified accounts.
-      </p>
-
-      <div class="flex flex-wrap gap-3 mt-8">
-        <button class="btn btn-gold text-lg px-7" onclick="showAuth('register')">
-          Create Free Store
-        </button>
-
-        <button class="btn btn-dark text-lg px-7" onclick="showAuth('login')">
-          Sign In
-        </button>
-      </div>
-    </div>
-
-    <div class="grid md:grid-cols-3 gap-5 mt-20">
-      <div class="card p-6 card-hover transition">
-        <div class="text-3xl mb-4">🛍️</div>
-        <h3 class="font-bold text-xl">Your Own Store</h3>
-        <p class="text-zinc-400 mt-2">
-          Create a simple online storefront for your products.
-        </p>
-      </div>
-
-      <div class="card p-6 card-hover transition">
-        <div class="text-3xl mb-4">📦</div>
-        <h3 class="font-bold text-xl">Manage Orders</h3>
-        <p class="text-zinc-400 mt-2">
-          Keep track of customer orders from pending to delivered.
-        </p>
-      </div>
-
-      <div class="card p-6 card-hover transition">
-        <div class="text-3xl mb-4">✓</div>
-        <h3 class="font-bold text-xl">Build Trust</h3>
-        <p class="text-zinc-400 mt-2">
-          Verified sellers can display a verification badge on SellerFlow.
-        </p>
-      </div>
-    </div>
-
-    <div class="mt-16 card p-7">
-      <h2 class="text-2xl font-bold">For buyers too</h2>
-      <p class="text-zinc-400 mt-2">
-        Buyers can create accounts and keep track of their purchases
-        and order status in one place.
-      </p>
-    </div>
-  </main>
-</section>
-
-
-<!-- =========================================================
-     AUTH PAGE
-========================================================= -->
-<section id="authPage" class="hidden min-h-screen">
-  <div class="max-w-md mx-auto px-5 py-10">
-
-    <button class="text-zinc-400 hover:text-white mb-8" onclick="showLanding()">
-      ← Back
-    </button>
-
-    <div class="text-3xl font-black mb-8">
-      SELLER<span class="gold">FLOW</span>
-    </div>
-
-    <div class="card p-6">
-
-      <div class="flex gap-2 mb-6">
-        <button id="accountSellerBtn"
-          class="btn btn-gold flex-1"
-          onclick="selectAccountType('seller')">
-          Seller
-        </button>
-
-        <button id="accountBuyerBtn"
-          class="btn btn-dark flex-1"
-          onclick="selectAccountType('buyer')">
-          Buyer
-        </button>
-      </div>
-
-      <h1 id="authTitle" class="text-2xl font-bold">Create your account</h1>
-
-      <p id="authSubtitle" class="text-zinc-400 text-sm mt-2">
-        Create your SellerFlow account.
-      </p>
-
-      <div id="registerFields" class="mt-6">
-        <label class="text-sm text-zinc-400">Full name</label>
-        <input id="authName" class="input mt-2" placeholder="Your name">
-      </div>
-
-      <div class="mt-4">
-        <label class="text-sm text-zinc-400">Email</label>
-        <input id="authEmail" type="email" class="input mt-2" placeholder="you@example.com">
-      </div>
-
-      <div class="mt-4">
-        <label class="text-sm text-zinc-400">Password</label>
-        <input id="authPassword" type="password" class="input mt-2" placeholder="Minimum 6 characters">
-      </div>
-
-      <button id="authSubmitBtn"
-        class="btn btn-gold w-full mt-6"
-        onclick="submitAuth()">
-        Create Account
-      </button>
-
-      <button
-        class="btn btn-dark w-full mt-3"
-        onclick="googleLogin()">
-        Continue with Google
-      </button>
-
-      <div class="text-center mt-5 text-sm text-zinc-400">
-        <span id="authSwitchText">Already have an account?</span>
-        <button
-          id="authSwitchBtn"
-          class="gold font-bold ml-1"
-          onclick="toggleAuthMode()">
-          Sign In
-        </button>
-      </div>
-
-      <div id="authError" class="hidden mt-4 p-3 rounded-lg bg-red-950 border border-red-900 text-red-300 text-sm"></div>
-
-    </div>
-  </div>
-</section>
-
-
-<!-- =========================================================
-     SELLER DASHBOARD
-========================================================= -->
-<section id="sellerDashboard" class="hidden min-h-screen">
-
-  <div class="flex min-h-screen">
-
-    <aside class="w-64 border-r border-zinc-800 bg-[#0b0b0b] p-4 hidden md:block">
-
-      <div class="text-2xl font-black px-3 py-4">
-        SELLER<span class="gold">FLOW</span>
-      </div>
-
-      <div id="sellerSideName" class="px-3 text-sm text-zinc-500 mb-5"></div>
-
-      <nav class="space-y-1">
-
-        <button class="nav-btn active" data-tab="overview"
-          onclick="showDashboardTab('overview')">
-          📊 Overview
-        </button>
-
-        <button class="nav-btn" data-tab="products"
-          onclick="showDashboardTab('products')">
-          🛍️ Products
-        </button>
-
-        <button class="nav-btn" data-tab="orders"
-          onclick="showDashboardTab('orders')">
-          📦 Orders
-        </button>
-
-        <button class="nav-btn" data-tab="store"
-          onclick="showDashboardTab('store')">
-          🏪 Store
-        </button>
-
-        <button class="nav-btn" data-tab="verification"
-          onclick="showDashboardTab('verification')">
-          🛡️ Verification
-        </button>
-
-        <button class="nav-btn"
-          onclick="openMyStore()">
-          👁️ View Store
-        </button>
-
-      </nav>
-
-      <div class="border-t border-zinc-800 mt-8 pt-5">
-        <button class="nav-btn" onclick="signOutUser()">
-          ↪ Sign Out
-        </button>
-      </div>
-
-    </aside>
-
-    <main class="flex-1 min-w-0">
-
-      <header class="border-b border-zinc-800 p-4 md:p-6 flex items-center justify-between">
-        <div>
-          <h1 id="dashboardTitle" class="text-xl md:text-2xl font-bold">Overview</h1>
-          <p class="text-xs text-zinc-500 mt-1">Seller dashboard</p>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <span id="sellerHeaderBadge"></span>
-
-          <button class="btn btn-dark btn-small md:hidden" onclick="showMobileMenu()">
-            Menu
-          </button>
-        </div>
-      </header>
-
-      <!-- Mobile nav -->
-      <div id="mobileSellerNav" class="hidden md:hidden border-b border-zinc-800 p-3">
-        <div class="grid grid-cols-2 gap-2">
-          <button class="btn btn-dark btn-small" onclick="showDashboardTab('overview');hideMobileMenu()">Overview</button>
-          <button class="btn btn-dark btn-small" onclick="showDashboardTab('products');hideMobileMenu()">Products</button>
-          <button class="btn btn-dark btn-small" onclick="showDashboardTab('orders');hideMobileMenu()">Orders</button>
-          <button class="btn btn-dark btn-small" onclick="showDashboardTab('store');hideMobileMenu()">Store</button>
-          <button class="btn btn-dark btn-small" onclick="showDashboardTab('verification');hideMobileMenu()">Verification</button>
-          <button class="btn btn-dark btn-small" onclick="openMyStore()">View Store</button>
-          <button class="btn btn-red btn-small col-span-2" onclick="signOutUser()">Sign Out</button>
-        </div>
-      </div>
-
-      <div class="p-4 md:p-7 max-w-7xl mx-auto">
-
-        <!-- OVERVIEW -->
-        <div id="sellerTabOverview" class="seller-tab">
-
-          <div class="mb-7">
-            <h2 class="text-3xl font-black">
-              Welcome, <span id="welcomeName">Seller</span>
-            </h2>
-            <p class="text-zinc-400 mt-1">
-              Manage your store and orders from here.
-            </p>
-          </div>
-
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-
-            <div class="stat">
-              <div class="text-zinc-500 text-sm">Products</div>
-              <div id="statProducts" class="text-3xl font-black mt-2">0</div>
-            </div>
-
-            <div class="stat">
-              <div class="text-zinc-500 text-sm">Orders</div>
-              <div id="statOrders" class="text-3xl font-black mt-2">0</div>
-            </div>
-
-            <div class="stat">
-              <div class="text-zinc-500 text-sm">Pending</div>
-              <div id="statPending" class="text-3xl font-black mt-2">0</div>
-            </div>
-
-            <div class="stat">
-              <div class="text-zinc-500 text-sm">Delivered</div>
-              <div id="statDelivered" class="text-3xl font-black mt-2">0</div>
-            </div>
-
-          </div>
-
-          <div class="grid lg:grid-cols-2 gap-5 mt-7">
-
-            <div class="card p-6">
-              <h3 class="font-bold text-lg">Verification</h3>
-              <div id="overviewVerification" class="mt-4"></div>
-              <button class="btn btn-dark mt-5" onclick="showDashboardTab('verification')">
-                Manage Verification
-              </button>
-            </div>
-
-            <div class="card p-6">
-              <h3 class="font-bold text-lg">Store</h3>
-              <div class="mt-3 text-zinc-400">
-                <div id="overviewStoreName"></div>
-                <div id="overviewStoreDescription" class="mt-2 text-sm"></div>
-              </div>
-
-              <div class="flex gap-2 mt-5">
-                <button class="btn btn-gold" onclick="openMyStore()">View Store</button>
-                <button class="btn btn-dark" onclick="showDashboardTab('store')">Edit Store</button>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- PRODUCTS -->
-        <div id="sellerTabProducts" class="seller-tab hidden">
-
-          <div class="flex flex-wrap gap-3 justify-between items-center mb-6">
-            <div>
-              <h2 class="text-2xl font-bold">Products</h2>
-              <p class="text-zinc-400 text-sm">Manage what you sell.</p>
-            </div>
-
-            <button class="btn btn-gold" onclick="openProductModal()">
-              + Add Product
-            </button>
-          </div>
-
-          <div id="productsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
-
-        </div>
-
-
-        <!-- ORDERS -->
-        <div id="sellerTabOrders" class="seller-tab hidden">
-
-          <div class="mb-6">
-            <h2 class="text-2xl font-bold">Orders</h2>
-            <p class="text-zinc-400 text-sm">Manage customer orders.</p>
-          </div>
-
-          <div id="sellerOrdersList"></div>
-
-        </div>
-
-
-        <!-- STORE -->
-        <div id="sellerTabStore" class="seller-tab hidden">
-
-          <div class="mb-6">
-            <h2 class="text-2xl font-bold">Store Settings</h2>
-            <p class="text-zinc-400 text-sm">Customize your public store.</p>
-          </div>
-
-          <div class="card p-6 max-w-2xl">
-
-            <label class="text-sm text-zinc-400">Store name</label>
-            <input id="storeNameInput" class="input mt-2">
-
-            <label class="text-sm text-zinc-400 block mt-5">Description</label>
-            <textarea id="storeDescriptionInput" class="input mt-2" rows="4"></textarea>
-
-            <label class="text-sm text-zinc-400 block mt-5">WhatsApp number</label>
-            <input id="storeWhatsappInput" class="input mt-2" placeholder="+233...">
-
-            <button class="btn btn-gold mt-6" onclick="saveStoreSettings()">
-              Save Store
-            </button>
-
-          </div>
-
-        </div>
-
-
-        <!-- VERIFICATION -->
-        <div id="sellerTabVerification" class="seller-tab hidden">
-
-          <div class="mb-6">
-            <h2 class="text-2xl font-bold">Seller Verification</h2>
-            <p class="text-zinc-400 text-sm">
-              Submit your Ghana Card details for manual review.
-            </p>
-          </div>
-
-          <div class="card p-6 max-w-3xl">
-
-            <div id="verificationStatusBox"></div>
-
-            <hr class="my-6">
-
-            <div>
-              <label class="text-sm text-zinc-400">Ghana Card ID number</label>
-              <input id="ghanaCardNumber" class="input mt-2"
-                placeholder="GHA-XXXXXXXXX-X">
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-5 mt-5">
-
-              <div>
-                <label class="text-sm text-zinc-400">Front of Ghana Card</label>
-                <input id="ghanaCardFront" type="file"
-                  accept="image/*"
-                  class="input mt-2">
-              </div>
-
-              <div>
-                <label class="text-sm text-zinc-400">Back of Ghana Card</label>
-                <input id="ghanaCardBack" type="file"
-                  accept="image/*"
-                  class="input mt-2">
-              </div>
-
-            </div>
-
-            <div class="mt-5 p-4 rounded-lg bg-zinc-950 border border-zinc-800 text-sm text-zinc-400">
-              Your Ghana Card information is sensitive and should not be publicly displayed.
-              It is submitted to SellerFlow for manual verification.
-            </div>
-
-            <button id="verificationSubmitBtn"
-              class="btn btn-gold mt-6"
-              onclick="submitVerification()">
-              Submit for Verification
-            </button>
-
-          </div>
-
-        </div>
-
-      </div>
-    </main>
-  </div>
-</section>
-
-
-<!-- =========================================================
-     BUYER DASHBOARD
-========================================================= -->
-<section id="buyerDashboard" class="hidden min-h-screen">
-
-  <header class="border-b border-zinc-800 p-4 md:p-6">
-    <div class="max-w-6xl mx-auto flex items-center justify-between">
-
-      <div>
-        <div class="text-2xl font-black">
-          SELLER<span class="gold">FLOW</span>
-        </div>
-        <div class="text-xs text-zinc-500 mt-1">Buyer account</div>
-      </div>
-
-      <div class="flex gap-2">
-        <button class="btn btn-dark btn-small" onclick="showBuyerTab('orders')">
-          My Orders
-        </button>
-        <button class="btn btn-red btn-small" onclick="signOutUser()">
-          Sign Out
-        </button>
-      </div>
-
-    </div>
-  </header>
-
-  <main class="max-w-6xl mx-auto px-4 py-8">
-
-    <div class="mb-8">
-      <h1 class="text-3xl font-black">
-        Welcome, <span id="buyerWelcomeName">Buyer</span>
-      </h1>
-      <p class="text-zinc-400 mt-2">
-        Track your SellerFlow purchases here.
-      </p>
-    </div>
-
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-
-      <div class="stat">
-        <div class="text-zinc-500 text-sm">Total Orders</div>
-        <div id="buyerStatOrders" class="text-3xl font-black mt-2">0</div>
-      </div>
-
-      <div class="stat">
-        <div class="text-zinc-500 text-sm">Pending</div>
-        <div id="buyerStatPending" class="text-3xl font-black mt-2">0</div>
-      </div>
-
-      <div class="stat">
-        <div class="text-zinc-500 text-sm">Processing</div>
-        <div id="buyerStatProcessing" class="text-3xl font-black mt-2">0</div>
-      </div>
-
-      <div class="stat">
-        <div class="text-zinc-500 text-sm">Delivered</div>
-        <div id="buyerStatDelivered" class="text-3xl font-black mt-2">0</div>
-      </div>
-
-    </div>
-
-    <div class="mt-8">
-      <h2 class="text-xl font-bold mb-4">My Purchases</h2>
-      <div id="buyerOrdersList"></div>
-    </div>
-
-  </main>
-</section>
-
-
-<!-- =========================================================
-     ADMIN DASHBOARD
-========================================================= -->
-<section id="adminDashboard" class="hidden min-h-screen">
-
-  <header class="border-b border-zinc-800 p-4 md:p-6">
-
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-
-      <div>
-        <div class="text-2xl font-black">
-          SELLER<span class="gold">FLOW</span>
-          <span class="text-sm text-zinc-500 ml-2">ADMIN</span>
-        </div>
-
-        <div class="text-xs text-zinc-500 mt-1">
-          Owner control center
-        </div>
-      </div>
-
-      <button class="btn btn-red btn-small" onclick="signOutUser()">
-        Sign Out
-      </button>
-
-    </div>
-
-  </header>
-
-  <main class="max-w-7xl mx-auto px-4 py-7">
-
-    <div class="flex gap-2 overflow-x-auto pb-3 mb-6">
-
-      <button class="btn btn-gold btn-small admin-nav active" data-admin-tab="overview"
-        onclick="showAdminTab('overview')">
-        Overview
-      </button>
-
-      <button class="btn btn-dark btn-small admin-nav" data-admin-tab="sellers"
-        onclick="showAdminTab('sellers')">
-        Sellers
-      </button>
-
-      <button class="btn btn-dark btn-small admin-nav" data-admin-tab="buyers"
-        onclick="showAdminTab('buyers')">
-        Buyers
-      </button>
-
-      <button class="btn btn-dark btn-small admin-nav" data-admin-tab="verification"
-        onclick="showAdminTab('verification')">
-        Verification
-      </button>
-
-      <button class="btn btn-dark btn-small admin-nav" data-admin-tab="orders"
-        onclick="showAdminTab('orders')">
-        Orders
-      </button>
-
-    </div>
-
-
-    <!-- ADMIN OVERVIEW -->
-    <div id="adminTabOverview" class="admin-tab">
-
-      <h1 class="text-3xl font-black mb-6">Admin Overview</h1>
-
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-
-        <div class="stat">
-          <div class="text-zinc-500 text-sm">Total Users</div>
-          <div id="adminTotalUsers" class="text-3xl font-black mt-2">0</div>
-        </div>
-
-        <div class="stat">
-          <div class="text-zinc-500 text-sm">Sellers</div>
-          <div id="adminTotalSellers" class="text-3xl font-black mt-2">0</div>
-        </div>
-
-        <div class="stat">
-          <div class="text-zinc-500 text-sm">Buyers</div>
-          <div id="adminTotalBuyers" class="text-3xl font-black mt-2">0</div>
-        </div>
-
-        <div class="stat">
-          <div class="text-zinc-500 text-sm">Pending Verification</div>
-          <div id="adminPendingVerification" class="text-3xl font-black mt-2">0</div>
-        </div>
-
-      </div>
-
-      <div class="grid md:grid-cols-2 gap-5 mt-7">
-
-        <div class="card p-6">
-          <h3 class="font-bold text-lg">Verified Sellers</h3>
-          <div id="adminVerifiedSellers" class="text-4xl font-black gold mt-3">0</div>
-        </div>
-
-        <div class="card p-6">
-          <h3 class="font-bold text-lg">Total Orders</h3>
-          <div id="adminTotalOrders" class="text-4xl font-black gold mt-3">0</div>
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- ADMIN SELLERS -->
-    <div id="adminTabSellers" class="admin-tab hidden">
-
-      <h1 class="text-3xl font-black mb-6">Sellers</h1>
-
-      <div class="card p-4">
-        <div id="adminSellersTable" class="table-wrap"></div>
-      </div>
-
-    </div>
-
-
-    <!-- ADMIN BUYERS -->
-    <div id="adminTabBuyers" class="admin-tab hidden">
-
-      <h1 class="text-3xl font-black mb-6">Buyers</h1>
-
-      <div class="card p-4">
-        <div id="adminBuyersTable" class="table-wrap"></div>
-      </div>
-
-    </div>
-
-
-    <!-- ADMIN VERIFICATION -->
-    <div id="adminTabVerification" class="admin-tab hidden">
-
-      <h1 class="text-3xl font-black mb-6">Verification Requests</h1>
-
-      <div id="adminVerificationList"></div>
-
-    </div>
-
-
-    <!-- ADMIN ORDERS -->
-    <div id="adminTabOrders" class="admin-tab hidden">
-
-      <h1 class="text-3xl font-black mb-6">All Orders</h1>
-
-      <div class="card p-4">
-        <div id="adminOrdersTable" class="table-wrap"></div>
-      </div>
-
-    </div>
-
-  </main>
-</section>
-
-
-<!-- =========================================================
-     PUBLIC STORE
-========================================================= -->
-<section id="publicStore" class="hidden min-h-screen">
-
-  <header class="border-b border-zinc-800 p-4 sticky top-0 bg-[#080808]/95 backdrop-blur z-50">
-
-    <div class="max-w-6xl mx-auto flex items-center justify-between">
-
-      <button onclick="backFromStore()" class="text-zinc-400 hover:text-white">
-        ← Back
-      </button>
-
-      <div class="font-black">
-        SELLER<span class="gold">FLOW</span>
-      </div>
-
-      <button class="btn btn-gold btn-small" onclick="openCartModal()">
-        🛒 Cart <span id="cartCount">0</span>
-      </button>
-
-    </div>
-
-  </header>
-
-  <main class="max-w-6xl mx-auto px-4 py-8">
-
-    <div class="card p-7 mb-7">
-
-      <div class="flex flex-wrap items-center gap-3">
-        <h1 id="publicStoreName" class="text-3xl md:text-4xl font-black"></h1>
-        <span id="publicStoreBadge"></span>
-      </div>
-
-      <p id="publicStoreDescription" class="text-zinc-400 mt-3"></p>
-
-      <div class="flex flex-wrap gap-3 mt-5">
-
-        <button id="publicWhatsappBtn"
-          class="btn btn-green"
-          onclick="contactStoreWhatsApp()">
-          WhatsApp Seller
-        </button>
-
-        <button class="btn btn-dark"
-          onclick="showAuth('login')">
-          My Account
-        </button>
-
-      </div>
-
-    </div>
-
-    <div id="publicProductsGrid"
-      class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-    </div>
-
-  </main>
-</section>
-
-
-<!-- =========================================================
-     PRODUCT MODAL
-========================================================= -->
-<div id="productModal" class="modal-bg hidden">
-
-  <div class="modal">
-
-    <div class="flex items-center justify-between">
-      <h2 id="productModalTitle" class="text-xl font-bold">Add Product</h2>
-      <button class="text-zinc-400 text-2xl" onclick="closeModal('productModal')">×</button>
-    </div>
-
-    <input id="editingProductId" type="hidden">
-
-    <label class="text-sm text-zinc-400 block mt-6">Product name</label>
-    <input id="productName" class="input mt-2">
-
-    <div class="grid grid-cols-2 gap-4 mt-4">
-
-      <div>
-        <label class="text-sm text-zinc-400">Price (GHS)</label>
-        <input id="productPrice" type="number" min="0" class="input mt-2">
-      </div>
-
-      <div>
-        <label class="text-sm text-zinc-400">Stock</label>
-        <input id="productStock" type="number" min="0" class="input mt-2">
-      </div>
-
-    </div>
-
-    <label class="text-sm text-zinc-400 block mt-4">Description</label>
-    <textarea id="productDescription" class="input mt-2" rows="4"></textarea>
-
-    <label class="text-sm text-zinc-400 block mt-4">
-      Product image
-    </label>
-
-    <input id="productImage" type="file" accept="image/*" class="input mt-2">
-
-    <div id="currentProductImage" class="text-xs text-zinc-500 mt-2"></div>
-
-    <button id="saveProductBtn"
-      class="btn btn-gold w-full mt-6"
-      onclick="saveProduct()">
-      Save Product
-    </button>
-
-  </div>
+<!-- LANDING -->
+<div id="landing" class="min-h-screen">
+<div class="max-w-6xl mx-auto p-5">
+
+<header class="flex justify-between items-center">
+<b class="text-xl">
+SELLER<span class="gold">FLOW</span>
+</b>
+
+<button class="btn d" onclick="authPage('login')">
+Sign in
+</button>
+</header>
+
+<main class="grid md:grid-cols-2 gap-10 items-center min-h-[80vh]">
+
+<div>
+
+<h1 class="text-5xl md:text-7xl font-black mt-3">
+Sell smarter.<br>
+<span class="gold">Manage easier.</span>
+</h1>
+
+<p class="text-gray-400 text-lg mt-5">
+Online stores, product discovery, orders, reviews and buyer-seller messaging in one place.
+</p>
+
+<button class="btn g mt-7" onclick="authPage('register')">
+Create Free Account
+</button>
+
+</div>
+
+<div class="grid grid-cols-2 gap-3">
+
+<div class="card p-5">
+🛍️
+<b class="block mt-2">Stores</b>
+<small class="text-gray-500">Build a shareable shop.</small>
+</div>
+
+<div class="card p-5">
+🔥
+<b class="block mt-2">For You</b>
+<small class="text-gray-500">Photos and product videos.</small>
+</div>
+
+<div class="card p-5">
+💬
+<b class="block mt-2">Messages</b>
+<small class="text-gray-500">Talk directly to sellers.</small>
+</div>
+
+<div class="card p-5">
+✅
+<b class="block mt-2">Verification</b>
+<small class="text-gray-500">Manual Ghana Card review.</small>
+</div>
+
+</div>
+</main>
+
+<footer class="text-center text-xs text-gray-600">
+© 2026 SELLER FLOW.INC. All rights reserved.
+</footer>
+
+</div>
 </div>
 
 
-<!-- =========================================================
-     CART MODAL
-========================================================= -->
-<div id="cartModal" class="modal-bg hidden">
+<!-- AUTH -->
+<div id="auth" class="hide min-h-screen">
 
-  <div class="modal">
+<div class="max-w-md mx-auto p-5 pt-12">
 
-    <div class="flex items-center justify-between">
-      <h2 class="text-xl font-bold">Your Cart</h2>
-      <button class="text-zinc-400 text-2xl" onclick="closeModal('cartModal')">×</button>
-    </div>
+<button class="text-gray-500" onclick="location.reload()">
+← Back
+</button>
 
-    <div id="cartItems" class="mt-5"></div>
+<div class="card p-6 mt-6">
 
-    <div class="border-t border-zinc-800 mt-5 pt-5 flex justify-between">
-      <span class="font-bold">Total</span>
-      <span id="cartTotal" class="font-black gold">GHS 0.00</span>
-    </div>
+<b class="text-2xl">
+SELLER<span class="gold">FLOW</span>
+</b>
 
-    <button class="btn btn-gold w-full mt-5" onclick="openCheckout()">
-      Continue to Checkout
-    </button>
+<h2 id="at" class="text-xl font-bold mt-4"></h2>
 
-  </div>
+<div class="grid grid-cols-2 gap-2 mt-4">
+
+<button
+id="sm"
+class="btn g"
+onclick="mode='seller';modes()">
+Seller
+</button>
+
+<button
+id="bm"
+class="btn d"
+onclick="mode='buyer';modes()">
+Buyer
+</button>
+
+</div>
+
+<input
+id="name"
+class="inp mt-4"
+placeholder="Full name">
+
+<input
+id="email"
+class="inp mt-3"
+placeholder="Email">
+
+<input
+id="pass"
+class="inp mt-3"
+type="password"
+placeholder="Password">
+
+<button
+class="btn g w-full mt-4"
+onclick="emailAuth()">
+Continue
+</button>
+
+<button
+class="btn d w-full mt-3"
+onclick="google()">
+Continue with Google
+</button>
+
+<button
+id="switch"
+class="text-gray-500 text-sm w-full mt-4"
+onclick="toggle()">
+</button>
+
+</div>
+</div>
 </div>
 
 
-<!-- =========================================================
-     CHECKOUT MODAL
-========================================================= -->
-<div id="checkoutModal" class="modal-bg hidden">
+<!-- APP -->
+<div id="app" class="hide pb-24">
 
-  <div class="modal">
+<header class="sticky top-0 z-10 bg-[#080808ee] border-b border-[#222]">
 
-    <div class="flex items-center justify-between">
-      <h2 class="text-xl font-bold">Checkout</h2>
-      <button class="text-zinc-400 text-2xl" onclick="closeModal('checkoutModal')">×</button>
-    </div>
+<div class="max-w-6xl mx-auto p-4 flex justify-between">
 
-    <div class="mt-5 p-4 bg-zinc-950 border border-zinc-800 rounded-lg">
-      <div class="text-sm text-zinc-400">Total</div>
-      <div id="checkoutTotal" class="text-2xl font-black gold mt-1">GHS 0.00</div>
-    </div>
+<b onclick="home()">
+SELLER<span class="gold">FLOW</span>
+</b>
 
-    <div class="mt-5">
-      <label class="text-sm text-zinc-400">Name</label>
-      <input id="checkoutName" class="input mt-2">
-    </div>
+<div>
 
-    <div class="mt-4">
-      <label class="text-sm text-zinc-400">Phone</label>
-      <input id="checkoutPhone" class="input mt-2" placeholder="+233...">
-    </div>
+<button
+class="btn d mr-1"
+onclick="messages()">
+💬
+</button>
 
-    <div class="mt-4">
-      <label class="text-sm text-zinc-400">Delivery method</label>
+<button
+class="btn d"
+onclick="profile()">
+👤
+</button>
 
-      <select id="checkoutDeliveryMethod" class="input mt-2">
-        <option value="pickup">Pickup</option>
-        <option value="delivery">Delivery</option>
-      </select>
-    </div>
+</div>
 
-    <div class="mt-4">
-      <label class="text-sm text-zinc-400">Address / Pickup details</label>
-      <textarea id="checkoutAddress" class="input mt-2" rows="3"></textarea>
-    </div>
+</div>
+</header>
 
-    <div class="mt-4">
-      <label class="text-sm text-zinc-400">Note</label>
-      <textarea id="checkoutNote" class="input mt-2" rows="3"></textarea>
-    </div>
+<main class="max-w-6xl mx-auto p-4">
 
-    <div class="mt-5 p-4 rounded-lg bg-yellow-950/30 border border-yellow-900 text-yellow-200 text-sm">
-      SellerFlow V1 does not process the payment inside the app.
-      You and the seller arrange payment and delivery separately.
-    </div>
+<section id="home" class="view"></section>
 
-    <button class="btn btn-gold w-full mt-5" onclick="placeOrder()">
-      Place Order
-    </button>
+<section id="feed" class="view hide"></section>
 
-  </div>
+<section id="orders" class="view hide"></section>
+
+<section id="msgs" class="view hide"></section>
+
+<section id="prof" class="view hide"></section>
+
+<section id="seller" class="view hide"></section>
+
+<section id="admin" class="view hide"></section>
+
+<section id="store" class="view hide"></section>
+
+</main>
 </div>
 
 
-<!-- =========================================================
-     ADMIN ACTION MODAL
-========================================================= -->
-<div id="adminActionModal" class="modal-bg hidden">
+<!-- NAV -->
+<nav id="nav" class="bottom hide">
 
-  <div class="modal">
+<div class="max-w-xl mx-auto grid grid-cols-5 text-center">
 
-    <div class="flex items-center justify-between">
-      <h2 id="adminActionTitle" class="text-xl font-bold">Admin Action</h2>
-      <button class="text-zinc-400 text-2xl" onclick="closeModal('adminActionModal')">×</button>
-    </div>
+<button class="p-3 text-xs" onclick="home()">
+🏠<br>Home
+</button>
 
-    <input id="adminActionUserId" type="hidden">
+<button class="p-3 text-xs" onclick="forYou()">
+🔥<br>For You
+</button>
 
-    <div class="mt-5">
-      <label class="text-sm text-zinc-400">Action</label>
+<button class="p-3 text-xs" onclick="messages()">
+💬<br>Messages
+</button>
 
-      <select id="adminActionSelect" class="input mt-2">
-        <option value="warn">Warn</option>
-        <option value="block">Block</option>
-        <option value="suspend">Suspend</option>
-        <option value="remove">Remove</option>
-        <option value="approve">Approve Verification</option>
-        <option value="reject">Reject Verification</option>
-        <option value="resubmit">Request Resubmission</option>
-      </select>
-    </div>
+<button class="p-3 text-xs" onclick="orders()">
+📦<br>Orders
+</button>
 
-    <div class="mt-4">
-      <label class="text-sm text-zinc-400">Reason / Note</label>
-      <textarea id="adminActionReason" class="input mt-2" rows="4"></textarea>
-    </div>
+<button class="p-3 text-xs" onclick="profile()">
+👤<br>Profile
+</button>
 
-    <button class="btn btn-gold w-full mt-5" onclick="performAdminAction()">
-      Apply Action
-    </button>
+</div>
+</nav>
 
-  </div>
+
+<!-- MODAL -->
+<div
+id="modal"
+class="fixed inset-0 bg-black/80 z-50 hidden overflow-auto">
+
+<div
+id="mb"
+class="max-w-lg mx-auto p-4 min-h-full flex items-center">
+</div>
+
+</div>
+
+<div
+id="toast"
+class="fixed bottom-20 right-4 bg-[#222] border border-[#444] rounded-xl p-3 hidden z-50">
 </div>
 
 
-<!-- =========================================================
-     TOAST
-========================================================= -->
-<div id="toast" class="toast hidden"></div>
+<script type="module">
+
+import{
+initializeApp
+}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+
+import{
+getAuth,
+createUserWithEmailAndPassword,
+signInWithEmailAndPassword,
+signInWithPopup,
+GoogleAuthProvider,
+onAuthStateChanged,
+signOut,
+updateProfile
+}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+import{
+getFirestore,
+doc,
+getDoc,
+setDoc,
+addDoc,
+updateDoc,
+deleteDoc,
+getDocs,
+collection,
+query,
+where,
+orderBy,
+limit,
+serverTimestamp
+}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
 
-<!-- =========================================================
-     NORMAL UI SCRIPT
-     IMPORTANT: This is NOT a module.
-     Therefore UI buttons work even if Firebase fails.
-========================================================= -->
-<script>
+/* =========================
+FIREBASE
+========================= */
 
-window.SELLERFLOW = {
-  firebaseReady:false,
-  auth:null,
-  db:null,
-  storage:null,
-  currentUser:null,
-  currentProfile:null,
-  currentStore:null,
-  currentProducts:[],
-  currentOrders:[],
-  cart:[],
-  authMode:"register",
-  accountType:"seller",
-  viewingStoreId:null,
-  viewingSellerProfile:null,
-  adminUsers:[],
-  adminOrders:[],
-  adminVerificationUsers:[]
+const cfg={
+apiKey:'AIzaSyCyEdrUXAfgThfpSTPY-Yvz8BG3LrhYuWk',
+authDomain:'sellerflow-efaab.firebaseapp.com',
+projectId:'sellerflow-efaab',
+storageBucket:'sellerflow-efaab.firebasestorage.app',
+messagingSenderId:'987175352360',
+appId:'1:987175352360:web:53e44304aaf11b98c61d1d'
 };
 
-window.escapeHTML = function(value){
-  return String(value ?? "")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
+const API='https://sellerflow-api.gideondreams3325.workers.dev';
+
+const CLOUD='xxis0qjp';
+
+const PRESET='ml_default';
+
+const OWNER='gideondreams3325@gmail.com';
+
+const app=initializeApp(cfg);
+
+const auth=getAuth(app);
+
+const db=getFirestore(app);
+
+const gp=new GoogleAuthProvider();
+
+
+/* =========================
+STATE
+========================= */
+
+let u=null;
+
+let ud=null;
+
+let mode='seller';
+
+let am='register';
+
+let store=null;
+
+let products=[];
+
+let cart=[];
+
+let chatId=null;
+
+
+/* =========================
+HELPERS
+========================= */
+
+const $=id=>document.getElementById(id);
+
+const esc=s=>String(s??'').replace(
+/[&<>"']/g,
+c=>({
+'&':'&amp;',
+'<':'&lt;',
+'>':'&gt;',
+'"':'&quot;',
+"'":'&#39;'
+}[c])
+);
+
+const money=n=>'GHS '+Number(n||0).toFixed(2);
+
+const admin=()=>u?.email?.toLowerCase()===OWNER.toLowerCase();
+
+const badge=x=>x?.verified
+?`<span class="badge ${x.badgeColor==='blue'?'blue':'green'}">✓</span>`
+:'';
+
+
+function toast(x){
+
+$('toast').textContent=x;
+
+$('toast').classList.remove('hidden');
+
+setTimeout(()=>{
+$('toast').classList.add('hidden');
+},2500);
+
+}
+
+
+function view(id){
+
+document
+.querySelectorAll('.view')
+.forEach(x=>x.classList.add('hide'));
+
+$(id).classList.remove('hide');
+
+}
+
+
+function modal(x){
+
+$('mb').innerHTML=
+'<div class="card p-5 w-full">'+x+'</div>';
+
+$('modal').classList.remove('hidden');
+
+}
+
+
+function close(){
+
+$('modal').classList.add('hidden');
+
+}
+
+
+/* =========================
+AUTH
+========================= */
+
+window.authPage=x=>{
+
+$('landing').classList.add('hide');
+
+$('auth').classList.remove('hide');
+
+am=x;
+
+$('at').textContent=
+x==='register'
+?'Create your account'
+:'Welcome back';
+
+$('switch').textContent=
+x==='register'
+?'Already have an account? Sign in'
+:'New here? Create an account';
+
+$('name').classList.toggle(
+'hide',
+x==='login'
+);
+
 };
 
-window.money = function(value){
-  return "GHS " + Number(value || 0).toFixed(2);
+
+window.toggle=()=>{
+
+authPage(
+am==='register'
+?'login'
+:'register'
+);
+
 };
 
-window.toast = function(message, type="normal"){
-  const el = document.getElementById("toast");
-  if(!el)return;
 
-  el.className = "toast";
+window.modes=()=>{
 
-  if(type==="error"){
-    el.style.borderColor="#7f1d1d";
-  }else if(type==="success"){
-    el.style.borderColor="#166534";
-  }
+$('sm').className=
+'btn '+(mode==='seller'?'g':'d');
 
-  el.textContent = message;
+$('bm').className=
+'btn '+(mode==='buyer'?'g':'d');
 
-  setTimeout(()=>{
-    el.classList.add("hidden");
-  },3500);
 };
 
-window.showOnly = function(id){
-  const sections = [
-    "landingPage",
-    "authPage",
-    "sellerDashboard",
-    "buyerDashboard",
-    "adminDashboard",
-    "publicStore"
-  ];
 
-  sections.forEach(x=>{
-    const el=document.getElementById(x);
-    if(el)el.classList.add("hidden");
-  });
+/* =========================
+EMAIL AUTH
+========================= */
 
-  const target=document.getElementById(id);
-  if(target)target.classList.remove("hidden");
+window.emailAuth=async()=>{
+
+try{
+
+let e=$('email').value.trim();
+
+let p=$('pass').value;
+
+let n=$('name').value.trim();
+
+if(
+!e||
+!p||
+(am==='register'&&!n)
+){
+
+return toast('Complete all fields');
+
+}
+
+
+if(am==='register'){
+
+let r=
+await createUserWithEmailAndPassword(
+auth,
+e,
+p
+);
+
+if(n){
+
+await updateProfile(
+r.user,
+{displayName:n}
+);
+
+}
+
+await save(
+r.user,
+n,
+mode
+);
+
+}else{
+
+await signInWithEmailAndPassword(
+auth,
+e,
+p
+);
+
+}
+
+}catch(e){
+
+toast(e.message);
+
+}
+
 };
 
-window.showLanding = function(){
-  showOnly("landingPage");
+
+/* =========================
+GOOGLE AUTH
+========================= */
+
+window.google=async()=>{
+
+try{
+
+let r=
+await signInWithPopup(
+auth,
+gp
+);
+
+let s=
+await getDoc(
+doc(db,'users',r.user.uid)
+);
+
+if(!s.exists()){
+
+await save(
+r.user,
+r.user.displayName||'User',
+mode
+);
+
+}
+
+}catch(e){
+
+toast(e.message);
+
+}
+
 };
 
-window.showAuth = function(mode="register"){
-  showOnly("authPage");
-  window.SELLERFLOW.authMode=mode;
 
-  document.getElementById("authError").classList.add("hidden");
+/* =========================
+SAVE USER
+========================= */
 
-  const register=document.getElementById("registerFields");
-  const title=document.getElementById("authTitle");
-  const subtitle=document.getElementById("authSubtitle");
-  const submit=document.getElementById("authSubmitBtn");
-  const switchText=document.getElementById("authSwitchText");
-  const switchBtn=document.getElementById("authSwitchBtn");
+async function save(x,n,r){
 
-  if(mode==="login"){
-    register.classList.add("hidden");
-    title.textContent="Welcome back";
-    subtitle.textContent="Sign in to your SellerFlow account.";
-    submit.textContent="Sign In";
-    switchText.textContent="Don't have an account?";
-    switchBtn.textContent="Create Account";
-  }else{
-    register.classList.remove("hidden");
-    title.textContent="Create your account";
-    subtitle.textContent="Create your SellerFlow account.";
-    submit.textContent="Create Account";
-    switchText.textContent="Already have an account?";
-    switchBtn.textContent="Sign In";
-  }
+let role=
+x.email?.toLowerCase()===OWNER.toLowerCase()
+?'admin'
+:r;
+
+await setDoc(
+doc(db,'users',x.uid),
+{
+uid:x.uid,
+name:n||x.displayName||'User',
+email:x.email,
+role,
+status:'active',
+plan:'free',
+verified:false,
+verificationStatus:'not_submitted',
+badgeColor:'green',
+createdAt:serverTimestamp()
+},
+{merge:true}
+);
+
+if(role==='seller'){
+
+await setDoc(
+doc(db,'stores',x.uid),
+{
+sellerId:x.uid,
+name:(n||x.displayName||'Seller')+"'s Store",
+description:'',
+whatsapp:'',
+createdAt:serverTimestamp()
+},
+{merge:true}
+);
+
+}
+
+}
+
+
+/* =========================
+AUTH LISTENER
+========================= */
+
+onAuthStateChanged(
+auth,
+async x=>{
+
+u=x;
+
+if(!x){
+
+$('app').classList.add('hide');
+
+return;
+
+}
+
+let s=
+await getDoc(
+doc(db,'users',x.uid)
+);
+
+if(!s.exists()){
+
+await save(
+x,
+x.displayName||'User',
+mode
+);
+
+}
+
+ud=
+(
+await getDoc(
+doc(db,'users',x.uid)
+)
+).data();
+
+
+if(admin()){
+
+ud.role='admin';
+
+await setDoc(
+doc(db,'users',x.uid),
+{role:'admin'},
+{merge:true}
+);
+
+}
+
+
+$('landing').classList.add('hide');
+
+$('auth').classList.add('hide');
+
+$('app').classList.remove('hide');
+
+$('nav').classList.remove('hide');
+
+
+if(admin()){
+
+window.adminPage();
+
+}else if(ud.role==='seller'){
+
+window.sellerPage();
+
+}else{
+
+buyerPage();
+
+}
+
+});
+
+
+/* =========================
+HOME
+========================= */
+
+window.home=()=>{
+
+if(admin()){
+
+return window.adminPage();
+
+}
+
+if(ud.role==='seller'){
+
+return window.sellerPage();
+
+}
+
+buyerPage();
+
 };
 
-window.toggleAuthMode = function(){
-  showAuth(
-    window.SELLERFLOW.authMode==="login"
-    ? "register"
-    : "login"
-  );
+
+/* =========================
+BUYER HOME
+========================= */
+
+function buyerPage(){
+
+view('home');
+
+$('home').innerHTML=`
+
+<div class="card p-5">
+
+<small class="text-gray-500">
+Welcome back
+</small>
+
+<h1 class="text-2xl font-black">
+${esc(ud.name)}
+</h1>
+
+<div class="flex gap-2 mt-4">
+
+<button
+class="btn g"
+onclick="forYou()">
+🔥 For You
+</button>
+
+<button
+class="btn d"
+onclick="orders()">
+📦 Orders
+</button>
+
+</div>
+
+</div>
+
+<h2 class="font-black text-xl mt-7">
+Stores
+</h2>
+
+<div
+id="stores"
+class="grid md:grid-cols-3 gap-3 mt-3">
+</div>
+
+`;
+
+loadStores();
+
+}
+
+
+/* =========================
+STORES
+========================= */
+
+async function loadStores(){
+
+let q=
+await getDocs(
+query(
+collection(db,'stores'),
+limit(60)
+)
+);
+
+$('stores').innerHTML=
+
+q.docs.map(d=>`
+
+<div class="card p-4">
+
+<b>
+${esc(d.data().name)}
+</b>
+
+<p class="text-gray-500 text-sm mt-1">
+${esc(d.data().description||'Online store')}
+</p>
+
+<button
+class="btn d w-full mt-3"
+onclick="openStore('${d.id}')">
+Visit Store
+</button>
+
+</div>
+
+`).join('')
+
+||'<p class="text-gray-500">No stores yet.</p>';
+
+}
+
+
+/* =========================
+FOR YOU
+========================= */
+
+window.forYou=async()=>{
+
+view('feed');
+
+$('feed').innerHTML=`
+
+<h2 class="text-2xl font-black">
+For You 🔥
+</h2>
+
+<div
+id="posts"
+class="max-w-xl mx-auto space-y-4 mt-4">
+</div>
+
+`;
+
+let q=
+await getDocs(
+query(
+collection(db,'posts'),
+limit(50)
+)
+);
+
+let a=$('posts');
+
+if(!q.size){
+
+a.innerHTML=
+'<div class="card p-5 text-gray-500">No posts yet.</div>';
+
+return;
+
+}
+
+for(let d of q.docs){
+
+let p=d.data();
+
+let su=
+(await getDoc(
+doc(db,'users',p.sellerId)
+)).data()||{};
+
+a.innerHTML+=`
+
+<article class="card p-3">
+
+<b>
+${esc(su.name||'Seller')}
+${badge(su)}
+</b>
+
+${
+p.mediaType==='video'
+?
+`<video controls class="w-full rounded-xl mt-3 max-h-[520px]" src="${esc(p.mediaUrl)}"></video>`
+:
+`<img class="w-full rounded-xl mt-3 max-h-[520px] object-cover" src="${esc(p.mediaUrl)}">`
+}
+
+<p class="mt-3">
+${esc(p.caption||'')}
+</p>
+
+<div class="flex gap-5 text-sm text-gray-400 mt-3">
+
+<button onclick="like('${d.id}')">
+♥ ${p.likesCount||0}
+</button>
+
+<button onclick="comments('${d.id}')">
+💬 ${p.commentsCount||0}
+</button>
+
+<button onclick="savepost('${d.id}')">
+🔖 ${p.savesCount||0}
+</button>
+
+<button onclick="share('${d.id}')">
+↗ Share
+</button>
+
+</div>
+
+</article>
+
+`;
+
+}
+
 };
 
-window.selectAccountType = function(type){
-  window.SELLERFLOW.accountType=type;
 
-  const seller=document.getElementById("accountSellerBtn");
-  const buyer=document.getElementById("accountBuyerBtn");
+/* =========================
+LIKES
+========================= */
 
-  if(type==="seller"){
-    seller.className="btn btn-gold flex-1";
-    buyer.className="btn btn-dark flex-1";
-  }else{
-    seller.className="btn btn-dark flex-1";
-    buyer.className="btn btn-gold flex-1";
-  }
+window.like=async id=>{
+
+let r=
+doc(db,'posts',id,'likes',u.uid);
+
+let s=
+await getDoc(r);
+
+let p=
+doc(db,'posts',id);
+
+let d=
+(await getDoc(p)).data();
+
+let n=d.likesCount||0;
+
+if(s.exists()){
+
+await deleteDoc(r);
+
+await updateDoc(
+p,
+{likesCount:Math.max(0,n-1)}
+);
+
+}else{
+
+await setDoc(
+r,
+{
+uid:u.uid,
+createdAt:serverTimestamp()
+}
+);
+
+await updateDoc(
+p,
+{likesCount:n+1}
+);
+
+}
+
+forYou();
+
 };
 
-window.showDashboardTab = function(tab){
 
-  document.querySelectorAll(".seller-tab").forEach(el=>{
-    el.classList.add("hidden");
-  });
+/* =========================
+SAVE POST
+========================= */
 
-  const target=document.getElementById("sellerTab"+capitalize(tab));
+window.savepost=async id=>{
 
-  if(target){
-    target.classList.remove("hidden");
-  }
+await setDoc(
+doc(db,'posts',id,'saves',u.uid),
+{
+uid:u.uid,
+createdAt:serverTimestamp()
+}
+);
 
-  document.querySelectorAll(".nav-btn[data-tab]").forEach(btn=>{
-    btn.classList.remove("active");
+toast('Saved');
 
-    if(btn.dataset.tab===tab){
-      btn.classList.add("active");
-    }
-  });
-
-  const titles={
-    overview:"Overview",
-    products:"Products",
-    orders:"Orders",
-    store:"Store Settings",
-    verification:"Verification"
-  };
-
-  document.getElementById("dashboardTitle").textContent =
-    titles[tab] || "Dashboard";
-
-  if(tab==="products")renderProducts();
-  if(tab==="orders")renderSellerOrders();
-  if(tab==="store")fillStoreSettings();
-  if(tab==="verification")renderVerification();
 };
 
-window.capitalize=function(x){
-  return x.charAt(0).toUpperCase()+x.slice(1);
+
+/* =========================
+COMMENTS
+========================= */
+
+window.comments=async id=>{
+
+let q=
+await getDocs(
+query(
+collection(db,'posts',id,'comments'),
+limit(50)
+)
+);
+
+modal(`
+
+<h2 class="text-xl font-black">
+Comments
+</h2>
+
+<div class="mt-4 space-y-2">
+
+${q.docs.map(d=>`
+
+<div class="border-b border-[#222] pb-2">
+
+<b>
+${esc(d.data().userName)}
+</b>
+
+<p class="text-gray-400">
+${esc(d.data().text)}
+</p>
+
+</div>
+
+`).join('')}
+
+</div>
+
+<input
+id="ct"
+class="inp mt-4"
+placeholder="Comment">
+
+<button
+class="btn g w-full mt-3"
+onclick="comment('${id}')">
+Post
+</button>
+
+`);
+
 };
 
-window.showBuyerTab=function(){
-  renderBuyerOrders();
+
+window.comment=async id=>{
+
+let t=$('ct').value.trim();
+
+if(!t)return;
+
+await addDoc(
+collection(db,'posts',id,'comments'),
+{
+userId:u.uid,
+userName:ud.name,
+text:t,
+createdAt:serverTimestamp()
+}
+);
+
+close();
+
+forYou();
+
 };
 
-window.showMobileMenu=function(){
-  document.getElementById("mobileSellerNav").classList.remove("hidden");
+
+/* =========================
+SHARE
+========================= */
+
+window.share=async id=>{
+
+let x=
+location.href.split('?')[0]+'?post='+id;
+
+try{
+
+await navigator.share({
+title:'SellerFlow',
+url:x
+});
+
+}catch{
+
+await navigator.clipboard?.writeText(x);
+
+toast('Link copied');
+
+}
+
 };
 
-window.hideMobileMenu=function(){
-  document.getElementById("mobileSellerNav").classList.add("hidden");
+
+/* =========================
+PUBLIC STORE
+========================= */
+
+window.openStore=async id=>{
+
+store=
+(await getDoc(
+doc(db,'stores',id)
+)).data();
+
+products=
+(
+await getDocs(
+query(
+collection(db,'products'),
+where('sellerId','==',id),
+limit(100)
+)
+)
+).docs.map(
+d=>({id:d.id,...d.data()})
+);
+
+let su=
+(
+await getDoc(
+doc(db,'users',id)
+)
+).data()||{};
+
+view('store');
+
+$('store').innerHTML=`
+
+<button
+class="text-gray-500"
+onclick="home()">
+← Back
+</button>
+
+<div class="card p-5 mt-3">
+
+<h1 class="text-2xl font-black">
+
+${esc(store.name)}
+${badge(su)}
+
+</h1>
+
+<p class="text-gray-500">
+${esc(store.description||'')}
+</p>
+
+<div class="flex gap-2 mt-4">
+
+<button
+class="btn d"
+onclick="chat('${id}')">
+💬 Message
+</button>
+
+<button
+class="btn d"
+onclick="follow('${id}')">
+＋ Follow
+</button>
+
+<button
+class="btn d"
+onclick="shareStore('${id}')">
+↗ Share
+</button>
+
+</div>
+
+</div>
+
+<div class="grid md:grid-cols-3 gap-3 mt-4">
+
+${products.map(p=>`
+
+<div class="card p-3">
+
+<img
+class="w-full h-48 object-cover rounded-xl"
+src="${esc(p.imageUrl||'https://placehold.co/600x400/111/fff?text=Product')}">
+
+<b class="block mt-3">
+${esc(p.name)}
+</b>
+
+<b class="gold">
+${money(p.price)}
+</b>
+
+<p class="text-gray-500 text-sm">
+${esc(p.description||'')}
+</p>
+
+<button
+class="btn g w-full mt-3"
+onclick="buy('${p.id}')">
+Buy
+</button>
+
+<button
+class="text-sm text-gray-500 mt-2"
+onclick="reviews('${p.id}')">
+⭐ Reviews
+</button>
+
+</div>
+
+`).join('')}
+
+</div>
+
+`;
+
 };
 
-window.closeModal=function(id){
-  const el=document.getElementById(id);
-  if(el)el.classList.add("hidden");
+
+/* =========================
+BUY
+========================= */
+
+window.buy=id=>{
+
+let p=
+products.find(x=>x.id===id);
+
+if(!p)return;
+
+cart.push({
+...p,
+qty:1
+});
+
+checkout();
+
 };
 
-window.openProductModal=function(product=null){
 
-  document.getElementById("productModal").classList.remove("hidden");
+/* =========================
+CHECKOUT
+========================= */
 
-  document.getElementById("editingProductId").value =
-    product?.id || "";
+window.checkout=()=>{
 
-  document.getElementById("productModalTitle").textContent =
-    product ? "Edit Product" : "Add Product";
+if(!u){
 
-  document.getElementById("productName").value =
-    product?.name || "";
+return toast(
+'Please sign in as a buyer first.'
+);
 
-  document.getElementById("productPrice").value =
-    product?.price ?? "";
+}
 
-  document.getElementById("productStock").value =
-    product?.stock ?? "";
+if(ud.role!=='buyer'){
 
-  document.getElementById("productDescription").value =
-    product?.description || "";
+return toast(
+'Use a buyer account to place an order.'
+);
 
-  document.getElementById("productImage").value="";
+}
 
-  document.getElementById("currentProductImage").textContent =
-    product?.imageUrl ? "Current image will remain unless replaced." : "";
+let total=
+cart.reduce(
+(a,p)=>a+p.price*p.qty,
+0
+);
+
+modal(`
+
+<h2 class="text-xl font-black">
+Checkout
+</h2>
+
+<input
+id="phone"
+class="inp mt-4"
+placeholder="Phone / WhatsApp">
+
+<select
+id="method"
+class="inp mt-3">
+
+<option>
+Pickup
+</option>
+
+<option>
+Delivery
+</option>
+
+</select>
+
+<textarea
+id="address"
+class="inp mt-3"
+placeholder="Address / pickup details">
+</textarea>
+
+<p class="gold font-black mt-3">
+${money(total)}
+· Physical payment arranged with seller
+</p>
+
+<button
+class="btn g w-full mt-4"
+onclick="place()">
+Place Order
+</button>
+
+`);
+
 };
 
-window.openCartModal=function(){
-  renderCart();
-  document.getElementById("cartModal").classList.remove("hidden");
+
+/* =========================
+PLACE ORDER
+========================= */
+
+window.place=async()=>{
+
+let items=
+cart.map(p=>({
+productId:p.id,
+name:p.name,
+price:p.price,
+quantity:p.qty
+}));
+
+let total=
+items.reduce(
+(a,p)=>a+p.price*p.quantity,
+0
+);
+
+if(!$('phone').value.trim()){
+
+return toast('Enter your phone number');
+
+}
+
+await addDoc(
+collection(db,'orders'),
+{
+sellerId:store.sellerId,
+storeId:store.sellerId,
+buyerId:u.uid,
+buyerEmail:u.email,
+customerName:ud.name,
+customerPhone:$('phone').value,
+deliveryMethod:$('method').value,
+address:$('address').value,
+items,
+total,
+paymentMethod:'physical_payment',
+paymentStatus:'not_applicable',
+status:'pending',
+createdAt:serverTimestamp(),
+updatedAt:serverTimestamp()
+}
+);
+
+cart=[];
+
+close();
+
+toast('Order placed successfully');
+
+orders();
+
 };
 
-window.openCheckout=function(){
 
-  if(!window.SELLERFLOW.cart.length){
-    toast("Your cart is empty.","error");
-    return;
-  }
+/* =========================
+REVIEWS
+========================= */
 
-  if(!window.SELLERFLOW.currentUser){
-    closeModal("cartModal");
-    toast("Please create or sign in to a buyer account first.","error");
-    showAuth("login");
-    selectAccountType("buyer");
-    return;
-  }
+window.reviews=async pid=>{
 
-  if(window.SELLERFLOW.currentProfile?.role !== "buyer"){
-    closeModal("cartModal");
-    toast("Checkout requires a buyer account.","error");
-    return;
-  }
+let q=
+await getDocs(
+query(
+collection(db,'reviews'),
+where('productId','==',pid),
+limit(50)
+)
+);
 
-  const total=window.SELLERFLOW.cart.reduce(
-    (sum,item)=>sum+(Number(item.price)*Number(item.quantity)),0
-  );
+modal(`
 
-  document.getElementById("checkoutTotal").textContent=money(total);
+<h2 class="text-xl font-black">
+Reviews
+</h2>
 
-  document.getElementById("checkoutName").value =
-    window.SELLERFLOW.currentProfile?.name ||
-    window.SELLERFLOW.currentUser.displayName ||
-    "";
+<div class="mt-4">
 
-  document.getElementById("checkoutPhone").value =
-    window.SELLERFLOW.currentProfile?.phone || "";
+${q.docs.map(d=>`
 
-  closeModal("cartModal");
-  document.getElementById("checkoutModal").classList.remove("hidden");
+<div class="border-b border-[#222] py-3">
+
+⭐ ${d.data().rating}/5
+
+<b>
+${esc(d.data().buyerName)}
+</b>
+
+<p class="text-gray-400">
+${esc(d.data().text)}
+</p>
+
+</div>
+
+`).join('')}
+
+</div>
+
+<button
+class="btn d w-full mt-4"
+onclick="close()">
+Close
+</button>
+
+`);
+
 };
 
-window.updateCartQuantity=function(productId,delta){
 
-  const item=window.SELLERFLOW.cart.find(x=>x.productId===productId);
+/* =========================
+FOLLOW
+========================= */
 
-  if(!item)return;
+window.follow=async id=>{
 
-  item.quantity+=delta;
+await setDoc(
+doc(db,'follows',u.uid+'_'+id),
+{
+followerId:u.uid,
+followingSellerId:id,
+createdAt:serverTimestamp()
+}
+);
 
-  if(item.quantity<=0){
-    window.SELLERFLOW.cart=
-      window.SELLERFLOW.cart.filter(x=>x.productId!==productId);
-  }
+toast('Following');
 
-  renderCart();
 };
 
-window.removeFromCart=function(productId){
-  window.SELLERFLOW.cart=
-    window.SELLERFLOW.cart.filter(x=>x.productId!==productId);
 
-  renderCart();
+/* =========================
+SHARE STORE
+========================= */
+
+window.shareStore=async id=>{
+
+let x=
+location.href.split('?')[0]+'?store='+id;
+
+try{
+
+await navigator.share({
+title:store.name,
+url:x
+});
+
+}catch{
+
+await navigator.clipboard?.writeText(x);
+
+toast('Link copied');
+
+}
+
 };
 
-window.renderCart=function(){
 
-  const box=document.getElementById("cartItems");
-  const count=document.getElementById("cartCount");
+/* =========================
+BUYER ORDERS
+========================= */
 
-  count.textContent=window.SELLERFLOW.cart.reduce(
-    (sum,x)=>sum+x.quantity,0
-  );
+window.orders=async()=>{
 
-  if(!window.SELLERFLOW.cart.length){
-    box.innerHTML=
-      `<div class="text-center py-10 text-zinc-500">Your cart is empty.</div>`;
+view('orders');
 
-    document.getElementById("cartTotal").textContent=money(0);
-    return;
-  }
+let q=
+await getDocs(
+query(
+collection(db,'orders'),
+where('buyerId','==',u.uid),
+limit(100)
+)
+);
 
-  let total=0;
+$('orders').innerHTML=`
 
-  box.innerHTML=window.SELLERFLOW.cart.map(item=>{
+<h2 class="text-2xl font-black">
+My Orders
+</h2>
 
-    const line=Number(item.price)*Number(item.quantity);
-    total+=line;
+<div class="space-y-3 mt-4">
 
-    return `
-      <div class="flex gap-3 py-4 border-b border-zinc-800">
-        <div class="w-16 h-16 rounded-lg bg-zinc-900 overflow-hidden">
-          ${item.imageUrl
-            ? `<img src="${escapeHTML(item.imageUrl)}" class="w-full h-full object-cover">`
-            : ""}
-        </div>
+${
+q.docs.map(d=>{
 
-        <div class="flex-1">
-          <div class="font-bold">${escapeHTML(item.name)}</div>
-          <div class="text-sm text-zinc-500">${money(item.price)}</div>
+let o=d.data();
 
-          <div class="flex items-center gap-2 mt-2">
-            <button class="btn btn-dark btn-small"
-              onclick="updateCartQuantity('${item.productId}',-1)">−</button>
+return `
 
-            <span>${item.quantity}</span>
+<div class="card p-4">
 
-            <button class="btn btn-dark btn-small"
-              onclick="updateCartQuantity('${item.productId}',1)">+</button>
+<div class="flex justify-between">
 
-            <button class="text-red-400 text-xs ml-2"
-              onclick="removeFromCart('${item.productId}')">
-              Remove
-            </button>
-          </div>
-        </div>
+<b>
+${money(o.total)}
+</b>
 
-        <div class="font-bold">${money(line)}</div>
-      </div>
-    `;
-  }).join("");
+<span class="gold">
+${esc(o.status)}
+</span>
 
-  document.getElementById("cartTotal").textContent=money(total);
+</div>
+
+<p class="text-gray-400 text-sm">
+
+${o.items?.map(
+x=>esc(x.name)+' × '+x.quantity
+).join(', ')}
+
+</p>
+
+</div>
+
+`;
+
+}).join('')
+}
+
+</div>
+
+`;
+
 };
 
-window.addToCart=function(product){
 
-  const existing=window.SELLERFLOW.cart.find(
-    x=>x.productId===product.id
-  );
+/* =========================
+MESSAGES
+========================= */
 
-  if(existing){
-    existing.quantity++;
-  }else{
-    window.SELLERFLOW.cart.push({
-      productId:product.id,
-      name:product.name,
-      price:Number(product.price),
-      quantity:1,
-      imageUrl:product.imageUrl || ""
-    });
-  }
+window.messages=async()=>{
 
-  renderCart();
-  toast("Product added to cart.","success");
+view('msgs');
+
+let q=
+await getDocs(
+query(
+collection(db,'conversations'),
+where('participants','array-contains',u.uid),
+limit(50)
+)
+);
+
+$('msgs').innerHTML=`
+
+<h2 class="text-2xl font-black">
+Messages
+</h2>
+
+<div class="space-y-2 mt-4">
+
+${
+q.docs.map(d=>`
+
+<button
+class="card p-4 w-full text-left"
+onclick="openChat('${d.id}')">
+
+<b>
+${esc(d.data().otherName||'Conversation')}
+</b>
+
+<p class="text-gray-500">
+${esc(d.data().lastMessage||'')}
+</p>
+
+</button>
+
+`).join('')
+
+||
+
+'<p class="text-gray-500 mt-4">No conversations yet.</p>'
+
+}
+
+</div>
+
+`;
+
 };
 
-window.backFromStore=function(){
 
-  if(window.SELLERFLOW.currentUser){
+/* =========================
+START CHAT
+========================= */
 
-    const role=window.SELLERFLOW.currentProfile?.role;
+window.chat=async sid=>{
 
-    if(role==="seller"){
-      showOnly("sellerDashboard");
-      return;
-    }
+let id=
+[u.uid,sid].sort().join('_');
 
-    if(role==="buyer"){
-      showOnly("buyerDashboard");
-      return;
-    }
+let su=
+(
+await getDoc(
+doc(db,'users',sid)
+)
+).data()||{};
 
-    if(
-      window.SELLERFLOW.currentUser.email?.toLowerCase()
-      === OWNER_EMAIL.toLowerCase()
-    ){
-      showOnly("adminDashboard");
-      return;
-    }
-  }
+await setDoc(
+doc(db,'conversations',id),
+{
+participants:[u.uid,sid],
+sellerId:sid,
+buyerId:u.uid,
+otherName:su.name||'Seller',
+lastMessage:'',
+updatedAt:serverTimestamp()
+},
+{merge:true}
+);
 
-  showLanding();
+openChat(id);
+
 };
 
-window.contactStoreWhatsApp=function(){
 
-  const number=window.SELLERFLOW.currentStore?.whatsapp;
+/* =========================
+OPEN CHAT
+========================= */
 
-  if(!number){
-    toast("This seller has not added a WhatsApp number.","error");
-    return;
-  }
+window.openChat=async id=>{
 
-  const cleaned=String(number).replace(/[^\d]/g,"");
+view('msgs');
 
-  window.open(
-    "https://wa.me/"+cleaned,
-    "_blank"
-  );
+let q=
+await getDocs(
+query(
+collection(
+db,
+'conversations',
+id,
+'messages'
+),
+orderBy('createdAt','asc'),
+limit(100)
+)
+);
+
+$('msgs').innerHTML=`
+
+<h2 class="text-2xl font-black">
+Chat
+</h2>
+
+<div class="card p-4 mt-4">
+
+<div class="space-y-2 max-h-80 overflow-auto">
+
+${q.docs.map(d=>`
+
+<p
+class="${d.data().senderId===u.uid?'text-right':''}">
+
+<span
+class="inline-block bg-[#202020] rounded-xl px-3 py-2">
+
+${esc(d.data().text)}
+
+</span>
+
+</p>
+
+`).join('')}
+
+</div>
+
+<div class="flex gap-2 mt-4">
+
+<input
+id="msg"
+class="inp"
+placeholder="Message">
+
+<button
+class="btn g"
+onclick="send('${id}')">
+Send
+</button>
+
+</div>
+
+</div>
+
+`;
+
 };
 
-window.renderVerification=function(){
 
-  const p=window.SELLERFLOW.currentProfile || {};
+/* =========================
+SEND MESSAGE
+========================= */
 
-  const status=p.verificationStatus || "not_submitted";
-  const plan=p.plan || "free";
+window.send=async id=>{
 
-  const labels={
-    not_submitted:["Not Submitted","badge-gray"],
-    pending:["Pending Review","badge-yellow"],
-    approved:["Approved","badge-green"],
-    rejected:["Rejected","badge-red"],
-    suspended:["Suspended","badge-red"],
-    resubmission:["Resubmission Required","badge-yellow"]
-  };
+let t=
+$('msg').value.trim();
 
-  const data=labels[status] || labels.not_submitted;
+if(!t)return;
 
-  let badge="";
+await addDoc(
+collection(
+db,
+'conversations',
+id,
+'messages'
+),
+{
+senderId:u.uid,
+text:t,
+createdAt:serverTimestamp(),
+read:false
+}
+);
 
-  if(p.verified){
-    badge=getVerificationBadge(p);
-  }
+await updateDoc(
+doc(db,'conversations',id),
+{
+lastMessage:t,
+updatedAt:serverTimestamp()
+}
+);
 
-  document.getElementById("verificationStatusBox").innerHTML=`
-    <div class="flex flex-wrap items-center gap-3">
-      <span class="badge ${data[1]}">${data[0]}</span>
-      ${badge}
-    </div>
+openChat(id);
 
-    <div class="grid md:grid-cols-2 gap-4 mt-5">
-
-      <div class="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
-        <div class="text-xs text-zinc-500">Current Plan</div>
-        <div class="font-bold mt-1">${escapeHTML(planLabel(plan))}</div>
-      </div>
-
-      <div class="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
-        <div class="text-xs text-zinc-500">Badge</div>
-        <div class="font-bold mt-1">
-          ${p.verified ? (plan==="pro150" ? "Blue Verified" : "Green Verified") : "Not active"}
-        </div>
-      </div>
-
-    </div>
-  `;
-
-  document.getElementById("ghanaCardNumber").value=
-    p.ghanaCardNumber || "";
-
-  const submit=document.getElementById("verificationSubmitBtn");
-
-  if(status==="pending"){
-    submit.disabled=true;
-    submit.style.opacity=".5";
-    submit.textContent="Verification Pending";
-  }else if(status==="approved"){
-    submit.disabled=true;
-    submit.style.opacity=".5";
-    submit.textContent="Verified";
-  }else{
-    submit.disabled=false;
-    submit.style.opacity="1";
-    submit.textContent=
-      status==="rejected" || status==="resubmission"
-      ? "Resubmit for Verification"
-      : "Submit for Verification";
-  }
 };
 
-window.planLabel=function(plan){
 
-  const labels={
-    free:"Free",
-    pro30:"GHS 30",
-    pro70:"GHS 70",
-    pro150:"GHS 150"
-  };
+/* =========================
+SELLER DASHBOARD
+========================= */
 
-  return labels[plan] || "Free";
+window.sellerPage=()=>{
+
+view('seller');
+
+loadSeller();
+
 };
 
-window.getVerificationBadge=function(profile){
 
-  if(!profile?.verified)return "";
+async function loadSeller(){
 
-  if(profile.plan==="pro150"){
-    return `<span class="badge badge-blue">✓ Verified</span>`;
-  }
+let st=
+(
+await getDoc(
+doc(db,'stores',u.uid)
+)
+).data()||{};
 
-  return `<span class="badge badge-green">✓ Verified</span>`;
+products=
+(
+await getDocs(
+query(
+collection(db,'products'),
+where('sellerId','==',u.uid),
+limit(100)
+)
+)
+).docs.map(
+d=>({id:d.id,...d.data()})
+);
+
+let oq=
+await getDocs(
+query(
+collection(db,'orders'),
+where('sellerId','==',u.uid),
+limit(100)
+)
+);
+
+let sellerOrders=
+oq.docs.map(
+d=>({id:d.id,...d.data()})
+);
+
+
+$('seller').innerHTML=`
+
+<div class="flex justify-between">
+
+<div>
+
+<h1 class="text-2xl font-black">
+Seller Dashboard
+</h1>
+
+<p class="text-gray-500">
+
+Plan:
+${esc(ud.plan)}
+
+·
+
+${
+ud.verified
+?'Verified'
+:'Verification '+esc(ud.verificationStatus)
+}
+
+</p>
+
+</div>
+
+<button
+class="btn g"
+onclick="openStore('${u.uid}')">
+View Store
+</button>
+
+</div>
+
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
+
+<div class="card p-4">
+
+Products
+
+<b class="block text-2xl">
+${products.length}
+</b>
+
+</div>
+
+<div class="card p-4">
+
+Orders
+
+<b class="block text-2xl">
+${sellerOrders.length}
+</b>
+
+</div>
+
+<div class="card p-4">
+
+Pending
+
+<b class="block text-2xl">
+
+${
+sellerOrders.filter(
+x=>x.status==='pending'
+).length
+}
+
+</b>
+
+</div>
+
+<div class="card p-4">
+
+Badge
+
+<b class="block mt-2">
+${badge(ud)||'—'}
+</b>
+
+</div>
+
+</div>
+
+
+<div class="grid md:grid-cols-2 gap-4 mt-5">
+
+
+<!-- PRODUCTS -->
+
+<div class="card p-5">
+
+<h2 class="font-black text-xl">
+Products
+</h2>
+
+<button
+class="btn g mt-3"
+onclick="productForm()">
+＋ Add Product
+</button>
+
+<div class="space-y-2 mt-3">
+
+${products.map(p=>`
+
+<div class="border-b border-[#222] py-2 flex justify-between">
+
+<span>
+${esc(p.name)}
+·
+${money(p.price)}
+</span>
+
+<button
+class="text-red-400"
+onclick="del('products','${p.id}')">
+Delete
+</button>
+
+</div>
+
+`).join('')}
+
+</div>
+
+</div>
+
+
+<!-- VERIFICATION -->
+
+<div class="card p-5">
+
+<h2 class="font-black text-xl">
+Ghana Card Verification
+</h2>
+
+<p class="text-gray-500 text-sm mt-2">
+
+Status:
+${esc(ud.verificationStatus||'not_submitted')}
+
+</p>
+
+<button
+class="btn g mt-3"
+onclick="verifyForm()">
+
+${
+ud.verified
+?'View status'
+:'Submit verification'
+}
+
+</button>
+
+</div>
+
+
+<!-- POSTS -->
+
+<div class="card p-5">
+
+<h2 class="font-black text-xl">
+For You Posts
+</h2>
+
+<button
+class="btn g mt-3"
+onclick="postForm()">
+＋ Publish Post
+</button>
+
+</div>
+
+
+<!-- ORDERS -->
+
+<div class="card p-5">
+
+<h2 class="font-black text-xl">
+Orders
+</h2>
+
+<div class="space-y-2 mt-3">
+
+${sellerOrders.map(o=>`
+
+<div class="border-b border-[#222] py-2">
+
+<b>
+${esc(o.customerName)}
+</b>
+
+·
+
+${money(o.total)}
+
+<select
+class="inp mt-2"
+onchange="orderStatus('${o.id}',this.value)">
+
+<option
+${o.status==='pending'?'selected':''}>
+pending
+</option>
+
+<option
+${o.status==='confirmed'?'selected':''}>
+confirmed
+</option>
+
+<option
+${o.status==='processing'?'selected':''}>
+processing
+</option>
+
+<option
+${o.status==='ready'?'selected':''}>
+ready
+</option>
+
+<option
+${o.status==='out_for_delivery'?'selected':''}>
+out_for_delivery
+</option>
+
+<option
+${o.status==='delivered'?'selected':''}>
+delivered
+</option>
+
+<option
+${o.status==='cancelled'?'selected':''}>
+cancelled
+</option>
+
+</select>
+
+</div>
+
+`).join('')}
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+}
+
+
+/* =========================
+PRODUCT FORM
+========================= */
+
+window.productForm=()=>{
+
+modal(`
+
+<h2 class="text-xl font-black">
+Add Product
+</h2>
+
+<input
+id="pn"
+class="inp mt-4"
+placeholder="Product name">
+
+<input
+id="pp"
+class="inp mt-3"
+type="number"
+placeholder="Price">
+
+<input
+id="ps"
+class="inp mt-3"
+type="number"
+placeholder="Stock">
+
+<textarea
+id="pd"
+class="inp mt-3"
+placeholder="Description">
+</textarea>
+
+<input
+id="pi"
+class="inp mt-3"
+type="file"
+accept="image/*">
+
+<button
+class="btn g w-full mt-4"
+onclick="addProduct()">
+Save
+</button>
+
+`);
+
 };
 
-window.renderProducts=function(){
 
-  const box=document.getElementById("productsGrid");
-  const products=window.SELLERFLOW.currentProducts || [];
+/* =========================
+CLOUDINARY
+========================= */
 
-  if(!products.length){
-    box.innerHTML=`
-      <div class="card p-10 text-center text-zinc-500 col-span-full">
-        <div class="text-4xl">🛍️</div>
-        <div class="font-bold text-white mt-3">No products yet</div>
-        <div class="text-sm mt-1">Add your first product.</div>
-        <button class="btn btn-gold mt-5" onclick="openProductModal()">
-          Add Product
-        </button>
-      </div>
-    `;
-    return;
-  }
+async function upload(f){
 
-  box.innerHTML=products.map(p=>`
+let fd=new FormData();
 
-    <div class="card p-4">
+fd.append('file',f);
 
-      <div class="h-48 rounded-xl bg-zinc-900 overflow-hidden">
-        ${p.imageUrl
-          ? `<img src="${escapeHTML(p.imageUrl)}" class="product-img">`
-          : `<div class="h-full flex items-center justify-center text-zinc-600">No image</div>`
-        }
-      </div>
+fd.append(
+'upload_preset',
+PRESET
+);
 
-      <div class="mt-4 flex justify-between gap-3">
-        <div>
-          <h3 class="font-bold">${escapeHTML(p.name)}</h3>
-          <div class="gold font-black mt-1">${money(p.price)}</div>
-        </div>
+fd.append(
+'folder',
+'sellerflow'
+);
 
-        <div class="text-right text-xs text-zinc-500">
-          Stock<br>
-          <span class="text-white font-bold">${Number(p.stock||0)}</span>
-        </div>
-      </div>
+let r=
+await fetch(
+`https://api.cloudinary.com/v1_1/${CLOUD}/auto/upload`,
+{
+method:'POST',
+body:fd
+}
+);
 
-      <p class="text-sm text-zinc-500 mt-3">
-        ${escapeHTML(p.description || "No description")}
-      </p>
+if(!r.ok){
 
-      <div class="flex gap-2 mt-5">
-        <button class="btn btn-dark btn-small flex-1"
-          onclick='openProductModal(${JSON.stringify(safeObject(p))})'>
-          Edit
-        </button>
+throw Error('Upload failed');
 
-        <button class="btn btn-red btn-small"
-          onclick="deleteProduct('${p.id}')">
-          Delete
-        </button>
-      </div>
+}
 
-    </div>
+return(
+await r.json()
+).secure_url;
 
-  `).join("");
+}
+
+
+/* =========================
+ADD PRODUCT
+========================= */
+
+window.addProduct=async()=>{
+
+try{
+
+let f=$('pi').files[0];
+
+let url=
+f
+?await upload(f)
+:'';
+
+let name=
+$('pn').value.trim();
+
+let price=
+Number($('pp').value);
+
+let stock=
+Number($('ps').value);
+
+if(!name){
+
+return toast(
+'Enter product name'
+);
+
+}
+
+if(!price){
+
+return toast(
+'Enter product price'
+);
+
+}
+
+await addDoc(
+collection(db,'products'),
+{
+sellerId:u.uid,
+storeId:u.uid,
+name,
+price,
+stock,
+description:$('pd').value.trim(),
+imageUrl:url,
+rating:0,
+reviewCount:0,
+createdAt:serverTimestamp()
+}
+);
+
+close();
+
+loadSeller();
+
+toast('Product added');
+
+}catch(e){
+
+toast(e.message);
+
+}
+
 };
 
-window.safeObject=function(obj){
-  return JSON.parse(JSON.stringify(obj));
+
+/* =========================
+DELETE
+========================= */
+
+window.del=async(c,id)=>{
+
+if(!confirm('Delete?'))return;
+
+await deleteDoc(
+doc(db,c,id)
+);
+
+loadSeller();
+
 };
 
-window.renderSellerOrders=function(){
 
-  const box=document.getElementById("sellerOrdersList");
-  const orders=window.SELLERFLOW.currentOrders || [];
+/* =========================
+ORDER STATUS
+========================= */
 
-  if(!orders.length){
-    box.innerHTML=`
-      <div class="card p-10 text-center text-zinc-500">
-        No orders yet.
-      </div>
-    `;
-    return;
-  }
+window.orderStatus=async(id,s)=>{
 
-  box.innerHTML=orders.map(o=>`
+await updateDoc(
+doc(db,'orders',id),
+{
+status:s,
+updatedAt:serverTimestamp()
+}
+);
 
-    <div class="card p-5 mb-4">
+loadSeller();
 
-      <div class="flex flex-wrap justify-between gap-3">
-
-        <div>
-          <div class="font-bold">
-            Order #${escapeHTML(String(o.id).slice(-8))}
-          </div>
-
-          <div class="text-sm text-zinc-500 mt-1">
-            ${escapeHTML(o.customerName || "Customer")}
-            · ${escapeHTML(o.customerPhone || "")}
-          </div>
-        </div>
-
-        <div class="gold font-black">${money(o.total)}</div>
-
-      </div>
-
-      <div class="mt-4 text-sm">
-        <div class="text-zinc-500">Items</div>
-
-        <div class="mt-2 space-y-1">
-          ${(o.items||[]).map(item=>`
-            <div>
-              ${escapeHTML(item.name)} × ${item.quantity}
-            </div>
-          `).join("")}
-        </div>
-      </div>
-
-      <div class="grid md:grid-cols-3 gap-3 mt-5">
-
-        <div>
-          <div class="text-xs text-zinc-500">Status</div>
-          <select
-            class="input mt-1"
-            onchange="updateOrderStatus('${o.id}',this.value)">
-            ${orderStatuses(o.status)}
-          </select>
-        </div>
-
-        <div>
-          <div class="text-xs text-zinc-500">Delivery</div>
-          <div class="mt-2">${escapeHTML(o.deliveryMethod || "—")}</div>
-        </div>
-
-        <div>
-          <div class="text-xs text-zinc-500">Date</div>
-          <div class="mt-2">${formatDate(o.createdAt)}</div>
-        </div>
-
-      </div>
-
-      ${o.address ? `
-        <div class="mt-4 text-sm">
-          <span class="text-zinc-500">Address:</span>
-          ${escapeHTML(o.address)}
-        </div>
-      `:""}
-
-      ${o.note ? `
-        <div class="mt-2 text-sm">
-          <span class="text-zinc-500">Note:</span>
-          ${escapeHTML(o.note)}
-        </div>
-      `:""}
-
-    </div>
-
-  `).join("");
 };
 
-window.orderStatuses=function(current){
 
-  const list=[
-    ["pending","Pending"],
-    ["confirmed","Confirmed"],
-    ["processing","Processing"],
-    ["ready_for_pickup","Ready for Pickup"],
-    ["out_for_delivery","Out for Delivery"],
-    ["delivered","Delivered"],
-    ["cancelled","Cancelled"]
-  ];
+/* =========================
+POST FORM
+========================= */
 
-  return list.map(x=>
-    `<option value="${x[0]}" ${current===x[0]?"selected":""}>${x[1]}</option>`
-  ).join("");
+window.postForm=()=>{
+
+modal(`
+
+<h2 class="text-xl font-black">
+For You Post
+</h2>
+
+<textarea
+id="pc"
+class="inp mt-4"
+placeholder="Caption">
+</textarea>
+
+<input
+id="pf"
+class="inp mt-3"
+type="file"
+accept="image/*,video/*">
+
+<button
+class="btn g w-full mt-4"
+onclick="addPost()">
+Publish
+</button>
+
+`);
+
 };
 
-window.formatDate=function(timestamp){
 
-  if(!timestamp)return "—";
+/* =========================
+ADD POST
+========================= */
 
-  try{
+window.addPost=async()=>{
 
-    let d;
+let f=$('pf').files[0];
 
-    if(timestamp?.toDate){
-      d=timestamp.toDate();
-    }else{
-      d=new Date(timestamp);
-    }
+if(!f){
 
-    return d.toLocaleDateString(
-      undefined,
-      {year:"numeric",month:"short",day:"numeric"}
-    );
+return toast(
+'Choose media'
+);
 
-  }catch(e){
-    return "—";
-  }
+}
+
+try{
+
+let url=
+await upload(f);
+
+await addDoc(
+collection(db,'posts'),
+{
+sellerId:u.uid,
+caption:$('pc').value.trim(),
+mediaUrl:url,
+mediaType:f.type.startsWith('video')
+?'video'
+:'image',
+likesCount:0,
+commentsCount:0,
+savesCount:0,
+createdAt:serverTimestamp(),
+status:'active'
+}
+);
+
+close();
+
+toast('Published');
+
+}catch(e){
+
+toast(e.message);
+
+}
+
 };
 
-window.fillStoreSettings=function(){
 
-  const s=window.SELLERFLOW.currentStore || {};
+/* =========================
+GHANA CARD VERIFICATION
+========================= */
 
-  document.getElementById("storeNameInput").value=s.name || "";
-  document.getElementById("storeDescriptionInput").value=s.description || "";
-  document.getElementById("storeWhatsappInput").value=s.whatsapp || "";
+window.verifyForm=()=>{
+
+modal(`
+
+<h2 class="text-xl font-black">
+Ghana Card Verification
+</h2>
+
+<p class="text-gray-500 text-sm mt-2">
+
+Your Ghana Card data is private and sent only to the secure SellerFlow API.
+
+</p>
+
+<input
+id="gid"
+class="inp mt-4"
+placeholder="Ghana Card ID number">
+
+<input
+id="gf"
+class="inp mt-3"
+type="file"
+accept="image/jpeg,image/png,image/webp">
+
+<input
+id="gb"
+class="inp mt-3"
+type="file"
+accept="image/jpeg,image/png,image/webp">
+
+<button
+class="btn g w-full mt-4"
+onclick="verify()">
+Submit for Review
+</button>
+
+`);
+
 };
 
-window.updateDashboardStats=function(){
 
-  const products=window.SELLERFLOW.currentProducts || [];
-  const orders=window.SELLERFLOW.currentOrders || [];
+/* =========================
+VERIFY
+========================= */
 
-  document.getElementById("statProducts").textContent=products.length;
-  document.getElementById("statOrders").textContent=orders.length;
+window.verify=async()=>{
 
-  document.getElementById("statPending").textContent=
-    orders.filter(x=>x.status==="pending").length;
+try{
 
-  document.getElementById("statDelivered").textContent=
-    orders.filter(x=>x.status==="delivered").length;
+let id=
+$('gid').value.trim();
 
-  const profile=window.SELLERFLOW.currentProfile || {};
+let front=
+$('gf').files[0];
 
-  document.getElementById("sellerHeaderBadge").innerHTML=
-    getVerificationBadge(profile);
+let back=
+$('gb').files[0];
 
-  document.getElementById("overviewVerification").innerHTML=
-    profile.verificationStatus==="approved"
-      ? `${getVerificationBadge(profile)}<div class="text
+if(!id){
+
+return toast(
+'Enter your Ghana Card ID'
+);
+
+}
+
+if(!front||!back){
+
+return toast(
+'Upload both front and back'
+);
+
+}
+
+let fd=new FormData();
+
+fd.append(
+'sellerId',
+u.uid
+);
+
+fd.append(
+'ghanaCardNumber',
+id
+);
+
+fd.append(
+'front',
+front
+);
+
+fd.append(
+'back',
+back
+);
+
+let r=
+await fetch(
+API+'/verification/upload',
+{
+method:'POST',
+headers:{
+Authorization:
+'Bearer '+await u.getIdToken()
+},
+body:fd
+}
+);
+
+let j={};
+
+try{
+j=await r.json();
+}catch{}
+
+if(!r.ok){
+
+return toast(
+j.error||'Verification failed'
+);
+
+}
+
+await updateDoc(
+doc(db,'users',u.uid),
+{
+verificationStatus:'pending'
+}
+);
+
+ud.verificationStatus='pending';
+
+close();
+
+toast(
+'Submitted for review'
+);
+
+loadSeller();
+
+}catch(e){
+
+toast(
+e.message
+);
+
+}
+
+};
+
+
+/* =========================
+PROFILE
+========================= */
+
+window.profile=()=>{
+
+view('prof');
+
+$('prof').innerHTML=`
+
+<div class="card p-5">
+
+<h2 class="text-2xl font-black">
+
+${esc(ud.name)}
+
+${badge(ud)}
+
+</h2>
+
+<p class="text-gray-500">
+${esc(u.email)}
+</p>
+
+<p class="mt-4">
+
+Role:
+${esc(ud.role)}
+
+·
+
+Plan:
+${esc(ud.plan||'free')}
+
+</p>
+
+${
+ud.role==='seller'
+?
+`
+<button
+class="btn d w-full mt-4"
+onclick="sellerPage()">
+Seller Dashboard
+</button>
+`
+:''
+}
+
+<button
+class="btn r w-full mt-3"
+onclick="logout()">
+Sign out
+</button>
+
+</div>
+
+`;
+
+};
+
+
+/* =========================
+LOGOUT
+========================= */
+
+window.logout=()=>signOut(auth);
+
+
+/* =========================
+ADMIN
+========================= */
+
+window.adminPage=()=>{
+
+view('admin');
+
+adminLoad('users');
+
+};
+
+
+window.adminLoad=async tab=>{
+
+let us=
+(
+await getDocs(
+query(
+collection(db,'users'),
+limit(200)
+)
+)
+).docs.map(
+d=>({id:d.id,...d.data()})
+);
+
+let ps=
+(
+await getDocs(
+query(
+collection(db,'products'),
+limit(200)
+)
+)
+).docs.map(
+d=>({id:d.id,...d.data()})
+);
+
+let rs=
+(
+await getDocs(
+query(
+collection(db,'reports'),
+limit(200)
+)
+)
+).docs.map(
+d=>({id:d.id,...d.data()})
+);
+
+let pending=
+us.filter(
+x=>x.verificationStatus==='pending'
+);
+
+
+$('admin').innerHTML=`
+
+<h1 class="text-2xl font-black">
+Owner Control Center 👑
+</h1>
+
+<p class="text-gray-500">
+${OWNER}
+</p>
+
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
+
+<div class="card p-4">
+
+Users
+
+<b class="block text-2xl">
+${us.length}
+</b>
+
+</div>
+
+<div class="card p-4">
+
+Products
+
+<b class="block text-2xl">
+${ps.length}
+</b>
+
+</div>
+
+<div class="card p-4">
+
+Reports
+
+<b class="block text-2xl">
+${rs.filter(x=>x.status==='open').length}
+</b>
+
+</div>
+
+<div class="card p-4">
+
+Verification
+
+<b class="block text-2xl">
+${pending.length}
+</b>
+
+</div>
+
+</div>
+
+
+<div class="flex gap-2 overflow-auto mt-5">
+
+<button
+class="btn d"
+onclick="adminLoad('users')">
+Users
+</button>
+
+<button
+class="btn d"
+onclick="adminLoad('verification')">
+Verification
+</button>
+
+<button
+class="btn d"
+onclick="adminLoad('products')">
+Products
+</button>
+
+<button
+class="btn d"
+onclick="adminLoad('reports')">
+Reports
+</button>
+
+</div>
+
+
+<div class="space-y-3 mt-4">
+
+${
+tab==='users'
+
+?
+
+us.map(x=>`
+
+<div class="card p-4 flex justify-between">
+
+<div>
+
+<b>
+
+${esc(x.name)}
+${badge(x)}
+
+</b>
+
+<p class="text-gray-500 text-xs">
+
+${esc(x.email)}
+·
+${esc(x.role)}
+·
+${esc(x.status||'active')}
+
+</p>
+
+</div>
+
+<div class="flex gap-2">
+
+<button
+class="btn d"
+onclick="ustatus('${x.id}','warned')">
+Warn
+</button>
+
+<button
+class="btn d"
+onclick="ustatus('${x.id}','suspended')">
+Suspend
+</button>
+
+</div>
+
+</div>
+
+`).join('')
+
+:
+
+tab==='verification'
+
+?
+
+pending.map(x=>`
+
+<div class="card p-4">
+
+<b>
+${esc(x.name)}
+</b>
+
+<p class="text-gray-500">
+${esc(x.email)}
+</p>
+
+<button
+class="btn g mt-3 mr-2"
+onclick="approve('${x.id}')">
+Approve
+</button>
+
+<button
+class="btn r mt-3"
+onclick="reject('${x.id}')">
+Reject
+</button>
+
+</div>
+
+`).join('')
+
+||
+
+'<p class="text-gray-500">No pending verification.</p>'
+
+:
+
+tab==='products'
+
+?
+
+ps.map(x=>`
+
+<div class="card p-4 flex justify-between">
+
+<span>
+${esc(x.name)}
+·
+${money(x.price)}
+</span>
+
+<button
+class="btn r"
+onclick="removeProduct('${x.id}')">
+Remove
+</button>
+
+</div>
+
+`).join('')
+
+:
+
+rs.map(x=>`
+
+<div class="card p-4">
+
+<b>
+${esc(x.type)}
+·
+${esc(x.reason)}
+</b>
+
+<p class="text-gray-400">
+${esc(x.note||'')}
+</p>
+
+</div>
+
+`).join('')
+
+}
+
+</div>
+
+`;
+
+};
+
+
+/* =========================
+ADMIN STATUS
+========================= */
+
+window.ustatus=async(id,s)=>{
+
+await updateDoc(
+doc(db,'users',id),
+{
+status:s
+}
+);
+
+adminLoad('users');
+
+};
+
+
+/* =========================
+ADMIN REMOVE PRODUCT
+========================= */
+
+window.removeProduct=async id=>{
+
+if(!confirm('Remove this product?'))return;
+
+await deleteDoc(
+doc(db,'products',id)
+);
+
+adminLoad('products');
+
+};
+
+
+/* =========================
+ADMIN APPROVE
+========================= */
+
+window.approve=async id=>{
+
+let x=
+(
+await getDoc(
+doc(db,'users',id)
+)
+).data()||{};
+
+let blue=
+x.plan==='150';
+
+await updateDoc(
+doc(db,'users',id),
+{
+verified:true,
+verificationStatus:'approved',
+badgeColor:blue?'blue':'green'
+}
+);
+
+await setDoc(
+doc(db,'stores',id),
+{
+verified:true,
+badgeColor:blue?'blue':'green'
+},
+{merge:true}
+);
+
+toast('Seller approved');
+
+adminLoad('verification');
+
+};
+
+
+/* =========================
+ADMIN REJECT
+========================= */
+
+window.reject=async id=>{
+
+await updateDoc(
+doc(db,'users',id),
+{
+verified:false,
+verificationStatus:'rejected'
+}
+);
+
+adminLoad('verification');
+
+};
+
+
+/* =========================
+MODAL CLOSE
+========================= */
+
+window.addEventListener(
+'click',
+e=>{
+
+if(e.target.id==='modal'){
+
+close();
+
+}
+
+}
+);
+
+window.close=close;
+
+window.signOut=signOut;
+
+window.auth=auth;
+
+</script>
+
+</body>
+</html>
