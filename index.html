@@ -3,946 +3,938 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#080808">
 <title>SELLERFLOW</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
 *{box-sizing:border-box}
-
-html{
-scroll-behavior:smooth
-}
-
 body{
-margin:0;
-background:#080808;
-color:#fff;
-font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+  margin:0;
+  background:#080808;
+  color:#fff;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
 }
-
-button,input,textarea,select{
-font:inherit
-}
-
-button{
-cursor:pointer
-}
-
-button:disabled{
-opacity:.5;
-cursor:not-allowed
-}
-
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
 .card{
-background:#111;
-border:1px solid #292929;
-border-radius:16px
+  background:#111;
+  border:1px solid #292929;
+  border-radius:16px
 }
-
-.card2{
-background:#0d0d0d;
-border:1px solid #242424;
-border-radius:14px
-}
-
-.gold{
-color:#f5b942
-}
-
+.gold{color:#f5b942}
 .btn{
-padding:11px 15px;
-border-radius:11px;
-font-weight:800;
-transition:.15s
+  padding:11px 15px;
+  border-radius:11px;
+  font-weight:800;
+  border:0
 }
-
-.btn:active{
-transform:scale(.97)
-}
-
 .g{
-background:#f5b942;
-color:#090909
+  background:#f5b942;
+  color:#090909
 }
-
 .d{
-background:#181818;
-border:1px solid #333;
-color:#fff
+  background:#181818;
+  color:#fff;
+  border:1px solid #333
 }
-
 .r{
-background:#391515;
-color:#ff8888;
-border:1px solid #5a2222
+  background:#391515;
+  color:#ff8888;
+  border:1px solid #592020
 }
-
 .inp{
-width:100%;
-background:#0c0c0c;
-border:1px solid #333;
-border-radius:10px;
-padding:11px;
-color:#fff;
-outline:none
+  width:100%;
+  background:#0c0c0c;
+  border:1px solid #333;
+  border-radius:10px;
+  padding:11px;
+  color:#fff;
+  outline:none
 }
-
 .inp:focus{
-border-color:#f5b942
+  border-color:#f5b942
 }
-
-textarea.inp{
-min-height:100px;
-resize:vertical
-}
-
-.hide{
-display:none!important
-}
-
+.hide{display:none!important}
 .badge{
-display:inline-flex;
-width:20px;
-height:20px;
-border-radius:50%;
-align-items:center;
-justify-content:center;
-font-size:12px;
-font-weight:900;
-vertical-align:middle;
-margin-left:4px
+  display:inline-flex;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:900;
+  margin-left:5px
 }
-
-.green{
-background:#16a34a;
-color:#fff
-}
-
-.blue{
-background:#1687ff;
-color:#fff
-}
-
-.status{
-display:inline-flex;
-padding:5px 9px;
-border-radius:999px;
-background:#1d1d1d;
-border:1px solid #333;
-font-size:12px;
-font-weight:800
-}
-
+.green{background:#16a34a}
+.blue{background:#1687ff}
 .bottom{
-position:fixed;
-bottom:0;
-left:0;
-right:0;
-background:#0b0b0bee;
-backdrop-filter:blur(12px);
-border-top:1px solid #292929;
-z-index:20
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#0b0b0bee;
+  backdrop-filter:blur(10px);
+  border-top:1px solid #292929;
+  z-index:20
 }
-
-.nav-active{
-color:#f5b942
-}
-
-.empty{
-padding:30px 15px;
-text-align:center;
-color:#666
-}
-
 .spinner{
-width:22px;
-height:22px;
-border:3px solid #333;
-border-top-color:#f5b942;
-border-radius:50%;
-animation:spin .8s linear infinite;
-margin:auto
+  width:30px;
+  height:30px;
+  border:3px solid #333;
+  border-top-color:#f5b942;
+  border-radius:50%;
+  animation:spin .8s linear infinite
 }
-
-@keyframes spin{
-to{transform:rotate(360deg)}
-}
-
-.line{
-height:1px;
-background:#242424;
-margin:15px 0
-}
-
-.product-img{
-width:100%;
-height:190px;
-object-fit:cover;
-border-radius:12px;
-background:#0a0a0a
-}
-
-.avatar{
-width:42px;
-height:42px;
-border-radius:50%;
-background:#1c1c1c;
-display:flex;
-align-items:center;
-justify-content:center;
-font-weight:900
-}
-
-@media(max-width:640px){
-h1{
-letter-spacing:-.03em
-}
-}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 
 <body>
 
-<!-- =========================================================
-     LANDING PAGE
-========================================================= -->
+<!-- ================= LANDING ================= -->
 
 <div id="landing" class="min-h-screen">
 
-<div class="max-w-6xl mx-auto p-5">
+  <div class="max-w-6xl mx-auto p-5">
 
-<header class="flex justify-between items-center">
+    <header class="flex justify-between items-center">
+      <button
+        type="button"
+        class="text-xl font-black"
+        onclick="window.showLanding()">
+        SELLER<span class="gold">FLOW</span>
+      </button>
 
-<b class="text-xl tracking-tight">
-SELLER<span class="gold">FLOW</span>
-</b>
+      <button
+        type="button"
+        class="btn d"
+        onclick="window.authPage('login')">
+        Sign in
+      </button>
+    </header>
 
-<button
-class="btn d"
-onclick="authPage('login')">
-Sign in
-</button>
+    <main class="grid md:grid-cols-2 gap-10 items-center min-h-[80vh]">
 
-</header>
+      <div>
 
+        <h1 class="text-5xl md:text-7xl font-black mt-3">
+          Sell smarter.<br>
+          <span class="gold">Manage easier.</span>
+        </h1>
 
-<main class="grid md:grid-cols-2 gap-10 items-center min-h-[80vh]">
+        <p class="text-gray-400 text-lg mt-5">
+          Online stores, product discovery, orders, reviews and
+          buyer-seller messaging in one place.
+        </p>
 
-<div>
+        <div class="flex flex-wrap gap-3 mt-7">
 
-<div class="inline-block px-3 py-1 rounded-full border border-[#333] text-xs text-gray-400 mt-5">
-Ghana's online selling platform
+          <button
+            type="button"
+            class="btn g"
+            onclick="window.authPage('register')">
+            Create Free Account
+          </button>
+
+          <button
+            type="button"
+            class="btn d"
+            onclick="window.authPage('login')">
+            Sign In
+          </button>
+
+        </div>
+
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+
+        <div class="card p-5">
+          🛍️
+          <b class="block mt-2">Stores</b>
+          <small class="text-gray-500">
+            Build a shareable shop.
+          </small>
+        </div>
+
+        <div class="card p-5">
+          🔥
+          <b class="block mt-2">For You</b>
+          <small class="text-gray-500">
+            Photos and product videos.
+          </small>
+        </div>
+
+        <div class="card p-5">
+          💬
+          <b class="block mt-2">Messages</b>
+          <small class="text-gray-500">
+            Talk directly to sellers.
+          </small>
+        </div>
+
+        <div class="card p-5">
+          ✅
+          <b class="block mt-2">Verification</b>
+          <small class="text-gray-500">
+            Manual Ghana Card review.
+          </small>
+        </div>
+
+      </div>
+
+    </main>
+
+    <footer class="text-center text-xs text-gray-600 py-5">
+      © SELLERFLOW. All rights reserved.
+    </footer>
+
+  </div>
 </div>
 
-<h1 class="text-5xl md:text-7xl font-black mt-5 leading-tight">
-Sell smarter.<br>
-<span class="gold">Manage easier.</span>
-</h1>
 
-<p class="text-gray-400 text-lg mt-5 max-w-xl">
-Create your online store, showcase products, discover sellers, manage orders and communicate with buyers — all in one place.
-</p>
-
-<div class="flex flex-wrap gap-3 mt-7">
-
-<button
-class="btn g"
-onclick="authPage('register')">
-Create Free Account
-</button>
-
-<button
-class="btn d"
-onclick="authPage('login')">
-Sign in
-</button>
-
-</div>
-
-</div>
-
-
-<div class="grid grid-cols-2 gap-3">
-
-<div class="card p-5">
-<div class="text-2xl">🛍️</div>
-<b class="block mt-2">Stores</b>
-<small class="text-gray-500">
-Build a shareable online shop.
-</small>
-</div>
-
-<div class="card p-5">
-<div class="text-2xl">🔥</div>
-<b class="block mt-2">For You</b>
-<small class="text-gray-500">
-Discover products and sellers.
-</small>
-</div>
-
-<div class="card p-5">
-<div class="text-2xl">💬</div>
-<b class="block mt-2">Messages</b>
-<small class="text-gray-500">
-Talk directly with sellers.
-</small>
-</div>
-
-<div class="card p-5">
-<div class="text-2xl">✅</div>
-<b class="block mt-2">Verification</b>
-<small class="text-gray-500">
-Manual Ghana Card review.
-</small>
-</div>
-
-</div>
-
-</main>
-
-
-<footer class="text-center text-xs text-gray-600 py-5">
-© SELLERFLOW. All rights reserved.
-</footer>
-
-</div>
-</div>
-
-
-<!-- =========================================================
-     AUTH
-========================================================= -->
+<!-- ================= AUTH ================= -->
 
 <div id="auth" class="hide min-h-screen">
 
-<div class="max-w-md mx-auto p-5 pt-10">
+  <div class="max-w-md mx-auto p-5 pt-12">
 
-<button
-class="text-gray-500"
-onclick="backLanding()">
-← Back
-</button>
+    <button
+      type="button"
+      class="text-gray-500"
+      onclick="window.showLanding()">
+      ← Back
+    </button>
 
-<div class="card p-6 mt-6">
+    <div class="card p-6 mt-6">
 
-<b class="text-2xl">
-SELLER<span class="gold">FLOW</span>
-</b>
+      <button
+        type="button"
+        class="text-2xl font-black"
+        onclick="window.showLanding()">
+        SELLER<span class="gold">FLOW</span>
+      </button>
 
-<h2
-id="at"
-class="text-xl font-bold mt-4">
-</h2>
+      <h2
+        id="at"
+        class="text-xl font-bold mt-4">
+      </h2>
 
+      <p class="text-gray-500 text-sm mt-2">
+        Choose your account type.
+      </p>
 
-<div class="grid grid-cols-2 gap-2 mt-4">
+      <div class="grid grid-cols-2 gap-2 mt-4">
 
-<button
-id="sm"
-class="btn g"
-onclick="setMode('seller')">
-Seller
-</button>
+        <button
+          id="sm"
+          type="button"
+          class="btn g"
+          onclick="window.setMode('seller')">
+          Seller
+        </button>
 
-<button
-id="bm"
-class="btn d"
-onclick="setMode('buyer')">
-Buyer
-</button>
+        <button
+          id="bm"
+          type="button"
+          class="btn d"
+          onclick="window.setMode('buyer')">
+          Buyer
+        </button>
 
+      </div>
+
+      <input
+        id="name"
+        class="inp mt-4"
+        placeholder="Full name"
+        autocomplete="name">
+
+      <input
+        id="email"
+        class="inp mt-3"
+        type="email"
+        placeholder="Email"
+        autocomplete="email">
+
+      <input
+        id="pass"
+        class="inp mt-3"
+        type="password"
+        placeholder="Password"
+        autocomplete="current-password">
+
+      <button
+        id="emailBtn"
+        type="button"
+        class="btn g w-full mt-4"
+        onclick="window.emailAuth()">
+        Continue
+      </button>
+
+      <button
+        id="googleBtn"
+        type="button"
+        class="btn d w-full mt-3"
+        onclick="window.googleLogin()">
+        Continue with Google
+      </button>
+
+      <button
+        id="switch"
+        type="button"
+        class="text-gray-500 text-sm w-full mt-4"
+        onclick="window.toggleAuth()">
+      </button>
+
+      <p
+        id="authError"
+        class="text-red-400 text-sm mt-4 hidden">
+      </p>
+
+    </div>
+
+  </div>
 </div>
 
 
-<div
-id="sellerHint"
-class="text-xs text-gray-500 mt-3">
-Seller accounts can create stores and sell products.
-</div>
-
-
-<input
-id="name"
-class="inp mt-4"
-placeholder="Full name"
-autocomplete="name">
-
-
-<input
-id="email"
-class="inp mt-3"
-type="email"
-placeholder="Email"
-autocomplete="email">
-
-
-<input
-id="pass"
-class="inp mt-3"
-type="password"
-placeholder="Password"
-autocomplete="current-password">
-
-
-<button
-id="emailBtn"
-class="btn g w-full mt-4"
-onclick="emailAuth()">
-Continue
-</button>
-
-
-<button
-id="googleBtn"
-class="btn d w-full mt-3"
-onclick="google()">
-Continue with Google
-</button>
-
-
-<button
-id="switch"
-class="text-gray-500 text-sm w-full mt-4"
-onclick="toggle()">
-</button>
-
-</div>
-</div>
-</div>
-
-
-<!-- =========================================================
-     APP
-========================================================= -->
+<!-- ================= APP ================= -->
 
 <div id="app" class="hide pb-24">
 
-<header class="sticky top-0 z-10 bg-[#080808ee] backdrop-blur-md border-b border-[#222]">
+  <header class="sticky top-0 z-10 bg-[#080808ee] backdrop-blur border-b border-[#222]">
 
-<div class="max-w-6xl mx-auto p-4 flex justify-between items-center">
+    <div class="max-w-6xl mx-auto p-4 flex justify-between items-center">
 
-<button
-class="font-black text-lg"
-onclick="home()">
+      <button
+        type="button"
+        class="font-black"
+        onclick="window.home()">
+        SELLER<span class="gold">FLOW</span>
+      </button>
 
-SELLER<span class="gold">FLOW</span>
+      <div class="flex gap-2">
 
-</button>
+        <button
+          type="button"
+          class="btn d"
+          onclick="window.messages()">
+          💬
+        </button>
 
+        <button
+          type="button"
+          class="btn d"
+          onclick="window.profile()">
+          👤
+        </button>
 
-<div class="flex gap-2">
+      </div>
 
-<button
-class="btn d"
-onclick="messages()">
-💬
-</button>
+    </div>
 
-<button
-class="btn d"
-onclick="profile()">
-👤
-</button>
+  </header>
 
-</div>
+  <main class="max-w-6xl mx-auto p-4">
 
-</div>
+    <section id="home" class="view"></section>
 
-</header>
+    <section id="feed" class="view hide"></section>
 
+    <section id="orders" class="view hide"></section>
 
-<main class="max-w-6xl mx-auto p-4">
+    <section id="msgs" class="view hide"></section>
 
-<section
-id="home"
-class="view">
-</section>
+    <section id="prof" class="view hide"></section>
 
-<section
-id="feed"
-class="view hide">
-</section>
+    <section id="seller" class="view hide"></section>
 
-<section
-id="orders"
-class="view hide">
-</section>
+    <section id="admin" class="view hide"></section>
 
-<section
-id="msgs"
-class="view hide">
-</section>
+    <section id="store" class="view hide"></section>
 
-<section
-id="prof"
-class="view hide">
-</section>
-
-<section
-id="seller"
-class="view hide">
-</section>
-
-<section
-id="admin"
-class="view hide">
-</section>
-
-<section
-id="store"
-class="view hide">
-</section>
-
-</main>
-
+  </main>
 </div>
 
 
-<!-- =========================================================
-     BOTTOM NAVIGATION
-========================================================= -->
+<!-- ================= NAV ================= -->
 
-<nav
-id="nav"
-class="bottom hide">
+<nav id="nav" class="bottom hide">
 
-<div class="max-w-xl mx-auto grid grid-cols-5 text-center">
+  <div class="max-w-xl mx-auto grid grid-cols-5 text-center">
 
-<button
-id="navHome"
-class="p-3 text-xs"
-onclick="home()">
-🏠<br>Home
-</button>
+    <button
+      type="button"
+      class="p-3 text-xs"
+      onclick="window.home()">
+      🏠<br>Home
+    </button>
 
-<button
-id="navFeed"
-class="p-3 text-xs"
-onclick="forYou()">
-🔥<br>For You
-</button>
+    <button
+      type="button"
+      class="p-3 text-xs"
+      onclick="window.forYou()">
+      🔥<br>For You
+    </button>
 
-<button
-id="navMsg"
-class="p-3 text-xs"
-onclick="messages()">
-💬<br>Messages
-</button>
+    <button
+      type="button"
+      class="p-3 text-xs"
+      onclick="window.messages()">
+      💬<br>Messages
+    </button>
 
-<button
-id="navOrders"
-class="p-3 text-xs"
-onclick="orders()">
-📦<br>Orders
-</button>
+    <button
+      type="button"
+      class="p-3 text-xs"
+      onclick="window.orders()">
+      📦<br>Orders
+    </button>
 
-<button
-id="navProfile"
-class="p-3 text-xs"
-onclick="profile()">
-👤<br>Profile
-</button>
+    <button
+      type="button"
+      class="p-3 text-xs"
+      onclick="window.profile()">
+      👤<br>Profile
+    </button>
 
-</div>
+  </div>
 
 </nav>
 
 
-<!-- =========================================================
-     MODAL
-========================================================= -->
+<!-- ================= MODAL ================= -->
 
 <div
-id="modal"
-class="fixed inset-0 bg-black/80 z-50 hidden overflow-auto">
+  id="modal"
+  class="fixed inset-0 bg-black/80 z-50 hidden overflow-auto">
 
-<div
-id="mb"
-class="max-w-lg mx-auto p-4 min-h-full flex items-center">
-</div>
+  <div
+    id="mb"
+    class="max-w-lg mx-auto p-4 min-h-full flex items-center">
+  </div>
 
-</div>
-
-
-<!-- TOAST -->
-
-<div
-id="toast"
-class="fixed bottom-20 right-4 left-4 md:left-auto md:max-w-sm bg-[#222] border border-[#444] rounded-xl p-3 hidden z-[60] shadow-2xl">
 </div>
 
 
-<!-- =========================================================
-     FIREBASE / APPLICATION
-========================================================= -->
+<!-- ================= TOAST ================= -->
+
+<div
+  id="toast"
+  class="fixed bottom-20 right-4 bg-[#222] border border-[#444] rounded-xl p-3 hidden z-[60]">
+</div>
+
 
 <script type="module">
 
 /* =========================================================
-   FIREBASE IMPORTS
+   FIREBASE
 ========================================================= */
 
 import {
-initializeApp
-}
-from
-'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 
 import {
-getAuth,
-createUserWithEmailAndPassword,
-signInWithEmailAndPassword,
-signInWithPopup,
-GoogleAuthProvider,
-onAuthStateChanged,
-signOut,
-updateProfile
-}
-from
-'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signOut,
+  updateProfile
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 import {
-getFirestore,
-doc,
-getDoc,
-setDoc,
-addDoc,
-updateDoc,
-deleteDoc,
-getDocs,
-collection,
-query,
-where,
-orderBy,
-limit,
-serverTimestamp
-}
-from
-'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  getDocs,
+  collection,
+  query,
+  where,
+  limit,
+  orderBy,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 
 /* =========================================================
-   FIREBASE CONFIG
-   YOUR CONFIG — PRESERVED EXACTLY
+   YOUR FIREBASE CONFIG
+   KEPT EXACTLY AS PROVIDED
 ========================================================= */
 
 const firebaseConfig = {
 
-apiKey:
-"AIzaSyCyEdrUXAfgThfpSTPY-Yvz8BG3LrhYuWk",
+  apiKey:
+    "AIzaSyCyEdrUXAfgThfpSTPY-Yvz8BG3LrhYuWk",
 
-authDomain:
-"sellerflow-efaab.firebaseapp.com",
+  authDomain:
+    "sellerflow-efaab.firebaseapp.com",
 
-databaseURL:
-"https://sellerflow-efaab-default-rtdb.firebaseio.com",
+  databaseURL:
+    "https://sellerflow-efaab-default-rtdb.firebaseio.com",
 
-projectId:
-"sellerflow-efaab",
+  projectId:
+    "sellerflow-efaab",
 
-storageBucket:
-"sellerflow-efaab.firebasestorage.app",
+  storageBucket:
+    "sellerflow-efaab.firebasestorage.app",
 
-messagingSenderId:
-"987175352360",
+  messagingSenderId:
+    "987175352360",
 
-appId:
-"1:987175352360:web:53e44304aaf11b98c61d1d"
+  appId:
+    "1:987175352360:web:53e44304aaf11b98c61d1d"
 
 };
 
 
-const app=initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
-const auth=getAuth(app);
+const auth = getAuth(app);
 
-const db=getFirestore(app);
+const db = getFirestore(app);
 
-const googleProvider=new GoogleAuthProvider();
+const googleProvider = new GoogleAuthProvider();
 
 
 /* =========================================================
-   SELLERFLOW CONFIG
+   SELLERFLOW SETTINGS
 ========================================================= */
 
-const API=
-'https://sellerflow-api.gideondreams3325.workers.dev';
+const API =
+  "https://sellerflow-api.gideondreams3325.workers.dev";
 
-const CLOUDINARY_CLOUD_NAME=
-'xxis0qjp';
+const CLOUD =
+  "xxis0qjp";
 
-const CLOUDINARY_UPLOAD_PRESET=
-'ml_default';
+const PRESET =
+  "ml_default";
 
-const OWNER_EMAIL=
-'gideondreams3325@gmail.com';
+const OWNER =
+  "gideondreams3325@gmail.com";
 
 
 /* =========================================================
    STATE
 ========================================================= */
 
-let currentUser=null;
+let u = null;
 
-let userData=null;
+let ud = null;
 
-let mode='seller';
+let mode = "seller";
 
-let authMode='register';
+let am = "register";
 
-let currentStore=null;
+let store = null;
 
-let products=[];
+let products = [];
 
-let cart=[];
+let cart = [];
 
-let currentChatId=null;
+let currentSellerId = null;
 
 
 /* =========================================================
    HELPERS
 ========================================================= */
 
-const $=id=>
-document.getElementById(id);
+const $ = id =>
+  document.getElementById(id);
 
 
-const esc=value=>
-String(value??'').replace(
-/[&<>"']/g,
-char=>({
-'&':'&amp;',
-'<':'&lt;',
-'>':'&gt;',
-'"':'&quot;',
-"'":'&#39;'
-}[char])
-);
+const esc = value =>
+  String(value ?? "")
+    .replace(/[&<>"']/g, c => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[c]));
 
 
-const money=value=>
-'GHS '+Number(value||0).toFixed(2);
+const money = value =>
+  "GHS " + Number(value || 0).toFixed(2);
 
 
-const isAdmin=()=>
-currentUser?.email?.toLowerCase()===
-OWNER_EMAIL.toLowerCase();
+const isAdmin = () =>
+  !!u &&
+  u.email?.toLowerCase() ===
+  OWNER.toLowerCase();
 
 
-const getInitial=name=>
-String(name||'U').trim().charAt(0).toUpperCase();
+function badge(x){
 
+  if(!x?.verified){
+    return "";
+  }
 
-const badge=x=>{
-
-if(!x?.verified){
-
-return '';
-
+  return `
+    <span class="badge ${
+      x.badgeColor === "blue"
+      ? "blue"
+      : "green"
+    }">✓</span>
+  `;
 }
-
-return `
-<span
-class="badge ${x.badgeColor==='blue'?'blue':'green'}"
-title="Verified">
-✓
-</span>
-`;
-
-};
-
-
-const statusText=s=>{
-
-const map={
-
-pending:'Pending',
-
-confirmed:'Confirmed',
-
-processing:'Processing',
-
-ready:'Ready for Pickup',
-
-out_for_delivery:'Out for Delivery',
-
-delivered:'Delivered',
-
-cancelled:'Cancelled'
-
-};
-
-return map[s]||s||'Pending';
-
-};
 
 
 function toast(message){
 
-const box=$('toast');
+  const el = $("toast");
 
-box.textContent=message;
+  el.textContent = message;
 
-box.classList.remove('hidden');
+  el.classList.remove("hidden");
 
-clearTimeout(window.__sellerflowToast);
+  clearTimeout(window.__toastTimer);
 
-window.__sellerflowToast=
-setTimeout(()=>{
-
-box.classList.add('hidden');
-
-},3000);
+  window.__toastTimer =
+    setTimeout(() => {
+      el.classList.add("hidden");
+    }, 2500);
 
 }
 
 
 function view(id){
 
-document
-.querySelectorAll('.view')
-.forEach(section=>
-section.classList.add('hide')
-);
+  document
+    .querySelectorAll(".view")
+    .forEach(x =>
+      x.classList.add("hide")
+    );
 
-$(id).classList.remove('hide');
+  const el = $(id);
 
-updateNav(id);
-
-window.scrollTo({
-top:0,
-behavior:'smooth'
-});
+  if(el){
+    el.classList.remove("hide");
+  }
 
 }
 
 
-function updateNav(id){
+function modal(html){
 
-document
-.querySelectorAll('#nav button')
-.forEach(x=>
-x.classList.remove('nav-active')
-);
+  $("mb").innerHTML =
+    `<div class="card p-5 w-full">${html}</div>`;
 
-if(id==='home')$('navHome')?.classList.add('nav-active');
-
-if(id==='feed')$('navFeed')?.classList.add('nav-active');
-
-if(id==='msgs')$('navMsg')?.classList.add('nav-active');
-
-if(id==='orders')$('navOrders')?.classList.add('nav-active');
-
-if(id==='prof')$('navProfile')?.classList.add('nav-active');
-
-}
-
-
-function modal(content){
-
-$('mb').innerHTML=
-`
-<div class="card p-5 w-full">
-${content}
-</div>
-`;
-
-$('modal').classList.remove('hidden');
+  $("modal").classList.remove("hidden");
 
 }
 
 
 function closeModal(){
 
-$('modal').classList.add('hidden');
+  $("modal").classList.add("hidden");
 
-$('mb').innerHTML='';
+  $("mb").innerHTML = "";
 
 }
-
-
-window.closeModal=closeModal;
 
 
 /* =========================================================
    LANDING / AUTH
 ========================================================= */
 
-window.authPage=function(type){
+window.showLanding = function(){
 
-$('landing').classList.add('hide');
+  $("landing").classList.remove("hide");
 
-$('auth').classList.remove('hide');
+  $("auth").classList.add("hide");
 
-authMode=type;
+  if(!u){
 
-$('at').textContent=
-type==='register'
-?'Create your account'
-:'Welcome back';
+    $("app").classList.add("hide");
 
-$('switch').textContent=
-type==='register'
-?'Already have an account? Sign in'
-:'New here? Create an account';
+    $("nav").classList.add("hide");
 
-$('name').classList.toggle(
-'hide',
-type==='login'
-);
-
-$('pass').autocomplete=
-type==='register'
-?'new-password'
-:'current-password';
-
-setMode(mode);
+  }
 
 };
 
 
-window.backLanding=function(){
+window.authPage = function(page){
 
-$('auth').classList.add('hide');
+  $("landing").classList.add("hide");
 
-$('landing').classList.remove('hide');
+  $("auth").classList.remove("hide");
+
+  $("app").classList.add("hide");
+
+  $("nav").classList.add("hide");
+
+  am = page;
+
+  $("at").textContent =
+    page === "register"
+    ? "Create your account"
+    : "Welcome back";
+
+  $("switch").textContent =
+    page === "register"
+    ? "Already have an account? Sign in"
+    : "New here? Create an account";
+
+  $("name").classList.toggle(
+    "hide",
+    page === "login"
+  );
+
+  $("pass").value = "";
+
+  $("authError").classList.add("hidden");
+
+  window.setMode(mode);
 
 };
 
 
-window.toggle=function(){
+window.toggleAuth = function(){
 
-authPage(
-authMode==='register'
-?'login'
-:'register'
-);
+  window.authPage(
+    am === "register"
+    ? "login"
+    : "register"
+  );
 
 };
 
 
-window.setMode=function(selectedMode){
+window.setMode = function(m){
 
-mode=selectedMode;
+  mode = m;
 
-$('sm').className=
-'btn '+(mode==='seller'?'g':'d');
+  $("sm").className =
+    "btn " +
+    (mode === "seller" ? "g" : "d");
 
-$('bm').className=
-'btn '+(mode==='buyer'?'g':'d');
+  $("bm").className =
+    "btn " +
+    (mode === "buyer" ? "g" : "d");
 
-if($('sellerHint')){
+};
 
-$('sellerHint').textContent=
-mode==='seller'
-?'Seller accounts can create stores and sell products.'
-:'Buyer accounts can discover stores and track purchases.';
+
+/* =========================================================
+   ERROR HANDLING
+========================================================= */
+
+function authError(message){
+
+  $("authError").textContent = message;
+
+  $("authError").classList.remove("hidden");
 
 }
+
+
+function friendlyError(error){
+
+  const code = error?.code || "";
+
+  if(code.includes("auth/invalid-credential")){
+    return "Incorrect email or password.";
+  }
+
+  if(code.includes("auth/wrong-password")){
+    return "Incorrect password.";
+  }
+
+  if(code.includes("auth/user-not-found")){
+    return "No account was found with this email.";
+  }
+
+  if(code.includes("auth/email-already-in-use")){
+    return "This email is already registered.";
+  }
+
+  if(code.includes("auth/weak-password")){
+    return "Password must be at least 6 characters.";
+  }
+
+  if(code.includes("auth/popup-closed-by-user")){
+    return "Google sign-in was cancelled.";
+  }
+
+  if(code.includes("auth/popup-blocked")){
+    return "Your browser blocked the Google sign-in window.";
+  }
+
+  return error?.message || "Something went wrong.";
+}
+
+
+/* =========================================================
+   EMAIL AUTH
+========================================================= */
+
+window.emailAuth = async function(){
+
+  try{
+
+    $("authError").classList.add("hidden");
+
+    const email =
+      $("email").value.trim();
+
+    const password =
+      $("pass").value;
+
+    const name =
+      $("name").value.trim();
+
+    if(!email || !password){
+
+      return authError(
+        "Enter your email and password."
+      );
+
+    }
+
+    if(am === "register" && !name){
+
+      return authError(
+        "Enter your full name."
+      );
+
+    }
+
+    $("emailBtn").disabled = true;
+
+    $("emailBtn").textContent =
+      "Please wait...";
+
+
+    if(am === "register"){
+
+      const result =
+        await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+
+
+      if(name){
+
+        await updateProfile(
+          result.user,
+          {
+            displayName:name
+          }
+        );
+
+      }
+
+
+      await saveUser(
+        result.user,
+        name,
+        mode
+      );
+
+
+      toast("Account created");
+
+
+    }else{
+
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    }
+
+  }catch(error){
+
+    console.error(error);
+
+    authError(
+      friendlyError(error)
+    );
+
+  }finally{
+
+    $("emailBtn").disabled = false;
+
+    $("emailBtn").textContent =
+      "Continue";
+
+  }
+
+};
+
+
+/* =========================================================
+   GOOGLE LOGIN
+========================================================= */
+
+window.googleLogin = async function(){
+
+  try{
+
+    $("authError").classList.add("hidden");
+
+    $("googleBtn").disabled = true;
+
+    $("googleBtn").textContent =
+      "Opening Google...";
+
+
+    const result =
+      await signInWithPopup(
+        auth,
+        googleProvider
+      );
+
+
+    const userRef =
+      doc(db,"users",result.user.uid);
+
+    const snap =
+      await getDoc(userRef);
+
+
+    if(!snap.exists()){
+
+      await saveUser(
+        result.user,
+        result.user.displayName || "User",
+        mode
+      );
+
+    }
+
+
+  }catch(error){
+
+    console.error(error);
+
+    authError(
+      friendlyError(error)
+    );
+
+  }finally{
+
+    $("googleBtn").disabled = false;
+
+    $("googleBtn").textContent =
+      "Continue with Google";
+
+  }
 
 };
 
@@ -951,284 +943,76 @@ mode==='seller'
    SAVE USER
 ========================================================= */
 
-async function saveUser(firebaseUser,name,selectedRole){
+async function saveUser(
+  user,
+  name,
+  selectedRole
+){
 
-const owner=
-firebaseUser.email?.toLowerCase()===
-OWNER_EMAIL.toLowerCase();
-
-const role=
-owner
-?'admin'
-:selectedRole;
-
-
-await setDoc(
-doc(db,'users',firebaseUser.uid),
-{
-
-uid:firebaseUser.uid,
-
-name:
-name||
-firebaseUser.displayName||
-'User',
-
-email:
-firebaseUser.email||'',
-
-role,
-
-status:'active',
-
-plan:'free',
-
-verified:false,
-
-verificationStatus:'not_submitted',
-
-badgeColor:'green',
-
-createdAt:serverTimestamp()
-
-},
-{
-merge:true
-}
-);
+  const role =
+    user.email?.toLowerCase() ===
+    OWNER.toLowerCase()
+    ? "admin"
+    : selectedRole;
 
 
-/* Seller store */
+  await setDoc(
+    doc(db,"users",user.uid),
+    {
+      uid:user.uid,
 
-if(role==='seller'){
+      name:
+        name ||
+        user.displayName ||
+        "User",
 
-await setDoc(
-doc(db,'stores',firebaseUser.uid),
-{
+      email:user.email,
 
-sellerId:
-firebaseUser.uid,
+      role,
 
-name:
-(name||
-firebaseUser.displayName||
-'Seller')+
-"'s Store",
+      status:"active",
 
-description:'',
+      plan:"free",
 
-whatsapp:'',
+      verified:false,
 
-verified:false,
+      verificationStatus:
+        "not_submitted",
 
-badgeColor:'green',
+      badgeColor:"green",
 
-createdAt:serverTimestamp()
+      createdAt:serverTimestamp()
+    },
+    {merge:true}
+  );
 
-},
-{
-merge:true
-}
-);
+
+  if(role === "seller"){
+
+    await setDoc(
+      doc(db,"stores",user.uid),
+      {
+        sellerId:user.uid,
+
+        name:
+          (name ||
+           user.displayName ||
+           "Seller") +
+          "'s Store",
+
+        description:"",
+
+        whatsapp:"",
+
+        createdAt:
+          serverTimestamp()
+      },
+      {merge:true}
+    );
+
+  }
 
 }
-
-}
-
-
-/* =========================================================
-   EMAIL AUTH
-========================================================= */
-
-window.emailAuth=async function(){
-
-const button=$('emailBtn');
-
-try{
-
-const email=
-$('email').value.trim();
-
-const password=
-$('pass').value;
-
-const name=
-$('name').value.trim();
-
-
-if(!email){
-
-return toast('Enter your email');
-
-}
-
-
-if(!password){
-
-return toast('Enter your password');
-
-}
-
-
-if(authMode==='register'&&!name){
-
-return toast('Enter your full name');
-
-}
-
-
-button.disabled=true;
-
-button.textContent='Please wait...';
-
-
-if(authMode==='register'){
-
-const result=
-await createUserWithEmailAndPassword(
-auth,
-email,
-password
-);
-
-
-if(name){
-
-await updateProfile(
-result.user,
-{
-displayName:name
-}
-);
-
-}
-
-
-await saveUser(
-result.user,
-name,
-mode
-);
-
-toast('Account created');
-
-}else{
-
-await signInWithEmailAndPassword(
-auth,
-email,
-password
-);
-
-}
-
-}catch(error){
-
-console.error(error);
-
-toast(
-friendlyAuthError(error)
-);
-
-}finally{
-
-button.disabled=false;
-
-button.textContent='Continue';
-
-}
-
-};
-
-
-/* =========================================================
-   AUTH ERROR
-========================================================= */
-
-function friendlyAuthError(error){
-
-const code=error?.code||'';
-
-const messages={
-
-'auth/email-already-in-use':
-'An account already exists with this email.',
-
-'auth/invalid-email':
-'Please enter a valid email address.',
-
-'auth/weak-password':
-'Password must be at least 6 characters.',
-
-'auth/invalid-credential':
-'Email or password is incorrect.',
-
-'auth/wrong-password':
-'Email or password is incorrect.',
-
-'auth/user-not-found':
-'Email or password is incorrect.',
-
-'auth/popup-closed-by-user':
-'Google sign-in was cancelled.',
-
-'auth/popup-blocked':
-'Your browser blocked the Google sign-in popup.',
-
-'auth/network-request-failed':
-'Network error. Check your internet connection.'
-
-};
-
-return messages[code]||
-error?.message||
-'Something went wrong.';
-
-}
-
-
-/* =========================================================
-   GOOGLE AUTH
-========================================================= */
-
-window.google=async function(){
-
-try{
-
-const result=
-await signInWithPopup(
-auth,
-googleProvider
-);
-
-const userRef=
-doc(db,'users',result.user.uid);
-
-const snap=
-await getDoc(userRef);
-
-
-if(!snap.exists()){
-
-await saveUser(
-result.user,
-result.user.displayName||'User',
-mode
-);
-
-}
-
-}catch(error){
-
-console.error(error);
-
-toast(
-friendlyAuthError(error)
-);
-
-}
-
-};
 
 
 /* =========================================================
@@ -1236,172 +1020,143 @@ friendlyAuthError(error)
 ========================================================= */
 
 onAuthStateChanged(
-auth,
-async firebaseUser=>{
+  auth,
+  async user => {
 
-try{
+    try{
 
-currentUser=firebaseUser;
-
-
-if(!firebaseUser){
-
-userData=null;
-
-$('app').classList.add('hide');
-
-$('nav').classList.add('hide');
-
-$('auth').classList.add('hide');
-
-$('landing').classList.remove('hide');
-
-return;
-
-}
+      u = user;
 
 
-let snap=
-await getDoc(
-doc(db,'users',firebaseUser.uid)
+      if(!user){
+
+        ud = null;
+
+        $("app").classList.add("hide");
+
+        $("nav").classList.add("hide");
+
+        if(
+          $("auth").classList.contains("hide")
+        ){
+
+          $("landing").classList.remove("hide");
+
+        }
+
+        return;
+
+      }
+
+
+      let snap =
+        await getDoc(
+          doc(db,"users",user.uid)
+        );
+
+
+      if(!snap.exists()){
+
+        await saveUser(
+          user,
+          user.displayName || "User",
+          mode
+        );
+
+        snap =
+          await getDoc(
+            doc(db,"users",user.uid)
+          );
+
+      }
+
+
+      ud = snap.data() || {};
+
+
+      if(isAdmin()){
+
+        ud.role = "admin";
+
+        await setDoc(
+          doc(db,"users",user.uid),
+          {
+            role:"admin"
+          },
+          {merge:true}
+        );
+
+      }
+
+
+      $("landing").classList.add("hide");
+
+      $("auth").classList.add("hide");
+
+      $("app").classList.remove("hide");
+
+      $("nav").classList.remove("hide");
+
+
+      if(isAdmin()){
+
+        window.adminPage();
+
+      }
+      else if(ud.role === "seller"){
+
+        window.sellerPage();
+
+      }
+      else{
+
+        window.buyerPage();
+
+      }
+
+
+    }catch(error){
+
+      console.error(
+        "AUTH STATE ERROR:",
+        error
+      );
+
+      toast(
+        "Could not load your account."
+      );
+
+    }
+
+  }
 );
-
-
-if(!snap.exists()){
-
-await saveUser(
-firebaseUser,
-firebaseUser.displayName||'User',
-mode
-);
-
-snap=
-await getDoc(
-doc(db,'users',firebaseUser.uid)
-);
-
-}
-
-
-userData=snap.data()||{};
-
-
-/* Owner always gets admin role */
-
-if(
-firebaseUser.email?.toLowerCase()===
-OWNER_EMAIL.toLowerCase()
-){
-
-if(userData.role!=='admin'){
-
-await setDoc(
-doc(db,'users',firebaseUser.uid),
-{
-role:'admin'
-},
-{
-merge:true
-}
-);
-
-userData.role='admin';
-
-}
-
-}
-
-
-if(userData.status==='blocked'){
-
-toast(
-'This account has been blocked.'
-);
-
-await signOut(auth);
-
-return;
-
-}
-
-
-if(userData.status==='suspended'){
-
-toast(
-'This account is currently suspended.'
-);
-
-await signOut(auth);
-
-return;
-
-}
-
-
-$('landing').classList.add('hide');
-
-$('auth').classList.add('hide');
-
-$('app').classList.remove('hide');
-
-$('nav').classList.remove('hide');
-
-
-if(isAdmin()){
-
-window.adminPage();
-
-}else if(userData.role==='seller'){
-
-window.sellerPage();
-
-}else{
-
-buyerPage();
-
-}
-
-}catch(error){
-
-console.error(error);
-
-toast(
-'Unable to load your account.'
-);
-
-}
-
-});
 
 
 /* =========================================================
    HOME
 ========================================================= */
 
-window.home=function(){
+window.home = function(){
 
-if(!currentUser||!userData){
+  if(!u || !ud){
 
-return;
+    return window.showLanding();
 
-}
+  }
 
+  if(isAdmin()){
 
-if(isAdmin()){
+    return window.adminPage();
 
-return window.adminPage();
+  }
 
-}
+  if(ud.role === "seller"){
 
+    return window.sellerPage();
 
-if(userData.role==='seller'){
+  }
 
-return window.sellerPage();
-
-}
-
-
-buyerPage();
+  window.buyerPage();
 
 };
 
@@ -1410,198 +1165,128 @@ buyerPage();
    BUYER HOME
 ========================================================= */
 
-function buyerPage(){
+window.buyerPage = function(){
 
-view('home');
+  view("home");
 
+  $("home").innerHTML = `
 
-$('home').innerHTML=`
+    <div class="card p-5">
 
-<div class="card p-5">
+      <small class="text-gray-500">
+        Welcome back
+      </small>
 
-<div class="flex items-center gap-3">
+      <h1 class="text-2xl font-black mt-1">
+        ${esc(ud.name)}
+      </h1>
 
-<div class="avatar">
-${esc(getInitial(userData.name))}
-</div>
+      <div class="flex flex-wrap gap-2 mt-4">
 
-<div>
+        <button
+          type="button"
+          class="btn g"
+          onclick="window.forYou()">
+          🔥 For You
+        </button>
 
-<small class="text-gray-500">
-Welcome back
-</small>
+        <button
+          type="button"
+          class="btn d"
+          onclick="window.orders()">
+          📦 My Orders
+        </button>
 
-<h1 class="text-2xl font-black">
-${esc(userData.name)}
-</h1>
+      </div>
 
-</div>
+    </div>
 
-</div>
+    <h2 class="font-black text-xl mt-7">
+      Discover Stores
+    </h2>
 
+    <div
+      id="stores"
+      class="grid md:grid-cols-3 gap-3 mt-3">
+    </div>
 
-<div class="flex flex-wrap gap-2 mt-5">
+  `;
 
-<button
-class="btn g"
-onclick="forYou()">
-🔥 Explore For You
-</button>
+  loadStores();
 
-<button
-class="btn d"
-onclick="orders()">
-📦 My Orders
-</button>
+};
 
-</div>
-
-</div>
-
-
-<div class="flex justify-between items-center mt-7">
-
-<h2 class="font-black text-xl">
-Stores
-</h2>
-
-<button
-class="text-sm text-gray-500"
-onclick="loadStores()">
-Refresh
-</button>
-
-</div>
-
-
-<div
-id="stores"
-class="grid md:grid-cols-3 gap-3 mt-3">
-
-<div class="card p-5">
-<div class="spinner"></div>
-</div>
-
-</div>
-
-`;
-
-loadStores();
-
-}
-
-
-/* =========================================================
-   LOAD STORES
-========================================================= */
 
 async function loadStores(){
 
-try{
+  try{
 
-const box=$('stores');
-
-if(!box)return;
-
-
-const result=
-await getDocs(
-query(
-collection(db,'stores'),
-limit(60)
-)
-);
+    const q =
+      await getDocs(
+        query(
+          collection(db,"stores"),
+          limit(60)
+        )
+      );
 
 
-if(!result.size){
-
-box.innerHTML=
-`
-<div class="card p-5 md:col-span-3 empty">
-No stores yet.
-</div>
-`;
-
-return;
-
-}
+    if(!$("stores")) return;
 
 
-box.innerHTML='';
+    $("stores").innerHTML =
 
+      q.docs.map(d => {
 
-for(const d of result.docs){
+        const s = d.data();
 
-const storeData=d.data()||{};
+        return `
 
-const sellerSnap=
-await getDoc(
-doc(db,'users',d.id)
-);
+          <div class="card p-4">
 
-const seller=
-sellerSnap.data()||{};
+            <b>
+              ${esc(s.name || "Store")}
+            </b>
 
+            <p class="text-gray-500 text-sm mt-1">
+              ${esc(
+                s.description ||
+                "Online store"
+              )}
+            </p>
 
-box.innerHTML+=`
+            <button
+              type="button"
+              class="btn d w-full mt-3"
+              onclick="window.openStore('${d.id}')">
+              Visit Store
+            </button>
 
-<div class="card p-4">
+          </div>
 
-<div class="flex items-center gap-3">
+        `;
 
-<div class="avatar">
-${esc(getInitial(seller.name||storeData.name))}
-</div>
+      }).join("")
 
-<div class="min-w-0">
+      ||
 
-<b class="block truncate">
+      `<p class="text-gray-500">
+        No stores yet.
+      </p>`;
 
-${esc(storeData.name||'Store')}
+  }catch(error){
 
-${badge(seller)}
+    console.error(error);
 
-</b>
+    if($("stores")){
 
-<p class="text-gray-500 text-sm truncate">
-${esc(storeData.description||'Online store')}
-</p>
+      $("stores").innerHTML =
+        `<p class="text-red-400">
+          Could not load stores.
+        </p>`;
 
-</div>
+    }
 
-</div>
-
-
-<button
-class="btn d w-full mt-4"
-onclick="openStore('${d.id}')">
-Visit Store
-</button>
-
-</div>
-
-`;
-
-}
-
-}catch(error){
-
-console.error(error);
-
-const box=$('stores');
-
-if(box){
-
-box.innerHTML=
-`
-<div class="card p-5 text-red-400">
-Unable to load stores.
-</div>
-`;
-
-}
-
-}
+  }
 
 }
 
@@ -1610,188 +1295,156 @@ Unable to load stores.
    FOR YOU
 ========================================================= */
 
-window.forYou=async function(){
+window.forYou = async function(){
 
-view('feed');
+  view("feed");
 
+  $("feed").innerHTML = `
 
-$('feed').innerHTML=`
+    <h2 class="text-2xl font-black">
+      For You 🔥
+    </h2>
 
-<div class="flex justify-between items-center">
+    <div
+      id="posts"
+      class="max-w-xl mx-auto space-y-4 mt-4">
+    </div>
 
-<h2 class="text-2xl font-black">
-For You 🔥
-</h2>
-
-<button
-class="text-sm text-gray-500"
-onclick="forYou()">
-Refresh
-</button>
-
-</div>
+  `;
 
 
-<div
-id="posts"
-class="max-w-xl mx-auto space-y-4 mt-4">
+  try{
 
-<div class="card p-5">
-<div class="spinner"></div>
-</div>
-
-</div>
-
-`;
+    const q =
+      await getDocs(
+        query(
+          collection(db,"posts"),
+          limit(50)
+        )
+      );
 
 
-try{
-
-const result=
-await getDocs(
-query(
-collection(db,'posts'),
-limit(50)
-)
-);
+    const area = $("posts");
 
 
-const posts=$('posts');
+    if(!q.size){
+
+      area.innerHTML =
+        `<div class="card p-5 text-gray-500">
+          No posts yet.
+        </div>`;
+
+      return;
+
+    }
 
 
-if(!result.size){
+    for(const d of q.docs){
 
-posts.innerHTML=
-`
-<div class="card p-5 empty">
-No posts yet.
-</div>
-`;
+      const p = d.data();
 
-return;
+      let seller = {};
 
-}
+      try{
 
+        seller =
+          (
+            await getDoc(
+              doc(
+                db,
+                "users",
+                p.sellerId
+              )
+            )
+          ).data() || {};
 
-for(const d of result.docs){
-
-const p=d.data()||{};
-
-const sellerSnap=
-await getDoc(
-doc(db,'users',p.sellerId)
-);
-
-const seller=
-sellerSnap.data()||{};
+      }catch{}
 
 
-posts.innerHTML+=`
+      area.innerHTML += `
 
-<article class="card p-3">
+        <article class="card p-3">
 
-<div class="flex items-center gap-3">
+          <b>
+            ${esc(
+              seller.name ||
+              "Seller"
+            )}
 
-<div class="avatar">
-${esc(getInitial(seller.name||'S'))}
-</div>
+            ${badge(seller)}
+          </b>
 
-<div>
+          ${
+            p.mediaType === "video"
 
-<b>
-${esc(seller.name||'Seller')}
-${badge(seller)}
-</b>
+            ?
 
-<p class="text-xs text-gray-500">
-SellerFlow
-</p>
+            `
+            <video
+              controls
+              class="w-full rounded-xl mt-3 max-h-[520px]"
+              src="${esc(p.mediaUrl)}">
+            </video>
+            `
 
-</div>
+            :
 
-</div>
+            `
+            <img
+              class="w-full rounded-xl mt-3 max-h-[520px] object-cover"
+              src="${esc(p.mediaUrl)}"
+              alt="Post">
+            `
+          }
 
+          <p class="mt-3">
+            ${esc(p.caption || "")}
+          </p>
 
-${
-p.mediaType==='video'
+          <div class="flex gap-5 text-sm text-gray-400 mt-3">
 
-?
+            <button
+              type="button"
+              onclick="window.likePost('${d.id}')">
+              ♥ ${p.likesCount || 0}
+            </button>
 
-`
-<video
-controls
-playsinline
-class="w-full rounded-xl mt-3 max-h-[520px] bg-black"
-src="${esc(p.mediaUrl)}">
-</video>
-`
+            <button
+              type="button"
+              onclick="window.comments('${d.id}')">
+              💬 ${p.commentsCount || 0}
+            </button>
 
-:
+            <button
+              type="button"
+              onclick="window.savePost('${d.id}')">
+              🔖 ${p.savesCount || 0}
+            </button>
 
-`
-<img
-class="w-full rounded-xl mt-3 max-h-[520px] object-cover"
-src="${esc(p.mediaUrl)}"
-alt="SellerFlow post">
-`
+            <button
+              type="button"
+              onclick="window.sharePost('${d.id}')">
+              ↗ Share
+            </button>
 
-}
+          </div>
 
+        </article>
 
-${
-p.caption
-?
-`
-<p class="mt-3">
-${esc(p.caption)}
-</p>
-`
-:''
-}
+      `;
 
+    }
 
-<div class="flex gap-5 text-sm text-gray-400 mt-4">
+  }catch(error){
 
-<button
-onclick="like('${d.id}')">
-♥ ${Number(p.likesCount||0)}
-</button>
+    console.error(error);
 
-<button
-onclick="comments('${d.id}')">
-💬 ${Number(p.commentsCount||0)}
-</button>
+    $("posts").innerHTML =
+      `<div class="card p-5 text-red-400">
+        Could not load posts.
+      </div>`;
 
-<button
-onclick="savepost('${d.id}')">
-🔖 ${Number(p.savesCount||0)}
-</button>
-
-<button
-onclick="share('${d.id}')">
-↗ Share
-</button>
-
-</div>
-
-</article>
-
-`;
-
-}
-
-}catch(error){
-
-console.error(error);
-
-$('posts').innerHTML=
-`
-<div class="card p-5 text-red-400">
-Unable to load posts.
-</div>
-`;
-
-}
+  }
 
 };
 
@@ -1800,85 +1453,85 @@ Unable to load posts.
    LIKE
 ========================================================= */
 
-window.like=async function(id){
+window.likePost = async function(id){
 
-if(!currentUser){
+  if(!u){
 
-return toast('Please sign in.');
+    return toast("Please sign in first.");
 
-}
-
-
-try{
-
-const likeRef=
-doc(
-db,
-'posts',
-id,
-'likes',
-currentUser.uid
-);
-
-const postRef=
-doc(db,'posts',id);
-
-const likeSnap=
-await getDoc(likeRef);
-
-const postSnap=
-await getDoc(postRef);
-
-if(!postSnap.exists()){
-
-return toast('Post no longer exists.');
-
-}
-
-const postData=postSnap.data()||{};
-
-let count=
-Number(postData.likesCount||0);
+  }
 
 
-if(likeSnap.exists()){
+  try{
 
-await deleteDoc(likeRef);
+    const likeRef =
+      doc(
+        db,
+        "posts",
+        id,
+        "likes",
+        u.uid
+      );
 
-count=Math.max(0,count-1);
+    const postRef =
+      doc(db,"posts",id);
 
-}else{
+    const likeSnap =
+      await getDoc(likeRef);
 
-await setDoc(
-likeRef,
-{
-uid:currentUser.uid,
-createdAt:serverTimestamp()
-}
-);
+    const postSnap =
+      await getDoc(postRef);
 
-count++;
+    const post =
+      postSnap.data() || {};
 
-}
-
-
-await updateDoc(
-postRef,
-{
-likesCount:count
-}
-);
+    const count =
+      post.likesCount || 0;
 
 
-forYou();
+    if(likeSnap.exists()){
 
-}catch(error){
+      await deleteDoc(likeRef);
 
-console.error(error);
+      await updateDoc(
+        postRef,
+        {
+          likesCount:
+            Math.max(0,count - 1)
+        }
+      );
 
-toast('Unable to update like.');
+    }else{
 
-}
+      await setDoc(
+        likeRef,
+        {
+          uid:u.uid,
+          createdAt:
+            serverTimestamp()
+        }
+      );
+
+      await updateDoc(
+        postRef,
+        {
+          likesCount:count + 1
+        }
+      );
+
+    }
+
+    window.forYou();
+
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      "Could not update like."
+    );
+
+  }
 
 };
 
@@ -1887,79 +1540,41 @@ toast('Unable to update like.');
    SAVE POST
 ========================================================= */
 
-window.savepost=async function(id){
+window.savePost = async function(id){
 
-try{
+  if(!u){
 
-const saveRef=
-doc(
-db,
-'posts',
-id,
-'saves',
-currentUser.uid
-);
+    return toast("Please sign in first.");
 
-const postRef=
-doc(db,'posts',id);
-
-const saveSnap=
-await getDoc(saveRef);
-
-const postSnap=
-await getDoc(postRef);
-
-if(!postSnap.exists()){
-
-return toast('Post no longer exists.');
-
-}
-
-const p=postSnap.data()||{};
-
-let count=
-Number(p.savesCount||0);
+  }
 
 
-if(saveSnap.exists()){
+  try{
 
-await deleteDoc(saveRef);
+    await setDoc(
+      doc(
+        db,
+        "posts",
+        id,
+        "saves",
+        u.uid
+      ),
+      {
+        uid:u.uid,
+        createdAt:
+          serverTimestamp()
+      }
+    );
 
-count=Math.max(0,count-1);
+    toast("Post saved.");
 
-toast('Removed from saved posts');
+  }catch(error){
 
-}else{
+    console.error(error);
 
-await setDoc(
-saveRef,
-{
-uid:currentUser.uid,
-createdAt:serverTimestamp()
-}
-);
+    toast("Could not save post.");
 
-count++;
-
-toast('Post saved');
-
-}
-
-
-await updateDoc(
-postRef,
-{
-savesCount:count
-}
-);
-
-}catch(error){
-
-console.error(error);
-
-toast('Unable to save post.');
-
-}
+  }
 
 };
 
@@ -1968,157 +1583,139 @@ toast('Unable to save post.');
    COMMENTS
 ========================================================= */
 
-window.comments=async function(id){
+window.comments = async function(id){
 
-try{
+  try{
 
-const result=
-await getDocs(
-query(
-collection(
-db,
-'posts',
-id,
-'comments'
-),
-orderBy('createdAt','asc'),
-limit(50)
-)
-);
-
-
-modal(`
-
-<h2 class="text-xl font-black">
-Comments
-</h2>
+    const q =
+      await getDocs(
+        query(
+          collection(
+            db,
+            "posts",
+            id,
+            "comments"
+          ),
+          limit(50)
+        )
+      );
 
 
-<div class="mt-4 space-y-3 max-h-80 overflow-auto">
+    modal(`
 
-${
-result.docs.length
+      <h2 class="text-xl font-black">
+        Comments
+      </h2>
 
-?
+      <div class="mt-4 space-y-3">
 
-result.docs.map(d=>`
+        ${
+          q.docs.map(d => {
 
-<div class="border-b border-[#222] pb-3">
+            const c = d.data();
 
-<b>
-${esc(d.data().userName||'User')}
-</b>
+            return `
 
-<p class="text-gray-400 mt-1">
-${esc(d.data().text||'')}
-</p>
+              <div class="border-b border-[#222] pb-2">
 
-</div>
+                <b>
+                  ${esc(
+                    c.userName ||
+                    "User"
+                  )}
+                </b>
 
-`).join('')
+                <p class="text-gray-400">
+                  ${esc(c.text)}
+                </p>
 
-:
+              </div>
 
-'<p class="text-gray-500">No comments yet.</p>'
+            `;
 
-}
+          }).join("")
 
-</div>
+          ||
 
+          `<p class="text-gray-500">
+            No comments yet.
+          </p>`
+        }
 
-<input
-id="ct"
-class="inp mt-4"
-placeholder="Write a comment">
+      </div>
 
+      <input
+        id="commentText"
+        class="inp mt-4"
+        placeholder="Write a comment">
 
-<button
-class="btn g w-full mt-3"
-onclick="comment('${id}')">
-Post Comment
-</button>
+      <button
+        type="button"
+        class="btn g w-full mt-3"
+        onclick="window.commentPost('${id}')">
+        Post Comment
+      </button>
 
-`);
+      <button
+        type="button"
+        class="btn d w-full mt-2"
+        onclick="window.closeModal()">
+        Close
+      </button>
 
-}catch(error){
+    `);
 
-console.error(error);
+  }catch(error){
 
-toast('Unable to load comments.');
+    console.error(error);
 
-}
+    toast("Could not load comments.");
+
+  }
 
 };
 
 
-window.comment=async function(id){
+window.commentPost = async function(id){
 
-const input=$('ct');
+  const text =
+    $("commentText")?.value.trim();
 
-const text=
-input?.value.trim();
-
-if(!text){
-
-return toast('Write a comment first.');
-
-}
+  if(!text) return;
 
 
-try{
+  try{
 
-await addDoc(
-collection(
-db,
-'posts',
-id,
-'comments'
-),
-{
-userId:currentUser.uid,
-userName:userData.name||'User',
-text,
-createdAt:serverTimestamp()
-}
-);
-
-
-/* Increment comment counter */
-
-const postRef=
-doc(db,'posts',id);
-
-const snap=
-await getDoc(postRef);
-
-if(snap.exists()){
-
-const p=snap.data()||{};
-
-await updateDoc(
-postRef,
-{
-commentsCount:
-Number(p.commentsCount||0)+1
-}
-);
-
-}
+    await addDoc(
+      collection(
+        db,
+        "posts",
+        id,
+        "comments"
+      ),
+      {
+        userId:u.uid,
+        userName:ud.name,
+        text,
+        createdAt:
+          serverTimestamp()
+      }
+    );
 
 
-closeModal();
+    closeModal();
 
-toast('Comment posted');
+    toast("Comment posted.");
 
-forYou();
+    window.forYou();
 
-}catch(error){
+  }catch(error){
 
-console.error(error);
+    console.error(error);
 
-toast('Unable to post comment.');
+    toast("Could not post comment.");
 
-}
+  }
 
 };
 
@@ -2127,44 +1724,31 @@ toast('Unable to post comment.');
    SHARE POST
 ========================================================= */
 
-window.share=async function(id){
+window.sharePost = async function(id){
 
-const link=
-location.href.split('?')[0]+
-'?post='+encodeURIComponent(id);
+  const url =
+    location.href.split("?")[0] +
+    "?post=" + id;
 
 
-try{
+  try{
 
-if(navigator.share){
+    if(navigator.share){
 
-await navigator.share({
-title:'SellerFlow',
-text:'Check out this post on SellerFlow',
-url:link
-});
+      await navigator.share({
+        title:"SellerFlow",
+        url
+      });
 
-}else{
+    }else{
 
-throw new Error('No share API');
+      await navigator.clipboard.writeText(url);
 
-}
+      toast("Link copied.");
 
-}catch(error){
+    }
 
-try{
-
-await navigator.clipboard.writeText(link);
-
-toast('Link copied');
-
-}catch{
-
-toast('Unable to share.');
-
-}
-
-}
+  }catch{}
 
 };
 
@@ -2173,319 +1757,243 @@ toast('Unable to share.');
    PUBLIC STORE
 ========================================================= */
 
-window.openStore=async function(id){
+window.openStore = async function(id){
 
-try{
+  try{
 
-const storeSnap=
-await getDoc(
-doc(db,'stores',id)
-);
+    currentSellerId = id;
 
 
-if(!storeSnap.exists()){
+    const storeSnap =
+      await getDoc(
+        doc(db,"stores",id)
+      );
 
-return toast('Store not found.');
 
-}
+    if(!storeSnap.exists()){
 
+      return toast(
+        "Store not found."
+      );
 
-currentStore={
-id,
-...storeSnap.data()
-};
+    }
 
 
-const productResult=
-await getDocs(
-query(
-collection(db,'products'),
-where('sellerId','==',id),
-limit(100)
-)
-);
+    store = storeSnap.data();
 
 
-products=
-productResult.docs.map(
-d=>({
-id:d.id,
-...d.data()
-})
-);
+    const productSnap =
+      await getDocs(
+        query(
+          collection(db,"products"),
+          where("sellerId","==",id),
+          limit(100)
+        )
+      );
 
 
-const sellerSnap=
-await getDoc(
-doc(db,'users',id)
-);
+    products =
+      productSnap.docs.map(
+        d => ({
+          id:d.id,
+          ...d.data()
+        })
+      );
 
 
-const seller=
-sellerSnap.data()||{};
+    const sellerSnap =
+      await getDoc(
+        doc(db,"users",id)
+      );
 
 
-view('store');
+    const seller =
+      sellerSnap.data() || {};
 
 
-$('store').innerHTML=`
+    view("store");
 
-<button
-class="text-gray-500"
-onclick="home()">
-← Back
-</button>
 
+    $("store").innerHTML = `
 
-<div class="card p-5 mt-3">
+      <button
+        type="button"
+        class="text-gray-500"
+        onclick="window.home()">
+        ← Back
+      </button>
 
-<div class="flex items-center gap-3">
+      <div class="card p-5 mt-3">
 
-<div class="avatar">
-${esc(getInitial(seller.name||currentStore.name))}
-</div>
+        <h1 class="text-2xl font-black">
 
-<div>
+          ${esc(
+            store.name ||
+            "Store"
+          )}
 
-<h1 class="text-2xl font-black">
+          ${badge(seller)}
 
-${esc(currentStore.name||'Store')}
+        </h1>
 
-${badge(seller)}
+        <p class="text-gray-500 mt-1">
+          ${esc(
+            store.description ||
+            "Welcome to our store."
+          )}
+        </p>
 
-</h1>
+        <div class="flex flex-wrap gap-2 mt-4">
 
-<p class="text-gray-500">
-${esc(currentStore.description||'')}
-</p>
+          <button
+            type="button"
+            class="btn d"
+            onclick="window.startChat('${id}')">
+            💬 Message
+          </button>
 
-</div>
+          <button
+            type="button"
+            class="btn d"
+            onclick="window.followStore('${id}')">
+            ＋ Follow
+          </button>
 
-</div>
+          <button
+            type="button"
+            class="btn d"
+            onclick="window.shareStore('${id}')">
+            ↗ Share
+          </button>
 
+        </div>
 
-<div class="flex flex-wrap gap-2 mt-5">
+      </div>
 
-<button
-class="btn d"
-onclick="chat('${id}')">
-💬 Message
-</button>
+      <div class="grid md:grid-cols-3 gap-3 mt-4">
 
-<button
-id="followBtn"
-class="btn d"
-onclick="follow('${id}')">
-＋ Follow
-</button>
+        ${
+          products.map(p => `
 
-<button
-class="btn d"
-onclick="shareStore('${id}')">
-↗ Share
-</button>
+            <div class="card p-3">
 
-</div>
+              <img
+                class="w-full h-48 object-cover rounded-xl"
+                src="${
+                  esc(
+                    p.imageUrl ||
+                    "https://placehold.co/600x400/111/fff?text=Product"
+                  )
+                }"
+                alt="${esc(p.name)}">
 
-</div>
+              <b class="block mt-3">
+                ${esc(p.name)}
+              </b>
 
+              <b class="gold">
+                ${money(p.price)}
+              </b>
 
-<div class="flex justify-between items-center mt-6">
+              <p class="text-gray-500 text-sm mt-1">
+                ${esc(
+                  p.description || ""
+                )}
+              </p>
 
-<h2 class="text-xl font-black">
-Products
-</h2>
+              <button
+                type="button"
+                class="btn g w-full mt-3"
+                onclick="window.buyProduct('${p.id}')">
+                Buy
+              </button>
 
-<span class="text-gray-500 text-sm">
-${products.length} item${products.length===1?'':'s'}
-</span>
+              <button
+                type="button"
+                class="text-sm text-gray-500 mt-2"
+                onclick="window.reviews('${p.id}')">
+                ⭐ Reviews
+              </button>
 
-</div>
+            </div>
 
+          `).join("")
 
-<div class="grid sm:grid-cols-2 md:grid-cols-3 gap-3 mt-3">
+          ||
 
-${
-products.length
+          `
+          <div class="card p-5 text-gray-500">
+            This store has no products yet.
+          </div>
+          `
 
-?
+        }
 
-products.map(p=>`
+      </div>
 
-<div class="card p-3">
+    `;
 
-<img
-class="product-img"
-src="${esc(
-p.imageUrl||
-'https://placehold.co/600x400/111/fff?text=Product'
-)}"
-alt="${esc(p.name)}">
+  }catch(error){
 
+    console.error(error);
 
-<b class="block mt-3">
-${esc(p.name)}
-</b>
+    toast(
+      "Could not open store."
+    );
 
-
-<b class="gold">
-${money(p.price)}
-</b>
-
-
-${
-p.stock!==undefined
-
-?
-
-`
-<p class="text-gray-500 text-xs mt-1">
-Stock: ${Number(p.stock||0)}
-</p>
-`
-
-:''
-}
-
-
-<p class="text-gray-500 text-sm mt-2">
-${esc(p.description||'')}
-</p>
-
-
-<button
-class="btn g w-full mt-3"
-onclick="buy('${p.id}')">
-Buy
-</button>
-
-
-<button
-class="text-sm text-gray-500 mt-2"
-onclick="reviews('${p.id}')">
-⭐ Reviews
-</button>
-
-</div>
-
-`).join('')
-
-:
-
-`
-<div class="card p-5 empty sm:col-span-2 md:col-span-3">
-This store has no products yet.
-</div>
-`
-
-}
-
-</div>
-
-`;
-
-
-/* Update follow button */
-
-await updateFollowButton(id);
-
-}catch(error){
-
-console.error(error);
-
-toast('Unable to open store.');
-
-}
+  }
 
 };
 
 
 /* =========================================================
-   FOLLOW BUTTON
+   BUY PRODUCT
 ========================================================= */
 
-async function updateFollowButton(id){
+window.buyProduct = function(id){
 
-const button=$('followBtn');
-
-if(!button||!currentUser)return;
-
-
-try{
-
-const snap=
-await getDoc(
-doc(
-db,
-'follows',
-currentUser.uid+'_'+id
-)
-);
-
-button.textContent=
-snap.exists()
-?'✓ Following'
-:'＋ Follow';
-
-}catch{}
-
-}
+  const product =
+    products.find(
+      p => p.id === id
+    );
 
 
-/* =========================================================
-   BUY
-========================================================= */
+  if(!product){
 
-window.buy=function(id){
+    return toast(
+      "Product not found."
+    );
 
-if(!currentUser){
-
-return toast(
-'Please sign in as a buyer first.'
-);
-
-}
+  }
 
 
-if(userData?.role!=='buyer'){
+  if(!u){
 
-return toast(
-'Use a buyer account to purchase products.'
-);
+    window.authPage("login");
 
-}
+    return toast(
+      "Please sign in as a buyer to continue."
+    );
 
-
-const product=
-products.find(x=>x.id===id);
+  }
 
 
-if(!product){
+  if(ud.role !== "buyer"){
 
-return toast('Product not found.');
+    return toast(
+      "Only buyer accounts can place orders."
+    );
 
-}
-
-
-const existing=
-cart.find(x=>x.id===id);
+  }
 
 
-if(existing){
-
-existing.qty++;
-
-}else{
-
-cart.push({
-...product,
-qty:1
-});
-
-}
+  cart = [{
+    ...product,
+    qty:1
+  }];
 
 
-checkout();
+  window.checkout();
 
 };
 
@@ -2494,123 +2002,124 @@ checkout();
    CHECKOUT
 ========================================================= */
 
-window.checkout=function(){
+window.checkout = function(){
 
-if(!currentUser){
+  if(!u){
 
-return toast(
-'Please sign in as a buyer first.'
-);
+    return toast(
+      "Please sign in as a buyer first."
+    );
 
-}
-
-
-if(userData?.role!=='buyer'){
-
-return toast(
-'Use a buyer account to place an order.'
-);
-
-}
+  }
 
 
-if(!cart.length){
+  if(ud.role !== "buyer"){
 
-return toast('Your cart is empty.');
+    return toast(
+      "Use a buyer account to place an order."
+    );
 
-}
-
-
-const total=
-cart.reduce(
-(total,item)=>
-total+
-Number(item.price||0)*
-Number(item.qty||1),
-0
-);
+  }
 
 
-modal(`
+  if(!cart.length){
 
-<h2 class="text-xl font-black">
-Checkout
-</h2>
+    return toast(
+      "Your cart is empty."
+    );
 
-
-<div class="mt-4 space-y-2">
-
-${
-cart.map(item=>`
-
-<div class="flex justify-between border-b border-[#222] pb-2">
-
-<span>
-${esc(item.name)}
-× ${item.qty}
-</span>
-
-<b>
-${money(
-Number(item.price||0)*
-Number(item.qty||1)
-)}
-</b>
-
-</div>
-
-`).join('')
-}
-
-</div>
+  }
 
 
-<input
-id="phone"
-class="inp mt-5"
-placeholder="Phone / WhatsApp"
-type="tel">
+  const total =
+    cart.reduce(
+      (sum,p) =>
+        sum +
+        Number(p.price || 0) *
+        Number(p.qty || 1),
+      0
+    );
 
 
-<select
-id="method"
-class="inp mt-3">
+  modal(`
 
-<option value="Pickup">
-Pickup
-</option>
+    <h2 class="text-xl font-black">
+      Checkout
+    </h2>
 
-<option value="Delivery">
-Delivery
-</option>
+    <div class="mt-4 space-y-2">
 
-</select>
+      ${
+        cart.map(p => `
 
+          <div class="flex justify-between border-b border-[#222] pb-2">
 
-<textarea
-id="address"
-class="inp mt-3"
-placeholder="Address / pickup details"></textarea>
+            <span>
+              ${esc(p.name)}
+              × ${p.qty}
+            </span>
 
+            <b>
+              ${money(
+                p.price * p.qty
+              )}
+            </b>
 
-<p class="gold font-black mt-4">
-Total: ${money(total)}
-</p>
+          </div>
 
+        `).join("")
+      }
 
-<p class="text-gray-500 text-xs mt-2">
-Payment is arranged directly with the seller.
-SellerFlow does not process payment in this version.
-</p>
+    </div>
 
+    <input
+      id="checkoutPhone"
+      class="inp mt-4"
+      placeholder="Phone / WhatsApp"
+      type="tel">
 
-<button
-class="btn g w-full mt-4"
-onclick="place()">
-Place Order
-</button>
+    <select
+      id="checkoutMethod"
+      class="inp mt-3">
 
-`);
+      <option value="Pickup">
+        Pickup
+      </option>
+
+      <option value="Delivery">
+        Delivery
+      </option>
+
+    </select>
+
+    <textarea
+      id="checkoutAddress"
+      class="inp mt-3"
+      placeholder="Address / pickup details"></textarea>
+
+    <p class="gold font-black mt-3">
+      Total: ${money(total)}
+    </p>
+
+    <p class="text-gray-500 text-sm mt-2">
+      Payment is arranged directly with the seller.
+    </p>
+
+    <button
+      type="button"
+      class="btn g w-full mt-4"
+      onclick="window.placeOrder()">
+      Place Order
+    </button>
+
+    <button
+      type="button"
+      class="btn d w-full mt-2"
+      onclick="window.closeModal()">
+      Cancel
+    </button>
+
+  `);
 
 };
 
@@ -2619,134 +2128,116 @@ Place Order
    PLACE ORDER
 ========================================================= */
 
-window.place=async function(){
+window.placeOrder = async function(){
 
-try{
+  try{
 
-if(!cart.length){
+    const phone =
+      $("checkoutPhone")?.value.trim();
 
-return toast('Cart is empty.');
+    const method =
+      $("checkoutMethod")?.value;
 
-}
-
-
-const phone=
-$('phone')?.value.trim();
-
-const method=
-$('method')?.value;
-
-const address=
-$('address')?.value.trim();
+    const address =
+      $("checkoutAddress")?.value.trim();
 
 
-if(!phone){
+    if(!phone){
 
-return toast('Enter your phone number.');
+      return toast(
+        "Enter your phone number."
+      );
 
-}
-
-
-if(!currentStore?.sellerId){
-
-return toast('Store information is missing.');
-
-}
+    }
 
 
-const items=
-cart.map(item=>({
-
-productId:item.id,
-
-name:item.name,
-
-price:Number(item.price||0),
-
-quantity:Number(item.qty||1)
-
-}));
+    const items =
+      cart.map(p => ({
+        productId:p.id,
+        name:p.name,
+        price:Number(p.price || 0),
+        quantity:Number(p.qty || 1)
+      }));
 
 
-const total=
-items.reduce(
-(sum,item)=>
-sum+
-item.price*
-item.quantity,
-0
-);
+    const total =
+      items.reduce(
+        (sum,item) =>
+          sum +
+          item.price *
+          item.quantity,
+        0
+      );
 
 
-await addDoc(
-collection(db,'orders'),
-{
+    await addDoc(
+      collection(db,"orders"),
+      {
+        sellerId:
+          currentSellerId,
 
-sellerId:
-currentStore.sellerId,
+        storeId:
+          currentSellerId,
 
-storeId:
-currentStore.sellerId,
+        buyerId:
+          u.uid,
 
-buyerId:
-currentUser.uid,
+        buyerEmail:
+          u.email,
 
-buyerEmail:
-currentUser.email||'',
+        customerName:
+          ud.name,
 
-customerName:
-userData.name||currentUser.displayName||'Buyer',
+        customerPhone:
+          phone,
 
-customerPhone:
-phone,
+        deliveryMethod:
+          method,
 
-deliveryMethod:
-method||'Pickup',
+        address:
+          address,
 
-address:
-address||'',
+        items,
 
-items,
+        total,
 
-total,
+        paymentMethod:
+          "physical_payment",
 
-paymentMethod:
-'physical_payment',
+        paymentStatus:
+          "not_applicable",
 
-paymentStatus:
-'not_applicable',
+        status:
+          "pending",
 
-status:
-'pending',
+        createdAt:
+          serverTimestamp(),
 
-createdAt:
-serverTimestamp(),
-
-updatedAt:
-serverTimestamp()
-
-}
-);
+        updatedAt:
+          serverTimestamp()
+      }
+    );
 
 
-cart=[];
+    cart = [];
 
-closeModal();
+    closeModal();
 
-toast('Order placed successfully');
+    toast(
+      "Order placed successfully."
+    );
 
-orders();
+    window.orders();
 
-}catch(error){
+  }catch(error){
 
-console.error(error);
+    console.error(error);
 
-toast(
-error?.message||
-'Unable to place order.'
-);
+    toast(
+      "Could not place order."
+    );
 
-}
+  }
 
 };
 
@@ -2755,84 +2246,83 @@ error?.message||
    REVIEWS
 ========================================================= */
 
-window.reviews=async function(productId){
+window.reviews = async function(pid){
 
-try{
+  try{
 
-const result=
-await getDocs(
-query(
-collection(db,'reviews'),
-where('productId','==',productId),
-limit(50)
-)
-);
-
-
-modal(`
-
-<h2 class="text-xl font-black">
-Reviews
-</h2>
+    const q =
+      await getDocs(
+        query(
+          collection(db,"reviews"),
+          where("productId","==",pid),
+          limit(50)
+        )
+      );
 
 
-<div class="mt-4 space-y-3">
+    modal(`
 
-${
-result.docs.length
+      <h2 class="text-xl font-black">
+        Reviews
+      </h2>
 
-?
+      <div class="mt-4">
 
-result.docs.map(d=>{
+        ${
+          q.docs.map(d => {
 
-const r=d.data()||{};
+            const r = d.data();
 
-return `
+            return `
 
-<div class="border-b border-[#222] py-3">
+              <div class="border-b border-[#222] py-3">
 
-<div>
-⭐ ${Number(r.rating||0)}/5
-</div>
+                ⭐ ${esc(r.rating)}/5
 
-<b>
-${esc(r.buyerName||'Buyer')}
-</b>
+                <b class="ml-2">
+                  ${esc(
+                    r.buyerName ||
+                    "Buyer"
+                  )}
+                </b>
 
-<p class="text-gray-400 mt-1">
-${esc(r.text||'')}
-</p>
+                <p class="text-gray-400 mt-1">
+                  ${esc(r.text || "")}
+                </p>
 
-</div>
+              </div>
 
-`;
+            `;
 
-}).join('')
+          }).join("")
 
-:
+          ||
 
-'<p class="text-gray-500">No reviews yet.</p>'
+          `<p class="text-gray-500">
+            No reviews yet.
+          </p>`
+        }
 
-}
+      </div>
 
-</div>
+      <button
+        type="button"
+        class="btn d w-full mt-4"
+        onclick="window.closeModal()">
+        Close
+      </button>
 
+    `);
 
-<button
-class="btn d w-full mt-4"
-onclick="closeModal()">
-Close
-</button>
+  }catch(error){
 
-`);
+    console.error(error);
 
-}catch(error){
+    toast(
+      "Could not load reviews."
+    );
 
-console.error(error);
-
-toast('Unable to load reviews.');
-
-}
+  }
 
 };
 
@@ -2841,66 +2331,50 @@ toast('Unable to load reviews.');
    FOLLOW
 ========================================================= */
 
-window.follow=async function(id){
+window.followStore = async function(id){
 
-if(!currentUser){
+  if(!u){
 
-return toast('Please sign in.');
+    return toast(
+      "Please sign in first."
+    );
 
-}
-
-
-try{
-
-const followRef=
-doc(
-db,
-'follows',
-currentUser.uid+'_'+id
-);
-
-const snap=
-await getDoc(followRef);
+  }
 
 
-if(snap.exists()){
+  try{
 
-await deleteDoc(followRef);
+    await setDoc(
+      doc(
+        db,
+        "follows",
+        u.uid + "_" + id
+      ),
+      {
+        followerId:u.uid,
 
-toast('Unfollowed');
+        followingSellerId:id,
 
-}else{
-
-await setDoc(
-followRef,
-{
-
-followerId:
-currentUser.uid,
-
-followingSellerId:
-id,
-
-createdAt:
-serverTimestamp()
-
-}
-);
-
-toast('Following');
-
-}
+        createdAt:
+          serverTimestamp()
+      },
+      {merge:true}
+    );
 
 
-await updateFollowButton(id);
+    toast(
+      "Following store."
+    );
 
-}catch(error){
+  }catch(error){
 
-console.error(error);
+    console.error(error);
 
-toast('Unable to update follow.');
+    toast(
+      "Could not follow store."
+    );
 
-}
+  }
 
 };
 
@@ -2909,45 +2383,34 @@ toast('Unable to update follow.');
    SHARE STORE
 ========================================================= */
 
-window.shareStore=async function(id){
+window.shareStore = async function(id){
 
-const link=
-location.href.split('?')[0]+
-'?store='+
-encodeURIComponent(id);
+  const url =
+    location.href.split("?")[0] +
+    "?store=" + id;
 
 
-try{
+  try{
 
-if(navigator.share){
+    if(navigator.share){
 
-await navigator.share({
-title:currentStore?.name||'SellerFlow Store',
-text:'Check out this store on SellerFlow',
-url:link
-});
+      await navigator.share({
+        title:
+          store?.name ||
+          "SellerFlow Store",
 
-}else{
+        url
+      });
 
-throw new Error();
+    }else{
 
-}
+      await navigator.clipboard.writeText(url);
 
-}catch{
+      toast("Store link copied.");
 
-try{
+    }
 
-await navigator.clipboard.writeText(link);
-
-toast('Store link copied');
-
-}catch{
-
-toast('Unable to share.');
-
-}
-
-}
+  }catch{}
 
 };
 
@@ -2956,161 +2419,125 @@ toast('Unable to share.');
    BUYER ORDERS
 ========================================================= */
 
-window.orders=async function(){
+window.orders = async function(){
 
-if(!currentUser)return;
+  if(!u){
 
-view('orders');
+    return toast(
+      "Please sign in first."
+    );
 
-
-$('orders').innerHTML=`
-
-<h2 class="text-2xl font-black">
-My Orders
-</h2>
-
-<div
-id="buyerOrders"
-class="space-y-3 mt-4">
-
-<div class="card p-5">
-<div class="spinner"></div>
-</div>
-
-</div>
-
-`;
+  }
 
 
-try{
+  view("orders");
 
-const result=
-await getDocs(
-query(
-collection(db,'orders'),
-where(
-'buyerId',
-'==',
-currentUser.uid
-),
-limit(100)
-)
-);
+  $("orders").innerHTML = `
 
+    <h2 class="text-2xl font-black">
+      My Orders
+    </h2>
 
-const box=$('buyerOrders');
+    <div
+      id="buyerOrders"
+      class="space-y-3 mt-4">
+    </div>
+
+  `;
 
 
-if(!result.size){
+  try{
 
-box.innerHTML=
-`
-<div class="card p-6 empty">
-You have no orders yet.
-</div>
-`;
-
-return;
-
-}
-
-
-box.innerHTML='';
-
-
-for(const d of result.docs){
-
-const o=d.data()||{};
+    const q =
+      await getDocs(
+        query(
+          collection(db,"orders"),
+          where(
+            "buyerId",
+            "==",
+            u.uid
+          ),
+          limit(100)
+        )
+      );
 
 
-box.innerHTML+=`
-
-<div class="card p-4">
-
-<div class="flex justify-between gap-3">
-
-<div>
-
-<b>
-${money(o.total)}
-</b>
-
-<p class="text-xs text-gray-500 mt-1">
-Order #${esc(d.id.slice(0,8))}
-</p>
-
-</div>
-
-<span class="status gold">
-${esc(statusText(o.status))}
-</span>
-
-</div>
+    const area =
+      $("buyerOrders");
 
 
-<div class="line"></div>
+    if(!q.size){
+
+      area.innerHTML =
+        `<div class="card p-5 text-gray-500">
+          You have no orders yet.
+        </div>`;
+
+      return;
+
+    }
 
 
-<p class="text-gray-400 text-sm">
+    area.innerHTML =
+      q.docs.map(d => {
 
-${
-(o.items||[])
-.map(
-item=>
-esc(item.name)+
-' × '+
-Number(item.quantity||1)
-)
-.join(', ')
+        const o = d.data();
 
-}
+        return `
 
-</p>
+          <div class="card p-4">
 
+            <div class="flex justify-between gap-3">
 
-<p class="text-gray-500 text-xs mt-3">
+              <b>
+                ${money(o.total)}
+              </b>
 
-${esc(o.deliveryMethod||'Pickup')}
+              <span class="gold">
+                ${esc(
+                  o.status ||
+                  "pending"
+                )}
+              </span>
 
-${
-o.address
-?
-' · '+esc(o.address)
-:''
-}
+            </div>
 
-</p>
+            <p class="text-gray-400 text-sm mt-2">
 
+              ${
+                o.items?.map(
+                  item =>
+                    esc(item.name) +
+                    " × " +
+                    item.quantity
+                ).join(", ")
+              }
 
-${
-o.customerPhone
-?
-`
-<p class="text-gray-500 text-xs mt-1">
-Contact: ${esc(o.customerPhone)}
-</p>
-`
-:''
-}
+            </p>
 
-</div>
+            <p class="text-gray-500 text-xs mt-2">
+              ${esc(
+                o.deliveryMethod ||
+                ""
+              )}
+            </p>
 
-`;
+          </div>
 
-}
+        `;
 
-}catch(error){
+      }).join("");
 
-console.error(error);
+  }catch(error){
 
-$('buyerOrders').innerHTML=
-`
-<div class="card p-5 text-red-400">
-Unable to load your orders.
-</div>
-`;
+    console.error(error);
 
-}
+    $("buyerOrders").innerHTML =
+      `<div class="card p-5 text-red-400">
+        Could not load orders.
+      </div>`;
+
+  }
 
 };
 
@@ -3119,147 +2546,111 @@ Unable to load your orders.
    MESSAGES
 ========================================================= */
 
-window.messages=async function(){
+window.messages = async function(){
 
-if(!currentUser)return;
+  if(!u){
 
-view('msgs');
+    return toast(
+      "Please sign in first."
+    );
 
-
-$('msgs').innerHTML=`
-
-<h2 class="text-2xl font-black">
-Messages
-</h2>
-
-<div
-id="conversationList"
-class="space-y-2 mt-4">
-
-<div class="card p-5">
-<div class="spinner"></div>
-</div>
-
-</div>
-
-`;
+  }
 
 
-try{
-
-const result=
-await getDocs(
-query(
-collection(db,'conversations'),
-where(
-'participants',
-'array-contains',
-currentUser.uid
-),
-limit(50)
-)
-);
+  view("msgs");
 
 
-const box=$('conversationList');
+  $("msgs").innerHTML = `
+
+    <h2 class="text-2xl font-black">
+      Messages
+    </h2>
+
+    <div
+      id="conversationList"
+      class="space-y-2 mt-4">
+    </div>
+
+  `;
 
 
-if(!result.size){
+  try{
 
-box.innerHTML=
-`
-<div class="card p-6 empty">
-No conversations yet.
-</div>
-`;
-
-return;
-
-}
-
-
-box.innerHTML='';
-
-
-for(const d of result.docs){
-
-const c=d.data()||{};
-
-let displayName=
-c.otherName||
-'Conversation';
+    const q =
+      await getDocs(
+        query(
+          collection(
+            db,
+            "conversations"
+          ),
+          where(
+            "participants",
+            "array-contains",
+            u.uid
+          ),
+          limit(50)
+        )
+      );
 
 
-if(c.sellerId===currentUser.uid){
-
-const buyerSnap=
-await getDoc(
-doc(db,'users',c.buyerId)
-);
-
-displayName=
-buyerSnap.data()?.name||
-'Buyer';
-
-}else if(c.sellerId){
-
-const sellerSnap=
-await getDoc(
-doc(db,'users',c.sellerId)
-);
-
-displayName=
-sellerSnap.data()?.name||
-c.otherName||
-'Seller';
-
-}
+    const area =
+      $("conversationList");
 
 
-box.innerHTML+=`
+    if(!q.size){
 
-<button
-class="card p-4 w-full text-left"
-onclick="openChat('${d.id}')">
+      area.innerHTML =
+        `<p class="text-gray-500">
+          No conversations yet.
+        </p>`;
 
-<div class="flex items-center gap-3">
+      return;
 
-<div class="avatar">
-${esc(getInitial(displayName))}
-</div>
+    }
 
-<div class="min-w-0">
 
-<b>
-${esc(displayName)}
-</b>
+    area.innerHTML =
+      q.docs.map(d => {
 
-<p class="text-gray-500 truncate">
-${esc(c.lastMessage||'Start a conversation')}
-</p>
+        const c = d.data();
 
-</div>
+        return `
 
-</div>
+          <button
+            type="button"
+            class="card p-4 w-full text-left"
+            onclick="window.openChat('${d.id}')">
 
-</button>
+            <b>
+              ${esc(
+                c.otherName ||
+                "Conversation"
+              )}
+            </b>
 
-`;
+            <p class="text-gray-500 mt-1">
+              ${esc(
+                c.lastMessage ||
+                ""
+              )}
+            </p>
 
-}
+          </button>
 
-}catch(error){
+        `;
 
-console.error(error);
+      }).join("");
 
-$('conversationList').innerHTML=
-`
-<div class="card p-5 text-red-400">
-Unable to load conversations.
-</div>
-`;
+  }catch(error){
 
-}
+    console.error(error);
+
+    $("conversationList").innerHTML =
+      `<p class="text-red-400">
+        Could not load messages.
+      </p>`;
+
+  }
 
 };
 
@@ -3268,80 +2659,88 @@ Unable to load conversations.
    START CHAT
 ========================================================= */
 
-window.chat=async function(sellerId){
+window.startChat = async function(sellerId){
 
-if(!currentUser){
+  if(!u){
 
-return toast('Please sign in.');
+    return toast(
+      "Please sign in first."
+    );
 
-}
-
-
-if(userData?.role!=='buyer'){
-
-return toast(
-'Messaging sellers is available from a buyer account.'
-);
-
-}
+  }
 
 
-try{
+  if(ud.role !== "buyer"){
 
-const conversationId=
-[currentUser.uid,sellerId]
-.sort()
-.join('_');
+    return toast(
+      "Only buyer accounts can message sellers."
+    );
 
-
-const sellerSnap=
-await getDoc(
-doc(db,'users',sellerId)
-);
+  }
 
 
-const seller=
-sellerSnap.data()||{};
+  try{
+
+    const id =
+      [u.uid,sellerId]
+        .sort()
+        .join("_");
 
 
-await setDoc(
-doc(db,'conversations',conversationId),
-{
-
-participants:[
-currentUser.uid,
-sellerId
-],
-
-sellerId,
-
-buyerId:
-currentUser.uid,
-
-otherName:
-seller.name||'Seller',
-
-lastMessage:'',
-
-updatedAt:
-serverTimestamp()
-
-},
-{
-merge:true
-}
-);
+    const sellerSnap =
+      await getDoc(
+        doc(
+          db,
+          "users",
+          sellerId
+        )
+      );
 
 
-openChat(conversationId);
+    const seller =
+      sellerSnap.data() || {};
 
-}catch(error){
 
-console.error(error);
+    await setDoc(
+      doc(
+        db,
+        "conversations",
+        id
+      ),
+      {
+        participants:[
+          u.uid,
+          sellerId
+        ],
 
-toast('Unable to start chat.');
+        sellerId,
 
-}
+        buyerId:u.uid,
+
+        otherName:
+          seller.name ||
+          "Seller",
+
+        lastMessage:"",
+
+        updatedAt:
+          serverTimestamp()
+      },
+      {merge:true}
+    );
+
+
+    window.openChat(id);
+
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      "Could not start chat."
+    );
+
+  }
 
 };
 
@@ -3350,173 +2749,117 @@ toast('Unable to start chat.');
    OPEN CHAT
 ========================================================= */
 
-window.openChat=async function(id){
+window.openChat = async function(id){
 
-if(!currentUser)return;
-
-currentChatId=id;
-
-view('msgs');
+  view("msgs");
 
 
-$('msgs').innerHTML=`
+  try{
 
-<button
-class="text-gray-500"
-onclick="messages()">
-← Messages
-</button>
-
-
-<h2 class="text-2xl font-black mt-3">
-Chat
-</h2>
-
-
-<div
-id="chatMessages"
-class="card p-4 mt-4">
-
-<div class="spinner"></div>
-
-</div>
-
-`;
+    const q =
+      await getDocs(
+        query(
+          collection(
+            db,
+            "conversations",
+            id,
+            "messages"
+          ),
+          orderBy(
+            "createdAt",
+            "asc"
+          ),
+          limit(100)
+        )
+      );
 
 
-try{
+    $("msgs").innerHTML = `
 
-const conversationSnap=
-await getDoc(
-doc(db,'conversations',id)
-);
+      <button
+        type="button"
+        class="text-gray-500"
+        onclick="window.messages()">
+        ← Messages
+      </button>
 
-const conversation=
-conversationSnap.data()||{};
+      <h2 class="text-2xl font-black mt-3">
+        Chat
+      </h2>
 
+      <div class="card p-4 mt-4">
 
-const otherId=
-conversation.sellerId===currentUser.uid
-?conversation.buyerId
-:conversation.sellerId;
+        <div
+          id="chatMessages"
+          class="space-y-2 max-h-80 overflow-auto">
 
+          ${
+            q.docs.map(d => {
 
-const otherSnap=
-await getDoc(
-doc(db,'users',otherId)
-);
+              const m =
+                d.data();
 
+              return `
 
-const other=
-otherSnap.data()||{};
+                <p class="${
+                  m.senderId === u.uid
+                  ? "text-right"
+                  : ""
+                }">
 
+                  <span class="inline-block bg-[#202020] rounded-xl px-3 py-2">
+                    ${esc(m.text)}
+                  </span>
 
-const result=
-await getDocs(
-query(
-collection(
-db,
-'conversations',
-id,
-'messages'
-),
-orderBy('createdAt','asc'),
-limit(100)
-)
-);
+                </p>
 
+              `;
 
-const box=$('chatMessages');
+            }).join("")
 
+            ||
 
-box.innerHTML=`
+            `<p class="text-gray-500">
+              Start the conversation.
+            </p>`
+          }
 
-<div class="mb-4">
+        </div>
 
-<b>
-${esc(other.name||'User')}
-${badge(other)}
-</b>
+        <div class="flex gap-2 mt-4">
 
-</div>
+          <input
+            id="messageInput"
+            class="inp"
+            placeholder="Message"
+            onkeydown="
+              if(event.key==='Enter'){
+                window.sendMessage('${id}')
+              }
+            ">
 
+          <button
+            type="button"
+            class="btn g"
+            onclick="window.sendMessage('${id}')">
+            Send
+          </button>
 
-<div
-class="space-y-2 max-h-[55vh] overflow-auto">
+        </div>
 
-${
-result.docs.length
+      </div>
 
-?
+    `;
 
-result.docs.map(d=>{
+  }catch(error){
 
-const m=d.data()||{};
+    console.error(error);
 
-const mine=
-m.senderId===currentUser.uid;
+    toast(
+      "Could not open conversation."
+    );
 
-return `
-
-<div
-class="${mine?'text-right':''}">
-
-<span
-class="inline-block max-w-[80%] ${
-mine
-?'bg-[#f5b942] text-black'
-:'bg-[#202020] text-white'
-} rounded-xl px-3 py-2">
-
-${esc(m.text||'')}
-
-</span>
-
-</div>
-
-`;
-
-}).join('')
-
-:
-
-`
-<p class="text-gray-500 text-center py-8">
-No messages yet. Say hello.
-</p>
-`
-
-}
-
-</div>
-
-
-<div class="flex gap-2 mt-4">
-
-<input
-id="msg"
-class="inp"
-placeholder="Write a message"
-onkeydown="if(event.key==='Enter')send('${id}')">
-
-
-<button
-class="btn g"
-onclick="send('${id}')">
-Send
-</button>
-
-</div>
-
-`;
-
-}catch(error){
-
-console.error(error);
-
-toast('Unable to open conversation.');
-
-}
+  }
 
 };
 
@@ -3525,68 +2868,66 @@ toast('Unable to open conversation.');
    SEND MESSAGE
 ========================================================= */
 
-window.send=async function(id){
+window.sendMessage = async function(id){
 
-const input=$('msg');
+  const input =
+    $("messageInput");
 
-const text=
-input?.value.trim();
-
-
-if(!text){
-
-return;
-
-}
+  const text =
+    input?.value.trim();
 
 
-try{
-
-await addDoc(
-collection(
-db,
-'conversations',
-id,
-'messages'
-),
-{
-
-senderId:
-currentUser.uid,
-
-text,
-
-createdAt:
-serverTimestamp(),
-
-read:false
-
-}
-);
+  if(!text) return;
 
 
-await updateDoc(
-doc(db,'conversations',id),
-{
+  try{
 
-lastMessage:text,
+    await addDoc(
+      collection(
+        db,
+        "conversations",
+        id,
+        "messages"
+      ),
+      {
+        senderId:u.uid,
 
-updatedAt:
-serverTimestamp()
+        text,
 
-}
-);
+        createdAt:
+          serverTimestamp(),
+
+        read:false
+      }
+    );
 
 
-openChat(id);
+    await updateDoc(
+      doc(
+        db,
+        "conversations",
+        id
+      ),
+      {
+        lastMessage:text,
 
-}catch(error){
+        updatedAt:
+          serverTimestamp()
+      }
+    );
 
-console.error(error);
 
-toast('Unable to send message.');
+    window.openChat(id);
 
-}
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      "Could not send message."
+    );
+
+  }
 
 };
 
@@ -3595,574 +2936,444 @@ toast('Unable to send message.');
    SELLER DASHBOARD
 ========================================================= */
 
-window.sellerPage=function(){
+window.sellerPage = function(){
 
-if(!currentUser||!userData)return;
+  view("seller");
 
-view('seller');
-
-loadSeller();
+  loadSeller();
 
 };
 
 
 async function loadSeller(){
 
-try{
-
-const storeSnap=
-await getDoc(
-doc(db,'stores',currentUser.uid)
-);
+  try{
+
+    const storeSnap =
+      await getDoc(
+        doc(
+          db,
+          "stores",
+          u.uid
+        )
+      );
+
+
+    const sellerStore =
+      storeSnap.data() || {};
+
+
+    products =
+      (
+        await getDocs(
+          query(
+            collection(db,"products"),
+            where(
+              "sellerId",
+              "==",
+              u.uid
+            ),
+            limit(100)
+          )
+        )
+      ).docs.map(
+        d => ({
+          id:d.id,
+          ...d.data()
+        })
+      );
+
+
+    const orderSnap =
+      await getDocs(
+        query(
+          collection(db,"orders"),
+          where(
+            "sellerId",
+            "==",
+            u.uid
+          ),
+          limit(100)
+        )
+      );
+
+
+    const sellerOrders =
+      orderSnap.docs.map(
+        d => ({
+          id:d.id,
+          ...d.data()
+        })
+      );
+
+
+    $("seller").innerHTML = `
+
+      <div class="flex flex-wrap justify-between gap-3">
+
+        <div>
+
+          <h1 class="text-2xl font-black">
+            Seller Dashboard
+          </h1>
+
+          <p class="text-gray-500 mt-1">
+
+            Plan:
+            ${esc(
+              ud.plan || "free"
+            )}
+
+            ·
+
+            ${
+              ud.verified
+              ? "Verified"
+              : "Verification " +
+                esc(
+                  ud.verificationStatus ||
+                  "not_submitted"
+                )
+            }
+
+            ${badge(ud)}
+
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          class="btn g"
+          onclick="window.openStore('${u.uid}')">
+          View Store
+        </button>
+
+      </div>
 
 
-if(!storeSnap.exists()){
-
-await setDoc(
-doc(db,'stores',currentUser.uid),
-{
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
 
-sellerId:
-currentUser.uid,
+        <div class="card p-4">
+          Products
+          <b class="block text-2xl">
+            ${products.length}
+          </b>
+        </div>
+
+        <div class="card p-4">
+          Orders
+          <b class="block text-2xl">
+            ${sellerOrders.length}
+          </b>
+        </div>
+
+        <div class="card p-4">
+          Pending
+          <b class="block text-2xl">
+            ${
+              sellerOrders.filter(
+                x => x.status === "pending"
+              ).length
+            }
+          </b>
+        </div>
 
-name:
-(userData.name||'Seller')+
-"'s Store",
+        <div class="card p-4">
+          Badge
+          <b class="block mt-2">
+            ${badge(ud) || "—"}
+          </b>
+        </div>
 
-description:'',
+      </div>
 
-whatsapp:'',
 
-verified:
-!!userData.verified,
+      <div class="grid md:grid-cols-2 gap-4 mt-5">
 
-badgeColor:
-userData.badgeColor||'green',
 
-createdAt:
-serverTimestamp()
+        <!-- STORE -->
 
-},
-{
-merge:true
-}
-);
+        <div class="card p-5">
 
-}
+          <h2 class="font-black text-xl">
+            Store
+          </h2>
 
+          <input
+            id="storeName"
+            class="inp mt-4"
+            value="${esc(
+              sellerStore.name || ""
+            )}"
+            placeholder="Store name">
 
-const st=
-(
-await getDoc(
-doc(db,'stores',currentUser.uid)
-)
-).data()||{};
+          <textarea
+            id="storeDescription"
+            class="inp mt-3"
+            placeholder="Store description">${esc(
+              sellerStore.description || ""
+            )}</textarea>
 
+          <input
+            id="storeWhatsApp"
+            class="inp mt-3"
+            value="${esc(
+              sellerStore.whatsapp || ""
+            )}"
+            placeholder="WhatsApp number">
 
-const productResult=
-await getDocs(
-query(
-collection(db,'products'),
-where(
-'sellerId',
-'==',
-currentUser.uid
-),
-limit(100)
-)
-);
+          <button
+            type="button"
+            class="btn g mt-3"
+            onclick="window.saveStore()">
+            Save Store
+          </button>
 
+        </div>
 
-products=
-productResult.docs.map(
-d=>({
-id:d.id,
-...d.data()
-})
-);
 
+        <!-- PRODUCTS -->
 
-const orderResult=
-await getDocs(
-query(
-collection(db,'orders'),
-where(
-'sellerId',
-'==',
-currentUser.uid
-),
-limit(100)
-)
-);
+        <div class="card p-5">
 
+          <h2 class="font-black text-xl">
+            Products
+          </h2>
 
-const sellerOrders=
-orderResult.docs.map(
-d=>({
-id:d.id,
-...d.data()
-})
-);
-
-
-const pending=
-sellerOrders.filter(
-x=>x.status==='pending'
-).length;
-
-
-const revenue=
-sellerOrders
-.filter(x=>x.status==='delivered')
-.reduce(
-(sum,x)=>
-sum+Number(x.total||0),
-0
-);
-
-
-$('seller').innerHTML=`
-
-<div class="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+          <button
+            type="button"
+            class="btn g mt-3"
+            onclick="window.productForm()">
+            ＋ Add Product
+          </button>
 
-<div>
+          <div class="space-y-2 mt-3">
 
-<h1 class="text-2xl font-black">
-Seller Dashboard
-</h1>
+            ${
+              products.map(p => `
 
-<p class="text-gray-500">
-Welcome, ${esc(userData.name)}
-</p>
+                <div class="border-b border-[#222] py-3 flex justify-between gap-3">
 
-<p class="text-sm mt-1">
+                  <span>
+                    ${esc(p.name)}
+                    ·
+                    ${money(p.price)}
+                  </span>
 
-Plan:
-<b class="gold">
-${esc(userData.plan||'free')}
-</b>
+                  <button
+                    type="button"
+                    class="text-red-400"
+                    onclick="window.deleteProduct('${p.id}')">
+                    Delete
+                  </button>
 
-·
+                </div>
 
-${
-userData.verified
-?
-`Verified ${badge(userData)}`
-:
-`Verification: ${esc(userData.verificationStatus||'not_submitted')}`
-}
+              `).join("")
 
-</p>
+              ||
 
-</div>
+              `<p class="text-gray-500 mt-3">
+                No products yet.
+              </p>`
+            }
 
+          </div>
 
-<button
-class="btn g"
-onclick="openStore('${currentUser.uid}')">
-View Store
-</button>
+        </div>
 
-</div>
 
+        <!-- VERIFICATION -->
 
-<div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-5">
+        <div class="card p-5">
 
-<div class="card p-4">
-<span class="text-gray-500 text-sm">
-Products
-</span>
-<b class="block text-2xl">
-${products.length}
-</b>
-</div>
+          <h2 class="font-black text-xl">
+            Ghana Card Verification
+          </h2>
 
-<div class="card p-4">
-<span class="text-gray-500 text-sm">
-Orders
-</span>
-<b class="block text-2xl">
-${sellerOrders.length}
-</b>
-</div>
+          <p class="text-gray-500 text-sm mt-2">
 
-<div class="card p-4">
-<span class="text-gray-500 text-sm">
-Pending
-</span>
-<b class="block text-2xl">
-${pending}
-</b>
-</div>
+            Status:
+            ${esc(
+              ud.verificationStatus ||
+              "not_submitted"
+            )}
 
-<div class="card p-4">
-<span class="text-gray-500 text-sm">
-Delivered
-</span>
-<b class="block text-2xl">
-${
-sellerOrders.filter(
-x=>x.status==='delivered'
-).length
-}
-</b>
-</div>
+          </p>
 
-<div class="card p-4">
-<span class="text-gray-500 text-sm">
-Revenue
-</span>
-<b class="block text-lg gold">
-${money(revenue)}
-</b>
-</div>
+          <button
+            type="button"
+            class="btn g mt-3"
+            onclick="window.verifyForm()">
 
-</div>
+            ${
+              ud.verified
+              ? "View Status"
+              : "Submit Verification"
+            }
 
+          </button>
 
-<div class="grid md:grid-cols-2 gap-4 mt-5">
+        </div>
 
 
-<!-- PRODUCTS -->
+        <!-- POSTS -->
 
-<div class="card p-5">
+        <div class="card p-5">
 
-<div class="flex justify-between items-center">
+          <h2 class="font-black text-xl">
+            For You Posts
+          </h2>
 
-<h2 class="font-black text-xl">
-Products
-</h2>
+          <p class="text-gray-500 text-sm mt-2">
+            Publish product photos and videos.
+          </p>
 
-<button
-class="btn g"
-onclick="productForm()">
-＋ Add
-</button>
+          <button
+            type="button"
+            class="btn g mt-3"
+            onclick="window.postForm()">
+            ＋ Publish Post
+          </button>
 
-</div>
+        </div>
 
 
-<div class="space-y-2 mt-4">
+        <!-- ORDERS -->
 
-${
-products.length
+        <div class="card p-5 md:col-span-2">
 
-?
+          <h2 class="font-black text-xl">
+            Orders
+          </h2>
 
-products.map(p=>`
+          <div class="space-y-3 mt-3">
 
-<div class="card2 p-3 flex justify-between gap-3 items-center">
+            ${
+              sellerOrders.map(o => `
 
-<div class="min-w-0">
+                <div class="border-b border-[#222] pb-3">
 
-<b class="block truncate">
-${esc(p.name)}
-</b>
+                  <div class="flex justify-between">
 
-<span class="gold text-sm">
-${money(p.price)}
-</span>
+                    <b>
+                      ${esc(
+                        o.customerName ||
+                        "Buyer"
+                      )}
+                    </b>
 
-<span class="text-gray-500 text-xs ml-2">
-Stock: ${Number(p.stock||0)}
-</span>
+                    <b class="gold">
+                      ${money(o.total)}
+                    </b>
 
-</div>
+                  </div>
 
+                  <p class="text-gray-500 text-sm mt-1">
+                    ${esc(
+                      o.customerPhone ||
+                      ""
+                    )}
+                    ·
+                    ${esc(
+                      o.deliveryMethod ||
+                      ""
+                    )}
+                  </p>
 
-<button
-class="text-red-400 text-sm"
-onclick="del('products','${p.id}')">
-Delete
-</button>
+                  <select
+                    class="inp mt-2"
+                    onchange="
+                      window.changeOrderStatus(
+                        '${o.id}',
+                        this.value
+                      )
+                    ">
 
-</div>
+                    <option value="pending"
+                      ${o.status==="pending"?"selected":""}>
+                      Pending
+                    </option>
 
-`).join('')
+                    <option value="confirmed"
+                      ${o.status==="confirmed"?"selected":""}>
+                      Confirmed
+                    </option>
 
-:
+                    <option value="processing"
+                      ${o.status==="processing"?"selected":""}>
+                      Processing
+                    </option>
 
-`
-<div class="empty">
-No products yet.
-</div>
-`
+                    <option value="ready"
+                      ${o.status==="ready"?"selected":""}>
+                      Ready for Pickup
+                    </option>
 
-}
+                    <option value="out_for_delivery"
+                      ${o.status==="out_for_delivery"?"selected":""}>
+                      Out for Delivery
+                    </option>
 
-</div>
+                    <option value="delivered"
+                      ${o.status==="delivered"?"selected":""}>
+                      Delivered
+                    </option>
 
-</div>
+                    <option value="cancelled"
+                      ${o.status==="cancelled"?"selected":""}>
+                      Cancelled
+                    </option>
 
+                  </select>
 
-<!-- STORE -->
+                </div>
 
-<div class="card p-5">
+              `).join("")
 
-<h2 class="font-black text-xl">
-Store Settings
-</h2>
+              ||
 
-<input
-id="storeName"
-class="inp mt-4"
-value="${esc(st.name||'')}"
-placeholder="Store name">
+              `<p class="text-gray-500">
+                No orders yet.
+              </p>`
+            }
 
+          </div>
 
-<textarea
-id="storeDesc"
-class="inp mt-3"
-placeholder="Store description">${esc(st.description||'')}</textarea>
+        </div>
 
+      </div>
 
-<input
-id="storeWhatsapp"
-class="inp mt-3"
-value="${esc(st.whatsapp||'')}"
-placeholder="WhatsApp number">
+    `;
 
+  }catch(error){
 
-<button
-class="btn g w-full mt-3"
-onclick="saveStore()">
-Save Store
-</button>
+    console.error(error);
 
-</div>
+    $("seller").innerHTML = `
 
+      <div class="card p-5">
 
-<!-- VERIFICATION -->
+        <h2 class="text-xl font-black">
+          Seller Dashboard
+        </h2>
 
-<div class="card p-5">
+        <p class="text-red-400 mt-3">
+          Could not load your seller dashboard.
+        </p>
 
-<div class="flex justify-between items-start gap-3">
+        <p class="text-gray-500 text-sm mt-2">
+          ${esc(
+            error.message
+          )}
+        </p>
 
-<div>
+      </div>
 
-<h2 class="font-black text-xl">
-Ghana Card Verification
-</h2>
+    `;
 
-<p class="text-gray-500 text-sm mt-2">
-Status:
-<b>
-${esc(userData.verificationStatus||'not_submitted')}
-</b>
-</p>
-
-</div>
-
-${badge(userData)}
-
-</div>
-
-
-<p class="text-gray-500 text-sm mt-4">
-Verification is reviewed manually. Your Ghana Card information is private.
-</p>
-
-
-<button
-class="btn g mt-4"
-onclick="verifyForm()">
-
-${
-userData.verificationStatus==='pending'
-?'View Submission Status'
-:
-userData.verified
-?'Verification Approved'
-:'Submit Verification'
-}
-
-</button>
-
-</div>
-
-
-<!-- POSTS -->
-
-<div class="card p-5">
-
-<h2 class="font-black text-xl">
-For You Posts
-</h2>
-
-<p class="text-gray-500 text-sm mt-2">
-Publish product photos and videos for buyers to discover.
-</p>
-
-<button
-class="btn g mt-4"
-onclick="postForm()">
-＋ Publish Post
-</button>
-
-</div>
-
-
-<!-- ORDERS -->
-
-<div class="card p-5 md:col-span-2">
-
-<div class="flex justify-between items-center">
-
-<h2 class="font-black text-xl">
-Orders
-</h2>
-
-<span class="text-gray-500 text-sm">
-${sellerOrders.length} total
-</span>
-
-</div>
-
-
-<div class="space-y-3 mt-4">
-
-${
-sellerOrders.length
-
-?
-
-sellerOrders.map(o=>`
-
-<div class="card2 p-4">
-
-<div class="flex flex-col md:flex-row md:justify-between gap-3">
-
-<div>
-
-<b>
-${esc(o.customerName||'Buyer')}
-</b>
-
-<p class="text-gray-500 text-sm mt-1">
-${money(o.total)}
-</p>
-
-<p class="text-gray-500 text-xs mt-1">
-${esc(o.deliveryMethod||'Pickup')}
-${o.customerPhone?' · '+esc(o.customerPhone):''}
-</p>
-
-</div>
-
-
-<span class="status gold">
-${esc(statusText(o.status))}
-</span>
-
-</div>
-
-
-<p class="text-gray-400 text-sm mt-3">
-
-${
-(o.items||[])
-.map(
-x=>
-esc(x.name)+
-' × '+
-Number(x.quantity||1)
-)
-.join(', ')
-
-}
-
-</p>
-
-
-<select
-class="inp mt-3"
-onchange="orderStatus('${o.id}',this.value)">
-
-<option value="pending"
-${o.status==='pending'?'selected':''}>
-Pending
-</option>
-
-<option value="confirmed"
-${o.status==='confirmed'?'selected':''}>
-Confirmed
-</option>
-
-<option value="processing"
-${o.status==='processing'?'selected':''}>
-Processing
-</option>
-
-<option value="ready"
-${o.status==='ready'?'selected':''}>
-Ready for Pickup
-</option>
-
-<option value="out_for_delivery"
-${o.status==='out_for_delivery'?'selected':''}>
-Out for Delivery
-</option>
-
-<option value="delivered"
-${o.status==='delivered'?'selected':''}>
-Delivered
-</option>
-
-<option value="cancelled"
-${o.status==='cancelled'?'selected':''}>
-Cancelled
-</option>
-
-</select>
-
-</div>
-
-`).join('')
-
-:
-
-`
-<div class="empty">
-No orders yet.
-</div>
-`
-
-}
-
-</div>
-
-</div>
-
-</div>
-
-`;
-
-}catch(error){
-
-console.error(error);
-
-$('seller').innerHTML=
-`
-<div class="card p-6">
-
-<h2 class="text-xl font-black">
-Seller Dashboard
-</h2>
-
-<p class="text-red-400 mt-3">
-Unable to load dashboard.
-</p>
-
-<button
-class="btn g mt-4"
-onclick="loadSeller()">
-Try Again
-</button>
-
-</div>
-`;
-
-}
+  }
 
 }
 
@@ -4171,61 +3382,52 @@ Try Again
    SAVE STORE
 ========================================================= */
 
-window.saveStore=async function(){
+window.saveStore = async function(){
 
-try{
+  try{
 
-const name=
-$('storeName')?.value.trim();
+    await setDoc(
+      doc(
+        db,
+        "stores",
+        u.uid
+      ),
+      {
+        sellerId:u.uid,
 
-const description=
-$('storeDesc')?.value.trim();
+        name:
+          $("storeName").value.trim(),
 
-const whatsapp=
-$('storeWhatsapp')?.value.trim();
+        description:
+          $("storeDescription")
+            .value.trim(),
 
+        whatsapp:
+          $("storeWhatsApp")
+            .value.trim(),
 
-if(!name){
-
-return toast('Enter your store name.');
-
-}
-
-
-await setDoc(
-doc(db,'stores',currentUser.uid),
-{
-
-sellerId:
-currentUser.uid,
-
-name,
-
-description,
-
-whatsapp,
-
-updatedAt:
-serverTimestamp()
-
-},
-{
-merge:true
-}
-);
+        updatedAt:
+          serverTimestamp()
+      },
+      {merge:true}
+    );
 
 
-toast('Store updated');
+    toast(
+      "Store updated successfully."
+    );
 
-loadSeller();
+    loadSeller();
 
-}catch(error){
+  }catch(error){
 
-console.error(error);
+    console.error(error);
 
-toast('Unable to save store.');
+    toast(
+      "Could not save store."
+    );
 
-}
+  }
 
 };
 
@@ -4234,145 +3436,112 @@ toast('Unable to save store.');
    PRODUCT FORM
 ========================================================= */
 
-window.productForm=function(){
+window.productForm = function(){
 
-modal(`
+  modal(`
 
-<h2 class="text-xl font-black">
-Add Product
-</h2>
+    <h2 class="text-xl font-black">
+      Add Product
+    </h2>
 
+    <input
+      id="pn"
+      class="inp mt-4"
+      placeholder="Product name">
 
-<input
-id="pn"
-class="inp mt-4"
-placeholder="Product name">
+    <input
+      id="pp"
+      class="inp mt-3"
+      type="number"
+      min="0"
+      placeholder="Price">
 
+    <input
+      id="ps"
+      class="inp mt-3"
+      type="number"
+      min="0"
+      placeholder="Stock">
 
-<input
-id="pp"
-class="inp mt-3"
-type="number"
-min="0"
-step="0.01"
-placeholder="Price in GHS">
+    <textarea
+      id="pd"
+      class="inp mt-3"
+      placeholder="Description"></textarea>
 
+    <input
+      id="pi"
+      class="inp mt-3"
+      type="file"
+      accept="image/*">
 
-<input
-id="ps"
-class="inp mt-3"
-type="number"
-min="0"
-placeholder="Stock quantity">
+    <button
+      type="button"
+      class="btn g w-full mt-4"
+      onclick="window.addProduct()">
+      Save Product
+    </button>
 
+    <button
+      type="button"
+      class="btn d w-full mt-2"
+      onclick="window.closeModal()">
+      Cancel
+    </button>
 
-<textarea
-id="pd"
-class="inp mt-3"
-placeholder="Description"></textarea>
-
-
-<input
-id="pi"
-class="inp mt-3"
-type="file"
-accept="image/jpeg,image/png,image/webp">
-
-
-<p class="text-gray-500 text-xs mt-2">
-Product images are stored on Cloudinary.
-</p>
-
-
-<button
-id="addProductBtn"
-class="btn g w-full mt-4"
-onclick="addProduct()">
-Save Product
-</button>
-
-`);
+  `);
 
 };
 
 
 /* =========================================================
-   CLOUDINARY UPLOAD
+   CLOUDINARY
 ========================================================= */
 
-async function uploadPublicImage(file){
+async function uploadFile(file){
 
-if(!file){
+  const form =
+    new FormData();
 
-return '';
+  form.append(
+    "file",
+    file
+  );
 
-}
+  form.append(
+    "upload_preset",
+    PRESET
+  );
 
-
-if(file.size>10*1024*1024){
-
-throw new Error(
-'Image/video must be smaller than 10MB.'
-);
-
-}
-
-
-const form=
-new FormData();
-
-form.append(
-'file',
-file
-);
-
-form.append(
-'upload_preset',
-CLOUDINARY_UPLOAD_PRESET
-);
-
-form.append(
-'folder',
-'sellerflow'
-);
+  form.append(
+    "folder",
+    "sellerflow"
+  );
 
 
-const response=
-await fetch(
-`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`,
-{
-
-method:'POST',
-
-body:form
-
-}
-);
+  const response =
+    await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD}/auto/upload`,
+      {
+        method:"POST",
+        body:form
+      }
+    );
 
 
-if(!response.ok){
+  if(!response.ok){
 
-throw new Error(
-'Cloudinary upload failed.'
-);
+    throw new Error(
+      "Image upload failed."
+    );
 
-}
-
-
-const data=
-await response.json();
+  }
 
 
-if(!data.secure_url){
-
-throw new Error(
-'Cloudinary did not return an image URL.'
-);
-
-}
+  const data =
+    await response.json();
 
 
-return data.secure_url;
+  return data.secure_url;
 
 }
 
@@ -4381,16 +3550,1483 @@ return data.secure_url;
    ADD PRODUCT
 ========================================================= */
 
-window.addProduct=async function(){
+window.addProduct = async function(){
 
-const button=$('addProductBtn');
+  try{
 
-try{
+    const name =
+      $("pn").value.trim();
 
-const name=
-$('pn').value.trim();
+    const price =
+      Number(
+        $("pp").value
+      );
 
-const price=
-Number($('pp').value);
+    const stock =
+      Number(
+        $("ps").value || 0
+      );
 
-const stock
+    const description =
+      $("pd").value.trim();
+
+    const file =
+      $("pi").files[0];
+
+
+    if(!name){
+
+      return toast(
+        "Enter product name."
+      );
+
+    }
+
+
+    if(price <= 0){
+
+      return toast(
+        "Enter a valid price."
+      );
+
+    }
+
+
+    let imageUrl = "";
+
+
+    if(file){
+
+      toast(
+        "Uploading image..."
+      );
+
+      imageUrl =
+        await uploadFile(file);
+
+    }
+
+
+    await addDoc(
+      collection(db,"products"),
+      {
+        sellerId:u.uid,
+
+        storeId:u.uid,
+
+        name,
+
+        price,
+
+        stock,
+
+        description,
+
+        imageUrl,
+
+        rating:0,
+
+        reviewCount:0,
+
+        createdAt:
+          serverTimestamp()
+      }
+    );
+
+
+    closeModal();
+
+    toast(
+      "Product added successfully."
+    );
+
+    loadSeller();
+
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      error.message ||
+      "Could not add product."
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   DELETE PRODUCT
+========================================================= */
+
+window.deleteProduct = async function(id){
+
+  if(!confirm(
+    "Delete this product?"
+  )){
+
+    return;
+
+  }
+
+
+  try{
+
+    await deleteDoc(
+      doc(
+        db,
+        "products",
+        id
+      )
+    );
+
+
+    toast(
+      "Product deleted."
+    );
+
+    loadSeller();
+
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      "Could not delete product."
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   ORDER STATUS
+========================================================= */
+
+window.changeOrderStatus =
+async function(id,status){
+
+  try{
+
+    await updateDoc(
+      doc(
+        db,
+        "orders",
+        id
+      ),
+      {
+        status,
+
+        updatedAt:
+          serverTimestamp()
+      }
+    );
+
+
+    toast(
+      "Order status updated."
+    );
+
+    loadSeller();
+
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      "Could not update order."
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   SELLER POST FORM
+========================================================= */
+
+window.postForm = function(){
+
+  modal(`
+
+    <h2 class="text-xl font-black">
+      For You Post
+    </h2>
+
+    <textarea
+      id="pc"
+      class="inp mt-4"
+      placeholder="Write a caption"></textarea>
+
+    <input
+      id="pf"
+      class="inp mt-3"
+      type="file"
+      accept="image/*,video/*">
+
+    <button
+      type="button"
+      class="btn g w-full mt-4"
+      onclick="window.addPost()">
+      Publish
+    </button>
+
+    <button
+      type="button"
+      class="btn d w-full mt-2"
+      onclick="window.closeModal()">
+      Cancel
+    </button>
+
+  `);
+
+};
+
+
+/* =========================================================
+   ADD POST
+========================================================= */
+
+window.addPost = async function(){
+
+  const file =
+    $("pf").files[0];
+
+
+  if(!file){
+
+    return toast(
+      "Choose an image or video."
+    );
+
+  }
+
+
+  try{
+
+    toast(
+      "Uploading..."
+    );
+
+
+    const url =
+      await uploadFile(file);
+
+
+    await addDoc(
+      collection(db,"posts"),
+      {
+        sellerId:u.uid,
+
+        caption:
+          $("pc").value.trim(),
+
+        mediaUrl:url,
+
+        mediaType:
+          file.type.startsWith("video")
+          ? "video"
+          : "image",
+
+        likesCount:0,
+
+        commentsCount:0,
+
+        savesCount:0,
+
+        createdAt:
+          serverTimestamp(),
+
+        status:"active"
+      }
+    );
+
+
+    closeModal();
+
+    toast(
+      "Post published."
+    );
+
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      error.message ||
+      "Could not publish post."
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   GHANA CARD FORM
+========================================================= */
+
+window.verifyForm = function(){
+
+  if(ud.verified){
+
+    modal(`
+
+      <h2 class="text-xl font-black">
+        Verification Status
+      </h2>
+
+      <div class="card p-4 mt-4">
+
+        <p class="text-gray-400">
+          Status
+        </p>
+
+        <b class="gold">
+          Approved ✓
+        </b>
+
+        <p class="text-gray-500 text-sm mt-3">
+          Your seller account has been manually verified.
+        </p>
+
+      </div>
+
+      <button
+        type="button"
+        class="btn d w-full mt-4"
+        onclick="window.closeModal()">
+        Close
+      </button>
+
+    `);
+
+    return;
+
+  }
+
+
+  modal(`
+
+    <h2 class="text-xl font-black">
+      Ghana Card Verification
+    </h2>
+
+    <p class="text-gray-500 text-sm mt-2">
+
+      Your Ghana Card information is sent to the
+      secure SellerFlow verification API and is not
+      published on your store.
+
+    </p>
+
+    <input
+      id="gid"
+      class="inp mt-4"
+      placeholder="Ghana Card ID number">
+
+    <label class="block text-sm text-gray-400 mt-3">
+      Ghana Card Front
+    </label>
+
+    <input
+      id="gf"
+      class="inp mt-2"
+      type="file"
+      accept="image/jpeg,image/png,image/webp">
+
+    <label class="block text-sm text-gray-400 mt-3">
+      Ghana Card Back
+    </label>
+
+    <input
+      id="gb"
+      class="inp mt-2"
+      type="file"
+      accept="image/jpeg,image/png,image/webp">
+
+    <button
+      type="button"
+      class="btn g w-full mt-4"
+      onclick="window.submitVerification()">
+      Submit for Review
+    </button>
+
+    <button
+      type="button"
+      class="btn d w-full mt-2"
+      onclick="window.closeModal()">
+      Cancel
+    </button>
+
+  `);
+
+};
+
+
+/* =========================================================
+   GHANA CARD SUBMISSION
+========================================================= */
+
+window.submitVerification =
+async function(){
+
+  try{
+
+    const cardNumber =
+      $("gid").value.trim();
+
+    const front =
+      $("gf").files[0];
+
+    const back =
+      $("gb").files[0];
+
+
+    if(!cardNumber){
+
+      return toast(
+        "Enter your Ghana Card ID."
+      );
+
+    }
+
+
+    if(!front || !back){
+
+      return toast(
+        "Upload both front and back."
+      );
+
+    }
+
+
+    const form =
+      new FormData();
+
+
+    form.append(
+      "sellerId",
+      u.uid
+    );
+
+    form.append(
+      "ghanaCardNumber",
+      cardNumber
+    );
+
+    form.append(
+      "front",
+      front
+    );
+
+    form.append(
+      "back",
+      back
+    );
+
+
+    toast(
+      "Submitting verification..."
+    );
+
+
+    const response =
+      await fetch(
+        API +
+        "/verification/upload",
+        {
+          method:"POST",
+
+          headers:{
+            Authorization:
+              "Bearer " +
+              await u.getIdToken()
+          },
+
+          body:form
+        }
+      );
+
+
+    let result = {};
+
+    try{
+
+      result =
+        await response.json();
+
+    }catch{}
+
+
+    if(!response.ok){
+
+      throw new Error(
+        result.error ||
+        "Verification submission failed."
+      );
+
+    }
+
+
+    await updateDoc(
+      doc(
+        db,
+        "users",
+        u.uid
+      ),
+      {
+        verificationStatus:
+          "pending"
+      }
+    );
+
+
+    ud.verificationStatus =
+      "pending";
+
+
+    closeModal();
+
+    toast(
+      "Submitted for review."
+    );
+
+    loadSeller();
+
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      error.message ||
+      "Verification failed."
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   PROFILE
+========================================================= */
+
+window.profile = function(){
+
+  if(!u || !ud){
+
+    return;
+
+  }
+
+
+  view("prof");
+
+
+  $("prof").innerHTML = `
+
+    <div class="card p-5">
+
+      <h2 class="text-2xl font-black">
+
+        ${esc(ud.name)}
+
+        ${badge(ud)}
+
+      </h2>
+
+      <p class="text-gray-500">
+        ${esc(u.email)}
+      </p>
+
+      <div class="mt-4 space-y-2">
+
+        <p>
+          Role:
+          <b>${esc(
+            ud.role
+          )}</b>
+        </p>
+
+        <p>
+          Plan:
+          <b>${esc(
+            ud.plan || "free"
+          )}</b>
+        </p>
+
+        ${
+          ud.role === "seller"
+          ?
+
+          `
+          <p>
+            Verification:
+            <b>
+              ${esc(
+                ud.verificationStatus ||
+                "not_submitted"
+              )}
+            </b>
+          </p>
+          `
+
+          :
+
+          ""
+        }
+
+      </div>
+
+
+      ${
+        ud.role === "seller"
+
+        ?
+
+        `
+        <button
+          type="button"
+          class="btn d w-full mt-4"
+          onclick="window.sellerPage()">
+          Seller Dashboard
+        </button>
+        `
+
+        :
+
+        ""
+      }
+
+
+      ${
+        isAdmin()
+
+        ?
+
+        `
+        <button
+          type="button"
+          class="btn g w-full mt-3"
+          onclick="window.adminPage()">
+          👑 Owner Control Center
+        </button>
+        `
+
+        :
+
+        ""
+      }
+
+
+      <button
+        type="button"
+        class="btn r w-full mt-3"
+        onclick="window.logout()">
+        Sign out
+      </button>
+
+    </div>
+
+  `;
+
+};
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+window.logout = async function(){
+
+  try{
+
+    await signOut(auth);
+
+    ud = null;
+
+    u = null;
+
+    $("app").classList.add("hide");
+
+    $("nav").classList.add("hide");
+
+    $("auth").classList.add("hide");
+
+    $("landing").classList.remove("hide");
+
+    toast(
+      "Signed out."
+    );
+
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      "Could not sign out."
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   ADMIN
+========================================================= */
+
+window.adminPage = function(){
+
+  if(!isAdmin()){
+
+    return toast(
+      "Admin access required."
+    );
+
+  }
+
+
+  view("admin");
+
+  window.adminLoad("overview");
+
+};
+
+
+window.adminLoad = async function(tab){
+
+  if(!isAdmin()){
+
+    return;
+
+  }
+
+
+  try{
+
+    const users =
+      (
+        await getDocs(
+          query(
+            collection(db,"users"),
+            limit(200)
+          )
+        )
+      ).docs.map(
+        d => ({
+          id:d.id,
+          ...d.data()
+        })
+      );
+
+
+    const products =
+      (
+        await getDocs(
+          query(
+            collection(db,"products"),
+            limit(200)
+          )
+        )
+      ).docs.map(
+        d => ({
+          id:d.id,
+          ...d.data()
+        })
+      );
+
+
+    const reports =
+      (
+        await getDocs(
+          query(
+            collection(db,"reports"),
+            limit(200)
+          )
+        )
+      ).docs.map(
+        d => ({
+          id:d.id,
+          ...d.data()
+        })
+      );
+
+
+    const pending =
+      users.filter(
+        x =>
+          x.verificationStatus ===
+          "pending"
+      );
+
+
+    const buyers =
+      users.filter(
+        x => x.role === "buyer"
+      );
+
+
+    const sellers =
+      users.filter(
+        x => x.role === "seller"
+      );
+
+
+    $("admin").innerHTML = `
+
+      <div class="flex justify-between gap-3">
+
+        <div>
+
+          <h1 class="text-2xl font-black">
+            Owner Control Center 👑
+          </h1>
+
+          <p class="text-gray-500">
+            ${OWNER}
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
+
+        <div class="card p-4">
+          Users
+          <b class="block text-2xl">
+            ${users.length}
+          </b>
+        </div>
+
+        <div class="card p-4">
+          Buyers
+          <b class="block text-2xl">
+            ${buyers.length}
+          </b>
+        </div>
+
+        <div class="card p-4">
+          Sellers
+          <b class="block text-2xl">
+            ${sellers.length}
+          </b>
+        </div>
+
+        <div class="card p-4">
+          Pending
+          <b class="block text-2xl">
+            ${pending.length}
+          </b>
+        </div>
+
+      </div>
+
+
+      <div class="flex gap-2 overflow-auto mt-5 pb-2">
+
+        <button
+          type="button"
+          class="btn d"
+          onclick="window.adminLoad('overview')">
+          Overview
+        </button>
+
+        <button
+          type="button"
+          class="btn d"
+          onclick="window.adminLoad('users')">
+          Users
+        </button>
+
+        <button
+          type="button"
+          class="btn d"
+          onclick="window.adminLoad('verification')">
+          Verification
+        </button>
+
+        <button
+          type="button"
+          class="btn d"
+          onclick="window.adminLoad('products')">
+          Products
+        </button>
+
+        <button
+          type="button"
+          class="btn d"
+          onclick="window.adminLoad('reports')">
+          Reports
+        </button>
+
+      </div>
+
+
+      <div
+        id="adminContent"
+        class="space-y-3 mt-4">
+      </div>
+
+    `;
+
+
+    const area =
+      $("adminContent");
+
+
+    /* OVERVIEW */
+
+    if(tab === "overview"){
+
+      area.innerHTML = `
+
+        <div class="card p-5">
+
+          <h2 class="text-xl font-black">
+            App Overview
+          </h2>
+
+          <div class="grid md:grid-cols-2 gap-3 mt-4">
+
+            <div class="card p-4">
+              Total users:
+              <b>${users.length}</b>
+            </div>
+
+            <div class="card p-4">
+              Sellers:
+              <b>${sellers.length}</b>
+            </div>
+
+            <div class="card p-4">
+              Buyers:
+              <b>${buyers.length}</b>
+            </div>
+
+            <div class="card p-4">
+              Verified sellers:
+              <b>
+                ${
+                  sellers.filter(
+                    x => x.verified
+                  ).length
+                }
+              </b>
+            </div>
+
+          </div>
+
+        </div>
+
+      `;
+
+    }
+
+
+    /* USERS */
+
+    if(tab === "users"){
+
+      area.innerHTML =
+
+        users.map(x => `
+
+          <div class="card p-4">
+
+            <div class="flex justify-between gap-3">
+
+              <div>
+
+                <b>
+
+                  ${esc(x.name)}
+
+                  ${badge(x)}
+
+                </b>
+
+                <p class="text-gray-500 text-xs mt-1">
+
+                  ${esc(x.email)}
+
+                  ·
+
+                  ${esc(x.role)}
+
+                  ·
+
+                  ${esc(
+                    x.status ||
+                    "active"
+                  )}
+
+                </p>
+
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+
+                ${
+                  x.id !== u.uid
+
+                  ?
+
+                  `
+                  <button
+                    type="button"
+                    class="btn d"
+                    onclick="window.adminUserStatus('${x.id}','warned')">
+                    Warn
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn r"
+                    onclick="window.adminUserStatus('${x.id}','suspended')">
+                    Suspend
+                  </button>
+                  `
+
+                  :
+
+                  `<span class="text-gray-500 text-sm">
+                    Owner
+                  </span>`
+                }
+
+              </div>
+
+            </div>
+
+          </div>
+
+        `).join("");
+
+    }
+
+
+    /* VERIFICATION */
+
+    if(tab === "verification"){
+
+      area.innerHTML =
+
+        pending.map(x => `
+
+          <div class="card p-4">
+
+            <b>
+              ${esc(x.name)}
+              ${badge(x)}
+            </b>
+
+            <p class="text-gray-500">
+              ${esc(x.email)}
+            </p>
+
+            <p class="text-gray-500 text-sm mt-2">
+              Verification:
+              ${esc(
+                x.verificationStatus
+              )}
+            </p>
+
+            <div class="flex gap-2 mt-3">
+
+              <button
+                type="button"
+                class="btn g"
+                onclick="window.approveSeller('${x.id}')">
+                Approve
+              </button>
+
+              <button
+                type="button"
+                class="btn r"
+                onclick="window.rejectSeller('${x.id}')">
+                Reject
+              </button>
+
+            </div>
+
+          </div>
+
+        `).join("")
+
+        ||
+
+        `<div class="card p-5 text-gray-500">
+          No pending verification requests.
+        </div>`;
+
+    }
+
+
+    /* PRODUCTS */
+
+    if(tab === "products"){
+
+      area.innerHTML =
+
+        products.map(x => `
+
+          <div class="card p-4 flex justify-between gap-3">
+
+            <div>
+
+              <b>
+                ${esc(x.name)}
+              </b>
+
+              <p class="gold">
+                ${money(x.price)}
+              </p>
+
+            </div>
+
+            <button
+              type="button"
+              class="btn r"
+              onclick="window.adminRemoveProduct('${x.id}')">
+              Remove
+            </button>
+
+          </div>
+
+        `).join("")
+
+        ||
+
+        `<div class="card p-5 text-gray-500">
+          No products found.
+        </div>`;
+
+    }
+
+
+    /* REPORTS */
+
+    if(tab === "reports"){
+
+      area.innerHTML =
+
+        reports.map(x => `
+
+          <div class="card p-4">
+
+            <b>
+              ${esc(
+                x.type ||
+                "Report"
+              )}
+            </b>
+
+            <p class="text-gray-400 mt-1">
+              ${esc(
+                x.reason ||
+                ""
+              )}
+            </p>
+
+            <p class="text-gray-500 text-sm mt-1">
+              ${esc(
+                x.note ||
+                ""
+              )}
+            </p>
+
+          </div>
+
+        `).join("")
+
+        ||
+
+        `<div class="card p-5 text-gray-500">
+          No reports found.
+        </div>`;
+
+    }
+
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      "Could not load admin dashboard."
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   ADMIN USER STATUS
+========================================================= */
+
+window.adminUserStatus =
+async function(id,status){
+
+  try{
+
+    await updateDoc(
+      doc(
+        db,
+        "users",
+        id
+      ),
+      {
+        status
+      }
+    );
+
+
+    toast(
+      "User status updated."
+    );
+
+    window.adminLoad("users");
+
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      "Could not update user."
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   ADMIN REMOVE PRODUCT
+========================================================= */
+
+window.adminRemoveProduct =
+async function(id){
+
+  if(!confirm(
+    "Remove this product?"
+  )){
+
+    return;
+
+  }
+
+
+  try{
+
+    await deleteDoc(
+      doc(
+        db,
+        "products",
+        id
+      )
+    );
+
+
+    toast(
+      "Product removed."
+    );
+
+    window.adminLoad("products");
+
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      "Could not remove product."
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   ADMIN APPROVE
+========================================================= */
+
+window.approveSeller =
+async function(id){
+
+  try{
+
+    const snap =
+      await getDoc(
+        doc(
+          db,
+          "users",
+          id
+        )
+      );
+
+
+    const seller =
+      snap.data() || {};
+
+
+    const blue =
+      seller.plan === "150";
+
+
+    await updateDoc(
+      doc(
+        db,
+        "users",
+        id
+      ),
+      {
+        verified:true,
+
+        verificationStatus:
+          "approved",
+
+        badgeColor:
+          blue
+          ? "blue"
+          : "green"
+      }
+    );
+
+
+    await setDoc(
+      doc(
+        db,
+        "stores",
+        id
+      ),
+      {
+        verified:true,
+
+        badgeColor:
+          blue
+          ? "blue"
+          : "green"
+      },
+      {merge:true}
+    );
+
+
+    toast(
+      "Seller approved."
+    );
+
+    window.adminLoad(
+      "verification"
+    );
+
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      "Could not approve seller."
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   ADMIN REJECT
+========================================================= */
+
+window.rejectSeller =
+async function(id){
+
+  try{
+
+    await updateDoc(
+      doc(
+        db,
+        "users",
+        id
+      ),
+      {
+        verified:false,
+
+        verificationStatus:
+          "rejected"
+      }
+    );
+
+
+    toast(
+      "Verification rejected."
+    );
+
+    window.adminLoad(
+      "verification"
+    );
+
+  }catch(error){
+
+    console.error(error);
+
+    toast(
+      "Could not reject verification."
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   MODAL OUTSIDE CLICK
+========================================================= */
+
+$("modal").addEventListener(
+  "click",
+  event => {
+
+    if(
+      event.target.id ===
+      "modal"
+    ){
+
+      closeModal();
+
+    }
+
+  }
+);
+
+
+window.closeModal =
+  closeModal;
+
+
+/* =========================================================
+   STARTUP
+========================================================= */
+
+window.addEventListener(
+  "error",
+  event => {
+
+    console.error(
+      "SELLERFLOW ERROR:",
+      event.error ||
+      event.message
+    );
+
+  }
+);
+
+</script>
+
+</body>
+</html>
