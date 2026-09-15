@@ -149,13 +149,8 @@
       padding: 22px;
     }
 
-    .verification-green {
-      color: #21d07a;
-    }
-
-    .verification-blue {
-      color: #3d8bff;
-    }
+    .verification-green { color: #21d07a; }
+    .verification-blue { color: #3d8bff; }
   </style>
 </head>
 
@@ -166,9 +161,7 @@
     <div class="text-center">
       <div class="loader mx-auto mb-5"></div>
       <h2 class="text-xl font-bold">SELLER<span class="gold">FLOW</span></h2>
-      <p id="loadingText" class="text-gray-500 mt-2 text-sm">
-        Starting SellerFlow...
-      </p>
+      <p id="loadingText" class="text-gray-500 mt-2 text-sm">Starting SellerFlow...</p>
     </div>
   </div>
 
@@ -177,70 +170,21 @@
     <header class="border-b border-[#202020]">
       <div class="max-w-6xl mx-auto px-5 py-5 flex items-center justify-between">
         <div>
-          <div class="text-2xl font-black">
-            SELLER<span class="gold">FLOW</span>
-          </div>
-          <div class="text-xs text-gray-500">
-            Ghana's simple online selling platform
-          </div>
+          <div class="text-2xl font-black">SELLER<span class="gold">FLOW</span></div>
+          <div class="text-xs text-gray-500">Ghana's simple online selling platform</div>
         </div>
-
-        <button id="landingLoginBtn" type="button" class="btn px-5 py-2 rounded-lg border border-[#333]">
-          Sign in
-        </button>
+        <button id="landingLoginBtn" type="button" class="btn px-5 py-2 rounded-lg border border-[#333]">Sign in</button>
       </div>
     </header>
 
     <main class="max-w-6xl mx-auto px-5">
       <section class="py-20 md:py-28 text-center">
-        <div class="inline-block px-4 py-2 rounded-full bg-[#151515] text-sm text-gray-400 mb-6">
-          🇬🇭 Built for Ghanaian sellers
-        </div>
-
-        <h1 class="text-4xl md:text-6xl font-black leading-tight">
-          Sell smarter.<br>
-          <span class="gold">Manage easier.</span>
-        </h1>
-
-        <p class="text-gray-400 max-w-2xl mx-auto mt-6 text-lg">
-          Turn your products into a real online store and manage customers,
-          products and orders from one place.
-        </p>
-
+        <div class="inline-block px-4 py-2 rounded-full bg-[#151515] text-sm text-gray-400 mb-6">🇬🇭 Built for Ghanaian sellers</div>
+        <h1 class="text-4xl md:text-6xl font-black leading-tight">Sell smarter.<br><span class="gold">Manage easier.</span></h1>
+        <p class="text-gray-400 max-w-2xl mx-auto mt-6 text-lg">Turn your products into a real online store and manage customers, products and orders from one place.</p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center mt-9">
-          <button id="landingCreateBtn" type="button" class="btn bg-gold text-black font-bold px-7 py-3 rounded-xl">
-            Create Free Account
-          </button>
-
-          <button id="landingSignBtn" type="button" class="btn border border-[#333] px-7 py-3 rounded-xl">
-            Sign in
-          </button>
-        </div>
-      </section>
-
-      <section class="grid md:grid-cols-3 gap-5 pb-20">
-        <div class="card p-6">
-          <div class="text-3xl mb-4">🛍️</div>
-          <h3 class="font-bold text-lg">Your Online Store</h3>
-          <p class="text-gray-500 text-sm mt-2">
-            Create your own store page and display your products professionally.
-          </p>
-        </div>
-
-        <div class="card p-6">
-          <div class="text-3xl mb-4">📦</div>
-          <h3 class="font-bold text-lg">Manage Orders</h3>
-          <p class="text-gray-500 text-sm mt-2">
-            Track orders from pending all the way to delivery.
-          </p>
-        </div>
-
-        <div class="card p-6">
-          <div class="text-3xl mb-4">✅</div>
-          <h3 class="font-bold text-lg">Build Trust</h3>
-          <p class="text-gray-500 text-sm mt-2">
-            Get verified and display your SellerFlow verification badge.
-          </p>
+          <button id="landingCreateBtn" type="button" class="btn bg-gold text-black font-bold px-7 py-3 rounded-xl">Create Free Account</button>
+          <button id="landingSignBtn" type="button" class="btn border border-[#333] px-7 py-3 rounded-xl">Sign in</button>
         </div>
       </section>
     </main>
@@ -249,17 +193,10 @@
   <!-- AUTH -->
   <section id="authPage" class="hidden min-h-screen p-5">
     <div class="max-w-md mx-auto pt-10">
-      <button id="authBackBtn" type="button" class="text-gray-500 hover:text-white mb-8">
-        ← Back
-      </button>
-
+      <button id="authBackBtn" type="button" class="text-gray-500 hover:text-white mb-8">← Back</button>
       <div class="text-center mb-8">
-        <div class="text-3xl font-black">
-          SELLER<span class="gold">FLOW</span>
-        </div>
-        <p id="authTitle" class="text-gray-500 mt-2">
-          Create your account
-        </p>
+        <div class="text-3xl font-black">SELLER<span class="gold">FLOW</span></div>
+        <p id="authTitle" class="text-gray-500 mt-2">Create your account</p>
       </div>
 
       <div class="card p-6">
@@ -274,9 +211,7 @@
         <label class="text-sm text-gray-400">Password</label>
         <input id="authPassword" type="password" class="w-full rounded-lg px-4 py-3 mt-2 mb-5" placeholder="At least 6 characters">
 
-        <button id="emailAuthBtn" type="button" class="btn w-full bg-gold text-black font-bold py-3 rounded-lg">
-          Create Account
-        </button>
+        <button id="emailAuthBtn" type="button" class="btn w-full bg-gold text-black font-bold py-3 rounded-lg">Create Account</button>
 
         <div class="flex items-center gap-3 my-5">
           <div class="h-px bg-[#292929] flex-1"></div>
@@ -284,52 +219,44 @@
           <div class="h-px bg-[#292929] flex-1"></div>
         </div>
 
-        <button id="googleBtn" type="button" class="btn w-full border border-[#333] py-3 rounded-lg">
-          Continue with Google
-        </button>
+        <button id="googleBtn" type="button" class="btn w-full border border-[#333] py-3 rounded-lg">Continue with Google</button>
+        <button id="switchAuthBtn" type="button" class="w-full text-sm text-gray-500 mt-5 hover:text-white">Already have an account? Sign in</button>
 
-        <button id="switchAuthBtn" type="button" class="w-full text-sm text-gray-500 mt-5 hover:text-white">
-          Already have an account? Sign in
-        </button>
-
-        <div id="authError" class="hidden mt-4 p-3 rounded-lg bg-red-950 border border-red-900 text-red-300 text-sm">
-        </div>
+        <div id="authError" class="hidden mt-4 p-3 rounded-lg bg-red-950 border border-red-900 text-red-300 text-sm"></div>
       </div>
     </div>
   </section>
 
   <!-- APP -->
   <section id="appPage" class="hidden min-h-screen">
-    <!-- TOP NAV -->
     <header class="sticky top-0 z-40 bg-[#080808]/95 backdrop-blur border-b border-[#202020]">
       <div class="max-w-7xl mx-auto px-4">
         <div class="h-16 flex items-center justify-between gap-3">
-          <button id="logoHomeBtn" type="button" class="text-xl font-black">
-            SELLER<span class="gold">FLOW</span>
-          </button>
+          <button id="logoHomeBtn" type="button" class="text-xl font-black">SELLER<span class="gold">FLOW</span></button>
 
           <div class="hidden md:flex items-center gap-1">
             <button class="nav-btn appNav active" data-page="home" type="button">Home</button>
-            <button class="nav-btn appNav" data-page="products" type="button" id="productsNav">Products</button>
+            <button class="nav-btn appNav" data-page="marketplace" type="button">Marketplace 🛍️</button>
+            <button class="nav-btn appNav" data-page="products" type="button">Products</button>
             <button class="nav-btn appNav" data-page="orders" type="button">Orders</button>
-            <button class="nav-btn appNav" data-page="store" type="button" id="storeNav">Store</button>
+            <button class="nav-btn appNav" data-page="store" type="button">Store</button>
             <button class="nav-btn appNav" data-page="profile" type="button">Profile</button>
           </div>
 
           <div class="flex items-center gap-2">
+            <button id="openCartBtn" type="button" class="btn border border-[#333] px-3 py-2 rounded-lg text-sm relative">
+              🛒 Cart <span id="cartCount" class="bg-gold text-black rounded-full px-1.5 py-0.5 text-xs font-bold">0</span>
+            </button>
             <span id="userBadge" class="hidden md:inline text-xs text-gray-500"></span>
-            <button id="mobileMenuBtn" type="button" class="md:hidden border border-[#333] rounded-lg px-3 py-2">
-              ☰
-            </button>
-            <button id="logoutBtn" type="button" class="hidden md:block text-sm text-red-400 hover:text-red-300">
-              Logout
-            </button>
+            <button id="mobileMenuBtn" type="button" class="md:hidden border border-[#333] rounded-lg px-3 py-2">☰</button>
+            <button id="logoutBtn" type="button" class="hidden md:block text-sm text-red-400 hover:text-red-300">Logout</button>
           </div>
         </div>
 
         <div id="mobileMenu" class="hidden md:hidden pb-3 border-t border-[#202020]">
           <div class="grid grid-cols-2 gap-2 pt-3">
             <button class="nav-btn appNav" data-page="home" type="button">Home</button>
+            <button class="nav-btn appNav" data-page="marketplace" type="button">Marketplace</button>
             <button class="nav-btn appNav" data-page="products" type="button">Products</button>
             <button class="nav-btn appNav" data-page="orders" type="button">Orders</button>
             <button class="nav-btn appNav" data-page="store" type="button">Store</button>
@@ -342,133 +269,94 @@
 
     <main class="max-w-7xl mx-auto px-4 py-6">
 
-      <!-- UNIFIED HOME DASHBOARD -->
+      <!-- HOME -->
       <div id="homePage">
         <div class="mb-7">
           <p class="text-gray-500 text-sm">Welcome back</p>
           <h1 id="welcomeName" class="text-3xl font-black mt-1"></h1>
         </div>
 
-        <!-- STORE STATS -->
         <div id="sellerStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div class="card p-5">
-            <p class="text-gray-500 text-sm">Products</p>
-            <p id="statProducts" class="text-2xl font-bold mt-2">0</p>
-          </div>
-          <div class="card p-5">
-            <p class="text-gray-500 text-sm">Sales</p>
-            <p id="statOrders" class="text-2xl font-bold mt-2">0</p>
-          </div>
-          <div class="card p-5">
-            <p class="text-gray-500 text-sm">Pending</p>
-            <p id="statPending" class="text-2xl font-bold mt-2">0</p>
-          </div>
-          <div class="card p-5">
-            <p class="text-gray-500 text-sm">Revenue</p>
-            <p id="statRevenue" class="text-2xl font-bold mt-2">GHS 0</p>
-          </div>
+          <div class="card p-5"><p class="text-gray-500 text-sm">Products</p><p id="statProducts" class="text-2xl font-bold mt-2">0</p></div>
+          <div class="card p-5"><p class="text-gray-500 text-sm">Sales</p><p id="statOrders" class="text-2xl font-bold mt-2">0</p></div>
+          <div class="card p-5"><p class="text-gray-500 text-sm">Pending</p><p id="statPending" class="text-2xl font-bold mt-2">0</p></div>
+          <div class="card p-5"><p class="text-gray-500 text-sm">Revenue</p><p id="statRevenue" class="text-2xl font-bold mt-2">GHS 0</p></div>
         </div>
 
         <div class="grid lg:grid-cols-2 gap-5 mb-6">
-          <!-- VERIFICATION -->
           <div class="card p-6">
             <div class="flex items-center justify-between gap-3">
               <div>
                 <h2 class="font-bold text-lg">Verification</h2>
-                <p class="text-gray-500 text-sm mt-1">
-                  Verify your identity to unlock store creation.
-                </p>
+                <p class="text-gray-500 text-sm mt-1">Verify your identity to unlock store creation.</p>
               </div>
-              <span id="homeVerificationBadge" class="status">
-                Not submitted
-              </span>
+              <span id="homeVerificationBadge" class="status">Not submitted</span>
             </div>
-            <button id="homeVerificationBtn" type="button" class="btn w-full mt-5 border border-[#333] py-3 rounded-lg">
-              Open Verification
-            </button>
+            <button id="homeVerificationBtn" type="button" class="btn w-full mt-5 border border-[#333] py-3 rounded-lg">Open Verification</button>
           </div>
 
-          <!-- YOUR STORE -->
           <div class="card p-6">
             <h2 class="font-bold text-lg">Your store</h2>
-            <p id="homeStoreName" class="text-gray-400 mt-2">
-              Store not created yet
-            </p>
-            <button id="homeStoreBtn" type="button" class="btn w-full mt-5 bg-gold text-black font-bold py-3 rounded-lg">
-              Manage Store
-            </button>
+            <p id="homeStoreName" class="text-gray-400 mt-2">Store not created yet</p>
+            <button id="homeStoreBtn" type="button" class="btn w-full mt-5 bg-gold text-black font-bold py-3 rounded-lg">Manage Store</button>
           </div>
         </div>
 
-        <!-- RECENT PURCHASES -->
         <div class="card p-6">
           <h3 class="font-bold text-lg">Your Recent Purchases</h3>
-          <p class="text-gray-500 text-sm mb-4">Track items you've bought from other sellers.</p>
-          <div id="buyerRecentOrders"></div>
+          <div id="buyerRecentOrders" class="mt-3"></div>
         </div>
+      </div>
+
+      <!-- MARKETPLACE -->
+      <div id="marketplacePage" class="hidden">
+        <div class="mb-6 flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-black">Marketplace</h1>
+            <p class="text-gray-500 text-sm">Explore stores and products from verified sellers.</p>
+          </div>
+        </div>
+        <div id="marketplaceGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
       </div>
 
       <!-- PRODUCTS -->
       <div id="productsPage" class="hidden">
         <div class="flex items-center justify-between gap-3 mb-6">
-          <div>
-            <h1 class="text-2xl font-black">Products</h1>
-            <p class="text-gray-500 text-sm">Manage your products.</p>
-          </div>
-          <button id="addProductBtn" type="button" class="btn bg-gold text-black font-bold px-4 py-3 rounded-lg hidden">
-            + Add Product
-          </button>
+          <div><h1 class="text-2xl font-black">Products</h1><p class="text-gray-500 text-sm">Manage your inventory.</p></div>
+          <button id="addProductBtn" type="button" class="btn bg-gold text-black font-bold px-4 py-3 rounded-lg hidden">+ Add Product</button>
         </div>
         <div id="productsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
       </div>
 
       <!-- ORDERS -->
       <div id="ordersPage" class="hidden">
-        <div class="mb-6">
-          <h1 class="text-2xl font-black">Customer Orders</h1>
-          <p class="text-gray-500 text-sm">Manage orders from your store.</p>
-        </div>
+        <div class="mb-6"><h1 class="text-2xl font-black">Customer Orders</h1><p class="text-gray-500 text-sm">Manage orders from buyers.</p></div>
         <div id="ordersList"></div>
       </div>
 
-      <!-- STORE -->
+      <!-- STORE SETTINGS -->
       <div id="storePage" class="hidden">
-        <div class="mb-6">
-          <h1 class="text-2xl font-black">Your Store Settings</h1>
-          <p class="text-gray-500 text-sm">Create and manage your public store profile.</p>
-        </div>
-
+        <div class="mb-6"><h1 class="text-2xl font-black">Your Store Settings</h1><p class="text-gray-500 text-sm">Customize your public store page.</p></div>
         <div class="card p-6 max-w-2xl">
           <label class="text-sm text-gray-400">Store name</label>
           <input id="storeName" class="w-full rounded-lg px-4 py-3 mt-2 mb-4" placeholder="Example Store">
-
           <label class="text-sm text-gray-400">Description</label>
           <textarea id="storeDescription" class="w-full rounded-lg px-4 py-3 mt-2 mb-4" rows="4" placeholder="Tell customers about your business"></textarea>
-
-          <label class="text-sm text-gray-400">WhatsApp number</label>
+          <label class="text-sm text-gray-400">WhatsApp number (with country code e.g. 233...)</label>
           <input id="storeWhatsapp" class="w-full rounded-lg px-4 py-3 mt-2 mb-5" placeholder="233XXXXXXXXX">
-
-          <button id="saveStoreBtn" type="button" class="btn bg-gold text-black font-bold px-6 py-3 rounded-lg">
-            Save Store
-          </button>
+          <button id="saveStoreBtn" type="button" class="btn bg-gold text-black font-bold px-6 py-3 rounded-lg">Save Store</button>
         </div>
       </div>
 
       <!-- PROFILE -->
       <div id="profilePage" class="hidden">
-        <div class="mb-6">
-          <h1 class="text-2xl font-black">Profile</h1>
-        </div>
-
+        <div class="mb-6"><h1 class="text-2xl font-black">Profile</h1></div>
         <div class="card p-6 max-w-2xl">
           <div class="flex items-center gap-4 mb-6">
-            <div id="profileAvatar" class="w-16 h-16 rounded-full bg-[#222] flex items-center justify-center text-2xl font-bold gold">
-              ?
-            </div>
+            <div id="profileAvatar" class="w-16 h-16 rounded-full bg-[#222] flex items-center justify-center text-2xl font-bold gold">?</div>
             <div>
               <h2 id="profileName" class="font-bold text-xl"></h2>
               <p id="profileEmail" class="text-gray-500 text-sm"></p>
-              <p id="profileRole" class="text-gray-500 text-sm mt-1">SellerFlow User</p>
             </div>
           </div>
           <div id="profileVerification"></div>
@@ -477,39 +365,16 @@
 
       <!-- ADMIN -->
       <div id="adminPage" class="hidden">
-        <div class="mb-7">
-          <p class="text-gray-500 text-sm">SellerFlow Administration</p>
-          <h1 class="text-3xl font-black mt-1">Admin Dashboard</h1>
-        </div>
-
+        <div class="mb-7"><p class="text-gray-500 text-sm">SellerFlow Administration</p><h1 class="text-3xl font-black mt-1">Admin Dashboard</h1></div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div class="card p-4">
-            <p class="text-gray-500 text-xs">Total Users</p>
-            <p id="adminUsers" class="text-2xl font-bold mt-2">0</p>
-          </div>
-          <div class="card p-4">
-            <p class="text-gray-500 text-xs">Verified Sellers</p>
-            <p id="adminVerified" class="text-2xl font-bold mt-2">0</p>
-          </div>
-          <div class="card p-4">
-            <p class="text-gray-500 text-xs">Unverified Users</p>
-            <p id="adminUnverified" class="text-2xl font-bold mt-2">0</p>
-          </div>
-          <div class="card p-4">
-            <p class="text-gray-500 text-xs">Pending Reviews</p>
-            <p id="adminPending" class="text-2xl font-bold mt-2">0</p>
-          </div>
+          <div class="card p-4"><p class="text-gray-500 text-xs">Total Users</p><p id="adminUsers" class="text-2xl font-bold mt-2">0</p></div>
+          <div class="card p-4"><p class="text-gray-500 text-xs">Verified Sellers</p><p id="adminVerified" class="text-2xl font-bold mt-2">0</p></div>
+          <div class="card p-4"><p class="text-gray-500 text-xs">Unverified Users</p><p id="adminUnverified" class="text-2xl font-bold mt-2">0</p></div>
+          <div class="card p-4"><p class="text-gray-500 text-xs">Pending Reviews</p><p id="adminPending" class="text-2xl font-bold mt-2">0</p></div>
         </div>
-
         <div class="grid lg:grid-cols-2 gap-5">
-          <div class="card p-5">
-            <h2 class="font-bold mb-4">Pending Verification</h2>
-            <div id="adminVerificationList"></div>
-          </div>
-          <div class="card p-5">
-            <h2 class="font-bold mb-4">Users</h2>
-            <div id="adminUsersList"></div>
-          </div>
+          <div class="card p-5"><h2 class="font-bold mb-4">Pending Verification</h2><div id="adminVerificationList"></div></div>
+          <div class="card p-5"><h2 class="font-bold mb-4">Users</h2><div id="adminUsersList"></div></div>
         </div>
       </div>
 
@@ -531,9 +396,6 @@
   <div id="toast" class="toast hidden"></div>
 
 <script type="module">
-/* =========================================================
-   FIREBASE
-========================================================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import {
   getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider,
@@ -543,10 +405,6 @@ import {
   getFirestore, collection, addDoc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, doc,
   query, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-/* =========================================================
-   SUPABASE - FOR IMAGE UPLOADS
-========================================================= */
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
 const firebaseConfig = {
@@ -559,47 +417,25 @@ const firebaseConfig = {
   appId: "1:987175352360:web:53e44304aaf11b98c61d1d"
 };
 
-/* =========================================================
-   SUPABASE CONFIG
-========================================================= */
 const supabaseUrl = "https://vvpwntehstjbccarqqzp.supabase.co";
 const supabaseKey = "sb_publishable_uxIZMAka2Om0ZFD4tg3xfQ__7Bl_J0V";
 const supabase = createClient(supabaseUrl, supabaseKey);
 const SUPABASE_BUCKET = "ghana-card-documents";
 
-/* =========================================================
-   CONFIG
-========================================================= */
 const ADMIN_EMAIL = "gideondreams3325@gmail.com";
 
-/* =========================================================
-   APP STATE
-========================================================= */
-let firebaseApp;
-let auth;
-let db;
-let currentUser = null;
-let currentUserData = null;
+let firebaseApp, auth, db;
+let currentUser = null, currentUserData = null;
 let authMode = "register";
+let products = [], salesOrders = [], buyerOrders = [], currentStore = null;
+let marketplaceStores = [], marketplaceProducts = [];
+let cart = [];
 
-let products = [];
-let salesOrders = [];
-let buyerOrders = [];
-let currentStore = null;
-
-/* =========================================================
-   BASIC HELPERS
-========================================================= */
 const $ = id => document.getElementById(id);
 
 function escapeHtml(value) {
   if (value === null || value === undefined) return "";
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+  return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
 function showToast(message, type = "success") {
@@ -607,9 +443,7 @@ function showToast(message, type = "success") {
   toast.textContent = message;
   toast.className = "toast " + type;
   clearTimeout(window.toastTimer);
-  window.toastTimer = setTimeout(() => {
-    toast.classList.add("hidden");
-  }, 4500);
+  window.toastTimer = setTimeout(() => { toast.classList.add("hidden"); }, 4500);
 }
 
 function showAuthError(message) {
@@ -623,51 +457,23 @@ function clearAuthError() {
   $("authError").textContent = "";
 }
 
-function setLoadingText(text) {
-  $("loadingText").textContent = text;
-}
-function hideLoading() {
-  $("loadingScreen").classList.add("hidden");
-}
+function setLoadingText(text) { $("loadingText").textContent = text; }
+function hideLoading() { $("loadingScreen").classList.add("hidden"); }
+function showLanding() { $("landingPage").classList.remove("hidden"); $("authPage").classList.add("hidden"); $("appPage").classList.add("hidden"); }
+function showAuth() { $("landingPage").classList.add("hidden"); $("authPage").classList.remove("hidden"); $("appPage").classList.add("hidden"); updateAuthUI(); }
+function showApp() { $("landingPage").classList.add("hidden"); $("authPage").classList.add("hidden"); $("appPage").classList.remove("hidden"); }
 
-function showLanding() {
-  $("landingPage").classList.remove("hidden");
-  $("authPage").classList.add("hidden");
-  $("appPage").classList.add("hidden");
-}
-
-function showAuth() {
-  $("landingPage").classList.add("hidden");
-  $("authPage").classList.remove("hidden");
-  $("appPage").classList.add("hidden");
-  updateAuthUI();
-}
-
-function showApp() {
-  $("landingPage").classList.add("hidden");
-  $("authPage").classList.add("hidden");
-  $("appPage").classList.remove("hidden");
-}
-
-/* =========================================================
-   INITIALIZE FIREBASE
-========================================================= */
 try {
   setLoadingText("Connecting to Firebase...");
   firebaseApp = initializeApp(firebaseConfig);
   auth = getAuth(firebaseApp);
   db = getFirestore(firebaseApp);
-  console.log("SellerFlow Firebase initialized.");
 } catch (error) {
-  console.error("Firebase initialization error:", error);
   hideLoading();
   showLanding();
-  showToast("Firebase failed to initialize: " + error.message, "error");
+  showToast("Firebase failed to initialize.", "error");
 }
 
-/* =========================================================
-   AUTH UI
-========================================================= */
 function updateAuthUI() {
   $("authTitle").textContent = authMode === "register" ? "Create your account" : "Sign in to SellerFlow";
   $("registerFields").classList.toggle("hidden", authMode !== "register");
@@ -675,22 +481,14 @@ function updateAuthUI() {
   $("switchAuthBtn").textContent = authMode === "register" ? "Already have an account? Sign in" : "Don't have an account? Create one";
 }
 
-/* =========================================================
-   EMAIL AUTH
-========================================================= */
 async function handleEmailAuth() {
   clearAuthError();
-  if (!auth) {
-    showAuthError("Firebase is not initialized. Refresh the page and try again.");
-    return;
-  }
-
   const email = $("authEmail").value.trim();
   const password = $("authPassword").value;
   const name = $("authName").value.trim();
 
   if (!email) { showAuthError("Enter your email address."); return; }
-  if (!password || password.length < 6) { showAuthError("Password must contain at least 6 characters."); return; }
+  if (!password || password.length < 6) { showAuthError("Password must be at least 6 characters."); return; }
   if (authMode === "register" && !name) { showAuthError("Enter your full name."); return; }
 
   const button = $("emailAuthBtn");
@@ -699,20 +497,9 @@ async function handleEmailAuth() {
   try {
     if (authMode === "register") {
       const credential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = credential.user;
-      await updateProfile(user, { displayName: name });
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        name: name,
-        email: email,
-        role: "user", // Default standard user
-        verificationStatus: "not_submitted",
-        verified: false,
-        plan: "free",
-        badgeColor: "green",
-        blocked: false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+      await updateProfile(credential.user, { displayName: name });
+      await setDoc(doc(db, "users", credential.user.uid), {
+        uid: credential.user.uid, name, email, verificationStatus: "not_submitted", verified: false, plan: "free", createdAt: serverTimestamp()
       }, { merge: true });
       showToast("Account created successfully.");
     } else {
@@ -720,176 +507,92 @@ async function handleEmailAuth() {
       showToast("Signed in successfully.");
     }
   } catch (error) {
-    console.error(error);
     showAuthError(firebaseAuthError(error));
   } finally {
     button.disabled = false;
   }
 }
 
-/* =========================================================
-   GOOGLE AUTH
-========================================================= */
 async function googleSignIn() {
   clearAuthError();
-  if (!auth) { showAuthError("Firebase is not initialized."); return; }
-
-  const button = $("googleBtn");
-  button.disabled = true;
-
   try {
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: "select_account" });
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     const userRef = doc(db, "users", user.uid);
     const existing = await getDoc(userRef);
-
     if (!existing.exists()) {
       await setDoc(userRef, {
-        uid: user.uid,
-        name: user.displayName || user.email?.split("@")[0] || "SellerFlow User",
-        email: user.email || "",
-        role: "user", // Default standard user
-        verificationStatus: "not_submitted",
-        verified: false,
-        plan: "free",
-        badgeColor: "green",
-        blocked: false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        uid: user.uid, name: user.displayName || "User", email: user.email || "", verificationStatus: "not_submitted", verified: false, plan: "free", createdAt: serverTimestamp()
       });
     }
     showToast("Google sign-in successful.");
   } catch (error) {
-    console.error("Google sign-in error:", error);
     showAuthError(firebaseAuthError(error));
-  } finally {
-    button.disabled = false;
   }
 }
 
-/* =========================================================
-   FIREBASE AUTH ERROR TRANSLATION
-========================================================= */
 function firebaseAuthError(error) {
-  const code = error?.code || "";
-  const messages = {
-    "auth/invalid-api-key": "Firebase rejected the API key. Check Firebase Project Settings.",
-    "auth/email-already-in-use": "An account already exists with this email.",
-    "auth/invalid-email": "The email address is invalid.",
-    "auth/weak-password": "The password is too weak. Use at least 6 characters.",
-    "auth/invalid-credential": "The email or password is incorrect.",
-    "auth/user-not-found": "No account was found with this email.",
-    "auth/wrong-password": "The password is incorrect.",
-    "auth/popup-closed-by-user": "Google sign-in was cancelled.",
-    "auth/too-many-requests": "Too many attempts. Wait a little and try again."
-  };
-  return messages[code] || error?.message || "Authentication failed. Please try again.";
+  return error?.message || "Authentication failed.";
 }
 
-/* =========================================================
-   AUTH STATE
-========================================================= */
 if (auth) {
   onAuthStateChanged(auth, async user => {
     if (!user) {
-      currentUser = null;
-      currentUserData = null;
-      hideLoading();
-      showLanding();
+      currentUser = null; currentUserData = null;
+      hideLoading(); showLanding();
       return;
     }
     currentUser = user;
-    setLoadingText("Loading your SellerFlow account...");
-
+    setLoadingText("Loading your account...");
     try {
       await loadUser();
-      if (currentUserData?.blocked === true) {
-        await signOut(auth);
-        showLanding();
-        showToast("This account has been blocked.", "error");
-        return;
-      }
       hideLoading();
       showApp();
       await startApp();
     } catch (error) {
-      console.error("Account loading error:", error);
-      hideLoading();
-      showLanding();
-      showToast("Could not load your account: " + error.message, "error");
+      hideLoading(); showLanding();
     }
   });
 }
 
-/* =========================================================
-   LOAD USER
-========================================================= */
 async function loadUser() {
   const ref = doc(db, "users", currentUser.uid);
   const snap = await getDoc(ref);
-
   if (!snap.exists()) {
-    currentUserData = {
-      uid: currentUser.uid,
-      name: currentUser.displayName || currentUser.email?.split("@")[0] || "User",
-      email: currentUser.email || "",
-      role: "user",
-      verificationStatus: "not_submitted",
-      verified: false,
-      plan: "free",
-      badgeColor: "green",
-      blocked: false
-    };
-    await setDoc(ref, {
-      ...currentUserData,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
+    currentUserData = { uid: currentUser.uid, name: currentUser.displayName || "User", email: currentUser.email || "", verified: false };
+    await setDoc(ref, currentUserData);
   } else {
     currentUserData = snap.data();
   }
 }
 
-/* =========================================================
-   START APP
-========================================================= */
 async function startApp() {
   $("userBadge").textContent = currentUser.email || "";
-  $("welcomeName").textContent = currentUserData.name || currentUser.displayName || "Welcome";
-
+  $("welcomeName").textContent = currentUserData.name || "Welcome";
   renderProfile();
 
-  // ONLY THE SPECIFIED OWNER CAN ACCESS ADMIN DASHBOARD
+  // STRICT ADMIN CHECK
   if (currentUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
     showAdmin();
-    return; // Stop loading the normal app for the admin
+    return;
   }
 
-  // Normal User Flow
   await loadStore();
   await loadProducts();
   await loadOrders();
+  await loadMarketplace();
   updateDashboard();
 }
 
-/* =========================================================
-   PAGE NAVIGATION
-========================================================= */
 function navigate(page) {
-  const pages = ["homePage", "productsPage", "ordersPage", "storePage", "profilePage", "adminPage"];
-  pages.forEach(id => { $(id)?.classList.add("hidden"); });
-
+  ["homePage", "marketplacePage", "productsPage", "ordersPage", "storePage", "profilePage", "adminPage"].forEach(id => $(id)?.classList.add("hidden"));
   const target = $(page + "Page");
-  if (target) { target.classList.remove("hidden"); }
-
-  document.querySelectorAll(".appNav").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.page === page);
-  });
-
+  if (target) target.classList.remove("hidden");
+  document.querySelectorAll(".appNav").forEach(btn => btn.classList.toggle("active", btn.dataset.page === page));
   $("mobileMenu").classList.add("hidden");
 
+  if (page === "marketplace") loadMarketplace();
   if (page === "products") loadProducts();
   if (page === "orders") loadOrders();
   if (page === "store") renderStoreForm();
@@ -897,31 +600,17 @@ function navigate(page) {
   if (page === "home") updateDashboard();
 }
 
-/* =========================================================
-   STORE
-========================================================= */
+/* STORE & PRODUCTS */
 async function loadStore() {
   if (!currentUser) return;
-  try {
-    const ref = doc(db, "stores", currentUser.uid);
-    const snap = await getDoc(ref);
-    if (snap.exists()) {
-      currentStore = { id: snap.id, ...snap.data() };
-    } else {
-      currentStore = null;
-    }
-  } catch (error) {
-    console.error(error);
-    showToast("Could not load your store.", "error");
-  }
+  const snap = await getDoc(doc(db, "stores", currentUser.uid));
+  currentStore = snap.exists() ? { id: snap.id, ...snap.data() } : null;
   renderStoreForm();
 }
 
 function renderStoreForm() {
   if (!currentStore) {
-    $("storeName").value = "";
-    $("storeDescription").value = "";
-    $("storeWhatsapp").value = "";
+    $("storeName").value = ""; $("storeDescription").value = ""; $("storeWhatsapp").value = "";
     return;
   }
   $("storeName").value = currentStore.name || "";
@@ -930,646 +619,353 @@ function renderStoreForm() {
 }
 
 async function saveStore() {
-  if (!currentUser) return;
-  
-  if (currentUserData.verified !== true) {
-    showToast("You must verify your identity to save store details.", "error");
-    return;
-  }
-
+  if (currentUserData.verified !== true) { showToast("Verify your identity first.", "error"); return; }
   const name = $("storeName").value.trim();
   const description = $("storeDescription").value.trim();
   const whatsapp = $("storeWhatsapp").value.trim();
+  if (!name) { showToast("Enter store name.", "warning"); return; }
 
-  if (!name) { showToast("Enter a store name.", "warning"); return; }
-
-  const button = $("saveStoreBtn");
-  button.disabled = true;
-
-  try {
-    await setDoc(doc(db, "stores", currentUser.uid), {
-      sellerId: currentUser.uid,
-      name, description, whatsapp,
-      updatedAt: serverTimestamp(),
-      createdAt: currentStore?.createdAt || serverTimestamp()
-    }, { merge: true });
-
-    await loadStore();
-    showToast("Store saved successfully.");
-  } catch (error) {
-    console.error(error);
-    showToast("Could not save store: " + error.message, "error");
-  } finally {
-    button.disabled = false;
-  }
+  await setDoc(doc(db, "stores", currentUser.uid), { sellerId: currentUser.uid, name, description, whatsapp, updatedAt: serverTimestamp() }, { merge: true });
+  await loadStore();
+  showToast("Store saved successfully.");
 }
 
-/* =========================================================
-   PRODUCTS
-========================================================= */
 async function loadProducts() {
   if (!currentUser) return;
-  try {
-    const q = query(collection(db, "products"), where("sellerId", "==", currentUser.uid));
-    const snap = await getDocs(q);
-    products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderProducts();
-  } catch (error) {
-    console.error(error);
-    showToast("Could not load products: " + error.message, "error");
-  }
+  const q = query(collection(db, "products"), where("sellerId", "==", currentUser.uid));
+  const snap = await getDocs(q);
+  products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderProducts();
 }
 
 function renderProducts() {
   const grid = $("productsGrid");
-  
-  // Show verification required message instead of product grid if not verified
   if (currentUserData?.verified !== true) {
-    grid.innerHTML = `
-      <div class="card p-8 text-center sm:col-span-2 lg:col-span-3">
-        <div class="text-4xl mb-3">🔒</div>
-        <h3 class="font-bold">Verification Required</h3>
-        <p class="text-gray-500 text-sm mt-2">
-          You must verify your identity on the home page before you can list products.
-        </p>
-      </div>
-    `;
+    grid.innerHTML = `<div class="card p-8 text-center sm:col-span-2 lg:col-span-3"><h3 class="font-bold">Verification Required</h3><p class="text-gray-500 text-sm mt-2">Verify identity to add products.</p></div>`;
     return;
   }
-
   if (!products.length) {
-    grid.innerHTML = `
-      <div class="card p-8 text-center sm:col-span-2 lg:col-span-3">
-        <div class="text-4xl mb-3">📦</div>
-        <h3 class="font-bold">No products yet</h3>
-        <p class="text-gray-500 text-sm mt-2">Add your first product.</p>
-      </div>
-    `;
+    grid.innerHTML = `<div class="card p-8 text-center sm:col-span-2 lg:col-span-3"><h3 class="font-bold">No products</h3></div>`;
+    return;
+  }
+  grid.innerHTML = products.map(p => `
+    <div class="card p-4">
+      <img src="${escapeHtml(p.imageUrl || '')}" class="product-img" onerror="this.src='https://via.placeholder.com/700x500?text=Product'">
+      <h3 class="font-bold text-lg mt-4">${escapeHtml(p.name)}</h3>
+      <p class="gold font-bold mt-1">GHS ${Number(p.price || 0).toFixed(2)}</p>
+      <button type="button" class="deleteProductBtn w-full border border-red-900 text-red-400 py-2 rounded-lg text-sm mt-4" data-id="${p.id}">Delete</button>
+    </div>
+  `).join("");
+
+  document.querySelectorAll(".deleteProductBtn").forEach(b => b.addEventListener("click", () => deleteProduct(b.dataset.id)));
+}
+
+function openProductModal() {
+  $("modalTitle").textContent = "Add Product with Image Upload";
+  $("modalContent").innerHTML = `
+    <form id="productForm">
+      <label class="text-sm text-gray-400">Product Name</label>
+      <input id="prodName" required class="w-full rounded-lg px-4 py-3 mt-2 mb-4" placeholder="Name">
+      <label class="text-sm text-gray-400">Price (GHS)</label>
+      <input id="prodPrice" required type="number" step="0.01" class="w-full rounded-lg px-4 py-3 mt-2 mb-4" placeholder="100">
+      <label class="text-sm text-gray-400">Stock</label>
+      <input id="prodStock" required type="number" class="w-full rounded-lg px-4 py-3 mt-2 mb-4" value="10">
+      <label class="text-sm text-gray-400">Product Image File</label>
+      <input id="prodImageFile" required type="file" accept="image/*" class="w-full rounded-lg px-4 py-3 mt-2 mb-4">
+      <label class="text-sm text-gray-400">Description</label>
+      <textarea id="prodDesc" class="w-full rounded-lg px-4 py-3 mt-2 mb-5" rows="3"></textarea>
+      <button type="submit" class="btn w-full bg-gold text-black font-bold py-3 rounded-lg">Upload & Save Product</button>
+    </form>
+  `;
+  $("modal").classList.remove("hidden");
+  $("productForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const name = $("prodName").value.trim();
+    const price = Number($("prodPrice").value);
+    const stock = Number($("prodStock").value);
+    const description = $("prodDesc").value.trim();
+    const file = $("prodImageFile").files[0];
+
+    try {
+      showToast("Uploading product image to Supabase...");
+      const filePath = `${currentUser.uid}/product_${Date.now()}`;
+      const { error } = await supabase.storage.from(SUPABASE_BUCKET).upload(filePath, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(filePath);
+
+      await addDoc(collection(db, "products"), {
+        sellerId: currentUser.uid, name, price, stock, description, imageUrl: urlData.publicUrl, createdAt: serverTimestamp()
+      });
+      closeModal();
+      await loadProducts();
+      showToast("Product added successfully!");
+    } catch (err) {
+      showToast("Upload failed: " + err.message, "error");
+    }
+  });
+}
+
+async function deleteProduct(id) {
+  if (confirm("Delete product?")) {
+    await deleteDoc(doc(db, "products", id));
+    await loadProducts();
+    showToast("Product deleted.");
+  }
+}
+
+/* MARKETPLACE & CART */
+async function loadMarketplace() {
+  const storeSnap = await getDocs(collection(db, "stores"));
+  marketplaceStores = storeSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const prodSnap = await getDocs(collection(db, "products"));
+  marketplaceProducts = prodSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  renderMarketplace();
+}
+
+function renderMarketplace() {
+  const grid = $("marketplaceGrid");
+  if (!marketplaceProducts.length) {
+    grid.innerHTML = `<p class="text-gray-500">No products available in the marketplace yet.</p>`;
     return;
   }
 
-  grid.innerHTML = products.map(product => {
-    const image = product.imageUrl || "https://via.placeholder.com/700x500?text=Product";
+  grid.innerHTML = marketplaceProducts.map(p => {
+    const store = marketplaceStores.find(s => s.sellerId === p.sellerId) || { name: "Seller Store", whatsapp: "" };
     return `
       <div class="card p-4">
-        <img src="${escapeHtml(image)}" class="product-img" onerror="this.src='https://via.placeholder.com/700x500?text=Product'">
-        <h3 class="font-bold text-lg mt-4">${escapeHtml(product.name)}</h3>
-        <p class="gold font-bold mt-1">GHS ${Number(product.price || 0).toFixed(2)}</p>
-        <p class="text-gray-500 text-sm mt-2">Stock: ${Number(product.stock || 0)}</p>
-        <p class="text-gray-500 text-sm mt-2 line-clamp-2">${escapeHtml(product.description || "")}</p>
+        <img src="${escapeHtml(p.imageUrl || '')}" class="product-img" onerror="this.src='https://via.placeholder.com/700x500?text=Product'">
+        <h3 class="font-bold text-lg mt-4">${escapeHtml(p.name)}</h3>
+        <p class="text-xs text-gray-500 mt-1">Store: ${escapeHtml(store.name)}</p>
+        <p class="gold font-bold mt-2">GHS ${Number(p.price || 0).toFixed(2)}</p>
         <div class="flex gap-2 mt-4">
-          <button type="button" class="editProductBtn flex-1 border border-[#333] py-2 rounded-lg text-sm" data-id="${product.id}">Edit</button>
-          <button type="button" class="deleteProductBtn flex-1 border border-red-900 text-red-400 py-2 rounded-lg text-sm" data-id="${product.id}">Delete</button>
+          <button type="button" class="btn bg-gold text-black font-bold flex-1 py-2 rounded-lg text-sm addToCartBtn" data-id="${p.id}">Add to Cart</button>
+          ${store.whatsapp ? `<a href="https://wa.me/${store.whatsapp}?text=Hello, I am interested in ${encodeURIComponent(p.name)}" target="_blank" class="btn border border-green-600 text-green-400 px-3 py-2 rounded-lg text-sm">💬</a>` : ''}
         </div>
       </div>
     `;
   }).join("");
 
-  document.querySelectorAll(".deleteProductBtn").forEach(btn => {
-    btn.addEventListener("click", () => deleteProduct(btn.dataset.id));
-  });
-  document.querySelectorAll(".editProductBtn").forEach(btn => {
-    btn.addEventListener("click", () => openProductModal(btn.dataset.id));
+  document.querySelectorAll(".addToCartBtn").forEach(btn => {
+    btn.addEventListener("click", () => addToCart(btn.dataset.id));
   });
 }
 
-/* =========================================================
-   PRODUCT MODAL
-========================================================= */
-function openProductModal(productId = null) {
-  const product = productId ? products.find(p => p.id === productId) : null;
-  $("modalTitle").textContent = product ? "Edit Product" : "Add Product";
+function addToCart(productId) {
+  const prod = marketplaceProducts.find(p => p.id === productId);
+  if (!prod) return;
+  const existing = cart.find(item => item.id === productId);
+  if (existing) {
+    existing.quantity += 1;
+  } else {
+    cart.push({ ...prod, quantity: 1 });
+  }
+  $("cartCount").textContent = cart.reduce((sum, i) => sum + i.quantity, 0);
+  showToast("Added to cart!");
+}
+
+$("openCartBtn").addEventListener("click", () => {
+  $("modalTitle").textContent = "Your Shopping Cart";
+  if (!cart.length) {
+    $("modalContent").innerHTML = `<p class="text-gray-500">Your cart is empty.</p>`;
+  } else {
+    const total = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+    $("modalContent").innerHTML = `
+      <div>
+        ${cart.map((item, idx) => `
+          <div class="flex justify-between items-center py-2 border-b border-[#222]">
+            <div><p class="font-bold">${escapeHtml(item.name)}</p><p class="text-xs text-gray-400">GHS ${item.price} x ${item.quantity}</p></div>
+            <p class="gold font-bold">GHS ${(item.price * item.quantity).toFixed(2)}</p>
+          </div>
+        `).join("")}
+        <div class="flex justify-between font-bold text-lg my-4"><span>Total:</span><span class="gold">GHS ${total.toFixed(2)}</span></div>
+        <button id="checkoutBtn" class="btn w-full bg-gold text-black font-bold py-3 rounded-lg">Proceed to Checkout</button>
+      </div>
+    `;
+    $("checkoutBtn").addEventListener("click", openCheckoutModal);
+  }
+  $("modal").classList.remove("hidden");
+});
+
+function openCheckoutModal() {
+  const total = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+  $("modalTitle").textContent = "Checkout Order";
   $("modalContent").innerHTML = `
-    <form id="productForm">
-      <label class="text-sm text-gray-400">Product name</label>
-      <input id="productName" required class="w-full rounded-lg px-4 py-3 mt-2 mb-4" value="${escapeHtml(product?.name || "")}" placeholder="Product name">
-
-      <label class="text-sm text-gray-400">Price (GHS)</label>
-      <input id="productPrice" required type="number" min="0" step="0.01" class="w-full rounded-lg px-4 py-3 mt-2 mb-4" value="${product?.price || ""}" placeholder="100">
-
-      <label class="text-sm text-gray-400">Stock</label>
-      <input id="productStock" required type="number" min="0" class="w-full rounded-lg px-4 py-3 mt-2 mb-4" value="${product?.stock ?? 1}" placeholder="10">
-
-      <label class="text-sm text-gray-400">Product image URL</label>
-      <input id="productImage" class="w-full rounded-lg px-4 py-3 mt-2 mb-4" value="${escapeHtml(product?.imageUrl || "")}" placeholder="https://...">
-
-      <label class="text-sm text-gray-400">Description</label>
-      <textarea id="productDescription" class="w-full rounded-lg px-4 py-3 mt-2 mb-5" rows="4" placeholder="Describe your product">${escapeHtml(product?.description || "")}</textarea>
-
-      <button type="submit" class="btn w-full bg-gold text-black font-bold py-3 rounded-lg">${product ? "Save Changes" : "Add Product"}</button>
+    <form id="checkoutForm">
+      <label class="text-sm text-gray-400">Full Name</label>
+      <input id="chkName" required class="w-full rounded-lg px-4 py-3 mt-2 mb-4" value="${escapeHtml(currentUserData?.name || '')}">
+      <label class="text-sm text-gray-400">Phone Number</label>
+      <input id="chkPhone" required class="w-full rounded-lg px-4 py-3 mt-2 mb-4" placeholder="024XXXXXXX">
+      <label class="text-sm text-gray-400">Delivery Address</label>
+      <textarea id="chkAddress" required class="w-full rounded-lg px-4 py-3 mt-2 mb-5" rows="2"></textarea>
+      <button type="submit" class="btn w-full bg-gold text-black font-bold py-3 rounded-lg">Place Order (Total: GHS ${total.toFixed(2)})</button>
     </form>
   `;
-  $("modal").classList.remove("hidden");
-  $("productForm").addEventListener("submit", event => {
-    event.preventDefault();
-    saveProduct(productId);
+  $("checkoutForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const customerName = $("chkName").value.trim();
+    const customerPhone = $("chkPhone").value.trim();
+    const address = $("chkAddress").value.trim();
+
+    try {
+      // Group orders by seller
+      const sellerGroups = {};
+      cart.forEach(item => {
+        if (!sellerGroups[item.sellerId]) sellerGroups[item.sellerId] = [];
+        sellerGroups[item.sellerId].push(item);
+      });
+
+      for (const sellerId in sellerGroups) {
+        const items = sellerGroups[sellerId];
+        const subtotal = items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+        await addDoc(collection(db, "orders"), {
+          buyerId: currentUser.uid, buyerEmail: currentUser.email, sellerId, items, total: subtotal, customerName, customerPhone, address, status: "pending", createdAt: serverTimestamp()
+        });
+      }
+
+      cart = [];
+      $("cartCount").textContent = "0";
+      closeModal();
+      showToast("Order placed successfully!");
+      loadOrders();
+    } catch (err) {
+      showToast("Checkout failed: " + err.message, "error");
+    }
   });
 }
 
-async function saveProduct(productId) {
-  const name = $("productName").value.trim();
-  const price = Number($("productPrice").value);
-  const stock = Number($("productStock").value);
-  const imageUrl = $("productImage").value.trim();
-  const description = $("productDescription").value.trim();
-
-  if (!name) { showToast("Enter a product name.", "warning"); return; }
-  if (!Number.isFinite(price) || price < 0) { showToast("Enter a valid price.", "warning"); return; }
-  if (!Number.isFinite(stock) || stock < 0) { showToast("Enter valid stock.", "warning"); return; }
-
-  try {
-    const data = {
-      sellerId: currentUser.uid,
-      storeId: currentUser.uid,
-      name, price, stock, description, imageUrl,
-      updatedAt: serverTimestamp()
-    };
-
-    if (productId) {
-      await updateDoc(doc(db, "products", productId), data);
-    } else {
-      await addDoc(collection(db, "products"), { ...data, createdAt: serverTimestamp() });
-    }
-    closeModal();
-    await loadProducts();
-    updateDashboard();
-    showToast(productId ? "Product updated." : "Product added.");
-  } catch (error) {
-    console.error(error);
-    showToast("Could not save product: " + error.message, "error");
-  }
-}
-
-async function deleteProduct(id) {
-  const product = products.find(p => p.id === id);
-  if (!product) return;
-  const yes = confirm(`Delete "${product.name}"?`);
-  if (!yes) return;
-  try {
-    await deleteDoc(doc(db, "products", id));
-    await loadProducts();
-    updateDashboard();
-    showToast("Product deleted.");
-  } catch (error) {
-    console.error(error);
-    showToast("Could not delete product: " + error.message, "error");
-  }
-}
-
-/* =========================================================
-   ORDERS
-========================================================= */
+/* ORDERS & DASHBOARD */
 async function loadOrders() {
   if (!currentUser) return;
-  try {
-    // 1. Load orders where user is the seller
-    const salesQ = query(collection(db, "orders"), where("sellerId", "==", currentUser.uid));
-    const salesSnap = await getDocs(salesQ);
-    salesOrders = salesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const salesSnap = await getDocs(query(collection(db, "orders"), where("sellerId", "==", currentUser.uid)));
+  salesOrders = salesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    // 2. Load orders where user is the buyer
-    const buyQ = query(collection(db, "orders"), where("buyerId", "==", currentUser.uid));
-    const buySnap = await getDocs(buyQ);
-    buyerOrders = buySnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const buySnap = await getDocs(query(collection(db, "orders"), where("buyerId", "==", currentUser.uid)));
+  buyerOrders = buySnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    renderOrders();
-    renderBuyerOrders();
-  } catch (error) {
-    console.error(error);
-    showToast("Could not load orders: " + error.message, "error");
-  }
+  renderOrders();
+  renderBuyerOrders();
 }
 
 function renderOrders() {
   const box = $("ordersList");
-  if (!salesOrders.length) {
-    box.innerHTML = `
-      <div class="card p-8 text-center">
-        <div class="text-4xl mb-3">📦</div>
-        <h3 class="font-bold">No orders yet</h3>
-        <p class="text-gray-500 text-sm mt-2">Orders from your customers will appear here.</p>
-      </div>
-    `;
-    return;
-  }
-
-  box.innerHTML = salesOrders.map(order => {
-    const date = formatDate(order.createdAt);
-    const status = order.status || "pending";
-    const items = Array.isArray(order.items) ? order.items : [];
-
-    return `
-      <div class="card p-5 mb-4">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p class="text-xs text-gray-600">ORDER ${escapeHtml(order.id)}</p>
-            <h3 class="font-bold mt-1">${escapeHtml(order.customerName || order.buyerEmail || "Customer")}</h3>
-            <p class="text-gray-500 text-sm mt-1">${escapeHtml(order.customerPhone || "")}</p>
-            <p class="text-gray-600 text-xs mt-2">${date}</p>
-          </div>
-          <div class="text-right">
-            <p class="gold font-bold">GHS ${Number(order.total || 0).toFixed(2)}</p>
-            <select class="orderStatusSelect mt-2 bg-[#0d0d0d] border border-[#333] rounded-lg px-3 py-2 text-sm" data-id="${order.id}">
-              ${orderStatusOptions(status)}
-            </select>
-          </div>
-        </div>
-        <div class="mt-4 border-t border-[#222] pt-4">
-          ${items.map(item => `
-            <div class="flex justify-between text-sm py-1">
-              <span class="text-gray-400">${escapeHtml(item.name)} × ${Number(item.quantity || 1)}</span>
-              <span>GHS ${(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2)}</span>
-            </div>
-          `).join("")}
-        </div>
-        <div class="text-xs text-gray-500 mt-3">Delivery: ${escapeHtml(order.deliveryMethod || "Not specified")}</div>
-        ${order.address ? `<div class="text-xs text-gray-500 mt-1">Address: ${escapeHtml(order.address)}</div>` : ""}
-      </div>
-    `;
-  }).join("");
-
-  document.querySelectorAll(".orderStatusSelect").forEach(select => {
-    select.addEventListener("change", () => updateOrderStatus(select.dataset.id, select.value));
-  });
-}
-
-function orderStatusOptions(current) {
-  const statuses = [
-    ["pending", "Pending"], ["confirmed", "Confirmed"], ["processing", "Processing"],
-    ["ready_for_pickup", "Ready for Pickup"], ["out_for_delivery", "Out for Delivery"],
-    ["delivered", "Delivered"], ["cancelled", "Cancelled"]
-  ];
-  return statuses.map(([value, label]) => `<option value="${value}" ${current === value ? "selected" : ""}>${label}</option>`).join("");
-}
-
-async function updateOrderStatus(orderId, status) {
-  try {
-    await updateDoc(doc(db, "orders", orderId), { status, updatedAt: serverTimestamp() });
-    await loadOrders();
-    updateDashboard();
-    showToast("Order status updated.");
-  } catch (error) {
-    console.error(error);
-    showToast("Could not update order: " + error.message, "error");
-  }
-}
-
-function formatStatus(status) {
-  const map = {
-    pending: "Pending", confirmed: "Confirmed", processing: "Processing",
-    ready_for_pickup: "Ready for Pickup", out_for_delivery: "Out for Delivery",
-    delivered: "Delivered", cancelled: "Cancelled"
-  };
-  return map[status] || status;
-}
-
-function formatDate(timestamp) {
-  if (!timestamp) return "";
-  try {
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleDateString("en-GH", { day: "numeric", month: "short", year: "numeric" });
-  } catch { return ""; }
-}
-
-/* =========================================================
-   DASHBOARD
-========================================================= */
-function updateDashboard() {
-  // Update Sales Stats
-  const totalProducts = products.length;
-  const totalOrders = salesOrders.length;
-  const pending = salesOrders.filter(o => o.status === "pending").length;
-  const revenue = salesOrders.filter(o => o.status !== "cancelled").reduce((sum, o) => sum + Number(o.total || 0), 0);
-
-  $("statProducts").textContent = totalProducts;
-  $("statOrders").textContent = totalOrders;
-  $("statPending").textContent = pending;
-  $("statRevenue").textContent = "GHS " + revenue.toFixed(2);
-
-  updateVerificationBadge();
-
-  // Control UI based on Verification
-  const isVerified = currentUserData?.verified === true;
-  
-  if (isVerified) {
-    $("homeStoreBtn").disabled = false;
-    $("homeStoreBtn").textContent = "Manage Store";
-    $("addProductBtn").classList.remove("hidden");
-    $("saveStoreBtn").disabled = false;
-    $("saveStoreBtn").textContent = "Save Store";
-    $("homeStoreName").textContent = currentStore?.name || "Your Store Ready";
-  } else {
-    $("homeStoreBtn").disabled = true;
-    $("homeStoreBtn").textContent = "Verify to unlock store";
-    $("addProductBtn").classList.add("hidden");
-    $("saveStoreBtn").disabled = true;
-    $("saveStoreBtn").textContent = "Verification Required";
-    $("homeStoreName").textContent = "Verification required to create a store";
-  }
-}
-
-/* =========================================================
-   BUYER ORDERS
-========================================================= */
-function renderBuyerOrders() {
-  const box = $("buyerRecentOrders");
-  if (!buyerOrders.length) {
-    box.innerHTML = `<p class="text-gray-500 text-sm">You haven't made any purchases yet.</p>`;
-    return;
-  }
-  box.innerHTML = buyerOrders.slice(0, 5).map(order => `
-    <div class="border-b border-[#222] py-4">
-      <div class="flex justify-between gap-3">
-        <div>
-          <p class="font-bold">Order #${escapeHtml(order.id.slice(0, 8))}</p>
-          <p class="text-gray-500 text-sm mt-1">${formatDate(order.createdAt)}</p>
-        </div>
-        <div class="text-right">
-          <p class="gold font-bold">GHS ${Number(order.total || 0).toFixed(2)}</p>
-          <span class="status mt-1">${formatStatus(order.status || "pending")}</span>
-        </div>
-      </div>
+  if (!salesOrders.length) { box.innerHTML = `<p class="text-gray-500">No orders from customers yet.</p>`; return; }
+  box.innerHTML = salesOrders.map(o => `
+    <div class="card p-5 mb-4">
+      <p class="font-bold">${escapeHtml(o.customerName)} (${escapeHtml(o.customerPhone)})</p>
+      <p class="text-gray-400 text-sm mt-1">Address: ${escapeHtml(o.address)}</p>
+      <p class="gold font-bold mt-2">GHS ${Number(o.total || 0).toFixed(2)}</p>
     </div>
   `).join("");
 }
 
-/* =========================================================
-   VERIFICATION (SUPABASE UPLOAD)
-========================================================= */
-function verificationText(status) {
-  const map = {
-    not_submitted: "Not submitted", pending: "Pending review", approved: "Approved",
-    rejected: "Rejected", resubmit: "Resubmission required", suspended: "Verification suspended"
-  };
-  return map[status] || "Not submitted";
+function renderBuyerOrders() {
+  const box = $("buyerRecentOrders");
+  if (!buyerOrders.length) { box.innerHTML = `<p class="text-gray-500 text-sm">No purchases yet.</p>`; return; }
+  box.innerHTML = buyerOrders.map(o => `
+    <div class="border-b border-[#222] py-3 flex justify-between">
+      <div><p class="font-bold">Order #${escapeHtml(o.id.slice(0,6))}</p><p class="text-xs text-gray-500">Status: ${escapeHtml(o.status)}</p></div>
+      <p class="gold font-bold">GHS ${Number(o.total || 0).toFixed(2)}</p>
+    </div>
+  `).join("");
 }
 
-function updateVerificationBadge() {
-  if (!currentUserData) return;
-  const status = currentUserData.verificationStatus || "not_submitted";
-  $("homeVerificationBadge").textContent = verificationText(status);
-
-  if (status === "approved") {
-    const badge = currentUserData.plan === "150" ? "✓ Blue Verified" : "✓ Verified";
-    $("homeVerificationBadge").textContent = badge;
-    $("homeVerificationBadge").className = "status " + (currentUserData.plan === "150" ? "verification-blue" : "verification-green");
-  }
+function updateDashboard() {
+  $("statProducts").textContent = products.length;
+  $("statOrders").textContent = salesOrders.length;
+  $("statPending").textContent = salesOrders.filter(o => o.status === "pending").length;
+  $("statRevenue").textContent = "GHS " + salesOrders.reduce((sum, o) => sum + Number(o.total || 0), 0).toFixed(2);
+  
+  const isVerified = currentUserData?.verified === true;
+  $("homeStoreBtn").disabled = !isVerified;
+  $("addProductBtn").classList.toggle("hidden", !isVerified);
+  $("saveStoreBtn").disabled = !isVerified;
 }
 
+/* VERIFICATION & PROFILE */
 function openVerification() {
-  const status = currentUserData.verificationStatus || "not_submitted";
   $("modalTitle").textContent = "Identity Verification";
   $("modalContent").innerHTML = `
-    <div class="mb-5">
-      <div class="text-sm text-gray-500">Verification status</div>
-      <div class="font-bold mt-1">${verificationText(status)}</div>
-    </div>
-    ${currentUserData.verified ? `
-      <div class="p-4 rounded-xl bg-[#101b15] border border-green-900 mb-5">
-        <div class="font-bold verification-green">✓ Your account is verified</div>
-        <p class="text-gray-500 text-sm mt-2">Your verification badge is active and your store is unlocked.</p>
-      </div>
-    ` : ""}
-    ${status === "pending" ? `
-      <div class="p-4 rounded-xl bg-[#17130a] border border-[#5b4617]">
-        <p class="text-sm text-gray-300">Your Ghana Card documents are waiting for manual review.</p>
-      </div>
-    ` : `
-      <form id="verificationForm">
-        <label class="text-sm text-gray-400">Ghana Card ID number</label>
-        <input id="ghanaCardNumber" required class="w-full rounded-lg px-4 py-3 mt-2 mb-4" placeholder="GHA-XXXXXXXXX-X" value="${escapeHtml(currentUserData.ghanaCardNumber || "")}">
-        <label class="text-sm text-gray-400">Ghana Card front image</label>
-        <input id="ghanaFront" required type="file" accept="image/*" class="w-full rounded-lg px-4 py-3 mt-2 mb-4">
-        <label class="text-sm text-gray-400">Ghana Card back image</label>
-        <input id="ghanaBack" required type="file" accept="image/*" class="w-full rounded-lg px-4 py-3 mt-2 mb-5">
-        <div class="text-xs text-gray-600 mb-4">Your Ghana Card information is private and is not displayed publicly.</div>
-        <button type="submit" class="btn w-full bg-gold text-black font-bold py-3 rounded-lg">Submit for Verification</button>
-      </form>
-    `}
+    <form id="verForm">
+      <label class="text-sm text-gray-400">Ghana Card ID number</label>
+      <input id="ghanaNum" required class="w-full rounded-lg px-4 py-3 mt-2 mb-4" value="${escapeHtml(currentUserData.ghanaCardNumber || '')}">
+      <label class="text-sm text-gray-400">Front Image</label>
+      <input id="ghanaF" required type="file" accept="image/*" class="w-full rounded-lg px-4 py-3 mt-2 mb-4">
+      <label class="text-sm text-gray-400">Back Image</label>
+      <input id="ghanaB" required type="file" accept="image/*" class="w-full rounded-lg px-4 py-3 mt-2 mb-5">
+      <button type="submit" class="btn w-full bg-gold text-black font-bold py-3 rounded-lg">Submit Verification</button>
+    </form>
   `;
   $("modal").classList.remove("hidden");
-  
-  const form = $("verificationForm");
-  if (form) {
-    form.addEventListener("submit", event => {
-      event.preventDefault();
-      submitVerification();
-    });
-  }
+  $("verForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const number = $("ghanaNum").value.trim();
+    const f = $("ghanaF").files[0];
+    const b = $("ghanaB").files[0];
+    try {
+      showToast("Uploading documents...");
+      const fPath = `${currentUser.uid}/front_${Date.now()}`;
+      const bPath = `${currentUser.uid}/back_${Date.now()}`;
+      await supabase.storage.from(SUPABASE_BUCKET).upload(fPath, f);
+      await supabase.storage.from(SUPABASE_BUCKET).upload(bPath, b);
+      const { data: fUrl } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(fPath);
+      const { data: bUrl } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(bPath);
+
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        ghanaCardNumber: number, ghanaCardFrontUrl: fUrl.publicUrl, ghanaCardBackUrl: bUrl.publicUrl, verificationStatus: "pending", verified: false
+      });
+      closeModal();
+      await loadUser();
+      showToast("Verification submitted!");
+    } catch (err) {
+      showToast("Error: " + err.message, "error");
+    }
+  });
 }
 
-async function submitVerification() {
-  const number = $("ghanaCardNumber").value.trim();
-  const front = $("ghanaFront").files[0];
-  const back = $("ghanaBack").files[0];
-
-  if (!number) { showToast("Enter your Ghana Card number.", "warning"); return; }
-  if (!front || !back) { showToast("Upload both sides of your Ghana Card.", "warning"); return; }
-  if (front.size > 8 * 1024 * 1024 || back.size > 8 * 1024 * 1024) {
-    showToast("Each image must be less than 8MB.", "warning"); return;
-  }
-
-  try {
-    const button = $("verificationForm").querySelector("button[type='submit']");
-    button.disabled = true;
-    showToast("Uploading documents securely...");
-
-    const timestamp = Date.now();
-    const frontPath = `${currentUser.uid}/front_${timestamp}`;
-    const backPath = `${currentUser.uid}/back_${timestamp}`;
-
-    // Upload Front Image
-    const { error: frontError } = await supabase.storage.from(SUPABASE_BUCKET).upload(frontPath, front);
-    if (frontError) throw new Error("Front image upload failed: " + frontError.message);
-
-    // Upload Back Image
-    const { error: backError } = await supabase.storage.from(SUPABASE_BUCKET).upload(backPath, back);
-    if (backError) throw new Error("Back image upload failed: " + backError.message);
-
-    // Get Public URLs
-    const { data: frontUrlData } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(frontPath);
-    const { data: backUrlData } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(backPath);
-
-    showToast("Saving verification status...");
-
-    // Save to Firebase
-    await updateDoc(doc(db, "users", currentUser.uid), {
-      ghanaCardNumber: number,
-      ghanaCardFrontUrl: frontUrlData.publicUrl,
-      ghanaCardBackUrl: backUrlData.publicUrl,
-      verificationStatus: "pending",
-      verified: false,
-      verificationSubmittedAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
-
-    await loadUser();
-    closeModal();
-    updateVerificationBadge();
-    updateDashboard();
-
-    showToast("Verification submitted successfully.");
-
-  } catch (error) {
-    console.error("Verification error:", error);
-    showToast(error.message, "error");
-  } finally {
-    const button = $("verificationForm")?.querySelector("button[type='submit']");
-    if (button) button.disabled = false;
-  }
-}
-
-/* =========================================================
-   PROFILE
-========================================================= */
 function renderProfile() {
-  if (!currentUser || !currentUserData) return;
-
-  const name = currentUserData.name || currentUser.displayName || "User";
-  $("profileName").textContent = name;
-  $("profileEmail").textContent = currentUser.email || "";
-  $("profileAvatar").textContent = name.charAt(0).toUpperCase();
-  const status = currentUserData.verificationStatus || "not_submitted";
-
-  $("profileVerification").innerHTML = `
-    <div class="border-t border-[#222] pt-5">
-      <div class="flex justify-between gap-4">
-        <div>
-          <p class="text-gray-500 text-sm">Verification</p>
-          <p class="font-bold mt-1">${verificationText(status)}</p>
-        </div>
-        ${currentUserData.verified ? `
-          <div class="${currentUserData.plan === "150" ? "verification-blue" : "verification-green"} font-bold">
-            ✓ ${currentUserData.plan === "150" ? "Blue Verified" : "Verified"}
-          </div>
-        ` : ""}
-      </div>
-      <button id="profileVerifyBtn" type="button" class="btn w-full border border-[#333] py-3 rounded-lg mt-5">
-        ${status === "approved" ? "View Verification" : "Open Verification"}
-      </button>
-    </div>
-  `;
-
-  $("profileVerifyBtn").addEventListener("click", openVerification);
+  $("profileName").textContent = currentUserData.name;
+  $("profileEmail").textContent = currentUserData.email;
+  $("profileAvatar").textContent = currentUserData.name.charAt(0).toUpperCase();
+  $("profileVerification").innerHTML = `<button id="profVerBtn" class="btn w-full border border-[#333] py-3 rounded-lg mt-5">Open Verification</button>`;
+  $("profVerBtn").addEventListener("click", openVerification);
 }
 
-/* =========================================================
-   ADMIN
-========================================================= */
+/* ADMIN */
 async function showAdmin() {
-  $("homePage").classList.add("hidden");
-  $("productsPage").classList.add("hidden");
-  $("ordersPage").classList.add("hidden");
-  $("storePage").classList.add("hidden");
-  $("profilePage").classList.add("hidden");
+  ["homePage", "marketplacePage", "productsPage", "ordersPage", "storePage", "profilePage"].forEach(id => $(id)?.classList.add("hidden"));
   $("adminPage").classList.remove("hidden");
-  await loadAdmin();
-}
 
-async function loadAdmin() {
-  if (!currentUser) return;
-  // Strict check
-  if (currentUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-    showToast("Admin access denied.", "error");
-    return;
-  }
+  const snap = await getDocs(collection(db, "users"));
+  const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  $("adminUsers").textContent = users.length;
+  $("adminVerified").textContent = users.filter(u => u.verified).length;
+  $("adminUnverified").textContent = users.filter(u => !u.verified).length;
+  const pending = users.filter(u => u.verificationStatus === "pending");
+  $("adminPending").textContent = pending.length;
 
-  try {
-    const snap = await getDocs(collection(db, "users"));
-    const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    const verified = users.filter(u => u.verified === true);
-    const unverified = users.filter(u => u.verified !== true);
-    const pending = users.filter(u => u.verificationStatus === "pending");
-
-    $("adminUsers").textContent = users.length;
-    $("adminVerified").textContent = verified.length;
-    $("adminUnverified").textContent = unverified.length;
-    $("adminPending").textContent = pending.length;
-
-    $("adminVerificationList").innerHTML = pending.length ? pending.map(renderAdminSeller).join("") : `<p class="text-gray-500 text-sm">No pending verification requests.</p>`;
-
-    $("adminUsersList").innerHTML = users.slice(0, 50).map(user => `
-      <div class="border-b border-[#222] py-3">
-        <div class="flex justify-between gap-3">
-          <div>
-            <p class="font-bold text-sm">${escapeHtml(user.name || "Unnamed")}</p>
-            <p class="text-gray-500 text-xs mt-1">${escapeHtml(user.email || "")}</p>
-          </div>
-          <span class="status ${user.verified ? "verification-green" : "text-gray-500"}">
-            ${user.verified ? "Verified" : "Unverified"}
-          </span>
-        </div>
-      </div>
-    `).join("");
-
-    document.querySelectorAll(".adminApproveBtn").forEach(btn => btn.addEventListener("click", () => adminApprove(btn.dataset.id)));
-    document.querySelectorAll(".adminRejectBtn").forEach(btn => btn.addEventListener("click", () => adminReject(btn.dataset.id)));
-  } catch (error) {
-    console.error(error);
-    showToast("Admin dashboard failed: " + error.message, "error");
-  }
-}
-
-function renderAdminSeller(user) {
-  return `
-    <div class="border-b border-[#222] py-4">
-      <div class="flex justify-between gap-3">
-        <div>
-          <p class="font-bold">${escapeHtml(user.name || "Unnamed")}</p>
-          <p class="text-gray-500 text-xs mt-1">${escapeHtml(user.email || "")}</p>
-          <a href="${escapeHtml(user.ghanaCardFrontUrl)}" target="_blank" class="text-xs text-blue-400 mt-1 block">View Front ID</a>
-          <a href="${escapeHtml(user.ghanaCardBackUrl)}" target="_blank" class="text-xs text-blue-400 block">View Back ID</a>
-        </div>
-        <div class="flex gap-2">
-          <button type="button" class="adminApproveBtn bg-green-900 text-green-300 px-3 py-2 rounded-lg text-xs" data-id="${user.id}">Approve</button>
-          <button type="button" class="adminRejectBtn bg-red-950 text-red-300 px-3 py-2 rounded-lg text-xs" data-id="${user.id}">Reject</button>
-        </div>
-      </div>
+  $("adminVerificationList").innerHTML = pending.length ? pending.map(u => `
+    <div class="border-b border-[#222] py-3 flex justify-between items-center">
+      <div><p class="font-bold">${escapeHtml(u.name)}</p><p class="text-xs text-gray-400">${escapeHtml(u.email)}</p></div>
+      <button class="btn bg-green-900 text-green-300 px-3 py-1 rounded text-xs approveBtn" data-id="${u.id}">Approve</button>
     </div>
-  `;
+  `).join("") : `<p class="text-gray-500 text-sm">No pending requests.</p>`;
+
+  document.querySelectorAll(".approveBtn").forEach(b => b.addEventListener("click", async () => {
+    await updateDoc(doc(db, "users", b.dataset.id), { verified: true, verificationStatus: "approved" });
+    showToast("User approved!");
+    showAdmin();
+  }));
 }
 
-async function adminApprove(userId) {
-  try {
-    await updateDoc(doc(db, "users", userId), { verificationStatus: "approved", verified: true, badgeColor: "green", verifiedAt: serverTimestamp(), verifiedBy: currentUser.email, updatedAt: serverTimestamp() });
-    showToast("User verified.");
-    await loadAdmin();
-  } catch (error) { showToast("Could not approve: " + error.message, "error"); }
-}
+function closeModal() { $("modal").classList.add("hidden"); $("modalContent").innerHTML = ""; }
+async function logoutUser() { await signOut(auth); showLanding(); }
 
-async function adminReject(userId) {
-  try {
-    await updateDoc(doc(db, "users", userId), { verificationStatus: "rejected", verified: false, updatedAt: serverTimestamp() });
-    showToast("Verification rejected.");
-    await loadAdmin();
-  } catch (error) { showToast("Could not reject: " + error.message, "error"); }
-}
-
-/* =========================================================
-   MODAL & LOGOUT
-========================================================= */
-function closeModal() {
-  $("modal").classList.add("hidden");
-  $("modalContent").innerHTML = "";
-}
-
-async function logoutUser() {
-  try {
-    await signOut(auth);
-    currentUser = null; currentUserData = null; products = []; salesOrders = []; buyerOrders = []; currentStore = null;
-    showLanding();
-    showToast("You have been signed out.");
-  } catch (error) { showToast("Could not sign out.", "error"); }
-}
-
-/* =========================================================
-   EVENT LISTENERS
-========================================================= */
 $("landingLoginBtn").addEventListener("click", () => { authMode = "login"; showAuth(); });
 $("landingSignBtn").addEventListener("click", () => { authMode = "login"; showAuth(); });
 $("landingCreateBtn").addEventListener("click", () => { authMode = "register"; showAuth(); });
-$("authBackBtn").addEventListener("click", () => { showLanding(); });
+$("authBackBtn").addEventListener("click", showLanding);
 $("emailAuthBtn").addEventListener("click", handleEmailAuth);
 $("googleBtn").addEventListener("click", googleSignIn);
 $("switchAuthBtn").addEventListener("click", () => { authMode = authMode === "register" ? "login" : "register"; clearAuthError(); updateAuthUI(); });
@@ -1579,20 +975,12 @@ $("logoHomeBtn").addEventListener("click", () => navigate("home"));
 $("mobileMenuBtn").addEventListener("click", () => $("mobileMenu").classList.toggle("hidden"));
 $("logoutBtn").addEventListener("click", logoutUser);
 $("mobileLogoutBtn").addEventListener("click", logoutUser);
-
-$("addProductBtn").addEventListener("click", () => openProductModal());
+$("addProductBtn").addEventListener("click", openProductModal);
 $("saveStoreBtn").addEventListener("click", saveStore);
 $("homeVerificationBtn").addEventListener("click", openVerification);
 $("homeStoreBtn").addEventListener("click", () => navigate("store"));
 $("modalCloseBtn").addEventListener("click", closeModal);
-$("modal").addEventListener("click", event => { if (event.target === $("modal")) closeModal(); });
-
-window.addEventListener("error", event => showToast("A JavaScript error occurred.", "error"));
-
-/* =========================================================
-   STARTUP
-========================================================= */
-if (!auth) { hideLoading(); showLanding(); } else { setLoadingText("Checking your SellerFlow account..."); }
+$("modal").addEventListener("click", e => { if (e.target === $("modal")) closeModal(); });
 </script>
 </body>
 </html>
