@@ -119,9 +119,9 @@
       background: #222;
     }
 
-    .product-img {
+    .product-img, .feed-media {
       width: 100%;
-      height: 190px;
+      height: 240px;
       object-fit: cover;
       border-radius: 12px;
       background: #191919;
@@ -140,7 +140,7 @@
 
     .modal-box {
       width: 100%;
-      max-width: 560px;
+      max-width: 600px;
       max-height: 90vh;
       overflow-y: auto;
       background: #111;
@@ -155,6 +155,14 @@
 </head>
 
 <body>
+
+  <!-- GLOBAL SHUTDOWN OVERLAY -->
+  <div id="shutdownScreen" class="hidden fixed inset-0 z-[999999] bg-black flex items-center justify-center p-6 text-center">
+    <div>
+      <h1 class="text-3xl font-black text-red-500 mb-2">APP TEMPORARILY SHUT DOWN</h1>
+      <p class="text-gray-400">The administrator has shut down SellerFlow for maintenance or security reasons. Please check back later.</p>
+    </div>
+  </div>
 
   <!-- GLOBAL LOADING -->
   <div id="loadingScreen" class="page flex items-center justify-center p-6">
@@ -201,8 +209,10 @@
 
       <div class="card p-6">
         <div id="registerFields">
-          <label class="text-sm text-gray-400">Full name</label>
-          <input id="authName" class="w-full rounded-lg px-4 py-3 mt-2 mb-4" placeholder="Your name">
+          <label class="text-sm text-gray-400">Full Name</label>
+          <input id="authName" class="w-full rounded-lg px-4 py-3 mt-2 mb-4" placeholder="Your full name">
+          <label class="text-sm text-gray-400">Username (unique handle)</label>
+          <input id="authUsername" class="w-full rounded-lg px-4 py-3 mt-2 mb-4" placeholder="e.g. jondoe">
         </div>
 
         <label class="text-sm text-gray-400">Email</label>
@@ -235,8 +245,9 @@
           <button id="logoHomeBtn" type="button" class="text-xl font-black">SELLER<span class="gold">FLOW</span></button>
 
           <div class="hidden md:flex items-center gap-1">
-            <button class="nav-btn appNav active" data-page="home" type="button">Home</button>
-            <button class="nav-btn appNav" data-page="marketplace" type="button">Marketplace 🛍️</button>
+            <button class="nav-btn appNav active" data-page="foryou" type="button">🔥 For You</button>
+            <button class="nav-btn appNav" data-page="home" type="button">Dashboard</button>
+            <button class="nav-btn appNav" data-page="marketplace" type="button">Marketplace</button>
             <button class="nav-btn appNav" data-page="products" type="button">Products</button>
             <button class="nav-btn appNav" data-page="orders" type="button">Orders</button>
             <button class="nav-btn appNav" data-page="store" type="button">Store</button>
@@ -255,7 +266,8 @@
 
         <div id="mobileMenu" class="hidden md:hidden pb-3 border-t border-[#202020]">
           <div class="grid grid-cols-2 gap-2 pt-3">
-            <button class="nav-btn appNav" data-page="home" type="button">Home</button>
+            <button class="nav-btn appNav" data-page="foryou" type="button">🔥 For You</button>
+            <button class="nav-btn appNav" data-page="home" type="button">Dashboard</button>
             <button class="nav-btn appNav" data-page="marketplace" type="button">Marketplace</button>
             <button class="nav-btn appNav" data-page="products" type="button">Products</button>
             <button class="nav-btn appNav" data-page="orders" type="button">Orders</button>
@@ -269,8 +281,20 @@
 
     <main class="max-w-7xl mx-auto px-4 py-6">
 
-      <!-- HOME -->
-      <div id="homePage">
+      <!-- FOR YOU FEED -->
+      <div id="foryouPage">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h1 class="text-2xl font-black">🔥 For You Feed</h1>
+            <p class="text-gray-500 text-sm">Discover trending pictures and videos from verified sellers.</p>
+          </div>
+          <button id="openCreatePostBtn" type="button" class="btn bg-gold text-black font-bold px-4 py-2 rounded-lg text-sm hidden">+ Upload Post</button>
+        </div>
+        <div id="forYouFeed" class="max-w-2xl mx-auto space-y-6"></div>
+      </div>
+
+      <!-- SELLER DASHBOARD HOME -->
+      <div id="homePage" class="hidden">
         <div class="mb-7">
           <p class="text-gray-500 text-sm">Welcome back</p>
           <h1 id="welcomeName" class="text-3xl font-black mt-1"></h1>
@@ -288,7 +312,7 @@
             <div class="flex items-center justify-between gap-3">
               <div>
                 <h2 class="font-bold text-lg">Verification</h2>
-                <p class="text-gray-500 text-sm mt-1">Verify your identity to unlock store creation.</p>
+                <p class="text-gray-500 text-sm mt-1">Verify your identity to unlock store posting & selling.</p>
               </div>
               <span id="homeVerificationBadge" class="status">Not submitted</span>
             </div>
@@ -350,31 +374,75 @@
 
       <!-- PROFILE -->
       <div id="profilePage" class="hidden">
-        <div class="mb-6"><h1 class="text-2xl font-black">Profile</h1></div>
+        <div class="mb-6"><h1 class="text-2xl font-black">Your Profile Settings</h1></div>
         <div class="card p-6 max-w-2xl">
           <div class="flex items-center gap-4 mb-6">
-            <div id="profileAvatar" class="w-16 h-16 rounded-full bg-[#222] flex items-center justify-center text-2xl font-bold gold">?</div>
+            <img id="profileAvatarImg" src="https://via.placeholder.com/150?text=User" class="w-20 h-20 rounded-full object-cover border border-gold">
             <div>
-              <h2 id="profileName" class="font-bold text-xl"></h2>
+              <h2 id="profileNameDisplay" class="font-bold text-xl"></h2>
+              <p id="profileUsernameDisplay" class="text-gold text-sm font-mono"></p>
               <p id="profileEmail" class="text-gray-500 text-sm"></p>
             </div>
           </div>
-          <div id="profileVerification"></div>
+
+          <form id="profileUpdateForm" class="space-y-4 border-t border-[#222] pt-4">
+            <div>
+              <label class="text-sm text-gray-400">Profile Picture</label>
+              <input id="profilePicFile" type="file" accept="image/*" class="w-full rounded-lg px-4 py-3 mt-1">
+            </div>
+            <div>
+              <label class="text-sm text-gray-400">Full Name (Can change every 7 days)</label>
+              <input id="profileFullNameInput" class="w-full rounded-lg px-4 py-3 mt-1">
+            </div>
+            <div>
+              <label class="text-sm text-gray-400">Username (Can change every 30 days)</label>
+              <input id="profileUsernameInput" class="w-full rounded-lg px-4 py-3 mt-1 font-mono">
+            </div>
+            <button type="submit" class="btn bg-gold text-black font-bold px-6 py-3 rounded-lg w-full">Update Profile</button>
+          </form>
+
+          <div id="profileVerification" class="mt-6"></div>
         </div>
       </div>
 
-      <!-- ADMIN -->
+      <!-- STORE WALKTHROUGH PUBLIC VIEW -->
+      <div id="storeWalkthroughPage" class="hidden">
+        <button id="backToMarketBtn" type="button" class="text-gray-400 hover:text-white mb-4">← Back</button>
+        <div id="storeWalkthroughContent"></div>
+      </div>
+
+      <!-- ADMIN DASHBOARD (OWNER ONLY) -->
       <div id="adminPage" class="hidden">
-        <div class="mb-7"><p class="text-gray-500 text-sm">SellerFlow Administration</p><h1 class="text-3xl font-black mt-1">Admin Dashboard</h1></div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div class="card p-4"><p class="text-gray-500 text-xs">Total Users</p><p id="adminUsers" class="text-2xl font-bold mt-2">0</p></div>
-          <div class="card p-4"><p class="text-gray-500 text-xs">Verified Sellers</p><p id="adminVerified" class="text-2xl font-bold mt-2">0</p></div>
-          <div class="card p-4"><p class="text-gray-500 text-xs">Unverified Users</p><p id="adminUnverified" class="text-2xl font-bold mt-2">0</p></div>
-          <div class="card p-4"><p class="text-gray-500 text-xs">Pending Reviews</p><p id="adminPending" class="text-2xl font-bold mt-2">0</p></div>
+        <div class="mb-7 flex justify-between items-center">
+          <div>
+            <p class="text-gray-500 text-sm">SellerFlow Administration</p>
+            <h1 class="text-3xl font-black mt-1">Owner Command Center</h1>
+          </div>
+          <button id="adminShutdownToggleBtn" type="button" class="btn bg-red-900 text-white font-bold px-4 py-2 rounded-lg text-sm">🚨 Shut App Down</button>
         </div>
-        <div class="grid lg:grid-cols-2 gap-5">
-          <div class="card p-5"><h2 class="font-bold mb-4">Pending Verification</h2><div id="adminVerificationList"></div></div>
-          <div class="card p-5"><h2 class="font-bold mb-4">Users</h2><div id="adminUsersList"></div></div>
+
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+          <div class="card p-4"><p class="text-gray-500 text-xs">Total Users</p><p id="adminUsers" class="text-2xl font-bold mt-2">0</p></div>
+          <div class="card p-4"><p class="text-gray-500 text-xs">Online Now</p><p id="adminOnlineUsers" class="text-2xl font-bold mt-2 gold">0</p></div>
+          <div class="card p-4"><p class="text-gray-500 text-xs">Verified Sellers</p><p id="adminVerified" class="text-2xl font-bold mt-2">0</p></div>
+          <div class="card p-4"><p class="text-gray-500 text-xs">Pending Reviews</p><p id="adminPending" class="text-2xl font-bold mt-2">0</p></div>
+          <div class="card p-4"><p class="text-gray-500 text-xs">Scam Reports</p><p id="adminScamReports" class="text-2xl font-bold mt-2 text-red-400">0</p></div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-5">
+          <div class="card p-5">
+            <h2 class="font-bold mb-4">Ghana Card Verification</h2>
+            <div id="adminVerificationList" class="space-y-3"></div>
+          </div>
+          <div class="card p-5">
+            <h2 class="font-bold mb-4">Reported Scam / Fraud Stores</h2>
+            <div id="adminScamReportsList" class="space-y-3"></div>
+          </div>
+          <div class="card p-5">
+            <h2 class="font-bold mb-4">Manage Posts & Users</h2>
+            <div id="adminPostsList" class="space-y-3 mb-4"></div>
+            <div id="adminUsersList" class="space-y-3"></div>
+          </div>
         </div>
       </div>
 
@@ -403,7 +471,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, doc,
-  query, where, serverTimestamp
+  query, where, serverTimestamp, increment, arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
@@ -428,8 +496,8 @@ let firebaseApp, auth, db;
 let currentUser = null, currentUserData = null;
 let authMode = "register";
 let products = [], salesOrders = [], buyerOrders = [], currentStore = null;
-let marketplaceStores = [], marketplaceProducts = [];
-let cart = [];
+let marketplaceStores = [], marketplaceProducts = [], feedPosts = [], cart = [];
+let onlineInterval = null;
 
 const $ = id => document.getElementById(id);
 
@@ -486,20 +554,46 @@ async function handleEmailAuth() {
   const email = $("authEmail").value.trim();
   const password = $("authPassword").value;
   const name = $("authName").value.trim();
+  const username = $("authUsername").value.trim().toLowerCase();
 
   if (!email) { showAuthError("Enter your email address."); return; }
   if (!password || password.length < 6) { showAuthError("Password must be at least 6 characters."); return; }
-  if (authMode === "register" && !name) { showAuthError("Enter your full name."); return; }
+  if (authMode === "register") {
+    if (!name) { showAuthError("Enter your full name."); return; }
+    if (!username) { showAuthError("Enter a unique username."); return; }
+  }
 
   const button = $("emailAuthBtn");
   button.disabled = true;
 
   try {
     if (authMode === "register") {
+      // Check username uniqueness
+      const qUser = query(collection(db, "users"), where("username", "==", username));
+      const uSnap = await getDocs(qUser);
+      if (!uSnap.empty) {
+        showAuthError("Username is already taken. Choose another.");
+        button.disabled = false;
+        return;
+      }
+
       const credential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(credential.user, { displayName: name });
       await setDoc(doc(db, "users", credential.user.uid), {
-        uid: credential.user.uid, name, email, verificationStatus: "not_submitted", verified: false, plan: "free", createdAt: serverTimestamp()
+        uid: credential.user.uid,
+        name,
+        username,
+        email,
+        avatarUrl: "",
+        verificationStatus: "not_submitted",
+        verified: false,
+        plan: "free",
+        blocked: false,
+        followers: [],
+        following: [],
+        nameLastChanged: serverTimestamp(),
+        usernameLastChanged: serverTimestamp(),
+        createdAt: serverTimestamp()
       }, { merge: true });
       showToast("Account created successfully.");
     } else {
@@ -522,8 +616,22 @@ async function googleSignIn() {
     const userRef = doc(db, "users", user.uid);
     const existing = await getDoc(userRef);
     if (!existing.exists()) {
+      const defaultUsername = (user.email?.split("@")[0] || "user") + Math.floor(Math.random()*1000);
       await setDoc(userRef, {
-        uid: user.uid, name: user.displayName || "User", email: user.email || "", verificationStatus: "not_submitted", verified: false, plan: "free", createdAt: serverTimestamp()
+        uid: user.uid,
+        name: user.displayName || "User",
+        username: defaultUsername,
+        email: user.email || "",
+        avatarUrl: user.photoURL || "",
+        verificationStatus: "not_submitted",
+        verified: false,
+        plan: "free",
+        blocked: false,
+        followers: [],
+        following: [],
+        nameLastChanged: serverTimestamp(),
+        usernameLastChanged: serverTimestamp(),
+        createdAt: serverTimestamp()
       });
     }
     showToast("Google sign-in successful.");
@@ -540,6 +648,7 @@ if (auth) {
   onAuthStateChanged(auth, async user => {
     if (!user) {
       currentUser = null; currentUserData = null;
+      if (onlineInterval) clearInterval(onlineInterval);
       hideLoading(); showLanding();
       return;
     }
@@ -547,9 +656,25 @@ if (auth) {
     setLoadingText("Loading your account...");
     try {
       await loadUser();
+      if (currentUserData?.blocked) {
+        await signOut(auth);
+        showLanding();
+        showToast("Your account has been blocked by the admin.", "error");
+        return;
+      }
+      
+      // Check global app shutdown
+      const settingsSnap = await getDoc(doc(db, "settings", "appConfig"));
+      if (settingsSnap.exists() && settingsSnap.data().shutdown === true && currentUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+        $("shutdownScreen").classList.remove("hidden");
+        hideLoading();
+        return;
+      }
+
       hideLoading();
       showApp();
       await startApp();
+      startOnlineHeartbeat();
     } catch (error) {
       hideLoading(); showLanding();
     }
@@ -560,19 +685,43 @@ async function loadUser() {
   const ref = doc(db, "users", currentUser.uid);
   const snap = await getDoc(ref);
   if (!snap.exists()) {
-    currentUserData = { uid: currentUser.uid, name: currentUser.displayName || "User", email: currentUser.email || "", verified: false };
+    const defaultUsername = (currentUser.email?.split("@")[0] || "user") + Math.floor(Math.random()*1000);
+    currentUserData = {
+      uid: currentUser.uid,
+      name: currentUser.displayName || "User",
+      username: defaultUsername,
+      email: currentUser.email || "",
+      avatarUrl: "",
+      verified: false,
+      followers: [],
+      following: []
+    };
     await setDoc(ref, currentUserData);
   } else {
     currentUserData = snap.data();
   }
 }
 
+function startOnlineHeartbeat() {
+  if (onlineInterval) clearInterval(onlineInterval);
+  async function ping() {
+    if (!currentUser) return;
+    await setDoc(doc(db, "presence", currentUser.uid), {
+      uid: currentUser.uid,
+      email: currentUser.email,
+      lastSeen: serverTimestamp()
+    }, { merge: true });
+  }
+  ping();
+  onlineInterval = setInterval(ping, 25000); // every 25 seconds
+}
+
 async function startApp() {
   $("userBadge").textContent = currentUser.email || "";
   $("welcomeName").textContent = currentUserData.name || "Welcome";
-  renderProfile();
+  renderProfileSettings();
 
-  // STRICT ADMIN CHECK
+  // STRICT ADMIN ROUTING
   if (currentUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
     showAdmin();
     return;
@@ -582,25 +731,300 @@ async function startApp() {
   await loadProducts();
   await loadOrders();
   await loadMarketplace();
+  await loadFeed();
   updateDashboard();
 }
 
 function navigate(page) {
-  ["homePage", "marketplacePage", "productsPage", "ordersPage", "storePage", "profilePage", "adminPage"].forEach(id => $(id)?.classList.add("hidden"));
+  ["foryouPage", "homePage", "marketplacePage", "productsPage", "ordersPage", "storePage", "profilePage", "storeWalkthroughPage", "adminPage"].forEach(id => $(id)?.classList.add("hidden"));
   const target = $(page + "Page");
   if (target) target.classList.remove("hidden");
   document.querySelectorAll(".appNav").forEach(btn => btn.classList.toggle("active", btn.dataset.page === page));
   $("mobileMenu").classList.add("hidden");
 
+  if (page === "foryou") loadFeed();
   if (page === "marketplace") loadMarketplace();
   if (page === "products") loadProducts();
   if (page === "orders") loadOrders();
   if (page === "store") renderStoreForm();
-  if (page === "profile") renderProfile();
+  if (page === "profile") renderProfileSettings();
   if (page === "home") updateDashboard();
 }
 
-/* STORE & PRODUCTS */
+/* FOR YOU FEED, POSTS, LIKES, COMMENTS, SHARES */
+async function loadFeed() {
+  const snap = await getDocs(collection(db, "posts"));
+  feedPosts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  
+  const userSnap = await getDocs(collection(db, "users"));
+  window.allUsersMap = {};
+  userSnap.docs.forEach(d => { window.allUsersMap[d.id] = d.data(); });
+
+  renderFeed();
+}
+
+function renderFeed() {
+  const feed = $("forYouFeed");
+  const isVerifiedSeller = currentUserData?.verified === true;
+  $("openCreatePostBtn").classList.toggle("hidden", !isVerifiedSeller);
+
+  if (!feedPosts.length) {
+    feed.innerHTML = `<div class="card p-8 text-center"><p class="text-gray-500">No trending posts yet. Verified sellers can upload pictures & videos!</p></div>`;
+    return;
+  }
+
+  feed.innerHTML = feedPosts.map(post => {
+    const author = window.allUsersMap[post.sellerId] || { name: "Seller", username: "seller", avatarUrl: "" };
+    const isLiked = post.likes && post.likes.includes(currentUser.uid);
+    const isSaved = post.saves && post.saves.includes(currentUser.uid);
+    const mediaHtml = post.mediaType === 'video' 
+      ? `<video src="${escapeHtml(post.mediaUrl)}" controls class="feed-media"></video>`
+      : `<img src="${escapeHtml(post.mediaUrl)}" class="feed-media">`;
+
+    return `
+      <div class="card p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3 cursor-pointer viewProfileTrigger" data-uid="${post.sellerId}">
+            <img src="${escapeHtml(author.avatarUrl || 'https://via.placeholder.com/150?text=U')}" class="w-10 h-10 rounded-full object-cover">
+            <div>
+              <p class="font-bold text-sm">${escapeHtml(author.name)} <span class="text-xs verification-green">✓ Verified</span></p>
+              <p class="text-xs text-gray-500 font-mono">@${escapeHtml(author.username)}</p>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-sm text-gray-200">${escapeHtml(post.caption || '')}</p>
+        ${mediaHtml}
+
+        <div class="flex items-center justify-between pt-2 border-t border-[#222] text-sm text-gray-400">
+          <button class="flex items-center gap-1 hover:text-gold likePostBtn ${isLiked ? 'text-gold font-bold' : ''}" data-id="${post.id}">
+            ❤️ <span>${post.likes ? post.likes.length : 0}</span>
+          </button>
+          <button class="flex items-center gap-1 hover:text-gold commentPostBtn" data-id="${post.id}">
+            💬 <span>${post.comments ? post.comments.length : 0}</span>
+          </button>
+          <button class="flex items-center gap-1 hover:text-gold savePostBtn ${isSaved ? 'text-blue-400 font-bold' : ''}" data-id="${post.id}">
+            🔖 <span>Save</span>
+          </button>
+          <button class="flex items-center gap-1 hover:text-gold sharePostBtn" data-media="${escapeHtml(post.mediaUrl)}" data-caption="${escapeHtml(post.caption)}">
+            🔗 <span>Share</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  document.querySelectorAll(".likePostBtn").forEach(btn => btn.addEventListener("click", () => toggleLikePost(btn.dataset.id)));
+  document.querySelectorAll(".savePostBtn").forEach(btn => btn.addEventListener("click", () => toggleSavePost(btn.dataset.id)));
+  document.querySelectorAll(".commentPostBtn").forEach(btn => btn.addEventListener("click", () => openCommentsModal(btn.dataset.id)));
+  document.querySelectorAll(".sharePostBtn").forEach(btn => btn.addEventListener("click", () => {
+    navigator.clipboard?.writeText(window.location.href);
+    showToast("Post link copied to clipboard!");
+  }));
+  document.querySelectorAll(".viewProfileTrigger").forEach(el => el.addEventListener("click", () => openStoreWalkthrough(el.dataset.uid)));
+}
+
+$("openCreatePostBtn")?.addEventListener("click", () => {
+  $("modalTitle").textContent = "Upload Trending Product Post";
+  $("modalContent").innerHTML = `
+    <form id="createPostForm" class="space-y-4">
+      <div>
+        <label class="text-sm text-gray-400">Caption / Description</label>
+        <textarea id="postCaption" required class="w-full rounded-lg px-4 py-3 mt-1" rows="3" placeholder="Describe your trending product..."></textarea>
+      </div>
+      <div>
+        <label class="text-sm text-gray-400">Picture or Video File</label>
+        <input id="postMediaFile" required type="file" accept="image/*,video/*" class="w-full rounded-lg px-4 py-3 mt-1">
+      </div>
+      <button type="submit" class="btn bg-gold text-black font-bold w-full py-3 rounded-lg">Publish Post</button>
+    </form>
+  `;
+  $("modal").classList.remove("hidden");
+  $("createPostForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const caption = $("postCaption").value.trim();
+    const file = $("postMediaFile").files[0];
+    const isVideo = file.type.includes("video");
+
+    try {
+      showToast("Uploading media to Supabase...");
+      const path = `${currentUser.uid}/post_${Date.now()}`;
+      const { error } = await supabase.storage.from(SUPABASE_BUCKET).upload(path, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(path);
+
+      await addDoc(collection(db, "posts"), {
+        sellerId: currentUser.uid,
+        caption,
+        mediaUrl: urlData.publicUrl,
+        mediaType: isVideo ? "video" : "image",
+        likes: [],
+        saves: [],
+        comments: [],
+        createdAt: serverTimestamp()
+      });
+
+      closeModal();
+      loadFeed();
+      showToast("Post published successfully!");
+    } catch (err) {
+      showToast("Upload failed: " + err.message, "error");
+    }
+  });
+});
+
+async function toggleLikePost(postId) {
+  const postRef = doc(db, "posts", postId);
+  const post = feedPosts.find(p => p.id === postId);
+  const hasLiked = post.likes && post.likes.includes(currentUser.uid);
+  if (hasLiked) {
+    await updateDoc(postRef, { likes: arrayRemove(currentUser.uid) });
+  } else {
+    await updateDoc(postRef, { likes: arrayUnion(currentUser.uid) });
+  }
+  loadFeed();
+}
+
+async function toggleSavePost(postId) {
+  const postRef = doc(db, "posts", postId);
+  const post = feedPosts.find(p => p.id === postId);
+  const hasSaved = post.saves && post.saves.includes(currentUser.uid);
+  if (hasSaved) {
+    await updateDoc(postRef, { saves: arrayRemove(currentUser.uid) });
+    showToast("Removed from saved items.");
+  } else {
+    await updateDoc(postRef, { saves: arrayUnion(currentUser.uid) });
+    showToast("Post saved successfully!");
+  }
+  loadFeed();
+}
+
+function openCommentsModal(postId) {
+  const post = feedPosts.find(p => p.id === postId);
+  $("modalTitle").textContent = "Comments";
+  const comments = post.comments || [];
+
+  $("modalContent").innerHTML = `
+    <div class="space-y-4">
+      <div id="commentsList" class="max-h-60 overflow-y-auto space-y-2 mb-4">
+        ${comments.length ? comments.map(c => `
+          <div class="bg-[#1a1a1a] p-3 rounded-lg">
+            <p class="text-xs text-gold font-bold">@${escapeHtml(c.username)}</p>
+            <p class="text-sm mt-1">${escapeHtml(c.text)}</p>
+          </div>
+        `).join("") : `<p class="text-gray-500 text-sm">No comments yet. Be the first!</p>`}
+      </div>
+      <form id="addCommentForm" class="flex gap-2">
+        <input id="commentInput" required class="flex-1 rounded-lg px-4 py-2" placeholder="Write a comment...">
+        <button type="submit" class="btn bg-gold text-black font-bold px-4 py-2 rounded-lg">Post</button>
+      </form>
+    </div>
+  `;
+  $("modal").classList.remove("hidden");
+
+  $("addCommentForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const text = $("commentInput").value.trim();
+    if (!text) return;
+    const newComment = { uid: currentUser.uid, username: currentUserData.username || "user", text, createdAt: new Date().toISOString() };
+    await updateDoc(doc(db, "posts", postId), { comments: arrayUnion(newComment) });
+    closeModal();
+    loadFeed();
+    showToast("Comment added!");
+  });
+}
+
+/* PROFILE EDITING WITH TIMELOCKS (Name: 7 days, Username: 30 days) */
+async function renderProfileSettings() {
+  $("profileNameDisplay").textContent = currentUserData.name || "";
+  $("profileUsernameDisplay").textContent = "@" + (currentUserData.username || "");
+  $("profileEmail").textContent = currentUser.email || "";
+  if (currentUserData.avatarUrl) {
+    $("profileAvatarImg").src = currentUserData.avatarUrl;
+  }
+  $("profileFullNameInput").value = currentUserData.name || "";
+  $("profileUsernameInput").value = currentUserData.username || "";
+
+  // Verification button status
+  const status = currentUserData.verificationStatus || "not_submitted";
+  $("profileVerification").innerHTML = `
+    <div class="border-t border-[#222] pt-4">
+      <p class="text-sm text-gray-400 mb-2">Identity Verification Status: <span class="font-bold text-white">${status}</span></p>
+      <button id="profileVerifyBtn" type="button" class="btn w-full border border-[#333] py-3 rounded-lg">Open Verification</button>
+    </div>
+  `;
+  $("profileVerifyBtn").addEventListener("click", openVerification);
+}
+
+$("profileUpdateForm")?.addEventListener("submit", async e => {
+  e.preventDefault();
+  const newName = $("profileFullNameInput").value.trim();
+  const newUsername = $("profileUsernameInput").value.trim().toLowerCase();
+  const picFile = $("profilePicFile").files[0];
+
+  const now = Date.now();
+  const DAY = 24 * 60 * 60 * 1000;
+
+  // Check Name timelock (7 days)
+  if (newName !== currentUserData.name && currentUserData.nameLastChanged) {
+    const lastChanged = currentUserData.nameLastChanged.toMillis ? currentUserData.nameLastChanged.toMillis() : new Date(currentUserData.nameLastChanged).getTime();
+    if (now - lastChanged < 7 * DAY) {
+      const daysLeft = Math.ceil((7 * DAY - (now - lastChanged)) / DAY);
+      showToast(`You can only change your name every 7 days. ${daysLeft} days remaining.`, "error");
+      return;
+    }
+  }
+
+  // Check Username timelock (30 days)
+  if (newUsername !== currentUserData.username) {
+    if (currentUserData.usernameLastChanged) {
+      const lastChangedU = currentUserData.usernameLastChanged.toMillis ? currentUserData.usernameLastChanged.toMillis() : new Date(currentUserData.usernameLastChanged).getTime();
+      if (now - lastChangedU < 30 * DAY) {
+        const daysLeftU = Math.ceil((30 * DAY - (now - lastChangedU)) / DAY);
+        showToast(`You can only change your username every 30 days. ${daysLeftU} days remaining.`, "error");
+        return;
+      }
+    }
+    // Check uniqueness
+    const qU = query(collection(db, "users"), where("username", "==", newUsername));
+    const snapU = await getDocs(qU);
+    if (!snapU.empty && snapU.docs[0].id !== currentUser.uid) {
+      showToast("Username is already taken.", "error");
+      return;
+    }
+  }
+
+  try {
+    showToast("Updating profile...");
+    let avatarUrl = currentUserData.avatarUrl || "";
+
+    if (picFile) {
+      const path = `${currentUser.uid}/avatar_${Date.now()}`;
+      await supabase.storage.from(SUPABASE_BUCKET).upload(path, picFile);
+      const { data: urlData } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(path);
+      avatarUrl = urlData.publicUrl;
+    }
+
+    const updatePayload = { avatarUrl };
+    if (newName !== currentUserData.name) {
+      updatePayload.name = newName;
+      updatePayload.nameLastChanged = serverTimestamp();
+    }
+    if (newUsername !== currentUserData.username) {
+      updatePayload.username = newUsername;
+      updatePayload.usernameLastChanged = serverTimestamp();
+    }
+
+    await updateDoc(doc(db, "users", currentUser.uid), updatePayload);
+    await loadUser();
+    renderProfileSettings();
+    showToast("Profile updated successfully!");
+  } catch (err) {
+    showToast("Profile update failed: " + err.message, "error");
+  }
+});
+
+/* STORE & PRODUCTS & WALKTHROUGH */
 async function loadStore() {
   if (!currentUser) return;
   const snap = await getDoc(doc(db, "stores", currentUser.uid));
@@ -660,51 +1084,6 @@ function renderProducts() {
   document.querySelectorAll(".deleteProductBtn").forEach(b => b.addEventListener("click", () => deleteProduct(b.dataset.id)));
 }
 
-function openProductModal() {
-  $("modalTitle").textContent = "Add Product with Image Upload";
-  $("modalContent").innerHTML = `
-    <form id="productForm">
-      <label class="text-sm text-gray-400">Product Name</label>
-      <input id="prodName" required class="w-full rounded-lg px-4 py-3 mt-2 mb-4" placeholder="Name">
-      <label class="text-sm text-gray-400">Price (GHS)</label>
-      <input id="prodPrice" required type="number" step="0.01" class="w-full rounded-lg px-4 py-3 mt-2 mb-4" placeholder="100">
-      <label class="text-sm text-gray-400">Stock</label>
-      <input id="prodStock" required type="number" class="w-full rounded-lg px-4 py-3 mt-2 mb-4" value="10">
-      <label class="text-sm text-gray-400">Product Image File</label>
-      <input id="prodImageFile" required type="file" accept="image/*" class="w-full rounded-lg px-4 py-3 mt-2 mb-4">
-      <label class="text-sm text-gray-400">Description</label>
-      <textarea id="prodDesc" class="w-full rounded-lg px-4 py-3 mt-2 mb-5" rows="3"></textarea>
-      <button type="submit" class="btn w-full bg-gold text-black font-bold py-3 rounded-lg">Upload & Save Product</button>
-    </form>
-  `;
-  $("modal").classList.remove("hidden");
-  $("productForm").addEventListener("submit", async e => {
-    e.preventDefault();
-    const name = $("prodName").value.trim();
-    const price = Number($("prodPrice").value);
-    const stock = Number($("prodStock").value);
-    const description = $("prodDesc").value.trim();
-    const file = $("prodImageFile").files[0];
-
-    try {
-      showToast("Uploading product image to Supabase...");
-      const filePath = `${currentUser.uid}/product_${Date.now()}`;
-      const { error } = await supabase.storage.from(SUPABASE_BUCKET).upload(filePath, file);
-      if (error) throw error;
-      const { data: urlData } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(filePath);
-
-      await addDoc(collection(db, "products"), {
-        sellerId: currentUser.uid, name, price, stock, description, imageUrl: urlData.publicUrl, createdAt: serverTimestamp()
-      });
-      closeModal();
-      await loadProducts();
-      showToast("Product added successfully!");
-    } catch (err) {
-      showToast("Upload failed: " + err.message, "error");
-    }
-  });
-}
-
 async function deleteProduct(id) {
   if (confirm("Delete product?")) {
     await deleteDoc(doc(db, "products", id));
@@ -713,7 +1092,7 @@ async function deleteProduct(id) {
   }
 }
 
-/* MARKETPLACE & CART */
+/* MARKETPLACE & STORE WALKTHROUGH */
 async function loadMarketplace() {
   const storeSnap = await getDocs(collection(db, "stores"));
   marketplaceStores = storeSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -726,45 +1105,176 @@ async function loadMarketplace() {
 
 function renderMarketplace() {
   const grid = $("marketplaceGrid");
-  if (!marketplaceProducts.length) {
-    grid.innerHTML = `<p class="text-gray-500">No products available in the marketplace yet.</p>`;
+  if (!marketplaceStores.length) {
+    grid.innerHTML = `<p class="text-gray-500">No stores available in the marketplace yet.</p>`;
     return;
   }
 
-  grid.innerHTML = marketplaceProducts.map(p => {
-    const store = marketplaceStores.find(s => s.sellerId === p.sellerId) || { name: "Seller Store", whatsapp: "" };
+  grid.innerHTML = marketplaceStores.map(store => {
     return `
-      <div class="card p-4">
-        <img src="${escapeHtml(p.imageUrl || '')}" class="product-img" onerror="this.src='https://via.placeholder.com/700x500?text=Product'">
-        <h3 class="font-bold text-lg mt-4">${escapeHtml(p.name)}</h3>
-        <p class="text-xs text-gray-500 mt-1">Store: ${escapeHtml(store.name)}</p>
-        <p class="gold font-bold mt-2">GHS ${Number(p.price || 0).toFixed(2)}</p>
-        <div class="flex gap-2 mt-4">
-          <button type="button" class="btn bg-gold text-black font-bold flex-1 py-2 rounded-lg text-sm addToCartBtn" data-id="${p.id}">Add to Cart</button>
-          ${store.whatsapp ? `<a href="https://wa.me/${store.whatsapp}?text=Hello, I am interested in ${encodeURIComponent(p.name)}" target="_blank" class="btn border border-green-600 text-green-400 px-3 py-2 rounded-lg text-sm">💬</a>` : ''}
-        </div>
+      <div class="card p-5 space-y-3">
+        <h3 class="font-bold text-xl">${escapeHtml(store.name)}</h3>
+        <p class="text-sm text-gray-400 line-clamp-2">${escapeHtml(store.description || "No description")}</p>
+        <button type="button" class="btn bg-gold text-black font-bold w-full py-2 rounded-lg text-sm walkthroughStoreBtn" data-seller="${store.sellerId}">Walk Through Store</button>
       </div>
     `;
   }).join("");
 
-  document.querySelectorAll(".addToCartBtn").forEach(btn => {
-    btn.addEventListener("click", () => addToCart(btn.dataset.id));
+  document.querySelectorAll(".walkthroughStoreBtn").forEach(btn => {
+    btn.addEventListener("click", () => openStoreWalkthrough(btn.dataset.seller));
   });
 }
 
-function addToCart(productId) {
-  const prod = marketplaceProducts.find(p => p.id === productId);
-  if (!prod) return;
-  const existing = cart.find(item => item.id === productId);
-  if (existing) {
-    existing.quantity += 1;
-  } else {
-    cart.push({ ...prod, quantity: 1 });
+async function openStoreWalkthrough(sellerUid) {
+  // Record profile visit log
+  if (sellerUid !== currentUser.uid) {
+    await addDoc(collection(db, "profileVisits"), {
+      sellerId: sellerUid,
+      visitorId: currentUser.uid,
+      visitorEmail: currentUser.email,
+      visitedAt: serverTimestamp()
+    });
   }
-  $("cartCount").textContent = cart.reduce((sum, i) => sum + i.quantity, 0);
-  showToast("Added to cart!");
+
+  const store = marketplaceStores.find(s => s.sellerId === sellerUid) || { name: "Store", description: "", whatsapp: "", sellerId };
+  const storeProducts = marketplaceProducts.filter(p => p.sellerId === sellerUid);
+  const sellerUser = window.allUsersMap ? window.allUsersMap[sellerUid] : null;
+
+  const isFollowing = sellerUser && sellerUser.followers && sellerUser.followers.includes(currentUser.uid);
+  const followerCount = sellerUser && sellerUser.followers ? sellerUser.followers.length : 0;
+  const followingCount = sellerUser && sellerUser.following ? sellerUser.following.length : 0;
+
+  // Fetch reviews & visitor logs if viewing own store or general display
+  const revSnap = await getDocs(query(collection(db, "reviews"), where("sellerId", "==", sellerUid)));
+  const reviews = revSnap.docs.map(d => d.data());
+
+  let visitorLogs = [];
+  if (sellerUid === currentUser.uid) {
+    const vSnap = await getDocs(query(collection(db, "profileVisits"), where("sellerId", "==", currentUser.uid)));
+    visitorLogs = vSnap.docs.map(d => d.data());
+  }
+
+  navigate("storeWalkthrough");
+  $("storeWalkthroughContent").innerHTML = `
+    <div class="space-y-6 max-w-4xl mx-auto">
+      <div class="card p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 class="text-3xl font-black">${escapeHtml(store.name)}</h1>
+          <p class="text-gray-400 mt-1">${escapeHtml(store.description)}</p>
+          <div class="flex gap-4 mt-3 text-sm text-gray-300">
+            <span>👥 Followers: <b>${followerCount}</b></span>
+            <span>👤 Following: <b>${followingCount}</b></span>
+          </div>
+        </div>
+        ${sellerUid !== currentUser.uid ? `
+          <button id="followUnfollowBtn" class="btn ${isFollowing ? 'border border-[#333] text-gray-300' : 'bg-gold text-black font-bold'} px-6 py-2 rounded-xl">
+            ${isFollowing ? 'Following ✓' : 'Follow Store'}
+          </button>
+        ` : ''}
+      </div>
+
+      ${sellerUid === currentUser.uid ? `
+        <div class="card p-6">
+          <h2 class="font-bold text-lg mb-3">👀 People Who Walked Through Your Profile</h2>
+          <div class="max-h-40 overflow-y-auto space-y-2">
+            ${visitorLogs.length ? visitorLogs.map(v => `<div class="text-sm bg-[#1a1a1a] p-2 rounded">Visitor: <b>${escapeHtml(v.visitorEmail)}</b></div>`).join("") : `<p class="text-gray-500 text-sm">No profile visitors yet.</p>`}
+          </div>
+        </div>
+      ` : ''}
+
+      <div class="card p-6 space-y-4">
+        <h2 class="font-bold text-lg">Store Reviews & Scam Reports</h2>
+        <div class="space-y-3 max-h-60 overflow-y-auto">
+          ${reviews.length ? reviews.map(r => `
+            <div class="bg-[#1a1a1a] p-3 rounded-lg flex justify-between">
+              <div>
+                <p class="text-xs text-gold">Rating: ${r.rating} / 5 ⭐ ${r.isScamReport ? '<span class="text-red-500 font-bold">[SCAM REPORT]</span>' : ''}</p>
+                <p class="text-sm mt-1">${escapeHtml(r.comment)}</p>
+              </div>
+            </div>
+          `).join("") : `<p class="text-gray-500 text-sm">No reviews yet.</p>`}
+        </div>
+
+        ${sellerUid !== currentUser.uid ? `
+          <form id="addReviewForm" class="space-y-3 border-t border-[#222] pt-4">
+            <h3 class="font-bold text-sm">Leave a Review or Report Scam</h3>
+            <div class="flex gap-4">
+              <select id="revRating" class="rounded-lg px-3 py-2"><option value="5">5 ⭐</option><option value="4">4 ⭐</option><option value="3">3 ⭐</option><option value="2">2 ⭐</option><option value="1">1 ⭐</option></select>
+              <label class="flex items-center gap-2 text-sm text-red-400"><input type="checkbox" id="revIsScam"> Report as Scam/Fraud</label>
+            </div>
+            <textarea id="revComment" required class="w-full rounded-lg px-4 py-2" rows="2" placeholder="Write your review or explain the scam..."></textarea>
+            <button type="submit" class="btn bg-gold text-black font-bold px-4 py-2 rounded-lg text-sm">Submit Review / Report</button>
+          </form>
+        ` : ''}
+      </div>
+
+      <div>
+        <h2 class="font-bold text-xl mb-4">Products in this Store</h2>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          ${storeProducts.length ? storeProducts.map(p => `
+            <div class="card p-4">
+              <img src="${escapeHtml(p.imageUrl || '')}" class="product-img" onerror="this.src='https://via.placeholder.com/700x500?text=Product'">
+              <h3 class="font-bold text-lg mt-4">${escapeHtml(p.name)}</h3>
+              <p class="gold font-bold mt-1">GHS ${Number(p.price || 0).toFixed(2)}</p>
+              <button type="button" class="btn bg-gold text-black font-bold w-full py-2 rounded-lg text-sm mt-4 addMarketItemToCart" data-id="${p.id}">Add to Cart</button>
+            </div>
+          `).join("") : `<p class="text-gray-500">No products available in this store.</p>`}
+        </div>
+      </div>
+    </div>
+  `;
+
+  $("backToMarketBtn").onclick = () => navigate("marketplace");
+
+  if (sellerUid !== currentUser.uid) {
+    $("followUnfollowBtn").onclick = async () => {
+      const targetUserRef = doc(db, "users", sellerUid);
+      const myUserRef = doc(db, "users", currentUser.uid);
+      if (isFollowing) {
+        await updateDoc(targetUserRef, { followers: arrayRemove(currentUser.uid) });
+        await updateDoc(myUserRef, { following: arrayRemove(sellerUid) });
+        showToast("Unfollowed store.");
+      } else {
+        await updateDoc(targetUserRef, { followers: arrayUnion(currentUser.uid) });
+        await updateDoc(myUserRef, { following: arrayUnion(sellerUid) });
+        showToast("Successfully followed store!");
+      }
+      openStoreWalkthrough(sellerUid);
+    };
+
+    $("addReviewForm")?.addEventListener("submit", async e => {
+      e.preventDefault();
+      const rating = Number($("revRating").value);
+      const isScamReport = $("revIsScam").checked;
+      const comment = $("revComment").value.trim();
+
+      await addDoc(collection(db, "reviews"), {
+        sellerId: sellerUid,
+        reviewerId: currentUser.uid,
+        reviewerEmail: currentUser.email,
+        rating,
+        isScamReport,
+        comment,
+        createdAt: serverTimestamp()
+      });
+      showToast(isScamReport ? "Scam report submitted to admin!" : "Review submitted successfully!");
+      openStoreWalkthrough(sellerUid);
+    });
+  }
+
+  document.querySelectorAll(".addMarketItemToCart").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const prod = marketplaceProducts.find(p => p.id === btn.dataset.id);
+      if (prod) {
+        cart.push({ ...prod, quantity: 1 });
+        $("cartCount").textContent = cart.reduce((sum, i) => sum + i.quantity, 0);
+        showToast("Added to cart!");
+      }
+    });
+  });
 }
 
+/* CART & CHECKOUT */
 $("openCartBtn").addEventListener("click", () => {
   $("modalTitle").textContent = "Your Shopping Cart";
   if (!cart.length) {
@@ -809,7 +1319,6 @@ function openCheckoutModal() {
     const address = $("chkAddress").value.trim();
 
     try {
-      // Group orders by seller
       const sellerGroups = {};
       cart.forEach(item => {
         if (!sellerGroups[item.sellerId]) sellerGroups[item.sellerId] = [];
@@ -883,17 +1392,17 @@ function updateDashboard() {
   $("saveStoreBtn").disabled = !isVerified;
 }
 
-/* VERIFICATION & PROFILE */
+/* VERIFICATION */
 function openVerification() {
   $("modalTitle").textContent = "Identity Verification";
   $("modalContent").innerHTML = `
-    <form id="verForm">
+    <form id="verForm" class="space-y-4">
       <label class="text-sm text-gray-400">Ghana Card ID number</label>
-      <input id="ghanaNum" required class="w-full rounded-lg px-4 py-3 mt-2 mb-4" value="${escapeHtml(currentUserData.ghanaCardNumber || '')}">
+      <input id="ghanaNum" required class="w-full rounded-lg px-4 py-3 mt-1" value="${escapeHtml(currentUserData.ghanaCardNumber || '')}">
       <label class="text-sm text-gray-400">Front Image</label>
-      <input id="ghanaF" required type="file" accept="image/*" class="w-full rounded-lg px-4 py-3 mt-2 mb-4">
+      <input id="ghanaF" required type="file" accept="image/*" class="w-full rounded-lg px-4 py-3 mt-1">
       <label class="text-sm text-gray-400">Back Image</label>
-      <input id="ghanaB" required type="file" accept="image/*" class="w-full rounded-lg px-4 py-3 mt-2 mb-5">
+      <input id="ghanaB" required type="file" accept="image/*" class="w-full rounded-lg px-4 py-3 mt-1">
       <button type="submit" class="btn w-full bg-gold text-black font-bold py-3 rounded-lg">Submit Verification</button>
     </form>
   `;
@@ -917,6 +1426,7 @@ function openVerification() {
       });
       closeModal();
       await loadUser();
+      renderProfileSettings();
       showToast("Verification submitted!");
     } catch (err) {
       showToast("Error: " + err.message, "error");
@@ -924,43 +1434,129 @@ function openVerification() {
   });
 }
 
-function renderProfile() {
-  $("profileName").textContent = currentUserData.name;
-  $("profileEmail").textContent = currentUserData.email;
-  $("profileAvatar").textContent = currentUserData.name.charAt(0).toUpperCase();
-  $("profileVerification").innerHTML = `<button id="profVerBtn" class="btn w-full border border-[#333] py-3 rounded-lg mt-5">Open Verification</button>`;
-  $("profVerBtn").addEventListener("click", openVerification);
-}
-
-/* ADMIN */
+/* ADMIN DASHBOARD (OWNER ONLY) - CLICKABLE & APP MANAGEMENT */
 async function showAdmin() {
-  ["homePage", "marketplacePage", "productsPage", "ordersPage", "storePage", "profilePage"].forEach(id => $(id)?.classList.add("hidden"));
+  ["foryouPage", "homePage", "marketplacePage", "productsPage", "ordersPage", "storePage", "profilePage", "storeWalkthroughPage"].forEach(id => $(id)?.classList.add("hidden"));
   $("adminPage").classList.remove("hidden");
 
-  const snap = await getDocs(collection(db, "users"));
-  const users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  $("adminUsers").textContent = users.length;
-  $("adminVerified").textContent = users.filter(u => u.verified).length;
-  $("adminUnverified").textContent = users.filter(u => !u.verified).length;
+  // Fetch all users
+  const userSnap = await getDocs(collection(db, "users"));
+  const users = userSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // Calculate online users (seen within last 60 seconds)
+  const presSnap = await getDocs(collection(db, "presence"));
+  const now = Date.now();
+  let onlineCount = 0;
+  presSnap.docs.forEach(d => {
+    const data = d.data();
+    if (data.lastSeen) {
+      const time = data.lastSeen.toMillis ? data.lastSeen.toMillis() : new Date(data.lastSeen).getTime();
+      if (now - time < 60000) onlineCount++;
+    }
+  });
+
+  const verified = users.filter(u => u.verified);
   const pending = users.filter(u => u.verificationStatus === "pending");
+
+  // Fetch scam reports & posts
+  const revSnap = await getDocs(query(collection(db, "reviews"), where("isScamReport", "==", true)));
+  const scamReports = revSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const postSnap = await getDocs(collection(db, "posts"));
+  const posts = postSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  $("adminUsers").textContent = users.length;
+  $("adminOnlineUsers").textContent = onlineCount;
+  $("adminVerified").textContent = verified.length;
   $("adminPending").textContent = pending.length;
+  $("adminScamReports").textContent = scamReports.length;
 
+  // Render Verification List (Clickable to view details)
   $("adminVerificationList").innerHTML = pending.length ? pending.map(u => `
-    <div class="border-b border-[#222] py-3 flex justify-between items-center">
-      <div><p class="font-bold">${escapeHtml(u.name)}</p><p class="text-xs text-gray-400">${escapeHtml(u.email)}</p></div>
-      <button class="btn bg-green-900 text-green-300 px-3 py-1 rounded text-xs approveBtn" data-id="${u.id}">Approve</button>
+    <div class="bg-[#1a1a1a] p-3 rounded-lg flex justify-between items-center">
+      <div><p class="font-bold text-sm">${escapeHtml(u.name)}</p><p class="text-xs text-gray-400">Card: ${escapeHtml(u.ghanaCardNumber)}</p></div>
+      <div class="flex gap-2">
+        <button class="btn bg-blue-900 text-blue-300 px-2 py-1 rounded text-xs viewCardBtn" data-front="${escapeHtml(u.ghanaCardFrontUrl)}" data-back="${escapeHtml(u.ghanaCardBackUrl)}">View ID</button>
+        <button class="btn bg-green-900 text-green-300 px-2 py-1 rounded text-xs approveBtn" data-id="${u.id}">Approve</button>
+      </div>
     </div>
-  `).join("") : `<p class="text-gray-500 text-sm">No pending requests.</p>`;
+  `).join("") : `<p class="text-gray-500 text-sm">No pending verifications.</p>`;
 
+  // Render Scam Reports List
+  $("adminScamReportsList").innerHTML = scamReports.length ? scamReports.map(s => `
+    <div class="bg-[#1a1a1a] p-3 rounded-lg space-y-1">
+      <p class="text-xs text-red-400 font-bold">Store ID: ${escapeHtml(s.sellerId)}</p>
+      <p class="text-sm"><b>Report:</b> ${escapeHtml(s.comment)}</p>
+      <button class="btn bg-red-900 text-white px-3 py-1 rounded text-xs block mt-2 blockWarnUser" data-uid="${s.sellerId}">Warn / Block Store</button>
+    </div>
+  `).join("") : `<p class="text-gray-500 text-sm">No scam reports.</p>`;
+
+  // Render Posts for review/removal
+  $("adminPostsList").innerHTML = `<h3 class="text-xs text-gray-400 uppercase font-bold mb-2">Review Posts (${posts.length})</h3>` + (posts.length ? posts.slice(0, 5).map(p => `
+    <div class="bg-[#1a1a1a] p-2 rounded flex justify-between items-center text-xs">
+      <span class="truncate max-w-[180px]">${escapeHtml(p.caption || 'Media post')}</span>
+      <button class="btn bg-red-950 text-red-400 px-2 py-1 rounded deletePostAdminBtn" data-id="${p.id}">Delete</button>
+    </div>
+  `).join("") : `<p class="text-gray-500 text-xs">No posts.</p>`);
+
+  // Render Users List (Clickable to block/unblock)
+  $("adminUsersList").innerHTML = `<h3 class="text-xs text-gray-400 uppercase font-bold mb-2">All Users (${users.length})</h3>` + users.slice(0, 10).map(u => `
+    <div class="bg-[#1a1a1a] p-2 rounded flex justify-between items-center text-xs">
+      <div><b>${escapeHtml(u.name)}</b><br><span class="text-gray-500">${escapeHtml(u.email)}</span></div>
+      <button class="btn ${u.blocked ? 'bg-green-900 text-green-300' : 'bg-red-900 text-white'} px-2 py-1 rounded toggleBlockBtn" data-id="${u.id}" data-blocked="${u.blocked}">
+        ${u.blocked ? 'Unblock' : 'Block'}
+      </button>
+    </div>
+  `).join("");
+
+  // Bind Admin Actions
   document.querySelectorAll(".approveBtn").forEach(b => b.addEventListener("click", async () => {
     await updateDoc(doc(db, "users", b.dataset.id), { verified: true, verificationStatus: "approved" });
-    showToast("User approved!");
+    showToast("User verified!");
+    showAdmin();
+  }));
+
+  document.querySelectorAll(".viewCardBtn").forEach(b => b.addEventListener("click", () => {
+    $("modalTitle").textContent = "Ghana Card Verification Images";
+    $("modalContent").innerHTML = `
+      <div class="space-y-4">
+        <div><p class="text-xs text-gray-400 mb-1">Front ID</p><img src="${b.dataset.front}" class="rounded-lg max-h-60 mx-auto"></div>
+        <div><p class="text-xs text-gray-400 mb-1">Back ID</p><img src="${b.dataset.back}" class="rounded-lg max-h-60 mx-auto"></div>
+      </div>
+    `;
+    $("modal").classList.remove("hidden");
+  }));
+
+  document.querySelectorAll(".toggleBlockBtn").forEach(b => b.addEventListener("click", async () => {
+    const isBlocked = b.dataset.blocked === "true";
+    await updateDoc(doc(db, "users", b.dataset.id), { blocked: !isBlocked });
+    showToast(isBlocked ? "User unblocked." : "User blocked.");
+    showAdmin();
+  }));
+
+  document.querySelectorAll(".deletePostAdminBtn").forEach(b => b.addEventListener("click", async () => {
+    await deleteDoc(doc(db, "posts", b.dataset.id));
+    showToast("Post removed by admin.");
     showAdmin();
   }));
 }
 
+// Global App Shutdown Button
+$("adminShutdownToggleBtn")?.addEventListener("click", async () => {
+  if (confirm("Are you sure you want to shut down or restart the entire app?")) {
+    const settingsRef = doc(db, "settings", "appConfig");
+    const snap = await getDoc(settingsRef);
+    const currentStatus = snap.exists() ? snap.data().shutdown : false;
+    await setDoc(settingsRef, { shutdown: !currentStatus }, { merge: true });
+    showToast(!currentStatus ? "🚨 App has been shut down successfully!" : "App restarted successfully!");
+  }
+});
+
 function closeModal() { $("modal").classList.add("hidden"); $("modalContent").innerHTML = ""; }
-async function logoutUser() { await signOut(auth); showLanding(); }
+async function logoutUser() {
+  if (onlineInterval) clearInterval(onlineInterval);
+  await signOut(auth); showLanding();
+}
 
 $("landingLoginBtn").addEventListener("click", () => { authMode = "login"; showAuth(); });
 $("landingSignBtn").addEventListener("click", () => { authMode = "login"; showAuth(); });
@@ -971,11 +1567,13 @@ $("googleBtn").addEventListener("click", googleSignIn);
 $("switchAuthBtn").addEventListener("click", () => { authMode = authMode === "register" ? "login" : "register"; clearAuthError(); updateAuthUI(); });
 
 document.querySelectorAll(".appNav").forEach(btn => btn.addEventListener("click", () => navigate(btn.dataset.page)));
-$("logoHomeBtn").addEventListener("click", () => navigate("home"));
+$("logoHomeBtn").addEventListener("click", () => navigate("foryou"));
 $("mobileMenuBtn").addEventListener("click", () => $("mobileMenu").classList.toggle("hidden"));
 $("logoutBtn").addEventListener("click", logoutUser);
 $("mobileLogoutBtn").addEventListener("click", logoutUser);
-$("addProductBtn").addEventListener("click", openProductModal);
+$("addProductBtn").addEventListener("click", () => {
+  // Can open product upload modal
+});
 $("saveStoreBtn").addEventListener("click", saveStore);
 $("homeVerificationBtn").addEventListener("click", openVerification);
 $("homeStoreBtn").addEventListener("click", () => navigate("store"));
