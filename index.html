@@ -18,6 +18,42 @@
 button,a,input,textarea,select{position:relative;z-index:1}
 
 .btn{transition:.18s ease;cursor:pointer}.btn:active{transform:scale(.98)}.btn-primary{background:#f5b942;color:#080808;font-weight:800}.btn-secondary{background:#171717;border:1px solid #333}.btn-danger{border:1px solid #7f1d1d;color:#fca5a5}.field{outline:none;transition:border-color .18s,box-shadow .18s}.field:focus{border-color:#f5b942!important;box-shadow:0 0 0 3px rgba(245,185,66,.08)}.skeleton{background:linear-gradient(90deg,#151515,#202020,#151515);background-size:200% 100%;animation:sh 1.4s infinite}@keyframes sh{to{background-position:-200% 0}}
+
+/* SellerFlow layout polish: keep the application itself fixed to the viewport and give scrolling to the content areas that need it. */
+html,body{height:100%;min-height:100%;overflow:hidden;overscroll-behavior:none}
+body{overflow:hidden}
+#app{height:100dvh;min-height:0!important;max-height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+#app>header{flex:0 0 auto;min-width:0}
+#app>header .max-w-7xl{min-width:0}
+#page{flex:1 1 auto;min-height:0!important;height:auto;max-height:none;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:24px}
+#app>footer{flex:0 0 auto;padding-top:12px!important;padding-bottom:12px!important}
+#page>*{min-width:0;max-width:100%}
+.card,.glass,.policy-hero,.modal-card,.page-selector-card{min-width:0;overflow:hidden}
+.card p,.card h1,.card h2,.card h3,.card h4,.card div,.card span,.card label{overflow-wrap:anywhere;word-break:break-word}
+.grid>*{min-width:0}
+input,select,textarea{max-width:100%;min-width:0}
+select{width:100%;text-overflow:ellipsis}
+textarea{max-width:100%;overflow:auto;resize:vertical}
+#termsEditor{min-height:180px;max-height:360px;overflow-y:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+#notifyMessage{min-height:110px;max-height:240px;overflow-y:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+#notifyUser,#notifyTitle,#notifyType{min-width:0;width:100%}
+#page .space-y-3,#page .space-y-4,#page .space-y-5{min-width:0;max-width:100%}
+#page img,#page video{max-width:100%}
+#page table{display:block;max-width:100%;overflow-x:auto}
+#page pre{max-width:100%;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+/* Keep long admin lists and editor panels inside their cards instead of pushing the app wider/taller. */
+#page .card>.space-y-3,#page .card>.space-y-4{max-height:520px;overflow-y:auto;overflow-x:hidden;padding-right:2px}
+#page .card:has(#termsEditor),#page .card:has(#notifyMessage){overflow:visible}
+#page .card:has(#termsEditor) #termsEditor,#page .card:has(#notifyMessage) #notifyMessage{display:block}
+@media(max-width:767px){
+  #app>header .max-w-7xl{height:auto;min-height:64px;flex-wrap:wrap;padding-top:8px;padding-bottom:8px}
+  #desktopNav{display:none!important}
+  #page{padding-top:14px;padding-left:12px;padding-right:12px}
+  #app>footer{font-size:10px;line-height:1.3}
+  #page .card>.space-y-3,#page .card>.space-y-4{max-height:420px}
+  .modal{padding:8px}
+  .modal-card{max-height:calc(100dvh - 16px);overflow-y:auto}
+}
 </style>
 </head>
 <body>
@@ -666,4 +702,177 @@ init();
   document.addEventListener('click',e=>{const m=e.target.closest('[data-message-user]');if(m)startChat(m.dataset.messageUser)});
 })();
 </script>
-</body></html>
+
+<style id="sf-final-layout-fix">
+/* FINAL APP FRAME: the browser/page never scrolls; only designated inner surfaces do. */
+html,body{width:100%;height:100%;min-height:100%;margin:0;overflow:hidden!important;overscroll-behavior:none!important;touch-action:pan-y}
+body{position:fixed;inset:0}
+#app{position:fixed;inset:0;width:100%;height:100dvh;max-height:100dvh;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column}
+#app>header{position:relative!important;top:auto!important;flex:0 0 auto;z-index:50}
+#page{position:relative!important;flex:1 1 auto!important;width:100%;height:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important;padding-bottom:0!important;overscroll-behavior:none!important}
+#page>.sf-page-scroll{width:100%;height:100%;min-height:0;max-height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:24px 1rem 28px}
+#page>.sf-page-scroll>*{min-width:0;max-width:100%}
+#app>footer{flex:0 0 auto;max-width:none!important;width:100%;padding:10px 16px!important;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#page .grid>*{min-width:0}
+#page .flex>*{min-width:0}
+#page img,#page video,#page iframe{max-width:100%}
+.card,.glass,.policy-hero,.sf-profile-cover,.sf-post-tile,.sf-stat-card{min-width:0;max-width:100%}
+.card{overflow:hidden}
+.card p,.card h1,.card h2,.card h3,.card h4,.card h5,.card div,.card span,.card label,.sf-profile-cover p{overflow-wrap:anywhere;word-break:break-word}
+textarea,input,select{min-width:0;max-width:100%}
+#termsEditor,#notifyMessage{width:100%;max-width:100%;overflow-y:auto;overflow-x:hidden;resize:vertical;overflow-wrap:anywhere;word-break:break-word}
+#notifyMessage{max-height:220px}
+#termsEditor{max-height:330px}
+#page table{max-width:100%;overflow:auto}
+#page pre{max-width:100%;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+.sf-profile-cover{overflow:hidden}
+.sf-profile-tabs{min-width:0;overflow:hidden;position:sticky;top:0;z-index:3;background:#121212}
+.profile-grid{width:100%;min-width:0}
+.sf-post-tile{display:block;border:0;padding:0;min-width:0;isolation:isolate}
+.sf-post-tile>img,.sf-post-tile>video{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.sf-post-tile .sf-tile-meta{pointer-events:none}
+.sf-profile-following-panel{max-height:52vh;overflow:auto}
+.modal-card{min-width:0;max-width:100%;overflow-x:hidden;overflow-y:auto}
+.modal-card img,.modal-card video{max-width:100%;height:auto}
+@media(max-width:640px){#page>.sf-page-scroll{padding:16px 10px 22px}.sf-profile-tabs{overflow-x:auto;white-space:nowrap}.sf-profile-tab{flex:0 0 auto}.sf-post-tile{min-width:0}.modal{padding:8px}.modal-card{max-height:calc(100dvh - 16px)}}
+</style>
+<script id="sf-final-layout-and-profile-fix">
+(function(){
+  /* Keep every rendered page inside one controlled scrolling surface. */
+  function ensurePageScroller(){
+    const page=document.getElementById('page');
+    if(!page || page.dataset.sfScrollerReady==='1')return;
+    if(!page.querySelector(':scope > .sf-page-scroll')){
+      const wrap=document.createElement('div');
+      wrap.className='sf-page-scroll';
+      while(page.firstChild)wrap.appendChild(page.firstChild);
+      page.appendChild(wrap);
+    }
+    page.dataset.sfScrollerReady='1';
+  }
+  const page=document.getElementById('page');
+  if(page){
+    new MutationObserver(()=>{
+      if(page.dataset.sfWrapping==='1')return;
+      page.dataset.sfWrapping='1';
+      requestAnimationFrame(()=>{ensurePageScroller();page.dataset.sfWrapping='0'});
+    }).observe(page,{childList:true});
+    ensurePageScroller();
+  }
+
+  /* Re-render the creator profile with a real Following view and media viewer. */
+  renderProfile=async function(){
+    const p=currentProfile||{};let posts=[];
+    try{
+      const s=await getDocs(query(collection(db,'posts'),where('sellerId','==',currentUser.uid),limit(100)));
+      posts=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.status!=='removed').sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
+    }catch(_){ }
+    const followers=(p.followers||[]).length,following=(p.following||[]).length;
+    const likes=posts.reduce((n,x)=>n+(x.likes||[]).length,0),views=posts.reduce((n,x)=>n+Number(x.views||0),0);
+    const mediaTile=x=>{
+      if(!x.mediaUrl)return `<div class="w-full h-full flex items-center justify-center p-4 text-xs text-center">${esc(x.text||'SellerFlow post')}</div>`;
+      if(String(x.mediaType||'').startsWith('video'))return `<video src="${esc(x.mediaUrl)}" data-media-path="${esc(x.mediaPath||'')} muted playsinline preload="metadata" onerror="window.__sfMediaFallback(this)"></video>`;
+      return `<img src="${esc(x.mediaUrl)}" data-media-path="${esc(x.mediaPath||'')} alt="Post" loading="lazy" onerror="window.__sfMediaFallback(this)">`;
+    };
+    $('page').innerHTML=pageTitle('Profile','Your public creator identity, audience and content.')+`<section class="sf-profile-cover"><div class="relative z-10 p-5 md:p-7"><div class="flex flex-col md:flex-row md:items-end gap-5"><button type="button" id="profilePhotoBtn" class="shrink-0 border-0 bg-transparent">${p.avatarUrl?`<img class="sf-profile-avatar" src="${esc(p.avatarUrl)}" data-media-path="${esc(p.avatarPath||'')}" alt="${esc(p.name||'Profile picture')}" onerror="window.__sfMediaFallback(this)">`:`<div class="sf-profile-avatar flex items-center justify-center text-4xl font-black">${esc((p.name||'?')[0].toUpperCase())}</div>`}</button><div class="flex-1 min-w-0"><div class="flex flex-wrap items-center gap-2"><h2 class="text-3xl font-black">${esc(p.name||'SellerFlow User')}</h2>${verifyBadge(p)}</div><div class="muted mt-1 break-words">@${esc(p.username||'seller')} · ${sfPresenceBadge(p)}</div><p class="text-sm md:text-base mt-3 max-w-2xl">${esc(p.bio||'Tell customers and followers what you create, sell or share.')}</p><div class="flex flex-wrap gap-2 mt-5"><button id="editProfileTop" class="btn btn-primary px-5 py-2.5 rounded-xl">Edit profile</button>${button('＋ Create post','profileCreatePost','border border-[#444] bg-[#171717] text-white')}</div></div></div><div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-7"><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="posts"><div class="text-2xl font-black">${posts.length}</div><div class="muted text-xs mt-1">Posts</div></button><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="views"><div class="text-2xl font-black">${views}</div><div class="muted text-xs mt-1">Views</div></button><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="likes"><div class="text-2xl font-black">${likes}</div><div class="muted text-xs mt-1">Likes</div></button><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="followers"><div class="text-2xl font-black">${followers}</div><div class="muted text-xs mt-1">Followers</div></button></div></div></section><section class="card mt-5"><div class="sf-profile-tabs"><button class="sf-profile-tab active" id="profilePostsTab">Posts</button><button class="sf-profile-tab" id="profileFollowingTab">Following ${following}</button></div><div id="profileContent" class="p-2"><div class="profile-grid">${posts.length?posts.map(x=>`<button type="button" class="sf-post-tile" data-profile-post="${x.id}">${mediaTile(x)}<div class="sf-tile-meta"><span>${x.mediaType?.startsWith('video')?'▶ Video':x.mediaType?.startsWith('image')?'▧ Photo':'Text'}</span><span>♥ ${x.likes?.length||0} · ${x.views||0}</span></div></button>`).join(''):'<div class="col-span-3 p-12 text-center muted">You have not published any posts yet.</div>'}</div></div></section>`;
+
+    $('profileCreatePost').onclick=openPostModal;$('editProfileTop').onclick=sfOpenProfileEditor;
+    $('profilePhotoBtn')?.addEventListener('click',()=>p.avatarUrl&&sfOpenImage(p.avatarUrl,'Profile picture'));
+
+    const openPost=async id=>{
+      try{
+        const s=await getDoc(doc(db,'posts',id));
+        if(!snapshotExists(s))return toast('This post is no longer available.','error');
+        const x=s.data();
+        const media=x.mediaUrl?(String(x.mediaType||'').startsWith('video')?`<video src="${esc(x.mediaUrl)}" data-media-path="${esc(x.mediaPath||'')} class="w-full rounded-2xl bg-black" controls playsinline preload="metadata" onerror="window.__sfMediaFallback(this)"></video>`:`<img src="${esc(x.mediaUrl)}" data-media-path="${esc(x.mediaPath||'')} class="w-full max-h-[70vh] object-contain rounded-2xl bg-black" alt="Post" onerror="window.__sfMediaFallback(this)">`):'<div class="p-10 text-center rounded-2xl bg-[#171717]">Text post</div>';
+        modal(`<div class="min-w-0"><div class="flex items-center justify-between gap-3 mb-4"><div><h2 class="text-xl font-bold">Your post</h2><div class="muted text-xs mt-1">${String(x.mediaType||'text').startsWith('video')?'Video':'Photo/Text'}</div></div><button type="button" data-modal-back>← Back</button></div>${media}<p class="mt-4 whitespace-pre-wrap break-words">${esc(x.text||'')}</p><div class="muted text-sm mt-2">${x.views||0} views · ${(x.likes||[]).length} likes · ${(x.comments||[]).length} comments</div></div>`);
+      }catch(e){toast(errMsg(e),'error')}
+    };
+    document.querySelectorAll('[data-profile-post]').forEach(b=>b.onclick=()=>openPost(b.dataset.profilePost));
+
+    $('profilePostsTab').onclick=()=>{
+      document.querySelectorAll('.sf-profile-tab').forEach(x=>x.classList.remove('active'));$('profilePostsTab').classList.add('active');
+      $('profileContent').innerHTML=`<div class="profile-grid">${posts.length?posts.map(x=>`<button type="button" class="sf-post-tile" data-profile-post="${x.id}">${mediaTile(x)}<div class="sf-tile-meta"><span>${x.mediaType?.startsWith('video')?'▶ Video':x.mediaType?.startsWith('image')?'▧ Photo':'Text'}</span><span>♥ ${x.likes?.length||0} · ${x.views||0}</span></div></button>`).join(''):'<div class="col-span-3 p-12 text-center muted">You have not published any posts yet.</div>'}</div>`;
+      document.querySelectorAll('[data-profile-post]').forEach(b=>b.onclick=()=>openPost(b.dataset.profilePost));
+    };
+    $('profileFollowingTab').onclick=()=>{
+      document.querySelectorAll('.sf-profile-tab').forEach(x=>x.classList.remove('active'));$('profileFollowingTab').classList.add('active');
+      const list=(p.following||[]).map(uid=>sellerProfile(uid)).filter(u=>u&&u.uid);
+      $('profileContent').innerHTML=`<div class="sf-profile-following-panel"><div class="grid sm:grid-cols-2 gap-3 p-2">${list.length?list.map(u=>`<button type="button" class="sf-result w-full text-left" data-following-user="${u.uid}">${avatar(u,'w-12 h-12 rounded-full object-cover bg-[#222]')}<span class="flex-1 min-w-0"><b class="block truncate">${esc(u.name||u.username||'SellerFlow user')}</b><span class="muted text-xs block truncate">@${esc(u.username||'seller')}</span><span class="text-xs mt-1">${sfPresenceBadge(u)}</span></span></button>`).join(''):'<div class="sm:col-span-2 p-12 text-center muted">You are not following anyone yet.</div>'}</div></div>`;
+      document.querySelectorAll('[data-following-user]').forEach(b=>b.onclick=()=>{closeModal();openSellerProfile?openSellerProfile(b.dataset.followingUser):startChat(b.dataset.followingUser)});
+    };
+
+    document.querySelectorAll('[data-profile-stat]').forEach(b=>b.onclick=()=>{const k=b.dataset.profileStat;if(k==='posts')$('profilePostsTab').click();else if(k==='followers')modal(`<div><h2 class="text-xl font-bold">Followers</h2><p class="muted text-sm mt-1">People following @${esc(p.username||'seller')}.</p><div class="space-y-2 mt-4">${(p.followers||[]).map(uid=>{const u=sellerProfile(uid);return `<button class="sf-user-row w-full flex items-center gap-3 p-3 rounded-xl border border-[#292929] text-left" data-open-seller="${uid}">${avatar(u)}<span class="flex-1"><b>${esc(u.name||u.username)}</b><div class="muted text-xs">@${esc(u.username||'seller')}</div></span></button>`}).join('')||'<div class="muted p-4">No followers yet.</div>'}</div></div>`);else toast(k==='views'?'Total views across your posts.':'Total likes across your posts.','info')});
+  };
+})();
+</script>
+
+<style id="sf-final-layout-care">
+/* SellerFlow: locked browser viewport, with deliberate internal scroll surfaces. */
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden!important;overscroll-behavior:none!important}
+body{position:relative!important;touch-action:auto!important}
+#app.app-shell-lock{position:fixed!important;inset:0!important;width:100%!important;height:100dvh!important;min-height:0!important;max-height:100dvh!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+#app.app-shell-lock>header{flex:0 0 auto!important;width:100%!important;min-height:0!important;z-index:50}
+#app.app-shell-lock>main#page{flex:1 1 auto!important;width:100%!important;min-width:0!important;height:0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;touch-action:pan-y!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior-y:contain!important;scrollbar-gutter:stable;padding-bottom:28px!important}
+#app.app-shell-lock>footer{flex:0 0 auto!important;width:100%!important;min-height:0!important;overflow:hidden!important}
+/* Prevent ordinary cards from creating horizontal overflow or clipping usable content. */
+.card,.glass,.sf-panel,.sf-profile-following-panel,.profile-grid,.grid{min-width:0!important;max-width:100%!important}
+.card{overflow:visible!important}
+.card>*{min-width:0;max-width:100%;box-sizing:border-box}
+.card input,.card select,.card textarea,.card button{max-width:100%;box-sizing:border-box}
+img,video,iframe,canvas{display:block;max-width:100%;box-sizing:border-box}
+input,select,textarea,button{max-width:100%;box-sizing:border-box}
+textarea,input,select{min-width:0}
+pre,code{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;max-width:100%}
+.sf-safe-row{display:flex;min-width:0;max-width:100%;gap:10px;align-items:center}
+.sf-safe-row>*{min-width:0}
+.sf-safe-text{min-width:0;overflow-wrap:anywhere;word-break:break-word}
+/* Intentional internal scroll areas. */
+.terms-box{max-width:100%;max-height:min(42dvh,360px)!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;touch-action:pan-y!important;overflow-wrap:anywhere;word-break:break-word}
+.page-selector{overflow:hidden!important}
+.page-selector-card{width:min(680px,100%);max-width:100%;max-height:88dvh!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;touch-action:pan-y!important}
+.modal{overflow:hidden!important}
+.modal-card{min-width:0;max-width:calc(100vw - 24px)!important;max-height:calc(100dvh - 24px)!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;touch-action:pan-y!important;overflow-wrap:anywhere}
+.modal-card img,.modal-card video{max-width:100%;height:auto}
+.modal-card textarea{min-height:120px;max-height:40dvh;resize:vertical}
+/* For You uses the main app scroll. Do NOT create a competing nested reel scroller. */
+.reel-feed{max-width:100%!important;overflow:visible!important;overflow-x:visible!important;scroll-snap-type:y proximity}
+.reel-card{min-width:0!important;max-width:100%!important;overflow:hidden!important}
+/* Profile posts remain visible/clickable inside the page scroll. */
+.profile-grid{overflow:visible!important}
+.sf-post-tile{min-width:0;max-width:100%;overflow:hidden!important;display:block}
+.sf-post-tile img,.sf-post-tile video,.sf-post-tile .media-preview{display:block;width:100%;max-width:100%;object-fit:cover}
+.sf-tile-meta{min-width:0;max-width:100%;overflow:hidden}
+.sf-tile-meta>*{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sf-profile-tabs{min-width:0;max-width:100%;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-x!important}
+/* Chat: conversation list and message history are independently scrollable. */
+.chat-layout{min-height:0!important;height:min(700px,calc(100dvh - 180px))!important}
+.chat-list{min-height:0!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;touch-action:pan-y!important}
+.chat-window{min-height:0!important;height:100%!important}
+.chat-messages{min-height:0!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;touch-action:pan-y!important}
+/* Long admin lists/panels get their own scroll without expanding the application shell. */
+.admin-scroll-panel,.admin-list-panel,.notification-panel,.users-panel,.verification-panel,.posts-review-panel{min-height:0;max-height:min(68dvh,720px)!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;touch-action:pan-y!important}
+/* Search/result lists and explicitly marked scroll surfaces. */
+.sf-search-results,.sf-scroll,.scroll-area,[data-scrollable]{min-height:0;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;touch-action:pan-y!important}
+.sf-search-results{max-height:65dvh}
+.flex,.grid{min-width:0}
+.flex>*{min-width:0}
+.truncate,.text-ellipsis{min-width:0;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:767px){
+ #app.app-shell-lock>main#page{padding:12px 10px 24px!important}
+ #app.app-shell-lock>footer{font-size:10px;padding-top:6px!important;padding-bottom:6px!important}
+ .card{padding:14px!important}
+ .page-selector{padding:8px!important}
+ .page-selector-card{max-height:90dvh!important}
+ .modal{padding:8px!important}
+ .modal-card{width:100%!important;max-width:calc(100vw - 16px)!important;padding:14px!important}
+ .terms-box{max-height:38dvh!important}
+ .chat-layout{height:calc(100dvh - 230px)!important;min-height:420px!important;grid-template-columns:1fr!important}
+ .chat-list{max-height:190px!important}
+ .chat-messages{min-height:180px!important}
+ .profile-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px!important}
+ .sf-post-tile img,.sf-post-tile video{aspect-ratio:1/1}
+ .reel-card{height:calc(100dvh - 140px);min-height:420px}
+}
+</style></body></html>
