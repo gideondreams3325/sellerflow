@@ -568,7 +568,6 @@ async function handleEmailAuth() {
 
   try {
     if (authMode === "register") {
-      // Check username uniqueness
       const qUser = query(collection(db, "users"), where("username", "==", username));
       const uSnap = await getDocs(qUser);
       if (!uSnap.empty) {
@@ -596,9 +595,21 @@ async function handleEmailAuth() {
         createdAt: serverTimestamp()
       }, { merge: true });
       showToast("Account created successfully.");
+      currentUser = credential.user;
+      await loadUser();
+      hideLoading();
+      showApp();
+      await startApp();
+      startOnlineHeartbeat();
     } else {
-      await signInWithEmailAndPassword(auth, email, password);
+      const credential = await signInWithEmailAndPassword(auth, email, password);
       showToast("Signed in successfully.");
+      currentUser = credential.user;
+      await loadUser();
+      hideLoading();
+      showApp();
+      await startApp();
+      startOnlineHeartbeat();
     }
   } catch (error) {
     showAuthError(firebaseAuthError(error));
@@ -635,6 +646,12 @@ async function googleSignIn() {
       });
     }
     showToast("Google sign-in successful.");
+    currentUser = user;
+    await loadUser();
+    hideLoading();
+    showApp();
+    await startApp();
+    startOnlineHeartbeat();
   } catch (error) {
     showAuthError(firebaseAuthError(error));
   }
@@ -663,7 +680,6 @@ if (auth) {
         return;
       }
       
-      // Check global app shutdown
       const settingsSnap = await getDoc(doc(db, "settings", "appConfig"));
       if (settingsSnap.exists() && settingsSnap.data().shutdown === true && currentUser.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
         $("shutdownScreen").classList.remove("hidden");
@@ -713,7 +729,7 @@ function startOnlineHeartbeat() {
     }, { merge: true });
   }
   ping();
-  onlineInterval = setInterval(ping, 25000); // every 25 seconds
+  onlineInterval = setInterval(ping, 25000);
 }
 
 async function startApp() {
@@ -721,7 +737,6 @@ async function startApp() {
   $("welcomeName").textContent = currentUserData.name || "Welcome";
   renderProfileSettings();
 
-  // STRICT ADMIN ROUTING
   if (currentUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
     showAdmin();
     return;
@@ -751,7 +766,6 @@ function navigate(page) {
   if (page === "home") updateDashboard();
 }
 
-/* FOR YOU FEED, POSTS, LIKES, COMMENTS, SHARES */
 async function loadFeed() {
   const snap = await getDocs(collection(db, "posts"));
   feedPosts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -934,7 +948,6 @@ function openCommentsModal(postId) {
   });
 }
 
-/* PROFILE EDITING WITH TIMELOCKS (Name: 7 days, Username: 30 days) */
 async function renderProfileSettings() {
   $("profileNameDisplay").textContent = currentUserData.name || "";
   $("profileUsernameDisplay").textContent = "@" + (currentUserData.username || "");
@@ -945,7 +958,6 @@ async function renderProfileSettings() {
   $("profileFullNameInput").value = currentUserData.name || "";
   $("profileUsernameInput").value = currentUserData.username || "";
 
-  // Verification button status
   const status = currentUserData.verificationStatus || "not_submitted";
   $("profileVerification").innerHTML = `
     <div class="border-t border-[#222] pt-4">
@@ -965,7 +977,6 @@ $("profileUpdateForm")?.addEventListener("submit", async e => {
   const now = Date.now();
   const DAY = 24 * 60 * 60 * 1000;
 
-  // Check Name timelock (7 days)
   if (newName !== currentUserData.name && currentUserData.nameLastChanged) {
     const lastChanged = currentUserData.nameLastChanged.toMillis ? currentUserData.nameLastChanged.toMillis() : new Date(currentUserData.nameLastChanged).getTime();
     if (now - lastChanged < 7 * DAY) {
@@ -975,7 +986,6 @@ $("profileUpdateForm")?.addEventListener("submit", async e => {
     }
   }
 
-  // Check Username timelock (30 days)
   if (newUsername !== currentUserData.username) {
     if (currentUserData.usernameLastChanged) {
       const lastChangedU = currentUserData.usernameLastChanged.toMillis ? currentUserData.usernameLastChanged.toMillis() : new Date(currentUserData.usernameLastChanged).getTime();
@@ -985,7 +995,6 @@ $("profileUpdateForm")?.addEventListener("submit", async e => {
         return;
       }
     }
-    // Check uniqueness
     const qU = query(collection(db, "users"), where("username", "==", newUsername));
     const snapU = await getDocs(qU);
     if (!snapU.empty && snapU.docs[0].id !== currentUser.uid) {
@@ -1024,7 +1033,6 @@ $("profileUpdateForm")?.addEventListener("submit", async e => {
   }
 });
 
-/* STORE & PRODUCTS & WALKTHROUGH */
 async function loadStore() {
   if (!currentUser) return;
   const snap = await getDoc(doc(db, "stores", currentUser.uid));
@@ -1092,7 +1100,6 @@ async function deleteProduct(id) {
   }
 }
 
-/* MARKETPLACE & STORE WALKTHROUGH */
 async function loadMarketplace() {
   const storeSnap = await getDocs(collection(db, "stores"));
   marketplaceStores = storeSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -1126,7 +1133,6 @@ function renderMarketplace() {
 }
 
 async function openStoreWalkthrough(sellerUid) {
-  // Record profile visit log
   if (sellerUid !== currentUser.uid) {
     await addDoc(collection(db, "profileVisits"), {
       sellerId: sellerUid,
@@ -1144,7 +1150,6 @@ async function openStoreWalkthrough(sellerUid) {
   const followerCount = sellerUser && sellerUser.followers ? sellerUser.followers.length : 0;
   const followingCount = sellerUser && sellerUser.following ? sellerUser.following.length : 0;
 
-  // Fetch reviews & visitor logs if viewing own store or general display
   const revSnap = await getDocs(query(collection(db, "reviews"), where("sellerId", "==", sellerUid)));
   const reviews = revSnap.docs.map(d => d.data());
 
@@ -1274,7 +1279,6 @@ async function openStoreWalkthrough(sellerUid) {
   });
 }
 
-/* CART & CHECKOUT */
 $("openCartBtn").addEventListener("click", () => {
   $("modalTitle").textContent = "Your Shopping Cart";
   if (!cart.length) {
@@ -1344,7 +1348,6 @@ function openCheckoutModal() {
   });
 }
 
-/* ORDERS & DASHBOARD */
 async function loadOrders() {
   if (!currentUser) return;
   const salesSnap = await getDocs(query(collection(db, "orders"), where("sellerId", "==", currentUser.uid)));
@@ -1392,7 +1395,6 @@ function updateDashboard() {
   $("saveStoreBtn").disabled = !isVerified;
 }
 
-/* VERIFICATION */
 function openVerification() {
   $("modalTitle").textContent = "Identity Verification";
   $("modalContent").innerHTML = `
@@ -1434,16 +1436,13 @@ function openVerification() {
   });
 }
 
-/* ADMIN DASHBOARD (OWNER ONLY) - CLICKABLE & APP MANAGEMENT */
 async function showAdmin() {
   ["foryouPage", "homePage", "marketplacePage", "productsPage", "ordersPage", "storePage", "profilePage", "storeWalkthroughPage"].forEach(id => $(id)?.classList.add("hidden"));
   $("adminPage").classList.remove("hidden");
 
-  // Fetch all users
   const userSnap = await getDocs(collection(db, "users"));
   const users = userSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  // Calculate online users (seen within last 60 seconds)
   const presSnap = await getDocs(collection(db, "presence"));
   const now = Date.now();
   let onlineCount = 0;
@@ -1458,7 +1457,6 @@ async function showAdmin() {
   const verified = users.filter(u => u.verified);
   const pending = users.filter(u => u.verificationStatus === "pending");
 
-  // Fetch scam reports & posts
   const revSnap = await getDocs(query(collection(db, "reviews"), where("isScamReport", "==", true)));
   const scamReports = revSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
@@ -1471,7 +1469,6 @@ async function showAdmin() {
   $("adminPending").textContent = pending.length;
   $("adminScamReports").textContent = scamReports.length;
 
-  // Render Verification List (Clickable to view details)
   $("adminVerificationList").innerHTML = pending.length ? pending.map(u => `
     <div class="bg-[#1a1a1a] p-3 rounded-lg flex justify-between items-center">
       <div><p class="font-bold text-sm">${escapeHtml(u.name)}</p><p class="text-xs text-gray-400">Card: ${escapeHtml(u.ghanaCardNumber)}</p></div>
@@ -1482,7 +1479,6 @@ async function showAdmin() {
     </div>
   `).join("") : `<p class="text-gray-500 text-sm">No pending verifications.</p>`;
 
-  // Render Scam Reports List
   $("adminScamReportsList").innerHTML = scamReports.length ? scamReports.map(s => `
     <div class="bg-[#1a1a1a] p-3 rounded-lg space-y-1">
       <p class="text-xs text-red-400 font-bold">Store ID: ${escapeHtml(s.sellerId)}</p>
@@ -1491,7 +1487,6 @@ async function showAdmin() {
     </div>
   `).join("") : `<p class="text-gray-500 text-sm">No scam reports.</p>`;
 
-  // Render Posts for review/removal
   $("adminPostsList").innerHTML = `<h3 class="text-xs text-gray-400 uppercase font-bold mb-2">Review Posts (${posts.length})</h3>` + (posts.length ? posts.slice(0, 5).map(p => `
     <div class="bg-[#1a1a1a] p-2 rounded flex justify-between items-center text-xs">
       <span class="truncate max-w-[180px]">${escapeHtml(p.caption || 'Media post')}</span>
@@ -1499,7 +1494,6 @@ async function showAdmin() {
     </div>
   `).join("") : `<p class="text-gray-500 text-xs">No posts.</p>`);
 
-  // Render Users List (Clickable to block/unblock)
   $("adminUsersList").innerHTML = `<h3 class="text-xs text-gray-400 uppercase font-bold mb-2">All Users (${users.length})</h3>` + users.slice(0, 10).map(u => `
     <div class="bg-[#1a1a1a] p-2 rounded flex justify-between items-center text-xs">
       <div><b>${escapeHtml(u.name)}</b><br><span class="text-gray-500">${escapeHtml(u.email)}</span></div>
@@ -1509,7 +1503,6 @@ async function showAdmin() {
     </div>
   `).join("");
 
-  // Bind Admin Actions
   document.querySelectorAll(".approveBtn").forEach(b => b.addEventListener("click", async () => {
     await updateDoc(doc(db, "users", b.dataset.id), { verified: true, verificationStatus: "approved" });
     showToast("User verified!");
@@ -1541,7 +1534,6 @@ async function showAdmin() {
   }));
 }
 
-// Global App Shutdown Button
 $("adminShutdownToggleBtn")?.addEventListener("click", async () => {
   if (confirm("Are you sure you want to shut down or restart the entire app?")) {
     const settingsRef = doc(db, "settings", "appConfig");
@@ -1571,14 +1563,19 @@ $("logoHomeBtn").addEventListener("click", () => navigate("foryou"));
 $("mobileMenuBtn").addEventListener("click", () => $("mobileMenu").classList.toggle("hidden"));
 $("logoutBtn").addEventListener("click", logoutUser);
 $("mobileLogoutBtn").addEventListener("click", logoutUser);
-$("addProductBtn").addEventListener("click", () => {
-  // Can open product upload modal
-});
 $("saveStoreBtn").addEventListener("click", saveStore);
 $("homeVerificationBtn").addEventListener("click", openVerification);
 $("homeStoreBtn").addEventListener("click", () => navigate("store"));
 $("modalCloseBtn").addEventListener("click", closeModal);
 $("modal").addEventListener("click", e => { if (e.target === $("modal")) closeModal(); });
+
+// Initial check fallback
+setTimeout(() => {
+  if (!auth.currentUser) {
+    hideLoading();
+    showLanding();
+  }
+}, 1500);
 </script>
 </body>
 </html>
