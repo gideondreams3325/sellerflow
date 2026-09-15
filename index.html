@@ -4,9 +4,17 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>SellerFlow — Ghana Seller Marketplace</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<!-- Firebase Compat is used here for broad Android/WebView compatibility. -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script>tailwind.config={theme:{extend:{colors:{gold:'#f5b942'}}}}</script>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#080808;color:#f5f5f5;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,textarea,select{font:inherit}button:disabled{opacity:.5;cursor:not-allowed}.gold{color:#f5b942}.bg-gold{background:#f5b942;color:#080808}.border-gold{border-color:#f5b942}.card{background:#121212;border:1px solid #292929;border-radius:18px}.muted{color:#a1a1aa}.hide{display:none!important}.modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}.modal-card{width:min(720px,100%);max-height:92vh;overflow:auto;background:#111;border:1px solid #333;border-radius:22px;padding:20px}.toast{position:fixed;right:16px;bottom:18px;z-index:300;max-width:360px}.toast>div{margin-top:8px;padding:13px 15px;border-radius:12px;background:#1b1b1b;border:1px solid #333;box-shadow:0 8px 30px #000}.navbtn.active{color:#f5b942;border-bottom:2px solid #f5b942}.glass{background:linear-gradient(145deg,#161616,#0f0f0f);box-shadow:0 20px 50px rgba(0,0,0,.22)}.action-btn{border:1px solid #333;background:#171717;border-radius:999px;padding:8px 12px;font-size:13px}.action-btn:hover{border-color:#f5b942;color:#f5b942}.media-preview{border-radius:16px;overflow:hidden;background:#050505}.brand-glow{text-shadow:0 0 28px rgba(245,185,66,.16)}.avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#242424}.product-img{aspect-ratio:1/1;object-fit:cover;width:100%;border-radius:14px;background:#191919}.post-media{max-height:620px;width:100%;object-fit:cover;background:#050505}.spin{width:22px;height:22px;border:3px solid #333;border-top-color:#f5b942;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+
+#loading.hide{display:none!important}
+#loading{pointer-events:auto}
+button,a,input,textarea,select{position:relative;z-index:1}
 </style>
 </head>
 <body>
@@ -18,22 +26,50 @@
 <div id="modalRoot"></div><div id="toast" class="toast"></div>
 <script>
 (function(){
-  setTimeout(function(){
-    var l=document.getElementById('loading');
-    if(l && !l.classList.contains('hide')){
-      var t=document.getElementById('loadingText');
-      if(t)t.textContent='The app took too long to start. Check your internet connection and Firebase configuration.';
-      l.classList.add('hide');
-      var landing=document.getElementById('landing');
-      if(landing)landing.classList.remove('hide');
-    }
-  },12000);
+  function $x(id){return document.getElementById(id)}
+  function hideLoading(){var x=$x('loading');if(x)x.classList.add('hide')}
+  function showLanding(){hideLoading();var l=$x('landing'),a=$x('authPage'),p=$x('app');if(l)l.classList.remove('hide');if(a)a.classList.add('hide');if(p)p.classList.add('hide')}
+  window.addEventListener('error',function(e){console.error('SellerFlow startup error:',e.error||e.message);var t=$x('loadingText');if(t)t.textContent='SellerFlow could not start. Tap Sign in to retry.';showLanding()});
+  window.addEventListener('unhandledrejection',function(e){console.error('SellerFlow startup rejection:',e.reason);var t=$x('loadingText');if(t)t.textContent='SellerFlow could not connect. Tap Sign in to retry.';showLanding()});
+  setTimeout(function(){var l=$x('loading');if(l&&!l.classList.contains('hide')){var t=$x('loadingText');if(t)t.textContent='SellerFlow is ready. Tap a button to continue.';showLanding()}},8000);
+  document.addEventListener('click',function(e){
+    var id=e.target&&e.target.id;
+    if(id==='landingLogin'||id==='heroLogin'){var a=$x('authPage'),l=$x('landing');if(a){l.classList.add('hide');a.classList.remove('hide');var sw=$x('authSwitch');if(sw)sw.textContent='New here? Create an account';var title=$x('authTitle');if(title)title.textContent='Welcome back';var sub=$x('authSubtitle');if(sub)sub.textContent='Sign in to continue.';var nw=$x('nameWrap'),uw=$x('usernameWrap'),sb=$x('authSubmit');if(nw)nw.style.display='none';if(uw)uw.style.display='none';if(sb)sb.textContent='Sign in';}}
+    if(id==='landingRegister'||id==='heroRegister'){var a=$x('authPage'),l=$x('landing');if(a){l.classList.add('hide');a.classList.remove('hide');var title=$x('authTitle');if(title)title.textContent='Create your account';var sub=$x('authSubtitle');if(sub)sub.textContent='Sell and shop across Ghana.';var nw=$x('nameWrap'),uw=$x('usernameWrap'),sb=$x('authSubmit');if(nw)nw.style.display='block';if(uw)uw.style.display='block';if(sb)sb.textContent='Create account';}}
+    if(id==='backLanding'){showLanding()}
+  },true);
 })();
 </script>
-<script type="module">
-import{initializeApp}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-import{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,GoogleAuthProvider,signInWithPopup,signOut,sendPasswordResetEmail,sendEmailVerification,updateProfile}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-import{getFirestore,collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,limit,serverTimestamp,arrayUnion,arrayRemove}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+<script>
+/* Firebase compatibility layer: keeps the rest of SellerFlow's code in the same API shape without ES-module parsing. */
+const initializeApp=(config)=>firebase.initializeApp(config);
+const getAuth=(app)=>firebase.auth();
+const onAuthStateChanged=(auth,cb)=>auth.onAuthStateChanged(cb);
+const createUserWithEmailAndPassword=(auth,email,password)=>auth.createUserWithEmailAndPassword(email,password);
+const signInWithEmailAndPassword=(auth,email,password)=>auth.signInWithEmailAndPassword(email,password);
+const GoogleAuthProvider=firebase.auth.GoogleAuthProvider;
+const signInWithPopup=(auth,provider)=>auth.signInWithPopup(provider);
+const signOut=(auth)=>auth.signOut();
+const sendPasswordResetEmail=(auth,email)=>auth.sendPasswordResetEmail(email);
+const sendEmailVerification=(user)=>user.sendEmailVerification();
+const updateProfile=(user,data)=>user.updateProfile(data);
+const getFirestore=(app)=>firebase.firestore();
+const collection=(db,path)=>db.collection(path);
+const doc=(db,path,id)=>id===undefined?db.doc(path):db.collection(path).doc(id);
+const getDoc=(ref)=>ref.get();
+const getDocs=(q)=>q.get();
+const setDoc=(ref,data,opts)=>ref.set(data,opts);
+const addDoc=(coll,data)=>coll.add(data);
+const updateDoc=(ref,data)=>ref.update(data);
+const deleteDoc=(ref)=>ref.delete();
+const query=(source,...constraints)=>constraints.reduce((q,c)=>c(q),source);
+const where=(field,op,value)=>(q)=>q.where(field,op,value);
+const orderBy=(field,direction)=>(q)=>q.orderBy(field,direction);
+const limit=(n)=>(q)=>q.limit(n);
+const serverTimestamp=()=>firebase.firestore.FieldValue.serverTimestamp();
+const arrayUnion=(...values)=>firebase.firestore.FieldValue.arrayUnion(...values);
+const arrayRemove=(...values)=>firebase.firestore.FieldValue.arrayRemove(...values);
+
 
 const firebaseConfig={apiKey:'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk',authDomain:'sellerflow-efaab.firebaseapp.com',databaseURL:'https://sellerflow-efaab-default-rtdb.firebaseio.com',projectId:'sellerflow-efaab',storageBucket:'sellerflow-efaab.firebasestorage.app',messagingSenderId:'987175352360',appId:'1:987175352360:web:53e44304aaf11b98c61d1d'};
 const ADMIN_EMAIL='gideondreams3325@gmail.com';
@@ -157,7 +193,7 @@ async function checkShutdown(){try{const s=await getDoc(doc(db,'settings','app')
 function modal(html){$('modalRoot').innerHTML=`<div class="modal"><div class="modal-card">${html}</div></div>`;document.querySelectorAll('[data-close-modal]').forEach(b=>b.onclick=closeModal)}function closeModal(){$('modalRoot').innerHTML=''}
 
 document.addEventListener('click',e=>{const seller=e.target.closest('[data-open-seller]');if(seller)openStore(seller.dataset.openSeller);const nav=e.target.closest('[data-mobile-page]');if(nav)navigate(nav.dataset.mobilePage)});
-document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>navigate(b.dataset.page));$('landingLogin').onclick=$('heroLogin').onclick=()=>showAuth('login');$('landingRegister').onclick=$('heroRegister').onclick=()=>showAuth('register');$('backLanding').onclick=showLanding;$('authSwitch').onclick=()=>showAuth(authMode==='register'?'login':'register');$('mobileMenu').onclick=()=>{$('mobileNav').classList.toggle('hide');setNav()};$('brandBtn').onclick=()=>navigate('feed');$('cartBtn').onclick=()=>navigate('cart');$('logoutBtn').onclick=logoutUser;$('authForm').onsubmit=async e=>{e.preventDefault();$('authError').textContent='';try{loading(authMode==='register'?'Creating account…':'Signing in…');const email=$('authEmail').value.trim(),password=$('authPassword').value;if(!email||!password)throw Error('Enter your email and password.');if(authMode==='register'){const name=$('authName').value.trim(),username=usernameClean($('authUsername').value);if(name.length<2||username.length<3)throw Error('Enter a valid name and username.');const c=await createUserWithEmailAndPassword(auth,email,password);try{if(!(await uniqueUsername(username))){await signOut(auth);throw Error('That username is already taken.')}await updateProfile(c.user,{displayName:name});await createMissingProfile(c.user,{name,username,usernameLower:username,role:'seller'});await sendEmailVerification(c.user).catch(()=>{})}catch(err){try{await signOut(auth)}catch(_){}throw err}}else{await signInWithEmailAndPassword(auth,email,password)}}catch(e){$('authError').textContent=errMsg(e)}finally{ready()}}$('googleBtn').onclick=async()=>{try{loading('Opening Google sign-in…');await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){toast(errMsg(e),'error')}finally{ready()}}$('resetBtn').onclick=async()=>{const email=$('authEmail').value.trim();if(!email)return toast('Enter your email first','error');try{await sendPasswordResetEmail(auth,email);toast('Password reset email sent','success')}catch(e){toast(errMsg(e),'error')}};
+document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>navigate(b.dataset.page));$('landingLogin').onclick=$('heroLogin').onclick=()=>showAuth('login');$('landingRegister').onclick=$('heroRegister').onclick=()=>showAuth('register');$('backLanding').onclick=showLanding;$('authSwitch').onclick=()=>showAuth(authMode==='register'?'login':'register');$('mobileMenu').onclick=()=>{$('mobileNav').classList.toggle('hide');setNav()};$('brandBtn').onclick=()=>navigate('feed');$('cartBtn').onclick=()=>navigate('cart');$('logoutBtn').onclick=logoutUser;$('authForm').onsubmit=async e=>{e.preventDefault();$('authError').textContent='';try{loading(authMode==='register'?'Creating account…':'Signing in…');const email=$('authEmail').value.trim(),password=$('authPassword').value;if(!email||!password)throw Error('Enter your email and password.');if(authMode==='register'){const name=$('authName').value.trim(),username=usernameClean($('authUsername').value);if(name.length<2||username.length<3)throw Error('Enter a valid name and username.');const c=await createUserWithEmailAndPassword(auth,email,password);try{if(!(await uniqueUsername(username))){await signOut(auth);throw Error('That username is already taken.')}await updateProfile(c.user,{displayName:name});await createMissingProfile(c.user,{name,username,usernameLower:username,role:'seller'});await sendEmailVerification(c.user).catch(()=>{})}catch(err){try{await signOut(auth)}catch(_){}throw err}}else{await signInWithEmailAndPassword(auth,email,password)}}catch(e){$('authError').textContent=errMsg(e)}finally{ready()}};$('googleBtn').onclick=async()=>{try{loading('Opening Google sign-in…');await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){toast(errMsg(e),'error')}finally{ready()}}; $('resetBtn').onclick=async()=>{const email=$('authEmail').value.trim();if(!email)return toast('Enter your email first','error');try{await sendPasswordResetEmail(auth,email);toast('Password reset email sent','success')}catch(e){toast(errMsg(e),'error')}};
 async function startUser(u){currentUser=u;try{await ensureProfile(u)}catch(e){console.warn('Profile setup did not block login:',e)}if(currentProfile?.blocked){await signOut(auth);throw Error('This account is blocked. Contact the administrator.')}loadCart();showApp();try{if(await checkShutdown())return}catch(e){console.warn('Shutdown check skipped:',e)}try{await navigate('feed')}catch(e){console.warn('Feed load failed:',e);toast('You are signed in, but the feed could not load. Check your connection.','error')}}
 
 async function logoutUser(){try{if(!auth)return;loading('Signing out securely…');await signOut(auth);currentUser=null;currentProfile=null;isAdmin=false;cart=[];localStorage.removeItem('sellerflow_cart');hide($('app'));hide($('authPage'));hide($('shutdown'));show($('landing'));toast('You have been signed out.','success')}catch(e){toast(errMsg(e),'error')}finally{ready()}}
