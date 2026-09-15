@@ -16,18 +16,30 @@
 <div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="current-password"></div><button id="authSubmit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm muted">← Back</button><div id="authError" class="text-red-400 text-sm mt-4"></div></div></div>
 <div id="app" class="hide min-h-screen"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424]"><div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3"><button id="mobileMenu" class="md:hidden p-2">☰</button><button id="brandBtn" class="text-xl font-black gold">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2" data-page="orders">Orders</button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button></div><div class="ml-auto flex items-center gap-2"><button id="cartBtn" class="relative p-2">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2">Logout</button></div></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-2 grid grid-cols-3 gap-1"></div></header><main id="page" class="max-w-7xl mx-auto px-4 py-6 min-h-[calc(100vh-10rem)]"></main><footer class="max-w-7xl mx-auto px-4 py-8 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div>
 <div id="modalRoot"></div><div id="toast" class="toast"></div>
+<script>
+(function(){
+  setTimeout(function(){
+    var l=document.getElementById('loading');
+    if(l && !l.classList.contains('hide')){
+      var t=document.getElementById('loadingText');
+      if(t)t.textContent='The app took too long to start. Check your internet connection and Firebase configuration.';
+      l.classList.add('hide');
+      var landing=document.getElementById('landing');
+      if(landing)landing.classList.remove('hide');
+    }
+  },12000);
+})();
+</script>
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,GoogleAuthProvider,signInWithPopup,signOut,sendPasswordResetEmail,sendEmailVerification,updateProfile}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import{getFirestore,collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,limit,serverTimestamp,arrayUnion,arrayRemove}from'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
-import{createClient}from'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
 const firebaseConfig={apiKey:'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk',authDomain:'sellerflow-efaab.firebaseapp.com',databaseURL:'https://sellerflow-efaab-default-rtdb.firebaseio.com',projectId:'sellerflow-efaab',storageBucket:'sellerflow-efaab.firebasestorage.app',messagingSenderId:'987175352360',appId:'1:987175352360:web:53e44304aaf11b98c61d1d'};
 const ADMIN_EMAIL='gideondreams3325@gmail.com';
 const supabaseUrl='https://vvpwntehstjbccarqqzp.supabase.co';
 const supabaseKey='sb_publishable_uxIZMAka2Om0ZFD4tg3xfQ__7Bl_J0V';
 const SUPABASE_BUCKET='ghana-card-documents';
-const supabase=createClient(supabaseUrl,supabaseKey);
 let firebaseApp,auth,db;let currentUser=null,currentProfile=null,isAdmin=false,currentPage='feed',allPublicProfiles=new Map(),cart=[];let authMode='register';
 const $=id=>document.getElementById(id), show=e=>e?.classList.remove('hide'), hide=e=>e?.classList.add('hide');
 function esc(v=''){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
@@ -41,8 +53,15 @@ function pageTitle(t,sub=''){return `<div class="mb-6"><h1 class="text-2xl md:te
 function button(t,id='',cls='bg-gold text-black'){return `<button id="${id}" class="px-4 py-2 rounded-xl font-semibold ${cls}">${esc(t)}</button>`}
 function avatar(p,cls='avatar'){return p?.avatarUrl?`<img class="${cls}" src="${esc(p.avatarUrl)}" alt="">`:`<div class="${cls} flex items-center justify-center font-bold">${esc((p?.name||p?.username||'?')[0].toUpperCase())}</div>`}
 function validFile(file,types,maxMB){if(!file)return false;if(!types.includes(file.type))throw Error('Unsupported file type.');if(file.size>maxMB*1024*1024)throw Error(`File is too large. Maximum is ${maxMB}MB.`);return true}
-async function uploadPublic(file,folder){validFile(file,['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm'],50);const ext=(file.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').toLowerCase();const path=`media/${currentUser.uid}/${folder}/${Date.now()}_${crypto.randomUUID()}.${ext}`;const {error}=await supabase.storage.from(SUPABASE_BUCKET).upload(path,file,{contentType:file.type,cacheControl:'3600',upsert:false});if(error)throw Error(`Supabase upload failed: ${error.message}`);const {data}=supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(path);if(!data?.publicUrl)throw Error('Supabase did not return a public media URL.');return{url:data.publicUrl,path}}
-async function uploadPrivate(file,folder){validFile(file,['image/jpeg','image/png','image/webp','application/pdf'],10);const ext=(file.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').toLowerCase();const path=`verification/${currentUser.uid}/${folder}_${Date.now()}.${ext}`;const {error}=await supabase.storage.from(SUPABASE_BUCKET).upload(path,file,{contentType:file.type,cacheControl:'3600',upsert:false});if(error)throw Error(`Supabase upload failed: ${error.message}`);return path}
+async function supabaseUpload(file,path,maxMB){
+  if(!file) throw Error('No file selected.');
+  const endpoint=`${supabaseUrl}/storage/v1/object/${SUPABASE_BUCKET}/${path}`;
+  const res=await fetch(endpoint,{method:'POST',headers:{apikey:supabaseKey,Authorization:`Bearer ${supabaseKey}`, 'Content-Type':file.type||'application/octet-stream','x-upsert':'false'},body:file});
+  if(!res.ok){let msg='Upload failed';try{const j=await res.json();msg=j.message||j.error||msg}catch(_){}throw Error(`Supabase upload failed: ${msg}`)}
+  return path;
+}
+async function uploadPublic(file,folder){validFile(file,['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm'],50);const ext=(file.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').toLowerCase();const path=`media/${currentUser.uid}/${folder}/${Date.now()}_${crypto.randomUUID()}.${ext}`;await supabaseUpload(file,path,50);return{url:`${supabaseUrl}/storage/v1/object/public/${SUPABASE_BUCKET}/${path}`,path}}
+async function uploadPrivate(file,folder){validFile(file,['image/jpeg','image/png','image/webp','application/pdf'],10);const ext=(file.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').toLowerCase();const path=`verification/${currentUser.uid}/${folder}_${Date.now()}.${ext}`;await supabaseUpload(file,path,10);return path}
 
 function showLanding(){hide($('authPage'));hide($('app'));show($('landing'));ready()}
 function showAuth(mode='register'){authMode=mode;hide($('landing'));hide($('app'));show($('authPage'));$('authTitle').textContent=mode==='register'?'Create your account':'Welcome back';$('authSubtitle').textContent=mode==='register'?'Sell and shop across Ghana.':'Sign in to continue.';$('nameWrap').style.display=mode==='register'?'block':'none';$('usernameWrap').style.display=mode==='register'?'block':'none';$('authSubmit').textContent=mode==='register'?'Create account':'Sign in';$('authSwitch').textContent=mode==='register'?'Already have an account? Sign in':'New here? Create an account';$('authError').textContent='';ready()}
