@@ -55,9 +55,33 @@ body,input,textarea,select,button,.card,.reel-content,.chat-bubble,.sf-stat-card
 .reel-shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.88),rgba(0,0,0,.08) 50%,rgba(0,0,0,.25));pointer-events:none}
 .reel-content{position:absolute;left:0;right:68px;bottom:0;padding:16px;max-height:44%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;z-index:5}
 .reel-content p{max-width:100%;word-break:break-word;overflow-wrap:anywhere}
-.reel-actions{position:absolute;right:12px;bottom:76px;display:flex;flex-direction:column;gap:12px;z-index:10}
-.reel-action{width:44px;height:44px;border-radius:50%;background:rgba(15,15,15,.78);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center}
-.reel-action:hover{border-color:#f5b942;color:#f5b942}
+.reel-actions{position:absolute;right:12px;bottom:24px;display:flex;flex-direction:column;align-items:center;gap:12px;z-index:10}
+.reel-action-group{display:flex;flex-direction:column;align-items:center;gap:3px}
+.reel-action{width:46px;height:46px;border-radius:50%;background:rgba(20,20,20,.68);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.45);transition:transform .15s,background .15s,border-color .15s;cursor:pointer}
+.reel-action:hover{border-color:#f5b942;transform:scale(1.06)}
+.reel-action:active{transform:scale(.9)}
+.reel-action.is-liked{background:rgba(239,68,68,.25);border-color:#ef4444;box-shadow:0 0 16px rgba(239,68,68,.4)}
+.reel-action.is-saved{background:rgba(245,185,66,.25);border-color:#f5b942;box-shadow:0 0 16px rgba(245,185,66,.4)}
+.reel-action-count{font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.9);line-height:1;text-align:center;letter-spacing:.02em}
+
+.reel-creator-stack{position:relative;display:flex;flex-direction:column;align-items:center;margin-bottom:6px}
+.reel-avatar-btn{width:48px;height:48px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#f5b942,rgba(255,255,255,.8));box-shadow:0 4px 14px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;transition:transform .15s;cursor:pointer}
+.reel-avatar-btn:active{transform:scale(.92)}
+.reel-avatar-img{width:100%;height:100%;border-radius:50%;object-fit:cover;border:2px solid #000;background:#181818}
+.reel-follow-badge{position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:#f5b942;color:#000;border:2px solid #000;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer;transition:transform .18s,background .18s;z-index:2}
+.reel-follow-badge:hover{transform:translateX(-50%) scale(1.15);background:#fff}
+.reel-follow-badge:active{transform:translateX(-50%) scale(.9)}
+
+.reel-sound-disc{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle,#1f1f1f 30%,#090909 65%,#262626 95%);border:2.5px solid #141414;box-shadow:0 0 0 1px rgba(255,255,255,.22),0 4px 14px rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s;margin-top:2px}
+.reel-sound-disc.is-spinning{animation:sfSpinDisc 4s linear infinite}
+@keyframes sfSpinDisc{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+.reel-follow-pill{padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800;border:1px solid rgba(245,185,66,.7);color:#f5b942;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);transition:all .15s;cursor:pointer}
+.reel-follow-pill:hover{background:#f5b942;color:#000}
+.reel-store-pill{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,.25);color:#e4e4e7;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);transition:all .15s;cursor:pointer}
+.reel-store-pill:hover{border-color:#f5b942;color:#f5b942}
+.reel-sound-ticker{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.5);backdrop-filter:blur(8px);border-radius:999px;padding:6px 12px;font-size:12px;color:#f4f4f5;transition:border-color .15s;cursor:pointer}
+.reel-sound-ticker:hover{border-color:#f5b942;color:#f5b942}
 .sf-video-indicator{position:absolute;top:8px;right:8px;z-index:3;background:rgba(0,0,0,.75);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;backdrop-filter:blur(4px);display:flex;align-items:center;gap:4px}
 .sf-photo-indicator{position:absolute;top:8px;right:8px;z-index:3;background:rgba(0,0,0,.75);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;backdrop-filter:blur(4px)}
 .admin-tab{padding:8px 16px;border-radius:12px;background:#151515;border:1px solid #292929;color:#999;font-weight:600;white-space:nowrap;transition:.15s ease;cursor:pointer}
@@ -96,8 +120,13 @@ body,input,textarea,select,button,.card,.reel-content,.chat-bubble,.sf-stat-card
 .video-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:28px;text-align:center;background:radial-gradient(circle at center,#1d1d1d,#050505)}
 @media(max-width:640px){
   .page-selector-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .reel-actions{right:10px;bottom:70px}
-  .reel-action{width:40px;height:40px}
+  .reel-actions{right:8px;bottom:20px;gap:11px}
+  .reel-action{width:42px;height:42px}
+  .reel-creator-stack{margin-bottom:5px}
+  .reel-avatar-btn{width:44px;height:44px}
+  .reel-follow-badge{width:20px;height:20px;font-size:13px;bottom:-6px}
+  .reel-sound-disc{width:40px;height:40px}
+  .reel-content{right:64px;padding:12px;bottom:2px}
   .modal{padding:8px}
   .modal-card{border-radius:20px;padding:16px;max-height:94vh}
 }
@@ -112,15 +141,14 @@ button,a,input,textarea,select{position:relative;z-index:1}
 <body>
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center"><div class="text-center"><div class="spin mx-auto mb-4"></div><div class="gold font-bold text-xl">SellerFlow</div><div id="loadingText" class="muted text-sm mt-2">Starting secure app…</div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
-<div id="landing" class="hide min-h-screen"><header class="max-w-6xl mx-auto px-5 py-5 flex items-center justify-between"><div class="text-2xl font-black gold">SellerFlow</div><div class="flex gap-2"><button type="button" id="landingLogin" class="px-4 py-2 rounded-xl border border-[#333]">Sign in</button><button type="button" id="landingRegister" class="px-4 py-2 rounded-xl bg-gold font-bold">Create account</button></div></header><main class="max-w-6xl mx-auto px-5 py-16 grid md:grid-cols-2 gap-10 items-center"><div><span class="gold text-sm font-bold">GHANA'S SOCIAL SELLING MARKETPLACE</span><h1 class="text-5xl md:text-7xl font-black leading-tight mt-3">Sell. Discover. <span class="gold">Grow.</span></h1><p class="muted text-lg mt-5 max-w-xl">A safer marketplace where Ghanaian sellers can build stores, publish products, connect with customers and manage orders.</p><div class="flex gap-3 mt-7"><button type="button" id="heroRegister" class="bg-gold px-6 py-3 rounded-xl font-bold">Start selling free</button><button type="button" id="heroLogin" class="border border-[#333] px-6 py-3 rounded-xl">I already have an account</button></div></div><div class="card p-6"><div class="grid grid-cols-2 gap-3"><div class="p-5 rounded-2xl bg-[#181818]"><div class="text-3xl">🛍️</div><b>Stores</b><p class="muted text-sm mt-1">Create your seller storefront.</p></div><div class="p-5 rounded-2xl bg-[#181818]"><div class="text-3xl">📦</div><b>Orders</b><p class="muted text-sm mt-1">Track every customer order.</p></div><div class="p-5 rounded-2xl bg-[#181818]"><div class="text-3xl">👥</div><b>Community</b><p class="muted text-sm mt-1">Follow sellers and interact.</p></div><div class="p-5 rounded-2xl bg-[#181818]"><div class="text-3xl">🛡️</div><b>Verification</b><p class="muted text-sm mt-1">Build customer trust.</p></div></div></div></main><footer class="max-w-6xl mx-auto px-5 pb-8 text-center text-xs text-zinc-500">© 2026 SellerFlow™. All rights reserved. · Ghana’s social selling marketplace.</footer></div>
-<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm muted">← Back</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 SellerFlow™ · All rights reserved.</div></div></div>
-<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3"><button id="mobileMenu" class="md:hidden p-2" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden p-2" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2" data-page="orders">Orders</button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div class="ml-auto flex items-center gap-2"><button id="notificationBtn" class="bell-btn p-2" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2">Logout</button></div></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-2 grid grid-cols-3 gap-1"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
+<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 SellerFlow™ · All rights reserved.</div></div></div>
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3"><button id="mobileMenu" class="md:hidden p-2" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden p-2" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2" data-page="orders">Orders</button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-2"><button id="notificationBtn" class="bell-btn p-2" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2">Logout</button></div></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-2 grid grid-cols-3 gap-1"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="modalRoot"></div><div id="toast" class="toast"></div>
 <script>
 (function(){
   function $x(id){return document.getElementById(id)}
   function hideLoading(){var x=$x('loading');if(x)x.classList.add('hide')}
-  function showLanding(){hideLoading();var l=$x('landing'),a=$x('authPage'),p=$x('app');if(l)l.classList.remove('hide');if(a)a.classList.add('hide');if(p)p.classList.add('hide')}
+  function showHomeFeed(){hideLoading();var a=$x('authPage'),p=$x('app');if(a)a.classList.add('hide');if(p){p.classList.remove('hide');p.classList.add('is-feed-page');}}
   window.addEventListener('error',function(e){
     if(!e)return;
     if(e.target&&(e.target.tagName==='IMG'||e.target.tagName==='VIDEO'||e.target.tagName==='AUDIO'||e.target.tagName==='SOURCE'||e.target.tagName==='LINK'))return;
@@ -133,12 +161,10 @@ button,a,input,textarea,select{position:relative;z-index:1}
     if(!reason||reason==='Script error.')return;
     console.warn('SellerFlow unhandled promise notice:',reason);
   });
-  setTimeout(function(){var l=$x('loading');if(l&&!l.classList.contains('hide')){var t=$x('loadingText');if(t)t.textContent='SellerFlow is ready. Tap a button to continue.';showLanding()}},8000);
+  setTimeout(function(){var l=$x('loading');if(l&&!l.classList.contains('hide')){var t=$x('loadingText');if(t)t.textContent='SellerFlow is ready.';showHomeFeed();if(typeof navigate==='function')navigate('feed');}},6000);
   document.addEventListener('click',function(e){
     var id=e.target&&e.target.id;
-    if(id==='landingLogin'||id==='heroLogin'){var a=$x('authPage'),l=$x('landing');if(a){l.classList.add('hide');a.classList.remove('hide');var sw=$x('authSwitch');if(sw)sw.textContent='New here? Create an account';var title=$x('authTitle');if(title)title.textContent='Welcome back';var sub=$x('authSubtitle');if(sub)sub.textContent='Sign in to continue.';var nw=$x('nameWrap'),uw=$x('usernameWrap'),tw=$x('termsWrap'),sb=$x('authSubmit');if(nw)nw.style.display='none';if(uw)uw.style.display='none';if(tw)tw.style.display='none';if(sb)sb.textContent='Sign in';}}
-    if(id==='landingRegister'||id==='heroRegister'){var a=$x('authPage'),l=$x('landing');if(a){l.classList.add('hide');a.classList.remove('hide');var title=$x('authTitle');if(title)title.textContent='Create your account';var sub=$x('authSubtitle');if(sub)sub.textContent='Sell and shop across Ghana.';var nw=$x('nameWrap'),uw=$x('usernameWrap'),tw=$x('termsWrap'),sb=$x('authSubmit');if(nw)nw.style.display='block';if(uw)uw.style.display='block';if(tw)tw.style.display='block';if(sb)sb.textContent='Create account';}}
-    if(id==='backLanding'){showLanding()}
+    if(id==='backLanding'){showHomeFeed();if(typeof navigate==='function')navigate('feed');}
     if(id==='viewSignupTerms'){if(typeof ensureTerms==='function'&&typeof showTermsModal==='function')ensureTerms().then(()=>showTermsModal(false))}
   },true);
 })();
@@ -157,8 +183,45 @@ const sendPasswordResetEmail=(auth,email)=>auth.sendPasswordResetEmail(email);
 const sendEmailVerification=(user)=>user.sendEmailVerification();
 const updateProfile=(user,data)=>user.updateProfile(data);
 const getFirestore=(app)=>firebase.firestore();
-const collection=(db,path)=>db.collection(path);
-const doc=(db,path,id)=>id===undefined?db.doc(path):db.collection(path).doc(id);
+function getDbSafe(database){
+  if(database && typeof database.collection === 'function') return database;
+  if(typeof db !== 'undefined' && db && typeof db.collection === 'function') return db;
+  if(typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && typeof firebase.firestore === 'function'){
+    try {
+      db = firebase.firestore();
+      return db;
+    } catch(_) {}
+  }
+  return null;
+}
+const collection=(database,path)=>{
+  const d = getDbSafe(database);
+  if(!d){
+    console.warn('Firestore collection requested before database ready:', path);
+    return {
+      get: async () => ({ empty: true, docs: [], forEach: () => {} }),
+      add: async () => ({ id: 'local_' + Date.now() }),
+      where: () => ({ where: () => ({ limit: () => ({ get: async () => ({ empty: true, docs: [] }) }), get: async () => ({ empty: true, docs: [] }) }), limit: () => ({ get: async () => ({ empty: true, docs: [] }) }), get: async () => ({ empty: true, docs: [] }) }),
+      orderBy: () => ({ limit: () => ({ get: async () => ({ empty: true, docs: [] }) }), get: async () => ({ empty: true, docs: [] }) }),
+      limit: () => ({ get: async () => ({ empty: true, docs: [] }) }),
+      doc: (id) => doc(d, path, id)
+    };
+  }
+  return d.collection(path);
+};
+const doc=(database,path,id)=>{
+  const d = getDbSafe(database);
+  if(!d){
+    console.warn('Firestore doc requested before database ready:', path, id);
+    return {
+      get: async () => ({ exists: () => false, data: () => null }),
+      set: async () => {},
+      update: async () => {},
+      delete: async () => {}
+    };
+  }
+  return id===undefined?d.doc(path):d.collection(path).doc(id);
+};
 const getDoc=(ref)=>ref.get();
 const getDocs=(q)=>q.get();
 const setDoc=(ref,data,opts)=>ref.set(data,opts);
@@ -179,8 +242,8 @@ function snapshotExists(snap){return !!snap && (typeof snap.exists==='function' 
 
 const firebaseConfig={apiKey:'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk',authDomain:'sellerflow-efaab.firebaseapp.com',databaseURL:'https://sellerflow-efaab-default-rtdb.firebaseio.com',projectId:'sellerflow-efaab',storageBucket:'sellerflow-efaab.firebasestorage.app',messagingSenderId:'987175352360',appId:'1:987175352360:web:53e44304aaf11b98c61d1d'};
 const ADMIN_EMAIL='gideondreams3325@gmail.com';
-const supabaseUrl='https://vvpwntehstjbccarqqzp.supabase.co';
-const supabaseKey='sb_publishable_uxIZMAka2Om0ZFD4tg3xfQ__7Bl_J0V';
+let supabaseUrl='https://vvpwntehstjbccarqqzp.supabase.co';
+let supabaseKey='sb_publishable_uxIZMAka2Om0ZFD4tg3xfQ__7Bl_J0V';
 const SUPABASE_BUCKET='ghana-card-documents';
 let firebaseApp,auth,db;let currentUser=null,currentProfile=null,isAdmin=false,currentPage='feed',allPublicProfiles=new Map(),cart=[];let authMode='register';let appTerms='';let appTermsVersion='2026.09';let notificationCache=[];
 const $=id=>document.getElementById(id), show=e=>e?.classList.remove('hide'), hide=e=>e?.classList.add('hide');
@@ -191,7 +254,7 @@ function toast(msg,type='info'){const d=document.createElement('div');d.innerHTM
 function errMsg(e){const c=e?.code||'';const m={ 'auth/email-already-in-use':'That email is already registered.','auth/invalid-credential':'Incorrect email or password.','auth/invalid-email':'Enter a valid email address.','auth/weak-password':'Use a stronger password.','auth/popup-closed-by-user':'Google sign-in was cancelled.','auth/network-request-failed':'Network error. Check your connection.','permission-denied':'You do not have permission for this action.','storage/unauthorized':'Storage permission denied. Check Firebase Storage Rules.'};return m[c]||e?.message||'Something went wrong.'}
 function loading(t='Working…'){show($('loading'));$('loadingText').textContent=t}
 function ready(){hide($('loading'))}
-function pageTitle(t,sub=''){const back=currentPage&&currentPage!=='feed'?`<button type="button" class="back-page-btn" data-global-back="1">← Back</button>`:'';return `<div class="mb-6">${back}<h1 class="text-2xl md:text-3xl font-black">${esc(t)}</h1>${sub?`<p class="muted mt-1">${esc(sub)}</p>`:''}</div>`}
+function pageTitle(t,sub=''){const back=currentPage&&currentPage!=='feed'?`<button type="button" class="back-page-btn" data-global-back="1">← Back to For You</button>`:'';return `<div class="mb-6">${back}<h1 class="text-2xl md:text-3xl font-black">${esc(t)}</h1>${sub?`<p class="muted mt-1">${esc(sub)}</p>`:''}</div>`}
 function button(t,id='',cls='bg-gold text-black'){return `<button type="button" id="${id}" class="btn px-4 py-2 rounded-xl font-semibold ${cls}">${esc(t)}</button>`}
 function avatar(p,cls='avatar'){return p?.avatarUrl?`<img class="${cls}" src="${esc(p.avatarUrl)}" alt="">`:`<div class="${cls} flex items-center justify-center font-bold">${esc((p?.name||p?.username||'?')[0].toUpperCase())}</div>`}
 function validFile(file,types,maxMB){if(!file)return false;if(!types.includes(file.type))throw Error('Unsupported file type.');if(file.size>maxMB*1024*1024)throw Error(`File is too large. Maximum is ${maxMB}MB.`);return true}
@@ -206,9 +269,87 @@ async function uploadPublic(file,folder){validFile(file,['image/jpeg','image/png
 async function loadPrivateMedia(path,video){try{const res=await fetch(`${supabaseUrl}/storage/v1/object/${SUPABASE_BUCKET}/${path}`,{headers:{apikey:supabaseKey,Authorization:`Bearer ${supabaseKey}`}});if(!res.ok)throw Error('Media could not be loaded');const blob=await res.blob();const objectUrl=URL.createObjectURL(blob);video.src=objectUrl;video.dataset.objectUrl=objectUrl;video.load();video.play().catch(()=>{});return true}catch(e){console.warn('Private media fallback failed:',e);return false}}
 async function uploadPrivate(file,folder){validFile(file,['image/jpeg','image/png','image/webp','application/pdf'],10);const ext=(file.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').toLowerCase();const path=`verification/${currentUser.uid}/${folder}_${Date.now()}.${ext}`;await supabaseUpload(file,path,10);return path}
 
-function showLanding(){hide($('authPage'));hide($('app'));show($('landing'));ready()}
-function showAuth(mode='register'){authMode=mode;hide($('landing'));hide($('app'));show($('authPage'));$('authTitle').textContent=mode==='register'?'Create your account':'Welcome back';$('authSubtitle').textContent=mode==='register'?'Sell and shop across Ghana.':'Sign in to continue.';$('nameWrap').style.display=mode==='register'?'block':'none';$('usernameWrap').style.display=mode==='register'?'block':'none';$('termsWrap').style.display=mode==='register'?'block':'none';$('authSubmit').textContent=mode==='register'?'Create account':'Sign in';$('authSwitch').textContent=mode==='register'?'Already have an account? Sign in':'New here? Create an account';$('authError').textContent='';ready()}
-function showApp(){hide($('landing'));hide($('authPage'));show($('app'));const isFeed=currentPage==='feed';$('app')?.classList.toggle('is-feed-page',isFeed);$('appMainScroll')?.classList.toggle('is-feed-scroll',isFeed);ready();}
+function formatReelCount(n){
+  n = Number(n) || 0;
+  if(n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if(n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return String(n);
+}
+
+function showAuthPrompt(actionMessage = 'interact on SellerFlow'){
+  if(typeof pauseAllForYouVideos === 'function') pauseAllForYouVideos(false);
+  modal(`
+    <div class="text-center py-3 px-2">
+      <div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-[#2a1e0b] to-[#141414] border border-gold/40 flex items-center justify-center text-3xl mb-4 shadow-xl shadow-gold/10">
+        ✨
+      </div>
+      <h2 class="text-2xl font-black text-white tracking-tight">Join SellerFlow</h2>
+      <p class="muted text-sm mt-2 max-w-xs mx-auto leading-relaxed">
+        Sign in or create an account to ${esc(actionMessage)}.
+      </p>
+      <div class="space-y-2.5 mt-6 max-w-sm mx-auto">
+        <button type="button" id="authPromptRegister" class="w-full py-3.5 px-4 bg-gold text-black rounded-xl font-bold text-sm hover:brightness-110 shadow-lg shadow-gold/20 flex items-center justify-center gap-2 transition active:scale-98">
+          Create free account
+        </button>
+        <button type="button" id="authPromptLogin" class="w-full py-3 px-4 bg-[#1b1b1b] hover:bg-[#252525] border border-[#383838] text-white rounded-xl font-bold text-sm transition active:scale-98">
+          Sign in
+        </button>
+        <button type="button" id="authPromptGoogle" class="w-full py-2.5 px-4 bg-[#141414] hover:bg-[#202020] border border-[#333] text-zinc-300 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 transition active:scale-98">
+          <span>Continue with Google</span>
+        </button>
+      </div>
+      <div class="mt-4">
+        <button type="button" data-close-modal class="text-xs text-zinc-400 hover:text-white py-1 px-3">
+          Not now, keep browsing
+        </button>
+      </div>
+    </div>
+  `);
+  $('authPromptRegister')?.addEventListener('click', ()=>{ closeModal(); showAuth('register'); });
+  $('authPromptLogin')?.addEventListener('click', ()=>{ closeModal(); showAuth('login'); });
+  $('authPromptGoogle')?.addEventListener('click', async()=>{
+    closeModal();
+    try {
+      loading('Opening Google sign-in…');
+      await signInWithPopup(auth, new GoogleAuthProvider());
+    } catch(e) {
+      toast(errMsg(e),'error');
+    } finally {
+      ready();
+    }
+  });
+}
+window.showAuthPrompt=showAuthPrompt;
+
+function showLanding(){
+  hide($('authPage'));
+  showApp();
+  if(typeof navigate === 'function') navigate('feed');
+  ready();
+}
+function showAuth(mode='register'){
+  if(typeof pauseAllForYouVideos === 'function') pauseAllForYouVideos(false);
+  authMode=mode;
+  hide($('app'));
+  show($('authPage'));
+  $('authTitle').textContent=mode==='register'?'Create your account':'Welcome back';
+  $('authSubtitle').textContent=mode==='register'?'Sell and shop across Ghana.':'Sign in to continue.';
+  $('nameWrap').style.display=mode==='register'?'block':'none';
+  $('usernameWrap').style.display=mode==='register'?'block':'none';
+  $('termsWrap').style.display=mode==='register'?'block':'none';
+  $('authSubmit').textContent=mode==='register'?'Create account':'Sign in';
+  $('authSwitch').textContent=mode==='register'?'Already have an account? Sign in':'New here? Create an account';
+  $('authError').textContent='';
+  ready();
+}
+function showApp(){
+  hide($('authPage'));
+  show($('app'));
+  const isFeed=currentPage==='feed';
+  $('app')?.classList.toggle('is-feed-page',isFeed);
+  $('appMainScroll')?.classList.toggle('is-feed-scroll',isFeed);
+  ready();
+}
 async function uniqueUsername(u,uid=''){const s=u.toLowerCase().trim();const q=query(collection(db,'publicProfiles'),where('usernameLower','==',s),limit(2));const snap=await getDocs(q);return snap.docs.every(d=>d.id===uid)}
 function usernameClean(v){return v.toLowerCase().replace(/[^a-z0-9_]/g,'').slice(0,24)}
 async function loadUserProfile(u){
@@ -256,17 +397,17 @@ function setNav(){
   if(adminDesktop)adminDesktop.remove();
   if(isAdmin){const b=document.createElement('button');b.id='adminNav';b.className='navbtn px-3 py-2';b.dataset.page='admin';b.textContent='Admin';b.onclick=()=>navigate('admin');document.getElementById('desktopNav').appendChild(b)}
 
-  const rightActions=$('logoutBtn')?.parentElement;
+  const rightActions=$('headerRightActions')||$('logoutBtn')?.parentElement||document.querySelector('header .ml-auto');
   if(rightActions){
     if(!currentUser){
-      rightActions.innerHTML=`<button type="button" id="headerLoginBtn" class="border border-[#444] hover:border-gold px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#181818] text-white">Sign In</button><button type="button" id="headerRegisterBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110">Register</button>`;
-      $('headerLoginBtn').onclick=()=>showAuth('login');
-      $('headerRegisterBtn').onclick=()=>showAuth('register');
+      rightActions.innerHTML=`<button type="button" id="headerLoginBtn" class="border border-[#444] hover:border-gold px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#181818] text-white transition">Sign In</button><button type="button" id="headerRegisterBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm">Register</button>`;
+      $('headerLoginBtn')?.addEventListener('click',()=>showAuth('login'));
+      $('headerRegisterBtn')?.addEventListener('click',()=>showAuth('register'));
     } else {
       rightActions.innerHTML=`<button id="notificationBtn" class="bell-btn p-2" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2">Logout</button>`;
-      $('notificationBtn').onclick=()=>{if(window.renderGroupedNotifications)return window.renderGroupedNotifications();if(window.openNotifications)return window.openNotifications();openNotifications();};
-      $('cartBtn').onclick=()=>navigate('cart');
-      $('logoutBtn').onclick=logoutUser;
+      $('notificationBtn')?.addEventListener('click',()=>{if(window.renderGroupedNotifications)return window.renderGroupedNotifications();if(window.openNotifications)return window.openNotifications();openNotifications();});
+      $('cartBtn')?.addEventListener('click',()=>navigate('cart'));
+      $('logoutBtn')?.addEventListener('click',logoutUser);
       updateCartBadge();
     }
   }
@@ -276,13 +417,11 @@ function setNav(){
   $('mobileLogout')?.addEventListener('click',logoutUser);
   $('mobileAuthBtn')?.addEventListener('click',()=>{hide($('mobileNav'));showAuth('login')});
 }
-async function navigate(page, targetPostId, options){
-  if(!currentUser && page !== 'feed' && page !== 'update'){
-    showAuth('login');
-    toast('Please sign in or create an account to access ' + page + '.', 'error');
-    return;
-  }
-  document.querySelectorAll('video').forEach(v=>{
+function pauseAllForYouVideos(destroyFeed=false){
+  try{
+    if(window._sfFeedCleanup)window._sfFeedCleanup(destroyFeed);
+  }catch(_){}
+  document.querySelectorAll('.reel-video, video').forEach(v=>{
     try{
       if(!v.paused)v.pause();
       const c=v.closest('.reel-card');
@@ -292,6 +431,15 @@ async function navigate(page, targetPostId, options){
       }
     }catch(_){}
   });
+}
+window.pauseAllForYouVideos=pauseAllForYouVideos;
+
+async function navigate(page, targetPostId, options){
+  if(!currentUser && page !== 'feed' && page !== 'marketplace' && page !== 'store' && page !== 'update'){
+    showAuthPrompt('access ' + page);
+    return;
+  }
+  pauseAllForYouVideos(page !== 'feed');
   currentPage=page;hide($('mobileNav'));setNav();
   const isFeed=currentPage==='feed';
   $('app')?.classList.toggle('is-feed-page',isFeed);
@@ -435,7 +583,21 @@ ${esc(update.message || '')}
 }
 window.renderSellerFlowUpdatePage = renderSellerFlowUpdatePage;
 
-async function renderPage(){if(!currentUser){showLanding();return}showApp();const isFeed=currentPage==='feed';$('app')?.classList.toggle('is-feed-page',isFeed);$('appMainScroll')?.classList.toggle('is-feed-scroll',isFeed);setNav();const map={feed:renderFeed,dashboard:renderDashboard,marketplace:renderMarketplace,products:renderProducts,orders:renderOrders,store:renderStore,profile:renderProfile,cart:renderCart,settings:renderSettings,admin:renderAdmin,update:renderSellerFlowUpdatePage,chats:window.renderChats||renderChats};await (map[currentPage]||renderFeed)();updateCartBadge()}
+async function renderPage(){
+  if(!currentUser && currentPage !== 'feed' && currentPage !== 'marketplace' && currentPage !== 'update'){
+    showAuthPrompt('access this page');
+    navigate('feed');
+    return;
+  }
+  showApp();
+  const isFeed=currentPage==='feed';
+  $('app')?.classList.toggle('is-feed-page',isFeed);
+  $('appMainScroll')?.classList.toggle('is-feed-scroll',isFeed);
+  setNav();
+  const map={feed:renderFeed,dashboard:renderDashboard,marketplace:renderMarketplace,products:renderProducts,orders:renderOrders,store:renderStore,profile:renderProfile,cart:renderCart,settings:renderSettings,admin:renderAdmin,update:renderSellerFlowUpdatePage,chats:window.renderChats||renderChats};
+  await (map[currentPage]||renderFeed)();
+  updateCartBadge();
+}
 
 async function renderFeed(targetPostId, options){
   const snap=await getDocs(query(collection(db,'posts'),limit(100)));
@@ -454,32 +616,184 @@ async function renderFeed(targetPostId, options){
     }
   }
   const fromProfile=options?.fromProfile;
-  $('page').innerHTML=`<div class="feed-top-bar flex items-center justify-between px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10"><div class="flex items-center gap-2 min-w-0">${fromProfile?`<button type="button" id="feedBackProfile" class="border border-[#333] hover:border-gold px-2.5 py-1 rounded-xl text-xs font-bold mr-1">← Profile</button>`:''}<h1 class="text-lg font-black tracking-tight text-white">For You</h1><span class="text-[11px] gold bg-[#1e170c] border border-[#3f2e14] px-2 py-0.5 rounded-full whitespace-nowrap">Ranked feed</span></div><div class="flex items-center gap-2"><button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0">＋ Upload</button></div></div><div class="reel-feed flex-1 min-h-0 h-full w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">${feedPosts.length?feedPosts.map(postCard).join(''):`<div class="h-full flex items-center justify-center p-6"><div class="card p-8 text-center max-w-md"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2 text-sm">Share something and it will be published while SellerFlow reviews it for safety.</p><button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button></div></div>`}</div><div class="hidden lg:flex flex-col gap-2 fixed right-6 bottom-1/2 translate-y-1/2 z-20"><button id="feedPrevBtn" class="w-10 h-10 rounded-full bg-[#181818]/90 border border-[#333] hover:border-gold hover:text-gold flex items-center justify-center text-sm shadow-xl" title="Previous post (↑)">▲</button><button id="feedNextBtn" class="w-10 h-10 rounded-full bg-[#181818]/90 border border-[#333] hover:border-gold hover:text-gold flex items-center justify-center text-sm shadow-xl" title="Next post (↓)">▼</button></div>`;
+  $('page').innerHTML=`
+    <div class="feed-top-bar flex items-center justify-between px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10">
+      <div class="flex items-center gap-2 min-w-0">
+        ${fromProfile?`<button type="button" id="feedBackProfile" class="border border-[#333] hover:border-gold px-2.5 py-1 rounded-xl text-xs font-bold mr-1">← Profile</button>`:''}
+        <h1 class="text-lg font-black tracking-tight text-white">For You</h1>
+        <span class="text-[11px] gold bg-[#1e170c] border border-[#3f2e14] px-2 py-0.5 rounded-full whitespace-nowrap">Ranked feed</span>
+      </div>
+      <div class="flex items-center gap-2">
+        ${!currentUser ? `
+          <button type="button" id="feedLoginBtn" class="border border-[#444] hover:border-gold px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#141414] text-white transition">Sign In</button>
+          <button type="button" id="feedRegisterBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 shadow-sm transition">Register</button>
+        ` : `
+          <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0">＋ Upload</button>
+        `}
+      </div>
+    </div>
+    <div class="reel-feed flex-1 min-h-0 h-full w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
+      ${feedPosts.length?feedPosts.map(postCard).join(''):`
+        <div class="h-full flex items-center justify-center p-6">
+          <div class="card p-8 text-center max-w-md">
+            <div class="text-5xl mb-3">🎬</div>
+            <h2 class="text-xl font-bold">Your For You feed is ready</h2>
+            <p class="muted mt-2 text-sm">Share something and it will be published while SellerFlow reviews it for safety.</p>
+            <button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button>
+          </div>
+        </div>
+      `}
+    </div>
+    <div class="hidden lg:flex flex-col gap-2 fixed right-6 bottom-1/2 translate-y-1/2 z-20">
+      <button id="feedPrevBtn" class="w-10 h-10 rounded-full bg-[#181818]/90 border border-[#333] hover:border-gold hover:text-gold flex items-center justify-center text-sm shadow-xl" title="Previous post (↑)">▲</button>
+      <button id="feedNextBtn" class="w-10 h-10 rounded-full bg-[#181818]/90 border border-[#333] hover:border-gold hover:text-gold flex items-center justify-center text-sm shadow-xl" title="Next post (↓)">▼</button>
+    </div>
+  `;
+
   $('feedBackProfile')?.addEventListener('click',()=>navigate('profile'));
-  $('openFeedUpload')?.addEventListener('click',openPostModal);
-  $('openFeedUploadEmpty')?.addEventListener('click',openPostModal);
+  $('feedLoginBtn')?.addEventListener('click',()=>showAuth('login'));
+  $('feedRegisterBtn')?.addEventListener('click',()=>showAuth('register'));
+  $('openFeedUpload')?.addEventListener('click',()=>{
+    if(!currentUser) return showAuthPrompt('upload videos or photos to For You');
+    openPostModal();
+  });
+  $('openFeedUploadEmpty')?.addEventListener('click',()=>{
+    if(!currentUser) return showAuthPrompt('upload videos or photos to For You');
+    openPostModal();
+  });
   document.querySelectorAll('[data-post-action]').forEach(b=>b.onclick=postAction);
+  document.querySelectorAll('[data-reel-follow]').forEach(b=>b.onclick=(e)=>{
+    e.stopPropagation();
+    toggleFollowSeller(b.dataset.reelFollow);
+  });
+  document.querySelectorAll('[data-open-seller]').forEach(b=>b.onclick=(e)=>{
+    e.stopPropagation();
+    openStore(b.dataset.openSeller);
+  });
   setupReelPlayback(targetPostId);
 }
 function verifyBadge(s){return s?.verified?` <span class="verified-badge" title="SellerFlow verified">✓</span>`:''}
 function postCard(p){
- const s=p.platformLabel==='SellerFlow'&&p.isAdminPost?{...sellerProfile(p.sellerId),name:'SellerFlow',username:'sellerflow',verified:true}:sellerProfile(p.sellerId),liked=(p.likes||[]).includes(currentUser.uid),saved=(p.saves||[]).includes(currentUser.uid);
- let media='';
- if(p.mediaUrl){
-   if(p.mediaType?.startsWith('video')){
-     media=`<video class="reel-media reel-video" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" data-post-id="${p.id}" playsinline webkit-playsinline loop preload="metadata" poster="${esc(p.thumbnailUrl||'')}"></video><button type="button" class="reel-play-toggle" data-video-toggle="${p.id}">▶</button><div class="reel-sound-label">🔊 Sound</div>`;
-   }else{
-     media=`<img loading="lazy" class="reel-media" src="${esc(p.mediaUrl)}" alt="SellerFlow post" data-media-path="${esc(p.mediaPath||'')}" onerror="window.__sfMediaFallback?window.__sfMediaFallback(this):null">`;
-   }
- }else{
-   media=`<div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"><div class="text-6xl mb-3">🛍️</div><div class="text-lg font-bold max-w-md">${esc(p.text||'SellerFlow post')}</div></div>`;
- }
- const soundText=p.soundName||'Original sound';
- return `<article class="reel-card" data-reel-id="${p.id}"><div class="reel-media-wrap">${media}</div><div class="reel-shade"></div><div class="reel-actions"><button class="reel-action" data-post-action="like" data-id="${p.id}" title="Like">${liked?'❤️':'🤍'}<div class="text-[10px] mt-0.5">${p.likes?.length||0}</div></button><button class="reel-action" data-post-action="comment" data-id="${p.id}" title="Comment">💬<div class="text-[10px] mt-0.5">${p.comments?.length||0}</div></button><button class="reel-action" data-post-action="save" data-id="${p.id}" title="Save">🔖<div class="text-[10px] mt-0.5">${p.saves?.length||0}</div></button>${p.mediaType?.startsWith('video')?`<button class="reel-action" data-post-action="sound" data-id="${p.id}" title="Save sound">🎵</button>`:''}<button class="reel-action" data-post-action="share" data-id="${p.id}" title="Share">↗</button></div><div class="reel-content"><div class="flex items-center gap-3"><button data-open-seller="${p.sellerId}">${avatar(s)}</button><button data-open-seller="${p.sellerId}" class="text-left"><b>${esc(s.name||s.username)}</b>${verifyBadge(s)}<div class="muted text-xs">@${esc(s.username||'seller')} · ${new Date(ts(p.createdAt)||Date.now()).toLocaleDateString('en-GH',{day:'numeric',month:'short'})}</div></button></div>${p.text?`<p class="mt-4 text-sm md:text-base whitespace-pre-wrap leading-relaxed max-w-2xl">${esc(p.text)}</p>`:''}<div class="mt-3 flex flex-wrap items-center gap-2"><span class="sound-chip">🎵 ${esc(soundText)}</span>${p.soundOriginName?`<span class="post-origin">Original by ${esc(p.soundOriginName)}</span>`:''}</div></div></article>`;
+  const s=p.platformLabel==='SellerFlow'&&p.isAdminPost?{...sellerProfile(p.sellerId),name:'SellerFlow',username:'sellerflow',verified:true}:sellerProfile(p.sellerId);
+  const liked=(p.likes||[]).includes(currentUser?.uid);
+  const saved=(p.saves||[]).includes(currentUser?.uid);
+  const isMine = currentUser && currentUser.uid === p.sellerId;
+  const isFollowing = currentUser && (currentProfile?.following||[]).includes(p.sellerId);
+  let media='';
+  if(p.mediaUrl){
+    if(p.mediaType?.startsWith('video')){
+      media=`<video class="reel-media reel-video" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" data-post-id="${p.id}" playsinline webkit-playsinline loop preload="metadata" poster="${esc(p.thumbnailUrl||'')}"></video><button type="button" class="reel-play-toggle" data-video-toggle="${p.id}">▶</button><div class="reel-sound-label">🔊 Sound</div>`;
+    }else{
+      media=`<img loading="lazy" class="reel-media" src="${esc(p.mediaUrl)}" alt="SellerFlow post" data-media-path="${esc(p.mediaPath||'')}" onerror="window.__sfMediaFallback?window.__sfMediaFallback(this):null">`;
+    }
+  }else{
+    media=`<div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"><div class="text-6xl mb-3">🛍️</div><div class="text-lg font-bold max-w-md">${esc(p.text||'SellerFlow post')}</div></div>`;
+  }
+  const soundText=p.soundName||'Original sound';
+  const avatarUrl=s.avatarUrl||`https://api.dicebear.com/7.x/identicon/svg?seed=${esc(s.username||p.sellerId)}`;
+
+  return `
+    <article class="reel-card" data-reel-id="${p.id}">
+      <div class="reel-media-wrap">${media}</div>
+      <div class="reel-shade"></div>
+
+      <!-- Modern grouped vertical action bar -->
+      <div class="reel-actions">
+        <!-- 1. Creator avatar with follow '+' button nested underneath -->
+        <div class="reel-creator-stack">
+          <button type="button" class="reel-avatar-btn" data-open-seller="${p.sellerId}" title="View @${esc(s.username||'seller')}">
+            <img src="${esc(avatarUrl)}" class="reel-avatar-img" alt="${esc(s.username||'seller')}" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${esc(s.username||p.sellerId)}'">
+          </button>
+          ${!isMine && !isFollowing ? `
+            <button type="button" class="reel-follow-badge" data-reel-follow="${p.sellerId}" title="Follow @${esc(s.username||'seller')}">
+              <span>＋</span>
+            </button>
+          ` : ''}
+        </div>
+
+        <!-- 2. Like button with count directly underneath -->
+        <div class="reel-action-group">
+          <button type="button" class="reel-action ${liked ? 'is-liked' : ''}" data-post-action="like" data-id="${p.id}" title="Like">
+            <svg class="w-6 h-6 ${liked ? 'text-red-500 fill-red-500' : 'text-white fill-none stroke-current'}" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
+          </button>
+          <span class="reel-action-count">${formatReelCount(p.likes?.length||0)}</span>
+        </div>
+
+        <!-- 3. Comment button with count directly underneath -->
+        <div class="reel-action-group">
+          <button type="button" class="reel-action text-white" data-post-action="comment" data-id="${p.id}" title="Comments">
+            <svg class="w-6 h-6 text-white fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+          </button>
+          <span class="reel-action-count">${formatReelCount(p.comments?.length||0)}</span>
+        </div>
+
+        <!-- 4. Save/Bookmark button with count directly underneath -->
+        <div class="reel-action-group">
+          <button type="button" class="reel-action ${saved ? 'is-saved' : ''}" data-post-action="save" data-id="${p.id}" title="Save">
+            <svg class="w-6 h-6 ${saved ? 'text-yellow-400 fill-yellow-400' : 'text-white fill-none stroke-current'}" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            </svg>
+          </button>
+          <span class="reel-action-count">${formatReelCount(p.saves?.length||0)}</span>
+        </div>
+
+        <!-- 5. Share button with label directly underneath -->
+        <div class="reel-action-group">
+          <button type="button" class="reel-action text-white" data-post-action="share" data-id="${p.id}" title="Share">
+            <svg class="w-6 h-6 text-white fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+            </svg>
+          </button>
+          <span class="reel-action-count">Share</span>
+        </div>
+
+        <!-- 6. Spinning audio disc with avatar artwork -->
+        <div class="reel-action-group">
+          <button type="button" class="reel-sound-disc" data-post-action="sound" data-id="${p.id}" title="Sound: ${esc(soundText)}">
+            <img src="${esc(avatarUrl)}" class="w-6 h-6 rounded-full object-cover pointer-events-none" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${esc(s.username||p.sellerId)}'">
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom overlay info -->
+      <div class="reel-content">
+        <div class="flex items-center gap-2 mb-2 flex-wrap">
+          <button type="button" data-open-seller="${p.sellerId}" class="flex items-center gap-1.5 text-white font-black text-sm md:text-base hover:text-gold transition">
+            <span>@${esc(s.username||'seller')}</span>
+            ${verifyBadge(s)}
+          </button>
+          ${!isMine && !isFollowing ? `
+            <button type="button" class="reel-follow-pill" data-reel-follow="${p.sellerId}">
+              Follow
+            </button>
+          ` : ''}
+          <button type="button" class="reel-store-pill" data-open-seller="${p.sellerId}">
+            🏪 Store
+          </button>
+        </div>
+        ${p.text ? `<p class="reel-caption text-sm md:text-base text-zinc-100/95 leading-snug line-clamp-3 mb-2.5">${esc(p.text)}</p>` : ''}
+        <div class="flex items-center gap-2">
+          <button type="button" class="reel-sound-ticker" data-post-action="sound" data-id="${p.id}">
+            <span class="text-gold text-xs">🎵</span>
+            <span class="truncate font-medium text-xs max-w-[210px]">${esc(soundText)}</span>
+            ${p.soundOriginName ? `<span class="text-[10px] text-zinc-400 truncate">· ${esc(p.soundOriginName)}</span>` : ''}
+          </button>
+        </div>
+      </div>
+    </article>
+  `;
 }
 function setupReelPlayback(targetPostId){
  const feedEl=document.getElementById('reelFeed');
  if(!feedEl)return;
+ if(window._sfFeedCleanup){
+   try{window._sfFeedCleanup(true);}catch(_){}
+   window._sfFeedCleanup=null;
+ }
  const cards=[...feedEl.querySelectorAll('.reel-card')];
  const videos=[...feedEl.querySelectorAll('.reel-video')];
  let audioCtx=null;
@@ -615,6 +929,12 @@ function setupReelPlayback(targetPostId){
     v.addEventListener('stalled',()=>{if(v.readyState===0)fallback()});
     v.addEventListener('play',()=>{
       enableAudio();
+      // Ensure only the currently watched For You video can play
+      if(currentPage!=='feed'||(currentActiveCard&&card!==currentActiveCard)){
+        try{v.pause();}catch(_){}
+        updateCardButton(card,false);
+        return;
+      }
       pauseAllVideosExcept(v);
       updateCardButton(card,true);
     });
@@ -629,6 +949,7 @@ function setupReelPlayback(targetPostId){
       if(!v)return;
       enableAudio();
       if(v.paused){
+        currentActiveCard=card;
         pauseAllVideosExcept(v);
         v.dataset.userPaused='0';
         v.play().catch(()=>{v.muted=true;v.play().catch(()=>{})});
@@ -647,9 +968,23 @@ function setupReelPlayback(targetPostId){
 
   function activateCard(card){
     if(!card)return;
-    if(currentPage!=='feed')return;
+    if(currentPage!=='feed'){
+      pauseAllVideosExcept(null);
+      return;
+    }
 
     const activeVideo=card.querySelector('.reel-video');
+
+    // Immediately pause previous card's video if switching cards
+    if(currentActiveCard&&currentActiveCard!==card){
+      const prevVideo=currentActiveCard.querySelector('.reel-video');
+      if(prevVideo){
+        try{if(!prevVideo.paused)prevVideo.pause();}catch(_){}
+        updateCardButton(currentActiveCard,false);
+      }
+    }
+
+    // Strictly ensure only the currently watched video can play
     pauseAllVideosExcept(activeVideo);
 
     // Warm up and pre-load next and surrounding videos immediately
@@ -691,10 +1026,11 @@ function setupReelPlayback(targetPostId){
     }
   }
 
+  let io=null;
   if('IntersectionObserver'in window){
-    const io=new IntersectionObserver(entries=>{
+    io=new IntersectionObserver(entries=>{
       entries.forEach(entry=>{
-        if(!entry.isIntersecting || entry.intersectionRatio < 0.55){
+        if(!entry.isIntersecting || entry.intersectionRatio < 0.6){
           entry.target.querySelectorAll('video').forEach(v=>{
             try{
               if(!v.paused)v.pause();
@@ -709,10 +1045,10 @@ function setupReelPlayback(targetPostId){
           best=entry;
         }
       });
-      if(best&&best.intersectionRatio>=0.55){
+      if(best&&best.intersectionRatio>=0.6){
         activateCard(best.target);
       }
-    },{root:feedEl,threshold:[0,0.1,0.25,0.4,0.55,0.7,0.85,1.0]});
+    },{root:feedEl,threshold:[0,0.1,0.25,0.4,0.6,0.75,0.85,1.0]});
     cards.forEach(c=>io.observe(c));
   }
 
@@ -724,12 +1060,26 @@ function setupReelPlayback(targetPostId){
     if(e.deltaY>0&&idx<cards.length-1){
       e.preventDefault();
       wheelLock=true;
+      if(currentActiveCard){
+        const v=currentActiveCard.querySelector('.reel-video');
+        if(v){
+          try{if(!v.paused)v.pause();}catch(_){}
+          updateCardButton(currentActiveCard,false);
+        }
+      }
       preloadSurroundingReels(cards[idx+1]);
       cards[idx+1].scrollIntoView({behavior:'smooth',block:'start'});
       setTimeout(()=>{wheelLock=false},350);
     }else if(e.deltaY<0&&idx>0){
       e.preventDefault();
       wheelLock=true;
+      if(currentActiveCard){
+        const v=currentActiveCard.querySelector('.reel-video');
+        if(v){
+          try{if(!v.paused)v.pause();}catch(_){}
+          updateCardButton(currentActiveCard,false);
+        }
+      }
       preloadSurroundingReels(cards[idx-1]);
       cards[idx-1].scrollIntoView({behavior:'smooth',block:'start'});
       setTimeout(()=>{wheelLock=false},350);
@@ -744,7 +1094,8 @@ function setupReelPlayback(targetPostId){
       const idx=cards.indexOf(currentActiveCard);
       if(idx>=0){
         const offset=Math.abs(top-idx*h);
-        if(offset>h*0.12){
+        // Immediately pause the old video when swiping or scrolling away
+        if(offset>12){
           const v=currentActiveCard.querySelector('.reel-video');
           if(v){
             try{
@@ -752,7 +1103,6 @@ function setupReelPlayback(targetPostId){
             }catch(_){}
             updateCardButton(currentActiveCard,false);
           }
-          // Preload the target card being scrolled towards
           const targetIdx=top>idx*h?Math.min(cards.length-1,idx+1):Math.max(0,idx-1);
           if(cards[targetIdx])preloadSurroundingReels(cards[targetIdx]);
         }
@@ -760,6 +1110,7 @@ function setupReelPlayback(targetPostId){
     }
     clearTimeout(settleTimer);
     settleTimer=setTimeout(()=>{
+      if(currentPage!=='feed')return;
       const idx=Math.round(top/(h||1));
       if(cards[idx]){
         if(Math.abs(top-idx*h)>6){
@@ -767,7 +1118,7 @@ function setupReelPlayback(targetPostId){
         }
         activateCard(cards[idx]);
       }
-    },80);
+    },60);
   },{passive:true});
 
   const pauseBackgroundVideos=()=>{
@@ -801,34 +1152,62 @@ function setupReelPlayback(targetPostId){
   window.addEventListener('pagehide',pauseBackgroundVideos);
   window.addEventListener('freeze',pauseBackgroundVideos);
 
- const prevBtn=document.getElementById('feedPrevBtn');
- const nextBtn=document.getElementById('feedNextBtn');
- if(prevBtn){
-   prevBtn.onmouseenter=()=>{
-     const idx=cards.indexOf(currentActiveCard||cards[0]);
-     if(idx>0)preloadSurroundingReels(cards[idx-1]);
-   };
-   prevBtn.onclick=()=>{
-     const idx=cards.indexOf(currentActiveCard||cards[0]);
-     if(idx>0){
-       preloadSurroundingReels(cards[idx-1]);
-       cards[idx-1].scrollIntoView({behavior:'smooth',block:'start'});
-     }
-   };
- }
- if(nextBtn){
-   nextBtn.onmouseenter=()=>{
-     const idx=cards.indexOf(currentActiveCard||cards[0]);
-     if(idx<cards.length-1)preloadSurroundingReels(cards[idx+1]);
-   };
-   nextBtn.onclick=()=>{
-     const idx=cards.indexOf(currentActiveCard||cards[0]);
-     if(idx<cards.length-1){
-       preloadSurroundingReels(cards[idx+1]);
-       cards[idx+1].scrollIntoView({behavior:'smooth',block:'start'});
-     }
-   };
- }
+  window._sfFeedCleanup=function(destroy=false){
+    try{if(io)io.disconnect();}catch(_){}
+    clearTimeout(settleTimer);
+    document.removeEventListener('visibilitychange',handleDocVisibility);
+    document.removeEventListener('webkitvisibilitychange',handleDocVisibility);
+    window.removeEventListener('blur',pauseBackgroundVideos);
+    window.removeEventListener('pagehide',pauseBackgroundVideos);
+    window.removeEventListener('freeze',pauseBackgroundVideos);
+    if(destroy){
+      pauseBackgroundVideos();
+      currentActiveCard=null;
+    }
+  };
+
+  const prevBtn=document.getElementById('feedPrevBtn');
+  const nextBtn=document.getElementById('feedNextBtn');
+  if(prevBtn){
+    prevBtn.onmouseenter=()=>{
+      const idx=cards.indexOf(currentActiveCard||cards[0]);
+      if(idx>0)preloadSurroundingReels(cards[idx-1]);
+    };
+    prevBtn.onclick=()=>{
+      const idx=cards.indexOf(currentActiveCard||cards[0]);
+      if(idx>0){
+        if(currentActiveCard){
+          const v=currentActiveCard.querySelector('.reel-video');
+          if(v){
+            try{if(!v.paused)v.pause();}catch(_){}
+            updateCardButton(currentActiveCard,false);
+          }
+        }
+        preloadSurroundingReels(cards[idx-1]);
+        cards[idx-1].scrollIntoView({behavior:'smooth',block:'start'});
+      }
+    };
+  }
+  if(nextBtn){
+    nextBtn.onmouseenter=()=>{
+      const idx=cards.indexOf(currentActiveCard||cards[0]);
+      if(idx<cards.length-1)preloadSurroundingReels(cards[idx+1]);
+    };
+    nextBtn.onclick=()=>{
+      const idx=cards.indexOf(currentActiveCard||cards[0]);
+      if(idx<cards.length-1){
+        if(currentActiveCard){
+          const v=currentActiveCard.querySelector('.reel-video');
+          if(v){
+            try{if(!v.paused)v.pause();}catch(_){}
+            updateCardButton(currentActiveCard,false);
+          }
+        }
+        preloadSurroundingReels(cards[idx+1]);
+        cards[idx+1].scrollIntoView({behavior:'smooth',block:'start'});
+      }
+    };
+  }
 
  if(targetPostId){
    const targetEl=document.querySelector(`[data-reel-id="${targetPostId}"]`);
@@ -852,13 +1231,68 @@ function setupReelPlayback(targetPostId){
 function updateVideoButton(v){const c=v.closest('.reel-card');const b=c?.querySelector('[data-video-toggle]');if(b)b.textContent=v.paused?'▶':'❚❚'}
 
 async function postAction(e){
+  const b=e.currentTarget,id=b.dataset.id,action=b.dataset.postAction;
   if(!currentUser){
-    showAuth('login');
-    toast('Please sign in or create an account to interact.', 'error');
+    const verb = action === 'like' ? 'like posts on For You' : action === 'comment' ? 'comment on posts' : action === 'save' ? 'save posts to your collection' : action === 'sound' ? 'save and use sounds' : 'interact on SellerFlow';
+    showAuthPrompt(verb);
     return;
   }
-  const b=e.currentTarget,id=b.dataset.id,action=b.dataset.postAction,r=doc(db,'posts',id),s=await getDoc(r);if(!snapshotExists(s))return;const p=s.data();if(action==='like')await updateDoc(r,{likes:(p.likes||[]).includes(currentUser.uid)?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});if(action==='save')await updateDoc(r,{saves:(p.saves||[]).includes(currentUser.uid)?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});if(action==='comment'){openCommentPanel(id,p);return}if(action==='sound'){await saveSoundForUser(id,p);return}if(action==='share'){const url=location.href.split('#')[0]+'#post='+id;if(navigator.share){try{await navigator.share({title:'SellerFlow post',text:p.text||'Check this SellerFlow post',url})}catch{}}else{await navigator.clipboard?.writeText(url);toast('Post link copied','success')}}if(action==='like'||action==='save'){const wasActive=(action==='like'?(p.likes||[]).includes(currentUser.uid):(p.saves||[]).includes(currentUser.uid));const wrap=document.querySelector(`[data-reel-id="${id}"]`);const btn=wrap?.querySelector(`[data-post-action="${action}"]`);if(btn){btn.firstChild.textContent=action==='like'?(wasActive?'🤍':'❤️'):'🔖';const countEl=btn.querySelector('div');if(countEl)countEl.textContent=String((action==='like'?(p.likes||[]).length:(p.saves||[]).length)+(wasActive?-1:1));}toast(action==='like'?'Reaction updated':'Post saved','success')}}
-function openCommentPanel(id,p){const root=$('modalRoot');root.innerHTML=`<div class="comment-backdrop" id="commentBackdrop"></div><section class="comment-sheet"><div class="flex items-center justify-between"><div><h2 class="text-xl font-bold">Comments</h2><p class="muted text-sm">Your Reel stays visible and playing while you comment.</p></div><button type="button" id="closeCommentPanel" class="w-10 h-10 rounded-full border border-[#333]">×</button></div><div class="space-y-3 my-5 max-h-64 overflow-auto">${(p.comments||[]).slice(-30).map(c=>`<div class="bg-[#191919] p-3 rounded-xl"><b>${esc(c.name||'User')}</b><div class="text-sm mt-1">${esc(c.text)}</div></div>`).join('')||'<p class="muted">No comments yet.</p>'}</div><textarea id="commentText" class="w-full bg-[#191919] border border-[#333] rounded-xl p-3" rows="3" placeholder="Write a comment…"></textarea><div class="flex justify-end mt-3">${button('Comment','submitComment')}</div></section>`;$('closeCommentPanel').onclick=closeModal;$('commentBackdrop').onclick=closeModal;$('submitComment').onclick=async()=>{const text=$('commentText').value.trim();if(!text)return toast('Write a comment first','error');await updateDoc(doc(db,'posts',id),{comments:arrayUnion({uid:currentUser.uid,name:isAdmin?'SellerFlow':(currentProfile.name||'SellerFlow user'),createdAt:Date.now(),text})});closeModal();toast('Comment added','success')}}
+  const r=doc(db,'posts',id),s=await getDoc(r);if(!snapshotExists(s))return;const p=s.data();if(action==='like')await updateDoc(r,{likes:(p.likes||[]).includes(currentUser.uid)?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});if(action==='save')await updateDoc(r,{saves:(p.saves||[]).includes(currentUser.uid)?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});if(action==='comment'){openCommentPanel(id,p);return}if(action==='sound'){await saveSoundForUser(id,p);return}if(action==='share'){const url=location.href.split('#')[0]+'#post='+id;if(navigator.share){try{await navigator.share({title:'SellerFlow post',text:p.text||'Check this SellerFlow post',url})}catch{}}else{await navigator.clipboard?.writeText(url);toast('Post link copied','success')}}if(action==='like'||action==='save'){const wasActive=(action==='like'?(p.likes||[]).includes(currentUser.uid):(p.saves||[]).includes(currentUser.uid));const wrap=document.querySelector(`[data-reel-id="${id}"]`);const btn=wrap?.querySelector(`[data-post-action="${action}"]`);if(btn){
+    if(action==='like'){
+      const svg=btn.querySelector('svg');
+      if(svg){
+        if(wasActive){
+          svg.setAttribute('class','w-6 h-6 text-white fill-none stroke-current');
+          btn.classList.remove('is-liked');
+        }else{
+          svg.setAttribute('class','w-6 h-6 text-red-500 fill-red-500');
+          btn.classList.add('is-liked');
+        }
+      }
+    } else if(action==='save'){
+      const svg=btn.querySelector('svg');
+      if(svg){
+        if(wasActive){
+          svg.setAttribute('class','w-6 h-6 text-white fill-none stroke-current');
+          btn.classList.remove('is-saved');
+        }else{
+          svg.setAttribute('class','w-6 h-6 text-yellow-400 fill-yellow-400');
+          btn.classList.add('is-saved');
+        }
+      }
+    }
+    const countEl=btn.parentElement?.querySelector('.reel-action-count');
+    if(countEl){
+      const currentCount=action==='like'?(p.likes||[]).length:(p.saves||[]).length;
+      countEl.textContent=formatReelCount(Math.max(0, currentCount+(wasActive?-1:1)));
+    }
+  }toast(action==='like'?'Reaction updated':'Post saved','success')}}
+
+async function toggleFollowSeller(uid){
+  if(!currentUser) return showAuthPrompt('follow verified sellers');
+  try{
+    const r=doc(db,'publicProfiles',uid);
+    const p=sellerProfile(uid);
+    const following=(p.followers||[]).includes(currentUser.uid);
+    if(following){
+      await updateDoc(r,{followers:arrayRemove(currentUser.uid)});
+      await updateDoc(doc(db,'publicProfiles',currentUser.uid),{following:arrayRemove(uid)});
+      toast('Unfollowed @'+(p.username||'seller'),'info');
+    }else{
+      await updateDoc(r,{followers:arrayUnion(currentUser.uid)});
+      await updateDoc(doc(db,'publicProfiles',currentUser.uid),{following:arrayUnion(uid)});
+      if(window.notifyFollow)await window.notifyFollow(uid);
+      toast('Following @'+(p.username||'seller'),'success');
+    }
+    await loadPublicProfiles();
+    renderFeed();
+  }catch(e){
+    toast(errMsg(e),'error');
+  }
+}
+window.toggleFollowSeller=toggleFollowSeller;
+
+function openCommentPanel(id,p){const root=$('modalRoot');root.innerHTML=`<div class="comment-backdrop" id="commentBackdrop"></div><section class="comment-sheet"><div class="flex items-center justify-between"><div><h2 class="text-xl font-bold">Comments</h2><p class="muted text-sm">Your Reel stays visible and playing while you comment.</p></div><button type="button" id="closeCommentPanel" class="w-10 h-10 rounded-full border border-[#333]">×</button></div><div class="space-y-3 my-5 max-h-64 overflow-auto">${(p.comments||[]).slice(-30).map(c=>`<div class="bg-[#191919] p-3 rounded-xl"><b>${esc(c.name||'User')}</b><div class="text-sm mt-1">${esc(c.text)}</div></div>`).join('')||'<p class="muted">No comments yet.</p>'}</div><textarea id="commentText" class="w-full bg-[#191919] border border-[#333] rounded-xl p-3" rows="3" placeholder="Write a comment…"></textarea><div class="flex justify-end mt-3">${button('Comment','submitComment')}</div></section>`;$('closeCommentPanel').onclick=closeModal;$('commentBackdrop').onclick=closeModal;$('submitComment').onclick=async()=>{if(!currentUser){closeModal();return showAuthPrompt('post comments on SellerFlow');}const text=$('commentText').value.trim();if(!text)return toast('Write a comment first','error');await updateDoc(doc(db,'posts',id),{comments:arrayUnion({uid:currentUser.uid,name:isAdmin?'SellerFlow':(currentProfile.name||'SellerFlow user'),createdAt:Date.now(),text})});closeModal();toast('Comment added','success')}}
 async function saveSoundForUser(id,p){try{const soundId=p.soundId||id,originId=p.soundOriginPostId||id,originUid=p.soundOriginatorId||p.sellerId,origin=sellerProfile(originUid);await setDoc(doc(db,'savedSounds',currentUser.uid,'items',soundId),{soundId,originPostId:originId,originatorId:originUid,originatorName:origin.name||origin.username||'SellerFlow creator',soundName:p.soundName||'Original sound',savedAt:serverTimestamp()},{merge:true});localStorage.setItem('sellerflow_active_sound',JSON.stringify({soundId,originPostId:originId,originatorId:originUid,soundName:p.soundName||'Original sound',originatorName:origin.name||origin.username||'SellerFlow creator'}));toast(`Sound saved — original by ${origin.name||origin.username||'SellerFlow creator'}`,'success')}catch(e){toast(errMsg(e),'error')}}
 function getActiveSound(){try{return JSON.parse(localStorage.getItem('sellerflow_active_sound')||'null')}catch{return null}}
 function openPostModal(){const active=getActiveSound();modal(`<h2 class="text-xl font-bold">Create SellerFlow post</h2><p class="muted text-sm mt-1">Photos and videos publish immediately while SellerFlow reviews them for safety.</p>${active?`<div class="sound-chip mt-4">🎵 Using sound: ${esc(active.soundName)} · Original by ${esc(active.originatorName)}</div>`:''}<textarea id="postText" class="w-full mt-4 bg-[#191919] border border-[#333] rounded-xl p-3" rows="5" placeholder="What do you want to share?"></textarea><input id="postFile" type="file" accept="image/*,video/mp4,video/webm" class="w-full mt-3"><p class="muted text-xs mt-2">Images up to 10MB; videos up to 50MB.</p><div class="flex justify-end gap-2 mt-4"><button data-close-modal class="px-4 py-2">Cancel</button>${button('Publish to For You','publishPost')}</div>`);$('publishPost').onclick=async()=>{try{const text=$('postText').value.trim(),file=$('postFile').files[0];if(!text&&!file)throw Error('Add text or media.');loading('Publishing to For You…');let mediaUrl='',mediaType='',mediaPath='';if(file){validFile(file,['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm'],50);const x=await uploadPublic(file,'posts');mediaUrl=x.url;mediaPath=x.path;mediaType=file.type}const sound=active||null;const ref=await addDoc(collection(db,'posts'),{sellerId:currentUser.uid,text,mediaUrl,mediaPath,mediaType,likes:[],saves:[],comments:[],status:'published',createdAt:serverTimestamp(),submittedAt:serverTimestamp(),reviewStatus:'under_review',soundId:sound?.soundId||'',soundName:sound?.soundName||(mediaType.startsWith('video')?'Original sound':''),soundOriginPostId:sound?.originPostId||'',soundOriginatorId:sound?.originatorId||currentUser.uid,soundOriginName:sound?.originatorName||(isAdmin?'SellerFlow':currentProfile.name||'SellerFlow creator'),platformLabel:'SellerFlow',isAdminPost:!!isAdmin});if(mediaType.startsWith('video')&&!sound)await setDoc(doc(db,'sounds',ref.id),{soundId:ref.id,originPostId:ref.id,originatorId:currentUser.uid,originatorName:isAdmin?'SellerFlow':(currentProfile.name||currentProfile.username||'SellerFlow creator'),soundName:`Original sound · ${currentProfile.name||'SellerFlow creator'}`,createdAt:serverTimestamp()},{merge:true});closeModal();toast('Published to For You. SellerFlow is reviewing it for safety.','success');navigate('feed')}catch(e){toast(errMsg(e),'error')}finally{ready()}}}
@@ -927,7 +1361,97 @@ async function renderMarketplace(){
 }
 function storeCard(s){const p=sellerProfile(s.ownerId);return `<div class="card p-5"><div class="flex items-center gap-3">${avatar(p)}<div><b>${esc(s.name)}</b><div class="text-xs mt-1 flex items-center gap-1"><span class="verified-badge">✓</span><span class="muted">Verified</span></div></div></div><p class="muted text-sm mt-4 line-clamp-3">${esc(s.description||'')}</p><button data-open-store="${s.ownerId}" class="mt-4 w-full border border-[#444] rounded-xl p-2">Visit store</button></div>`}
 function bindStoreCards(){document.querySelectorAll('[data-open-store]').forEach(b=>b.onclick=()=>openStore(b.dataset.openStore))}
-async function openStore(uid){loading('Opening store…');try{const [ss,ps]=await Promise.all([getDoc(doc(db,'stores',uid)),getDoc(doc(db,'publicProfiles',uid))]);const store=snapshotExists(ss)?ss.data():null,p=snapshotExists(ps)?ps.data():sellerProfile(uid);const products=(await getDocs(query(collection(db,'products'),where('sellerId','==',uid)))).docs.map(d=>({id:d.id,...d.data()}));const following=(p.followers||[]).includes(currentUser.uid);await addDoc(collection(db,'profileVisits'),{visitorId:currentUser.uid,profileId:uid,createdAt:serverTimestamp()}).catch(()=>{});$('page').innerHTML=`<div class="flex items-center gap-3 mb-5"><button id="backMarket" class="border border-[#333] rounded-xl px-3 py-2">←</button><div>${avatar(p,'w-16 h-16 rounded-full object-cover bg-[#222]')}</div><div><h1 class="text-2xl font-black">${esc(store?.name||p.name)}${p.verified?' <span class="verified-badge ml-1">✓</span>':''}</h1><div class="muted">@${esc(p.username)} · ${(p.followers||[]).length} followers</div></div></div><div class="store-map-card p-5 mb-5"><div class="grid sm:grid-cols-3 gap-3 mb-4"><div class="bg-[#111] rounded-xl p-3"><div class="muted text-xs">📍 Location</div><b>${esc(store?.location||'Location not added')}</b></div><div class="bg-[#111] rounded-xl p-3"><div class="muted text-xs">🏢 Address</div><b>${esc(store?.address||'Address not added')}</b></div><div class="bg-[#111] rounded-xl p-3"><div class="muted text-xs">🕒 Hours</div><b>${esc(store?.hours||'Hours not added')}</b></div></div><p>${esc(store?.description||'')}</p><div class="flex flex-wrap gap-2 mt-4">${store?.location||store?.address?`<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((store?.address||'')+' '+(store?.location||''))}" class="px-4 py-2 rounded-xl border border-[#444]">📍 Open location</a>`:''}<button id="followBtn" class="px-4 py-2 rounded-xl ${following?'border border-[#444]':'bg-gold text-black'}">${following?'Following':'Follow'}</button><button id="messageSellerBtn" class="px-4 py-2 rounded-xl border border-[#444]">💬 Message</button>${store?.whatsapp?`<a target="_blank" href="https://wa.me/${encodeURIComponent(store.whatsapp.replace(/\D/g,''))}" class="px-4 py-2 rounded-xl border border-[#444]">WhatsApp</a>`:''}</div></div><div class="flex items-center justify-between mb-4"><h2 class="text-xl font-bold">Products</h2></div><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">${products.length?products.map(productCard).join(''):'<div class="card p-6 muted">No products listed yet.</div>'}</div><div class="card p-5 mt-5"><h2 class="font-bold text-xl">Reviews</h2><div id="reviews" class="mt-3">Loading…</div><button id="reviewBtn" class="mt-4 border border-[#444] rounded-xl px-4 py-2">Write a review</button></div>`;$('backMarket').onclick=()=>navigate('marketplace');$('messageSellerBtn')?.addEventListener('click',()=>startSellerFlowChat(uid));$('followBtn').onclick=async()=>{const r=doc(db,'publicProfiles',uid);if(following){await updateDoc(r,{followers:arrayRemove(currentUser.uid)});await updateDoc(doc(db,'publicProfiles',currentUser.uid),{following:arrayRemove(uid)});toast('Unfollowed','success')}else{await updateDoc(r,{followers:arrayUnion(currentUser.uid)});await updateDoc(doc(db,'publicProfiles',currentUser.uid),{following:arrayUnion(uid)});if(window.notifyFollow)await window.notifyFollow(uid);toast('Following','success')}await openStore(uid)};document.querySelectorAll('[data-add-cart]').forEach(b=>b.onclick=()=>addToCart(products.find(x=>x.id===b.dataset.addCart)));await renderReviews(uid);$('reviewBtn').onclick=()=>openReviewModal(uid)}catch(e){toast(errMsg(e),'error')}finally{ready()}}
+async function openStore(uid){
+  pauseAllForYouVideos(true);
+  const previousPage = currentPage;
+  if(currentPage==='feed'){
+    currentPage='store';
+    $('app')?.classList.remove('is-feed-page');
+    $('appMainScroll')?.classList.remove('is-feed-scroll');
+    setNav();
+  }
+  loading('Opening store…');
+  try{
+    const [ss,ps]=await Promise.all([getDoc(doc(db,'stores',uid)),getDoc(doc(db,'publicProfiles',uid))]);
+    const store=snapshotExists(ss)?ss.data():null,p=snapshotExists(ps)?ps.data():sellerProfile(uid);
+    const products=(await getDocs(query(collection(db,'products'),where('sellerId','==',uid)))).docs.map(d=>({id:d.id,...d.data()}));
+    const following=currentUser ? (p.followers||[]).includes(currentUser.uid) : false;
+    if(currentUser){
+      addDoc(collection(db,'profileVisits'),{visitorId:currentUser.uid,profileId:uid,createdAt:serverTimestamp()}).catch(()=>{});
+    }
+    $('page').innerHTML=`
+      <div class="flex items-center gap-3 mb-5">
+        <button type="button" id="backMarket" class="back-page-btn border border-[#333] hover:border-gold rounded-xl px-3 py-2 text-sm font-bold bg-[#141414]">
+          ← Back to For You
+        </button>
+        <div>${avatar(p,'w-16 h-16 rounded-full object-cover bg-[#222]')}</div>
+        <div>
+          <h1 class="text-2xl font-black">${esc(store?.name||p.name)}${p.verified?' <span class="verified-badge ml-1">✓</span>':''}</h1>
+          <div class="muted">@${esc(p.username)} · ${(p.followers||[]).length} followers</div>
+        </div>
+      </div>
+      <div class="store-map-card p-5 mb-5">
+        <div class="grid sm:grid-cols-3 gap-3 mb-4">
+          <div class="bg-[#111] rounded-xl p-3"><div class="muted text-xs">📍 Location</div><b>${esc(store?.location||'Location not added')}</b></div>
+          <div class="bg-[#111] rounded-xl p-3"><div class="muted text-xs">🏢 Address</div><b>${esc(store?.address||'Address not added')}</b></div>
+          <div class="bg-[#111] rounded-xl p-3"><div class="muted text-xs">🕒 Hours</div><b>${esc(store?.hours||'Hours not added')}</b></div>
+        </div>
+        <p>${esc(store?.description||'')}</p>
+        <div class="flex flex-wrap gap-2 mt-4">
+          ${store?.location||store?.address?`<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((store?.address||'')+' '+(store?.location||''))}" class="px-4 py-2 rounded-xl border border-[#444]">📍 Open location</a>`:''}
+          <button type="button" id="followBtn" class="px-4 py-2 rounded-xl ${following?'border border-[#444]':'bg-gold text-black font-bold'}">${following?'Following':'Follow'}</button>
+          <button type="button" id="messageSellerBtn" class="px-4 py-2 rounded-xl border border-[#444]">💬 Message</button>
+          ${store?.whatsapp?`<a target="_blank" href="https://wa.me/${encodeURIComponent(store.whatsapp.replace(/\D/g,''))}" class="px-4 py-2 rounded-xl border border-[#444]">WhatsApp</a>`:''}
+        </div>
+      </div>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold">Products</h2>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        ${products.length?products.map(productCard).join(''):'<div class="card p-6 muted">No products listed yet.</div>'}
+      </div>
+      <div class="card p-5 mt-5">
+        <h2 class="font-bold text-xl">Reviews</h2>
+        <div id="reviews" class="mt-3">Loading…</div>
+        <button type="button" id="reviewBtn" class="mt-4 border border-[#444] rounded-xl px-4 py-2">Write a review</button>
+      </div>
+    `;
+
+    $('backMarket').onclick=()=>navigate(previousPage==='marketplace'?'marketplace':'feed');
+    $('messageSellerBtn')?.addEventListener('click',()=>{
+      if(!currentUser) return showAuthPrompt('message Ghanaian sellers');
+      startSellerFlowChat(uid);
+    });
+    $('followBtn').onclick=async()=>{
+      if(!currentUser) return showAuthPrompt('follow verified Ghanaian sellers');
+      const r=doc(db,'publicProfiles',uid);
+      if(following){
+        await updateDoc(r,{followers:arrayRemove(currentUser.uid)});
+        await updateDoc(doc(db,'publicProfiles',currentUser.uid),{following:arrayRemove(uid)});
+        toast('Unfollowed','success');
+      }else{
+        await updateDoc(r,{followers:arrayUnion(currentUser.uid)});
+        await updateDoc(doc(db,'publicProfiles',currentUser.uid),{following:arrayUnion(uid)});
+        if(window.notifyFollow)await window.notifyFollow(uid);
+        toast('Following','success');
+      }
+      await openStore(uid);
+    };
+    document.querySelectorAll('[data-add-cart]').forEach(b=>b.onclick=()=>{
+      if(!currentUser) return showAuthPrompt('add products to cart');
+      addToCart(products.find(x=>x.id===b.dataset.addCart));
+    });
+    await renderReviews(uid);
+    $('reviewBtn').onclick=()=>{
+      if(!currentUser) return showAuthPrompt('write a seller review');
+      openReviewModal(uid);
+    };
+  }catch(e){
+    toast(errMsg(e),'error');
+  }finally{
+    ready();
+  }
+}
 function productCard(p){return `<div class="card p-3"><img class="product-img" src="${esc(p.imageUrl||'')}" onerror="this.style.display='none'" alt=""><div class="font-bold mt-3">${esc(p.name)}</div><div class="gold font-black mt-1">${money(p.price)}</div><div class="muted text-sm mt-1 line-clamp-2">${esc(p.description||'')}</div><button data-add-cart="${p.id}" class="w-full mt-3 bg-gold text-black rounded-xl py-2">Add to cart</button></div>`}
 async function renderReviews(uid){const s=await getDocs(query(collection(db,'reviews'),where('sellerId','==',uid),limit(50)));$('reviews').innerHTML=s.docs.map(d=>{const r=d.data();return `<div class="border-b border-[#292929] py-3"><b>${esc(r.reviewerName)}</b><span class="gold ml-2">${'★'.repeat(Math.max(1,Math.min(5,r.rating)))}</span><p class="muted text-sm mt-1">${esc(r.text)}</p></div>`}).join('')||'<span class="muted">No reviews yet.</span>'}
 function openReviewModal(uid){modal(`<h2 class="text-xl font-bold">Review seller</h2><select id="reviewRating" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]"><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — Average</option><option value="2">2 — Poor</option><option value="1">1 — Very poor</option></select><textarea id="reviewText" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Tell other buyers about your experience…"></textarea><div class="flex justify-end gap-2 mt-4"><button data-close-modal>Cancel</button>${button('Submit','submitReview')}</div>`);$('submitReview').onclick=async()=>{try{const existing=await getDocs(query(collection(db,'reviews'),where('sellerId','==',uid),where('reviewerId','==',currentUser.uid),limit(1)));if(!existing.empty)throw Error('You already reviewed this seller.');const delivered=await getDocs(query(collection(db,'orders'),where('buyerId','==',currentUser.uid),where('sellerIds','array-contains',uid),where('status','==','delivered'),limit(1)));if(delivered.empty)throw Error('You can review a seller after a delivered order.');await addDoc(collection(db,'reviews'),{sellerId:uid,reviewerId:currentUser.uid,reviewerName:currentProfile.name,rating:Number($('reviewRating').value),text:$('reviewText').value.trim(),createdAt:serverTimestamp()});closeModal();toast('Review submitted','success');await openStore(uid)}catch(e){toast(errMsg(e),'error')}}}
@@ -1078,55 +1602,70 @@ async function checkShutdown(){try{const s=await getDoc(doc(db,'settings','app')
 
 
 function openPageSelector(){
+  pauseAllForYouVideos(false);
   const items=[['feed','🎬','For You'],...(isAdmin||currentProfile?.verified?[['dashboard','📊','Dashboard']]:[]),['marketplace','🛍️','Marketplace'],['products','📦','Products'],['orders','🧾','Orders'],['store','🏪','Store'],['profile','👤','Profile'],['settings','⚙️','Settings']];
   if(isAdmin)items.push(['admin','🛡️','Admin']);
   $('modalRoot').innerHTML=`<div class="page-selector" id="pageSelector"><div class="page-selector-card"><div class="flex items-center justify-between mb-3"><div><h2 class="text-xl font-black">Choose a page</h2><p class="muted text-sm mt-1">Tap where you want to go.</p></div><button type="button" data-close-selector class="w-10 h-10 rounded-full border border-[#333]">×</button></div><div class="page-selector-grid">${items.map(x=>`<button type="button" class="page-selector-item ${x[0]===currentPage?'active':''}" data-selector-page="${x[0]}"><span class="page-icon">${x[1]}</span><b>${x[2]}</b></button>`).join('')}</div><button type="button" data-close-selector class="page-selector-close border border-[#333] rounded-xl py-3">Close</button></div></div>`;
   document.querySelectorAll('[data-selector-page]').forEach(b=>b.onclick=()=>{closePageSelector();navigate(b.dataset.selectorPage)});document.querySelectorAll('[data-close-selector]').forEach(b=>b.onclick=closePageSelector);
 }
 function closePageSelector(){$('modalRoot').innerHTML=''}
-function modal(html){
-  document.querySelectorAll('.reel-video, video').forEach(v=>{
-    try{
-      if(!v.paused)v.pause();
-      const c=v.closest('.reel-card');
-      if(c){
-        const b=c.querySelector('[data-video-toggle]');
-        if(b){b.classList.remove('is-playing');b.textContent='▶';}
-      }
-    }catch(_){}
-  });
+function modal(html, keepVideoPlaying=false){
+  if(!keepVideoPlaying){
+    pauseAllForYouVideos(false);
+  }
   $('modalRoot').innerHTML=`<div class="modal"><div class="modal-card">${html}</div></div>`;
   document.querySelectorAll('[data-close-modal]').forEach(b=>b.onclick=closeModal);
 }
 function closeModal(){$('modalRoot').innerHTML=''}
 
 document.addEventListener('click',e=>{const seller=e.target.closest('[data-open-seller]');if(seller)openStore(seller.dataset.openSeller);const nav=e.target.closest('[data-mobile-page]');if(nav)navigate(nav.dataset.mobilePage);const back=e.target.closest('[data-global-back]');if(back)navigate('feed')});
-document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>navigate(b.dataset.page));$('pageSelectorBtn')?.addEventListener('click',openPageSelector);$('mobileMenu').onclick=openPageSelector;$('landingLogin').onclick=$('heroLogin').onclick=()=>showAuth('login');$('landingRegister').onclick=$('heroRegister').onclick=()=>showAuth('register');$('backLanding').onclick=showLanding;$('authSwitch').onclick=()=>showAuth(authMode==='register'?'login':'register');$('mobileMenu').onclick=()=>{$('mobileNav').classList.toggle('hide');setNav()};$('brandBtn').onclick=()=>navigate('feed');$('cartBtn').onclick=()=>navigate('cart');$('notificationBtn').onclick=()=>{if(window.renderGroupedNotifications)return window.renderGroupedNotifications();if(window.openNotifications)return window.openNotifications();openNotifications();};$('logoutBtn').onclick=logoutUser;$('authForm').onsubmit=async e=>{
-  e.preventDefault();
-  $('authError').textContent='';
-  try{
-    const email=$('authEmail').value.trim(),password=$('authPassword').value;
-    if(!email||!password)throw Error('Enter your email and password.');
-    loading(authMode==='register'?'Creating your SellerFlow account…':'Signing you in…');
-    if(authMode==='register'){
-      const name=$('authName').value.trim(),username=usernameClean($('authUsername').value);
-      if(name.length<2)throw Error('Enter your full name.');
-      if(username.length<3)throw Error('Username must be at least 3 characters.');
-      if(!$('termsAccept')?.checked)throw Error('Please read and agree to the Terms & Conditions before creating your account.');
-      await ensureTerms();
-      // Username availability is checked before account creation so a failed username does not leave a half-created account.
-      try{if(!(await uniqueUsername(username)))throw Error('That username is already taken.')}catch(checkErr){if(checkErr.message==='That username is already taken.')throw checkErr;console.warn('Username availability check skipped:',checkErr)}
-      const c=await createUserWithEmailAndPassword(auth,email,password);
-      await updateProfile(c.user,{displayName:name});
-      // Never sign out here because profile persistence is secondary to authentication.
-      await createMissingProfile(c.user,{name,username,usernameLower:username,role:'seller',termsAccepted:true,termsAcceptedAt:serverTimestamp(),termsVersion:appTermsVersion});
-      sendEmailVerification(c.user).catch(e=>console.warn('Verification email skipped:',e));
-    }else{
-      await signInWithEmailAndPassword(auth,email,password);
-    }
-  }catch(e){$('authError').textContent=errMsg(e);ready()}
-};
-$('googleBtn').onclick=async()=>{try{if(authMode==='register'){if(!$('termsAccept')?.checked)throw Error('Please read and agree to the Terms & Conditions before creating your account.');await ensureTerms()}loading('Opening Google sign-in…');await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){toast(errMsg(e),'error')}finally{ready()}}; $('resetBtn').onclick=async()=>{const email=$('authEmail').value.trim();if(!email)return toast('Enter your email first','error');try{await sendPasswordResetEmail(auth,email);toast('Password reset email sent','success')}catch(e){toast(errMsg(e),'error')}};
+document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>navigate(b.dataset.page));
+$('pageSelectorBtn')?.addEventListener('click',openPageSelector);
+$('mobileMenu')?.addEventListener('click',()=>{
+  $('mobileNav')?.classList.toggle('hide');
+  setNav();
+});
+$('landingLogin')?.addEventListener('click',()=>showAuth('login'));
+$('heroLogin')?.addEventListener('click',()=>showAuth('login'));
+$('landingRegister')?.addEventListener('click',()=>showAuth('register'));
+$('heroRegister')?.addEventListener('click',()=>showAuth('register'));
+$('backLanding')?.addEventListener('click',showLanding);
+$('authSwitch')?.addEventListener('click',()=>showAuth(authMode==='register'?'login':'register'));
+$('brandBtn')?.addEventListener('click',()=>navigate('feed'));
+$('cartBtn')?.addEventListener('click',()=>navigate('cart'));
+$('notificationBtn')?.addEventListener('click',()=>{
+  if(window.renderGroupedNotifications)return window.renderGroupedNotifications();
+  if(window.openNotifications)return window.openNotifications();
+  openNotifications();
+});
+$('logoutBtn')?.addEventListener('click',logoutUser);
+if($('authForm')){
+  $('authForm').onsubmit=async e=>{
+    e.preventDefault();
+    $('authError').textContent='';
+    try{
+      const email=$('authEmail').value.trim(),password=$('authPassword').value;
+      if(!email||!password)throw Error('Enter your email and password.');
+      loading(authMode==='register'?'Creating your SellerFlow account…':'Signing you in…');
+      if(authMode==='register'){
+        const name=$('authName').value.trim(),username=usernameClean($('authUsername').value);
+        if(name.length<2)throw Error('Enter your full name.');
+        if(username.length<3)throw Error('Username must be at least 3 characters.');
+        if(!$('termsAccept')?.checked)throw Error('Please read and agree to the Terms & Conditions before creating your account.');
+        await ensureTerms();
+        try{if(!(await uniqueUsername(username)))throw Error('That username is already taken.')}catch(checkErr){if(checkErr.message==='That username is already taken.')throw checkErr;console.warn('Username availability check skipped:',checkErr)}
+        const c=await createUserWithEmailAndPassword(auth,email,password);
+        await updateProfile(c.user,{displayName:name});
+        await createMissingProfile(c.user,{name,username,usernameLower:username,role:'seller',termsAccepted:true,termsAcceptedAt:serverTimestamp(),termsVersion:appTermsVersion});
+        sendEmailVerification(c.user).catch(e=>console.warn('Verification email skipped:',e));
+      }else{
+        await signInWithEmailAndPassword(auth,email,password);
+      }
+    }catch(e){$('authError').textContent=errMsg(e);ready()}
+  };
+}
+$('googleBtn')?.addEventListener('click',async()=>{try{if(authMode==='register'){if(!$('termsAccept')?.checked)throw Error('Please read and agree to the Terms & Conditions before creating your account.');await ensureTerms()}loading('Opening Google sign-in…');await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){toast(errMsg(e),'error')}finally{ready()}});
+$('resetBtn')?.addEventListener('click',async()=>{const email=$('authEmail')?.value.trim();if(!email)return toast('Enter your email first','error');try{await sendPasswordResetEmail(auth,email);toast('Password reset email sent','success')}catch(e){toast(errMsg(e),'error')}});
 let bootingUid=null;
 async function startUser(u){
   if(bootingUid===u.uid && currentUser?.uid===u.uid && !$('app').classList.contains('hide'))return;
@@ -1159,11 +1698,29 @@ async function startUser(u){
   loadNotifications(false);
   startNotificationWatcher();
   ready();
-  try{await navigate('feed');if(!isAdmin&&!currentProfile?.termsAccepted)showTermsModal(true)}catch(e){console.error('Feed navigation failed:',e);$('page').innerHTML='<div class="card p-6"><h2 class="font-bold text-xl">You are signed in</h2><p class="muted mt-2">SellerFlow could not load the feed yet.</p><button id="retrySignedIn" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Try again</button></div>';$('retrySignedIn').onclick=()=>navigate('feed')}
+  try{await navigate('feed');if(!isAdmin&&!currentProfile?.termsAccepted)showTermsModal(true)}catch(e){console.error('Feed navigation failed:',e);$('page').innerHTML='<div class="card p-6"><h2 class="font-bold text-xl">You are signed in</h2><p class="muted mt-2">SellerFlow could not load the feed yet.</p><button id="retrySignedIn" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Try again</button></div>';$('retrySignedIn')?.addEventListener('click',()=>navigate('feed'))}
   bootingUid=null;
 }
 
-async function logoutUser(){try{if(!auth)return;loading('Signing out securely…');await signOut(auth);currentUser=null;currentProfile=null;isAdmin=false;cart=[];localStorage.removeItem('sellerflow_cart');hide($('app'));hide($('authPage'));hide($('shutdown'));show($('landing'));toast('You have been signed out.','success')}catch(e){toast(errMsg(e),'error')}finally{ready()}}
+async function logoutUser(){
+  try{
+    if(auth) await signOut(auth);
+  }catch(e){
+    console.warn('Signout notice:',e);
+  }
+  currentUser=null;
+  currentProfile=null;
+  isAdmin=false;
+  cart=[];
+  localStorage.removeItem('sellerflow_cart');
+  hide($('authPage'));
+  hide($('shutdown'));
+  showApp();
+  setNav();
+  navigate('feed');
+  toast('You have been signed out.','success');
+  ready();
+}
 
 async function waitForFirebase(maxMs=6000){
   const start=Date.now();
@@ -1177,6 +1734,15 @@ async function init(){
   try{
     loading('Connecting securely…');
     await waitForFirebase();
+    try{
+      const cfgRes=await fetch('/api/config');
+      if(cfgRes.ok){
+        const cfg=await cfgRes.json();
+        if(cfg.firebaseApiKey)firebaseConfig.apiKey=cfg.firebaseApiKey;
+        if(cfg.supabaseUrl)supabaseUrl=cfg.supabaseUrl;
+        if(cfg.supabaseKey)supabaseKey=cfg.supabaseKey;
+      }
+    }catch(_){}
     firebaseApp=initializeApp(firebaseConfig);
     auth=getAuth(firebaseApp);
     db=getFirestore(firebaseApp);
@@ -1488,6 +2054,19 @@ init();
   openCommentPanel=async function(id,initialPost){
     let p=initialPost;
     let replyingTo=null;
+    // Keep currently watched video playing; pause any other videos
+    const activeCard=document.querySelector(`[data-reel-id="${id}"]`);
+    const activeVid=activeCard?.querySelector('.reel-video');
+    document.querySelectorAll('video').forEach(x=>{
+      if(x!==activeVid){
+        try{if(!x.paused)x.pause();}catch(_){}
+        const oc=x.closest('.reel-card');
+        if(oc){
+          const b=oc.querySelector('[data-video-toggle]');
+          if(b){b.classList.remove('is-playing');b.textContent='▶';}
+        }
+      }
+    });
     const fetchFreshPost=async()=>{
       const s=await getDoc(doc(db,'posts',id));
       if(snapshotExists(s))p={id:s.id,...s.data()};
