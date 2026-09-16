@@ -247,9 +247,16 @@ async function loadPublicProfiles(){allPublicProfiles.clear();try{const s=await 
 function sellerProfile(uid){return allPublicProfiles.get(uid)||{uid,name:'Seller',username:'seller',verified:false,followers:[]}}
 function setNav(){const dashBtn=document.querySelector('[data-page="dashboard"]');if(dashBtn)dashBtn.classList.toggle('dashboard-hidden',!isAdmin&&!currentProfile?.verified);document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));const adminDesktop=document.getElementById('adminNav');if(adminDesktop)adminDesktop.remove();if(isAdmin){const b=document.createElement('button');b.id='adminNav';b.className='navbtn px-3 py-2';b.dataset.page='admin';b.textContent='Admin';b.onclick=()=>navigate('admin');document.getElementById('desktopNav').appendChild(b)}const navPages=isAdmin?['feed','dashboard','marketplace','products','orders','store','profile','settings']:(currentProfile?.verified?['feed','dashboard','marketplace','products','orders','store','profile','settings']:['feed','marketplace','orders','profile','settings']);$('mobileNav').innerHTML=navPages.map(p=>`<button type="button" class="p-3 rounded-xl ${p===currentPage?'bg-[#202020] gold':''}" data-mobile-page="${p}">${p==='feed'?'For You':p[0].toUpperCase()+p.slice(1)}</button>`).join('')+(isAdmin?`<button class="p-3 rounded-xl ${currentPage==='admin'?'bg-[#202020] gold':''}" data-mobile-page="admin">Admin</button>`:'')+`<button id="mobileLogout" class="p-3 rounded-xl text-red-400" data-mobile-logout="1">Logout</button>`;$('mobileLogout')?.addEventListener('click',logoutUser)}
 async function navigate(page, targetPostId, options){
-  if(page!=='feed'){
-    document.querySelectorAll('.reel-video').forEach(v=>{try{v.pause()}catch(_){}});
-  }
+  document.querySelectorAll('video').forEach(v=>{
+    try{
+      if(!v.paused)v.pause();
+      const c=v.closest('.reel-card');
+      if(c){
+        const b=c.querySelector('[data-video-toggle]');
+        if(b){b.classList.remove('is-playing');b.textContent='▶';}
+      }
+    }catch(_){}
+  });
   currentPage=page;hide($('mobileNav'));setNav();
   const isFeed=currentPage==='feed';
   $('app')?.classList.toggle('is-feed-page',isFeed);
@@ -476,175 +483,208 @@ function setupReelPlayback(targetPostId){
    }
  }
 
- videos.forEach(v=>{
-   let fallbackTried=false;
-   const card=v.closest('.reel-card');
-   const fallback=async()=>{
-     if(fallbackTried||!v.dataset.mediaPath)return;
-     fallbackTried=true;
-     const ok=await loadPrivateMedia(v.dataset.mediaPath,v);
-     if(!ok)v.insertAdjacentHTML('afterend','<div class="video-fallback"><div><div class="text-4xl mb-2">🎥</div><b>This video is temporarily unavailable</b></div></div>');
-   };
-   v.addEventListener('error',fallback);
-   v.addEventListener('stalled',()=>{if(v.readyState===0)fallback()});
-   v.addEventListener('play',()=>{
-     enableAudio();
-     videos.filter(x=>x!==v).forEach(x=>{x.pause();const oc=x.closest('.reel-card');updateCardButton(oc,false)});
-     updateCardButton(card,true);
-   });
-   v.addEventListener('pause',()=>updateCardButton(card,false));
- });
+  function pauseAllVideosExcept(exceptVideo){
+    document.querySelectorAll('video').forEach(x=>{
+      if(x!==exceptVideo){
+        try{
+          if(!x.paused)x.pause();
+        }catch(_){}
+        const oc=x.closest('.reel-card');
+        if(oc)updateCardButton(oc,false);
+      }
+    });
+  }
 
- cards.forEach(card=>{
-   const v=card.querySelector('.reel-video');
-   const toggleBtn=card.querySelector('[data-video-toggle]');
-   const toggle=e=>{
-     if(e.target.closest('.reel-actions')||e.target.closest('.reel-content button')||e.target.closest('.sound-chip')||e.target.closest('.comment-sheet'))return;
-     if(!v)return;
-     enableAudio();
-     if(v.paused){
-       v.play().catch(()=>{v.muted=true;v.play().catch(()=>{})});
-       updateCardButton(card,true);
-     }else{
-       v.pause();
-       updateCardButton(card,false);
-     }
-   };
-   if(v){
-     v.addEventListener('click',toggle);
-     if(toggleBtn)toggleBtn.addEventListener('click',toggle);
-   }
- });
+  videos.forEach(v=>{
+    let fallbackTried=false;
+    const card=v.closest('.reel-card');
+    const fallback=async()=>{
+      if(fallbackTried||!v.dataset.mediaPath)return;
+      fallbackTried=true;
+      const ok=await loadPrivateMedia(v.dataset.mediaPath,v);
+      if(!ok)v.insertAdjacentHTML('afterend','<div class="video-fallback"><div><div class="text-4xl mb-2">🎥</div><b>This video is temporarily unavailable</b></div></div>');
+    };
+    v.addEventListener('error',fallback);
+    v.addEventListener('stalled',()=>{if(v.readyState===0)fallback()});
+    v.addEventListener('play',()=>{
+      enableAudio();
+      pauseAllVideosExcept(v);
+      updateCardButton(card,true);
+    });
+    v.addEventListener('pause',()=>updateCardButton(card,false));
+  });
 
- function activateCard(card){
-   if(!card)return;
-   if(card===currentActiveCard){
-     const v=card.querySelector('.reel-video');
-     if(v&&v.paused&&v.dataset.userPaused!=='1'){
-       v.play().catch(()=>{});
-       updateCardButton(card,true);
-     }
-     return;
-   }
-   currentActiveCard=card;
-   videos.forEach(v=>{
-     if(!card.contains(v)){
-       if(!v.paused)v.pause();
-       updateCardButton(v.closest('.reel-card'),false);
-     }
-   });
-   const activeVideo=card.querySelector('.reel-video');
-   if(activeVideo){
-     enableAudio();
-     activeVideo.muted=false;
-     activeVideo.volume=1;
-     activeVideo.dataset.userPaused='0';
-     activeVideo.play().catch(()=>{
-       activeVideo.muted=true;
-       activeVideo.play().catch(()=>{});
-     });
-     updateCardButton(card,true);
-   }
-   const id=card.dataset.reelId;
-   if(id&&!sessionStorage.getItem('sellerflow_viewed_'+id)){
-     sessionStorage.setItem('sellerflow_viewed_'+id,'1');
-     setTimeout(async()=>{
-       try{
-         const s=await getDoc(doc(db,'posts',id));
-         if(snapshotExists(s))await updateDoc(doc(db,'posts',id),{views:Number(s.data().views||0)+1});
-       }catch(_){}
-     },800);
-   }
- }
+  cards.forEach(card=>{
+    const v=card.querySelector('.reel-video');
+    const toggleBtn=card.querySelector('[data-video-toggle]');
+    const toggle=e=>{
+      if(e.target.closest('.reel-actions')||e.target.closest('.reel-content button')||e.target.closest('.sound-chip')||e.target.closest('.comment-sheet'))return;
+      if(!v)return;
+      enableAudio();
+      if(v.paused){
+        pauseAllVideosExcept(v);
+        v.dataset.userPaused='0';
+        v.play().catch(()=>{v.muted=true;v.play().catch(()=>{})});
+        updateCardButton(card,true);
+      }else{
+        v.dataset.userPaused='1';
+        try{v.pause();}catch(_){}
+        updateCardButton(card,false);
+      }
+    };
+    if(v){
+      v.addEventListener('click',toggle);
+      if(toggleBtn)toggleBtn.addEventListener('click',toggle);
+    }
+  });
 
- if('IntersectionObserver'in window){
-   const io=new IntersectionObserver(entries=>{
-     entries.forEach(entry=>{
-       if(!entry.isIntersecting || entry.intersectionRatio < 0.5){
-         const v=entry.target.querySelector('.reel-video');
-         if(v && !v.paused){
-           v.pause();
-           updateCardButton(entry.target,false);
-         }
-       }
-     });
-     let best=null;
-     entries.forEach(entry=>{
-       if(entry.isIntersecting&&(!best||entry.intersectionRatio>best.intersectionRatio)){
-         best=entry;
-       }
-     });
-     if(best&&best.intersectionRatio>=0.55){
-       activateCard(best.target);
-     }
-   },{root:feedEl,threshold:[0.1,0.25,0.5,0.65,0.85]});
-   cards.forEach(c=>io.observe(c));
- }
+  function activateCard(card){
+    if(!card)return;
+    if(currentPage!=='feed')return;
 
- feedEl.addEventListener('wheel',e=>{
-   if(wheelLock)return;
-   if(e.target.closest('.reel-content')||e.target.closest('.comment-sheet'))return;
-   if(Math.abs(e.deltaY)<20)return;
-   const idx=cards.indexOf(currentActiveCard||cards[0]);
-   if(e.deltaY>0&&idx<cards.length-1){
-     e.preventDefault();
-     wheelLock=true;
-     cards[idx+1].scrollIntoView({behavior:'smooth',block:'start'});
-     setTimeout(()=>{wheelLock=false},350);
-   }else if(e.deltaY<0&&idx>0){
-     e.preventDefault();
-     wheelLock=true;
-     cards[idx-1].scrollIntoView({behavior:'smooth',block:'start'});
-     setTimeout(()=>{wheelLock=false},350);
-   }
- },{passive:false});
+    const activeVideo=card.querySelector('.reel-video');
+    pauseAllVideosExcept(activeVideo);
 
- let settleTimer=null;
- feedEl.addEventListener('scroll',()=>{
-   const top=feedEl.scrollTop;
-   const h=feedEl.clientHeight || 1;
-   if(currentActiveCard){
-     const idx=cards.indexOf(currentActiveCard);
-     if(idx>=0){
-       const offset=Math.abs(top-idx*h);
-       if(offset>h*0.3){
-         const v=currentActiveCard.querySelector('.reel-video');
-         if(v&&!v.paused){
-           v.pause();
-           updateCardButton(currentActiveCard,false);
-         }
-       }
-     }
-   }
-   clearTimeout(settleTimer);
-   settleTimer=setTimeout(()=>{
-     const idx=Math.round(top/(h||1));
-     if(cards[idx]){
-       if(Math.abs(top-idx*h)>6){
-         cards[idx].scrollIntoView({behavior:'smooth',block:'start'});
-       }
-       activateCard(cards[idx]);
-     }
-   },100);
- },{passive:true});
+    if(card===currentActiveCard){
+      if(activeVideo&&activeVideo.paused&&activeVideo.dataset.userPaused!=='1'){
+        activeVideo.play().catch(()=>{});
+        updateCardButton(card,true);
+      }
+      return;
+    }
 
- document.addEventListener('visibilitychange',()=>{
-   if(document.hidden){
-     videos.forEach(v=>{
-       if(!v.paused){
-         v.dataset.wasPlaying='1';
-         v.pause();
-         updateCardButton(v.closest('.reel-card'),false);
-       }
-     });
-   }else if(currentPage==='feed'&&currentActiveCard){
-     const v=currentActiveCard.querySelector('.reel-video');
-     if(v&&v.dataset.wasPlaying==='1'&&v.dataset.userPaused!=='1'){
-       v.play().catch(()=>{});
-       updateCardButton(currentActiveCard,true);
-     }
-   }
- });
+    currentActiveCard=card;
+
+    if(activeVideo){
+      enableAudio();
+      activeVideo.muted=false;
+      activeVideo.volume=1;
+      activeVideo.dataset.userPaused='0';
+      activeVideo.play().then(()=>{
+        updateCardButton(card,true);
+      }).catch(()=>{
+        activeVideo.muted=true;
+        activeVideo.play().catch(()=>{});
+        updateCardButton(card,true);
+      });
+    }
+
+    const id=card.dataset.reelId;
+    if(id&&!sessionStorage.getItem('sellerflow_viewed_'+id)){
+      sessionStorage.setItem('sellerflow_viewed_'+id,'1');
+      setTimeout(async()=>{
+        try{
+          const s=await getDoc(doc(db,'posts',id));
+          if(snapshotExists(s))await updateDoc(doc(db,'posts',id),{views:Number(s.data().views||0)+1});
+        }catch(_){}
+      },800);
+    }
+  }
+
+  if('IntersectionObserver'in window){
+    const io=new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(!entry.isIntersecting || entry.intersectionRatio < 0.55){
+          entry.target.querySelectorAll('video').forEach(v=>{
+            try{
+              if(!v.paused)v.pause();
+            }catch(_){}
+          });
+          updateCardButton(entry.target,false);
+        }
+      });
+      let best=null;
+      entries.forEach(entry=>{
+        if(entry.isIntersecting&&(!best||entry.intersectionRatio>best.intersectionRatio)){
+          best=entry;
+        }
+      });
+      if(best&&best.intersectionRatio>=0.55){
+        activateCard(best.target);
+      }
+    },{root:feedEl,threshold:[0,0.1,0.25,0.4,0.55,0.7,0.85,1.0]});
+    cards.forEach(c=>io.observe(c));
+  }
+
+  feedEl.addEventListener('wheel',e=>{
+    if(wheelLock)return;
+    if(e.target.closest('.reel-content')||e.target.closest('.comment-sheet'))return;
+    if(Math.abs(e.deltaY)<20)return;
+    const idx=cards.indexOf(currentActiveCard||cards[0]);
+    if(e.deltaY>0&&idx<cards.length-1){
+      e.preventDefault();
+      wheelLock=true;
+      cards[idx+1].scrollIntoView({behavior:'smooth',block:'start'});
+      setTimeout(()=>{wheelLock=false},350);
+    }else if(e.deltaY<0&&idx>0){
+      e.preventDefault();
+      wheelLock=true;
+      cards[idx-1].scrollIntoView({behavior:'smooth',block:'start'});
+      setTimeout(()=>{wheelLock=false},350);
+    }
+  },{passive:false});
+
+  let settleTimer=null;
+  feedEl.addEventListener('scroll',()=>{
+    const top=feedEl.scrollTop;
+    const h=feedEl.clientHeight || 1;
+    if(currentActiveCard){
+      const idx=cards.indexOf(currentActiveCard);
+      if(idx>=0){
+        const offset=Math.abs(top-idx*h);
+        if(offset>h*0.12){
+          const v=currentActiveCard.querySelector('.reel-video');
+          if(v){
+            try{
+              if(!v.paused)v.pause();
+            }catch(_){}
+            updateCardButton(currentActiveCard,false);
+          }
+        }
+      }
+    }
+    clearTimeout(settleTimer);
+    settleTimer=setTimeout(()=>{
+      const idx=Math.round(top/(h||1));
+      if(cards[idx]){
+        if(Math.abs(top-idx*h)>6){
+          cards[idx].scrollIntoView({behavior:'smooth',block:'start'});
+        }
+        activateCard(cards[idx]);
+      }
+    },80);
+  },{passive:true});
+
+  const pauseBackgroundVideos=()=>{
+    document.querySelectorAll('video').forEach(v=>{
+      try{
+        if(!v.paused){
+          v.dataset.wasPlaying='1';
+          v.pause();
+        }
+      }catch(_){}
+      const oc=v.closest('.reel-card');
+      if(oc)updateCardButton(oc,false);
+    });
+  };
+
+  const handleDocVisibility=()=>{
+    if(document.hidden || document.visibilityState==='hidden'){
+      pauseBackgroundVideos();
+    }else if(currentPage==='feed'&&currentActiveCard&&!document.querySelector('#modalRoot:not(:empty) .modal')){
+      const v=currentActiveCard.querySelector('.reel-video');
+      if(v&&v.dataset.wasPlaying==='1'&&v.dataset.userPaused!=='1'){
+        v.play().catch(()=>{});
+        updateCardButton(currentActiveCard,true);
+      }
+    }
+  };
+
+  document.addEventListener('visibilitychange',handleDocVisibility);
+  document.addEventListener('webkitvisibilitychange',handleDocVisibility);
+  window.addEventListener('blur',pauseBackgroundVideos);
+  window.addEventListener('pagehide',pauseBackgroundVideos);
+  window.addEventListener('freeze',pauseBackgroundVideos);
 
  const prevBtn=document.getElementById('feedPrevBtn');
  const nextBtn=document.getElementById('feedNextBtn');
@@ -903,7 +943,21 @@ function openPageSelector(){
   document.querySelectorAll('[data-selector-page]').forEach(b=>b.onclick=()=>{closePageSelector();navigate(b.dataset.selectorPage)});document.querySelectorAll('[data-close-selector]').forEach(b=>b.onclick=closePageSelector);
 }
 function closePageSelector(){$('modalRoot').innerHTML=''}
-function modal(html){$('modalRoot').innerHTML=`<div class="modal"><div class="modal-card">${html}</div></div>`;document.querySelectorAll('[data-close-modal]').forEach(b=>b.onclick=closeModal)}function closeModal(){$('modalRoot').innerHTML=''}
+function modal(html){
+  document.querySelectorAll('.reel-video, video').forEach(v=>{
+    try{
+      if(!v.paused)v.pause();
+      const c=v.closest('.reel-card');
+      if(c){
+        const b=c.querySelector('[data-video-toggle]');
+        if(b){b.classList.remove('is-playing');b.textContent='▶';}
+      }
+    }catch(_){}
+  });
+  $('modalRoot').innerHTML=`<div class="modal"><div class="modal-card">${html}</div></div>`;
+  document.querySelectorAll('[data-close-modal]').forEach(b=>b.onclick=closeModal);
+}
+function closeModal(){$('modalRoot').innerHTML=''}
 
 document.addEventListener('click',e=>{const seller=e.target.closest('[data-open-seller]');if(seller)openStore(seller.dataset.openSeller);const nav=e.target.closest('[data-mobile-page]');if(nav)navigate(nav.dataset.mobilePage);const back=e.target.closest('[data-global-back]');if(back)navigate('feed')});
 document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>navigate(b.dataset.page));$('pageSelectorBtn')?.addEventListener('click',openPageSelector);$('mobileMenu').onclick=openPageSelector;$('landingLogin').onclick=$('heroLogin').onclick=()=>showAuth('login');$('landingRegister').onclick=$('heroRegister').onclick=()=>showAuth('register');$('backLanding').onclick=showLanding;$('authSwitch').onclick=()=>showAuth(authMode==='register'?'login':'register');$('mobileMenu').onclick=()=>{$('mobileNav').classList.toggle('hide');setNav()};$('brandBtn').onclick=()=>navigate('feed');$('cartBtn').onclick=()=>navigate('cart');$('notificationBtn').onclick=openNotifications;$('logoutBtn').onclick=logoutUser;$('authForm').onsubmit=async e=>{
