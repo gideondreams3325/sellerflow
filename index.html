@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>SellerFlow — Ghana Seller Marketplace</title>
+<meta name="description" content="Ghana's social selling marketplace where sellers build stores, publish products, share video/photo content, and manage orders.">
+<meta property="og:title" content="SellerFlow — Ghana Seller Marketplace">
+<meta property="og:description" content="Ghana's social selling marketplace where sellers build stores, publish products, share video/photo content, and manage orders.">
 <script src="https://cdn.tailwindcss.com"></script>
 <!-- Firebase Compat is used here for broad Android/WebView compatibility. -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -450,6 +453,78 @@ function setupReelPlayback(targetPostId){
  let audioCtx=null;
  let currentActiveCard=null;
  let wheelLock=false;
+ const preloadedMediaSources=new Set();
+
+ const preloadVideoElement=(v,priority='high')=>{
+   if(!v)return;
+   try{
+     if(priority==='high'){
+       v.preload='auto';
+       if(v.readyState<2&&!v._sfLoadTriggered){
+         v._sfLoadTriggered=true;
+         v.load();
+       }
+       const src=v.currentSrc||v.src;
+       if(src&&!preloadedMediaSources.has(src)&&!src.startsWith('blob:')){
+         preloadedMediaSources.add(src);
+         try{
+           const link=document.createElement('link');
+           link.rel='preload';
+           link.as='video';
+           link.href=src;
+           document.head.appendChild(link);
+           fetch(src,{method:'GET',headers:{Range:'bytes=0-1048576'},mode:'no-cors'}).catch(()=>{});
+         }catch(_){}
+       }
+       if(v.poster){
+         const img=new Image();
+         img.src=v.poster;
+       }
+     }else if(priority==='medium'){
+       if(v.preload!=='auto')v.preload='metadata';
+     }else{
+       if(v!==currentActiveCard?.querySelector('.reel-video')){
+         v.preload='none';
+       }
+     }
+   }catch(_){}
+ };
+
+ const preloadSurroundingReels=(centerCard)=>{
+   if(!centerCard)return;
+   const idx=cards.indexOf(centerCard);
+   if(idx<0)return;
+
+   // 1. Current active video: high priority preload & decode
+   const activeVid=centerCard.querySelector('.reel-video');
+   if(activeVid)preloadVideoElement(activeVid,'high');
+
+   // 2. Next video (i + 1): HIGH priority pre-loading for instantaneous playback on scroll
+   if(idx+1<cards.length){
+     const nextVid=cards[idx+1].querySelector('.reel-video');
+     if(nextVid)preloadVideoElement(nextVid,'high');
+   }
+
+   // 3. Second upcoming video (i + 2): Medium priority metadata buffer
+   if(idx+2<cards.length){
+     const next2Vid=cards[idx+2].querySelector('.reel-video');
+     if(next2Vid)preloadVideoElement(next2Vid,'medium');
+   }
+
+   // 4. Previous video (i - 1): High priority for instant swipe-back
+   if(idx-1>=0){
+     const prevVid=cards[idx-1].querySelector('.reel-video');
+     if(prevVid)preloadVideoElement(prevVid,'high');
+   }
+
+   // 5. Distant videos: lower preload priority to preserve network bandwidth for active stream
+   cards.forEach((c,cIdx)=>{
+     if(Math.abs(cIdx-idx)>2){
+       const distantVid=c.querySelector('.reel-video');
+       if(distantVid)preloadVideoElement(distantVid,'low');
+     }
+   });
+ };
 
  const enableAudio=()=>{
    try{
@@ -545,6 +620,9 @@ function setupReelPlayback(targetPostId){
     const activeVideo=card.querySelector('.reel-video');
     pauseAllVideosExcept(activeVideo);
 
+    // Warm up and pre-load next and surrounding videos immediately
+    preloadSurroundingReels(card);
+
     if(card===currentActiveCard){
       if(activeVideo&&activeVideo.paused&&activeVideo.dataset.userPaused!=='1'){
         activeVideo.play().catch(()=>{});
@@ -614,11 +692,13 @@ function setupReelPlayback(targetPostId){
     if(e.deltaY>0&&idx<cards.length-1){
       e.preventDefault();
       wheelLock=true;
+      preloadSurroundingReels(cards[idx+1]);
       cards[idx+1].scrollIntoView({behavior:'smooth',block:'start'});
       setTimeout(()=>{wheelLock=false},350);
     }else if(e.deltaY<0&&idx>0){
       e.preventDefault();
       wheelLock=true;
+      preloadSurroundingReels(cards[idx-1]);
       cards[idx-1].scrollIntoView({behavior:'smooth',block:'start'});
       setTimeout(()=>{wheelLock=false},350);
     }
@@ -640,6 +720,9 @@ function setupReelPlayback(targetPostId){
             }catch(_){}
             updateCardButton(currentActiveCard,false);
           }
+          // Preload the target card being scrolled towards
+          const targetIdx=top>idx*h?Math.min(cards.length-1,idx+1):Math.max(0,idx-1);
+          if(cards[targetIdx])preloadSurroundingReels(cards[targetIdx]);
         }
       }
     }
@@ -688,18 +771,37 @@ function setupReelPlayback(targetPostId){
 
  const prevBtn=document.getElementById('feedPrevBtn');
  const nextBtn=document.getElementById('feedNextBtn');
- if(prevBtn)prevBtn.onclick=()=>{
-   const idx=cards.indexOf(currentActiveCard||cards[0]);
-   if(idx>0)cards[idx-1].scrollIntoView({behavior:'smooth',block:'start'});
- };
- if(nextBtn)nextBtn.onclick=()=>{
-   const idx=cards.indexOf(currentActiveCard||cards[0]);
-   if(idx<cards.length-1)cards[idx+1].scrollIntoView({behavior:'smooth',block:'start'});
- };
+ if(prevBtn){
+   prevBtn.onmouseenter=()=>{
+     const idx=cards.indexOf(currentActiveCard||cards[0]);
+     if(idx>0)preloadSurroundingReels(cards[idx-1]);
+   };
+   prevBtn.onclick=()=>{
+     const idx=cards.indexOf(currentActiveCard||cards[0]);
+     if(idx>0){
+       preloadSurroundingReels(cards[idx-1]);
+       cards[idx-1].scrollIntoView({behavior:'smooth',block:'start'});
+     }
+   };
+ }
+ if(nextBtn){
+   nextBtn.onmouseenter=()=>{
+     const idx=cards.indexOf(currentActiveCard||cards[0]);
+     if(idx<cards.length-1)preloadSurroundingReels(cards[idx+1]);
+   };
+   nextBtn.onclick=()=>{
+     const idx=cards.indexOf(currentActiveCard||cards[0]);
+     if(idx<cards.length-1){
+       preloadSurroundingReels(cards[idx+1]);
+       cards[idx+1].scrollIntoView({behavior:'smooth',block:'start'});
+     }
+   };
+ }
 
  if(targetPostId){
    const targetEl=document.querySelector(`[data-reel-id="${targetPostId}"]`);
    if(targetEl){
+     preloadSurroundingReels(targetEl);
      setTimeout(()=>{
        targetEl.scrollIntoView({behavior:'instant',block:'start'});
        activateCard(targetEl);
@@ -709,6 +811,7 @@ function setupReelPlayback(targetPostId){
  }
 
  if(cards.length>0){
+   preloadSurroundingReels(cards[0]);
    setTimeout(()=>{
      activateCard(cards[0]);
    },80);
@@ -1151,14 +1254,13 @@ init();
   }
 
   /* Ranked For You: freshness + consistency + followers + verification + safety + content type + engagement + posting time. */
-  renderFeed=async function(){
+  renderFeed=async function(targetPostId){
     const posts=await getRankedPosts();
-    $('page').innerHTML=`<div class="feed-top-bar flex items-center justify-between px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-lg font-black tracking-tight text-white">For You</h1><span class="text-[11px] gold bg-[#1e170c] border border-[#3f2e14] px-2 py-0.5 rounded-full whitespace-nowrap">Ranked feed</span></div><button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0">＋ Upload</button></div><div class="reel-feed flex-1 min-h-0 h-full w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">${posts.length?posts.map(postCard).join(''):`<div class="h-full flex items-center justify-center p-6"><div class="card p-8 text-center max-w-md"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2 text-sm">Share a safe photo or video to start building your audience.</p><button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button></div></div>`}</div>`;
+    $('page').innerHTML=`<div class="feed-top-bar flex items-center justify-between px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-lg font-black tracking-tight text-white">For You</h1><span class="text-[11px] gold bg-[#1e170c] border border-[#3f2e14] px-2 py-0.5 rounded-full whitespace-nowrap">Ranked feed</span></div><div class="flex items-center gap-2 shrink-0"><button type="button" id="feedPrevBtn" class="btn px-2.5 py-1 text-xs rounded-lg border border-[#333] hover:bg-[#222]" title="Previous Reel">▲</button><button type="button" id="feedNextBtn" class="btn px-2.5 py-1 text-xs rounded-lg border border-[#333] hover:bg-[#222]" title="Next Reel">▼</button><button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black">＋ Upload</button></div></div><div class="reel-feed flex-1 min-h-0 h-full w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">${posts.length?posts.map(postCard).join(''):`<div class="h-full flex items-center justify-center p-6"><div class="card p-8 text-center max-w-md"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2 text-sm">Share a safe photo or video to start building your audience.</p><button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button></div></div>`}</div>`;
     $('openFeedUpload')?.addEventListener('click',openPostModal);
     $('openFeedUploadEmpty')?.addEventListener('click',openPostModal);
     document.querySelectorAll('[data-post-action]').forEach(b=>b.onclick=postAction);
-    setupReelPlayback();
-    document.querySelectorAll('[data-reel-id]').forEach(card=>{const id=card.dataset.reelId,key='sellerflow_viewed_'+id;if(!sessionStorage.getItem(key)){sessionStorage.setItem(key,'1');setTimeout(async()=>{try{const s=await getDoc(doc(db,'posts',id));if(snapshotExists(s))await updateDoc(doc(db,'posts',id),{views:Number(s.data().views||0)+1})}catch(_){}} ,900)}});
+    setupReelPlayback(targetPostId);
   };
 
   postAction=async function(e){
