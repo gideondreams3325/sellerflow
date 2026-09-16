@@ -1,0 +1,175 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email.lower() == 'gideondreams3325@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    // 1. Private User Profiles & Accounts
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) || isAdmin();
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // 2. Public Profiles & Social Identity
+    match /publicProfiles/{userId} {
+      allow read: if true;
+      allow create: if isOwner(userId) || isAdmin();
+      allow update: if isSignedIn(); // Allows following/followers updates and profile edits
+      allow delete: if isAdmin();
+    }
+
+    // 3. For You Feed Posts & Videos
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if isSignedIn() && (
+        request.resource.data.sellerId == request.auth.uid || isAdmin()
+      );
+      // Allow post author and admin full updates, or any signed-in user to react (likes, comments, saves, views)
+      allow update: if isSignedIn();
+      allow delete: if (resource.data.sellerId == request.auth.uid) || isAdmin();
+    }
+
+    // 4. Marketplace Products & Catalog
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isSignedIn() && (
+        request.resource.data.sellerId == request.auth.uid || isAdmin()
+      );
+      allow update, delete: if isSignedIn() && (
+        resource.data.sellerId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // 5. Stores & Vendor Storefronts
+    match /stores/{sellerId} {
+      allow read: if true;
+      allow create, update: if isOwner(sellerId) || isAdmin();
+      allow delete: if isOwner(sellerId) || isAdmin();
+    }
+
+    // 6. Orders & Checkout Transactions
+    match /orders/{orderId} {
+      allow read: if isSignedIn() && (
+        resource.data.buyerId == request.auth.uid ||
+        resource.data.sellerId == request.auth.uid ||
+        (resource.data.sellerIds is list && request.auth.uid in resource.data.sellerIds) ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.buyerId == request.auth.uid || isAdmin()
+      );
+      allow update: if isSignedIn() && (
+        resource.data.buyerId == request.auth.uid ||
+        resource.data.sellerId == request.auth.uid ||
+        (resource.data.sellerIds is list && request.auth.uid in resource.data.sellerIds) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 7. Store Reviews & Ratings
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn() && (
+        request.resource.data.reviewerId == request.auth.uid || isAdmin()
+      );
+      allow update, delete: if isSignedIn() && (
+        resource.data.reviewerId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // 8. In-App Notifications & Broadcasts
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && (
+        resource.data.recipientId == request.auth.uid ||
+        resource.data.userId == request.auth.uid ||
+        resource.data.userId == 'all' ||
+        isAdmin()
+      );
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        resource.data.recipientId == request.auth.uid ||
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 9. Scam & Safety Reports
+    match /scamReports/{reportId} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if isAdmin();
+    }
+
+    // 10. Direct Chats & Conversations
+    match /conversations/{conversationId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid in resource.data.participants || isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        request.auth.uid in request.resource.data.participants || isAdmin()
+      );
+      allow update: if isSignedIn() && (
+        request.auth.uid in resource.data.participants || isAdmin()
+      );
+      allow delete: if isAdmin();
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && (
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants ||
+          isAdmin()
+        );
+        allow create: if isSignedIn() && (
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants &&
+          request.resource.data.senderId == request.auth.uid
+        );
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    // 11. Saved Sounds Collection
+    match /savedSounds/{userId}/items/{soundId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // 12. Audio Sounds Catalog
+    match /sounds/{soundId} {
+      allow read: if true;
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // 13. Profile Visits Analytics
+    match /profileVisits/{visitId} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn() && (
+        resource.data.profileId == request.auth.uid || isAdmin()
+      );
+      allow update, delete: if isAdmin();
+    }
+
+    // 14. Platform Settings (Terms, Versions, Policies)
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

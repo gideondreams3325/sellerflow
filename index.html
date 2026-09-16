@@ -236,6 +236,9 @@ async function loadPublicProfiles(){allPublicProfiles.clear();try{const s=await 
 function sellerProfile(uid){return allPublicProfiles.get(uid)||{uid,name:'Seller',username:'seller',verified:false,followers:[]}}
 function setNav(){const dashBtn=document.querySelector('[data-page="dashboard"]');if(dashBtn)dashBtn.classList.toggle('dashboard-hidden',!isAdmin&&!currentProfile?.verified);document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));const adminDesktop=document.getElementById('adminNav');if(adminDesktop)adminDesktop.remove();if(isAdmin){const b=document.createElement('button');b.id='adminNav';b.className='navbtn px-3 py-2';b.dataset.page='admin';b.textContent='Admin';b.onclick=()=>navigate('admin');document.getElementById('desktopNav').appendChild(b)}const navPages=isAdmin?['feed','dashboard','marketplace','products','orders','store','profile','settings']:(currentProfile?.verified?['feed','dashboard','marketplace','products','orders','store','profile','settings']:['feed','marketplace','orders','profile','settings']);$('mobileNav').innerHTML=navPages.map(p=>`<button type="button" class="p-3 rounded-xl ${p===currentPage?'bg-[#202020] gold':''}" data-mobile-page="${p}">${p==='feed'?'For You':p[0].toUpperCase()+p.slice(1)}</button>`).join('')+(isAdmin?`<button class="p-3 rounded-xl ${currentPage==='admin'?'bg-[#202020] gold':''}" data-mobile-page="admin">Admin</button>`:'')+`<button id="mobileLogout" class="p-3 rounded-xl text-red-400" data-mobile-logout="1">Logout</button>`;$('mobileLogout')?.addEventListener('click',logoutUser)}
 async function navigate(page, targetPostId, options){
+  if(page!=='feed'){
+    document.querySelectorAll('.reel-video').forEach(v=>{try{v.pause()}catch(_){}});
+  }
   currentPage=page;hide($('mobileNav'));setNav();
   const isFeed=currentPage==='feed';
   $('app')?.classList.toggle('is-feed-page',isFeed);
@@ -246,6 +249,8 @@ async function navigate(page, targetPostId, options){
     await loadPublicProfiles();
     if(isFeed){
       await renderFeed(targetPostId, options);
+    } else if(currentPage==='update'){
+      await renderSellerFlowUpdatePage(targetPostId, options);
     } else {
       await renderPage();
     }
@@ -383,11 +388,19 @@ function setupReelPlayback(targetPostId){
  });
 
  function activateCard(card){
-   if(!card||card===currentActiveCard)return;
+   if(!card)return;
+   if(card===currentActiveCard){
+     const v=card.querySelector('.reel-video');
+     if(v&&v.paused&&v.dataset.userPaused!=='1'){
+       v.play().catch(()=>{});
+       updateCardButton(card,true);
+     }
+     return;
+   }
    currentActiveCard=card;
    videos.forEach(v=>{
      if(!card.contains(v)){
-       v.pause();
+       if(!v.paused)v.pause();
        updateCardButton(v.closest('.reel-card'),false);
      }
    });
@@ -396,6 +409,7 @@ function setupReelPlayback(targetPostId){
      enableAudio();
      activeVideo.muted=false;
      activeVideo.volume=1;
+     activeVideo.dataset.userPaused='0';
      activeVideo.play().catch(()=>{
        activeVideo.muted=true;
        activeVideo.play().catch(()=>{});
@@ -416,16 +430,25 @@ function setupReelPlayback(targetPostId){
 
  if('IntersectionObserver'in window){
    const io=new IntersectionObserver(entries=>{
+     entries.forEach(entry=>{
+       if(!entry.isIntersecting || entry.intersectionRatio < 0.5){
+         const v=entry.target.querySelector('.reel-video');
+         if(v && !v.paused){
+           v.pause();
+           updateCardButton(entry.target,false);
+         }
+       }
+     });
      let best=null;
      entries.forEach(entry=>{
        if(entry.isIntersecting&&(!best||entry.intersectionRatio>best.intersectionRatio)){
          best=entry;
        }
      });
-     if(best&&best.intersectionRatio>=0.5){
+     if(best&&best.intersectionRatio>=0.55){
        activateCard(best.target);
      }
-   },{root:feedEl,threshold:[0.2,0.5,0.85]});
+   },{root:feedEl,threshold:[0.1,0.25,0.5,0.65,0.85]});
    cards.forEach(c=>io.observe(c));
  }
 
@@ -449,16 +472,50 @@ function setupReelPlayback(targetPostId){
 
  let settleTimer=null;
  feedEl.addEventListener('scroll',()=>{
+   const top=feedEl.scrollTop;
+   const h=feedEl.clientHeight || 1;
+   if(currentActiveCard){
+     const idx=cards.indexOf(currentActiveCard);
+     if(idx>=0){
+       const offset=Math.abs(top-idx*h);
+       if(offset>h*0.3){
+         const v=currentActiveCard.querySelector('.reel-video');
+         if(v&&!v.paused){
+           v.pause();
+           updateCardButton(currentActiveCard,false);
+         }
+       }
+     }
+   }
    clearTimeout(settleTimer);
    settleTimer=setTimeout(()=>{
-     const top=feedEl.scrollTop;
-     const h=feedEl.clientHeight;
      const idx=Math.round(top/(h||1));
-     if(cards[idx]&&Math.abs(top-idx*h)>6){
-       cards[idx].scrollIntoView({behavior:'smooth',block:'start'});
+     if(cards[idx]){
+       if(Math.abs(top-idx*h)>6){
+         cards[idx].scrollIntoView({behavior:'smooth',block:'start'});
+       }
+       activateCard(cards[idx]);
      }
-   },140);
+   },100);
  },{passive:true});
+
+ document.addEventListener('visibilitychange',()=>{
+   if(document.hidden){
+     videos.forEach(v=>{
+       if(!v.paused){
+         v.dataset.wasPlaying='1';
+         v.pause();
+         updateCardButton(v.closest('.reel-card'),false);
+       }
+     });
+   }else if(currentPage==='feed'&&currentActiveCard){
+     const v=currentActiveCard.querySelector('.reel-video');
+     if(v&&v.dataset.wasPlaying==='1'&&v.dataset.userPaused!=='1'){
+       v.play().catch(()=>{});
+       updateCardButton(currentActiveCard,true);
+     }
+   }
+ });
 
  const prevBtn=document.getElementById('feedPrevBtn');
  const nextBtn=document.getElementById('feedNextBtn');
@@ -560,7 +617,7 @@ async function renderMarketplace(){
 }
 function storeCard(s){const p=sellerProfile(s.ownerId);return `<div class="card p-5"><div class="flex items-center gap-3">${avatar(p)}<div><b>${esc(s.name)}</b><div class="text-xs mt-1 flex items-center gap-1"><span class="verified-badge">✓</span><span class="muted">Verified</span></div></div></div><p class="muted text-sm mt-4 line-clamp-3">${esc(s.description||'')}</p><button data-open-store="${s.ownerId}" class="mt-4 w-full border border-[#444] rounded-xl p-2">Visit store</button></div>`}
 function bindStoreCards(){document.querySelectorAll('[data-open-store]').forEach(b=>b.onclick=()=>openStore(b.dataset.openStore))}
-async function openStore(uid){loading('Opening store…');try{const [ss,ps]=await Promise.all([getDoc(doc(db,'stores',uid)),getDoc(doc(db,'publicProfiles',uid))]);const store=snapshotExists(ss)?ss.data():null,p=snapshotExists(ps)?ps.data():sellerProfile(uid);const products=(await getDocs(query(collection(db,'products'),where('sellerId','==',uid)))).docs.map(d=>({id:d.id,...d.data()}));const following=(p.followers||[]).includes(currentUser.uid);await addDoc(collection(db,'profileVisits'),{visitorId:currentUser.uid,profileId:uid,createdAt:serverTimestamp()}).catch(()=>{});$('page').innerHTML=`<div class="flex items-center gap-3 mb-5"><button id="backMarket" class="border border-[#333] rounded-xl px-3 py-2">←</button><div>${avatar(p,'w-16 h-16 rounded-full object-cover bg-[#222]')}</div><div><h1 class="text-2xl font-black">${esc(store?.name||p.name)}${p.verified?' <span class="verified-badge ml-1">✓</span>':''}</h1><div class="muted">@${esc(p.username)} · ${(p.followers||[]).length} followers</div></div></div><div class="store-map-card p-5 mb-5"><div class="grid sm:grid-cols-3 gap-3 mb-4"><div class="bg-[#111] rounded-xl p-3"><div class="muted text-xs">📍 Location</div><b>${esc(store?.location||'Location not added')}</b></div><div class="bg-[#111] rounded-xl p-3"><div class="muted text-xs">🏢 Address</div><b>${esc(store?.address||'Address not added')}</b></div><div class="bg-[#111] rounded-xl p-3"><div class="muted text-xs">🕒 Hours</div><b>${esc(store?.hours||'Hours not added')}</b></div></div><p>${esc(store?.description||'')}</p><div class="flex flex-wrap gap-2 mt-4">${store?.location||store?.address?`<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((store?.address||'')+' '+(store?.location||''))}" class="px-4 py-2 rounded-xl border border-[#444]">📍 Open location</a>`:''}<button id="followBtn" class="px-4 py-2 rounded-xl ${following?'border border-[#444]':'bg-gold text-black'}">${following?'Following':'Follow'}</button><button id="messageSellerBtn" class="px-4 py-2 rounded-xl border border-[#444]">💬 Message</button>${store?.whatsapp?`<a target="_blank" href="https://wa.me/${encodeURIComponent(store.whatsapp.replace(/\D/g,''))}" class="px-4 py-2 rounded-xl border border-[#444]">WhatsApp</a>`:''}</div></div><div class="flex items-center justify-between mb-4"><h2 class="text-xl font-bold">Products</h2></div><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">${products.length?products.map(productCard).join(''):'<div class="card p-6 muted">No products listed yet.</div>'}</div><div class="card p-5 mt-5"><h2 class="font-bold text-xl">Reviews</h2><div id="reviews" class="mt-3">Loading…</div><button id="reviewBtn" class="mt-4 border border-[#444] rounded-xl px-4 py-2">Write a review</button></div>`;$('backMarket').onclick=()=>navigate('marketplace');$('messageSellerBtn')?.addEventListener('click',()=>startSellerFlowChat(uid));$('followBtn').onclick=async()=>{const r=doc(db,'publicProfiles',uid);if(following){await updateDoc(r,{followers:arrayRemove(currentUser.uid)});await updateDoc(doc(db,'publicProfiles',currentUser.uid),{following:arrayRemove(uid)});toast('Unfollowed','success')}else{await updateDoc(r,{followers:arrayUnion(currentUser.uid)});await updateDoc(doc(db,'publicProfiles',currentUser.uid),{following:arrayUnion(uid)});toast('Following','success')}await openStore(uid)};document.querySelectorAll('[data-add-cart]').forEach(b=>b.onclick=()=>addToCart(products.find(x=>x.id===b.dataset.addCart)));await renderReviews(uid);$('reviewBtn').onclick=()=>openReviewModal(uid)}catch(e){toast(errMsg(e),'error')}finally{ready()}}
+async function openStore(uid){loading('Opening store…');try{const [ss,ps]=await Promise.all([getDoc(doc(db,'stores',uid)),getDoc(doc(db,'publicProfiles',uid))]);const store=snapshotExists(ss)?ss.data():null,p=snapshotExists(ps)?ps.data():sellerProfile(uid);const products=(await getDocs(query(collection(db,'products'),where('sellerId','==',uid)))).docs.map(d=>({id:d.id,...d.data()}));const following=(p.followers||[]).includes(currentUser.uid);await addDoc(collection(db,'profileVisits'),{visitorId:currentUser.uid,profileId:uid,createdAt:serverTimestamp()}).catch(()=>{});$('page').innerHTML=`<div class="flex items-center gap-3 mb-5"><button id="backMarket" class="border border-[#333] rounded-xl px-3 py-2">←</button><div>${avatar(p,'w-16 h-16 rounded-full object-cover bg-[#222]')}</div><div><h1 class="text-2xl font-black">${esc(store?.name||p.name)}${p.verified?' <span class="verified-badge ml-1">✓</span>':''}</h1><div class="muted">@${esc(p.username)} · ${(p.followers||[]).length} followers</div></div></div><div class="store-map-card p-5 mb-5"><div class="grid sm:grid-cols-3 gap-3 mb-4"><div class="bg-[#111] rounded-xl p-3"><div class="muted text-xs">📍 Location</div><b>${esc(store?.location||'Location not added')}</b></div><div class="bg-[#111] rounded-xl p-3"><div class="muted text-xs">🏢 Address</div><b>${esc(store?.address||'Address not added')}</b></div><div class="bg-[#111] rounded-xl p-3"><div class="muted text-xs">🕒 Hours</div><b>${esc(store?.hours||'Hours not added')}</b></div></div><p>${esc(store?.description||'')}</p><div class="flex flex-wrap gap-2 mt-4">${store?.location||store?.address?`<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((store?.address||'')+' '+(store?.location||''))}" class="px-4 py-2 rounded-xl border border-[#444]">📍 Open location</a>`:''}<button id="followBtn" class="px-4 py-2 rounded-xl ${following?'border border-[#444]':'bg-gold text-black'}">${following?'Following':'Follow'}</button><button id="messageSellerBtn" class="px-4 py-2 rounded-xl border border-[#444]">💬 Message</button>${store?.whatsapp?`<a target="_blank" href="https://wa.me/${encodeURIComponent(store.whatsapp.replace(/\D/g,''))}" class="px-4 py-2 rounded-xl border border-[#444]">WhatsApp</a>`:''}</div></div><div class="flex items-center justify-between mb-4"><h2 class="text-xl font-bold">Products</h2></div><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">${products.length?products.map(productCard).join(''):'<div class="card p-6 muted">No products listed yet.</div>'}</div><div class="card p-5 mt-5"><h2 class="font-bold text-xl">Reviews</h2><div id="reviews" class="mt-3">Loading…</div><button id="reviewBtn" class="mt-4 border border-[#444] rounded-xl px-4 py-2">Write a review</button></div>`;$('backMarket').onclick=()=>navigate('marketplace');$('messageSellerBtn')?.addEventListener('click',()=>startSellerFlowChat(uid));$('followBtn').onclick=async()=>{const r=doc(db,'publicProfiles',uid);if(following){await updateDoc(r,{followers:arrayRemove(currentUser.uid)});await updateDoc(doc(db,'publicProfiles',currentUser.uid),{following:arrayRemove(uid)});toast('Unfollowed','success')}else{await updateDoc(r,{followers:arrayUnion(currentUser.uid)});await updateDoc(doc(db,'publicProfiles',currentUser.uid),{following:arrayUnion(uid)});if(window.notifyFollow)await window.notifyFollow(uid);toast('Following','success')}await openStore(uid)};document.querySelectorAll('[data-add-cart]').forEach(b=>b.onclick=()=>addToCart(products.find(x=>x.id===b.dataset.addCart)));await renderReviews(uid);$('reviewBtn').onclick=()=>openReviewModal(uid)}catch(e){toast(errMsg(e),'error')}finally{ready()}}
 function productCard(p){return `<div class="card p-3"><img class="product-img" src="${esc(p.imageUrl||'')}" onerror="this.style.display='none'" alt=""><div class="font-bold mt-3">${esc(p.name)}</div><div class="gold font-black mt-1">${money(p.price)}</div><div class="muted text-sm mt-1 line-clamp-2">${esc(p.description||'')}</div><button data-add-cart="${p.id}" class="w-full mt-3 bg-gold text-black rounded-xl py-2">Add to cart</button></div>`}
 async function renderReviews(uid){const s=await getDocs(query(collection(db,'reviews'),where('sellerId','==',uid),limit(50)));$('reviews').innerHTML=s.docs.map(d=>{const r=d.data();return `<div class="border-b border-[#292929] py-3"><b>${esc(r.reviewerName)}</b><span class="gold ml-2">${'★'.repeat(Math.max(1,Math.min(5,r.rating)))}</span><p class="muted text-sm mt-1">${esc(r.text)}</p></div>`}).join('')||'<span class="muted">No reviews yet.</span>'}
 function openReviewModal(uid){modal(`<h2 class="text-xl font-bold">Review seller</h2><select id="reviewRating" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]"><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — Average</option><option value="2">2 — Poor</option><option value="1">1 — Very poor</option></select><textarea id="reviewText" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Tell other buyers about your experience…"></textarea><div class="flex justify-end gap-2 mt-4"><button data-close-modal>Cancel</button>${button('Submit','submitReview')}</div>`);$('submitReview').onclick=async()=>{try{const existing=await getDocs(query(collection(db,'reviews'),where('sellerId','==',uid),where('reviewerId','==',currentUser.uid),limit(1)));if(!existing.empty)throw Error('You already reviewed this seller.');const delivered=await getDocs(query(collection(db,'orders'),where('buyerId','==',currentUser.uid),where('sellerIds','array-contains',uid),where('status','==','delivered'),limit(1)));if(delivered.empty)throw Error('You can review a seller after a delivered order.');await addDoc(collection(db,'reviews'),{sellerId:uid,reviewerId:currentUser.uid,reviewerName:currentProfile.name,rating:Number($('reviewRating').value),text:$('reviewText').value.trim(),createdAt:serverTimestamp()});closeModal();toast('Review submitted','success');await openStore(uid)}catch(e){toast(errMsg(e),'error')}}}
@@ -784,6 +841,10 @@ init();
 <!-- SellerFlow Update 2: social profile, media editor, admin moderation preview, engagement notifications and ranked For You feed -->
 <style>
 .profile-hero{background:linear-gradient(145deg,#171717,#0d0d0d);border:1px solid #292929;border-radius:24px;padding:22px}.profile-photo{width:96px;height:96px;border-radius:50%;object-fit:cover;background:#222;border:2px solid #333;cursor:pointer}.profile-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.profile-stat{background:#171717;border:1px solid #292929;border-radius:14px;padding:12px;text-align:center}.profile-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px}.profile-grid-item{aspect-ratio:1/1;background:#151515;overflow:hidden;position:relative;cursor:pointer}.profile-grid-item img,.profile-grid-item video{width:100%;height:100%;object-fit:cover}.profile-grid-item .grid-type{position:absolute;top:7px;right:7px;background:rgba(0,0,0,.65);border-radius:999px;padding:4px 7px;font-size:11px}.admin-media-preview{width:100%;max-height:520px;object-fit:contain;background:#050505;border-radius:16px}.editor-preview{width:100%;max-height:420px;object-fit:contain;background:#050505;border-radius:16px}.editor-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.editor-tool{background:#171717;border:1px solid #303030;border-radius:14px;padding:10px}.range-row{display:flex;align-items:center;gap:10px}.range-row input{flex:1}.notif-row{cursor:pointer;transition:.15s}.notif-row:hover{border-color:#f5b942!important}.modal-backbar{display:flex;align-items:center;gap:8px;margin-bottom:14px}.modal-backbar button{border:1px solid #333;background:#151515;border-radius:12px;padding:8px 12px}.ranking-note{font-size:11px;color:#777;margin-top:8px}
+.reply-indent{border-left:2px solid #333;padding-left:12px;margin-left:16px;margin-top:8px}
+.avatar-stack{display:inline-flex;align-items:center}
+.avatar-stack > *{margin-right:-8px;border:2px solid #141414}
+.ai-badge{background:linear-gradient(135deg,rgba(245,185,66,.2),rgba(245,185,66,.05));border:1px solid rgba(245,185,66,.45);color:#f5b942}
 @media(max-width:640px){.profile-stats{grid-template-columns:repeat(2,1fr)}.profile-grid{gap:2px}.editor-tools{grid-template-columns:1fr}}
 </style>
 <script>
@@ -793,12 +854,23 @@ init();
     if(p?.avatarUrl)return `<img data-view-image="${esc(p.avatarUrl)}" class="${cls}" src="${esc(p.avatarUrl)}" alt="${esc(p.name||p.username||'Profile picture')}" onerror="this.onerror=null;this.style.display='none'">`;
     return oldAvatar(p,cls);
   };
-  window.sfOpenImage=function(url,title='Image'){if(!url)return;modal(`<div><div class="modal-backbar"><button type="button" data-modal-back>← Back</button><b>${esc(title)}</b></div><img src="${esc(url)}" class="w-full max-h-[78vh] object-contain rounded-2xl bg-black" alt="${esc(title)}"></div>`)};
+  window.sfOpenImage=function(url,title='Image'){
+    if(!url)return;
+    modal(`<div><div class="text-sm font-bold text-zinc-300 mb-3">${esc(title)}</div><img src="${esc(url)}" class="w-full max-h-[78vh] object-contain rounded-2xl bg-black" alt="${esc(title)}"></div>`);
+  };
   document.addEventListener('click',e=>{const im=e.target.closest('[data-view-image]');if(im){e.stopPropagation();sfOpenImage(im.dataset.viewImage,im.alt||'Profile picture')}});
 
-  /* Every modal gets a consistent back button so notification/message/detail screens never trap the user. */
+  /* Unified modal with a single clean back button bar — preventing double back buttons anywhere */
   const baseModal=modal;
-  modal=function(html){$('modalRoot').innerHTML=`<div class="modal"><div class="modal-card"><div class="modal-backbar"><button type="button" data-modal-back>← Back</button><span class="muted text-xs">SellerFlow</span></div>${html}</div></div>`;document.querySelectorAll('[data-close-modal]').forEach(b=>b.onclick=closeModal);document.querySelectorAll('[data-modal-back]').forEach(b=>b.onclick=closeModal)};
+  modal=function(html,options={}){
+    if(options?.noBackBar){
+      $('modalRoot').innerHTML=`<div class="modal"><div class="modal-card">${html}</div></div>`;
+    }else{
+      $('modalRoot').innerHTML=`<div class="modal"><div class="modal-card"><div class="modal-header-bar flex items-center justify-between pb-3 mb-3 border-b border-[#262626]"><button type="button" class="btn-modal-back text-xs border border-[#333] hover:border-gold px-3 py-1.5 rounded-xl flex items-center gap-1.5 bg-[#141414] text-zinc-300 hover:text-white" data-modal-back>← Back</button><span class="text-xs text-zinc-500 font-bold uppercase tracking-wider">SellerFlow</span><button type="button" class="w-7 h-7 rounded-full border border-[#333] hover:border-gold flex items-center justify-center text-xs text-zinc-400 hover:text-white" data-close-modal title="Close">✕</button></div>${html}</div></div>`;
+    }
+    document.querySelectorAll('[data-close-modal]').forEach(b=>b.onclick=closeModal);
+    document.querySelectorAll('[data-modal-back]').forEach(b=>b.onclick=closeModal);
+  };
 
   async function notifyPostOwner(postId,type,extra=''){
     try{
@@ -806,11 +878,30 @@ init();
       const p=s.data(), owner=p.sellerId;
       if(!owner||owner===currentUser.uid)return;
       const actor=isAdmin?'SellerFlow':(currentProfile?.name||currentProfile?.username||'A SellerFlow user');
-      const titles={like:'New like on your post',comment:'New comment on your post',save:'Someone saved your post',share:'Your post was shared'};
-      const messages={like:`${actor} liked your SellerFlow post.`,comment:`${actor} commented on your SellerFlow post${extra?': '+extra:''}`,save:`${actor} saved your SellerFlow post.`,share:`${actor} shared your SellerFlow post.`};
+      const titles={like:'New like on your post',comment:'New comment on your post',save:'Someone saved your post',share:'Your post was shared',repost:'Your video was reposted'};
+      const messages={like:`${actor} liked your SellerFlow post.`,comment:`${actor} commented on your SellerFlow post${extra?': '+extra:''}`,save:`${actor} saved your SellerFlow post.`,share:`${actor} shared your SellerFlow post.`,repost:`${actor} reposted your video to get more reach!`};
       await addDoc(collection(db,'notifications'),{recipientId:owner,actorId:currentUser.uid,postId,postOwnerId:owner,senderName:actor,title:titles[type]||'Post activity',message:messages[type]||`${actor} interacted with your post.`,type:'post_engagement',engagementType:type,read:false,createdAt:serverTimestamp()});
     }catch(err){console.warn('Engagement notification skipped',err)}
   }
+
+  async function notifyCommentAuthor(recipientId,postId,action,commentSnippet=''){
+    if(!recipientId||recipientId===currentUser.uid)return;
+    try{
+      const actor=isAdmin?'SellerFlow':(currentProfile?.name||currentProfile?.username||'A SellerFlow user');
+      const title=action==='liked'?'Reaction to your comment':'New reply to your comment';
+      const message=action==='liked'?`${actor} liked your comment: "${commentSnippet.slice(0,45)}${commentSnippet.length>45?'…':''}"`:`${actor} replied: "${commentSnippet.slice(0,50)}${commentSnippet.length>50?'…':''}"`;
+      await addDoc(collection(db,'notifications'),{recipientId,actorId:currentUser.uid,postId,senderName:actor,title,message,type:'comment_activity',engagementType:action,read:false,createdAt:serverTimestamp()});
+    }catch(e){console.warn('Comment author notification skipped',e)}
+  }
+
+  async function notifyFollow(targetUid){
+    if(!targetUid||targetUid===currentUser.uid)return;
+    try{
+      const actor=isAdmin?'SellerFlow':(currentProfile?.name||currentProfile?.username||'A SellerFlow user');
+      await addDoc(collection(db,'notifications'),{recipientId:targetUid,actorId:currentUser.uid,senderName:actor,title:'New follower',message:`${actor} started following you.`,type:'follow',read:false,createdAt:serverTimestamp()});
+    }catch(e){console.warn('Follow notification skipped',e)}
+  }
+  window.notifyFollow=notifyFollow;
 
   function contentType(p){const t=(p.text||'').toLowerCase();if(/product|shop|buy|price|sale|order|ghana cedi|ghs/.test(t))return'product';if(/how to|tip|learn|tutorial|guide|business|money|finance/.test(t))return'education';if(/funny|comedy|joke|laugh/.test(t))return'comedy';if(/hair|barber|beauty|fashion|makeup/.test(t))return'beauty';if(p.mediaType?.startsWith('video'))return'video';if(p.mediaType?.startsWith('image'))return'photo';return'story'}
   function isSafePost(p){return !/(sex|sexual|porn|nude|naked|xxx|onlyfans|explicit|adult content|erotic)/i.test(p.text||'')}
@@ -847,37 +938,484 @@ init();
     const b=e.currentTarget,id=b.dataset.id,action=b.dataset.postAction,r=doc(db,'posts',id),s=await getDoc(r);if(!snapshotExists(s))return;const p=s.data();
     if(action==='like'){const active=(p.likes||[]).includes(currentUser.uid);await updateDoc(r,{likes:active?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});if(!active)await notifyPostOwner(id,'like');}
     if(action==='save'){const active=(p.saves||[]).includes(currentUser.uid);await updateDoc(r,{saves:active?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});if(!active)await notifyPostOwner(id,'save');}
+    if(action==='repost'){
+      const active=(p.reposts||[]).includes(currentUser.uid);
+      await updateDoc(r,{reposts:active?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});
+      if(!active){
+        await notifyPostOwner(id,'repost');
+        toast('Video reposted! Your followers can now discover this video.','success');
+      }else{
+        toast('Repost removed','info');
+      }
+      const wrap=document.querySelector(`[data-reel-id="${id}"]`);
+      const btn=wrap?.querySelector(`[data-post-action="repost"]`);
+      if(btn){
+        const nowCount=Math.max(0,(p.reposts||[]).length+(active?-1:1));
+        btn.innerHTML=`<span class="text-lg">${!active?'🔁':'🔄'}</span><div class="text-[10px] mt-0.5">${nowCount}</div>`;
+      }
+      return;
+    }
     if(action==='comment'){openCommentPanel(id,p);return}
     if(action==='sound'){await saveSoundForUser(id,p);return}
+    if(action==='options'){openPostSettingsModal(id,p);return}
     if(action==='share'){const url=location.href.split('#')[0]+'#post='+id;if(navigator.share){try{await navigator.share({title:'SellerFlow post',text:p.text||'Check this SellerFlow post',url});await notifyPostOwner(id,'share')}catch{}}else{await navigator.clipboard?.writeText(url);await notifyPostOwner(id,'share');toast('Post link copied','success')}}
     if(action==='like'||action==='save'){const wrap=document.querySelector(`[data-reel-id="${id}"]`);const btn=wrap?.querySelector(`[data-post-action="${action}"]`);if(btn){const nowActive=action==='like'?!((p.likes||[]).includes(currentUser.uid)):!((p.saves||[]).includes(currentUser.uid));btn.firstChild.textContent=action==='like'?(nowActive?'❤️':'🤍'):'🔖';const countEl=btn.querySelector('div');if(countEl)countEl.textContent=String((action==='like'?(p.likes||[]).length:(p.saves||[]).length)+(nowActive?1:-1))}toast(action==='like'?'Reaction updated':'Post saved','success')}
   };
 
-  openCommentPanel=async function(id,p){const comments=p.comments||[];modal(`<div><h2 class="text-xl font-bold">Comments</h2><p class="muted text-sm">The post stays visible behind this panel.</p><div class="space-y-3 my-5 max-h-64 overflow-auto">${comments.slice(-40).map(c=>`<div class="bg-[#191919] p-3 rounded-xl"><div class="flex items-center gap-2">${avatar(sellerProfile(c.uid))}<b>${esc(c.name||'User')}</b></div><div class="text-sm mt-1">${esc(c.text||'')}</div></div>`).join('')||'<p class="muted">No comments yet.</p>'}</div><textarea id="commentText" class="w-full bg-[#191919] border border-[#333] rounded-xl p-3" rows="3" placeholder="Write a comment…"></textarea><div class="flex justify-end mt-3">${button('Comment','submitComment')}</div></div>`);$('submitComment').onclick=async()=>{const text=$('commentText').value.trim();if(!text)return toast('Write a comment first','error');try{await updateDoc(doc(db,'posts',id),{comments:arrayUnion({uid:currentUser.uid,name:isAdmin?'SellerFlow':(currentProfile.name||'SellerFlow user'),createdAt:Date.now(),text})});await notifyPostOwner(id,'comment',text);closeModal();toast('Comment added','success')}catch(e){toast(errMsg(e),'error')}}};
+  function openPostSettingsModal(id,p){
+    const isMine=(p.sellerId===currentUser.uid)||isAdmin;
+    const curPrivacy=p.privacy||'public';
+    modal(`<div>
+      <h2 class="text-xl font-black">Post options</h2>
+      <p class="muted text-xs mt-1">Manage visibility, reach and controls for this post.</p>
+      <div class="mt-4 p-4 rounded-2xl bg-[#171717] border border-[#2c2c2c]">
+        <div class="font-bold text-sm text-zinc-200 mb-2">Who can watch this post</div>
+        <div class="space-y-2">
+          <label class="flex items-center gap-3 p-3 rounded-xl bg-[#121212] border ${curPrivacy==='public'?'border-gold':'border-[#2a2a2a]'} cursor-pointer">
+            <input type="radio" name="postPrivacyRadio" value="public" ${curPrivacy==='public'?'checked':''} class="accent-gold">
+            <div class="text-left">
+              <div class="font-bold text-sm text-white">🌐 Everyone (Public)</div>
+              <div class="muted text-xs">Anyone on SellerFlow can view this in For You and search.</div>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 p-3 rounded-xl bg-[#121212] border ${curPrivacy==='followers'?'border-gold':'border-[#2a2a2a]'} cursor-pointer">
+            <input type="radio" name="postPrivacyRadio" value="followers" ${curPrivacy==='followers'?'checked':''} class="accent-gold">
+            <div class="text-left">
+              <div class="font-bold text-sm text-white">👥 Followers only</div>
+              <div class="muted text-xs">Only accounts following you can view this post.</div>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 p-3 rounded-xl bg-[#121212] border ${curPrivacy==='private'?'border-gold':'border-[#2a2a2a]'} cursor-pointer">
+            <input type="radio" name="postPrivacyRadio" value="private" ${curPrivacy==='private'?'checked':''} class="accent-gold">
+            <div class="text-left">
+              <div class="font-bold text-sm text-white">🔒 Only me (Private)</div>
+              <div class="muted text-xs">Only you can view this post on your profile.</div>
+            </div>
+          </label>
+        </div>
+        <button id="savePrivacyBtn" class="mt-3 w-full bg-gold text-black py-2.5 rounded-xl font-bold text-sm">Save privacy setting</button>
+      </div>
+      ${isMine?`
+      <div class="mt-4 p-4 rounded-2xl bg-[#191111] border border-red-900/40">
+        <div class="font-bold text-sm text-red-400">Delete post</div>
+        <p class="text-xs text-zinc-400 mt-1">Permanently remove this video or photo from SellerFlow.</p>
+        <button id="triggerDeleteBtn" class="mt-3 w-full border border-red-800/60 hover:bg-red-950/40 text-red-400 py-2.5 rounded-xl font-bold text-sm">🗑️ Delete this post</button>
+      </div>
+      `:''}
+    </div>`);
+    $('savePrivacyBtn').onclick=async()=>{
+      const chosen=document.querySelector('input[name="postPrivacyRadio"]:checked')?.value||'public';
+      try{
+        await updateDoc(doc(db,'posts',id),{privacy:chosen,updatedAt:serverTimestamp()});
+        toast('Post privacy updated','success');
+        closeModal();
+        if(currentPage==='feed')navigate('feed',id);
+        else if(currentPage==='profile')renderProfile();
+      }catch(e){toast(errMsg(e),'error')}
+    };
+    if($('triggerDeleteBtn')){
+      $('triggerDeleteBtn').onclick=()=>{
+        modal(`<div>
+          <div class="text-3xl mb-2 text-red-400">⚠️</div>
+          <h2 class="text-xl font-bold text-white">Delete this post?</h2>
+          <p class="muted text-sm mt-2">Are you sure you want to permanently delete this post? This cannot be undone.</p>
+          <div class="flex gap-2 mt-5">
+            <button data-close-modal class="flex-1 border border-[#444] rounded-xl py-2.5 text-sm font-semibold">Cancel</button>
+            <button id="confirmDeleteBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl py-2.5 text-sm font-bold">Yes, delete</button>
+          </div>
+        </div>`);
+        $('confirmDeleteBtn').onclick=async()=>{
+          try{
+            await updateDoc(doc(db,'posts',id),{status:'removed',removedAt:serverTimestamp(),removedBy:currentUser.uid});
+            toast('Post deleted','success');
+            closeModal();
+            if(currentPage==='feed')navigate('feed');
+            else if(currentPage==='profile')renderProfile();
+          }catch(e){toast(errMsg(e),'error')}
+        };
+      };
+    }
+  }
 
-  /* TikTok-inspired profile: creator header, stats, tabs and a visual post grid. */
-  renderProfile=async function(){
-    const p=currentProfile||{};const privateDoc=await getDoc(doc(db,'users',currentUser.uid));const verification=privateDoc.data()||{};let posts=[];try{const s=await getDocs(query(collection(db,'posts'),where('sellerId','==',currentUser.uid),limit(100)));posts=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.status!=='removed').sort((a,b)=>ts(b.createdAt)-ts(a.createdAt))}catch(_){ }
-    const followers=(p.followers||[]).length,following=(p.following||[]).length,likes=posts.reduce((n,x)=>n+(x.likes||[]).length,0),views=posts.reduce((n,x)=>n+Number(x.views||0),0);
-    $('page').innerHTML=pageTitle('Profile','Your SellerFlow creator space.')+`<section class="profile-hero"><div class="flex flex-col items-center text-center"><button type="button" data-view-image="${esc(p.avatarUrl||'')}" class="border-0 bg-transparent">${p.avatarUrl?`<img class="profile-photo" src="${esc(p.avatarUrl)}" alt="${esc(p.name||'Profile picture')}">`:`<div class="profile-photo flex items-center justify-center text-3xl font-black">${esc((p.name||'?')[0].toUpperCase())}</div>`}</button><h2 class="text-2xl font-black mt-4">${esc(p.name||'Seller')}${verifyBadge(p)}</h2><div class="muted mt-1">@${esc(p.username||'seller')}</div><p class="muted text-sm mt-2 max-w-xl">${esc(p.bio||'')}</p><div class="profile-stats w-full max-w-2xl mt-5"><div class="profile-stat"><b class="text-lg">${posts.length}</b><div class="muted text-xs">Posts</div></div><div class="profile-stat"><b class="text-lg">${views}</b><div class="muted text-xs">Views</div></div><div class="profile-stat"><b class="text-lg">${likes}</b><div class="muted text-xs">Likes</div></div><div class="profile-stat"><b class="text-lg">${followers}</b><div class="muted text-xs">Followers</div></div></div><div class="flex gap-2 mt-5">${button('＋ Create post','profileCreatePost')}<button id="editProfileTop" class="btn btn-secondary px-5 py-3 rounded-xl font-bold">Edit profile</button></div></div></section><section class="card mt-5 overflow-hidden"><div class="p-4 border-b border-[#292929] flex items-center justify-between"><div><b>Your posts</b><div class="muted text-xs">Photos and videos you have published</div></div><span class="muted text-xs">${following} following</span></div><div class="profile-grid">${posts.length?posts.map(x=>`<button type="button" class="profile-grid-item" data-profile-post="${x.id}">${x.mediaUrl?(x.mediaType?.startsWith('video')?`<video src="${esc(x.mediaUrl)}" muted preload="metadata"></video>`:`<img src="${esc(x.mediaUrl)}" alt="Post">`):`<div class="w-full h-full flex items-center justify-center p-4 text-xs">${esc(x.text||'SellerFlow post')}</div>`}<span class="grid-type">${x.mediaType?.startsWith('video')?'▶':x.mediaType?.startsWith('image')?'▧':'T'}</span></button>`).join(''):'<div class="col-span-3 p-10 text-center muted">You have not published any posts yet.</div>'}</div></section>`;
-    $('profileCreatePost').onclick=openPostModal;$('editProfileTop').onclick=()=>{const f=$('profileName');if(f)f.focus();window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});};
-    document.querySelectorAll('[data-profile-post]').forEach(b=>b.onclick=async()=>{const id=b.dataset.profilePost;const s=await getDoc(doc(db,'posts',id));if(snapshotExists(s)){const x=s.data();modal(`<div><h2 class="text-xl font-bold">Your post</h2>${x.mediaUrl?(x.mediaType?.startsWith('video')?`<video src="${esc(x.mediaUrl)}" class="admin-media-preview" controls playsinline></video>`:`<img src="${esc(x.mediaUrl)}" class="admin-media-preview" alt="Post">`):''}<p class="mt-4 whitespace-pre-wrap">${esc(x.text||'')}</p><div class="muted text-sm mt-2">${x.views||0} views · ${(x.likes||[]).length} likes · ${(x.comments||[]).length} comments</div></div>`)}});
+  openCommentPanel=async function(id,initialPost){
+    let p=initialPost;
+    let replyingTo=null;
+    const fetchFreshPost=async()=>{
+      const s=await getDoc(doc(db,'posts',id));
+      if(snapshotExists(s))p={id:s.id,...s.data()};
+    };
+
+    const drawComments=()=>{
+      const allComments=p.comments||[];
+      // normalize comments to have IDs
+      const topComments=[];
+      const repliesMap={};
+      allComments.forEach((c,idx)=>{
+        if(!c.id)c.id='c_'+(c.createdAt||idx)+'_'+idx;
+        if(c.parentCommentId){
+          if(!repliesMap[c.parentCommentId])repliesMap[c.parentCommentId]=[];
+          repliesMap[c.parentCommentId].push(c);
+        }else{
+          topComments.push(c);
+        }
+      });
+
+      const root=$('modalRoot');
+      root.innerHTML=`<div class="comment-backdrop" id="commentBackdrop"></div><section class="comment-sheet"><div class="flex items-center justify-between pb-3 border-b border-[#292929]"><div><h2 class="text-xl font-black">Comments (${allComments.length})</h2><p class="muted text-xs">Video continues playing in background while commenting.</p></div><button type="button" id="closeCommentPanel" class="w-8 h-8 rounded-full border border-[#333] hover:border-gold flex items-center justify-center text-sm">✕</button></div><div class="space-y-3 my-4 max-h-[50vh] overflow-y-auto" id="commentListScroll">${topComments.map(c=>{
+        const userLiked=(c.likes||[]).includes(currentUser.uid);
+        const replies=repliesMap[c.id]||[];
+        return `<div class="bg-[#181818] p-3 rounded-2xl border border-[#272727]"><div class="flex items-start justify-between gap-2"><div class="flex items-center gap-2">${avatar(sellerProfile(c.uid),'w-8 h-8 rounded-full object-cover bg-[#222]')}<div><b class="text-xs text-zinc-200">${esc(c.name||'User')}</b><div class="muted text-[10px]">${c.createdAt?new Date(c.createdAt).toLocaleDateString():'Recently'}</div></div></div><button type="button" class="flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-[#333] hover:border-gold ${userLiked?'text-red-400 bg-red-950/20':'text-zinc-400'}" data-comment-react="${c.id}"><span>${userLiked?'❤️':'🤍'}</span><span class="text-[11px]">${(c.likes||[]).length||0}</span></button></div><div class="text-sm mt-2 text-zinc-100 pl-10 whitespace-pre-wrap">${esc(c.text||'')}</div><div class="pl-10 mt-2 flex items-center gap-3"><button type="button" class="text-xs text-gold hover:underline font-semibold" data-comment-reply="${c.id}" data-reply-name="${esc(c.name||'User')}" data-reply-uid="${c.uid}">💬 Reply</button></div>${replies.length?`<div class="reply-indent space-y-2 mt-2">${replies.map(r=>{
+          const rLiked=(r.likes||[]).includes(currentUser.uid);
+          return `<div class="bg-[#131313] p-2.5 rounded-xl border border-[#252525]"><div class="flex items-start justify-between gap-2"><div class="flex items-center gap-2">${avatar(sellerProfile(r.uid),'w-6 h-6 rounded-full object-cover bg-[#222]')}<div><b class="text-[11px] text-zinc-200">${esc(r.name||'User')}</b><span class="text-[10px] text-gold/80 ml-1.5">Replying to @${esc(r.replyToName||'creator')}</span></div></div><button type="button" class="flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded border border-[#2d2d2d] hover:border-gold ${rLiked?'text-red-400':'text-zinc-500'}" data-comment-react="${r.id}"><span>${rLiked?'❤️':'🤍'}</span><span class="text-[10px]">${(r.likes||[]).length||0}</span></button></div><div class="text-xs mt-1.5 text-zinc-200 pl-8 whitespace-pre-wrap">${esc(r.text||'')}</div></div>`;
+        }).join('')}</div>`:''}</div>`;
+      }).join('')||'<div class="muted text-center py-8 text-sm">No comments yet. Be the first to share your thoughts!</div>'}</div><div id="replyingBar" class="${replyingTo?'flex':'hidden'} items-center justify-between px-3 py-1.5 bg-[#20180d] border border-[#3e2e15] rounded-xl mb-2 text-xs text-gold"><span>Replying to <b>@${esc(replyingTo?.name||'')}</b></span><button type="button" id="cancelReplyBtn" class="text-xs text-zinc-400 hover:text-white">✕</button></div><div class="flex gap-2"><textarea id="commentText" class="flex-1 bg-[#191919] border border-[#333] rounded-xl p-3 text-sm focus:border-gold" rows="2" placeholder="${replyingTo?`Reply to @${replyingTo.name}…`:'Write a comment…'}"></textarea><button type="button" id="submitComment" class="bg-gold text-black px-4 rounded-xl font-bold text-sm hover:opacity-90 self-end py-3 shrink-0">Send</button></div></section>`;
+
+      $('closeCommentPanel').onclick=closeModal;
+      $('commentBackdrop').onclick=closeModal;
+      $('cancelReplyBtn')?.addEventListener('click',()=>{
+        replyingTo=null;
+        drawComments();
+      });
+
+      document.querySelectorAll('[data-comment-reply]').forEach(b=>{
+        b.onclick=()=>{
+          replyingTo={id:b.dataset.commentReply,name:b.dataset.replyName,uid:b.dataset.replyUid};
+          drawComments();
+          $('commentText')?.focus();
+        };
+      });
+
+      document.querySelectorAll('[data-comment-react]').forEach(b=>{
+        b.onclick=async()=>{
+          const cid=b.dataset.commentReact;
+          try{
+            await fetchFreshPost();
+            const list=(p.comments||[]).map(x=>({...x}));
+            const target=list.find(x=>x.id===cid);
+            if(!target)return;
+            if(!target.likes)target.likes=[];
+            const has=target.likes.includes(currentUser.uid);
+            if(has)target.likes=target.likes.filter(u=>u!==currentUser.uid);
+            else {
+              target.likes.push(currentUser.uid);
+              await notifyCommentAuthor(target.uid,id,'liked',target.text);
+            }
+            await updateDoc(doc(db,'posts',id),{comments:list});
+            p.comments=list;
+            drawComments();
+          }catch(err){toast(errMsg(err),'error')}
+        };
+      });
+
+      $('submitComment').onclick=async()=>{
+        const text=$('commentText').value.trim();
+        if(!text)return toast('Write a comment first','error');
+        try{
+          await fetchFreshPost();
+          const list=(p.comments||[]).map(x=>({...x}));
+          const newEntry={
+            id:'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+            uid:currentUser.uid,
+            name:isAdmin?'SellerFlow':(currentProfile.name||'SellerFlow user'),
+            text,
+            createdAt:Date.now(),
+            likes:[]
+          };
+          if(replyingTo){
+            newEntry.parentCommentId=replyingTo.id;
+            newEntry.replyToName=replyingTo.name;
+            newEntry.replyToUid=replyingTo.uid;
+            await notifyCommentAuthor(replyingTo.uid,id,'replied',text);
+            await notifyPostOwner(id,'comment',text);
+          }else{
+            await notifyPostOwner(id,'comment',text);
+          }
+          list.push(newEntry);
+          await updateDoc(doc(db,'posts',id),{comments:list});
+          p.comments=list;
+          replyingTo=null;
+          drawComments();
+          toast('Comment posted','success');
+          // auto scroll to bottom
+          setTimeout(()=>{
+            const el=$('commentListScroll');
+            if(el)el.scrollTop=el.scrollHeight;
+          },100);
+        }catch(e){toast(errMsg(e),'error')}
+      };
+    };
+
+    drawComments();
   };
 
-  /* Media editor. Images are actually rendered to a new file; videos get live filters and a poster/metadata selection. */
+  /* Media editor: TikTok-style upload flow with in-video cover selection and AI-generated content label */
   openPostModal=function(){
     const active=getActiveSound();
-    modal(`<div><h2 class="text-xl font-bold">Create SellerFlow post</h2><p class="muted text-sm mt-1">Edit your photo or video before publishing.</p><div class="mt-4"><input id="postFile" type="file" accept="image/*,video/mp4,video/webm" class="w-full p-2 rounded-xl bg-[#191919] border border-[#333]"></div><div id="editorArea" class="mt-4"></div><textarea id="postText" class="w-full mt-4 bg-[#191919] border border-[#333] rounded-xl p-3" rows="4" placeholder="Write a caption…"></textarea>${active?`<div class="sound-chip mt-3">🎵 Using sound: ${esc(active.soundName)} · Original by ${esc(active.originatorName)}</div>`:''}<div class="flex justify-end gap-2 mt-4"><button data-close-modal class="px-4 py-2">Cancel</button>${button('Publish to For You','publishPost')}</div></div>`);
-    let file=null,kind='',imageState={brightness:100,contrast:100,saturation:100,rotation:0,zoom:1,filter:'none'};
+    modal(`<div>
+      <div class="flex items-center justify-between pb-3 border-b border-[#262626]">
+        <div>
+          <h2 class="text-xl font-black text-white">Create post</h2>
+          <p class="muted text-xs">Share a photo or video with Ghana's SellerFlow community.</p>
+        </div>
+      </div>
+      <div class="mt-4">
+        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Select photo or video</label>
+        <input id="postFile" type="file" accept="image/*,video/mp4,video/webm,video/quicktime" class="w-full p-2.5 rounded-xl bg-[#191919] border border-[#333] text-sm text-zinc-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-gold file:text-black hover:file:opacity-90 cursor-pointer">
+      </div>
+      <div id="editorArea" class="mt-4"></div>
+      
+      <!-- TikTok-style AI Content Toggle -->
+      <div class="mt-4 p-3.5 bg-[#171717] border border-[#2b2b2b] rounded-2xl flex items-center justify-between">
+        <div class="pr-3">
+          <div class="font-bold text-sm text-white flex items-center gap-1.5">
+            <span>✨</span> AI-generated content
+          </div>
+          <p class="text-xs text-zinc-400 mt-0.5">Turn on if this video or photo was created or heavily edited using AI tools.</p>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+          <input type="checkbox" id="aiGeneratedCheckbox" class="sr-only peer">
+          <div class="w-11 h-6 bg-[#2b2b2b] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
+        </label>
+      </div>
+
+      <!-- Who can watch / Privacy -->
+      <div class="mt-4">
+        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Who can watch this post</label>
+        <select id="postPrivacySelect" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-zinc-200">
+          <option value="public">🌐 Everyone (Public)</option>
+          <option value="followers">👥 Followers only</option>
+          <option value="private">🔒 Only me (Private)</option>
+        </select>
+      </div>
+
+      <!-- Caption & quick hashtags -->
+      <div class="mt-4">
+        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Caption & hashtags</label>
+        <textarea id="postText" class="w-full bg-[#191919] border border-[#333] rounded-xl p-3 text-sm focus:border-gold" rows="3" placeholder="Describe your product, item or video…"></textarea>
+        <div class="flex flex-wrap gap-1.5 mt-2">
+          <button type="button" class="quick-tag text-[11px] px-2.5 py-1 rounded-lg bg-[#222] hover:bg-[#333] text-zinc-300 border border-[#2d2d2d]" data-tag="#SellerFlow">#SellerFlow</button>
+          <button type="button" class="quick-tag text-[11px] px-2.5 py-1 rounded-lg bg-[#222] hover:bg-[#333] text-zinc-300 border border-[#2d2d2d]" data-tag="#Accra">#Accra</button>
+          <button type="button" class="quick-tag text-[11px] px-2.5 py-1 rounded-lg bg-[#222] hover:bg-[#333] text-zinc-300 border border-[#2d2d2d]" data-tag="#GhanaMarket">#GhanaMarket</button>
+          <button type="button" class="quick-tag text-[11px] px-2.5 py-1 rounded-lg bg-[#222] hover:bg-[#333] text-zinc-300 border border-[#2d2d2d]" data-tag="#Trending">#Trending</button>
+          <button type="button" class="quick-tag text-[11px] px-2.5 py-1 rounded-lg bg-[#222] hover:bg-[#333] text-zinc-300 border border-[#2d2d2d]" data-tag="#Business">#Business</button>
+        </div>
+      </div>
+
+      ${active?`<div class="sound-chip mt-3 p-2.5 rounded-xl bg-[#1a1710] border border-gold/30 text-xs text-gold flex items-center gap-2"><span>🎵</span><span>Using sound: <b>${esc(active.soundName)}</b> · Original by ${esc(active.originatorName)}</span></div>`:''}
+
+      <div class="flex justify-end gap-2 mt-5 pt-3 border-t border-[#262626]">
+        <button data-close-modal class="px-4 py-2 text-sm text-zinc-400 hover:text-white">Cancel</button>
+        ${button('Publish post','publishPost')}
+      </div>
+    </div>`);
+
+    document.querySelectorAll('.quick-tag').forEach(btn=>{
+      btn.onclick=()=>{
+        const t=$('postText');
+        if(!t)return;
+        const tag=btn.dataset.tag;
+        if(!t.value.includes(tag)){
+          t.value=(t.value.trim()+' '+tag).trim()+' ';
+        }
+      };
+    });
+
+    let file=null,kind='',imageState={brightness:100,contrast:100,saturation:100,rotation:0,zoom:1};
+    let capturedCoverBlob=null;
     const area=$('editorArea');
-    function drawImage(){if(!file)return;const url=URL.createObjectURL(file);area.innerHTML=`<img id="editorImg" class="editor-preview" src="${url}" style="filter:brightness(${imageState.brightness}%) contrast(${imageState.contrast}%) saturate(${imageState.saturation}%);transform:rotate(${imageState.rotation}deg) scale(${imageState.zoom})"><div class="editor-tools mt-3"><div class="editor-tool">Brightness <div class="range-row"><input id="edBright" type="range" min="50" max="150" value="${imageState.brightness}"></div></div><div class="editor-tool">Contrast <div class="range-row"><input id="edContrast" type="range" min="50" max="150" value="${imageState.contrast}"></div></div><div class="editor-tool">Saturation <div class="range-row"><input id="edSat" type="range" min="0" max="180" value="${imageState.saturation}"></div></div><div class="editor-tool flex items-center justify-between">Zoom <input id="edZoom" type="range" min="80" max="140" value="100"></div></div><div class="flex flex-wrap gap-2 mt-3"><button type="button" id="edRotate" class="btn btn-secondary px-3 py-2 rounded-xl">↻ Rotate</button><button type="button" id="edReset" class="btn btn-secondary px-3 py-2 rounded-xl">Reset</button></div>`;
-      ['edBright','edContrast','edSat','edZoom'].forEach(id=>$(id).oninput=()=>{imageState.brightness=+$('edBright').value;imageState.contrast=+$('edContrast').value;imageState.saturation=+$('edSat').value;imageState.zoom=+$('edZoom').value/100;drawImageStyle()});$('edRotate').onclick=()=>{imageState.rotation=(imageState.rotation+90)%360;drawImageStyle()};$('edReset').onclick=()=>{imageState={brightness:100,contrast:100,saturation:100,rotation:0,zoom:1};drawImage()};
+
+    function drawImage(){
+      if(!file)return;
+      const url=URL.createObjectURL(file);
+      area.innerHTML=`<div class="rounded-2xl overflow-hidden bg-black border border-[#333] max-h-[380px] flex items-center justify-center"><img id="editorImg" class="editor-preview max-h-[360px] object-contain" src="${url}" style="filter:brightness(${imageState.brightness}%) contrast(${imageState.contrast}%) saturate(${imageState.saturation}%);transform:rotate(${imageState.rotation}deg) scale(${imageState.zoom})"></div><div class="editor-tools mt-3"><div class="editor-tool">Brightness <div class="range-row"><input id="edBright" type="range" min="50" max="150" value="${imageState.brightness}"></div></div><div class="editor-tool">Contrast <div class="range-row"><input id="edContrast" type="range" min="50" max="150" value="${imageState.contrast}"></div></div><div class="editor-tool">Saturation <div class="range-row"><input id="edSat" type="range" min="0" max="180" value="${imageState.saturation}"></div></div><div class="editor-tool flex items-center justify-between">Zoom <input id="edZoom" type="range" min="80" max="140" value="100"></div></div><div class="flex flex-wrap gap-2 mt-3"><button type="button" id="edRotate" class="btn btn-secondary px-3 py-2 rounded-xl text-xs">↻ Rotate 90°</button><button type="button" id="edReset" class="btn btn-secondary px-3 py-2 rounded-xl text-xs">Reset filters</button></div>`;
+      ['edBright','edContrast','edSat','edZoom'].forEach(id=>$(id).oninput=()=>{
+        imageState.brightness=+$('edBright').value;
+        imageState.contrast=+$('edContrast').value;
+        imageState.saturation=+$('edSat').value;
+        imageState.zoom=+$('edZoom').value/100;
+        const i=$('editorImg');
+        if(i)i.style.cssText=`filter:brightness(${imageState.brightness}%) contrast(${imageState.contrast}%) saturate(${imageState.saturation}%);transform:rotate(${imageState.rotation}deg) scale(${imageState.zoom})`;
+      });
+      $('edRotate').onclick=()=>{
+        imageState.rotation=(imageState.rotation+90)%360;
+        const i=$('editorImg');
+        if(i)i.style.cssText=`filter:brightness(${imageState.brightness}%) contrast(${imageState.contrast}%) saturate(${imageState.saturation}%);transform:rotate(${imageState.rotation}deg) scale(${imageState.zoom})`;
+      };
+      $('edReset').onclick=()=>{
+        imageState={brightness:100,contrast:100,saturation:100,rotation:0,zoom:1};
+        drawImage();
+      };
     }
-    function drawImageStyle(){const i=$('editorImg');if(i)i.style.cssText=`filter:brightness(${imageState.brightness}%) contrast(${imageState.contrast}%) saturate(${imageState.saturation}%);transform:rotate(${imageState.rotation}deg) scale(${imageState.zoom})`}
-    $('postFile').onchange=()=>{file=$('postFile').files[0];if(!file){area.innerHTML='';return}kind=file.type.startsWith('video')?'video':'image';if(kind==='image')drawImage();else{const u=URL.createObjectURL(file);area.innerHTML=`<video id="editorVideo" class="editor-preview" src="${u}" controls playsinline></video><div class="editor-tools mt-3"><div class="editor-tool">Brightness <input id="vBright" type="range" min="60" max="140" value="100"></div><div class="editor-tool">Contrast <input id="vContrast" type="range" min="60" max="140" value="100"></div><div class="editor-tool">Saturation <input id="vSat" type="range" min="0" max="180" value="100"></div><div class="editor-tool"><label>Start preview time</label><input id="vStart" type="number" min="0" step="0.1" value="0" class="w-full mt-2 p-2 rounded-lg bg-[#0f0f0f] border border-[#333]"></div></div><p class="ranking-note">Video filters are previewed in-app. The original video remains intact for reliable mobile uploads.</p>`;['vBright','vContrast','vSat'].forEach(id=>$(id).oninput=()=>{$('editorVideo').style.filter=`brightness(${$('vBright').value}%) contrast(${$('vContrast').value}%) saturate(${$('vSat').value}%)`})}};
-    $('publishPost').onclick=async()=>{try{const text=$('postText').value.trim();if(!text&&!file)throw Error('Add text or media.');loading('Preparing your post…');let uploadFile=file;if(file&&kind==='image'){const img=new Image();img.src=URL.createObjectURL(file);await img.decode();const c=document.createElement('canvas');const max=2200,scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));c.width=Math.round(img.naturalWidth*scale);c.height=Math.round(img.naturalHeight*scale);const ctx=c.getContext('2d');ctx.filter=`brightness(${imageState.brightness}%) contrast(${imageState.contrast}%) saturate(${imageState.saturation}%)`;ctx.translate(c.width/2,c.height/2);ctx.rotate(imageState.rotation*Math.PI/180);ctx.scale(imageState.zoom,imageState.zoom);ctx.drawImage(img,-c.width/(2*imageState.zoom),-c.height/(2*imageState.zoom),c.width/imageState.zoom,c.height/imageState.zoom);const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.9));uploadFile=new File([blob],`sellerflow-edit-${Date.now()}.jpg`,{type:'image/jpeg'})}
-      let mediaUrl='',mediaType='',mediaPath='';if(uploadFile){validFile(uploadFile,['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm'],50);const x=await uploadPublic(uploadFile,'posts');mediaUrl=x.url;mediaPath=x.path;mediaType=uploadFile.type}
-      const sound=active||null;const ref=await addDoc(collection(db,'posts'),{sellerId:currentUser.uid,text,mediaUrl,mediaPath,mediaType,likes:[],saves:[],comments:[],views:0,status:'published',createdAt:serverTimestamp(),submittedAt:serverTimestamp(),reviewStatus:'under_review',contentType:contentType({text,mediaType}),safeContent:isSafePost({text}),soundId:sound?.soundId||'',soundName:sound?.soundName||(mediaType.startsWith('video')?'Original sound':''),soundOriginPostId:sound?.originPostId||'',soundOriginatorId:sound?.originatorId||currentUser.uid,soundOriginName:sound?.originatorName||(isAdmin?'SellerFlow':currentProfile.name||'SellerFlow creator'),platformLabel:'SellerFlow',isAdminPost:!!isAdmin});if(mediaType.startsWith('video')&&!sound)await setDoc(doc(db,'sounds',ref.id),{soundId:ref.id,originPostId:ref.id,originatorId:currentUser.uid,originatorName:isAdmin?'SellerFlow':(currentProfile.name||currentProfile.username||'SellerFlow creator'),soundName:`Original sound · ${currentProfile.name||'SellerFlow creator'}`,createdAt:serverTimestamp()},{merge:true});closeModal();toast('Published to For You. SellerFlow is reviewing it for safety.','success');navigate('feed')}catch(e){toast(errMsg(e),'error')}finally{ready()}};
+
+    function setupVideoCoverSelection(videoEl){
+      const canvas=$('coverCanvas');
+      if(!canvas||!videoEl)return;
+      const ctx=canvas.getContext('2d');
+      const updateCanvasCover=()=>{
+        if(!videoEl.videoWidth||!videoEl.videoHeight)return;
+        canvas.width=videoEl.videoWidth;
+        canvas.height=videoEl.videoHeight;
+        ctx.drawImage(videoEl,0,0,canvas.width,canvas.height);
+        canvas.toBlob(b=>{capturedCoverBlob=b},'image/jpeg',0.9);
+      };
+      videoEl.onloadeddata=()=>{
+        videoEl.currentTime=0.1;
+      };
+      videoEl.onseeked=()=>{
+        updateCanvasCover();
+        if($('coverTimeLabel'))$('coverTimeLabel').textContent=videoEl.currentTime.toFixed(1)+'s';
+      };
+      $('coverRange')?.addEventListener('input',e=>{
+        const pct=Number(e.target.value);
+        if(videoEl.duration){
+          videoEl.currentTime=(pct/100)*videoEl.duration;
+        }
+      });
+    }
+
+    $('postFile').onchange=()=>{
+      file=$('postFile').files[0];
+      if(!file){area.innerHTML='';capturedCoverBlob=null;return}
+      kind=file.type.startsWith('video')?'video':'image';
+      if(kind==='image'){
+        capturedCoverBlob=null;
+        drawImage();
+      }else{
+        const u=URL.createObjectURL(file);
+        area.innerHTML=`
+          <div class="rounded-2xl overflow-hidden bg-black border border-[#333]">
+            <video id="editorVideo" class="w-full max-h-[300px] object-contain" src="${u}" controls playsinline></video>
+          </div>
+          
+          <!-- TikTok style video cover picker -->
+          <div class="p-3.5 bg-[#161616] border border-[#2b2b2b] rounded-2xl mt-3">
+            <div class="flex items-center justify-between text-xs mb-2">
+              <span class="font-bold flex items-center gap-1.5 text-zinc-200">
+                <span>🖼️</span> Select video cover frame
+              </span>
+              <span id="coverTimeLabel" class="text-gold font-mono font-bold">0.1s</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="relative w-16 h-24 shrink-0 rounded-xl overflow-hidden bg-black border border-gold shadow-md">
+                <canvas id="coverCanvas" class="w-full h-full object-cover"></canvas>
+                <span class="absolute bottom-1 right-1 bg-black/80 text-[8px] px-1 rounded text-gold font-bold">Cover</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[11px] text-zinc-400 mb-2">Drag the slider across the video to select the exact thumbnail frame viewers see on your profile:</p>
+                <input type="range" id="coverRange" min="0" max="100" value="0" step="0.5" class="w-full accent-gold cursor-pointer">
+                <div class="flex justify-between text-[10px] text-zinc-500 mt-1">
+                  <span>Beginning</span>
+                  <span>Middle</span>
+                  <span>End</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        const vEl=$('editorVideo');
+        setupVideoCoverSelection(vEl);
+      }
+    };
+
+    $('publishPost').onclick=async()=>{
+      try{
+        const text=$('postText').value.trim();
+        const isAiGenerated=!!$('aiGeneratedCheckbox')?.checked;
+        const privacy=$('postPrivacySelect')?.value||'public';
+        if(!text&&!file)throw Error('Add text or media to publish.');
+        loading('Publishing your SellerFlow post…');
+
+        let uploadFile=file;
+        if(file&&kind==='image'){
+          const img=new Image();
+          img.src=URL.createObjectURL(file);
+          await img.decode();
+          const c=document.createElement('canvas');
+          const max=2200,scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+          c.width=Math.round(img.naturalWidth*scale);
+          c.height=Math.round(img.naturalHeight*scale);
+          const ctx=c.getContext('2d');
+          ctx.filter=`brightness(${imageState.brightness}%) contrast(${imageState.contrast}%) saturate(${imageState.saturation}%)`;
+          ctx.translate(c.width/2,c.height/2);
+          ctx.rotate(imageState.rotation*Math.PI/180);
+          ctx.scale(imageState.zoom,imageState.zoom);
+          ctx.drawImage(img,-c.width/(2*imageState.zoom),-c.height/(2*imageState.zoom),c.width/imageState.zoom,c.height/imageState.zoom);
+          const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.9));
+          uploadFile=new File([blob],`sellerflow-photo-${Date.now()}.jpg`,{type:'image/jpeg'});
+        }
+
+        let mediaUrl='',mediaType='',mediaPath='';
+        if(uploadFile){
+          validFile(uploadFile,['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm','video/quicktime'],80);
+          const x=await uploadPublic(uploadFile,'posts');
+          mediaUrl=x.url;
+          mediaPath=x.path;
+          mediaType=uploadFile.type;
+        }
+
+        // Upload custom captured cover thumbnail if video
+        let thumbnailUrl='',thumbnailPath='';
+        if(kind==='video'&&capturedCoverBlob){
+          try{
+            const coverFile=new File([capturedCoverBlob],`cover-${Date.now()}.jpg`,{type:'image/jpeg'});
+            const cvUp=await uploadPublic(coverFile,'covers');
+            thumbnailUrl=cvUp.url;
+            thumbnailPath=cvUp.path;
+          }catch(cErr){console.warn('Cover upload fallback',cErr)}
+        }
+
+        const sound=active||null;
+        const postData={
+          sellerId:currentUser.uid,
+          text,
+          mediaUrl,
+          mediaPath,
+          mediaType,
+          thumbnailUrl,
+          thumbnailPath,
+          isAiGenerated,
+          privacy,
+          likes:[],
+          saves:[],
+          comments:[],
+          reposts:[],
+          views:0,
+          status:'published',
+          createdAt:serverTimestamp(),
+          submittedAt:serverTimestamp(),
+          reviewStatus:'under_review',
+          contentType:contentType({text,mediaType}),
+          safeContent:isSafePost({text}),
+          soundId:sound?.soundId||'',
+          soundName:sound?.soundName||(mediaType.startsWith('video')?'Original sound':''),
+          soundOriginPostId:sound?.originPostId||'',
+          soundOriginatorId:sound?.originatorId||currentUser.uid,
+          soundOriginName:sound?.originatorName||(isAdmin?'SellerFlow':currentProfile.name||'SellerFlow creator'),
+          platformLabel:'SellerFlow',
+          isAdminPost:!!isAdmin
+        };
+
+        const ref=await addDoc(collection(db,'posts'),postData);
+        if(mediaType.startsWith('video')&&!sound){
+          await setDoc(doc(db,'sounds',ref.id),{
+            soundId:ref.id,
+            originPostId:ref.id,
+            originatorId:currentUser.uid,
+            originatorName:isAdmin?'SellerFlow':(currentProfile.name||currentProfile.username||'SellerFlow creator'),
+            soundName:`Original sound · ${currentProfile.name||'SellerFlow creator'}`,
+            createdAt:serverTimestamp()
+          },{merge:true});
+        }
+
+        closeModal();
+        toast('Post published successfully to For You!','success');
+        navigate('feed');
+      }catch(e){
+        toast(errMsg(e),'error');
+      }finally{
+        ready();
+      }
+    };
   };
 
   /* Admin can preview every submitted media item and can remove any live post, including previously approved posts. */
@@ -892,7 +1430,203 @@ init();
     $('adminCreatePost')?.addEventListener('click',openPostModal);document.querySelectorAll('[data-approve-user]').forEach(b=>b.onclick=()=>reviewVerification(b.dataset.approveUser,true));document.querySelectorAll('[data-reject-user]').forEach(b=>b.onclick=()=>reviewVerification(b.dataset.rejectUser,false));document.querySelectorAll('[data-block-user]').forEach(b=>b.onclick=()=>toggleBlock(b.dataset.blockUser,b.dataset.blocked==='1'));document.querySelectorAll('[data-view-card]').forEach(b=>b.onclick=()=>viewVerificationRecord(b.dataset.viewCard));document.querySelectorAll('[data-admin-approve-post]').forEach(b=>b.onclick=()=>reviewPost(b.dataset.adminApprovePost,true));document.querySelectorAll('[data-admin-takedown-post]').forEach(b=>b.onclick=()=>adminTakeDown(b.dataset.adminTakedownPost));document.querySelectorAll('[data-admin-notify]').forEach(b=>b.onclick=()=>{navigate('admin');setTimeout(()=>{$('notifyUser').value=b.dataset.adminNotify;$('notifyTitle').focus()},50)});$('sendUserNotification').onclick=async()=>{try{await sendAdminNotification($('notifyUser').value,$('notifyTitle').value.trim(),$('notifyMessage').value.trim());$('notifyMessage').value=''}catch(e){toast(errMsg(e),'error')};};$('sendAllNotification').onclick=async()=>{try{await sendAdminBroadcast($('notifyTitle').value.trim(),$('notifyMessage').value.trim());$('notifyMessage').value=''}catch(e){toast(errMsg(e),'error')};};$('saveTerms').onclick=async()=>{try{const text=$('termsEditor').value.trim(),version=$('termsVersion').value.trim()||appTermsVersion;if(text.length<200)throw Error('Terms & Conditions are too short.');await setDoc(doc(db,'settings','terms'),{text,version,updatedAt:serverTimestamp(),updatedBy:currentUser.uid},{merge:true});appTerms=text;appTermsVersion=version;toast('Terms & Conditions updated','success')}catch(e){toast(errMsg(e),'error')}};$('shutdownApp')?.addEventListener('click',()=>setShutdown(true));$('restartApp')?.addEventListener('click',()=>setShutdown(false));
   };
 
-  openNotifications=async function(){await loadNotifications();const unread=notificationCache.filter(n=>!n.read).length;modal(`<div><div class="flex items-center justify-between"><div><h2 class="text-xl font-bold">SellerFlow updates & messages</h2><p class="muted text-sm">Tap a notification to view it, then use Back to return here.</p></div>${unread?`<button id="markAllNotifications" class="text-sm gold">Mark all read</button>`:''}</div><div class="space-y-2 mt-5">${notificationCache.length?notificationCache.map(n=>`<button type="button" class="notif-row w-full text-left p-4 rounded-xl ${n.read?'bg-[#151515]':'bg-[#1d1a12] border border-[#4a3b1d]'}" data-open-notification="${n.id}"><div class="font-semibold">${esc(n.senderName||'SellerFlow')}</div><div class="text-sm font-semibold mt-1">${esc(n.title||'Update')}</div><div class="text-sm muted mt-1 line-clamp-2">${esc(n.message||'')}</div><div class="text-xs text-zinc-500 mt-2">${new Date(ts(n.createdAt)||Date.now()).toLocaleString('en-GH')}</div></button>`).join(''):'<div class="p-8 text-center muted">You have no notifications yet.</div>'}</div></div>`);$('markAllNotifications')?.addEventListener('click',markAllNotifications);document.querySelectorAll('[data-open-notification]').forEach(b=>b.onclick=async()=>{const n=notificationCache.find(x=>x.id===b.dataset.openNotification);if(!n)return;try{await updateDoc(doc(db,'notifications',n.id),{read:true,readAt:serverTimestamp()})}catch(_){}modal(`<div><h2 class="text-xl font-bold">${esc(n.title||'SellerFlow message')}</h2><div class="muted text-sm mt-1">From ${esc(n.senderName||'SellerFlow')} · ${new Date(ts(n.createdAt)||Date.now()).toLocaleString('en-GH')}</div><div class="mt-5 p-5 rounded-2xl bg-[#171717] border border-[#292929] whitespace-pre-wrap leading-7">${esc(n.message||'')}</div>${n.postId?`<button type="button" id="viewNotificationPost" class="btn btn-secondary mt-4 px-4 py-2 rounded-xl">View related post</button>`:''}</div>`);$('viewNotificationPost')?.addEventListener('click',async()=>{const s=await getDoc(doc(db,'posts',n.postId));if(!snapshotExists(s))return toast('Related post is no longer available.','error');const x=s.data();modal(`<div><h2 class="text-xl font-bold">Related post</h2>${x.mediaUrl?(x.mediaType?.startsWith('video')?`<video src="${esc(x.mediaUrl)}" class="admin-media-preview" controls playsinline></video>`:`<img src="${esc(x.mediaUrl)}" class="admin-media-preview" alt="Post">`):''}<p class="mt-4">${esc(x.text||'')}</p></div>`)})});await loadNotifications()};
+  /* TikTok-style grouped notifications and dedicated SellerFlow updates page support */
+  openNotifications=async function(){
+    await loadNotifications();
+    const unread=notificationCache.filter(n=>!n.read).length;
+
+    // Grouping TikTok style
+    const followNotifs=notificationCache.filter(n=>n.type==='follow');
+    const engagementNotifs=notificationCache.filter(n=>n.type==='post_engagement'||n.type==='comment_activity');
+    const updateNotifs=notificationCache.filter(n=>n.fromAdmin||n.type==='system_update'||(n.senderName==='SellerFlow'&&!n.postId));
+    const otherNotifs=notificationCache.filter(n=>!followNotifs.includes(n)&&!engagementNotifs.includes(n)&&!updateNotifs.includes(n));
+
+    // Follow group
+    let followGroupHtml='';
+    if(followNotifs.length){
+      const latest=followNotifs[0];
+      const count=followNotifs.length;
+      const unreadCount=followNotifs.filter(n=>!n.read).length;
+      followGroupHtml=`
+        <button type="button" class="notif-row w-full text-left p-4 rounded-2xl ${unreadCount?'bg-[#1e1910] border border-[#4a391a]':'bg-[#161616] border border-[#262626]'} flex items-center justify-between gap-3 group" id="openFollowGroupBtn">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="avatar-stack">
+              ${followNotifs.slice(0,3).map(fn=>avatar(sellerProfile(fn.actorId),'w-9 h-9 rounded-full object-cover bg-[#222]')).join('')}
+            </div>
+            <div class="min-w-0">
+              <div class="font-bold text-sm text-white truncate">
+                ${esc(latest.senderName||'A user')}${count>1?` <span class="font-normal text-zinc-400">and ${count-1} other${count>2?'s':''}</span>`:''}
+              </div>
+              <div class="text-xs text-zinc-400">started following you</div>
+            </div>
+          </div>
+          <span class="text-xs text-gold font-bold shrink-0">View all (${count}) →</span>
+        </button>
+      `;
+    }
+
+    // Engagement group (grouped by postId)
+    const engagementGroups={};
+    engagementNotifs.forEach(n=>{
+      const pid=n.postId||'general';
+      if(!engagementGroups[pid])engagementGroups[pid]=[];
+      engagementGroups[pid].push(n);
+    });
+
+    const engagementHtml=Object.keys(engagementGroups).map(pid=>{
+      const list=engagementGroups[pid];
+      const latest=list[0];
+      const count=list.length;
+      const unreadCount=list.filter(n=>!n.read).length;
+      return `
+        <button type="button" class="notif-row w-full text-left p-4 rounded-2xl ${unreadCount?'bg-[#1e1910] border border-[#4a391a]':'bg-[#161616] border border-[#262626]'} flex items-center justify-between gap-3" data-engagement-post="${pid}">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-gold/10 border border-gold/40 flex items-center justify-center text-lg text-gold shrink-0">
+              ${latest.engagementType==='like'?'❤️':latest.engagementType==='repost'?'🔁':'💬'}
+            </div>
+            <div class="min-w-0">
+              <div class="font-bold text-sm text-white truncate">
+                ${esc(latest.senderName||'Someone')}${count>1?` <span class="font-normal text-zinc-400">and ${count-1} other${count>2?'s':''}</span>`:''}
+              </div>
+              <div class="text-xs text-zinc-400 truncate">
+                ${latest.engagementType==='repost'?'reposted your video to reach more buyers':latest.engagementType==='like'?'liked your post':latest.engagementType==='comment'?'commented on your post':'interacted with your post'}
+              </div>
+              <div class="text-[10px] text-zinc-500 mt-1">${new Date(ts(latest.createdAt)||Date.now()).toLocaleDateString('en-GH')}</div>
+            </div>
+          </div>
+          <span class="text-xs text-gold shrink-0 font-semibold">Watch post →</span>
+        </button>
+      `;
+    }).join('');
+
+    // SellerFlow Official Platform Updates
+    const updatesHtml=updateNotifs.map(n=>`
+      <button type="button" class="notif-row w-full text-left p-4 rounded-2xl ${n.read?'bg-[#161616] border border-[#262626]':'bg-[#1e1910] border border-gold/50'} flex items-start gap-3" data-open-platform-update="${n.id}">
+        <div class="w-10 h-10 rounded-xl bg-gold/20 border border-gold flex items-center justify-center text-xl shrink-0">📢</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="font-black text-sm text-white">${esc(n.title||'SellerFlow Platform Update')}</span>
+            <span class="verified-badge text-[10px]">✓</span>
+          </div>
+          <div class="text-xs text-zinc-300 mt-1 line-clamp-2">${esc(n.message||'')}</div>
+          <div class="flex items-center justify-between text-[10px] text-zinc-500 mt-2">
+            <span>Official SellerFlow Update</span>
+            <span class="text-gold font-bold">Open update page →</span>
+          </div>
+        </div>
+      </button>
+    `).join('');
+
+    // Other notifications (orders, etc.)
+    const otherHtml=otherNotifs.map(n=>`
+      <button type="button" class="notif-row w-full text-left p-3.5 rounded-2xl ${n.read?'bg-[#161616] border border-[#262626]':'bg-[#1e1910] border border-[#4a391a]'}" data-other-notif="${n.id}">
+        <div class="font-bold text-sm text-white">${esc(n.title||'Notification')}</div>
+        <div class="text-xs text-zinc-400 mt-0.5 line-clamp-2">${esc(n.message||'')}</div>
+        <div class="text-[10px] text-zinc-500 mt-1.5">${new Date(ts(n.createdAt)||Date.now()).toLocaleDateString('en-GH')}</div>
+      </button>
+    `).join('');
+
+    modal(`<div>
+      <div class="flex items-center justify-between pb-3 border-b border-[#262626]">
+        <div>
+          <h2 class="text-xl font-black text-white">Notifications</h2>
+          <p class="muted text-xs">All activity, new followers, reach, and platform updates.</p>
+        </div>
+        ${unread?`<button id="markAllNotifications" class="text-xs gold font-bold border border-[#3e2e15] bg-[#1e170c] px-3 py-1.5 rounded-xl">Mark all read</button>`:''}
+      </div>
+
+      <div class="space-y-3 mt-4 max-h-[68vh] overflow-y-auto pr-1">
+        ${followGroupHtml}
+        ${updatesHtml}
+        ${engagementHtml}
+        ${otherHtml}
+        ${!followGroupHtml&&!updatesHtml&&!engagementHtml&&!otherHtml?'<div class="p-12 text-center muted"><div class="text-4xl mb-2">🔔</div><div class="font-bold text-white">No notifications yet</div><p class="text-xs mt-1">When someone follows, comments or reposts your video, you will see it here.</p></div>':''}
+      </div>
+    </div>`);
+
+    $('markAllNotifications')?.addEventListener('click',markAllNotifications);
+
+    // Follow group click -> open list of followers with profile links & follow back
+    $('openFollowGroupBtn')?.addEventListener('click',()=>{
+      modal(`<div>
+        <h2 class="text-xl font-bold text-white">New Followers</h2>
+        <p class="muted text-xs mt-1">People who recently followed your SellerFlow profile.</p>
+        <div class="space-y-2 mt-4 max-h-[60vh] overflow-y-auto">
+          ${followNotifs.map(fn=>{
+            const u=sellerProfile(fn.actorId);
+            const isFollowing=(currentProfile?.following||[]).includes(fn.actorId);
+            return `<div class="p-3 rounded-xl bg-[#161616] border border-[#292929] flex items-center justify-between gap-3">
+              <button type="button" class="flex items-center gap-3 text-left flex-1 min-w-0" data-open-seller="${fn.actorId}">
+                ${avatar(u,'w-10 h-10 rounded-full object-cover bg-[#222]')}
+                <div class="min-w-0">
+                  <div class="font-bold text-sm text-white truncate">${esc(u.name||fn.senderName||'Seller')}</div>
+                  <div class="text-xs text-zinc-400 truncate">@${esc(u.username||'seller')}</div>
+                </div>
+              </button>
+              <button type="button" class="btn px-3 py-1.5 text-xs rounded-xl font-bold ${isFollowing?'border border-[#444] text-zinc-300':'bg-gold text-black'}" data-notif-follow="${fn.actorId}">
+                ${isFollowing?'Following':'Follow back'}
+              </button>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`);
+      document.querySelectorAll('[data-open-seller]').forEach(b=>b.onclick=()=>{closeModal();openStore(b.dataset.openSeller)});
+      document.querySelectorAll('[data-notif-follow]').forEach(b=>{
+        b.onclick=async()=>{
+          const uid=b.dataset.notifFollow;
+          try{
+            const isFollowing=(currentProfile?.following||[]).includes(uid);
+            await updateDoc(doc(db,'users',currentUser.uid),{following:isFollowing?arrayRemove(uid):arrayUnion(uid)});
+            await updateDoc(doc(db,'users',uid),{followers:isFollowing?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});
+            if(!isFollowing)window.notifyFollow(uid);
+            await refreshProfile();
+            b.textContent=isFollowing?'Follow back':'Following';
+            b.className=isFollowing?'btn px-3 py-1.5 text-xs rounded-xl font-bold bg-gold text-black':'btn px-3 py-1.5 text-xs rounded-xl font-bold border border-[#444] text-zinc-300';
+            toast(isFollowing?'Unfollowed':'Following','success');
+          }catch(e){toast(errMsg(e),'error')}
+        };
+      });
+    });
+
+    // Engagement group click -> direct to watch the video
+    document.querySelectorAll('[data-engagement-post]').forEach(b=>{
+      b.onclick=()=>{
+        const pid=b.dataset.engagementPost;
+        closeModal();
+        if(pid&&pid!=='general')window.openFeedWithPost(pid);
+        else navigate('feed');
+      };
+    });
+
+    // Platform update click -> navigate to unique dedicated SellerFlow Updates page
+    document.querySelectorAll('[data-open-platform-update]').forEach(b=>{
+      b.onclick=async()=>{
+        const nid=b.dataset.openPlatformUpdate;
+        const n=notificationCache.find(x=>x.id===nid);
+        if(!n)return;
+        try{await updateDoc(doc(db,'notifications',nid),{read:true,readAt:serverTimestamp()})}catch(_){}
+        closeModal();
+        navigate('update',nid,{updateData:n});
+      };
+    });
+
+    // Other notifications click
+    document.querySelectorAll('[data-other-notif]').forEach(b=>{
+      b.onclick=async()=>{
+        const nid=b.dataset.otherNotif;
+        const n=notificationCache.find(x=>x.id===nid);
+        if(!n)return;
+        try{await updateDoc(doc(db,'notifications',nid),{read:true,readAt:serverTimestamp()})}catch(_){}
+        if(n.postId){closeModal();window.openFeedWithPost(n.postId);return;}
+        if(n.orderId){closeModal();navigate('orders');return;}
+        modal(`<div>
+          <h2 class="text-xl font-black text-white">${esc(n.title||'Notification')}</h2>
+          <div class="text-xs text-zinc-400 mt-1">${new Date(ts(n.createdAt)||Date.now()).toLocaleString('en-GH')}</div>
+          <div class="mt-4 p-4 rounded-2xl bg-[#161616] border border-[#2a2a2a] text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">${esc(n.message||'')}</div>
+        </div>`);
+      };
+    });
+  };
 })();
 </script>
 
@@ -978,7 +1712,9 @@ init();
       } else {
         mediaPreview=`<div class="w-full h-full flex flex-col items-center justify-center p-4 text-center bg-[#161616]"><span class="text-3xl mb-1">🛍️</span><p class="text-xs line-clamp-3 text-zinc-300">${esc(x.text||'SellerFlow post')}</p></div>`;
       }
-      return `<button type="button" class="sf-post-tile relative overflow-hidden group cursor-pointer" data-profile-post="${x.id}" title="Watch post in For You feed">${mediaPreview}<div class="sf-tile-meta flex items-center justify-between"><span>${isVid?'▶ Video':x.mediaUrl?'📷 Photo':'Text'}</span><span>❤️ ${x.likes?.length||0} · 👁️ ${x.views||0}</span></div></button>`;
+      const aiBadge=x.isAiGenerated?`<span class="ai-badge">✨ AI</span>`:'';
+      const privBadge=x.privacy==='private'?'<span class="absolute top-2 right-2 bg-black/80 text-[10px] px-1.5 py-0.5 rounded text-zinc-300">🔒</span>':x.privacy==='followers'?'<span class="absolute top-2 right-2 bg-black/80 text-[10px] px-1.5 py-0.5 rounded text-gold">👥</span>':'';
+      return `<button type="button" class="sf-post-tile relative overflow-hidden group cursor-pointer" data-profile-post="${x.id}" title="Watch post in For You feed">${mediaPreview}${aiBadge}${privBadge}<div class="sf-tile-meta flex items-center justify-between"><span>${isVid?'▶ Video':x.mediaUrl?'📷 Photo':'Text'}</span><span>❤️ ${x.likes?.length||0} · 👁️ ${x.views||0}</span></div></button>`;
     }).join(''):'<div class="col-span-3 p-12 text-center muted"><div class="text-4xl mb-2">📸</div><h3 class="font-bold text-lg text-white">No posts published yet</h3><p class="text-sm mt-1">Tap "+ Create post" above to share your first photo or video with the SellerFlow community.</p></div>'}</div></div></section>`;
     $('profileCreatePost').onclick=openPostModal;
     $('editProfileTop').onclick=sfOpenProfileEditor;
@@ -1192,10 +1928,30 @@ init();
       const clearBtn=$('globalSearchClear');
       if(clearBtn)clearBtn.classList.toggle('hidden',!q);
 
-      const arr=data.filter(x=>!q||[x.title,x.sub,x.kind,x.profile?.username,x.store?.location,x.product?.category,x.post?.contentType].filter(Boolean).join(' ').toLowerCase().includes(q)).slice(0,80);
       const resultsEl=$('globalSearchResults');
       if(!resultsEl)return;
-      resultsEl.innerHTML=arr.map(x=>{let action='';if(x.kind==='User')action=`data-search-user="${x.id}"`;if(x.kind==='Store')action=`data-search-store="${x.store.ownerId||''}"`;if(x.kind==='Product')action=`data-search-product="${x.id}"`;if(x.kind==='Post')action=`data-search-post="${x.id}"`;return `<button type="button" class="sf-result w-full text-left" ${action}>${x.profile?avatar(x.profile,'w-11 h-11 rounded-full object-cover bg-[#222]'):x.product?.imageUrl?`<img src="${esc(x.product.imageUrl)}" class="w-11 h-11 rounded-xl object-cover">`:'<div class="w-11 h-11 rounded-xl bg-[#222] flex items-center justify-center">'+(x.kind==='Post'?'🎬':x.kind==='Store'?'🏪':'📦')+'</div>'}<span class="flex-1 min-w-0"><span class="text-[10px] gold">${esc(x.kind)}</span><b class="block truncate">${esc(x.title)}</b><span class="muted text-xs block truncate">${esc(x.sub)}</span></span></button>`}).join('')||'<div class="p-6 text-center muted">No matching results.</div>';
+
+      // The search engine shows NOTHING unless the user starts typing something that matches
+      if(!q){
+        resultsEl.innerHTML='';
+        return;
+      }
+
+      const arr=data.filter(x=>[x.title,x.sub,x.kind,x.profile?.username,x.store?.location,x.product?.category,x.post?.contentType,x.post?.text].filter(Boolean).join(' ').toLowerCase().includes(q)).slice(0,80);
+      
+      if(!arr.length){
+        resultsEl.innerHTML=`<div class="p-8 text-center muted"><div class="text-3xl mb-2">🔍</div><div class="font-bold text-white text-sm">No results found for "${esc($('globalSearchInput')?.value.trim()||'')}"</div><p class="text-xs mt-1 text-zinc-400">Try searching for creator names, @usernames, items, or locations.</p></div>`;
+        return;
+      }
+
+      resultsEl.innerHTML=arr.map(x=>{
+        let action='';
+        if(x.kind==='User')action=`data-search-user="${x.id}"`;
+        if(x.kind==='Store')action=`data-search-store="${x.store.ownerId||''}"`;
+        if(x.kind==='Product')action=`data-search-product="${x.id}"`;
+        if(x.kind==='Post')action=`data-search-post="${x.id}"`;
+        return `<button type="button" class="sf-result w-full text-left" ${action}>${x.profile?avatar(x.profile,'w-11 h-11 rounded-full object-cover bg-[#222]'):x.product?.imageUrl?`<img src="${esc(x.product.imageUrl)}" class="w-11 h-11 rounded-xl object-cover">`:x.post?.thumbnailUrl?`<img src="${esc(x.post.thumbnailUrl)}" class="w-11 h-11 rounded-xl object-cover">`:'<div class="w-11 h-11 rounded-xl bg-[#222] flex items-center justify-center text-lg">'+(x.kind==='Post'?'🎬':x.kind==='Store'?'🏪':'📦')+'</div>'}<span class="flex-1 min-w-0"><span class="text-[10px] gold font-semibold">${esc(x.kind)}</span><b class="block truncate text-sm text-zinc-100">${esc(x.title)}</b><span class="muted text-xs block truncate">${esc(x.sub)}</span></span><span class="text-xs text-zinc-500">→</span></button>`;
+      }).join('');
       
       const rememberQuery=()=>{
         const cur=$('globalSearchInput')?.value.trim();
@@ -1208,7 +1964,7 @@ init();
       document.querySelectorAll('[data-search-user]').forEach(b=>b.onclick=()=>{rememberQuery();closeModal();if(b.dataset.searchUser===currentUser.uid)navigate('profile');else startChat(b.dataset.searchUser)});
       document.querySelectorAll('[data-search-store]').forEach(b=>b.onclick=()=>{rememberQuery();closeModal();openStore(b.dataset.searchStore)});
       document.querySelectorAll('[data-search-product]').forEach(b=>b.onclick=()=>{rememberQuery();closeModal();navigate('products')});
-      document.querySelectorAll('[data-search-post]').forEach(b=>b.onclick=()=>{rememberQuery();closeModal();navigate('feed')});
+      document.querySelectorAll('[data-search-post]').forEach(b=>b.onclick=()=>{rememberQuery();closeModal();window.openFeedWithPost(b.dataset.searchPost)});
     };
 
     $('globalSearchInput').oninput=draw;
