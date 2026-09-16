@@ -10,8 +10,86 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script>tailwind.config={theme:{extend:{colors:{gold:'#f5b942'}}}}</script>
 <style>
-*{box-sizing:border-box}html,body{width:100%;max-width:100%;overflow-x:hidden;overscroll-behavior-x:none}body{margin:0;background:#080808;color:#f5f5f5;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,textarea,select{font:inherit}button:disabled{opacity:.5;cursor:not-allowed}.gold{color:#f5b942}.bg-gold{background:#f5b942;color:#080808}.border-gold{border-color:#f5b942}.card{background:#121212;border:1px solid #292929;border-radius:18px}.muted{color:#a1a1aa}.hide{display:none!important}.modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}.modal-card{width:min(720px,100%);max-height:92vh;overflow:auto;background:#111;border:1px solid #333;border-radius:22px;padding:20px}.toast{position:fixed;right:16px;bottom:18px;z-index:300;max-width:360px}.toast>div{margin-top:8px;padding:13px 15px;border-radius:12px;background:#1b1b1b;border:1px solid #333;box-shadow:0 8px 30px #000}.navbtn.active{color:#f5b942;border-bottom:2px solid #f5b942}.glass{background:linear-gradient(145deg,#161616,#0f0f0f);box-shadow:0 20px 50px rgba(0,0,0,.22)}.action-btn{border:1px solid #333;background:#171717;border-radius:999px;padding:8px 12px;font-size:13px}.action-btn:hover{border-color:#f5b942;color:#f5b942}.media-preview{border-radius:16px;overflow:hidden;background:#050505}.brand-glow{text-shadow:0 0 28px rgba(245,185,66,.16)}.avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#242424}.product-img{aspect-ratio:1/1;object-fit:cover;width:100%;border-radius:14px;background:#191919}.post-media{max-height:620px;width:100%;object-fit:cover;background:#050505}.spin{width:22px;height:22px;border:3px solid #333;border-top-color:#f5b942;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
-.reel-feed{max-width:760px;margin:0 auto}.reel-card{position:relative;min-height:calc(100vh - 120px);height:calc(100vh - 120px);max-height:900px;background:#050505;border:1px solid #242424;border-radius:22px;overflow:hidden;scroll-snap-align:start;box-shadow:0 20px 60px rgba(0,0,0,.35)}.reel-card .reel-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#050505}.reel-card .reel-shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.86),rgba(0,0,0,.05) 55%,rgba(0,0,0,.2))}.reel-card .reel-content{position:absolute;left:0;right:0;bottom:0;padding:22px}.reel-actions{position:absolute;right:14px;bottom:120px;display:flex;flex-direction:column;gap:10px;z-index:4}.reel-action{width:46px;height:46px;border-radius:50%;background:rgba(15,15,15,.78);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(8px)}.reel-action:hover{border-color:#f5b942;color:#f5b942}.verified-badge{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:#1d9bf0;color:white;font-size:11px;font-weight:900;box-shadow:0 0 0 2px rgba(29,155,240,.15)}.notification-badge{position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#ef4444;color:white;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}.bell-btn{position:relative}.policy-hero{background:radial-gradient(circle at top right,rgba(245,185,66,.16),transparent 38%),linear-gradient(145deg,#171717,#0d0d0d);border:1px solid #303030;border-radius:24px}.policy-icon{width:58px;height:58px;border-radius:18px;background:#f5b942;color:#080808;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900}.terms-box{max-height:340px;overflow:auto;background:#0d0d0d;border:1px solid #292929;border-radius:16px;padding:18px;line-height:1.7}.settings-item{display:flex;align-items:center;gap:14px;padding:16px;border-bottom:1px solid #292929}.settings-item:last-child{border-bottom:0}.app-shell-lock{width:100%;max-width:100%;overflow-x:hidden}.page-selector{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.78);backdrop-filter:blur(10px);display:flex;align-items:flex-end;justify-content:center;padding:12px}.page-selector-card{width:min(680px,100%);max-height:88vh;overflow:auto;background:#111;border:1px solid #343434;border-radius:28px;padding:16px;box-shadow:0 25px 80px rgba(0,0,0,.6)}.page-selector-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.page-selector-item{min-height:84px;border:1px solid #303030;border-radius:18px;background:linear-gradient(145deg,#191919,#101010);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:10px;color:#fff}.page-selector-item.active{border-color:#f5b942;box-shadow:0 0 0 1px rgba(245,185,66,.2),0 10px 30px rgba(0,0,0,.25)}.page-selector-item .page-icon{font-size:24px}.page-selector-close{width:100%;margin-top:12px}.back-page-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid #333;background:#151515;border-radius:12px;padding:8px 12px;color:#ddd;margin-bottom:12px}.back-page-btn:hover{border-color:#f5b942;color:#f5b942}.reel-feed{scroll-snap-type:y proximity}.reel-card{min-height:calc(100svh - 120px);height:calc(100svh - 120px)}@supports(height:100dvh){.reel-card{min-height:calc(100dvh - 120px);height:calc(100dvh - 120px)}}.reel-video{cursor:pointer;touch-action:manipulation}.reel-play-toggle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;width:64px;height:64px;border-radius:50%;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(8px);font-size:24px}.reel-sound-label{position:absolute;left:18px;top:18px;z-index:5;padding:7px 10px;border-radius:999px;background:rgba(0,0,0,.55);font-size:11px}.comment-sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(760px,100%);max-height:72vh;z-index:180;background:rgba(15,15,15,.96);backdrop-filter:blur(18px);border:1px solid #333;border-bottom:0;border-radius:24px 24px 0 0;box-shadow:0 -20px 70px rgba(0,0,0,.5);padding:16px;overflow:auto}.comment-backdrop{position:fixed;inset:0;z-index:175;background:rgba(0,0,0,.12)}.sound-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #333;background:#151515;border-radius:999px;padding:7px 10px;font-size:12px}.reel-upload-bar{display:flex;justify-content:flex-end;margin-bottom:12px}.copyright-tag{font-size:11px;color:#71717a;text-align:center;margin-top:18px;letter-spacing:.02em}.dashboard-hidden{display:none!important}.post-origin{font-size:11px;color:#a1a1aa}.video-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:28px;text-align:center;background:radial-gradient(circle at center,#1d1d1d,#050505)}@media(max-width:640px){.page-selector-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.reel-card{border-radius:16px}.reel-card .reel-content{padding:16px}.reel-actions{right:9px;bottom:105px}.reel-action{width:42px;height:42px}.modal{padding:8px}.modal-card{border-radius:20px;padding:16px;max-height:94vh}}
+*{box-sizing:border-box}
+html,body{width:100%;max-width:100%;height:100%;height:100dvh;margin:0;padding:0;overflow:hidden!important;overscroll-behavior:none!important;-webkit-overflow-scrolling:touch}
+body{position:fixed;inset:0;background:#080808;color:#f5f5f5;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+#landing,#authPage{position:fixed;inset:0;width:100%;height:100%;height:100dvh;max-height:100dvh;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
+img,video,iframe,canvas,svg{max-width:100%}video,img{box-sizing:border-box}button,input,textarea,select{font:inherit;max-width:100%}button:disabled{opacity:.5;cursor:not-allowed}
+body,input,textarea,select,button,.card,.reel-content,.chat-bubble,.sf-stat-card,.sf-user-row{overflow-wrap:anywhere;word-break:break-word}
+.flex-1{min-width:0}.gold{color:#f5b942}.bg-gold{background:#f5b942;color:#080808}.border-gold{border-color:#f5b942}.card{background:#121212;border:1px solid #292929;border-radius:18px;min-width:0}.muted{color:#a1a1aa}.hide{display:none!important}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;overscroll-behavior:contain}
+.modal-card{width:min(720px,100%);max-height:90vh;max-height:90dvh;overflow-y:auto;overflow-x:hidden;background:#111;border:1px solid #333;border-radius:22px;padding:20px;-webkit-overflow-scrolling:touch}
+.modal-card:has(.chat-window),.modal-card.chat-modal-active{height:85vh;max-height:88dvh;display:flex;flex-direction:column;overflow:hidden;padding:16px}
+.modal-card .chat-window{display:flex;flex-direction:column;height:100%;max-height:100%;min-height:0;flex:1 1 0%;overflow:hidden}
+.modal-card .chat-messages{flex:1 1 0%;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.modal-card #chatForm{flex-shrink:0}
+.toast{position:fixed;right:16px;bottom:18px;z-index:300;max-width:360px}
+.toast>div{margin-top:8px;padding:13px 15px;border-radius:12px;background:#1b1b1b;border:1px solid #333;box-shadow:0 8px 30px #000}
+.navbtn.active{color:#f5b942;border-bottom:2px solid #f5b942}
+.glass{background:linear-gradient(145deg,#161616,#0f0f0f);box-shadow:0 20px 50px rgba(0,0,0,.22)}
+.action-btn{border:1px solid #333;background:#171717;border-radius:999px;padding:8px 12px;font-size:13px}
+.action-btn:hover{border-color:#f5b942;color:#f5b942}
+.media-preview{border-radius:16px;overflow:hidden;background:#050505}
+.brand-glow{text-shadow:0 0 28px rgba(245,185,66,.16)}
+.avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#242424;flex-shrink:0}
+.product-img{aspect-ratio:1/1;object-fit:cover;width:100%;border-radius:14px;background:#191919}
+.post-media{max-height:620px;width:100%;object-fit:cover;background:#050505}
+.admin-media-preview{width:100%;max-width:100%;max-height:520px;object-fit:contain;background:#050505;border-radius:16px;display:block}
+.spin{width:22px;height:22px;border:3px solid #333;border-top-color:#f5b942;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.app-shell-lock{position:fixed;inset:0;width:100%;height:100%;height:100dvh;max-height:100dvh;display:flex;flex-direction:column;overflow:hidden;overscroll-behavior:none}
+.app-main-scroll{flex:1 1 0%;min-height:0;width:100%;max-width:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;display:flex;flex-direction:column}
+.app-main-scroll>main{flex:1 0 auto;width:100%;max-width:80rem;min-width:0}
+.app-main-scroll>footer{flex-shrink:0;margin-top:auto}
+#app.is-feed-page #appMainScroll,.app-main-scroll.is-feed-scroll{overflow:hidden!important;height:100%!important;max-height:100%!important;display:flex!important;flex-direction:column!important;overscroll-behavior:none!important}
+#app.is-feed-page #page,.is-feed-scroll>#page{flex:1 1 0%!important;height:100%!important;min-height:0!important;max-height:100%!important;padding:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;width:100%!important;max-width:100%!important}
+#app.is-feed-page footer,.is-feed-scroll>footer{display:none!important}
+.reel-feed{width:100%;height:100%;flex:1 1 0%;min-height:0;overflow-y:scroll;overflow-x:hidden;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+.reel-card{position:relative;width:100%;height:100%;min-height:100%;max-height:100%;scroll-snap-align:start;scroll-snap-stop:always;background:#050505;border-bottom:1px solid #1a1a1a;overflow:hidden}
+@media(min-width:641px){.reel-feed{padding:10px 0}.reel-card{max-width:440px;margin:0 auto;border:1px solid #242424;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.5);height:100%;min-height:100%}}
+@media(max-width:640px){.reel-card{border-radius:0;border-left:0;border-right:0}}
+.reel-media-wrap{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;background:#050505}
+.reel-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#050505}
+.reel-shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.88),rgba(0,0,0,.08) 50%,rgba(0,0,0,.25));pointer-events:none}
+.reel-content{position:absolute;left:0;right:68px;bottom:0;padding:16px;max-height:44%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;z-index:5}
+.reel-content p{max-width:100%;word-break:break-word;overflow-wrap:anywhere}
+.reel-actions{position:absolute;right:12px;bottom:76px;display:flex;flex-direction:column;gap:12px;z-index:10}
+.reel-action{width:44px;height:44px;border-radius:50%;background:rgba(15,15,15,.78);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.reel-action:hover{border-color:#f5b942;color:#f5b942}
+.verified-badge{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:#1d9bf0;color:white;font-size:11px;font-weight:900;box-shadow:0 0 0 2px rgba(29,155,240,.15);flex-shrink:0}
+.notification-badge{position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#ef4444;color:white;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.bell-btn{position:relative}
+.policy-hero{background:radial-gradient(circle at top right,rgba(245,185,66,.16),transparent 38%),linear-gradient(145deg,#171717,#0d0d0d);border:1px solid #303030;border-radius:24px;min-width:0}
+.policy-icon{width:58px;height:58px;border-radius:18px;background:#f5b942;color:#080808;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;flex-shrink:0}
+.terms-box{max-height:340px;overflow:auto;background:#0d0d0d;border:1px solid #292929;border-radius:16px;padding:18px;line-height:1.7}
+.settings-item{display:flex;align-items:center;gap:14px;padding:16px;border-bottom:1px solid #292929;min-width:0}
+.settings-item:last-child{border-bottom:0}
+.page-selector{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.78);backdrop-filter:blur(10px);display:flex;align-items:flex-end;justify-content:center;padding:12px}
+.page-selector-card{width:min(680px,100%);max-height:88vh;overflow:auto;background:#111;border:1px solid #343434;border-radius:28px;padding:16px;box-shadow:0 25px 80px rgba(0,0,0,.6)}
+.page-selector-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.page-selector-item{min-height:84px;border:1px solid #303030;border-radius:18px;background:linear-gradient(145deg,#191919,#101010);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:10px;color:#fff;min-width:0}
+.page-selector-item.active{border-color:#f5b942;box-shadow:0 0 0 1px rgba(245,185,66,.2),0 10px 30px rgba(0,0,0,.25)}
+.page-selector-item .page-icon{font-size:24px}
+.page-selector-close{width:100%;margin-top:12px}
+.back-page-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid #333;background:#151515;border-radius:12px;padding:8px 12px;color:#ddd;margin-bottom:12px}
+.back-page-btn:hover{border-color:#f5b942;color:#f5b942}
+.reel-video{cursor:pointer;touch-action:manipulation}
+.reel-play-toggle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;width:64px;height:64px;border-radius:50%;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(8px);font-size:24px}
+.reel-sound-label{position:absolute;left:18px;top:18px;z-index:5;padding:7px 10px;border-radius:999px;background:rgba(0,0,0,.55);font-size:11px}
+.comment-sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(760px,100%);max-height:72vh;z-index:180;background:rgba(15,15,15,.96);backdrop-filter:blur(18px);border:1px solid #333;border-bottom:0;border-radius:24px 24px 0 0;box-shadow:0 -20px 70px rgba(0,0,0,.5);padding:16px;overflow:auto}
+.comment-backdrop{position:fixed;inset:0;z-index:175;background:rgba(0,0,0,.12)}
+.sound-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #333;background:#151515;border-radius:999px;padding:7px 10px;font-size:12px}
+.reel-upload-bar{display:flex;justify-content:flex-end;margin-bottom:12px}
+.copyright-tag{font-size:11px;color:#71717a;text-align:center;margin-top:18px;letter-spacing:.02em}
+.dashboard-hidden{display:none!important}
+.post-origin{font-size:11px;color:#a1a1aa}
+.video-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:28px;text-align:center;background:radial-gradient(circle at center,#1d1d1d,#050505)}
+@media(max-width:640px){
+  .page-selector-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .reel-actions{right:10px;bottom:70px}
+  .reel-action{width:40px;height:40px}
+  .modal{padding:8px}
+  .modal-card{border-radius:20px;padding:16px;max-height:94vh}
+}
 
 #loading.hide{display:none!important}
 #loading{pointer-events:auto}
@@ -25,7 +103,7 @@ button,a,input,textarea,select{position:relative;z-index:1}
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
 <div id="landing" class="hide min-h-screen"><header class="max-w-6xl mx-auto px-5 py-5 flex items-center justify-between"><div class="text-2xl font-black gold">SellerFlow</div><div class="flex gap-2"><button type="button" id="landingLogin" class="px-4 py-2 rounded-xl border border-[#333]">Sign in</button><button type="button" id="landingRegister" class="px-4 py-2 rounded-xl bg-gold font-bold">Create account</button></div></header><main class="max-w-6xl mx-auto px-5 py-16 grid md:grid-cols-2 gap-10 items-center"><div><span class="gold text-sm font-bold">GHANA'S SOCIAL SELLING MARKETPLACE</span><h1 class="text-5xl md:text-7xl font-black leading-tight mt-3">Sell. Discover. <span class="gold">Grow.</span></h1><p class="muted text-lg mt-5 max-w-xl">A safer marketplace where Ghanaian sellers can build stores, publish products, connect with customers and manage orders.</p><div class="flex gap-3 mt-7"><button type="button" id="heroRegister" class="bg-gold px-6 py-3 rounded-xl font-bold">Start selling free</button><button type="button" id="heroLogin" class="border border-[#333] px-6 py-3 rounded-xl">I already have an account</button></div></div><div class="card p-6"><div class="grid grid-cols-2 gap-3"><div class="p-5 rounded-2xl bg-[#181818]"><div class="text-3xl">🛍️</div><b>Stores</b><p class="muted text-sm mt-1">Create your seller storefront.</p></div><div class="p-5 rounded-2xl bg-[#181818]"><div class="text-3xl">📦</div><b>Orders</b><p class="muted text-sm mt-1">Track every customer order.</p></div><div class="p-5 rounded-2xl bg-[#181818]"><div class="text-3xl">👥</div><b>Community</b><p class="muted text-sm mt-1">Follow sellers and interact.</p></div><div class="p-5 rounded-2xl bg-[#181818]"><div class="text-3xl">🛡️</div><b>Verification</b><p class="muted text-sm mt-1">Build customer trust.</p></div></div></div></main><footer class="max-w-6xl mx-auto px-5 pb-8 text-center text-xs text-zinc-500">© 2026 SellerFlow™. All rights reserved. · Ghana’s social selling marketplace.</footer></div>
 <div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm muted">← Back</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 SellerFlow™ · All rights reserved.</div></div></div>
-<div id="app" class="hide min-h-screen app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424]"><div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3"><button id="mobileMenu" class="md:hidden p-2" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden p-2" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2" data-page="orders">Orders</button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div class="ml-auto flex items-center gap-2"><button id="notificationBtn" class="bell-btn p-2" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2">Logout</button></div></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-2 grid grid-cols-3 gap-1"></div></header><main id="page" class="max-w-7xl mx-auto px-4 py-6 min-h-[calc(100vh-10rem)]"></main><footer class="max-w-7xl mx-auto px-4 py-8 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div>
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3"><button id="mobileMenu" class="md:hidden p-2" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden p-2" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2" data-page="orders">Orders</button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div class="ml-auto flex items-center gap-2"><button id="notificationBtn" class="bell-btn p-2" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2">Logout</button></div></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-2 grid grid-cols-3 gap-1"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="modalRoot"></div><div id="toast" class="toast"></div>
 <script>
 (function(){
@@ -108,7 +186,7 @@ async function uploadPrivate(file,folder){validFile(file,['image/jpeg','image/pn
 
 function showLanding(){hide($('authPage'));hide($('app'));show($('landing'));ready()}
 function showAuth(mode='register'){authMode=mode;hide($('landing'));hide($('app'));show($('authPage'));$('authTitle').textContent=mode==='register'?'Create your account':'Welcome back';$('authSubtitle').textContent=mode==='register'?'Sell and shop across Ghana.':'Sign in to continue.';$('nameWrap').style.display=mode==='register'?'block':'none';$('usernameWrap').style.display=mode==='register'?'block':'none';$('termsWrap').style.display=mode==='register'?'block':'none';$('authSubmit').textContent=mode==='register'?'Create account':'Sign in';$('authSwitch').textContent=mode==='register'?'Already have an account? Sign in':'New here? Create an account';$('authError').textContent='';ready()}
-function showApp(){hide($('landing'));hide($('authPage'));show($('app'));ready();}
+function showApp(){hide($('landing'));hide($('authPage'));show($('app'));const isFeed=currentPage==='feed';$('app')?.classList.toggle('is-feed-page',isFeed);$('appMainScroll')?.classList.toggle('is-feed-scroll',isFeed);ready();}
 async function uniqueUsername(u,uid=''){const s=u.toLowerCase().trim();const q=query(collection(db,'publicProfiles'),where('usernameLower','==',s),limit(2));const snap=await getDocs(q);return snap.docs.every(d=>d.id===uid)}
 function usernameClean(v){return v.toLowerCase().replace(/[^a-z0-9_]/g,'').slice(0,24)}
 async function loadUserProfile(u){
@@ -149,15 +227,16 @@ async function refreshProfile(){const s=await getDoc(doc(db,'users',currentUser.
 async function loadPublicProfiles(){allPublicProfiles.clear();try{const s=await getDocs(query(collection(db,'publicProfiles'),limit(300)));s.forEach(d=>allPublicProfiles.set(d.id,d.data()))}catch(e){console.warn(e)}}
 function sellerProfile(uid){return allPublicProfiles.get(uid)||{uid,name:'Seller',username:'seller',verified:false,followers:[]}}
 function setNav(){const dashBtn=document.querySelector('[data-page="dashboard"]');if(dashBtn)dashBtn.classList.toggle('dashboard-hidden',!isAdmin&&!currentProfile?.verified);document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));const adminDesktop=document.getElementById('adminNav');if(adminDesktop)adminDesktop.remove();if(isAdmin){const b=document.createElement('button');b.id='adminNav';b.className='navbtn px-3 py-2';b.dataset.page='admin';b.textContent='Admin';b.onclick=()=>navigate('admin');document.getElementById('desktopNav').appendChild(b)}const navPages=isAdmin?['feed','dashboard','marketplace','products','orders','store','profile','settings']:(currentProfile?.verified?['feed','dashboard','marketplace','products','orders','store','profile','settings']:['feed','marketplace','orders','profile','settings']);$('mobileNav').innerHTML=navPages.map(p=>`<button type="button" class="p-3 rounded-xl ${p===currentPage?'bg-[#202020] gold':''}" data-mobile-page="${p}">${p==='feed'?'For You':p[0].toUpperCase()+p.slice(1)}</button>`).join('')+(isAdmin?`<button class="p-3 rounded-xl ${currentPage==='admin'?'bg-[#202020] gold':''}" data-mobile-page="admin">Admin</button>`:'')+`<button id="mobileLogout" class="p-3 rounded-xl text-red-400" data-mobile-logout="1">Logout</button>`;$('mobileLogout')?.addEventListener('click',logoutUser)}
-async function navigate(page){currentPage=page;hide($('mobileNav'));setNav();loading('Loading…');try{await loadPublicProfiles();await renderPage()}catch(e){console.error(e);$('page').innerHTML=`<div class="card p-6"><h2 class="font-bold text-xl">Could not load this page</h2><p class="muted mt-2">${esc(errMsg(e))}</p><button id="retryPage" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Try again</button></div>`;$('retryPage').onclick=()=>navigate(page)}finally{ready()}}
+async function navigate(page){currentPage=page;hide($('mobileNav'));setNav();const isFeed=currentPage==='feed';$('app')?.classList.toggle('is-feed-page',isFeed);$('appMainScroll')?.classList.toggle('is-feed-scroll',isFeed);const sc=$('appMainScroll');if(sc)sc.scrollTop=0;loading('Loading…');try{await loadPublicProfiles();await renderPage()}catch(e){console.error(e);$('page').innerHTML=`<div class="card p-6"><h2 class="font-bold text-xl">Could not load this page</h2><p class="muted mt-2">${esc(errMsg(e))}</p><button id="retryPage" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Try again</button></div>`;$('retryPage').onclick=()=>navigate(page)}finally{ready()}}
 
-async function renderPage(){if(!currentUser){showLanding();return}showApp();setNav();const map={feed:renderFeed,dashboard:renderDashboard,marketplace:renderMarketplace,products:renderProducts,orders:renderOrders,store:renderStore,profile:renderProfile,cart:renderCart,settings:renderSettings,admin:renderAdmin};await (map[currentPage]||renderFeed)();updateCartBadge()}
+async function renderPage(){if(!currentUser){showLanding();return}showApp();const isFeed=currentPage==='feed';$('app')?.classList.toggle('is-feed-page',isFeed);$('appMainScroll')?.classList.toggle('is-feed-scroll',isFeed);setNav();const map={feed:renderFeed,dashboard:renderDashboard,marketplace:renderMarketplace,products:renderProducts,orders:renderOrders,store:renderStore,profile:renderProfile,cart:renderCart,settings:renderSettings,admin:renderAdmin};await (map[currentPage]||renderFeed)();updateCartBadge()}
 
 async function renderFeed(){
   const snap=await getDocs(query(collection(db,'posts'),limit(100)));
   const posts=snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>p.sellerId&&(p.status==='published'||p.status==='approved')).sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
-  $('page').innerHTML=pageTitle('For You','Discover SellerFlow videos, photos and stories.')+`<div class="reel-upload-bar">${button('＋ Upload video / photo','openFeedUpload')}</div><div class="reel-feed space-y-5" id="reelFeed">${posts.length?posts.map(postCard).join(''):`<div class="card p-10 text-center"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2">Share something and it will be published while SellerFlow reviews it for safety.</p></div>`}</div>`;
-  $('openFeedUpload').onclick=openPostModal;
+  $('page').innerHTML=`<div class="feed-top-bar flex items-center justify-between px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-lg font-black tracking-tight text-white">For You</h1><span class="text-[11px] gold bg-[#1e170c] border border-[#3f2e14] px-2 py-0.5 rounded-full whitespace-nowrap">Ranked feed</span></div><button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0">＋ Upload</button></div><div class="reel-feed flex-1 min-h-0 h-full w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">${posts.length?posts.map(postCard).join(''):`<div class="h-full flex items-center justify-center p-6"><div class="card p-8 text-center max-w-md"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2 text-sm">Share something and it will be published while SellerFlow reviews it for safety.</p><button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button></div></div>`}</div>`;
+  $('openFeedUpload')?.addEventListener('click',openPostModal);
+  $('openFeedUploadEmpty')?.addEventListener('click',openPostModal);
   document.querySelectorAll('[data-post-action]').forEach(b=>b.onclick=postAction);
   setupReelPlayback();
 }
@@ -169,12 +248,13 @@ function postCard(p){
  return `<article class="reel-card" data-reel-id="${p.id}"><div class="reel-media-wrap">${media||'<div class="absolute inset-0 flex items-center justify-center text-6xl">🛍️</div>'}</div><div class="reel-shade"></div><div class="reel-actions"><button class="reel-action" data-post-action="like" data-id="${p.id}" title="Like">${liked?'❤️':'🤍'}<div class="text-[10px] mt-0.5">${p.likes?.length||0}</div></button><button class="reel-action" data-post-action="comment" data-id="${p.id}" title="Comment">💬<div class="text-[10px] mt-0.5">${p.comments?.length||0}</div></button><button class="reel-action" data-post-action="save" data-id="${p.id}" title="Save">🔖<div class="text-[10px] mt-0.5">${p.saves?.length||0}</div></button>${p.mediaType?.startsWith('video')?`<button class="reel-action" data-post-action="sound" data-id="${p.id}" title="Save sound">🎵</button>`:''}<button class="reel-action" data-post-action="share" data-id="${p.id}" title="Share">↗</button></div><div class="reel-content"><div class="flex items-center gap-3"><button data-open-seller="${p.sellerId}">${avatar(s)}</button><button data-open-seller="${p.sellerId}" class="text-left"><b>${esc(s.name||s.username)}</b>${verifyBadge(s)}<div class="muted text-xs">@${esc(s.username||'seller')} · ${new Date(ts(p.createdAt)||Date.now()).toLocaleDateString('en-GH',{day:'numeric',month:'short'})}</div></button></div>${p.text?`<p class="mt-4 text-sm md:text-base whitespace-pre-wrap leading-relaxed max-w-2xl">${esc(p.text)}</p>`:''}<div class="mt-3 flex flex-wrap items-center gap-2"><span class="sound-chip">🎵 ${esc(soundText)}</span>${p.soundOriginName?`<span class="post-origin">Original by ${esc(p.soundOriginName)}</span>`:''}</div></div></article>`;
 }
 function setupReelPlayback(){
+ const feedEl=document.getElementById('reelFeed');
  const videos=[...document.querySelectorAll('.reel-video')];let audioCtx=null;
  const enableAudio=()=>{try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();videos.forEach(v=>{if(!v._sfGain){try{const src=audioCtx.createMediaElementSource(v),gain=audioCtx.createGain();gain.gain.value=1.8;src.connect(gain).connect(audioCtx.destination);v._sfGain=gain}catch(_){}}v.muted=false;v.volume=1})}catch(_) {}};
  document.addEventListener('pointerdown',enableAudio,{once:true,passive:true});
  videos.forEach(v=>{let fallbackTried=false;const fallback=async()=>{if(fallbackTried||!v.dataset.mediaPath)return;fallbackTried=true;const ok=await loadPrivateMedia(v.dataset.mediaPath,v);if(!ok)v.insertAdjacentHTML('afterend','<div class="video-fallback"><div><div class="text-4xl mb-2">🎥</div><b>This video is temporarily unavailable</b></div></div>')};const toggle=()=>{enableAudio();if(v.paused)v.play().catch(()=>{});else v.pause();updateVideoButton(v)};v.addEventListener('click',toggle);v.addEventListener('play',()=>{enableAudio();videos.filter(x=>x!==v).forEach(x=>x.pause());updateVideoButton(v)});v.addEventListener('pause',()=>updateVideoButton(v));v.addEventListener('error',fallback);v.addEventListener('stalled',()=>{if(v.readyState===0)fallback()})});
  document.querySelectorAll('[data-video-toggle]').forEach(b=>b.onclick=e=>{e.stopPropagation();const v=b.closest('.reel-card')?.querySelector('.reel-video');if(v){enableAudio();if(v.paused)v.play().catch(()=>{});else v.pause();updateVideoButton(v)}});
- if('IntersectionObserver'in window){const io=new IntersectionObserver(es=>es.forEach(en=>{const v=en.target;if(en.isIntersecting&&en.intersectionRatio>=.55){v.muted=false;v.volume=1;v.play().catch(()=>{})}else v.pause()}),{threshold:[.15,.55,.85]});videos.forEach(v=>io.observe(v))}else videos.forEach(v=>v.play().catch(()=>{}));
+ if('IntersectionObserver'in window){const io=new IntersectionObserver(es=>es.forEach(en=>{const v=en.target;if(en.isIntersecting&&en.intersectionRatio>=.5){v.muted=false;v.volume=1;v.play().catch(()=>{})}else v.pause()}),{root:feedEl||null,threshold:[.15,.5,.85]});videos.forEach(v=>io.observe(v))}else videos.forEach(v=>v.play().catch(()=>{}));
 }
 function updateVideoButton(v){const b=v.closest('.reel-card')?.querySelector('[data-video-toggle]');if(b)b.textContent=v.paused?'▶':'❚❚'}
 
@@ -464,8 +544,11 @@ init();
   /* Ranked For You: freshness + consistency + followers + verification + safety + content type + engagement + posting time. */
   renderFeed=async function(){
     const posts=await getRankedPosts();
-    $('page').innerHTML=pageTitle('For You','A ranked feed that gives quality SellerFlow content a chance to reach new people.')+`<div class="reel-upload-bar">${button('＋ Upload video / photo','openFeedUpload')}</div><div class="reel-feed space-y-5" id="reelFeed">${posts.length?posts.map(postCard).join(''):`<div class="card p-10 text-center"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2">Share a safe photo or video to start building your audience.</p></div>`}</div>`;
-    $('openFeedUpload').onclick=openPostModal;document.querySelectorAll('[data-post-action]').forEach(b=>b.onclick=postAction);setupReelPlayback();
+    $('page').innerHTML=`<div class="feed-top-bar flex items-center justify-between px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-lg font-black tracking-tight text-white">For You</h1><span class="text-[11px] gold bg-[#1e170c] border border-[#3f2e14] px-2 py-0.5 rounded-full whitespace-nowrap">Ranked feed</span></div><button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0">＋ Upload</button></div><div class="reel-feed flex-1 min-h-0 h-full w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">${posts.length?posts.map(postCard).join(''):`<div class="h-full flex items-center justify-center p-6"><div class="card p-8 text-center max-w-md"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2 text-sm">Share a safe photo or video to start building your audience.</p><button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button></div></div>`}</div>`;
+    $('openFeedUpload')?.addEventListener('click',openPostModal);
+    $('openFeedUploadEmpty')?.addEventListener('click',openPostModal);
+    document.querySelectorAll('[data-post-action]').forEach(b=>b.onclick=postAction);
+    setupReelPlayback();
     document.querySelectorAll('[data-reel-id]').forEach(card=>{const id=card.dataset.reelId,key='sellerflow_viewed_'+id;if(!sessionStorage.getItem(key)){sessionStorage.setItem(key,'1');setTimeout(async()=>{try{const s=await getDoc(doc(db,'posts',id));if(snapshotExists(s))await updateDoc(doc(db,'posts',id),{views:Number(s.data().views||0)+1})}catch(_){}} ,900)}});
   };
 
@@ -571,7 +654,7 @@ init();
   adminPostCard=function(uid,p){
     const s=p.platformLabel==='SellerFlow'&&p.isAdminPost?{...sellerProfile(p.sellerId),name:'SellerFlow',username:'sellerflow',verified:true}:sellerProfile(p.sellerId);
     let media='';
-    if(p.mediaUrl){if(p.mediaType?.startsWith('video'))media=`<div class="mt-4"><div class="sf-media-status mb-2">🎥 Video preview · ${esc(p.reviewStatus||'under review')}</div><video class="admin-media-preview" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')} controls playsinline preload="metadata" onerror="window.__sfMediaFallback(this)"></video></div>`;else media=`<div class="mt-4"><div class="sf-media-status mb-2">🖼️ Photo preview · ${esc(p.reviewStatus||'under review')}</div><img class="admin-media-preview" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" alt="SellerFlow submitted photo" onerror="window.__sfMediaFallback(this)"></div>`;}
+    if(p.mediaUrl){if(p.mediaType?.startsWith('video'))media=`<div class="mt-4"><div class="sf-media-status mb-2">🎥 Video preview · ${esc(p.reviewStatus||'under review')}</div><video class="admin-media-preview" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" controls playsinline preload="metadata" onerror="window.__sfMediaFallback(this)"></video></div>`;else media=`<div class="mt-4"><div class="sf-media-status mb-2">🖼️ Photo preview · ${esc(p.reviewStatus||'under review')}</div><img class="admin-media-preview" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" alt="SellerFlow submitted photo" onerror="window.__sfMediaFallback(this)"></div>`;}
     return `<div class="bg-[#181818] rounded-2xl p-4 border border-[#2b2b2b]"><div class="flex gap-3 items-center">${avatar(s,'avatar')}<div class="flex-1"><b>${esc(s.name||s.username)}</b>${verifyBadge(s)}<div class="muted text-xs">@${esc(s.username||'seller')}</div><div class="text-sm mt-2">${esc(p.text||'No caption')}</div><div class="muted text-xs mt-1">${esc(p.mediaType||'text')} · ${esc(p.status||'pending')} · ${esc(p.reviewStatus||'not reviewed')}</div></div></div>${media}<div class="flex gap-2 mt-3 flex-wrap"><button data-admin-approve-post="${uid}" class="bg-gold text-black rounded-xl px-3 py-2">Keep live / Approve</button><button data-admin-takedown-post="${uid}" class="border border-red-700 text-red-400 rounded-xl px-3 py-2">Take down</button></div></div>`;
   };
 
@@ -588,9 +671,9 @@ init();
   renderProfile=async function(){
     const p=currentProfile||{};let posts=[];try{const s=await getDocs(query(collection(db,'posts'),where('sellerId','==',currentUser.uid),limit(100)));posts=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.status!=='removed').sort((a,b)=>ts(b.createdAt)-ts(a.createdAt))}catch(_){ }
     const followers=(p.followers||[]).length,following=(p.following||[]).length,likes=posts.reduce((n,x)=>n+(x.likes||[]).length,0),views=posts.reduce((n,x)=>n+Number(x.views||0),0);
-    $('page').innerHTML=pageTitle('Profile','Your public creator identity, audience and content.')+`<section class="sf-profile-cover"><div class="relative z-10 p-5 md:p-7"><div class="flex flex-col md:flex-row md:items-end gap-5"><button type="button" id="profilePhotoBtn" class="shrink-0 border-0 bg-transparent">${p.avatarUrl?`<img class="sf-profile-avatar" src="${esc(p.avatarUrl)}" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'Profile picture')}" onerror="window.__sfMediaFallback(this)">`:`<div class="sf-profile-avatar flex items-center justify-center text-4xl font-black">${esc((p.name||'?')[0].toUpperCase())}</div>`}</button><div class="flex-1"><div class="flex flex-wrap items-center gap-2"><h2 class="text-3xl font-black">${esc(p.name||'SellerFlow User')}</h2>${verifyBadge(p)}</div><div class="muted mt-1">@${esc(p.username||'seller')} · ${sfPresenceBadge(p)}</div><p class="text-sm md:text-base mt-3 max-w-2xl">${esc(p.bio||'Tell customers and followers what you create, sell or share.')}</p><div class="flex flex-wrap gap-2 mt-5"><button id="editProfileTop" class="btn btn-primary px-5 py-2.5 rounded-xl">Edit profile</button>${button('＋ Create post','profileCreatePost','border border-[#444] bg-[#171717] text-white')}</div></div></div><div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-7"><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="posts"><div class="text-2xl font-black">${posts.length}</div><div class="muted text-xs mt-1">Posts</div></button><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="views"><div class="text-2xl font-black">${views}</div><div class="muted text-xs mt-1">Views</div></button><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="likes"><div class="text-2xl font-black">${likes}</div><div class="muted text-xs mt-1">Likes</div></button><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="followers"><div class="text-2xl font-black">${followers}</div><div class="muted text-xs mt-1">Followers</div></button></div></div></section><section class="card mt-5 overflow-hidden"><div class="sf-profile-tabs"><button class="sf-profile-tab active">Posts</button><button class="sf-profile-tab" id="profileFollowingTab">Following ${following}</button></div><div class="p-2"><div class="profile-grid">${posts.length?posts.map(x=>`<button type="button" class="sf-post-tile" data-profile-post="${x.id}">${x.mediaUrl?(x.mediaType?.startsWith('video')?`<video src="${esc(x.mediaUrl)}" data-media-path="${esc(x.mediaPath||'')} muted preload="metadata" onerror="window.__sfMediaFallback(this)"></video>`:`<img src="${esc(x.mediaUrl)}" data-media-path="${esc(x.mediaPath||'')} alt="Post" onerror="window.__sfMediaFallback(this)">`):`<div class="w-full h-full flex items-center justify-center p-4 text-xs">${esc(x.text||'SellerFlow post')}</div>`}<div class="sf-tile-meta"><span>${x.mediaType?.startsWith('video')?'▶ Video':x.mediaType?.startsWith('image')?'▧ Photo':'Text'}</span><span>♥ ${x.likes?.length||0} · ${x.views||0}</span></div></button>`).join(''):'<div class="col-span-3 p-12 text-center muted">You have not published any posts yet.</div>'}</div></div></section>`;
+    $('page').innerHTML=pageTitle('Profile','Your public creator identity, audience and content.')+`<section class="sf-profile-cover"><div class="relative z-10 p-5 md:p-7"><div class="flex flex-col md:flex-row md:items-end gap-5"><button type="button" id="profilePhotoBtn" class="shrink-0 border-0 bg-transparent">${p.avatarUrl?`<img class="sf-profile-avatar" src="${esc(p.avatarUrl)}" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'Profile picture')}" onerror="window.__sfMediaFallback(this)">`:`<div class="sf-profile-avatar flex items-center justify-center text-4xl font-black">${esc((p.name||'?')[0].toUpperCase())}</div>`}</button><div class="flex-1 min-w-0"><div class="flex flex-wrap items-center gap-2"><h2 class="text-3xl font-black">${esc(p.name||'SellerFlow User')}</h2>${verifyBadge(p)}</div><div class="muted mt-1">@${esc(p.username||'seller')} · ${sfPresenceBadge(p)}</div><p class="text-sm md:text-base mt-3 max-w-2xl">${esc(p.bio||'Tell customers and followers what you create, sell or share.')}</p><div class="flex flex-wrap gap-2 mt-5"><button id="editProfileTop" class="btn btn-primary px-5 py-2.5 rounded-xl">Edit profile</button>${button('＋ Create post','profileCreatePost','border border-[#444] bg-[#171717] text-white')}</div></div></div><div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-7"><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="posts"><div class="text-2xl font-black">${posts.length}</div><div class="muted text-xs mt-1">Posts</div></button><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="views"><div class="text-2xl font-black">${views}</div><div class="muted text-xs mt-1">Views</div></button><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="likes"><div class="text-2xl font-black">${likes}</div><div class="muted text-xs mt-1">Likes</div></button><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="followers"><div class="text-2xl font-black">${followers}</div><div class="muted text-xs mt-1">Followers</div></button></div></div></section><section class="card mt-5 overflow-hidden"><div class="sf-profile-tabs"><button class="sf-profile-tab active">Posts</button><button class="sf-profile-tab" id="profileFollowingTab">Following ${following}</button></div><div class="p-2"><div class="profile-grid">${posts.length?posts.map(x=>`<button type="button" class="sf-post-tile" data-profile-post="${x.id}">${x.mediaUrl?(x.mediaType?.startsWith('video')?`<video src="${esc(x.mediaUrl)}" data-media-path="${esc(x.mediaPath||'')}" muted preload="metadata" onerror="window.__sfMediaFallback(this)"></video>`:`<img src="${esc(x.mediaUrl)}" data-media-path="${esc(x.mediaPath||'')}" alt="Post" onerror="window.__sfMediaFallback(this)">`):`<div class="w-full h-full flex items-center justify-center p-4 text-xs">${esc(x.text||'SellerFlow post')}</div>`}<div class="sf-tile-meta"><span>${x.mediaType?.startsWith('video')?'▶ Video':x.mediaType?.startsWith('image')?'▧ Photo':'Text'}</span><span>♥ ${x.likes?.length||0} · ${x.views||0}</span></div></button>`).join(''):'<div class="col-span-3 p-12 text-center muted">You have not published any posts yet.</div>'}</div></div></section>`;
     $('profileCreatePost').onclick=openPostModal;$('editProfileTop').onclick=sfOpenProfileEditor;$('profilePhotoBtn')?.addEventListener('click',()=>p.avatarUrl&&sfOpenImage(p.avatarUrl,'Profile picture'));
-    document.querySelectorAll('[data-profile-post]').forEach(b=>b.onclick=async()=>{const id=b.dataset.profilePost,s=await getDoc(doc(db,'posts',id));if(snapshotExists(s)){const x=s.data();modal(`<div><h2 class="text-xl font-bold">Your post</h2>${x.mediaUrl?(x.mediaType?.startsWith('video')?`<video src="${esc(x.mediaUrl)}" data-media-path="${esc(x.mediaPath||'')} class="admin-media-preview" controls playsinline onerror="window.__sfMediaFallback(this)"></video>`:`<img src="${esc(x.mediaUrl)}" data-media-path="${esc(x.mediaPath||'')} class="admin-media-preview" alt="Post" onerror="window.__sfMediaFallback(this)">`):''}<p class="mt-4 whitespace-pre-wrap">${esc(x.text||'')}</p><div class="muted text-sm mt-2">${x.views||0} views · ${(x.likes||[]).length} likes · ${(x.comments||[]).length} comments</div></div>`)}});
+    document.querySelectorAll('[data-profile-post]').forEach(b=>b.onclick=async()=>{const id=b.dataset.profilePost,s=await getDoc(doc(db,'posts',id));if(snapshotExists(s)){const x=s.data();modal(`<div><h2 class="text-xl font-bold">Your post</h2>${x.mediaUrl?(x.mediaType?.startsWith('video')?`<video src="${esc(x.mediaUrl)}" data-media-path="${esc(x.mediaPath||'')}" class="admin-media-preview" controls playsinline onerror="window.__sfMediaFallback(this)"></video>`:`<img src="${esc(x.mediaUrl)}" data-media-path="${esc(x.mediaPath||'')}" class="admin-media-preview" alt="Post" onerror="window.__sfMediaFallback(this)">`):''}<p class="mt-4 whitespace-pre-wrap">${esc(x.text||'')}</p><div class="muted text-sm mt-2">${x.views||0} views · ${(x.likes||[]).length} likes · ${(x.comments||[]).length} comments</div></div>`)}});
     document.querySelectorAll('[data-profile-stat]').forEach(b=>b.onclick=()=>{const k=b.dataset.profileStat;if(k==='posts')document.querySelector('.sf-profile-tabs')?.scrollIntoView({behavior:'smooth'});else if(k==='followers')modal(`<div><h2 class="text-xl font-bold">Followers</h2><p class="muted text-sm mt-1">People following @${esc(p.username||'seller')}.</p><div class="space-y-2 mt-4">${(p.followers||[]).map(uid=>{const u=sellerProfile(uid);return `<button class="sf-user-row w-full flex items-center gap-3 p-3 rounded-xl border border-[#292929] text-left" data-open-seller="${uid}">${avatar(u)}<span class="flex-1"><b>${esc(u.name||u.username)}</b><div class="muted text-xs">@${esc(u.username||'seller')}</div></span></button>`}).join('')||'<div class="muted p-4">No followers yet.</div>'}</div></div>`);else if(k==='views'||k==='likes')toast(k==='views'?'Total views across your posts.':'Total likes across your posts.','info')});
   };
 
@@ -625,7 +708,7 @@ init();
 </script>
 
 <style>
-.sf-search-btn{min-width:42px}.sf-search-results{max-height:65vh;overflow:auto}.sf-result{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #292929;border-radius:14px;background:#151515}.sf-result:hover{border-color:#f5b942}.chat-layout{display:grid;grid-template-columns:300px 1fr;gap:16px;min-height:600px}.chat-list{max-height:620px;overflow:auto}.chat-window{display:flex;flex-direction:column;min-height:600px}.chat-messages{flex:1;overflow:auto;padding:16px;background:#0d0d0d;border-radius:18px;border:1px solid #292929}.chat-bubble{max-width:78%;padding:10px 13px;border-radius:16px;margin:7px 0;white-space:pre-wrap;word-break:break-word}.chat-me{margin-left:auto;background:#f5b942;color:#090909;border-bottom-right-radius:5px}.chat-them{margin-right:auto;background:#1c1c1c;border-bottom-left-radius:5px}.presence-dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:2px solid #0b0b0b}.presence-online{background:#20d46b}.presence-offline{background:#666}@media(max-width:760px){.chat-layout{grid-template-columns:1fr}.chat-window{min-height:520px}.chat-list{max-height:260px}}
+.sf-search-btn{min-width:42px}.sf-search-results{max-height:65vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}.sf-result{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #292929;border-radius:14px;background:#151515;min-width:0}.sf-result:hover{border-color:#f5b942}.chat-layout{display:grid;grid-template-columns:300px 1fr;gap:16px;min-height:480px}.chat-list{max-height:620px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}.chat-window{display:flex;flex-direction:column;min-height:360px;height:100%}.chat-messages{flex:1 1 0%;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:16px;background:#0d0d0d;border-radius:18px;border:1px solid #292929}.chat-bubble{max-width:85%;padding:10px 13px;border-radius:16px;margin:7px 0;white-space:pre-wrap;word-break:break-word}.chat-me{margin-left:auto;background:#f5b942;color:#090909;border-bottom-right-radius:5px}.chat-them{margin-right:auto;background:#1c1c1c;border-bottom-left-radius:5px}.presence-dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:2px solid #0b0b0b;flex-shrink:0}.presence-online{background:#20d46b}.presence-offline{background:#666}@media(max-width:760px){.chat-layout{grid-template-columns:1fr;min-height:0}.chat-window{min-height:360px;height:65vh}.chat-list{max-height:55vh}}
 </style>
 <script>
 (function(){
@@ -652,11 +735,165 @@ init();
   async function openNewChat(){
     const people=[...allPublicProfiles.values()].filter(p=>p.uid&&p.uid!==currentUser.uid);modal(`<div><h2 class="text-xl font-bold">New chat</h2><p class="muted text-sm mt-1">Search for a SellerFlow user.</p><input id="chatUserSearch" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Search name or username…"><div id="chatUserResults" class="sf-search-results space-y-2 mt-4"></div></div>`);const draw=()=>{const q=$('chatUserSearch').value.trim().toLowerCase();const arr=people.filter(p=>!q||profileSearchText(p).includes(q)).slice(0,50);$('chatUserResults').innerHTML=arr.map(p=>`<button type="button" class="sf-result w-full text-left" data-new-chat="${p.uid}">${avatar(p,'w-12 h-12 rounded-full object-cover bg-[#222]')}<span class="flex-1"><b>${esc(p.name||p.username)}</b><div class="muted text-xs">@${esc(p.username||'user')} · ${presence(p)}</div></span></button>`).join('')||'<div class="muted text-center p-5">No users found.</div>';document.querySelectorAll('[data-new-chat]').forEach(b=>b.onclick=()=>{closeModal();startChat(b.dataset.newChat)})};$('chatUserSearch').oninput=draw;draw()
   }
+  const SF_RECENT_SEARCHES_KEY='sellerflow_recent_searches';
+  function getRecentSearches(){
+    try{
+      const v=localStorage.getItem(SF_RECENT_SEARCHES_KEY);
+      if(!v)return [];
+      const parsed=JSON.parse(v);
+      return Array.isArray(parsed)?parsed.filter(x=>typeof x==='string'&&x.trim()).slice(0,5):[];
+    }catch(_){return []}
+  }
+  function saveRecentSearch(term){
+    if(!term||typeof term!=='string')return;
+    const clean=term.trim();
+    if(!clean)return;
+    const cur=getRecentSearches().filter(x=>x.toLowerCase()!==clean.toLowerCase());
+    const updated=[clean,...cur].slice(0,5);
+    try{localStorage.setItem(SF_RECENT_SEARCHES_KEY,JSON.stringify(updated))}catch(_){}
+  }
+  function removeRecentSearch(term){
+    const clean=(term||'').trim();
+    const updated=getRecentSearches().filter(x=>x.toLowerCase()!==clean.toLowerCase());
+    try{localStorage.setItem(SF_RECENT_SEARCHES_KEY,JSON.stringify(updated))}catch(_){}
+  }
+  function clearRecentSearches(){
+    try{localStorage.removeItem(SF_RECENT_SEARCHES_KEY)}catch(_){}
+  }
+
   async function globalSearch(){
-    modal(`<div><h2 class="text-xl font-bold">Search SellerFlow</h2><p class="muted text-sm">Search people, stores, products, posts and your orders.</p><input id="globalSearchInput" autofocus class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Search anything…"><div id="globalSearchResults" class="sf-search-results space-y-2 mt-4"></div></div>`);
+    modal(`<div>
+      <div class="flex items-center justify-between gap-3 mb-1">
+        <div>
+          <h2 class="text-xl font-bold">Search SellerFlow</h2>
+          <p class="muted text-sm">Search people, stores, products, posts and your orders.</p>
+        </div>
+        <button type="button" data-close-modal class="w-8 h-8 rounded-full bg-[#1e1e1e] hover:bg-[#2c2c2c] text-zinc-400 hover:text-white flex items-center justify-center text-sm" title="Close">✕</button>
+      </div>
+      <div class="relative mt-4">
+        <input id="globalSearchInput" autofocus class="w-full p-3 pl-10 pr-10 rounded-xl bg-[#191919] border border-[#333] text-white focus:border-gold outline-none text-sm" placeholder="Search anything…">
+        <span class="absolute left-3.5 top-3.5 text-zinc-500 pointer-events-none text-sm">⌕</span>
+        <button type="button" id="globalSearchClear" class="absolute right-3 top-3 text-zinc-400 hover:text-white hidden px-1.5 py-0.5 text-xs rounded-full bg-[#2a2a2a]" title="Clear search">✕</button>
+      </div>
+      <div id="recentSearchesSection" class="mt-4"></div>
+      <div id="globalSearchResults" class="sf-search-results space-y-2 mt-4"></div>
+    </div>`);
+
+    const renderRecentSearches=()=>{
+      const sec=$('recentSearchesSection');
+      if(!sec)return;
+      const recents=getRecentSearches();
+      if(!recents.length){
+        sec.innerHTML='';
+        sec.style.display='none';
+        return;
+      }
+      sec.style.display='block';
+      sec.innerHTML=`
+        <div class="flex items-center justify-between text-xs text-zinc-400 mb-2">
+          <span class="font-semibold flex items-center gap-1.5 text-zinc-300">
+            <span>🕒</span>
+            <span>Recent searches</span>
+          </span>
+          <button type="button" id="clearAllRecentSearches" class="text-xs gold hover:underline">Clear all</button>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          ${recents.map(term=>`
+            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1b1b1b] border border-[#2e2e2e] hover:border-[#444] text-xs text-zinc-200">
+              <button type="button" class="font-medium hover:text-gold cursor-pointer text-left" data-recent-search="${esc(term)}">
+                ${esc(term)}
+              </button>
+              <button type="button" class="text-zinc-500 hover:text-red-400 ml-0.5 w-4 h-4 flex items-center justify-center rounded-full text-[11px]" data-remove-recent="${esc(term)}" title="Remove recent search">✕</button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      sec.querySelectorAll('[data-recent-search]').forEach(b=>{
+        b.onclick=()=>{
+          const term=b.dataset.recentSearch;
+          if($('globalSearchInput')){
+            $('globalSearchInput').value=term;
+            saveRecentSearch(term);
+            renderRecentSearches();
+            draw();
+            $('globalSearchInput').focus();
+          }
+        };
+      });
+
+      sec.querySelectorAll('[data-remove-recent]').forEach(b=>{
+        b.onclick=(e)=>{
+          e.stopPropagation();
+          removeRecentSearch(b.dataset.removeRecent);
+          renderRecentSearches();
+        };
+      });
+
+      const clearAll=$('clearAllRecentSearches');
+      if(clearAll){
+        clearAll.onclick=()=>{
+          clearRecentSearches();
+          renderRecentSearches();
+        };
+      }
+    };
+
+    renderRecentSearches();
+
     const [profiles,stores,products,posts]=await Promise.all([getDocs(query(collection(db,'publicProfiles'),limit(300))),getDocs(query(collection(db,'stores'),limit(200))),getDocs(query(collection(db,'products'),limit(300))),getDocs(query(collection(db,'posts'),limit(300)))]);
     const data=[...profiles.docs.map(d=>({kind:'User',id:d.id,title:d.data().name||d.data().username||'User',sub:'@'+(d.data().username||'user'),profile:d.data()})),...stores.docs.map(d=>({kind:'Store',id:d.id,title:d.data().name||'Store',sub:d.data().description||d.data().location||'',store:d.data()})),...products.docs.map(d=>({kind:'Product',id:d.id,title:d.data().name||'Product',sub:d.data().description||'',product:d.data()})),...posts.docs.map(d=>({kind:'Post',id:d.id,title:d.data().text||'SellerFlow post',sub:(d.data().mediaType||'Post')+' · '+(d.data().views||0)+' views',post:d.data()}))];
-    const draw=()=>{const q=$('globalSearchInput').value.trim().toLowerCase();const arr=data.filter(x=>!q||[x.title,x.sub,x.kind,x.profile?.username,x.store?.location,x.product?.category,x.post?.contentType].filter(Boolean).join(' ').toLowerCase().includes(q)).slice(0,80);$('globalSearchResults').innerHTML=arr.map(x=>{let action='';if(x.kind==='User')action=`data-search-user="${x.id}"`;if(x.kind==='Store')action=`data-search-store="${x.store.ownerId||''}"`;if(x.kind==='Product')action=`data-search-product="${x.id}"`;if(x.kind==='Post')action=`data-search-post="${x.id}"`;return `<button type="button" class="sf-result w-full text-left" ${action}>${x.profile?avatar(x.profile,'w-11 h-11 rounded-full object-cover bg-[#222]'):x.product?.imageUrl?`<img src="${esc(x.product.imageUrl)}" class="w-11 h-11 rounded-xl object-cover">`:'<div class="w-11 h-11 rounded-xl bg-[#222] flex items-center justify-center">'+(x.kind==='Post'?'🎬':x.kind==='Store'?'🏪':'📦')+'</div>'}<span class="flex-1 min-w-0"><span class="text-[10px] gold">${esc(x.kind)}</span><b class="block truncate">${esc(x.title)}</b><span class="muted text-xs block truncate">${esc(x.sub)}</span></span></button>`}).join('')||'<div class="p-6 text-center muted">No matching results.</div>';document.querySelectorAll('[data-search-user]').forEach(b=>b.onclick=()=>{closeModal();if(b.dataset.searchUser===currentUser.uid)navigate('profile');else startChat(b.dataset.searchUser)});document.querySelectorAll('[data-search-store]').forEach(b=>b.onclick=()=>{closeModal();openStore(b.dataset.searchStore)});document.querySelectorAll('[data-search-product]').forEach(b=>b.onclick=()=>{closeModal();navigate('products')});document.querySelectorAll('[data-search-post]').forEach(b=>b.onclick=()=>{closeModal();navigate('feed')})};$('globalSearchInput').oninput=draw;draw();
+    
+    const draw=()=>{
+      const q=$('globalSearchInput')?.value.trim().toLowerCase()||'';
+      const clearBtn=$('globalSearchClear');
+      if(clearBtn)clearBtn.classList.toggle('hidden',!q);
+
+      const arr=data.filter(x=>!q||[x.title,x.sub,x.kind,x.profile?.username,x.store?.location,x.product?.category,x.post?.contentType].filter(Boolean).join(' ').toLowerCase().includes(q)).slice(0,80);
+      const resultsEl=$('globalSearchResults');
+      if(!resultsEl)return;
+      resultsEl.innerHTML=arr.map(x=>{let action='';if(x.kind==='User')action=`data-search-user="${x.id}"`;if(x.kind==='Store')action=`data-search-store="${x.store.ownerId||''}"`;if(x.kind==='Product')action=`data-search-product="${x.id}"`;if(x.kind==='Post')action=`data-search-post="${x.id}"`;return `<button type="button" class="sf-result w-full text-left" ${action}>${x.profile?avatar(x.profile,'w-11 h-11 rounded-full object-cover bg-[#222]'):x.product?.imageUrl?`<img src="${esc(x.product.imageUrl)}" class="w-11 h-11 rounded-xl object-cover">`:'<div class="w-11 h-11 rounded-xl bg-[#222] flex items-center justify-center">'+(x.kind==='Post'?'🎬':x.kind==='Store'?'🏪':'📦')+'</div>'}<span class="flex-1 min-w-0"><span class="text-[10px] gold">${esc(x.kind)}</span><b class="block truncate">${esc(x.title)}</b><span class="muted text-xs block truncate">${esc(x.sub)}</span></span></button>`}).join('')||'<div class="p-6 text-center muted">No matching results.</div>';
+      
+      const rememberQuery=()=>{
+        const cur=$('globalSearchInput')?.value.trim();
+        if(cur){
+          saveRecentSearch(cur);
+          renderRecentSearches();
+        }
+      };
+
+      document.querySelectorAll('[data-search-user]').forEach(b=>b.onclick=()=>{rememberQuery();closeModal();if(b.dataset.searchUser===currentUser.uid)navigate('profile');else startChat(b.dataset.searchUser)});
+      document.querySelectorAll('[data-search-store]').forEach(b=>b.onclick=()=>{rememberQuery();closeModal();openStore(b.dataset.searchStore)});
+      document.querySelectorAll('[data-search-product]').forEach(b=>b.onclick=()=>{rememberQuery();closeModal();navigate('products')});
+      document.querySelectorAll('[data-search-post]').forEach(b=>b.onclick=()=>{rememberQuery();closeModal();navigate('feed')});
+    };
+
+    $('globalSearchInput').oninput=draw;
+    $('globalSearchInput').onkeydown=(e)=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        const cur=$('globalSearchInput')?.value.trim();
+        if(cur){
+          saveRecentSearch(cur);
+          renderRecentSearches();
+        }
+      }
+    };
+    $('globalSearchInput').onchange=()=>{
+      const cur=$('globalSearchInput')?.value.trim();
+      if(cur){
+        saveRecentSearch(cur);
+        renderRecentSearches();
+      }
+    };
+    $('globalSearchClear')?.addEventListener('click',()=>{
+      if($('globalSearchInput')){
+        $('globalSearchInput').value='';
+        draw();
+        $('globalSearchInput').focus();
+      }
+    });
+    draw();
   }
   const oldRenderPage=renderPage;renderPage=async function(){if(currentPage==='chats')return renderChats();return oldRenderPage()};
   const oldSetNav=setNav;setNav=function(){oldSetNav();const desktop=$('desktopNav');if(desktop&&!desktop.querySelector('[data-page="chats"]')){const b=document.createElement('button');b.className='navbtn px-3 py-2';b.dataset.page='chats';b.textContent='Chats';b.onclick=()=>navigate('chats');desktop.appendChild(b)}const mn=$('mobileNav');if(mn&&!mn.querySelector('[data-mobile-page="chats"]')){const b=document.createElement('button');b.className='p-3 rounded-xl';b.dataset.mobilePage='chats';b.textContent='Chats';b.onclick=()=>navigate('chats');mn.prepend(b)}};
