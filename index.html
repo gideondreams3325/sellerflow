@@ -248,8 +248,40 @@ async function ensureProfile(u,extra={}){
 async function refreshProfile(){const s=await getDoc(doc(db,'users',currentUser.uid));currentProfile=snapshotExists(s)?s.data():await ensureProfile(currentUser);isAdmin=(currentUser.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase()}
 async function loadPublicProfiles(){allPublicProfiles.clear();try{const s=await getDocs(query(collection(db,'publicProfiles'),limit(300)));s.forEach(d=>allPublicProfiles.set(d.id,d.data()))}catch(e){console.warn(e)}}
 function sellerProfile(uid){return allPublicProfiles.get(uid)||{uid,name:'Seller',username:'seller',verified:false,followers:[]}}
-function setNav(){const dashBtn=document.querySelector('[data-page="dashboard"]');if(dashBtn)dashBtn.classList.toggle('dashboard-hidden',!isAdmin&&!currentProfile?.verified);document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));const adminDesktop=document.getElementById('adminNav');if(adminDesktop)adminDesktop.remove();if(isAdmin){const b=document.createElement('button');b.id='adminNav';b.className='navbtn px-3 py-2';b.dataset.page='admin';b.textContent='Admin';b.onclick=()=>navigate('admin');document.getElementById('desktopNav').appendChild(b)}const navPages=isAdmin?['feed','dashboard','marketplace','products','orders','store','profile','settings']:(currentProfile?.verified?['feed','dashboard','marketplace','products','orders','store','profile','settings']:['feed','marketplace','orders','profile','settings']);$('mobileNav').innerHTML=navPages.map(p=>`<button type="button" class="p-3 rounded-xl ${p===currentPage?'bg-[#202020] gold':''}" data-mobile-page="${p}">${p==='feed'?'For You':p[0].toUpperCase()+p.slice(1)}</button>`).join('')+(isAdmin?`<button class="p-3 rounded-xl ${currentPage==='admin'?'bg-[#202020] gold':''}" data-mobile-page="admin">Admin</button>`:'')+`<button id="mobileLogout" class="p-3 rounded-xl text-red-400" data-mobile-logout="1">Logout</button>`;$('mobileLogout')?.addEventListener('click',logoutUser)}
+function setNav(){
+  const dashBtn=document.querySelector('[data-page="dashboard"]');
+  if(dashBtn)dashBtn.classList.toggle('dashboard-hidden',!isAdmin&&!currentProfile?.verified);
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));
+  const adminDesktop=document.getElementById('adminNav');
+  if(adminDesktop)adminDesktop.remove();
+  if(isAdmin){const b=document.createElement('button');b.id='adminNav';b.className='navbtn px-3 py-2';b.dataset.page='admin';b.textContent='Admin';b.onclick=()=>navigate('admin');document.getElementById('desktopNav').appendChild(b)}
+
+  const rightActions=$('logoutBtn')?.parentElement;
+  if(rightActions){
+    if(!currentUser){
+      rightActions.innerHTML=`<button type="button" id="headerLoginBtn" class="border border-[#444] hover:border-gold px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#181818] text-white">Sign In</button><button type="button" id="headerRegisterBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110">Register</button>`;
+      $('headerLoginBtn').onclick=()=>showAuth('login');
+      $('headerRegisterBtn').onclick=()=>showAuth('register');
+    } else {
+      rightActions.innerHTML=`<button id="notificationBtn" class="bell-btn p-2" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2">Logout</button>`;
+      $('notificationBtn').onclick=()=>{if(window.renderGroupedNotifications)return window.renderGroupedNotifications();if(window.openNotifications)return window.openNotifications();openNotifications();};
+      $('cartBtn').onclick=()=>navigate('cart');
+      $('logoutBtn').onclick=logoutUser;
+      updateCartBadge();
+    }
+  }
+
+  const navPages=isAdmin?['feed','dashboard','marketplace','products','orders','store','profile','settings']:(currentProfile?.verified?['feed','dashboard','marketplace','products','orders','store','profile','settings']:['feed','marketplace','orders','profile','settings']);
+  $('mobileNav').innerHTML=navPages.map(p=>`<button type="button" class="p-3 rounded-xl ${p===currentPage?'bg-[#202020] gold':''}" data-mobile-page="${p}">${p==='feed'?'For You':p[0].toUpperCase()+p.slice(1)}</button>`).join('')+(isAdmin?`<button class="p-3 rounded-xl ${currentPage==='admin'?'bg-[#202020] gold':''}" data-mobile-page="admin">Admin</button>`:'')+(!currentUser?`<button class="p-3 rounded-xl text-gold font-bold" id="mobileAuthBtn">Sign In / Register</button>`:`<button id="mobileLogout" class="p-3 rounded-xl text-red-400" data-mobile-logout="1">Logout</button>`);
+  $('mobileLogout')?.addEventListener('click',logoutUser);
+  $('mobileAuthBtn')?.addEventListener('click',()=>{hide($('mobileNav'));showAuth('login')});
+}
 async function navigate(page, targetPostId, options){
+  if(!currentUser && page !== 'feed' && page !== 'update'){
+    showAuth('login');
+    toast('Please sign in or create an account to access ' + page + '.', 'error');
+    return;
+  }
   document.querySelectorAll('video').forEach(v=>{
     try{
       if(!v.paused)v.pause();
@@ -819,7 +851,13 @@ function setupReelPlayback(targetPostId){
 }
 function updateVideoButton(v){const c=v.closest('.reel-card');const b=c?.querySelector('[data-video-toggle]');if(b)b.textContent=v.paused?'▶':'❚❚'}
 
-async function postAction(e){const b=e.currentTarget,id=b.dataset.id,action=b.dataset.postAction,r=doc(db,'posts',id),s=await getDoc(r);if(!snapshotExists(s))return;const p=s.data();if(action==='like')await updateDoc(r,{likes:(p.likes||[]).includes(currentUser.uid)?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});if(action==='save')await updateDoc(r,{saves:(p.saves||[]).includes(currentUser.uid)?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});if(action==='comment'){openCommentPanel(id,p);return}if(action==='sound'){await saveSoundForUser(id,p);return}if(action==='share'){const url=location.href.split('#')[0]+'#post='+id;if(navigator.share){try{await navigator.share({title:'SellerFlow post',text:p.text||'Check this SellerFlow post',url})}catch{}}else{await navigator.clipboard?.writeText(url);toast('Post link copied','success')}}if(action==='like'||action==='save'){const wasActive=(action==='like'?(p.likes||[]).includes(currentUser.uid):(p.saves||[]).includes(currentUser.uid));const wrap=document.querySelector(`[data-reel-id="${id}"]`);const btn=wrap?.querySelector(`[data-post-action="${action}"]`);if(btn){btn.firstChild.textContent=action==='like'?(wasActive?'🤍':'❤️'):'🔖';const countEl=btn.querySelector('div');if(countEl)countEl.textContent=String((action==='like'?(p.likes||[]).length:(p.saves||[]).length)+(wasActive?-1:1));}toast(action==='like'?'Reaction updated':'Post saved','success')}}
+async function postAction(e){
+  if(!currentUser){
+    showAuth('login');
+    toast('Please sign in or create an account to interact.', 'error');
+    return;
+  }
+  const b=e.currentTarget,id=b.dataset.id,action=b.dataset.postAction,r=doc(db,'posts',id),s=await getDoc(r);if(!snapshotExists(s))return;const p=s.data();if(action==='like')await updateDoc(r,{likes:(p.likes||[]).includes(currentUser.uid)?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});if(action==='save')await updateDoc(r,{saves:(p.saves||[]).includes(currentUser.uid)?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});if(action==='comment'){openCommentPanel(id,p);return}if(action==='sound'){await saveSoundForUser(id,p);return}if(action==='share'){const url=location.href.split('#')[0]+'#post='+id;if(navigator.share){try{await navigator.share({title:'SellerFlow post',text:p.text||'Check this SellerFlow post',url})}catch{}}else{await navigator.clipboard?.writeText(url);toast('Post link copied','success')}}if(action==='like'||action==='save'){const wasActive=(action==='like'?(p.likes||[]).includes(currentUser.uid):(p.saves||[]).includes(currentUser.uid));const wrap=document.querySelector(`[data-reel-id="${id}"]`);const btn=wrap?.querySelector(`[data-post-action="${action}"]`);if(btn){btn.firstChild.textContent=action==='like'?(wasActive?'🤍':'❤️'):'🔖';const countEl=btn.querySelector('div');if(countEl)countEl.textContent=String((action==='like'?(p.likes||[]).length:(p.saves||[]).length)+(wasActive?-1:1));}toast(action==='like'?'Reaction updated':'Post saved','success')}}
 function openCommentPanel(id,p){const root=$('modalRoot');root.innerHTML=`<div class="comment-backdrop" id="commentBackdrop"></div><section class="comment-sheet"><div class="flex items-center justify-between"><div><h2 class="text-xl font-bold">Comments</h2><p class="muted text-sm">Your Reel stays visible and playing while you comment.</p></div><button type="button" id="closeCommentPanel" class="w-10 h-10 rounded-full border border-[#333]">×</button></div><div class="space-y-3 my-5 max-h-64 overflow-auto">${(p.comments||[]).slice(-30).map(c=>`<div class="bg-[#191919] p-3 rounded-xl"><b>${esc(c.name||'User')}</b><div class="text-sm mt-1">${esc(c.text)}</div></div>`).join('')||'<p class="muted">No comments yet.</p>'}</div><textarea id="commentText" class="w-full bg-[#191919] border border-[#333] rounded-xl p-3" rows="3" placeholder="Write a comment…"></textarea><div class="flex justify-end mt-3">${button('Comment','submitComment')}</div></section>`;$('closeCommentPanel').onclick=closeModal;$('commentBackdrop').onclick=closeModal;$('submitComment').onclick=async()=>{const text=$('commentText').value.trim();if(!text)return toast('Write a comment first','error');await updateDoc(doc(db,'posts',id),{comments:arrayUnion({uid:currentUser.uid,name:isAdmin?'SellerFlow':(currentProfile.name||'SellerFlow user'),createdAt:Date.now(),text})});closeModal();toast('Comment added','success')}}
 async function saveSoundForUser(id,p){try{const soundId=p.soundId||id,originId=p.soundOriginPostId||id,originUid=p.soundOriginatorId||p.sellerId,origin=sellerProfile(originUid);await setDoc(doc(db,'savedSounds',currentUser.uid,'items',soundId),{soundId,originPostId:originId,originatorId:originUid,originatorName:origin.name||origin.username||'SellerFlow creator',soundName:p.soundName||'Original sound',savedAt:serverTimestamp()},{merge:true});localStorage.setItem('sellerflow_active_sound',JSON.stringify({soundId,originPostId:originId,originatorId:originUid,soundName:p.soundName||'Original sound',originatorName:origin.name||origin.username||'SellerFlow creator'}));toast(`Sound saved — original by ${origin.name||origin.username||'SellerFlow creator'}`,'success')}catch(e){toast(errMsg(e),'error')}}
 function getActiveSound(){try{return JSON.parse(localStorage.getItem('sellerflow_active_sound')||'null')}catch{return null}}
@@ -1145,7 +1183,9 @@ async function init(){
     onAuthStateChanged(auth,async u=>{
       if(!u){
         currentUser=null;currentProfile=null;isAdmin=false;
-        showLanding();
+        showApp();
+        navigate('feed');
+        ready();
         return;
       }
       try{
@@ -1163,7 +1203,7 @@ async function init(){
   }catch(e){
     console.error('Firebase initialization failed:',e);
     $('loadingText').textContent='Firebase could not start: '+errMsg(e);
-    setTimeout(()=>{hide($('loading'));showLanding()},1200);
+    setTimeout(()=>{hide($('loading'));showApp();navigate('feed');ready()},1200);
   }
 }
 init();
