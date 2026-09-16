@@ -1254,9 +1254,38 @@ init();
   }
 
   /* Ranked For You: freshness + consistency + followers + verification + safety + content type + engagement + posting time. */
-  renderFeed=async function(targetPostId){
+  renderFeed=async function(targetPostId, options){
     const posts=await getRankedPosts();
-    $('page').innerHTML=`<div class="feed-top-bar flex items-center justify-between px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-lg font-black tracking-tight text-white">For You</h1><span class="text-[11px] gold bg-[#1e170c] border border-[#3f2e14] px-2 py-0.5 rounded-full whitespace-nowrap">Ranked feed</span></div><div class="flex items-center gap-2 shrink-0"><button type="button" id="feedPrevBtn" class="btn px-2.5 py-1 text-xs rounded-lg border border-[#333] hover:bg-[#222]" title="Previous Reel">▲</button><button type="button" id="feedNextBtn" class="btn px-2.5 py-1 text-xs rounded-lg border border-[#333] hover:bg-[#222]" title="Next Reel">▼</button><button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black">＋ Upload</button></div></div><div class="reel-feed flex-1 min-h-0 h-full w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">${posts.length?posts.map(postCard).join(''):`<div class="h-full flex items-center justify-center p-6"><div class="card p-8 text-center max-w-md"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2 text-sm">Share a safe photo or video to start building your audience.</p><button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button></div></div>`}</div>`;
+    let feedPosts=[...posts];
+    if(targetPostId && !feedPosts.some(p=>p.id===targetPostId)){
+      try{
+        const s=await getDoc(doc(db,'posts',targetPostId));
+        if(snapshotExists(s))feedPosts.unshift({id:s.id,...s.data()});
+      }catch(_){}
+    } else if(targetPostId){
+      const idx=feedPosts.findIndex(p=>p.id===targetPostId);
+      if(idx>0){
+        const [tp]=feedPosts.splice(idx,1);
+        feedPosts.unshift(tp);
+      }
+    }
+    const fromProfile=options?.fromProfile;
+    $('page').innerHTML=`<div class="feed-top-bar flex items-center justify-between px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10">
+      <div class="flex items-center gap-2 min-w-0">
+        ${fromProfile?`<button type="button" id="feedBackProfile" class="border border-[#333] hover:border-gold px-2.5 py-1 rounded-xl text-xs font-bold mr-1">← Profile</button>`:''}
+        <h1 class="text-lg font-black tracking-tight text-white">For You</h1>
+        <span class="text-[11px] gold bg-[#1e170c] border border-[#3f2e14] px-2 py-0.5 rounded-full whitespace-nowrap">Ranked feed</span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button type="button" id="feedPrevBtn" class="btn px-2.5 py-1 text-xs rounded-lg border border-[#333] hover:bg-[#222]" title="Previous Reel">▲</button>
+        <button type="button" id="feedNextBtn" class="btn px-2.5 py-1 text-xs rounded-lg border border-[#333] hover:bg-[#222]" title="Next Reel">▼</button>
+        <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black">＋ Upload</button>
+      </div>
+    </div>
+    <div class="reel-feed flex-1 min-h-0 h-full w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
+      ${feedPosts.length?feedPosts.map(postCard).join(''):`<div class="h-full flex items-center justify-center p-6"><div class="card p-8 text-center max-w-md"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2 text-sm">Share a safe photo or video to start building your audience.</p><button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button></div></div>`}
+    </div>`;
+    $('feedBackProfile')?.addEventListener('click',()=>navigate('profile'));
     $('openFeedUpload')?.addEventListener('click',openPostModal);
     $('openFeedUploadEmpty')?.addEventListener('click',openPostModal);
     document.querySelectorAll('[data-post-action]').forEach(b=>b.onclick=postAction);
@@ -1295,8 +1324,21 @@ init();
     const isMine=(p.sellerId===currentUser.uid)||isAdmin;
     const curPrivacy=p.privacy||'public';
     modal(`<div>
-      <h2 class="text-xl font-black">Post options</h2>
-      <p class="muted text-xs mt-1">Manage visibility, reach and controls for this post.</p>
+      <div class="flex items-center justify-between pb-3 border-b border-[#292929]">
+        <div>
+          <h2 class="text-xl font-black">Post options</h2>
+          <p class="muted text-xs mt-0.5">Manage visibility, caption, and controls for this post.</p>
+        </div>
+        <button type="button" data-close-modal class="w-8 h-8 rounded-full bg-[#1e1e1e] hover:bg-[#2c2c2c] text-zinc-400 hover:text-white flex items-center justify-center text-sm" title="Close">✕</button>
+      </div>
+
+      ${isMine ? `
+      <div class="mt-4 p-4 rounded-2xl bg-[#171717] border border-[#2c2c2c]">
+        <div class="font-bold text-sm text-zinc-200 mb-1">Edit caption</div>
+        <textarea id="editPostCaption" rows="3" class="w-full p-3 rounded-xl bg-[#121212] border border-[#333] text-sm text-white focus:border-gold outline-none" placeholder="Write a caption…">${esc(p.text||'')}</textarea>
+        <button id="saveCaptionBtn" class="mt-2.5 w-full bg-gold text-black py-2 rounded-xl font-bold text-xs hover:brightness-110">Save caption</button>
+      </div>
+
       <div class="mt-4 p-4 rounded-2xl bg-[#171717] border border-[#2c2c2c]">
         <div class="font-bold text-sm text-zinc-200 mb-2">Who can watch this post</div>
         <div class="space-y-2">
@@ -1322,28 +1364,51 @@ init();
             </div>
           </label>
         </div>
-        <button id="savePrivacyBtn" class="mt-3 w-full bg-gold text-black py-2.5 rounded-xl font-bold text-sm">Save privacy setting</button>
+        <button id="savePrivacyBtn" class="mt-3 w-full border border-[#444] hover:border-gold text-white py-2 rounded-xl font-bold text-xs bg-[#1a1a1a]">Save privacy setting</button>
       </div>
-      ${isMine?`
+
       <div class="mt-4 p-4 rounded-2xl bg-[#191111] border border-red-900/40">
         <div class="font-bold text-sm text-red-400">Delete post</div>
         <p class="text-xs text-zinc-400 mt-1">Permanently remove this video or photo from SellerFlow.</p>
-        <button id="triggerDeleteBtn" class="mt-3 w-full border border-red-800/60 hover:bg-red-950/40 text-red-400 py-2.5 rounded-xl font-bold text-sm">🗑️ Delete this post</button>
+        <button id="triggerDeleteBtn" class="mt-3 w-full border border-red-800/60 hover:bg-red-950/40 text-red-400 py-2 rounded-xl font-bold text-xs">🗑️ Delete this post</button>
       </div>
-      `:''}
+      ` : `
+      <div class="mt-4 p-4 rounded-2xl bg-[#171717] border border-[#2c2c2c] text-center">
+        <div class="text-3xl mb-2">🛡️</div>
+        <div class="font-bold text-sm text-white">Community post</div>
+        <p class="text-xs muted mt-1">Only the original creator (@${esc(sellerProfile(p.sellerId).username||'seller')}) can edit or delete this post.</p>
+        <div class="flex gap-2 mt-4 justify-center">
+          <button type="button" id="sharePostFromOptions" class="px-4 py-2 bg-[#222] hover:bg-[#333] rounded-xl text-xs font-bold text-white border border-[#444]">Share link</button>
+          <button type="button" id="savePostFromOptions" class="px-4 py-2 bg-gold text-black rounded-xl text-xs font-bold">Save post</button>
+        </div>
+      </div>
+      `}
     </div>`);
-    $('savePrivacyBtn').onclick=async()=>{
-      const chosen=document.querySelector('input[name="postPrivacyRadio"]:checked')?.value||'public';
-      try{
-        await updateDoc(doc(db,'posts',id),{privacy:chosen,updatedAt:serverTimestamp()});
-        toast('Post privacy updated','success');
-        closeModal();
-        if(currentPage==='feed')navigate('feed',id);
-        else if(currentPage==='profile')renderProfile();
-      }catch(e){toast(errMsg(e),'error')}
-    };
-    if($('triggerDeleteBtn')){
-      $('triggerDeleteBtn').onclick=()=>{
+
+    if(isMine){
+      $('saveCaptionBtn')?.addEventListener('click',async()=>{
+        const newCaption=$('editPostCaption')?.value.trim()||'';
+        try{
+          await updateDoc(doc(db,'posts',id),{text:newCaption,updatedAt:serverTimestamp()});
+          toast('Caption updated!','success');
+          closeModal();
+          if(currentPage==='feed')navigate('feed',id);
+          else if(currentPage==='profile')renderProfile();
+        }catch(e){toast(errMsg(e),'error')}
+      });
+
+      $('savePrivacyBtn')?.addEventListener('click',async()=>{
+        const chosen=document.querySelector('input[name="postPrivacyRadio"]:checked')?.value||'public';
+        try{
+          await updateDoc(doc(db,'posts',id),{privacy:chosen,updatedAt:serverTimestamp()});
+          toast('Post privacy updated','success');
+          closeModal();
+          if(currentPage==='feed')navigate('feed',id);
+          else if(currentPage==='profile')renderProfile();
+        }catch(e){toast(errMsg(e),'error')}
+      });
+
+      $('triggerDeleteBtn')?.addEventListener('click',()=>{
         modal(`<div>
           <div class="text-3xl mb-2 text-red-400">⚠️</div>
           <h2 class="text-xl font-bold text-white">Delete this post?</h2>
@@ -1362,7 +1427,21 @@ init();
             else if(currentPage==='profile')renderProfile();
           }catch(e){toast(errMsg(e),'error')}
         };
-      };
+      });
+    } else {
+      $('sharePostFromOptions')?.addEventListener('click',()=>{
+        closeModal();
+        const url=location.href.split('#')[0]+'#post='+id;
+        if(navigator.clipboard)navigator.clipboard.writeText(url);
+        toast('Post link copied','success');
+      });
+      $('savePostFromOptions')?.addEventListener('click',async()=>{
+        closeModal();
+        try{
+          await updateDoc(doc(db,'posts',id),{saves:arrayUnion(currentUser.uid)});
+          toast('Post saved to bookmarks','success');
+        }catch(e){toast(errMsg(e),'error')}
+      });
     }
   }
 
@@ -2025,13 +2104,44 @@ init();
   /* Replace feed cards so both images and videos can recover from private-bucket/public-URL failures. */
   postCard=function(p){
     const s=p.platformLabel==='SellerFlow'&&p.isAdminPost?{...sellerProfile(p.sellerId),name:'SellerFlow',username:'sellerflow',verified:true}:sellerProfile(p.sellerId);
-    const liked=(p.likes||[]).includes(currentUser.uid),saved=(p.saves||[]).includes(currentUser.uid);let media='';
+    const liked=(p.likes||[]).includes(currentUser?.uid),saved=(p.saves||[]).includes(currentUser?.uid),reposted=(p.reposts||[]).includes(currentUser?.uid);let media='';
     if(p.mediaUrl){
       if(p.mediaType?.startsWith('video'))media=`<video class="reel-media reel-video" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" data-post-id="${p.id}" playsinline webkit-playsinline loop preload="metadata" poster="${esc(p.thumbnailUrl||'')}" onerror="window.__sfMediaFallback(this)"></video><button type="button" class="reel-play-toggle" data-video-toggle="${p.id}">▶</button><div class="reel-sound-label">🔊 Sound</div>`;
       else media=`<img loading="lazy" class="reel-media" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" alt="SellerFlow post" onerror="window.__sfMediaFallback(this)">`;
     }
     const soundText=p.soundName||'Original sound';
-    return `<article class="reel-card" data-reel-id="${p.id}"><div class="reel-media-wrap">${media||'<div class="absolute inset-0 flex items-center justify-center text-6xl">🛍️</div>'}</div><div class="reel-shade"></div><div class="reel-actions"><button class="reel-action" data-post-action="like" data-id="${p.id}" title="Like">${liked?'❤️':'🤍'}<div class="text-[10px] mt-0.5">${p.likes?.length||0}</div></button><button class="reel-action" data-post-action="comment" data-id="${p.id}" title="Comment">💬<div class="text-[10px] mt-0.5">${p.comments?.length||0}</div></button><button class="reel-action" data-post-action="save" data-id="${p.id}" title="Save">🔖<div class="text-[10px] mt-0.5">${p.saves?.length||0}</div></button>${p.mediaType?.startsWith('video')?`<button class="reel-action" data-post-action="sound" data-id="${p.id}" title="Save sound">🎵</button>`:''}<button class="reel-action" data-post-action="share" data-id="${p.id}" title="Share">↗</button></div><div class="reel-content"><div class="flex items-center gap-3"><button data-open-seller="${p.sellerId}">${avatar(s)}</button><button data-open-seller="${p.sellerId}" class="text-left"><b>${esc(s.name||s.username)}</b>${verifyBadge(s)}<div class="muted text-xs">@${esc(s.username||'seller')} · ${new Date(ts(p.createdAt)||Date.now()).toLocaleDateString('en-GH',{day:'numeric',month:'short'})}</div></button></div>${p.text?`<p class="mt-4 text-sm md:text-base whitespace-pre-wrap leading-relaxed max-w-2xl">${esc(p.text)}</p>`:''}<div class="mt-3 flex flex-wrap items-center gap-2"><span class="sound-chip">🎵 ${esc(soundText)}</span>${p.soundOriginName?`<span class="post-origin">Original by ${esc(p.soundOriginName)}</span>`:''}</div></div></article>`;
+    const aiBadge=p.isAiGenerated?`<span class="text-[10px] gold bg-black/70 px-2 py-0.5 rounded-full border border-gold/40">✨ AI-generated</span>`:'';
+    const privacyBadge=p.privacy==='private'?'<span class="text-[10px] text-zinc-300 bg-black/70 px-2 py-0.5 rounded-full border border-zinc-700">🔒 Only me</span>':p.privacy==='followers'?'<span class="text-[10px] text-gold bg-black/70 px-2 py-0.5 rounded-full border border-gold/40">👥 Followers</span>':'';
+
+    return `<article class="reel-card" data-reel-id="${p.id}">
+      <div class="reel-media-wrap">${media||'<div class="absolute inset-0 flex items-center justify-center text-6xl">🛍️</div>'}</div>
+      <div class="reel-shade"></div>
+      <div class="reel-actions">
+        <button class="reel-action" data-post-action="like" data-id="${p.id}" title="Like">${liked?'❤️':'🤍'}<div class="text-[10px] mt-0.5">${p.likes?.length||0}</div></button>
+        <button class="reel-action" data-post-action="comment" data-id="${p.id}" title="Comment">💬<div class="text-[10px] mt-0.5">${p.comments?.length||0}</div></button>
+        <button class="reel-action" data-post-action="repost" data-id="${p.id}" title="Repost">${reposted?'🔁':'🔄'}<div class="text-[10px] mt-0.5">${p.reposts?.length||0}</div></button>
+        <button class="reel-action" data-post-action="save" data-id="${p.id}" title="Save">${saved?'🔖':'🏷️'}<div class="text-[10px] mt-0.5">${p.saves?.length||0}</div></button>
+        ${p.mediaType?.startsWith('video')?`<button class="reel-action" data-post-action="sound" data-id="${p.id}" title="Save sound">🎵</button>`:''}
+        <button class="reel-action" data-post-action="share" data-id="${p.id}" title="Share">↗</button>
+        <button class="reel-action" data-post-action="options" data-id="${p.id}" title="Options">⋯</button>
+      </div>
+      <div class="reel-content">
+        <div class="flex items-center gap-3">
+          <button data-open-seller="${p.sellerId}">${avatar(s)}</button>
+          <button data-open-seller="${p.sellerId}" class="text-left">
+            <b>${esc(s.name||s.username)}</b>${verifyBadge(s)}
+            <div class="muted text-xs">@${esc(s.username||'seller')} · ${new Date(ts(p.createdAt)||Date.now()).toLocaleDateString('en-GH',{day:'numeric',month:'short'})}</div>
+          </button>
+        </div>
+        ${p.text?`<p class="mt-4 text-sm md:text-base whitespace-pre-wrap leading-relaxed max-w-2xl">${esc(p.text)}</p>`:''}
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          <span class="sound-chip">🎵 ${esc(soundText)}</span>
+          ${p.soundOriginName?`<span class="post-origin">Original by ${esc(p.soundOriginName)}</span>`:''}
+          ${aiBadge}
+          ${privacyBadge}
+        </div>
+      </div>
+    </article>`;
   };
 
   /* Admin preview uses the same fallback for images and videos and shows a clear review state. */
