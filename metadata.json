@@ -1,0 +1,8 @@
+{
+  "name": "SellerFlow",
+  "description": "Ghana's social selling marketplace where sellers build stores, publish products, share video/photo content, and manage orders.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
