@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "node server.js",
-    "build": "node -e \"console.log('Build complete')\"",
+    "build": "node -e \"import('node:fs').then(fs=>{fs.mkdirSync('dist',{recursive:true});fs.copyFileSync('index.html','dist/index.html');if(fs.existsSync('_redirects'))fs.copyFileSync('_redirects','dist/_redirects');console.log('Build complete: static assets ready in dist/');})\"",
     "start": "node server.js",
     "lint": "node -e \"console.log('Lint passed')\""
   },
