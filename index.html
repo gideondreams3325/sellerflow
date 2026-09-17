@@ -2214,57 +2214,97 @@ init();
     };
   }
 
-  /* SellerFlow AI Moderation Layer: Returns ONLY 'SAFE', 'REVIEW', or 'VIOLATION' */
+  /* Trusted Server-Side SellerFlow AI Moderation Layer: Returns ONLY 'SAFE', 'REVIEW', or 'VIOLATION' from backend */
   async function sellerFlowAiModerator(input){
-    const res = await evaluateSellerFlowAiModeration(input);
-    return res.verdict; // Returns strictly 'SAFE', 'REVIEW', or 'VIOLATION'
+    try{
+      const payload = {
+        text: typeof input === 'string' ? input : (input?.text || ''),
+        fileName: input?.file?.name || '',
+        mediaUrl: input?.mediaUrl || '',
+        mediaType: input?.mediaType || ''
+      };
+      const res = await fetch('/api/moderation/inspect-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if(res.ok){
+        const data = await res.json();
+        return data.verdict || 'REVIEW';
+      }
+    }catch(e){
+      console.warn('Server moderation endpoint error; defaulting to REVIEW', e);
+    }
+    return 'REVIEW';
   }
   window.sellerFlowAiModerator = sellerFlowAiModerator;
   window.evaluateSellerFlowAiModeration = evaluateSellerFlowAiModeration;
   window.GHANA_MODERATION_RULES = GHANA_MODERATION_RULES;
 
-  /* Centralized AI post publishing executor */
+  /* Centralized AI post publishing executor: Decision governed by trusted server-side moderation */
   async function executeSellerFlowAiPostPublish(postData, uploadFile, videoElement){
-    const evalResult = await evaluateSellerFlowAiModeration({
-      text: postData.text || '',
-      file: uploadFile,
-      mediaUrl: postData.mediaUrl || '',
-      mediaType: postData.mediaType || '',
-      videoElement: videoElement
-    });
-    const verdict = evalResult.verdict; // 'SAFE', 'REVIEW', or 'VIOLATION'
+    // Enforce initial non-public status: client is not trusted to mark its own post SAFE or published
+    postData.status = 'hidden';
+    postData.reviewStatus = 'under_review';
+    postData.safeContent = false;
 
-    if(verdict === 'VIOLATION'){
-      // Immediately hide the post from public view
-      postData.status = 'hidden';
-      postData.reviewStatus = 'violation';
-      postData.hiddenFromPublic = true;
-      postData.violationDetected = true;
-      postData.violationRule = evalResult.detectedRule;
-      postData.violationReason = evalResult.reason;
-      postData.violationConfidence = evalResult.confidence;
-      postData.hiddenAt = serverTimestamp();
-      postData.safeContent = false;
-    } else if(verdict === 'REVIEW'){
-      // Keep uncertain cases as REVIEW for Admin
-      postData.status = 'published';
-      postData.reviewStatus = 'under_review';
-      postData.needsAdminReview = true;
-      postData.reviewRule = evalResult.detectedRule;
-      postData.reviewReason = evalResult.reason;
-      postData.reviewConfidence = evalResult.confidence;
-      postData.safeContent = true;
-    } else {
-      // SAFE
-      postData.status = 'published';
-      postData.reviewStatus = 'safe';
-      postData.safeContent = true;
-    }
-
+    // 1. Initial post document created in Firestore in under_review status
     const ref = await addDoc(collection(db, 'posts'), postData);
 
+    // 2. Query trusted server-side moderation endpoint to inspect the post
+    let evalResult = null;
+    let verdict = 'REVIEW';
+    try{
+      const res = await fetch('/api/moderation/inspect-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: ref.id,
+          sellerId: currentUser.uid,
+          text: postData.text || '',
+          fileName: uploadFile?.name || '',
+          mediaUrl: postData.mediaUrl || '',
+          mediaType: postData.mediaType || ''
+        })
+      });
+      if(res.ok){
+        const data = await res.json();
+        verdict = data.verdict || 'REVIEW';
+        evalResult = data.evalResult || data;
+      }
+    }catch(err){
+      console.warn('Server moderation inspection error; defaulting to secure REVIEW queue', err);
+    }
+
+    if(!evalResult){
+      evalResult = {
+        verdict: 'REVIEW',
+        detectedRule: 'PENDING_SERVER_INSPECTION',
+        reason: 'Post queued for SellerFlow safety review.',
+        confidence: 0.70,
+        moderatedBy: 'SellerFlow AI Server'
+      };
+      verdict = 'REVIEW';
+    }
+
+    // 3. Apply server moderation outcome
     if(verdict === 'VIOLATION'){
-      // Send the user a warning
+      // VIOLATION must hide the post
+      await updateDoc(doc(db, 'posts', ref.id), {
+        status: 'hidden',
+        reviewStatus: 'violation',
+        hiddenFromPublic: true,
+        violationDetected: true,
+        violationRule: evalResult.detectedRule,
+        violationReason: evalResult.reason,
+        violationConfidence: evalResult.confidence,
+        moderatedBy: 'SellerFlow AI Server',
+        moderationToken: evalResult.moderationToken || '',
+        hiddenAt: serverTimestamp(),
+        safeContent: false
+      });
+
+      // Send the user a warning notification
       try{
         await addDoc(collection(db, 'notifications'), {
           recipientId: currentUser.uid,
@@ -2294,7 +2334,9 @@ init();
           status: 'violation_hidden',
           postText: postData.text || '',
           mediaType: postData.mediaType || '',
-          mediaUrl: postData.mediaUrl || ''
+          mediaUrl: postData.mediaUrl || '',
+          moderatedBy: 'SellerFlow AI Server',
+          moderationToken: evalResult.moderationToken || ''
         });
       }catch(arErr){ console.warn('Admin review record error', arErr); }
 
@@ -2316,8 +2358,29 @@ init();
         });
       }catch(_){}
 
-      // DO NOT permanently delete the account! The account is kept intact.
-      // DO NOT remove existing features!
+    } else if(verdict === 'REVIEW'){
+      // REVIEW must remain hidden/under review until Admin review
+      await updateDoc(doc(db, 'posts', ref.id), {
+        status: 'hidden',
+        reviewStatus: 'under_review',
+        needsAdminReview: true,
+        reviewRule: evalResult.detectedRule,
+        reviewReason: evalResult.reason,
+        reviewConfidence: evalResult.confidence,
+        moderatedBy: 'SellerFlow AI Server',
+        moderationToken: evalResult.moderationToken || '',
+        safeContent: false
+      });
+    } else {
+      // SAFE can become publicly visible
+      await updateDoc(doc(db, 'posts', ref.id), {
+        status: 'published',
+        reviewStatus: 'safe',
+        safeContent: true,
+        moderatedBy: 'SellerFlow AI Server',
+        moderationToken: evalResult.moderationToken || '',
+        moderatedAt: serverTimestamp()
+      });
     }
 
     return { ref, verdict, evalResult };

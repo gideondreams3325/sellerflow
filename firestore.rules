@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // Global security helpers
     function isSignedIn() {
       return request.auth != null;
     }
@@ -13,37 +13,116 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email.lower() in ['gideondreams99@gmail.com', 'gideondreams3325@gmail.com', 'sjssaloon@gmail.com'] ||
+        request.auth.token.email.lower() in [
+          'gideondreams99@gmail.com',
+          'gideondreams3325@gmail.com',
+          'sjssaloon@gmail.com'
+        ] ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'admin')
       );
     }
 
-    // 1. Private User Profiles & Accounts
+    // 1. Private User Profiles & KYC Identity Data
+    // - Only the account owner and admins can read private KYC documents (Ghana Card, etc.)
+    // - Regular users CANNOT self-assign role: 'admin' or verificationStatus: 'approved'
+    // - Only admins can verify or approve sellers
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId) || isAdmin();
-      allow update: if isOwner(userId) || isAdmin();
+      allow create: if (isOwner(userId) || isAdmin()) && (
+        isAdmin() || (
+          request.resource.data.get('role', 'user') != 'admin' &&
+          request.resource.data.get('verified', false) == false &&
+          request.resource.data.get('verificationStatus', 'none') in ['none', 'pending']
+        )
+      );
+      allow update: if (isOwner(userId) || isAdmin()) && (
+        isAdmin() || (
+          // Non-admins cannot promote themselves to admin
+          request.resource.data.get('role', 'user') == resource.data.get('role', 'user') &&
+          // Non-admins cannot self-verify
+          request.resource.data.get('verified', false) == resource.data.get('verified', false) &&
+          // Non-admins cannot approve their own verification
+          request.resource.data.get('verificationStatus', 'none') in [resource.data.get('verificationStatus', 'none'), 'pending']
+        )
+      );
       allow delete: if isAdmin();
     }
 
-    // 2. Public Profiles & Social Identity
+    // 2. Public Storefront Profiles & Social Counters
+    // - Anyone can view public profiles
+    // - Profile owners can edit their own bio, avatar, name, and presence
+    // - Non-owners can ONLY update followers array/counter
+    // - PublicProfiles CANNOT be used to grant admin status or self-assign verification badges
     match /publicProfiles/{userId} {
       allow read: if true;
-      allow create: if isOwner(userId) || isAdmin();
-      allow update: if isSignedIn(); // Allows following/followers updates, presence, and profile edits
+      allow create: if (isOwner(userId) || isAdmin()) && (
+        isAdmin() || request.resource.data.get('verified', false) == false
+      );
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        // Profile owner updating their details without tampering with verified badge
+        (
+          isOwner(userId) &&
+          request.resource.data.get('verified', false) == resource.data.get('verified', false)
+        ) ||
+        // Other users interacting purely via follow/unfollow
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followers', 'followersCount'])
+        )
+      );
       allow delete: if isAdmin();
     }
 
-    // 3. For You Feed Posts & Videos
+    // 3. For You Feed Posts & Video Reels
+    // - Anyone can view published posts
+    // - Only post author or admin can edit/delete their posts
+    // - The client is NOT trusted to mark its own post SAFE on create
+    // - Posts become published only after verified safe by SellerFlow AI Server
+    // - Authors CANNOT change sellerId or reinstate posts hidden for violations
+    // - Other users can ONLY interact (like, comment, save, view, share, repost)
     match /posts/{postId} {
       allow read: if true;
       allow create: if isSignedIn() && (
         request.resource.data.sellerId == request.auth.uid || isAdmin()
+      ) && (
+        isAdmin() || (
+          request.resource.data.get('status', 'hidden') == 'hidden' &&
+          request.resource.data.get('reviewStatus', 'under_review') == 'under_review' &&
+          request.resource.data.get('safeContent', false) == false
+        )
       );
-      // Allow author/admin full updates or signed-in users to interact (likes, comments, reposts, saves, views)
-      allow update: if isSignedIn();
-      allow delete: if (resource.data.sellerId == request.auth.uid) || isAdmin();
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        // Post author updating post content or transitioning after server verification
+        (
+          resource.data.sellerId == request.auth.uid &&
+          request.resource.data.sellerId == resource.data.sellerId &&
+          // Cannot reinstate posts hidden for violations
+          resource.data.get('reviewStatus', '') != 'violation' &&
+          request.resource.data.get('reviewStatus', '') != 'violation' &&
+          // Author can transition to published only when marked safe by SellerFlow AI Server
+          (
+            request.resource.data.get('status', '') == resource.data.get('status', '') ||
+            (
+              request.resource.data.get('status', '') == 'published' &&
+              request.resource.data.get('reviewStatus', '') == 'safe' &&
+              request.resource.data.get('moderatedBy', '') == 'SellerFlow AI Server'
+            ) ||
+            request.resource.data.get('status', '') == 'hidden'
+          )
+        ) ||
+        // Community interaction: other users can ONLY modify social interaction counters/arrays
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'likes', 'comments', 'saves', 'views', 'shares', 'reposts'
+          ]) &&
+          request.resource.data.sellerId == resource.data.sellerId
+        )
+      );
+      allow delete: if isSignedIn() && (
+        resource.data.sellerId == request.auth.uid || isAdmin()
+      );
     }
 
     // 4. Marketplace Products & Catalog
@@ -52,12 +131,18 @@ service cloud.firestore {
       allow create: if isSignedIn() && (
         request.resource.data.sellerId == request.auth.uid || isAdmin()
       );
-      allow update, delete: if isSignedIn() && (
+      allow update: if isSignedIn() && (
+        isAdmin() || (
+          resource.data.sellerId == request.auth.uid &&
+          request.resource.data.sellerId == resource.data.sellerId
+        )
+      );
+      allow delete: if isSignedIn() && (
         resource.data.sellerId == request.auth.uid || isAdmin()
       );
     }
 
-    // 5. Stores & Vendor Storefronts
+    // 5. Vendor Storefronts
     match /stores/{sellerId} {
       allow read: if true;
       allow create, update: if isOwner(sellerId) || isAdmin();
@@ -77,26 +162,45 @@ service cloud.firestore {
         request.resource.data.buyerId == request.auth.uid || isAdmin()
       );
       allow update: if isSignedIn() && (
-        resource.data.buyerId == request.auth.uid ||
-        resource.data.sellerId == request.auth.uid ||
-        (resource.data.sellerIds is list && request.auth.uid in resource.data.sellerIds) ||
-        isAdmin()
+        isAdmin() ||
+        // Buyer can cancel or update notes
+        (
+          resource.data.buyerId == request.auth.uid &&
+          request.resource.data.buyerId == resource.data.buyerId &&
+          request.resource.data.sellerId == resource.data.sellerId &&
+          request.resource.data.total == resource.data.total
+        ) ||
+        // Seller can update order status
+        (
+          (resource.data.sellerId == request.auth.uid || (resource.data.sellerIds is list && request.auth.uid in resource.data.sellerIds)) &&
+          request.resource.data.buyerId == resource.data.buyerId &&
+          request.resource.data.total == resource.data.total
+        )
       );
       allow delete: if isAdmin();
     }
 
-    // 7. Store Reviews & Ratings
+    // 7. Store Reviews & Verified Ratings
     match /reviews/{reviewId} {
       allow read: if true;
       allow create: if isSignedIn() && (
         request.resource.data.reviewerId == request.auth.uid || isAdmin()
       );
-      allow update, delete: if isSignedIn() && (
+      allow update: if isSignedIn() && (
+        isAdmin() || (
+          resource.data.reviewerId == request.auth.uid &&
+          request.resource.data.reviewerId == resource.data.reviewerId &&
+          request.resource.data.sellerId == resource.data.sellerId
+        )
+      );
+      allow delete: if isSignedIn() && (
         resource.data.reviewerId == request.auth.uid || isAdmin()
       );
     }
 
-    // 8. In-App Notifications & Broadcasts
+    // 8. In-App Notifications, Order Alerts & Policy Warnings
+    // - Users CANNOT create fake admin broadcasts or fake policy warnings targeting other users
+    // - Only admins can issue official admin warnings and broadcasts
     match /notifications/{notificationId} {
       allow read: if isSignedIn() && (
         resource == null ||
@@ -106,27 +210,55 @@ service cloud.firestore {
         resource.data.userId == 'all' ||
         isAdmin()
       );
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && (
-        resource == null ||
-        resource.data.recipientId == request.auth.uid ||
-        resource.data.recipientId == 'all' ||
-        resource.data.userId == request.auth.uid ||
-        resource.data.userId == 'all' ||
-        isAdmin()
+      allow create: if isSignedIn() && (
+        isAdmin() ||
+        // Users can receive their own system-generated warnings
+        (
+          request.resource.data.recipientId == request.auth.uid &&
+          request.resource.data.get('userId', request.auth.uid) == request.auth.uid
+        ) ||
+        // Non-admins notifying others cannot spoof admin identity or issue policy warnings
+        (
+          request.resource.data.recipientId != request.auth.uid &&
+          request.resource.data.get('fromAdmin', false) == false &&
+          request.resource.data.get('type', '') != 'warning' &&
+          request.resource.data.get('type', '') != 'admin_broadcast' &&
+          request.resource.data.get('senderName', '') != 'SellerFlow' &&
+          request.resource.data.get('senderName', '') != 'SellerFlow Safety AI' &&
+          request.resource.data.get('senderName', '') != 'Admin'
+        )
       );
-      allow delete: if isAdmin();
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (
+          (resource.data.recipientId == request.auth.uid || resource.data.userId == request.auth.uid) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+        )
+      );
+      allow delete: if isAdmin() || (
+        isSignedIn() && (resource.data.recipientId == request.auth.uid || resource.data.userId == request.auth.uid)
+      );
     }
 
-    // 9. Scam & Safety Reports
+    // 9. Community Scam & Safety Reports
+    // Regular users can report content/users; only admins can review or resolve reports
     match /scamReports/{reportId} {
-      allow create: if isSignedIn();
+      allow create: if isSignedIn() && (
+        isAdmin() ||
+        request.resource.data.get('reporterId', request.auth.uid) == request.auth.uid
+      );
       allow read, update, delete: if isAdmin();
     }
 
     // 9b. AI Admin Review Records & Moderation Logs
+    // ONLY trusted server/admin processes can create or manage AI moderation audit records
     match /adminReviews/{reviewId} {
-      allow create: if isSignedIn();
+      allow create: if isAdmin() || (
+        isSignedIn() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.get('status', '') == 'violation_hidden' &&
+        request.resource.data.get('moderatedBy', '') == 'SellerFlow AI Server'
+      );
       allow read, update, delete: if isAdmin();
     }
 
@@ -145,11 +277,15 @@ service cloud.firestore {
       );
       allow delete: if isAdmin();
 
-      // Messages subcollection
+      // Messages subcollection: strictly accessible only by conversation participants
       match /messages/{messageId} {
-        allow read: if isSignedIn();
+        allow read: if isSignedIn() && (
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants ||
+          isAdmin()
+        );
         allow create: if isSignedIn() && (
-          request.resource.data.senderId == request.auth.uid
+          request.resource.data.senderId == request.auth.uid &&
+          (request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants || isAdmin())
         );
         allow update, delete: if isAdmin();
       }
@@ -163,7 +299,10 @@ service cloud.firestore {
     // 12. Audio Sounds Catalog
     match /sounds/{soundId} {
       allow read: if true;
-      allow create, update: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        isAdmin() || resource.data.get('originatorId', '') == request.auth.uid
+      );
       allow delete: if isAdmin();
     }
 
