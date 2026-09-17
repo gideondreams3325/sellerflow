@@ -6682,57 +6682,458 @@ init();
 </script>
 
 <style>
-@media(min-width:641px){.sf-search-btn{min-width:42px}}.sf-search-results{max-height:65vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}.sf-result{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #292929;border-radius:14px;background:#151515;min-width:0}.sf-result:hover{border-color:#f5b942}.chat-layout{display:grid;grid-template-columns:300px 1fr;gap:16px;min-height:480px}.chat-list{max-height:620px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}.chat-window{display:flex;flex-direction:column;min-height:360px;height:100%}.chat-messages{flex:1 1 0%;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:16px;background:#0d0d0d;border-radius:18px;border:1px solid #292929}.chat-bubble{max-width:85%;padding:10px 13px;border-radius:16px;margin:7px 0;white-space:pre-wrap;word-break:break-word}.chat-me{margin-left:auto;background:#f5b942;color:#090909;border-bottom-right-radius:5px}.chat-them{margin-right:auto;background:#1c1c1c;border-bottom-left-radius:5px}.presence-dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:2px solid #0b0b0b;flex-shrink:0}.presence-online{background:#20d46b}.presence-offline{background:#666}@media(max-width:760px){.chat-layout{grid-template-columns:1fr;min-height:0}.chat-window{min-height:360px;height:65vh}.chat-list{max-height:55vh}}
+@media(min-width:641px){.sf-search-btn{min-width:42px}}
+.sf-search-results{max-height:60vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#333 transparent}
+.sf-result-card{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #262630;border-radius:14px;background:#141418;min-width:0;transition:all .18s ease;text-align:left;width:100%}
+.sf-result-card:hover{border-color:#f5b942;background:#1b1b22;transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,0.4)}
+.sf-result-card:active{transform:scale(0.99)}
+.sf-search-tab{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:9999px;font-size:12px;font-weight:600;white-space:nowrap;transition:all .16s ease;cursor:pointer}
+.sf-search-tab.active{background:#f5b942;color:#0a0a0c;box-shadow:0 2px 10px rgba(245,185,66,0.35)}
+.sf-search-tab:not(.active){background:#16161d;color:#a1a1aa;border:1px solid #272733}
+.sf-search-tab:not(.active):hover{border-color:#3f3f4e;color:#fff;background:#1f1f2a}
+
+.chat-shell{background:#101014;border:1px solid #24242e;border-radius:20px;overflow:hidden;box-shadow:0 12px 36px rgba(0,0,0,0.45)}
+.chat-layout{display:grid;grid-template-columns:340px 1fr;min-height:560px;height:calc(100vh - 200px);max-height:760px}
+.chat-list-pane{display:flex;flex-direction:column;border-right:1px solid #23232c;background:#131318;min-width:0}
+.chat-list{flex:1 1 0%;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:8px;scrollbar-width:thin;scrollbar-color:#333 transparent}
+.chat-main-pane{display:flex;flex-direction:column;min-width:0;height:100%;background:#0d0d10}
+.chat-convo-item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid transparent;border-radius:14px;background:#17171e;width:100%;text-align:left;transition:all .16s ease;position:relative}
+.chat-convo-item:hover{background:#1d1d26;border-color:#2a2a38}
+.chat-convo-item.active-convo{background:#22222d;border-color:rgba(245,185,66,0.5);box-shadow:0 2px 12px rgba(0,0,0,0.3)}
+.chat-convo-item.active-convo::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3px;background:#f5b942;border-radius:0 4px 4px 0}
+.chat-window{display:flex;flex-direction:column;height:100%;min-height:0;overflow:hidden}
+.chat-messages{flex:1 1 0%;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:18px;background:radial-gradient(circle at top right, #16161e 0%, #0d0d10 65%);scrollbar-width:thin;scrollbar-color:#333 transparent}
+.chat-bubble{max-width:80%;padding:10px 14px;border-radius:18px;margin:5px 0;white-space:pre-wrap;word-break:break-word;position:relative}
+.chat-me{margin-left:auto;background:linear-gradient(135deg, #f7c555 0%, #f5b942 50%, #e2a129 100%);color:#080808;font-weight:500;border-bottom-right-radius:4px;box-shadow:0 3px 12px rgba(245,185,66,0.18)}
+.chat-them{margin-right:auto;background:#1c1c24;color:#f4f4f6;border:1px solid #2b2b38;border-bottom-left-radius:4px;box-shadow:0 3px 12px rgba(0,0,0,0.35)}
+.presence-dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:2px solid #0d0d10;flex-shrink:0}
+.presence-online{background:#20d46b;box-shadow:0 0 0 2px rgba(32,212,107,0.25)}
+.presence-offline{background:#666}
+.quick-chip{display:inline-flex;align-items:center;padding:5px 11px;border-radius:9999px;font-size:11px;font-weight:500;background:#181820;border:1px solid #2a2a35;color:#d4d4d8;cursor:pointer;white-space:nowrap;transition:all .14s ease}
+.quick-chip:hover{background:#22222d;border-color:#f5b942;color:#f5b942}
+@media(max-width:767px){
+  .chat-layout{grid-template-columns:1fr;min-height:500px;height:75vh;max-height:85dvh}
+  .chat-layout.in-active-chat .chat-list-pane{display:none}
+  .chat-layout:not(.in-active-chat) .chat-main-pane{display:none}
+}
 </style>
 <script>
 (function(){
   const CHAT_PREFIX='sfchat_';
   function pairId(a,b){return [a,b].sort().join('_')}
   function onlineNow(p){const t=Number(p?.lastSeenMs||0);return !!p?.online && (Date.now()-t<90000)}
-  function presence(p){return `<span class="presence-dot ${onlineNow(p)?'presence-online':'presence-offline'}"></span> <span class="text-xs ${onlineNow(p)?'text-green-400':'muted'}">${onlineNow(p)?'Online':'Offline'}</span>`}
+  function presence(p){return `<span class="presence-dot ${onlineNow(p)?'presence-online':'presence-offline'}"></span> <span class="text-xs font-medium ${onlineNow(p)?'text-green-400':'muted'}">${onlineNow(p)?'Online':'Offline'}</span>`}
+  function timeAgo(dateOrTs){
+    const ms = typeof dateOrTs === 'number' ? dateOrTs : (dateOrTs?.toMillis ? dateOrTs.toMillis() : (dateOrTs?.seconds ? dateOrTs.seconds * 1000 : 0));
+    if(!ms) return '';
+    const diff = Date.now() - ms;
+    if(diff < 60000) return 'Just now';
+    if(diff < 3600000) return Math.floor(diff/60000) + 'm';
+    if(diff < 86400000) return Math.floor(diff/3600000) + 'h';
+    if(diff < 172800000) return 'Yesterday';
+    return new Date(ms).toLocaleDateString('en-GH', { month: 'short', day: 'numeric' });
+  }
   function profileSearchText(p){return [p?.name,p?.username,p?.email,p?.bio,p?.role].filter(Boolean).join(' ').toLowerCase()}
-  async function startChat(uid){if(!currentUser){showAuthPrompt('chat with sellers');return;}if(uid===currentUser.uid)return;try{const other=sellerProfile(uid);const id=pairId(currentUser.uid,uid);const ref=doc(db,'conversations',id);const snap=await getDoc(ref);if(!snapshotExists(snap)){await setDoc(ref,{participants:[currentUser.uid,uid],createdAt:serverTimestamp(),updatedAt:serverTimestamp(),lastMessage:'',lastSenderId:''})}navigate('chats');setTimeout(()=>openConversation(id,uid,other),80)}catch(e){toast(errMsg(e),'error')}}
-  async function loadConversations(){if(!currentUser)return[];const snap=await getDocs(query(collection(db,'conversations'),where('participants','array-contains',currentUser.uid),limit(100)));return snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ts(b.updatedAt)-ts(a.updatedAt))}
+  
+  async function startChat(uid){
+    if(!currentUser){showAuthPrompt('chat with sellers');return;}
+    if(uid===currentUser.uid)return;
+    try{
+      const other=sellerProfile(uid);
+      const id=pairId(currentUser.uid,uid);
+      const ref=doc(db,'conversations',id);
+      const snap=await getDoc(ref);
+      if(!snapshotExists(snap)){
+        await setDoc(ref,{participants:[currentUser.uid,uid],createdAt:serverTimestamp(),updatedAt:serverTimestamp(),lastMessage:'',lastSenderId:''});
+      }
+      navigate('chats');
+      setTimeout(()=>openConversation(id,uid,other),80);
+    }catch(e){toast(errMsg(e),'error')}
+  }
+
+  async function loadConversations(){
+    if(!currentUser)return[];
+    const snap=await getDocs(query(collection(db,'conversations'),where('participants','array-contains',currentUser.uid),limit(100)));
+    return snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ts(b.updatedAt)-ts(a.updatedAt));
+  }
+
+  function renderChatWindowHtml(cid, uid, selected, isModal = false){
+    const isOnline = onlineNow(selected);
+    const storeObj = [...allStores.values()].find(s => s.ownerId === uid);
+    return `
+      <div class="chat-window flex flex-col h-full bg-[#0d0d11]">
+        <!-- Modern Contact Header -->
+        <div class="flex items-center justify-between gap-3 px-4 py-3.5 border-b border-[#24242e] bg-[#121217] shrink-0">
+          <div class="flex items-center gap-3 min-w-0">
+            ${isModal ? `<button type="button" id="chatModalBackBtn" class="w-8 h-8 rounded-full bg-[#1c1c24] hover:bg-[#282834] text-zinc-300 hover:text-white flex items-center justify-center text-sm font-bold border border-[#2e2e3c] transition" title="Back">←</button>` : `<button type="button" id="chatMobileBackToList" class="md:hidden w-8 h-8 rounded-full bg-[#1c1c24] hover:bg-[#282834] text-zinc-300 hover:text-white flex items-center justify-center text-sm font-bold border border-[#2e2e3c] transition" title="Conversations">←</button>`}
+            <div class="relative shrink-0 cursor-pointer" id="chatHeaderAvatar" data-chat-user-profile="${esc(uid)}">
+              ${avatar(selected,'w-10 h-10 rounded-full object-cover bg-[#222] border border-[#333]')}
+              <span class="absolute bottom-0 right-0 presence-dot ${isOnline ? 'presence-online' : 'presence-offline'}"></span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5">
+                <span class="font-bold text-sm text-white truncate">${esc(selected.name || selected.username || 'SellerFlow user')}</span>
+                ${selected.verified ? '<span class="text-xs" title="Verified Seller">✅</span>' : ''}
+              </div>
+              <div class="text-[11px] text-zinc-400 truncate flex items-center gap-1.5">
+                <span>@${esc(selected.username || 'user')}</span>
+                <span>•</span>
+                <span class="${isOnline ? 'text-green-400 font-medium' : 'text-zinc-500'}">${isOnline ? 'Active now' : 'Offline'}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            ${storeObj ? `<button type="button" id="chatViewStoreBtn" class="hidden sm:inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-[#1a1a22] hover:bg-[#242430] border border-[#2d2d3c] text-gold font-semibold transition" data-store-id="${esc(uid)}">🏪 Store</button>` : ''}
+            <button type="button" id="chatViewProfileBtn" class="hidden sm:inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-[#1a1a22] hover:bg-[#242430] border border-[#2d2d3c] text-zinc-300 hover:text-white font-medium transition" data-user-id="${esc(uid)}">Profile</button>
+            ${isModal ? `<button type="button" data-close-modal class="w-8 h-8 rounded-full bg-[#1c1c24] hover:bg-[#282834] text-zinc-400 hover:text-white flex items-center justify-center text-sm font-bold border border-[#2e2e3c] transition" title="Close">✕</button>` : ''}
+          </div>
+        </div>
+
+        <!-- Chat Messages Canvas -->
+        <div id="chatMessages" class="chat-messages flex-1">
+          <div class="h-full flex items-center justify-center p-6 text-zinc-500 text-xs">Loading conversation…</div>
+        </div>
+
+        <!-- Quick Reply Suggestions -->
+        <div class="px-3 pt-2 pb-1 bg-[#121217] border-t border-[#202028] flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+          <button type="button" class="quick-chip" data-quick-chat="Is this item still available?">📦 Is this available?</button>
+          <button type="button" class="quick-chip" data-quick-chat="What is your best price for this?">💰 Best price?</button>
+          <button type="button" class="quick-chip" data-quick-chat="Where is your shop or pickup location?">📍 Where in Ghana?</button>
+          <button type="button" class="quick-chip" data-quick-chat="Can I make payment through MoMo?">📱 Pay via MoMo?</button>
+        </div>
+
+        <!-- Chat Input Composer -->
+        <div class="p-3 bg-[#121217] shrink-0 border-t border-[#1e1e26]">
+          <form id="chatForm" class="flex items-center gap-2">
+            <div class="relative flex-1 flex items-center">
+              <input id="chatInput" class="w-full py-2.5 pl-3.5 pr-10 text-xs sm:text-sm rounded-xl bg-[#1a1a22] border border-[#2e2e3c] text-white placeholder-zinc-500 focus:border-gold outline-none transition" autocomplete="off" placeholder="Write a message to @${esc(selected.username || 'user')}…">
+            </div>
+            <button id="chatSendBtn" type="submit" class="bg-gold text-black font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm hover:brightness-110 active:scale-95 transition flex items-center gap-1.5 shrink-0 shadow-md shadow-amber-500/10">
+              <span>Send</span>
+              <span class="text-xs">➤</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    `;
+  }
+
   async function openConversation(cid,uid,other){
-    const ref=doc(db,'conversations',cid);let selected=other||sellerProfile(uid);
+    const ref=doc(db,'conversations',cid);
+    let selected=other||sellerProfile(uid);
     window._activeConversationId = cid;
     if(window._activeChatUnsub){
       try{ window._activeChatUnsub(); }catch(_){}
       window._activeChatUnsub = null;
     }
-    modal(`<div class="chat-window"><div class="flex items-center gap-3 pb-3 border-b border-[#292929]"><button type="button" data-modal-back>← Back</button>${avatar(selected,'w-11 h-11 rounded-full object-cover bg-[#222]')}<div class="flex-1"><b>${esc(selected.name||selected.username||'SellerFlow user')}</b><div class="muted text-xs">@${esc(selected.username||'user')} · ${onlineNow(selected)?'Online':'Offline'}</div></div></div><div id="chatMessages" class="chat-messages mt-3"></div><form id="chatForm" class="flex gap-2 mt-3"><input id="chatInput" class="flex-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="off" placeholder="Write a message…"><button class="bg-gold text-black px-5 rounded-xl font-bold">Send</button></form></div>`);
+
+    const activePane = $('chatActivePane');
+    const isInsideChatsPage = !!activePane && currentPage === 'chats';
+
+    if(isInsideChatsPage){
+      // Render directly into the master-detail right pane
+      activePane.innerHTML = renderChatWindowHtml(cid, uid, selected, false);
+      const chatLayout = $('chatLayoutContainer');
+      if(chatLayout){
+        chatLayout.classList.add('in-active-chat');
+      }
+      // Highlight conversation in list
+      document.querySelectorAll('.chat-convo-item').forEach(item => {
+        item.classList.toggle('active-convo', item.dataset.chatId === cid);
+      });
+    } else {
+      // Open in modern modal
+      modal(renderChatWindowHtml(cid, uid, selected, true), { noBackBar: true });
+      const modalBack = $('chatModalBackBtn');
+      if(modalBack) modalBack.onclick = closeModal;
+    }
+
+    // Wire mobile back button
+    const mobileBack = $('chatMobileBackToList');
+    if(mobileBack){
+      mobileBack.onclick = () => {
+        const chatLayout = $('chatLayoutContainer');
+        if(chatLayout) chatLayout.classList.remove('in-active-chat');
+      };
+    }
+
+    // Wire store and profile buttons
+    const storeBtn = $('chatViewStoreBtn');
+    if(storeBtn){
+      storeBtn.onclick = () => {
+        if(!isInsideChatsPage) closeModal();
+        openStore(storeBtn.dataset.storeId);
+      };
+    }
+    const profileBtn = $('chatViewProfileBtn');
+    if(profileBtn){
+      profileBtn.onclick = () => {
+        if(!isInsideChatsPage) closeModal();
+        if(uid === currentUser?.uid) navigate('profile');
+        else navigate('marketplace');
+      };
+    }
+
+    // Wire quick suggestion chips
+    document.querySelectorAll('[data-quick-chat]').forEach(b => {
+      b.onclick = () => {
+        const input = $('chatInput');
+        if(input){
+          input.value = b.dataset.quickChat;
+          input.focus();
+        }
+      };
+    });
+
     const q=query(collection(db,'conversations',cid,'messages'),orderBy('createdAt','asc'),limit(300));
     let initialRender = true;
     if(q && typeof q.onSnapshot === 'function'){
       window._activeChatUnsub = q.onSnapshot(snap => {
         const box=$('chatMessages');
         if(!box) return;
-        const wasAtBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 60;
-        box.innerHTML=snap.docs.map(d=>{const m=d.data(),me=m.senderId===currentUser?.uid;return `<div class="chat-bubble ${me?'chat-me':'chat-them'}"><div>${esc(m.text||'')}</div><div class="text-[10px] opacity-70 mt-1">${new Date(ts(m.createdAt)||Date.now()).toLocaleString('en-GH',{hour:'2-digit',minute:'2-digit'})}</div></div>`}).join('')||'<div class="h-full flex items-center justify-center muted">Start the conversation.</div>';
+        const wasAtBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 80;
+        if(snap.empty){
+          box.innerHTML = `
+            <div class="h-full flex flex-col items-center justify-center text-center p-6 my-auto select-none">
+              <div class="w-14 h-14 rounded-2xl bg-[#171720] border border-[#292938] flex items-center justify-center text-2xl mb-3">💬</div>
+              <div class="font-bold text-white text-sm">Start the conversation</div>
+              <p class="text-zinc-400 text-xs mt-1 max-w-xs">Ask @${esc(selected.username||'user')} about products, pricing, store pickup or nationwide delivery in Ghana.</p>
+            </div>
+          `;
+        } else {
+          let lastDateStr = '';
+          let html = '';
+          snap.docs.forEach(d => {
+            const m = d.data();
+            const me = m.senderId === currentUser?.uid;
+            const msgTime = ts(m.createdAt) || Date.now();
+            const dateObj = new Date(msgTime);
+            const dateStr = dateObj.toLocaleDateString('en-GH', { weekday: 'short', month: 'short', day: 'numeric' });
+            if (dateStr !== lastDateStr) {
+              lastDateStr = dateStr;
+              const isToday = new Date().toDateString() === dateObj.toDateString();
+              const label = isToday ? 'Today' : dateStr;
+              html += `<div class="flex justify-center my-3"><span class="text-[10px] font-semibold tracking-wider text-zinc-400 bg-[#16161d] border border-[#282834] px-2.5 py-0.5 rounded-full select-none">${esc(label)}</span></div>`;
+            }
+            const timeStr = dateObj.toLocaleTimeString('en-GH', { hour: '2-digit', minute: '2-digit' });
+            html += `
+              <div class="flex flex-col ${me ? 'items-end' : 'items-start'} my-1">
+                <div class="chat-bubble ${me ? 'chat-me' : 'chat-them'}">
+                  <div class="text-[13px] leading-relaxed break-words">${esc(m.text || '')}</div>
+                  <div class="text-[10px] ${me ? 'text-black/75' : 'text-zinc-400'} mt-1 text-right select-none font-medium">${esc(timeStr)}</div>
+                </div>
+              </div>
+            `;
+          });
+          box.innerHTML = html;
+        }
         if(initialRender || wasAtBottom) box.scrollTop=box.scrollHeight;
         initialRender = false;
       }, err => console.warn('Chat real-time snapshot notice:', err));
     }
-    $('chatForm').onsubmit=async e=>{e.preventDefault();const input=$('chatInput'),text=input.value.trim();if(!text)return;input.disabled=true;try{await addDoc(collection(db,'conversations',cid,'messages'),{senderId:currentUser.uid,recipientId:uid,text,createdAt:serverTimestamp()});await setDoc(ref,{participants:[currentUser.uid,uid],updatedAt:serverTimestamp(),lastMessage:text,lastSenderId:currentUser.uid},{merge:true});await addDoc(collection(db,'notifications'),{recipientId:uid,actorId:currentUser.uid,senderName:currentProfile?.name||currentProfile?.username||'SellerFlow user',title:'New chat message',message:text.length>120?text.slice(0,117)+'…':text,type:'chat_message',conversationId:cid,read:false,createdAt:serverTimestamp()});input.value=''}catch(e){toast(errMsg(e),'error')}finally{input.disabled=false;input.focus()}};
+
+    const form = $('chatForm');
+    if(form){
+      form.onsubmit=async e=>{
+        e.preventDefault();
+        const input=$('chatInput'),text=input.value.trim();
+        if(!text)return;
+        input.disabled=true;
+        try{
+          await addDoc(collection(db,'conversations',cid,'messages'),{senderId:currentUser.uid,recipientId:uid,text,createdAt:serverTimestamp()});
+          await setDoc(ref,{participants:[currentUser.uid,uid],updatedAt:serverTimestamp(),lastMessage:text,lastSenderId:currentUser.uid},{merge:true});
+          await addDoc(collection(db,'notifications'),{recipientId:uid,actorId:currentUser.uid,senderName:currentProfile?.name||currentProfile?.username||'SellerFlow user',title:'New chat message',message:text.length>120?text.slice(0,117)+'…':text,type:'chat_message',conversationId:cid,read:false,createdAt:serverTimestamp()});
+          input.value='';
+        }catch(e){toast(errMsg(e),'error')}finally{input.disabled=false;input.focus()}
+      };
+    }
   }
+
   renderChats=async function(){
     if(!currentUser){showAuthPrompt('view your chats');return;}
     const convs=await loadConversations();
-    const people=[];for(const c of convs){const uid=(c.participants||[]).find(x=>x!==currentUser.uid);if(uid)people.push({uid,c,p:sellerProfile(uid)})}
-    $('page').innerHTML=pageTitle('Chats','Private direct messages between SellerFlow users.')+`<div class="flex flex-wrap gap-2 mb-4"><button id="newChatBtn" class="bg-gold text-black px-4 py-2 rounded-xl font-bold">＋ New chat</button><button id="refreshChats" class="border border-[#444] px-4 py-2 rounded-xl">Refresh</button></div><section class="card p-4"><div class="chat-layout"><div><h2 class="font-bold mb-3">Recent conversations</h2><div class="chat-list space-y-2">${people.length?people.map(x=>`<button type="button" class="sf-result w-full text-left" data-chat-id="${x.c.id}" data-chat-user="${x.uid}">${avatar(x.p,'w-11 h-11 rounded-full object-cover bg-[#222]')}<span class="flex-1 min-w-0"><b class="block truncate">${esc(x.p.name||x.p.username||'User')}</b><span class="muted text-xs">${presence(x.p)}</span><span class="muted text-xs block truncate mt-1">${esc(x.c.lastMessage||'No messages yet')}</span></span></button>`).join(''):'<div class="p-6 text-center muted">No conversations yet.<br>Tap New chat to find someone.</div>'}</div></div><div class="hidden md:flex items-center justify-center border border-dashed border-[#333] rounded-2xl"><div class="text-center p-8"><div class="text-5xl">💬</div><h2 class="text-xl font-bold mt-3">Your messages</h2><p class="muted mt-2">Choose a conversation to start chatting.</p></div></div></div></section>`;
-    document.querySelectorAll('[data-chat-id]').forEach(b=>b.onclick=()=>openConversation(b.dataset.chatId,b.dataset.chatUser,sellerProfile(b.dataset.chatUser)));$('refreshChats').onclick=()=>navigate('chats');$('newChatBtn').onclick=openNewChat;
+    const people=[];
+    for(const c of convs){
+      const uid=(c.participants||[]).find(x=>x!==currentUser.uid);
+      if(uid)people.push({uid,c,p:sellerProfile(uid)});
+    }
+
+    $('page').innerHTML=pageTitle('Direct Messages','Private real-time conversations with sellers and buyers across Ghana.')+`
+      <div class="flex items-center justify-between gap-3 mb-4">
+        <div class="flex items-center gap-2">
+          <button id="newChatBtn" class="bg-gold text-black px-4 py-2 rounded-xl text-xs font-bold hover:brightness-110 active:scale-95 transition flex items-center gap-1.5 shadow-sm shadow-amber-500/10">＋ New Chat</button>
+          <button id="refreshChats" class="border border-[#383844] hover:border-gold/60 text-zinc-300 hover:text-white px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#16161d] transition">Refresh</button>
+        </div>
+        <div class="text-xs text-zinc-400 font-medium hidden sm:block">
+          <span class="text-gold font-bold">${people.length}</span> active ${people.length === 1 ? 'chat' : 'chats'}
+        </div>
+      </div>
+
+      <div class="chat-shell">
+        <div id="chatLayoutContainer" class="chat-layout">
+          <!-- Left Pane: Conversations List -->
+          <div id="chatListPane" class="chat-list-pane">
+            <div class="p-3 border-b border-[#23232c] bg-[#121217]">
+              <div class="relative">
+                <input id="chatSearchFilter" class="w-full pl-8 pr-7 py-2 text-xs rounded-xl bg-[#191920] border border-[#2b2b36] text-white placeholder-zinc-500 focus:border-gold outline-none transition" placeholder="Search conversations…">
+                <span class="absolute left-2.5 top-2 text-zinc-500 text-xs pointer-events-none">⌕</span>
+                <button type="button" id="clearChatFilter" class="hidden absolute right-2.5 top-2 text-zinc-400 hover:text-white text-xs">✕</button>
+              </div>
+            </div>
+
+            <div id="chatConvoList" class="chat-list space-y-1.5">
+              ${people.length ? people.map(x => {
+                const isOnline = onlineNow(x.p);
+                const isMe = x.c.lastSenderId === currentUser?.uid;
+                const lastPreview = x.c.lastMessage ? (isMe ? `You: ${x.c.lastMessage}` : x.c.lastMessage) : 'No messages yet';
+                const timeLabel = timeAgo(x.c.updatedAt);
+                return `
+                  <button type="button" class="chat-convo-item" data-chat-id="${x.c.id}" data-chat-user="${x.uid}">
+                    <div class="relative shrink-0">
+                      ${avatar(x.p,'w-11 h-11 rounded-full object-cover bg-[#222] border border-[#333]')}
+                      <span class="absolute bottom-0 right-0 presence-dot ${isOnline ? 'presence-online' : 'presence-offline'}"></span>
+                    </div>
+                    <span class="flex-1 min-w-0">
+                      <span class="flex items-center justify-between gap-1">
+                        <b class="truncate text-xs sm:text-sm text-zinc-100 font-semibold">${esc(x.p.name || x.p.username || 'User')}</b>
+                        <span class="text-[10px] text-zinc-500 shrink-0 font-medium">${esc(timeLabel)}</span>
+                      </span>
+                      <span class="text-[11px] text-zinc-400 block truncate mt-0.5">@${esc(x.p.username || 'user')}</span>
+                      <span class="text-xs text-zinc-300 block truncate mt-1">${esc(lastPreview)}</span>
+                    </span>
+                  </button>
+                `;
+              }).join('') : `
+                <div class="p-8 text-center muted flex flex-col items-center justify-center my-auto">
+                  <div class="w-12 h-12 rounded-2xl bg-[#191922] border border-[#2b2b38] flex items-center justify-center text-xl mb-3">💬</div>
+                  <div class="text-white font-bold text-sm">No conversations yet</div>
+                  <p class="text-xs text-zinc-400 mt-1 max-w-xs">Tap New Chat above to message any seller or buyer on SellerFlow.</p>
+                </div>
+              `}
+            </div>
+          </div>
+
+          <!-- Right Pane: Active Chat Window -->
+          <div id="chatActivePane" class="chat-main-pane">
+            <div class="h-full flex flex-col items-center justify-center p-8 text-center select-none my-auto">
+              <div class="w-16 h-16 rounded-2xl bg-[#181822] border border-[#2c2c3c] flex items-center justify-center text-3xl mb-4 text-gold">💬</div>
+              <h3 class="text-base font-bold text-white">Your SellerFlow Messages</h3>
+              <p class="text-zinc-400 text-xs max-w-sm mt-1.5 mb-5">Select a conversation from the left to read messages, verify order status, and negotiate prices safely.</p>
+              <button type="button" id="startFirstChatBtn" class="bg-gold text-black px-4 py-2 rounded-xl text-xs font-bold hover:brightness-110 active:scale-95 transition">＋ Start a New Chat</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Filter conversations live
+    const filterInput = $('chatSearchFilter');
+    const clearFilterBtn = $('clearChatFilter');
+    if(filterInput){
+      filterInput.oninput = () => {
+        const q = filterInput.value.trim().toLowerCase();
+        if(clearFilterBtn) clearFilterBtn.classList.toggle('hidden', !q);
+        document.querySelectorAll('.chat-convo-item').forEach(item => {
+          const text = item.textContent.toLowerCase();
+          item.style.display = (!q || text.includes(q)) ? 'flex' : 'none';
+        });
+      };
+      if(clearFilterBtn){
+        clearFilterBtn.onclick = () => {
+          filterInput.value = '';
+          filterInput.dispatchEvent(new Event('input'));
+          filterInput.focus();
+        };
+      }
+    }
+
+    // Wire conversation click handlers
+    document.querySelectorAll('[data-chat-id]').forEach(b => {
+      b.onclick = () => openConversation(b.dataset.chatId, b.dataset.chatUser, sellerProfile(b.dataset.chatUser));
+    });
+
+    $('refreshChats').onclick = () => navigate('chats');
+    $('newChatBtn').onclick = openNewChat;
+    const firstChat = $('startFirstChatBtn');
+    if(firstChat) firstChat.onclick = openNewChat;
   };
+
   async function openNewChat(){
     if(!currentUser){showAuthPrompt('start a chat');return;}
-    const people=[...allPublicProfiles.values()].filter(p=>p.uid&&p.uid!==(currentUser?.uid||''));modal(`<div><h2 class="text-xl font-bold">New chat</h2><p class="muted text-sm mt-1">Search for a SellerFlow user.</p><input id="chatUserSearch" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Search name or username…"><div id="chatUserResults" class="sf-search-results space-y-2 mt-4"></div></div>`);const draw=()=>{const q=$('chatUserSearch').value.trim().toLowerCase();const arr=people.filter(p=>!q||profileSearchText(p).includes(q)).slice(0,50);$('chatUserResults').innerHTML=arr.map(p=>`<button type="button" class="sf-result w-full text-left" data-new-chat="${p.uid}">${avatar(p,'w-12 h-12 rounded-full object-cover bg-[#222]')}<span class="flex-1"><b>${esc(p.name||p.username)}</b><div class="muted text-xs">@${esc(p.username||'user')} · ${presence(p)}</div></span></button>`).join('')||'<div class="muted text-center p-5">No users found.</div>';document.querySelectorAll('[data-new-chat]').forEach(b=>b.onclick=()=>{closeModal();startChat(b.dataset.newChat)})};$('chatUserSearch').oninput=draw;draw()
+    const people=[...allPublicProfiles.values()].filter(p=>p.uid&&p.uid!==(currentUser?.uid||''));
+    modal(`
+      <div class="p-1">
+        <div class="flex items-center justify-between pb-3 border-b border-[#262632] mb-3">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <span>💬</span>
+              <span>Start New Conversation</span>
+            </h2>
+            <p class="text-zinc-400 text-xs mt-0.5">Find registered buyers and verified sellers across Ghana.</p>
+          </div>
+          <button type="button" data-close-modal class="w-8 h-8 rounded-full bg-[#1c1c24] hover:bg-[#282834] text-zinc-400 hover:text-white flex items-center justify-center text-sm font-bold border border-[#2e2e3c] transition" title="Close">✕</button>
+        </div>
+        <div class="relative mb-3">
+          <input id="chatUserSearch" autofocus class="w-full py-2.5 pl-9 pr-8 rounded-xl bg-[#16161d] border border-[#2c2c3a] text-white placeholder-zinc-500 focus:border-gold outline-none text-xs sm:text-sm transition" placeholder="Search by name, @username, or role…">
+          <span class="absolute left-3 top-2.5 text-zinc-500 text-xs pointer-events-none">⌕</span>
+          <button type="button" id="clearUserSearch" class="hidden absolute right-2.5 top-2.5 text-zinc-400 hover:text-white text-xs">✕</button>
+        </div>
+        <div id="chatUserResults" class="sf-search-results space-y-1.5 max-h-[55vh]"></div>
+      </div>
+    `, { noBackBar: true });
+
+    const draw=()=>{
+      const q=$('chatUserSearch')?.value.trim().toLowerCase()||'';
+      const clearBtn=$('clearUserSearch');
+      if(clearBtn) clearBtn.classList.toggle('hidden',!q);
+      const arr=people.filter(p=>!q||profileSearchText(p).includes(q)).slice(0,60);
+      const resultsEl=$('chatUserResults');
+      if(!resultsEl)return;
+      resultsEl.innerHTML=arr.map(p=>{
+        const isOnline = onlineNow(p);
+        return `
+          <button type="button" class="sf-result-card" data-new-chat="${p.uid}">
+            <div class="relative shrink-0">
+              ${avatar(p,'w-11 h-11 rounded-full object-cover bg-[#222] border border-[#333]')}
+              <span class="absolute bottom-0 right-0 presence-dot ${isOnline ? 'presence-online' : 'presence-offline'}"></span>
+            </div>
+            <span class="flex-1 min-w-0">
+              <span class="flex items-center gap-1.5">
+                <b class="text-sm text-zinc-100 truncate">${esc(p.name||p.username)}</b>
+                ${p.verified ? '<span class="text-xs" title="Verified">✅</span>' : ''}
+              </span>
+              <span class="text-xs text-zinc-400 block truncate">@${esc(p.username||'user')} · ${presence(p)}</span>
+            </span>
+            <span class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#20202a] text-gold border border-amber-500/20 shrink-0">Message →</span>
+          </button>
+        `;
+      }).join('')||`
+        <div class="muted text-center p-6 text-xs">
+          <div class="text-2xl mb-1">🔍</div>
+          No users found matching "${esc(q)}".
+        </div>
+      `;
+      document.querySelectorAll('[data-new-chat]').forEach(b=>b.onclick=()=>{closeModal();startChat(b.dataset.newChat)});
+    };
+
+    const input=$('chatUserSearch');
+    if(input){
+      input.oninput=draw;
+      const clearBtn=$('clearUserSearch');
+      if(clearBtn){
+        clearBtn.onclick=()=>{input.value='';draw();input.focus()};
+      }
+    }
+    draw();
   }
+
   const SF_RECENT_SEARCHES_KEY='sellerflow_recent_searches';
   function getRecentSearches(){
     try{
       const v=localStorage.getItem(SF_RECENT_SEARCHES_KEY);
       if(!v)return [];
       const parsed=JSON.parse(v);
-      return Array.isArray(parsed)?parsed.filter(x=>typeof x==='string'&&x.trim()).slice(0,5):[];
+      return Array.isArray(parsed)?parsed.filter(x=>typeof x==='string'&&x.trim()).slice(0,6):[];
     }catch(_){return []}
   }
   function saveRecentSearch(term){
@@ -6740,7 +7141,7 @@ init();
     const clean=term.trim();
     if(!clean)return;
     const cur=getRecentSearches().filter(x=>x.toLowerCase()!==clean.toLowerCase());
-    const updated=[clean,...cur].slice(0,5);
+    const updated=[clean,...cur].slice(0,6);
     try{localStorage.setItem(SF_RECENT_SEARCHES_KEY,JSON.stringify(updated))}catch(_){}
   }
   function removeRecentSearch(term){
@@ -6753,22 +7154,46 @@ init();
   }
 
   async function globalSearch(){
-    modal(`<div>
-      <div class="flex items-center justify-between gap-3 mb-1">
-        <div>
-          <h2 class="text-xl font-bold">Search SellerFlow</h2>
-          <p class="muted text-sm">Search people, stores, products, posts and your orders.</p>
+    modal(`
+      <div class="flex flex-col h-full max-h-[85vh]">
+        <!-- Search Header -->
+        <div class="flex items-center justify-between pb-3.5 border-b border-[#24242e] shrink-0">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <span class="text-gold">⌕</span>
+              <span>Search SellerFlow</span>
+            </h2>
+            <p class="text-xs text-zinc-400 mt-0.5">Explore products, verified stores, sellers, and video reels across Ghana.</p>
+          </div>
+          <button type="button" data-close-modal class="w-8 h-8 rounded-full bg-[#1c1c24] hover:bg-[#282834] text-zinc-400 hover:text-white flex items-center justify-center text-sm font-bold border border-[#2e2e3c] transition" title="Close (Esc)">✕</button>
         </div>
-        <button type="button" data-close-modal class="w-8 h-8 rounded-full bg-[#1e1e1e] hover:bg-[#2c2c2c] text-zinc-400 hover:text-white flex items-center justify-center text-sm" title="Close">✕</button>
+
+        <!-- Input Bar with Clear Button -->
+        <div class="relative mt-3 shrink-0">
+          <input id="globalSearchInput" autofocus class="w-full py-3 pl-10 pr-10 rounded-xl bg-[#16161d] border border-[#2e2e3c] text-white placeholder-zinc-500 focus:border-gold outline-none text-sm transition" placeholder="Search products, sellers, stores, locations, tags…">
+          <span class="absolute left-3.5 top-3.5 text-zinc-500 pointer-events-none text-sm">⌕</span>
+          <button type="button" id="globalSearchClear" class="absolute right-3 top-3 text-zinc-400 hover:text-white hidden w-6 h-6 items-center justify-center text-xs rounded-full bg-[#242430]" title="Clear search">✕</button>
+        </div>
+
+        <!-- Category Filter Tabs -->
+        <div id="searchFilterTabs" class="flex items-center gap-1.5 mt-3 pb-2 overflow-x-auto no-scrollbar shrink-0 border-b border-[#202028]">
+          <button type="button" class="sf-search-tab active" data-filter-kind="all">✨ All <span id="tabCountAll" class="text-[10px] opacity-80">(0)</span></button>
+          <button type="button" class="sf-search-tab" data-filter-kind="Product">🏷️ Products <span id="tabCountProduct" class="text-[10px] opacity-80">(0)</span></button>
+          <button type="button" class="sf-search-tab" data-filter-kind="Store">🏪 Stores <span id="tabCountStore" class="text-[10px] opacity-80">(0)</span></button>
+          <button type="button" class="sf-search-tab" data-filter-kind="User">👤 Sellers <span id="tabCountUser" class="text-[10px] opacity-80">(0)</span></button>
+          <button type="button" class="sf-search-tab" data-filter-kind="Post">🎬 Videos <span id="tabCountPost" class="text-[10px] opacity-80">(0)</span></button>
+        </div>
+
+        <!-- Scrollable Search Body -->
+        <div class="flex-1 min-h-0 overflow-y-auto mt-2 pr-1 space-y-3 sf-search-results">
+          <div id="recentSearchesSection"></div>
+          <div id="suggestedSearchesSection"></div>
+          <div id="globalSearchResults" class="space-y-2"></div>
+        </div>
       </div>
-      <div class="relative mt-4">
-        <input id="globalSearchInput" autofocus class="w-full p-3 pl-10 pr-10 rounded-xl bg-[#191919] border border-[#333] text-white focus:border-gold outline-none text-sm" placeholder="Search anything…">
-        <span class="absolute left-3.5 top-3.5 text-zinc-500 pointer-events-none text-sm">⌕</span>
-        <button type="button" id="globalSearchClear" class="absolute right-3 top-3 text-zinc-400 hover:text-white hidden px-1.5 py-0.5 text-xs rounded-full bg-[#2a2a2a]" title="Clear search">✕</button>
-      </div>
-      <div id="recentSearchesSection" class="mt-4"></div>
-      <div id="globalSearchResults" class="sf-search-results space-y-2 mt-4"></div>
-    </div>`);
+    `, { noBackBar: true });
+
+    let activeFilterKind = 'all';
 
     const renderRecentSearches=()=>{
       const sec=$('recentSearchesSection');
@@ -6781,22 +7206,24 @@ init();
       }
       sec.style.display='block';
       sec.innerHTML=`
-        <div class="flex items-center justify-between text-xs text-zinc-400 mb-2">
-          <span class="font-semibold flex items-center gap-1.5 text-zinc-300">
-            <span>🕒</span>
-            <span>Recent searches</span>
-          </span>
-          <button type="button" id="clearAllRecentSearches" class="text-xs gold hover:underline">Clear all</button>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          ${recents.map(term=>`
-            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1b1b1b] border border-[#2e2e2e] hover:border-[#444] text-xs text-zinc-200">
-              <button type="button" class="font-medium hover:text-gold cursor-pointer text-left" data-recent-search="${esc(term)}">
-                ${esc(term)}
-              </button>
-              <button type="button" class="text-zinc-500 hover:text-red-400 ml-0.5 w-4 h-4 flex items-center justify-center rounded-full text-[11px]" data-remove-recent="${esc(term)}" title="Remove recent search">✕</button>
-            </div>
-          `).join('')}
+        <div class="p-2.5 rounded-xl bg-[#14141a] border border-[#24242e] mb-2">
+          <div class="flex items-center justify-between text-xs text-zinc-400 mb-2">
+            <span class="font-semibold flex items-center gap-1.5 text-zinc-300">
+              <span class="text-gold">🕒</span>
+              <span>Recent searches</span>
+            </span>
+            <button type="button" id="clearAllRecentSearches" class="text-[11px] text-gold hover:underline font-medium">Clear all</button>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            ${recents.map(term=>`
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1c1c24] border border-[#2b2b36] hover:border-gold/50 text-xs text-zinc-200 transition">
+                <button type="button" class="font-medium hover:text-gold cursor-pointer text-left" data-recent-search="${esc(term)}">
+                  ${esc(term)}
+                </button>
+                <button type="button" class="text-zinc-500 hover:text-red-400 ml-0.5 w-3.5 h-3.5 flex items-center justify-center rounded-full text-[10px]" data-remove-recent="${esc(term)}" title="Remove">✕</button>
+              </div>
+            `).join('')}
+          </div>
         </div>
       `;
 
@@ -6830,41 +7257,200 @@ init();
       }
     };
 
-    renderRecentSearches();
+    const renderSuggestedTopics=()=>{
+      const sec=$('suggestedSearchesSection');
+      if(!sec)return;
+      const suggestions=[
+        {icon:'🇬🇭',label:'Ghana Card Verified',q:'verified'},
+        {icon:'📱',label:'Phones & Gadgets',q:'phone'},
+        {icon:'👟',label:'Sneakers & Shoes',q:'shoes'},
+        {icon:'👗',label:'Fashion & Clothes',q:'fashion'},
+        {icon:'📍',label:'Accra Stores',q:'accra'},
+        {icon:'📍',label:'Kumasi Stores',q:'kumasi'}
+      ];
+      sec.innerHTML=`
+        <div class="p-2.5 rounded-xl bg-[#14141a] border border-[#24242e]">
+          <div class="text-xs font-semibold text-zinc-300 mb-2 flex items-center gap-1.5">
+            <span class="text-gold">🔥</span>
+            <span>Popular in Ghana</span>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            ${suggestions.map(s=>`
+              <button type="button" class="quick-chip" data-suggest-search="${esc(s.q)}">
+                <span>${s.icon}</span>
+                <span>${esc(s.label)}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
 
-    const [profiles,stores,products,posts]=await Promise.all([getDocs(query(collection(db,'publicProfiles'),limit(300))),getDocs(query(collection(db,'stores'),limit(200))),getDocs(query(collection(db,'products'),limit(300))),getDocs(query(collection(db,'posts'),limit(300)))]);
-    const data=[...profiles.docs.map(d=>({kind:'User',id:d.id,title:d.data().name||d.data().username||'User',sub:'@'+(d.data().username||'user'),profile:d.data()})),...stores.docs.map(d=>({kind:'Store',id:d.id,title:d.data().name||'Store',sub:d.data().description||d.data().location||'',store:d.data()})),...products.docs.map(d=>({kind:'Product',id:d.id,title:d.data().name||'Product',sub:d.data().description||'',product:d.data()})),...posts.docs.map(d=>({kind:'Post',id:d.id,title:d.data().text||'SellerFlow post',sub:(d.data().mediaType||'Post')+' · '+(d.data().views||0)+' views',post:d.data()}))];
-    
+      sec.querySelectorAll('[data-suggest-search]').forEach(b=>{
+        b.onclick=()=>{
+          const q=b.dataset.suggestSearch;
+          if($('globalSearchInput')){
+            $('globalSearchInput').value=q;
+            saveRecentSearch(q);
+            renderRecentSearches();
+            draw();
+            $('globalSearchInput').focus();
+          }
+        };
+      });
+    };
+
+    renderRecentSearches();
+    renderSuggestedTopics();
+
+    // Wire Category Tabs
+    document.querySelectorAll('[data-filter-kind]').forEach(tab=>{
+      tab.onclick=()=>{
+        document.querySelectorAll('[data-filter-kind]').forEach(t=>t.classList.remove('active'));
+        tab.classList.add('active');
+        activeFilterKind=tab.dataset.filterKind;
+        draw();
+      };
+    });
+
+    const [profiles,stores,products,posts]=await Promise.all([
+      getDocs(query(collection(db,'publicProfiles'),limit(300))),
+      getDocs(query(collection(db,'stores'),limit(200))),
+      getDocs(query(collection(db,'products'),limit(300))),
+      getDocs(query(collection(db,'posts'),limit(300)))
+    ]);
+
+    const data=[
+      ...profiles.docs.map(d=>({kind:'User',id:d.id,title:d.data().name||d.data().username||'User',sub:'@'+(d.data().username||'user'),profile:d.data()})),
+      ...stores.docs.map(d=>({kind:'Store',id:d.id,title:d.data().name||'Store',sub:d.data().description||d.data().location||'',store:d.data()})),
+      ...products.docs.map(d=>({kind:'Product',id:d.id,title:d.data().name||'Product',sub:d.data().description||'',product:d.data()})),
+      ...posts.docs.map(d=>({kind:'Post',id:d.id,title:d.data().text||'SellerFlow post',sub:(d.data().mediaType||'Post')+' · '+(d.data().views||0)+' views',post:d.data()}))
+    ];
+
     const draw=()=>{
       const q=$('globalSearchInput')?.value.trim().toLowerCase()||'';
       const clearBtn=$('globalSearchClear');
-      if(clearBtn)clearBtn.classList.toggle('hidden',!q);
+      if(clearBtn) clearBtn.classList.toggle('hidden',!q);
 
       const resultsEl=$('globalSearchResults');
+      const recentSec=$('recentSearchesSection');
+      const suggestSec=$('suggestedSearchesSection');
       if(!resultsEl)return;
 
-      // The search engine shows NOTHING unless the user starts typing something that matches
       if(!q){
         resultsEl.innerHTML='';
+        if(recentSec) recentSec.style.display=getRecentSearches().length?'block':'none';
+        if(suggestSec) suggestSec.style.display='block';
+        if($('tabCountAll')) $('tabCountAll').textContent='(0)';
+        if($('tabCountProduct')) $('tabCountProduct').textContent='(0)';
+        if($('tabCountStore')) $('tabCountStore').textContent='(0)';
+        if($('tabCountUser')) $('tabCountUser').textContent='(0)';
+        if($('tabCountPost')) $('tabCountPost').textContent='(0)';
         return;
       }
 
-      const arr=data.filter(x=>[x.title,x.sub,x.kind,x.profile?.username,x.store?.location,x.product?.category,x.post?.contentType,x.post?.text].filter(Boolean).join(' ').toLowerCase().includes(q)).slice(0,80);
-      
+      if(recentSec) recentSec.style.display='none';
+      if(suggestSec) suggestSec.style.display='none';
+
+      const allMatches=data.filter(x=>[x.title,x.sub,x.kind,x.profile?.username,x.store?.location,x.product?.category,x.post?.contentType,x.post?.text].filter(Boolean).join(' ').toLowerCase().includes(q));
+
+      // Update badge counts on tabs
+      const countProduct = allMatches.filter(x=>x.kind==='Product').length;
+      const countStore = allMatches.filter(x=>x.kind==='Store').length;
+      const countUser = allMatches.filter(x=>x.kind==='User').length;
+      const countPost = allMatches.filter(x=>x.kind==='Post').length;
+      if($('tabCountAll')) $('tabCountAll').textContent=`(${allMatches.length})`;
+      if($('tabCountProduct')) $('tabCountProduct').textContent=`(${countProduct})`;
+      if($('tabCountStore')) $('tabCountStore').textContent=`(${countStore})`;
+      if($('tabCountUser')) $('tabCountUser').textContent=`(${countUser})`;
+      if($('tabCountPost')) $('tabCountPost').textContent=`(${countPost})`;
+
+      const filtered = activeFilterKind === 'all' ? allMatches : allMatches.filter(x=>x.kind===activeFilterKind);
+      const arr = filtered.slice(0, 80);
+
       if(!arr.length){
-        resultsEl.innerHTML=`<div class="p-8 text-center muted"><div class="text-3xl mb-2">🔍</div><div class="font-bold text-white text-sm">No results found for "${esc($('globalSearchInput')?.value.trim()||'')}"</div><p class="text-xs mt-1 text-zinc-400">Try searching for creator names, @usernames, items, or locations.</p></div>`;
+        resultsEl.innerHTML=`
+          <div class="p-8 text-center muted flex flex-col items-center justify-center">
+            <div class="w-14 h-14 rounded-2xl bg-[#191922] border border-[#2b2b38] flex items-center justify-center text-2xl mb-2">🔍</div>
+            <div class="font-bold text-white text-sm">No matches found for "${esc($('globalSearchInput')?.value.trim()||'')}"</div>
+            <p class="text-xs mt-1 text-zinc-400 max-w-xs">Try searching by creator name, @username, product brand, category or location in Ghana.</p>
+          </div>
+        `;
         return;
       }
 
-      resultsEl.innerHTML=arr.map(x=>{
-        let action='';
-        if(x.kind==='User')action=`data-search-user="${x.id}"`;
-        if(x.kind==='Store')action=`data-search-store="${x.store.ownerId||''}"`;
-        if(x.kind==='Product')action=`data-search-product="${x.id}"`;
-        if(x.kind==='Post')action=`data-search-post="${x.id}"`;
-        return `<button type="button" class="sf-result w-full text-left" ${action}>${x.profile?avatar(x.profile,'w-11 h-11 rounded-full object-cover bg-[#222]'):x.product?.imageUrl?`<img src="${esc(x.product.imageUrl)}" class="w-11 h-11 rounded-xl object-cover">`:x.post?.thumbnailUrl?`<img src="${esc(x.post.thumbnailUrl)}" class="w-11 h-11 rounded-xl object-cover">`:'<div class="w-11 h-11 rounded-xl bg-[#222] flex items-center justify-center text-lg">'+(x.kind==='Post'?'🎬':x.kind==='Store'?'🏪':'📦')+'</div>'}<span class="flex-1 min-w-0"><span class="text-[10px] gold font-semibold">${esc(x.kind)}</span><b class="block truncate text-sm text-zinc-100">${esc(x.title)}</b><span class="muted text-xs block truncate">${esc(x.sub)}</span></span><span class="text-xs text-zinc-500">→</span></button>`;
-      }).join('');
-      
+      resultsEl.innerHTML = `
+        <div class="text-xs text-zinc-400 px-1 font-medium flex items-center justify-between mb-1">
+          <span>Showing ${arr.length} of ${filtered.length} ${filtered.length === 1 ? 'match' : 'matches'}</span>
+          ${activeFilterKind !== 'all' ? `<span class="text-gold capitalize">${esc(activeFilterKind)}s</span>` : ''}
+        </div>
+        <div class="space-y-2">
+          ${arr.map(x=>{
+            let action='';
+            if(x.kind==='User')action=`data-search-user="${x.id}"`;
+            if(x.kind==='Store')action=`data-search-store="${x.store.ownerId||''}"`;
+            if(x.kind==='Product')action=`data-search-product="${x.id}"`;
+            if(x.kind==='Post')action=`data-search-post="${x.id}"`;
+
+            let thumbnail = '';
+            let metaBadge = '';
+            let priceTag = '';
+
+            if(x.kind==='User'){
+              const isOnline = onlineNow(x.profile);
+              thumbnail = `
+                <div class="relative shrink-0">
+                  ${avatar(x.profile,'w-11 h-11 rounded-full object-cover bg-[#222] border border-[#333]')}
+                  <span class="absolute bottom-0 right-0 presence-dot ${isOnline ? 'presence-online' : 'presence-offline'}"></span>
+                </div>
+              `;
+              metaBadge = `<span class="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full font-semibold border border-blue-500/20">Seller</span>`;
+            } else if(x.kind==='Store'){
+              thumbnail = `
+                <div class="w-11 h-11 rounded-xl bg-[#202028] border border-[#333] flex items-center justify-center text-xl shrink-0">
+                  🏪
+                </div>
+              `;
+              metaBadge = `<span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-semibold border border-emerald-500/20">Store</span>`;
+            } else if(x.kind==='Product'){
+              thumbnail = x.product?.imageUrl ? `
+                <img src="${esc(x.product.imageUrl)}" class="w-11 h-11 rounded-xl object-cover shrink-0 border border-[#333]" alt="${esc(x.title)}">
+              ` : `
+                <div class="w-11 h-11 rounded-xl bg-[#202028] border border-[#333] flex items-center justify-center text-xl shrink-0">📦</div>
+              `;
+              metaBadge = `<span class="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full font-semibold border border-amber-500/20">${esc(x.product?.category || 'Product')}</span>`;
+              if(x.product?.price){
+                priceTag = `<span class="text-xs font-bold text-gold shrink-0">${money(x.product.price)}</span>`;
+              }
+            } else if(x.kind==='Post'){
+              thumbnail = x.post?.thumbnailUrl ? `
+                <div class="relative shrink-0">
+                  <img src="${esc(x.post.thumbnailUrl)}" class="w-11 h-11 rounded-xl object-cover border border-[#333]" alt="">
+                  <span class="absolute inset-0 flex items-center justify-center text-xs text-white bg-black/40 rounded-xl">▶</span>
+                </div>
+              ` : `
+                <div class="w-11 h-11 rounded-xl bg-[#202028] border border-[#333] flex items-center justify-center text-xl shrink-0">🎬</div>
+              `;
+              metaBadge = `<span class="text-[10px] text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full font-semibold border border-purple-500/20">Video Reel</span>`;
+            }
+
+            return `
+              <button type="button" class="sf-result-card" ${action}>
+                ${thumbnail}
+                <span class="flex-1 min-w-0">
+                  <span class="flex items-center gap-2">
+                    ${metaBadge}
+                    <b class="text-xs sm:text-sm text-zinc-100 truncate block font-semibold">${esc(x.title)}</b>
+                  </span>
+                  <span class="text-xs text-zinc-400 block truncate mt-0.5">${esc(x.sub)}</span>
+                </span>
+                ${priceTag}
+                <span class="text-xs text-zinc-500 font-bold shrink-0">→</span>
+              </button>
+            `;
+          }).join('')}
+        </div>
+      `;
+
       const rememberQuery=()=>{
         const cur=$('globalSearchInput')?.value.trim();
         if(cur){
@@ -6879,33 +7465,39 @@ init();
       document.querySelectorAll('[data-search-post]').forEach(b=>b.onclick=()=>{rememberQuery();closeModal();window.openFeedWithPost(b.dataset.searchPost)});
     };
 
-    $('globalSearchInput').oninput=draw;
-    $('globalSearchInput').onkeydown=(e)=>{
-      if(e.key==='Enter'){
-        e.preventDefault();
-        const cur=$('globalSearchInput')?.value.trim();
+    const searchInput = $('globalSearchInput');
+    if(searchInput){
+      searchInput.oninput = draw;
+      searchInput.onkeydown = (e) => {
+        if(e.key === 'Enter'){
+          e.preventDefault();
+          const cur = searchInput.value.trim();
+          if(cur){
+            saveRecentSearch(cur);
+            renderRecentSearches();
+          }
+        }
+      };
+      searchInput.onchange = () => {
+        const cur = searchInput.value.trim();
         if(cur){
           saveRecentSearch(cur);
           renderRecentSearches();
         }
-      }
-    };
-    $('globalSearchInput').onchange=()=>{
-      const cur=$('globalSearchInput')?.value.trim();
-      if(cur){
-        saveRecentSearch(cur);
-        renderRecentSearches();
-      }
-    };
+      };
+    }
+
     $('globalSearchClear')?.addEventListener('click',()=>{
-      if($('globalSearchInput')){
-        $('globalSearchInput').value='';
+      if(searchInput){
+        searchInput.value='';
         draw();
-        $('globalSearchInput').focus();
+        searchInput.focus();
       }
     });
+
     draw();
   }
+
   const oldRenderPage=renderPage;renderPage=async function(){if(currentPage==='chats')return renderChats();return oldRenderPage()};
   const oldSetNav=setNav;setNav=function(){oldSetNav();const desktop=$('desktopNav');if(desktop&&!desktop.querySelector('[data-page="chats"]')){const b=document.createElement('button');b.className='navbtn px-3 py-2';b.dataset.page='chats';b.textContent='Chats';b.onclick=()=>navigate('chats');desktop.appendChild(b)}const mn=$('mobileNav');if(mn&&!mn.querySelector('[data-mobile-page="chats"]')){const b=document.createElement('button');b.className='p-3 rounded-xl';b.dataset.mobilePage='chats';b.textContent='Chats';b.onclick=()=>navigate('chats');mn.prepend(b)}};
   function installSearch(){const head=document.querySelector('#app header .max-w-7xl');if(!head||$('sfGlobalSearchBtn'))return;const wrap=document.createElement('div');wrap.className='ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0';wrap.innerHTML=`<button id="sfGlobalSearchBtn" class="sf-search-btn border border-[#333] rounded-xl px-2.5 sm:px-3 py-2 shrink-0" title="Search SellerFlow">⌕ <span class="hidden sm:inline">Search</span></button>`;const old=head.querySelector('.ml-auto');if(old){old.classList.remove('ml-auto');wrap.classList.add('ml-auto');head.insertBefore(wrap,old);wrap.appendChild(old)}else head.appendChild(wrap);$('sfGlobalSearchBtn').onclick=globalSearch}
