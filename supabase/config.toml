@@ -5,3 +5,9 @@ project_id = "vvpwntehstjbccarqqzp"
 # verify_jwt is set to false so the Supabase API Gateway forwards the incoming
 # user authentication token directly to the function for authoritative server-side verification.
 verify_jwt = false
+
+[functions.verifyGhanaCard]
+# verify_jwt is set to false so the Supabase API Gateway forwards the incoming
+# user authentication token directly to the function for authoritative server-side verification.
+verify_jwt = false
+

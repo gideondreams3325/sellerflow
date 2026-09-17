@@ -365,7 +365,8 @@ app.get('/api/config', (req, res) => {
     firebaseApiKey: process.env.FIREBASE_API_KEY || '',
     supabaseUrl: process.env.SUPABASE_URL || '',
     supabaseKey: process.env.SUPABASE_KEY || '',
-    moderationFunctionUrl: process.env.MODERATION_FUNCTION_URL || (process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL.replace(/\/+$/, '')}/functions/v1/moderatePost` : 'https://vvpwntehstjbccarqqzp.supabase.co/functions/v1/moderatePost')
+    moderationFunctionUrl: process.env.MODERATION_FUNCTION_URL || (process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL.replace(/\/+$/, '')}/functions/v1/moderatePost` : 'https://vvpwntehstjbccarqqzp.supabase.co/functions/v1/moderatePost'),
+    verificationFunctionUrl: process.env.VERIFICATION_FUNCTION_URL || (process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL.replace(/\/+$/, '')}/functions/v1/verifyGhanaCard` : 'https://vvpwntehstjbccarqqzp.supabase.co/functions/v1/verifyGhanaCard')
   });
 });
 

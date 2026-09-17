@@ -371,6 +371,7 @@ const ADMIN_EMAIL=ADMIN_EMAILS[0];
 let supabaseUrl='https://vvpwntehstjbccarqqzp.supabase.co';
 let supabaseKey='sb_publishable_uxIZMAka2Om0ZFD4tg3xfQ__7Bl_J0V';
 const SUPABASE_BUCKET='ghana-card-documents';
+const SELLERFLOW_PROD_VERIFICATION_URL='https://vvpwntehstjbccarqqzp.supabase.co/functions/v1/verifyGhanaCard';
 let firebaseApp,auth,db;let currentUser=null,currentProfile=null,isAdmin=false,currentPage='feed',allPublicProfiles=new Map(),cart=[];let authMode='register';let appTerms='';let appTermsVersion='2026.09';let notificationCache=[];
 const $=id=>document.getElementById(id), show=e=>e?.classList.remove('hide'), hide=e=>e?.classList.add('hide');
 function esc(v=''){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
@@ -2496,7 +2497,71 @@ async function renderStore(){
 
 async function renderProfile(){const p=currentProfile;const privateDoc=await getDoc(doc(db,'users',currentUser.uid));const verification=privateDoc.data()||{};$('page').innerHTML=pageTitle('Profile','Manage your account details and profile picture.')+`<div class="grid lg:grid-cols-[1fr_1.3fr] gap-5"><div class="card p-6"><div class="flex items-center gap-4">${avatar(p,'w-20 h-20 rounded-full object-cover bg-[#222]')}<div><h2 class="text-xl font-bold">${esc(p.name)}</h2><div class="muted">@${esc(p.username)}</div>${p.verified?'<div class="text-sm font-bold mt-1 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':''}</div></div><input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-5"><button id="uploadAvatar" class="mt-3 border border-[#444] rounded-xl px-4 py-2">Update profile picture</button><label class="muted text-sm block mt-5">Full name</label><input id="profileName" value="${esc(p.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><label class="muted text-sm block mt-4">Username</label><input id="profileUsername" value="${esc(p.username||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><button id="saveProfile" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Save profile</button><div class="muted text-sm mt-4">${esc(currentUser.email)} · ${currentUser.emailVerified?'Email verified':'Email not verified'}</div>${!currentUser.emailVerified?`<button id="verifyEmail" class="mt-2 text-sm gold">Send verification email</button>`:''}</div><div class="card p-6"><h2 class="text-xl font-bold">Seller identity</h2><p class="muted mt-2">Verification is managed from Settings. Approved sellers receive the modern blue SellerFlow verification badge.</p><button id="openSettingsVerification" class="mt-4 bg-gold text-black px-5 py-3 rounded-xl font-bold">Open Settings</button></div></div>`;$('uploadAvatar').onclick=async()=>{try{const f=$('avatarFile').files[0];if(!f)return toast('Choose a picture first','error');const x=await uploadPublic(f,'profiles');await updateDoc(doc(db,'users',currentUser.uid),{avatarUrl:x.url});await updateDoc(doc(db,'publicProfiles',currentUser.uid),{avatarUrl:x.url});currentProfile.avatarUrl=x.url;toast('Profile picture updated','success');navigate('profile')}catch(e){toast(errMsg(e),'error')}};$('saveProfile').onclick=saveProfile;$('verifyEmail')?.addEventListener('click',async()=>{await sendEmailVerification(currentUser);toast('Verification email sent','success')});$('openSettingsVerification')?.addEventListener('click',openVerificationModal)}
 async function saveProfile(){try{const name=$('profileName').value.trim(),username=usernameClean($('profileUsername').value);if(name.length<2||username.length<3)throw Error('Enter a valid name and username.');if(username!==currentProfile.username){if(!(await uniqueUsername(username,currentUser.uid)))throw Error('That username is already taken.');}await updateDoc(doc(db,'users',currentUser.uid),{name,username,usernameLower:username.toLowerCase(),nameLastChanged:serverTimestamp(),usernameLastChanged:serverTimestamp()});try{await setDoc(doc(db,'publicProfiles',currentUser.uid),{uid:currentUser.uid,name,username,usernameLower:username.toLowerCase(),avatarUrl:currentProfile.avatarUrl||'',verified:!!currentProfile.verified,followers:currentProfile.followers||[],following:currentProfile.following||[],role:currentProfile.role||'seller'},{merge:true})}catch(e){console.warn('Public profile sync skipped:',e)}await refreshProfile();toast('Profile saved','success');navigate('profile')}catch(e){toast(errMsg(e),'error')}}
-async function submitVerification(){try{const n=$('ghanaCard').value.trim(),front=$('cardFront').files[0],back=$('cardBack').files[0];if(!n||!front||!back)throw Error('Enter the Ghana Card number and upload both sides.');validFile(front,['image/jpeg','image/png','image/webp','application/pdf'],10);validFile(back,['image/jpeg','image/png','image/webp','application/pdf'],10);loading('Securely submitting your identity for review…');const [fp,bp]=await Promise.all([uploadPrivate(front,'front'),uploadPrivate(back,'back')]);await updateDoc(doc(db,'users',currentUser.uid),{ghanaCardMasked:n,ghanaCardFrontPath:fp,ghanaCardBackPath:bp,verificationStatus:'pending',verificationSubmittedAt:serverTimestamp()});toast('Verification submitted for admin review','success');await refreshProfile();navigate('profile')}catch(e){toast(errMsg(e),'error')}finally{ready()}}
+async function submitVerification(){
+  try{
+    const n=$('ghanaCard').value.trim(),front=$('cardFront').files[0],back=$('cardBack').files[0];
+    if(!n||!front||!back)throw Error('Enter the Ghana Card number and upload both sides.');
+    validFile(front,['image/jpeg','image/png','image/webp','application/pdf'],10);
+    validFile(back,['image/jpeg','image/png','image/webp','application/pdf'],10);
+    loading('Uploading identity documents securely…');
+    const [fp,bp]=await Promise.all([uploadPrivate(front,'front'),uploadPrivate(back,'back')]);
+    
+    // Initial client update to safely reflect submission in progress
+    await updateDoc(doc(db,'users',currentUser.uid),{
+      ghanaCardMasked:n.slice(0,3)+'-*****'+(n.slice(-4)||''),
+      ghanaCardFrontPath:fp,
+      ghanaCardBackPath:bp,
+      verificationStatus:'pending',
+      verificationSubmittedAt:serverTimestamp()
+    });
+
+    loading('Authoritatively verifying Ghana Card identity…');
+    // Call authoritative server-side Edge Function with caller's authentication token
+    try {
+      const token = currentUser ? await currentUser.getIdToken() : '';
+      const endpoint = window.SELLERFLOW_VERIFICATION_URL || SELLERFLOW_PROD_VERIFICATION_URL;
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          frontPath: fp,
+          backPath: bp,
+          ghanaCardNumber: n,
+          fullName: currentProfile?.name || ''
+        })
+      });
+
+      if(res.ok){
+        const data = await res.json();
+        if(data.verdict === 'VERIFIED'){
+          toast('Identity verified! Your blue SellerFlow badge is now active.','success');
+        } else if(data.verdict === 'REVIEW'){
+          toast('Verification submitted securely and queued for administrator review.','info');
+        } else if(data.verdict === 'REJECTED'){
+          toast(data.message || 'Verification could not be approved. Please review details.','error');
+        } else {
+          toast(data.message || 'Verification submitted for review.','success');
+        }
+      } else {
+        toast('Verification submitted securely for administrator review.','info');
+      }
+    } catch(callErr){
+      console.warn('Authoritative verification Edge Function notice:', callErr);
+      toast('Verification submitted securely for administrator review.','info');
+    }
+
+    closeModal();
+    await refreshProfile();
+    navigate('profile');
+  }catch(e){
+    toast(errMsg(e),'error');
+  }finally{
+    ready();
+  }
+}
 
 function addToCart(p){
   if(!currentUser)return showAuthPrompt('make an order and add items to your cart');
@@ -3618,6 +3683,7 @@ async function init(){
         if(cfg.supabaseUrl)supabaseUrl=cfg.supabaseUrl;
         if(cfg.supabaseKey)supabaseKey=cfg.supabaseKey;
         if(cfg.moderationFunctionUrl)window.SELLERFLOW_MODERATION_URL=cfg.moderationFunctionUrl;
+        if(cfg.verificationFunctionUrl)window.SELLERFLOW_VERIFICATION_URL=cfg.verificationFunctionUrl;
       }
     }catch(_){}
     firebaseApp=initializeApp(firebaseConfig);
