@@ -378,7 +378,7 @@ function money(n){return new Intl.NumberFormat('en-GH',{style:'currency',currenc
 function ts(v){return v?.toMillis?v.toMillis():v?.seconds?v.seconds*1000:0}
 function toast(msg,type='info'){const d=document.createElement('div');d.innerHTML=`<div class="${type==='error'?'border-red-500':type==='success'?'border-green-500':'border-[#333]'}">${esc(msg)}</div>`;$('toast').appendChild(d);setTimeout(()=>d.remove(),3500)}
 function errMsg(e){const c=e?.code||'';const m={ 'auth/email-already-in-use':'That email is already registered.','auth/invalid-credential':'Incorrect email or password.','auth/invalid-email':'Enter a valid email address.','auth/weak-password':'Use a stronger password.','auth/popup-closed-by-user':'Google sign-in was cancelled.','auth/network-request-failed':'Network error. Check your connection.','permission-denied':'You do not have permission for this action.','storage/unauthorized':'Storage permission denied. Check Firebase Storage Rules.'};return m[c]||e?.message||'Something went wrong.'}
-function loading(t='Working…'){show($('loading'));$('loadingText').textContent=t}
+function loading(t='Working…'){show($('loading'));const lt=$('loadingText');if(lt)lt.textContent=t}
 function ready(){hide($('loading'))}
 function pageTitle(t,sub=''){const back=currentPage&&currentPage!=='feed'?`<button type="button" class="back-page-btn" data-global-back="1">← Back to For You</button>`:'';return `<div class="mb-6">${back}<h1 class="text-2xl md:text-3xl font-black">${esc(t)}</h1>${sub?`<p class="muted mt-1">${esc(sub)}</p>`:''}</div>`}
 function button(t,id='',cls='bg-gold text-black'){return `<button type="button" id="${id}" class="btn px-4 py-2 rounded-xl font-semibold ${cls}">${esc(t)}</button>`}
@@ -458,14 +458,14 @@ function showAuth(mode='register'){
   authMode=mode;
   hide($('app'));
   show($('authPage'));
-  $('authTitle').textContent=mode==='register'?'Create your account':'Welcome back';
-  $('authSubtitle').textContent=mode==='register'?'Sell and shop across Ghana.':'Sign in to continue.';
-  $('nameWrap').style.display=mode==='register'?'block':'none';
-  $('usernameWrap').style.display=mode==='register'?'block':'none';
-  $('termsWrap').style.display=mode==='register'?'block':'none';
-  $('authSubmit').textContent=mode==='register'?'Create account':'Sign in';
-  $('authSwitch').textContent=mode==='register'?'Already have an account? Sign in':'New here? Create an account';
-  $('authError').textContent='';
+  if($('authTitle'))$('authTitle').textContent=mode==='register'?'Create your account':'Welcome back';
+  if($('authSubtitle'))$('authSubtitle').textContent=mode==='register'?'Sell and shop across Ghana.':'Sign in to continue.';
+  if($('nameWrap'))$('nameWrap').style.display=mode==='register'?'block':'none';
+  if($('usernameWrap'))$('usernameWrap').style.display=mode==='register'?'block':'none';
+  if($('termsWrap'))$('termsWrap').style.display=mode==='register'?'block':'none';
+  if($('authSubmit'))$('authSubmit').textContent=mode==='register'?'Create account':'Sign in';
+  if($('authSwitch'))$('authSwitch').textContent=mode==='register'?'Already have an account? Sign in':'New here? Create an account';
+  if($('authError'))$('authError').textContent='';
   ready();
 }
 function showApp(){
@@ -518,10 +518,25 @@ function sellerProfile(uid){return allPublicProfiles.get(uid)||{uid,name:'Seller
 function setNav(){
   const dashBtn=document.querySelector('[data-page="dashboard"]');
   if(dashBtn)dashBtn.classList.toggle('dashboard-hidden',!isAdmin&&!currentProfile?.verified);
-  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));
+  document.querySelectorAll('.navbtn').forEach(b=>{
+    const p=b.dataset.page;
+    const isAct = p===currentPage || (currentPage==='products' && p==='marketplace');
+    b.classList.toggle('active', isAct);
+  });
   const adminDesktop=document.getElementById('adminNav');
   if(adminDesktop)adminDesktop.remove();
-  if(isAdmin){const b=document.createElement('button');b.id='adminNav';b.className='navbtn px-3 py-2';b.dataset.page='admin';b.textContent='Admin';b.onclick=()=>navigate('admin');document.getElementById('desktopNav').appendChild(b)}
+  if(isAdmin){
+    const dNav = document.getElementById('desktopNav');
+    if(dNav && !document.getElementById('adminNav')){
+      const b=document.createElement('button');
+      b.id='adminNav';
+      b.className='navbtn px-3 py-2';
+      b.dataset.page='admin';
+      b.textContent='Admin';
+      b.onclick=()=>navigate('admin');
+      dNav.appendChild(b);
+    }
+  }
 
   const rightActions=$('headerRightActions')||$('logoutBtn')?.parentElement||document.querySelector('header .ml-auto');
   if(rightActions){
@@ -562,7 +577,7 @@ function pauseAllForYouVideos(destroyFeed=false){
 window.pauseAllForYouVideos=pauseAllForYouVideos;
 
 async function navigate(page, targetPostId, options){
-  if(!currentUser && page !== 'feed' && page !== 'marketplace' && page !== 'update'){
+  if(!currentUser && page !== 'feed' && page !== 'marketplace' && page !== 'products' && page !== 'update'){
     const promptMsg = page === 'store' ? 'view verified stores and seller catalogues'
       : (page === 'orders' ? 'make orders and track deliveries'
       : (page === 'cart' ? 'view your cart and make an order'
@@ -722,7 +737,7 @@ ${esc(update.message || '')}
 window.renderSellerFlowUpdatePage = renderSellerFlowUpdatePage;
 
 async function renderPage(targetPostId, options){
-  if(!currentUser && currentPage !== 'feed' && currentPage !== 'marketplace' && currentPage !== 'update'){
+  if(!currentUser && currentPage !== 'feed' && currentPage !== 'marketplace' && currentPage !== 'products' && currentPage !== 'update'){
     showAuthPrompt('access this page');
     navigate('feed');
     return;
@@ -1414,7 +1429,7 @@ async function postAction(e){
         }
       }
     }
-    const countEl=btn.parentElement?.querySelector('.reel-action-count');
+    const countEl=btn?.parentElement?.querySelector('.reel-action-count');
     if(countEl){
       const currentCount=action==='like'?(p.likes||[]).length:(p.saves||[]).length;
       countEl.textContent=formatReelCount(Math.max(0, currentCount+(wasActive?-1:1)));
@@ -1448,23 +1463,37 @@ window.toggleFollowSeller=toggleFollowSeller;
 function openCommentPanel(id,p){const root=$('modalRoot');root.innerHTML=`<div class="comment-backdrop" id="commentBackdrop"></div><section class="comment-sheet"><div class="flex items-center justify-between"><div><h2 class="text-xl font-bold">Comments</h2><p class="muted text-sm">Your Reel stays visible and playing while you comment.</p></div><button type="button" id="closeCommentPanel" class="w-10 h-10 rounded-full border border-[#333]">×</button></div><div class="space-y-3 my-5 max-h-64 overflow-auto">${(p.comments||[]).slice(-30).map(c=>`<div class="bg-[#191919] p-3 rounded-xl"><b>${esc(c.name||'User')}</b><div class="text-sm mt-1">${esc(c.text)}</div></div>`).join('')||'<p class="muted">No comments yet.</p>'}</div><textarea id="commentText" class="w-full bg-[#191919] border border-[#333] rounded-xl p-3" rows="3" placeholder="Write a comment…"></textarea><div class="flex justify-end mt-3">${button('Comment','submitComment')}</div></section>`;$('closeCommentPanel').onclick=closeModal;$('commentBackdrop').onclick=closeModal;$('submitComment').onclick=async()=>{if(!currentUser){closeModal();return showAuthPrompt('post comments on SellerFlow');}const text=$('commentText').value.trim();if(!text)return toast('Write a comment first','error');await updateDoc(doc(db,'posts',id),{comments:arrayUnion({uid:currentUser.uid,name:isAdmin?'SellerFlow':(currentProfile.name||'SellerFlow user'),createdAt:Date.now(),text})});closeModal();toast('Comment added','success')}}
 async function saveSoundForUser(id,p){if(!currentUser)return showAuthPrompt('save sounds');try{const soundId=p.soundId||id,originId=p.soundOriginPostId||id,originUid=p.soundOriginatorId||p.sellerId,origin=sellerProfile(originUid);await setDoc(doc(db,'savedSounds',currentUser.uid,'items',soundId),{soundId,originPostId:originId,originatorId:originUid,originatorName:origin.name||origin.username||'SellerFlow creator',soundName:p.soundName||'Original sound',savedAt:serverTimestamp()},{merge:true});localStorage.setItem('sellerflow_active_sound',JSON.stringify({soundId,originPostId:originId,originatorId:originUid,soundName:p.soundName||'Original sound',originatorName:origin.name||origin.username||'SellerFlow creator'}));toast(`Sound saved — original by ${origin.name||origin.username||'SellerFlow creator'}`,'success')}catch(e){toast(errMsg(e),'error')}}
 function getActiveSound(){try{return JSON.parse(localStorage.getItem('sellerflow_active_sound')||'null')}catch{return null}}
-function openPostModal(){if(!currentUser)return showAuthPrompt('create posts on SellerFlow');const active=getActiveSound();modal(`<h2 class="text-xl font-bold">Create SellerFlow post</h2><p class="muted text-sm mt-1">Photos and videos publish immediately while SellerFlow reviews them for safety.</p>${active?`<div class="sound-chip mt-4">🎵 Using sound: ${esc(active.soundName)} · Original by ${esc(active.originatorName)}</div>`:''}<textarea id="postText" class="w-full mt-4 bg-[#191919] border border-[#333] rounded-xl p-3" rows="5" placeholder="What do you want to share?"></textarea><input id="postFile" type="file" accept="image/*,video/mp4,video/webm" class="w-full mt-3"><p class="muted text-xs mt-2">Images up to 10MB; videos up to 50MB.</p><div class="flex justify-end gap-2 mt-4"><button data-close-modal class="px-4 py-2">Cancel</button>${button('Publish to For You','publishPost')}</div>`);$('publishPost').onclick=async()=>{try{const text=$('postText').value.trim(),file=$('postFile').files[0];if(!text&&!file)throw Error('Add text or media.');loading('Checking safety with SellerFlow AI…');let mediaUrl='',mediaType='',mediaPath='';if(file){validFile(file,['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm'],50);const x=await uploadPublic(file,'posts');mediaUrl=x.url;mediaPath=x.path;mediaType=file.type}const sound=active||null;const postData={sellerId:currentUser.uid,text,mediaUrl,mediaPath,mediaType,likes:[],saves:[],comments:[],status:'hidden',safeContent:false,createdAt:serverTimestamp(),submittedAt:serverTimestamp(),reviewStatus:'under_review',soundId:sound?.soundId||'',soundName:sound?.soundName||(mediaType.startsWith('video')?'Original sound':''),soundOriginPostId:sound?.originPostId||'',soundOriginatorId:sound?.originatorId||currentUser.uid,soundOriginName:sound?.originatorName||(isAdmin?'SellerFlow':currentProfile.name||'SellerFlow creator'),platformLabel:'SellerFlow',isAdminPost:!!isAdmin};const {ref,verdict,evalResult}=await executeSellerFlowAiPostPublish(postData,file,null);if(mediaType.startsWith('video')&&!sound)await setDoc(doc(db,'sounds',ref.id),{soundId:ref.id,originPostId:ref.id,originatorId:currentUser.uid,originatorName:isAdmin?'SellerFlow':(currentProfile.name||currentProfile.username||'SellerFlow creator'),soundName:`Original sound · ${currentProfile.name||'SellerFlow creator'}`,createdAt:serverTimestamp()},{merge:true});closeModal();if(verdict==='VIOLATION'){toast(`⚠️ Safety Policy Warning: Post hidden from public view due to a policy violation (${evalResult.detectedRule}). A warning has been recorded.`,'error');}else if(verdict==='REVIEW'){toast('Post submitted. It is currently queued for SellerFlow safety review.','success');}else{toast('Published to For You. Verified safe by SellerFlow AI.','success');}navigate('feed')}catch(e){toast(errMsg(e),'error')}finally{ready()}}}
+function openPostModal(){if(typeof window.__openPostModal==='function')return window.__openPostModal();if(!currentUser)return showAuthPrompt('create posts on SellerFlow');toast('Media editor initializing…','info');}
 
 async function renderDashboard(){if(!currentProfile?.verified&&!isAdmin){$('page').innerHTML=pageTitle('Dashboard unavailable','Seller dashboards are available after identity verification.')+`<div class="card p-8 text-center"><div class="text-5xl">🛡️</div><h2 class="text-xl font-bold mt-3">Verify to unlock your dashboard</h2><p class="muted mt-2">You can still use For You, publish community content and shop. Your business dashboard unlocks after verification.</p>${button('Go to Settings','dashboardVerify','mt-5')}</div>`;$('dashboardVerify').onclick=()=>navigate('settings');return}const [products,orders]=await Promise.all([getDocs(query(collection(db,'products'),where('sellerId','==',currentUser.uid))),getDocs(query(collection(db,'orders'),where('sellerIds','array-contains',currentUser.uid)))]);let revenue=0,pending=0;orders.forEach(d=>{const o=d.data();if(o.sellerId===currentUser.uid&&o.status!=='cancelled')revenue+=Number(o.total)||0;if(o.sellerId===currentUser.uid&&['pending','confirmed','processing'].includes(o.status))pending++});$('page').innerHTML=pageTitle('Dashboard','Your SellerFlow business overview.')+`<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"><div class="card p-5"><div class="muted text-sm">Products</div><div class="text-3xl font-black mt-2">${products.size}</div></div><div class="card p-5"><div class="muted text-sm">Orders</div><div class="text-3xl font-black mt-2">${orders.size}</div></div><div class="card p-5"><div class="muted text-sm">Pending</div><div class="text-3xl font-black mt-2">${pending}</div></div><div class="card p-5"><div class="muted text-sm">Revenue</div><div class="text-3xl font-black mt-2">${money(revenue)}</div></div></div><div class="grid lg:grid-cols-2 gap-5 mt-5"><div class="card p-6"><h2 class="font-bold text-xl">Seller verification</h2><p class="muted mt-2">${currentProfile.verified?'Your seller account is verified.':'Submit your Ghana Card so an admin can review your identity.'}</p>${currentProfile.verified?'<div class="font-bold mt-4 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':`<div class="muted text-sm mt-4">Verification is managed in Settings.</div>`}</div><div class="card p-6"><h2 class="font-bold text-xl">Store</h2><p class="muted mt-2">${currentProfile.verified?'Create or update your public storefront.':'Verification is required before opening a store.'}</p>${button('Manage store','storeDash','mt-4 border border-[#444] bg-transparent text-white')}</div></div>`;$('storeDash')?.addEventListener('click',()=>navigate('store'))}
 
-async function renderMarketplace(){
-  const stores=await getDocs(query(collection(db,'stores'),limit(100)));
-  const valid=stores.docs.map(d=>({id:d.id,...d.data()})).filter(s=>sellerProfile(s.ownerId).verified);
-  let activeFilter='all';
+async function renderMarketplace(initialTab = 'products', targetPostId, options){
+  const [storesSnap, productsSnap] = await Promise.all([
+    getDocs(query(collection(db,'stores'),limit(100))),
+    getDocs(query(collection(db,'products'),limit(300)))
+  ]);
+  const validStores = storesSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>sellerProfile(s.ownerId).verified);
+  const allProducts = productsSnap.docs.map(d=>({id:d.id,...d.data()}));
   
-  $('page').innerHTML=pageTitle('Marketplace','Discover verified Ghanaian sellers, local boutiques, and shops.')+`
+  let activeMarketTab = (initialTab === 'stores' || initialTab === 'products') ? initialTab : 'products';
+  let activeStoreFilter = 'all';
+  let activeProductFilter = 'all';
+  
+  const myProductsCount = currentUser ? allProducts.filter(p => p.sellerId === currentUser.uid).length : 0;
+  
+  $('page').innerHTML = `
+    <div class="flex items-center gap-2 text-xs mb-2">
+      <span class="text-gold font-bold flex items-center gap-1 cursor-pointer hover:underline" id="marketBreadcrumbRoot"><span>🛍️</span><span>Marketplace</span></span>
+      <span class="text-zinc-600">/</span>
+      <span id="marketBreadcrumbLabel" class="text-zinc-300 font-semibold">${activeMarketTab==='products'?'📦 Products Catalogue':'🏪 Verified Stores'}</span>
+    </div>` + pageTitle('Marketplace', 'Discover verified Ghanaian products, local boutiques, and shops.') + `
     ${!currentUser ? `
       <div class="mb-5 p-4 rounded-2xl bg-gradient-to-r from-[#1c180e] via-[#141414] to-[#121212] border border-gold/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-gold/5">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-gold/15 border border-gold/40 flex items-center justify-center text-xl shrink-0">🏪</div>
+          <div class="w-10 h-10 rounded-full bg-gold/15 border border-gold/40 flex items-center justify-center text-xl shrink-0">🛍️</div>
           <div>
-            <div class="font-bold text-sm text-white">Browse verified Ghanaian stores freely</div>
-            <div class="text-xs text-zinc-400 mt-0.5">Explore authentic sellers and local shops across Ghana. An account is required to visit store catalogues or make an order.</div>
+            <div class="font-bold text-sm text-white">Browse Ghanaian marketplace & products freely</div>
+            <div class="text-xs text-zinc-400 mt-0.5">Explore authentic products and verified local shops across Ghana. An account is required to place orders, add to cart, or message sellers.</div>
           </div>
         </div>
         <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
@@ -1473,41 +1502,196 @@ async function renderMarketplace(){
         </div>
       </div>
     ` : ''}
-    <div class="card p-4 md:p-5 mb-5 space-y-3">
-      <div class="relative">
-        <input id="marketSearch" class="w-full p-3.5 pl-10 rounded-xl bg-[#151515] border border-[#333] focus:border-gold text-sm" placeholder="Search stores by name, products, or location…">
-        <span class="absolute left-3.5 top-3.5 text-zinc-500">🔍</span>
+
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+      <div class="flex items-center gap-1.5 p-1 bg-[#141414] border border-[#282828] rounded-2xl w-full sm:w-auto">
+        <button type="button" id="tabMarketProducts" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 ${activeMarketTab==='products'?'bg-gold text-black shadow-sm font-black':'text-zinc-400 hover:text-white'}">
+          <span>📦</span>
+          <span>Products</span>
+          <span class="text-[11px] px-2 py-0.5 rounded-full ${activeMarketTab==='products'?'bg-black/20 text-black font-extrabold':'bg-[#222] text-zinc-400'}">${allProducts.length}</span>
+        </button>
+        <button type="button" id="tabMarketStores" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 ${activeMarketTab==='stores'?'bg-gold text-black shadow-sm font-black':'text-zinc-400 hover:text-white'}">
+          <span>🏪</span>
+          <span>Stores</span>
+          <span class="text-[11px] px-2 py-0.5 rounded-full ${activeMarketTab==='stores'?'bg-black/20 text-black font-extrabold':'bg-[#222] text-zinc-400'}">${validStores.length}</span>
+        </button>
       </div>
-      <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs" id="marketFilterChips">
-        <button class="market-chip active px-3.5 py-1.5 rounded-full border border-gold bg-gold text-black font-bold" data-cat="all">All stores (${valid.length})</button>
-        <button class="market-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300" data-cat="accra">📍 Accra / East Legon</button>
-        <button class="market-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300" data-cat="kumasi">📍 Kumasi</button>
-        <button class="market-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300" data-cat="fashion">👗 Fashion & Beauty</button>
-        <button class="market-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300" data-cat="tech">📱 Tech & Electronics</button>
-        <button class="market-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300" data-cat="food">🍲 Food & Provisions</button>
+
+      ${(isAdmin || currentProfile?.verified) ? `
+        <button type="button" id="marketAddProductBtn" class="btn px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gold text-black hover:brightness-110 shadow-sm flex items-center gap-1.5 shrink-0">
+          <span>+</span>
+          <span>Add product</span>
+        </button>
+      ` : ''}
+    </div>
+
+    <!-- PRODUCTS TAB VIEW -->
+    <div id="marketProductsView" class="${activeMarketTab==='products'?'':'hide'}">
+      <div class="card p-4 md:p-5 mb-5 space-y-3">
+        <div class="relative">
+          <input id="productSearch" class="w-full p-3.5 pl-10 rounded-xl bg-[#151515] border border-[#333] focus:border-gold text-sm text-white" placeholder="Search products by name, description, or seller…">
+          <span class="absolute left-3.5 top-3.5 text-zinc-500">🔍</span>
+        </div>
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs" id="productFilterChips">
+          <button class="prod-chip active px-3.5 py-1.5 rounded-full border border-gold bg-gold text-black font-bold whitespace-nowrap" data-pcat="all">All products (${allProducts.length})</button>
+          <button class="prod-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-pcat="fashion">👗 Fashion & Beauty</button>
+          <button class="prod-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-pcat="tech">📱 Tech & Electronics</button>
+          <button class="prod-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-pcat="food">🍲 Food & Provisions</button>
+          <button class="prod-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-pcat="home">🏠 Home & Living</button>
+          <button class="prod-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-pcat="instock">🟢 In stock only</button>
+          ${currentUser && (isAdmin || currentProfile?.verified) ? `<button class="prod-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-pcat="mine">👤 My catalogue (${myProductsCount})</button>` : ''}
+        </div>
+      </div>
+      <div class="flex items-center justify-between mb-3 text-xs muted px-1">
+        <span id="productCount">${allProducts.length} product${allProducts.length===1?'':'s'} available</span>
+        <span>🛡️ Verified Ghanaian Sellers</span>
+      </div>
+      <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        ${allProducts.length ? allProducts.map(marketplaceProductCard).join('') : '<div class="col-span-full card p-10 text-center muted"><div class="text-3xl mb-2">📦</div><p class="font-bold text-white">No products available yet.</p></div>'}
       </div>
     </div>
-    <div class="flex items-center justify-between mb-3 text-xs muted px-1">
-      <span id="marketCount">${valid.length} verified Ghanaian stores</span>
-      <span>🛡️ 100% ID Verified</span>
+
+    <!-- STORES TAB VIEW -->
+    <div id="marketStoresView" class="${activeMarketTab==='stores'?'':'hide'}">
+      <div class="card p-4 md:p-5 mb-5 space-y-3">
+        <div class="relative">
+          <input id="marketSearch" class="w-full p-3.5 pl-10 rounded-xl bg-[#151515] border border-[#333] focus:border-gold text-sm text-white" placeholder="Search stores by name, products, or location…">
+          <span class="absolute left-3.5 top-3.5 text-zinc-500">🔍</span>
+        </div>
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs" id="marketFilterChips">
+          <button class="market-chip active px-3.5 py-1.5 rounded-full border border-gold bg-gold text-black font-bold whitespace-nowrap" data-cat="all">All stores (${validStores.length})</button>
+          <button class="market-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-cat="accra">📍 Accra / East Legon</button>
+          <button class="market-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-cat="kumasi">📍 Kumasi</button>
+          <button class="market-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-cat="fashion">👗 Fashion & Beauty</button>
+          <button class="market-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-cat="tech">📱 Tech & Electronics</button>
+          <button class="market-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-cat="food">🍲 Food & Provisions</button>
+        </div>
+      </div>
+      <div class="flex items-center justify-between mb-3 text-xs muted px-1">
+        <span id="marketCount">${validStores.length} verified Ghanaian stores</span>
+        <span>🛡️ 100% ID Verified</span>
+      </div>
+      <div id="storeGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${validStores.length ? validStores.map(storeCard).join('') : '<div class="card p-8 muted text-center">No verified stores are available yet.</div>'}</div>
     </div>
-    <div id="storeGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${valid.length?valid.map(storeCard).join(''):'<div class="card p-8 muted text-center">No verified stores are available yet.</div>'}</div>
   `;
 
   $('marketGuestLogin')?.addEventListener('click',()=>showAuth('login'));
   $('marketGuestRegister')?.addEventListener('click',()=>showAuth('register'));
+  $('marketAddProductBtn')?.addEventListener('click',()=>openProductModal());
 
-  const filter=()=>{
+  // Tab switching logic
+  const setMarketTab = (tab) => {
+    activeMarketTab = tab;
+    const isProd = tab === 'products';
+    if($('marketBreadcrumbLabel')) $('marketBreadcrumbLabel').textContent = isProd ? '📦 Products Catalogue' : '🏪 Verified Stores';
+    $('tabMarketProducts')?.classList.toggle('bg-gold', isProd);
+    $('tabMarketProducts')?.classList.toggle('text-black', isProd);
+    $('tabMarketProducts')?.classList.toggle('shadow-sm', isProd);
+    $('tabMarketProducts')?.classList.toggle('font-black', isProd);
+    $('tabMarketProducts')?.classList.toggle('text-zinc-400', !isProd);
+
+    $('tabMarketStores')?.classList.toggle('bg-gold', !isProd);
+    $('tabMarketStores')?.classList.toggle('text-black', !isProd);
+    $('tabMarketStores')?.classList.toggle('shadow-sm', !isProd);
+    $('tabMarketStores')?.classList.toggle('font-black', !isProd);
+    $('tabMarketStores')?.classList.toggle('text-zinc-400', isProd);
+
+    if(isProd){
+      show($('marketProductsView'));
+      hide($('marketStoresView'));
+    } else {
+      hide($('marketProductsView'));
+      show($('marketStoresView'));
+    }
+  };
+
+  $('marketBreadcrumbRoot')?.addEventListener('click',()=>setMarketTab('products'));
+  $('tabMarketProducts')?.addEventListener('click',()=>setMarketTab('products'));
+  $('tabMarketStores')?.addEventListener('click',()=>setMarketTab('stores'));
+
+  // Products filtering
+  const filterProducts = () => {
+    const q = ($('productSearch')?.value||'').toLowerCase().trim();
+    const filtered = allProducts.filter(p => {
+      const sProf = sellerProfile(p.sellerId);
+      const hay = ((p.name||'') + ' ' + (p.description||'') + ' ' + (sProf.name||'') + ' ' + (sProf.username||'')).toLowerCase();
+      const matchQuery = !q || hay.includes(q);
+      let matchCat = true;
+      if(activeProductFilter === 'fashion') {
+        matchCat = /fashion|dress|cloth|wear|beauty|shoe|bag|hair|wig|jewel|heel|kente/i.test(hay);
+      } else if(activeProductFilter === 'tech') {
+        matchCat = /tech|phone|electr|laptop|gadget|sound|audio|apple|samsung|charger|watch|case/i.test(hay);
+      } else if(activeProductFilter === 'food') {
+        matchCat = /food|snack|drink|grocery|provision|spice|rice|oil|shito|tea|coffee|waakye/i.test(hay);
+      } else if(activeProductFilter === 'home') {
+        matchCat = /home|decor|living|bed|furniture|kitchen|light|lamp|art|craft/i.test(hay);
+      } else if(activeProductFilter === 'instock') {
+        matchCat = Number(p.stock) > 0;
+      } else if(activeProductFilter === 'mine') {
+        matchCat = currentUser && p.sellerId === currentUser.uid;
+      }
+      return matchQuery && matchCat;
+    });
+
+    const countEl = $('productCount');
+    if(countEl) countEl.textContent = `${filtered.length} product${filtered.length===1?'':'s'} found`;
+    const grid = $('productGrid');
+    if(grid) {
+      grid.innerHTML = filtered.length ? filtered.map(marketplaceProductCard).join('') : '<div class="col-span-full card p-10 text-center muted"><div class="text-3xl mb-2">📦</div><p class="font-bold text-white">No products match your search.</p><p class="text-xs mt-1">Try another keyword or category filter.</p></div>';
+      bindProductCards(filtered);
+    }
+  };
+
+  document.querySelectorAll('#productFilterChips [data-pcat]').forEach(btn=>{
+    btn.onclick=()=>{
+      document.querySelectorAll('#productFilterChips [data-pcat]').forEach(b=>{
+        b.className='prod-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap';
+      });
+      btn.className='prod-chip active px-3.5 py-1.5 rounded-full border border-gold bg-gold text-black font-bold whitespace-nowrap';
+      activeProductFilter = btn.dataset.pcat;
+      filterProducts();
+    };
+  });
+
+  const prodSearchEl = $('productSearch');
+  if(prodSearchEl) prodSearchEl.oninput = filterProducts;
+
+  const bindProductCards = (list) => {
+    document.querySelectorAll('[data-add-cart]').forEach(b=>{
+      b.onclick=()=>{
+        if(!currentUser) return showAuthPrompt('add products to cart and make orders');
+        const item = list.find(x=>x.id===b.dataset.addCart) || allProducts.find(x=>x.id===b.dataset.addCart);
+        if(item) addToCart(item);
+      };
+    });
+    document.querySelectorAll('[data-open-store]').forEach(b=>{
+      b.onclick=()=>openStore(b.dataset.openStore);
+    });
+    document.querySelectorAll('[data-edit-product]').forEach(b=>{
+      b.onclick=()=>{
+        const item = allProducts.find(x=>x.id===b.dataset.editProduct);
+        if(item) openProductModal(item);
+      };
+    });
+    document.querySelectorAll('[data-delete-product]').forEach(b=>{
+      b.onclick=()=>deleteProduct(b.dataset.deleteProduct);
+    });
+  };
+
+  bindProductCards(allProducts);
+
+  // Stores filtering
+  const filterStores = () => {
     const q=($('marketSearch')?.value||'').toLowerCase().trim();
-    const filtered=valid.filter(s=>{
+    const filtered=validStores.filter(s=>{
       const hay=(s.name+' '+(s.description||'')+' '+(s.location||'')+' '+(s.address||'')).toLowerCase();
       const matchQuery=!q || hay.includes(q);
       let matchCat=true;
-      if(activeFilter==='accra') matchCat=hay.includes('accra')||hay.includes('legon')||hay.includes('osu');
-      else if(activeFilter==='kumasi') matchCat=hay.includes('kumasi');
-      else if(activeFilter==='fashion') matchCat=hay.includes('fashion')||hay.includes('cloth')||hay.includes('wear')||hay.includes('beauty')||hay.includes('hair');
-      else if(activeFilter==='tech') matchCat=hay.includes('phone')||hay.includes('tech')||hay.includes('electr')||hay.includes('gadget');
-      else if(activeFilter==='food') matchCat=hay.includes('food')||hay.includes('snack')||hay.includes('grocery')||hay.includes('provis');
+      if(activeStoreFilter==='accra') matchCat=hay.includes('accra')||hay.includes('legon')||hay.includes('osu');
+      else if(activeStoreFilter==='kumasi') matchCat=hay.includes('kumasi');
+      else if(activeStoreFilter==='fashion') matchCat=hay.includes('fashion')||hay.includes('cloth')||hay.includes('wear')||hay.includes('beauty')||hay.includes('hair');
+      else if(activeStoreFilter==='tech') matchCat=hay.includes('phone')||hay.includes('tech')||hay.includes('electr')||hay.includes('gadget');
+      else if(activeStoreFilter==='food') matchCat=hay.includes('food')||hay.includes('snack')||hay.includes('grocery')||hay.includes('provis');
       return matchQuery && matchCat;
     });
     const countEl=$('marketCount');
@@ -1519,16 +1703,59 @@ async function renderMarketplace(){
   document.querySelectorAll('#marketFilterChips [data-cat]').forEach(btn=>{
     btn.onclick=()=>{
       document.querySelectorAll('#marketFilterChips [data-cat]').forEach(b=>{
-        b.className='market-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300';
+        b.className='market-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap';
       });
-      btn.className='market-chip active px-3.5 py-1.5 rounded-full border border-gold bg-gold text-black font-bold';
-      activeFilter=btn.dataset.cat;
-      filter();
+      btn.className='market-chip active px-3.5 py-1.5 rounded-full border border-gold bg-gold text-black font-bold whitespace-nowrap';
+      activeStoreFilter=btn.dataset.cat;
+      filterStores();
     };
   });
 
-  $('marketSearch').oninput=filter;
+  const marketSearchEl = $('marketSearch');
+  if(marketSearchEl) marketSearchEl.oninput = filterStores;
   bindStoreCards();
+}
+function marketplaceProductCard(p){
+  const s=sellerProfile(p.sellerId);
+  const isOwner=currentUser && p.sellerId===currentUser.uid;
+  const inStock=Number(p.stock) > 0;
+  return `
+    <div class="card p-4 flex flex-col justify-between" id="market-product-${esc(p.id)}">
+      <div>
+        <div class="relative w-full aspect-[4/3] sm:aspect-square rounded-xl overflow-hidden bg-[#161616] border border-[#262626]">
+          <img class="w-full h-full object-cover" src="${esc(p.imageUrl||'')}" alt="${esc(p.name||'Product')}" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 fill=%22none%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%231a1a1a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2228%22%3E📦%3C/text%3E%3C/svg%3E'">
+          ${!inStock ? `<span class="absolute top-2.5 right-2.5 bg-red-950/90 text-red-300 text-xs px-2.5 py-1 rounded-lg font-bold border border-red-700/60 shadow">Out of Stock</span>` : `<span class="absolute top-2.5 right-2.5 bg-black/70 backdrop-blur-sm text-zinc-300 text-xs px-2.5 py-1 rounded-lg border border-white/10 font-mono">${Number(p.stock)||0} in stock</span>`}
+        </div>
+        <button type="button" data-open-store="${esc(p.sellerId)}" class="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-gold mt-3 transition text-left w-full truncate">
+          <span>🏪</span>
+          <span class="truncate font-semibold">${esc(s.name || 'Verified Seller')}</span>
+          ${s.verified ? '<span class="verified-badge">✓</span>' : ''}
+        </button>
+        <div class="flex items-baseline justify-between gap-2 mt-1.5">
+          <b class="text-base sm:text-sm font-bold text-white leading-snug truncate" title="${esc(p.name)}">${esc(p.name)}</b>
+          <div class="gold font-black text-lg sm:text-base shrink-0">${money(p.price)}</div>
+        </div>
+        ${p.description ? `<p class="muted text-xs mt-1.5 line-clamp-2 leading-relaxed">${esc(p.description)}</p>` : ''}
+      </div>
+      <div class="mt-4 pt-3 border-t border-[#262626]">
+        ${isOwner ? `
+          <div class="flex gap-2">
+            <button type="button" data-edit-product="${p.id}" class="flex-1 border border-[#444] hover:border-gold rounded-xl py-2 text-xs font-semibold text-zinc-200 transition flex items-center justify-center gap-1">
+              <span>✏️</span><span>Edit</span>
+            </button>
+            <button type="button" data-delete-product="${p.id}" class="border border-red-700/70 hover:bg-red-950/30 text-red-400 rounded-xl px-3 py-2 text-xs font-semibold transition flex items-center justify-center gap-1">
+              <span>🗑️</span>
+            </button>
+          </div>
+        ` : `
+          <button type="button" data-add-cart="${p.id}" ${!inStock ? 'disabled' : ''} class="w-full ${!inStock ? 'bg-[#222] text-zinc-500 cursor-not-allowed' : 'bg-gold text-black font-bold hover:brightness-110 shadow-sm'} rounded-xl py-2.5 text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
+            <span>🛒</span>
+            <span>${!inStock ? 'Out of stock' : 'Add to cart'}</span>
+          </button>
+        `}
+      </div>
+    </div>
+  `;
 }
 function storeCard(s){
   const p=sellerProfile(s.ownerId);
@@ -1677,56 +1904,8 @@ function productCard(p){
 async function renderReviews(uid){const s=await getDocs(query(collection(db,'reviews'),where('sellerId','==',uid),limit(50)));$('reviews').innerHTML=s.docs.map(d=>{const r=d.data();return `<div class="border-b border-[#292929] py-3"><b>${esc(r.reviewerName)}</b><span class="gold ml-2">${'★'.repeat(Math.max(1,Math.min(5,r.rating)))}</span><p class="muted text-sm mt-1">${esc(r.text)}</p></div>`}).join('')||'<span class="muted">No reviews yet.</span>'}
 function openReviewModal(uid){modal(`<h2 class="text-xl font-bold">Review seller</h2><select id="reviewRating" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]"><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — Average</option><option value="2">2 — Poor</option><option value="1">1 — Very poor</option></select><textarea id="reviewText" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Tell other buyers about your experience…"></textarea><div class="flex justify-end gap-2 mt-4"><button data-close-modal>Cancel</button>${button('Submit','submitReview')}</div>`);$('submitReview').onclick=async()=>{try{const existing=await getDocs(query(collection(db,'reviews'),where('sellerId','==',uid),where('reviewerId','==',currentUser.uid),limit(1)));if(!existing.empty)throw Error('You already reviewed this seller.');const delivered=await getDocs(query(collection(db,'orders'),where('buyerId','==',currentUser.uid),where('sellerIds','array-contains',uid),where('status','==','delivered'),limit(1)));if(delivered.empty)throw Error('You can review a seller after a delivered order.');await addDoc(collection(db,'reviews'),{sellerId:uid,reviewerId:currentUser.uid,reviewerName:currentProfile.name,rating:Number($('reviewRating').value),text:$('reviewText').value.trim(),createdAt:serverTimestamp()});closeModal();toast('Review submitted','success');await openStore(uid)}catch(e){toast(errMsg(e),'error')}}}
 
-async function renderProducts(){
-  if(!currentProfile.verified){
-    $('page').innerHTML=pageTitle('Products','Manage your catalogue.')+`<div class="card p-7"><h2 class="text-xl font-bold">Verification required</h2><p class="muted mt-2">Only verified sellers can publish products.</p>${button('Open Settings','productVerify','mt-4')}</div>`;
-    $('productVerify').onclick=()=>navigate('settings');
-    return;
-  }
-  const s=await getDocs(query(collection(db,'products'),where('sellerId','==',currentUser.uid)));
-  const products=s.docs.map(d=>({id:d.id,...d.data()}));
-  $('page').innerHTML=pageTitle('Products','Add, edit and remove what you sell.')+`
-    <div class="flex justify-between items-center mb-5">
-      <div class="text-xs sm:text-sm muted">${products.length} product${products.length===1?'':'s'} in catalogue</div>
-      ${button('+ Add product','addProduct')}
-    </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      ${products.length?products.map(p=>`
-        <div class="card p-4 sm:p-4 flex flex-col justify-between" id="product-card-${esc(p.id)}">
-          <div>
-            <div class="relative w-full aspect-[4/3] sm:aspect-square rounded-xl overflow-hidden bg-[#161616] border border-[#262626]">
-              <img class="w-full h-full object-cover" src="${esc(p.imageUrl||'')}" alt="${esc(p.name||'Product')}" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 fill=%22none%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%231a1a1a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2228%22%3E📦%3C/text%3E%3C/svg%3E'">
-              ${Number(p.stock) <= 0 ? `<span class="absolute top-2.5 right-2.5 bg-red-950/90 text-red-300 text-xs px-2.5 py-1 rounded-lg font-bold border border-red-700/60 shadow">Out of Stock</span>` : `<span class="absolute top-2.5 right-2.5 bg-black/70 backdrop-blur-sm text-zinc-300 text-xs px-2.5 py-1 rounded-lg border border-white/10 font-mono">${Number(p.stock)||0} in stock</span>`}
-            </div>
-            <div class="flex items-baseline justify-between gap-3 mt-3.5">
-              <b class="text-base sm:text-sm font-bold text-white leading-snug truncate">${esc(p.name)}</b>
-              <div class="gold font-black text-lg sm:text-base shrink-0">${money(p.price)}</div>
-            </div>
-            ${p.description ? `<p class="muted text-xs sm:text-sm mt-1.5 line-clamp-2 leading-relaxed">${esc(p.description)}</p>` : ''}
-            <div class="flex items-center gap-2 mt-2.5 text-xs text-zinc-400">
-              <span class="inline-flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full ${Number(p.stock)>0?'bg-green-500':'bg-red-500'}"></span>
-                <span class="${Number(p.stock)>0?'text-zinc-300 font-medium':'text-red-400 font-semibold'}">${Number(p.stock)>0?`${Number(p.stock)} units available`:'Out of stock'}</span>
-              </span>
-            </div>
-          </div>
-          <div class="flex gap-2 mt-4 pt-3 border-t border-[#262626]">
-            <button type="button" data-edit-product="${p.id}" class="flex-1 border border-[#444] hover:border-gold rounded-xl py-2.5 text-xs sm:text-sm font-semibold text-zinc-200 transition flex items-center justify-center gap-1.5">
-              <span>✏️</span>
-              <span>Edit</span>
-            </button>
-            <button type="button" data-delete-product="${p.id}" class="border border-red-700/70 hover:bg-red-950/30 text-red-400 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5">
-              <span>🗑️</span>
-              <span>Delete</span>
-            </button>
-          </div>
-        </div>
-      `).join(''):'<div class="card p-7 muted">No products yet.</div>'}
-    </div>
-  `;
-  $('addProduct').onclick=()=>openProductModal();
-  document.querySelectorAll('[data-edit-product]').forEach(b=>b.onclick=()=>openProductModal(products.find(p=>p.id===b.dataset.editProduct)));
-  document.querySelectorAll('[data-delete-product]').forEach(b=>b.onclick=()=>deleteProduct(b.dataset.deleteProduct));
+async function renderProducts(targetPostId, options){
+  return renderMarketplace('products', targetPostId, options);
 }
 function openProductModal(p=null){modal(`<h2 class="text-xl font-bold">${p?'Edit product':'Add product'}</h2><input id="prodName" value="${esc(p?.name||'')}" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Product name"><input id="prodPrice" type="number" min="0" step="0.01" value="${p?.price??''}" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Price in GHS"><input id="prodStock" type="number" min="0" step="1" value="${p?.stock??0}" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Stock"><textarea id="prodDesc" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Description">${esc(p?.description||'')}</textarea><input id="prodFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-3"><p class="muted text-xs mt-2">Product image: maximum 10MB.</p><div class="flex justify-end gap-2 mt-4"><button data-close-modal>Cancel</button>${button(p?'Save changes':'Add product','saveProduct')}</div>`);$('saveProduct').onclick=async()=>{try{const name=$('prodName').value.trim(),price=Number($('prodPrice').value),stock=Number($('prodStock').value),description=$('prodDesc').value.trim(),file=$('prodFile').files[0];if(!name||!Number.isFinite(price)||price<0||!Number.isInteger(stock)||stock<0)throw Error('Enter a valid name, price and stock.');let imageUrl=p?.imageUrl||'',imagePath=p?.imagePath||'';if(file){validFile(file,['image/jpeg','image/png','image/webp'],10);const x=await uploadPublic(file,'products');imageUrl=x.url;imagePath=x.path}if(!imageUrl)throw Error('Choose a product image.');const data={sellerId:currentUser.uid,name,price,stock,description,imageUrl,imagePath,updatedAt:serverTimestamp()};if(p)await updateDoc(doc(db,'products',p.id),data);else await addDoc(collection(db,'products'),{...data,createdAt:serverTimestamp()});closeModal();toast(p?'Product updated':'Product added','success');navigate('products')}catch(e){toast(errMsg(e),'error')}}}
 async function deleteProduct(id){if(!confirm('Delete this product?'))return;try{const s=await getDoc(doc(db,'products',id));if(!snapshotExists(s)||s.data().sellerId!==currentUser.uid)throw Error('You cannot delete this product.');await deleteDoc(doc(db,'products',id));toast('Product deleted','success');navigate('products')}catch(e){toast(errMsg(e),'error')}}
@@ -2330,7 +2509,7 @@ function addToCart(p){
 }
 function saveCart(){localStorage.setItem('sellerflow_cart',JSON.stringify(cart));updateCartBadge()}
 function loadCart(){try{cart=JSON.parse(localStorage.getItem('sellerflow_cart')||'[]')||[]}catch{cart=[]}}
-function updateCartBadge(){$('cartCount').textContent=cart.reduce((n,i)=>n+i.quantity,0)}
+function updateCartBadge(){const el=$('cartCount');if(el)el.textContent=cart.reduce((n,i)=>n+i.quantity,0)}
 function renderCart(){
   if(!currentUser)return showAuthPrompt('view cart and make an order');
   const total=cart.reduce((n,i)=>n+i.price*i.quantity,0);
@@ -2831,6 +3010,7 @@ function updateOrdersBadge(count){
   const text=pendingOrdersCount>99?'99+':String(pendingOrdersCount);
   const badges=document.querySelectorAll('.orders-nav-badge, #desktopOrdersBadge, #mobileOrdersBadge');
   badges.forEach(b=>{
+    if(!b)return;
     b.textContent=text;
     if(pendingOrdersCount>0){
       b.classList.remove('hide');
@@ -3332,7 +3512,7 @@ $('logoutBtn')?.addEventListener('click',logoutUser);
 if($('authForm')){
   $('authForm').onsubmit=async e=>{
     e.preventDefault();
-    $('authError').textContent='';
+    if($('authError'))$('authError').textContent='';
     try{
       const email=$('authEmail').value.trim(),password=$('authPassword').value;
       if(!email||!password)throw Error('Enter your email and password.');
@@ -3351,7 +3531,7 @@ if($('authForm')){
       }else{
         await signInWithEmailAndPassword(auth,email,password);
       }
-    }catch(e){$('authError').textContent=errMsg(e);ready()}
+    }catch(e){if($('authError'))$('authError').textContent=errMsg(e);ready()}
   };
 }
 $('googleBtn')?.addEventListener('click',async()=>{try{if(authMode==='register'){if(!$('termsAccept')?.checked)throw Error('Please read and agree to the Terms & Conditions before creating your account.');await ensureTerms()}loading('Opening Google sign-in…');await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){toast(errMsg(e),'error')}finally{ready()}});
@@ -3466,7 +3646,7 @@ async function init(){
     });
   }catch(e){
     console.error('Firebase initialization failed:',e);
-    $('loadingText').textContent='Firebase could not start: '+errMsg(e);
+    const lt=$('loadingText');if(lt)lt.textContent='Firebase could not start: '+errMsg(e);
     setTimeout(()=>{hide($('loading'));showApp();navigate('feed');ready()},1200);
   }
 }
@@ -3479,6 +3659,24 @@ init();
 .avatar-stack{display:inline-flex;align-items:center}
 .avatar-stack > *{margin-right:-8px;border:2px solid #141414}
 .ai-badge{background:linear-gradient(135deg,rgba(245,185,66,.2),rgba(245,185,66,.05));border:1px solid rgba(245,185,66,.45);color:#f5b942}
+/* Media Upload Editor: Crop & Resolution Controls */
+.crop-viewport-box{position:relative;overflow:hidden;background:#050505;border:1px solid #333;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;transition:all .2s cubic-bezier(0.16,1,0.3,1)}
+.crop-grid-3x3{position:absolute;inset:0;pointer-events:none;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);border:1px solid rgba(255,255,255,.2);z-index:10}
+.crop-grid-3x3>div{border:0.5px dashed rgba(255,255,255,.16)}
+.crop-corner{position:absolute;width:14px;height:14px;pointer-events:none;z-index:11}
+.crop-corner-tl{top:6px;left:6px;border-top:2.5px solid #f5b942;border-left:2.5px solid #f5b942}
+.crop-corner-tr{top:6px;right:6px;border-top:2.5px solid #f5b942;border-right:2.5px solid #f5b942}
+.crop-corner-bl{bottom:6px;left:6px;border-bottom:2.5px solid #f5b942;border-left:2.5px solid #f5b942}
+.crop-corner-br{bottom:6px;right:6px;border-bottom:2.5px solid #f5b942;border-right:2.5px solid #f5b942}
+.sf-editor-tab{padding:7px 13px;font-size:12px;font-weight:700;border-radius:12px;background:#181818;border:1px solid #2e2e2e;color:#a1a1aa;transition:all .16s ease;cursor:pointer;white-space:nowrap;user-select:none}
+.sf-editor-tab:hover{color:#fff;border-color:#444}
+.sf-editor-tab.active{background:rgba(245,185,66,.12);border-color:#f5b942;color:#f5b942}
+.ratio-chip{padding:6px 12px;border-radius:10px;background:#181818;border:1px solid #303030;color:#d4d4d8;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px;transition:all .15s ease;cursor:pointer;white-space:nowrap;user-select:none}
+.ratio-chip:hover{background:#222;border-color:#555;color:#fff}
+.ratio-chip.active{background:#f5b942;color:#080808;border-color:#f5b942;font-weight:750;box-shadow:0 2px 10px rgba(245,185,66,.3)}
+.res-card{padding:10px 12px;border-radius:12px;background:#181818;border:1px solid #2e2e2e;color:#e4e4e7;cursor:pointer;transition:all .16s ease;text-align:left;user-select:none}
+.res-card:hover{border-color:#555;background:#202020}
+.res-card.active{border-color:#f5b942;background:rgba(245,185,66,.08);box-shadow:0 0 0 1px rgba(245,185,66,.4)}
 /* Photo Filters in Post Creation */
 .filter-strip{display:flex;gap:10px;overflow-x:auto;padding:6px 4px 10px 4px;scrollbar-width:thin;scrollbar-color:#333 #121212;-webkit-overflow-scrolling:touch}
 .filter-strip::-webkit-scrollbar{height:4px}
@@ -4063,7 +4261,32 @@ init();
     if(action==='sound'){await saveSoundForUser(id,p);return}
     if(action==='options'){openPostSettingsModal(id,p);return}
     if(action==='share'){const url=location.href.split('#')[0]+'#post='+id;if(navigator.share){try{await navigator.share({title:'SellerFlow post',text:p.text||'Check this SellerFlow post',url});await notifyPostOwner(id,'share')}catch{}}else{await navigator.clipboard?.writeText(url);await notifyPostOwner(id,'share');toast('Post link copied','success')}}
-    if(action==='like'||action==='save'){const wrap=document.querySelector(`[data-reel-id="${id}"]`);const btn=wrap?.querySelector(`[data-post-action="${action}"]`);if(btn){const nowActive=action==='like'?(currentUser&&!(p.likes||[]).includes(currentUser.uid)):(currentUser&&!(p.saves||[]).includes(currentUser.uid));btn.firstChild.textContent=action==='like'?(nowActive?'❤️':'🤍'):'🔖';const countEl=btn.querySelector('div');if(countEl)countEl.textContent=String((action==='like'?(p.likes||[]).length:(p.saves||[]).length)+(nowActive?1:-1))}toast(action==='like'?'Reaction updated':'Post saved','success')}
+    if(action==='like'||action==='save'){
+      const wrap=document.querySelector(`[data-reel-id="${id}"]`);
+      const btn=wrap?.querySelector(`[data-post-action="${action}"]`);
+      if(btn){
+        const nowActive=action==='like'?(currentUser&&!(p.likes||[]).includes(currentUser.uid)):(currentUser&&!(p.saves||[]).includes(currentUser.uid));
+        if(action==='like'){
+          btn.classList.toggle('is-liked', Boolean(nowActive));
+          const heartSvg = btn.querySelector('svg');
+          if(heartSvg){
+            heartSvg.setAttribute('class', nowActive ? 'w-6 h-6 text-red-500 fill-red-500' : 'w-6 h-6 text-white fill-none stroke-current');
+          }
+        } else if(action==='save'){
+          btn.classList.toggle('is-saved', Boolean(nowActive));
+          const saveSvg = btn.querySelector('svg');
+          if(saveSvg){
+            saveSvg.setAttribute('class', nowActive ? 'w-6 h-6 text-yellow-400 fill-yellow-400' : 'w-6 h-6 text-white fill-none stroke-current');
+          }
+        }
+        const countEl=btn.querySelector('.reel-action-count') || btn.querySelector('div');
+        if(countEl){
+          const baseCount = (action==='like'?(p.likes||[]).length:(p.saves||[]).length);
+          countEl.textContent=formatReelCount(Math.max(0, baseCount + (nowActive?1:-1)));
+        }
+      }
+      toast(action==='like'?'Reaction updated':'Post saved','success');
+    }
   };
 
   function openPostSettingsModal(id,p){
@@ -4406,15 +4629,15 @@ init();
     drawComments();
   };
 
-  /* Media editor: TikTok-style upload flow with in-video cover selection and AI-generated content label */
-  openPostModal=function(){
+  /* Media editor: Picture and video upload editor with resolution selection, framing & crop */
+  window.__openPostModal = openPostModal = function(){
     if(!currentUser) return showAuthPrompt('create a post');
-    const active=getActiveSound();
+    const active = getActiveSound();
     modal(`<div>
       <div class="flex items-center justify-between pb-3 border-b border-[#262626]">
         <div>
           <h2 class="text-xl font-black text-white">Create post</h2>
-          <p class="muted text-xs">Share a photo or video with Ghana's SellerFlow community.</p>
+          <p class="muted text-xs">Upload, crop, select resolution & edit photos or videos for SellerFlow.</p>
         </div>
       </div>
       <div class="mt-4">
@@ -4492,18 +4715,94 @@ init();
       { id: 'emerald', name: 'Emerald', filter: 'hue-rotate(50deg) saturate(1.3) contrast(1.08)', label: 'Emerald', desc: 'Lush tropical green undertones' }
     ];
 
-    let file=null,kind='',imageState={filter:'normal',brightness:100,contrast:100,saturation:100,rotation:0,zoom:1};
-    let capturedCoverBlob=null;
-    let showFineTuneSliders=false;
-    const area=$('editorArea');
+    let file = null, kind = '';
+    let imageCropState = { ratio: 'original', panX: 50, panY: 50, zoom: 1, rotation: 0 };
+    let imageResolution = '1080p'; // 'original' | '4k' | '1080p' | '720p' | '480p'
+    let imageFilters = { filter: 'normal', brightness: 100, contrast: 100, saturation: 100 };
+    let imgNaturalW = 0, imgNaturalH = 0;
+    let activeImageTab = 'crop'; // 'crop' | 'res' | 'filters' | 'tune'
+    let showCropGrid = true;
+
+    let videoCropState = { ratio: 'original', panX: 50, panY: 50, zoom: 1 };
+    let videoResolution = '720p'; // 'original' | '1080p' | '720p' | '480p' | '360p'
+    let vidNaturalW = 0, vidNaturalH = 0;
+    let activeVideoTab = 'crop'; // 'crop' | 'res' | 'cover'
+    let capturedCoverBlob = null;
+    let showVideoCropGrid = true;
+
+    const area = $('editorArea');
+
+    function calculateTargetDimensions(srcW, srcH, ratioKey, resKey){
+      const w = srcW || 1080;
+      const h = srcH || 1920;
+      let targetRatio;
+      if(ratioKey === '9:16') targetRatio = 9 / 16;
+      else if(ratioKey === '1:1') targetRatio = 1;
+      else if(ratioKey === '4:5') targetRatio = 4 / 5;
+      else if(ratioKey === '16:9') targetRatio = 16 / 9;
+      else if(ratioKey === '3:4') targetRatio = 3 / 4;
+      else targetRatio = w / h;
+
+      let maxDim;
+      if(resKey === '4k') maxDim = 3840;
+      else if(resKey === '1080p') maxDim = 1920;
+      else if(resKey === '720p') maxDim = 1280;
+      else if(resKey === '480p') maxDim = 854;
+      else if(resKey === '360p') maxDim = 640;
+      else maxDim = Math.max(w, h);
+
+      let targetW, targetH;
+      if(targetRatio <= 1){
+        if(resKey === '1080p'){ targetW = 1080; targetH = Math.round(1080 / targetRatio); }
+        else if(resKey === '720p'){ targetW = 720; targetH = Math.round(720 / targetRatio); }
+        else if(resKey === '480p'){ targetW = 480; targetH = Math.round(480 / targetRatio); }
+        else if(resKey === '360p'){ targetW = 360; targetH = Math.round(360 / targetRatio); }
+        else if(resKey === '4k'){ targetW = 2160; targetH = Math.round(2160 / targetRatio); }
+        else {
+          targetH = Math.round(Math.min(h, maxDim));
+          targetW = Math.round(targetH * targetRatio);
+        }
+      } else {
+        if(resKey === '1080p'){ targetH = 1080; targetW = Math.round(1080 * targetRatio); }
+        else if(resKey === '720p'){ targetH = 720; targetW = Math.round(720 * targetRatio); }
+        else if(resKey === '480p'){ targetH = 480; targetW = Math.round(480 * targetRatio); }
+        else if(resKey === '360p'){ targetH = 360; targetW = Math.round(360 * targetRatio); }
+        else if(resKey === '4k'){ targetH = 2160; targetW = Math.round(2160 * targetRatio); }
+        else {
+          targetW = Math.round(Math.min(w, maxDim));
+          targetH = Math.round(targetW / targetRatio);
+        }
+      }
+      targetW = Math.max(16, Math.round(targetW / 2) * 2);
+      targetH = Math.max(16, Math.round(targetH / 2) * 2);
+      return { targetW, targetH, targetRatio };
+    }
+
+    function getSourceCropRect(srcW, srcH, targetRatio, panX, panY, zoom){
+      const z = Math.max(1, zoom || 1);
+      const curAspect = srcW / srcH;
+      let cropW, cropH;
+      if(curAspect > targetRatio){
+        cropH = srcH / z;
+        cropW = cropH * targetRatio;
+      } else {
+        cropW = srcW / z;
+        cropH = cropW / targetRatio;
+      }
+      const maxX = Math.max(0, srcW - cropW);
+      const maxY = Math.max(0, srcH - cropH);
+      const cropX = Math.max(0, Math.min(maxX, ((panX ?? 50) / 100) * maxX));
+      const cropY = Math.max(0, Math.min(maxY, ((panY ?? 50) / 100) * maxY));
+      return { cropX, cropY, cropW, cropH };
+    }
 
     function getCombinedFilterCss(){
-      const fObj = SF_PHOTO_FILTERS.find(f => f.id === imageState.filter) || SF_PHOTO_FILTERS[0];
+      const fObj = SF_PHOTO_FILTERS.find(f => f.id === imageFilters.filter) || SF_PHOTO_FILTERS[0];
       const baseFilter = (!fObj.filter || fObj.filter === 'none') ? '' : fObj.filter;
       const adj = [];
-      if(imageState.brightness !== 100) adj.push(`brightness(${imageState.brightness}%)`);
-      if(imageState.contrast !== 100) adj.push(`contrast(${imageState.contrast}%)`);
-      if(imageState.saturation !== 100) adj.push(`saturate(${imageState.saturation}%)`);
+      if(imageFilters.brightness !== 100) adj.push(`brightness(${imageFilters.brightness}%)`);
+      if(imageFilters.contrast !== 100) adj.push(`contrast(${imageFilters.contrast}%)`);
+      if(imageFilters.saturation !== 100) adj.push(`saturate(${imageFilters.saturation}%)`);
 
       if(baseFilter && adj.length > 0){
         return `${baseFilter} ${adj.join(' ')}`;
@@ -4515,60 +4814,289 @@ init();
       return 'none';
     }
 
-    function applyImageStyles(){
-      const img=$('editorImg');
-      if(!img)return;
-      const fCss=getCombinedFilterCss();
-      img.style.filter=fCss==='none'?'none':fCss;
-      img.style.transform=`rotate(${imageState.rotation}deg) scale(${imageState.zoom})`;
+    function updateImageEditorUI(){
+      const box = $('cropViewportBox');
+      const img = $('editorImg');
+      if(!box || !img) return;
 
-      const badge=$('previewFilterBadge');
+      const natW = imgNaturalW || 1080;
+      const natH = imgNaturalH || 1920;
+      const { targetW, targetH, targetRatio } = calculateTargetDimensions(natW, natH, imageCropState.ratio, imageResolution);
+
+      // Adjust viewport box dimensions
+      if(imageCropState.ratio === '9:16'){
+        box.style.aspectRatio = '9 / 16';
+        box.style.maxHeight = '370px';
+        box.style.maxWidth = '225px';
+        box.style.margin = '0 auto';
+        box.style.width = '100%';
+      } else if(imageCropState.ratio === '1:1'){
+        box.style.aspectRatio = '1 / 1';
+        box.style.maxHeight = '310px';
+        box.style.maxWidth = '310px';
+        box.style.margin = '0 auto';
+        box.style.width = '100%';
+      } else if(imageCropState.ratio === '4:5'){
+        box.style.aspectRatio = '4 / 5';
+        box.style.maxHeight = '350px';
+        box.style.maxWidth = '280px';
+        box.style.margin = '0 auto';
+        box.style.width = '100%';
+      } else if(imageCropState.ratio === '16:9'){
+        box.style.aspectRatio = '16 / 9';
+        box.style.maxHeight = '270px';
+        box.style.maxWidth = '100%';
+        box.style.margin = '0 auto';
+        box.style.width = '100%';
+      } else if(imageCropState.ratio === '3:4'){
+        box.style.aspectRatio = '3 / 4';
+        box.style.maxHeight = '340px';
+        box.style.maxWidth = '255px';
+        box.style.margin = '0 auto';
+        box.style.width = '100%';
+      } else {
+        box.style.aspectRatio = `${natW} / ${natH}`;
+        box.style.maxHeight = '330px';
+        box.style.maxWidth = '100%';
+        box.style.margin = '0 auto';
+        box.style.width = 'auto';
+      }
+
+      // Apply image positioning and filters
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'cover';
+      img.style.objectPosition = `${imageCropState.panX}% ${imageCropState.panY}%`;
+      img.style.transform = `scale(${imageCropState.zoom}) rotate(${imageCropState.rotation}deg)`;
+      const fCss = getCombinedFilterCss();
+      img.style.filter = fCss === 'none' ? 'none' : fCss;
+
+      // Update badges
+      const ratioLabels = {
+        'original': 'Original Aspect',
+        '9:16': '9:16 Reel',
+        '1:1': '1:1 Square',
+        '4:5': '4:5 Portrait',
+        '16:9': '16:9 Landscape',
+        '3:4': '3:4 Photo'
+      };
+      if($('previewRatioText')) $('previewRatioText').textContent = ratioLabels[imageCropState.ratio] || imageCropState.ratio;
+      if($('previewResBadge')) $('previewResBadge').textContent = `${targetW} × ${targetH}`;
+      if($('targetResDimensions')) $('targetResDimensions').textContent = `${targetW} × ${targetH} px`;
+      if($('targetResAspect')) $('targetResAspect').textContent = `(${imageCropState.ratio === 'original' ? 'Native' : imageCropState.ratio})`;
+      
+      const qLabels = { '4k': '4K UHD', '1080p': 'Full HD', '720p': 'HD', '480p': 'SD', 'original': 'Native' };
+      if($('targetResQualityBadge')) $('targetResQualityBadge').textContent = qLabels[imageResolution] || imageResolution.toUpperCase();
+
+      const badge = $('previewFilterBadge');
       if(badge){
-        if(imageState.filter&&imageState.filter!=='normal'){
-          const fObj=SF_PHOTO_FILTERS.find(f=>f.id===imageState.filter);
-          badge.textContent=`✨ ${fObj?fObj.name:imageState.filter}`;
+        if(imageFilters.filter && imageFilters.filter !== 'normal'){
+          const fObj = SF_PHOTO_FILTERS.find(f => f.id === imageFilters.filter);
+          badge.textContent = `✨ ${fObj ? fObj.name : imageFilters.filter}`;
           badge.classList.remove('hide');
-        }else{
+        } else {
           badge.classList.add('hide');
         }
       }
 
-      const activeF=SF_PHOTO_FILTERS.find(f=>f.id===imageState.filter)||SF_PHOTO_FILTERS[0];
-      if($('activeFilterName'))$('activeFilterName').textContent=activeF.name;
-      if($('activeFilterDesc'))$('activeFilterDesc').textContent=activeF.desc;
+      // Active tab highlights
+      document.querySelectorAll('[data-img-tab]').forEach(b => {
+        b.classList.toggle('active', b.dataset.imgTab === activeImageTab);
+      });
+      ['crop', 'res', 'filters', 'tune'].forEach(tab => {
+        const p = $('imgTab_' + tab);
+        if(p) p.classList.toggle('hide', tab !== activeImageTab);
+      });
 
-      const hasCustomTune=imageState.brightness!==100||imageState.contrast!==100||imageState.saturation!==100||imageState.zoom!==1||imageState.rotation!==0;
-      if($('tuneDot'))$('tuneDot').classList.toggle('hide',!hasCustomTune);
+      // Ratio chip active state
+      document.querySelectorAll('[data-img-ratio]').forEach(b => {
+        b.classList.toggle('active', b.dataset.imgRatio === imageCropState.ratio);
+      });
+
+      // Resolution card active state
+      document.querySelectorAll('[data-img-res]').forEach(b => {
+        b.classList.toggle('active', b.dataset.imgRes === imageResolution);
+      });
+
+      // Sliders readouts
+      if($('valPanX')) $('valPanX').textContent = Math.round(imageCropState.panX) + '%';
+      if($('valPanY')) $('valPanY').textContent = Math.round(imageCropState.panY) + '%';
+      if($('valZoom')) $('valZoom').textContent = imageCropState.zoom.toFixed(1) + 'x';
+      if($('valBright')) $('valBright').textContent = imageFilters.brightness + '%';
+      if($('valContrast')) $('valContrast').textContent = imageFilters.contrast + '%';
+      if($('valSat')) $('valSat').textContent = imageFilters.saturation + '%';
+
+      // Grid toggle state
+      const grid = $('cropGridOverlay');
+      if(grid) grid.style.display = showCropGrid ? 'grid' : 'none';
+      if($('btnToggleGrid')) $('btnToggleGrid').classList.toggle('text-gold', showCropGrid);
     }
 
     function drawImage(){
-      if(!file)return;
-      const url=URL.createObjectURL(file);
-      const activeF=SF_PHOTO_FILTERS.find(f=>f.id===imageState.filter)||SF_PHOTO_FILTERS[0];
-      const hasCustomTune=imageState.brightness!==100||imageState.contrast!==100||imageState.saturation!==100||imageState.zoom!==1||imageState.rotation!==0;
+      if(!file) return;
+      const url = URL.createObjectURL(file);
 
-      area.innerHTML=`
-        <div class="relative rounded-2xl overflow-hidden bg-black border border-[#333] max-h-[380px] flex items-center justify-center">
-          <img id="editorImg" class="editor-preview max-h-[360px] object-contain transition-[filter] duration-150" src="${url}" style="filter:${getCombinedFilterCss()};transform:rotate(${imageState.rotation}deg) scale(${imageState.zoom})">
-          <div id="previewFilterBadge" class="absolute top-2.5 right-2.5 bg-black/80 backdrop-blur-sm border border-gold/40 text-gold text-[10px] font-bold px-2 py-0.5 rounded-full ${imageState.filter==='normal'?'hide':''}">
-            ✨ ${esc(activeF.name)}
+      area.innerHTML = `
+        <!-- Live Viewport & Framing Box -->
+        <div class="crop-viewport-box" id="cropViewportBox">
+          <img id="editorImg" class="transition-all duration-75 select-none pointer-events-none" src="${url}">
+          
+          <div id="cropGridOverlay" class="crop-grid-3x3">
+            <div></div><div></div><div></div>
+            <div></div><div></div><div></div>
+            <div></div><div></div><div></div>
+          </div>
+          
+          <div class="crop-corner crop-corner-tl"></div>
+          <div class="crop-corner crop-corner-tr"></div>
+          <div class="crop-corner crop-corner-bl"></div>
+          <div class="crop-corner crop-corner-br"></div>
+
+          <div id="previewRatioBadge" class="absolute top-2.5 left-2.5 bg-black/85 backdrop-blur-sm border border-gold/40 text-gold text-[10px] font-bold px-2.5 py-0.5 rounded-full z-20 flex items-center gap-1 shadow">
+            <span>📐</span><span id="previewRatioText">Original Aspect</span>
+          </div>
+          <div id="previewResBadge" class="absolute top-2.5 right-2.5 bg-black/85 backdrop-blur-sm border border-zinc-700 text-zinc-200 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full z-20 shadow">
+            1080p
+          </div>
+          <div id="previewFilterBadge" class="absolute bottom-2.5 left-2.5 bg-black/85 backdrop-blur-sm border border-gold/40 text-gold text-[10px] font-bold px-2 py-0.5 rounded-full z-20 hide shadow">
+            ✨ Normal
           </div>
         </div>
 
-        <!-- Photo Filters Carousel -->
-        <div class="mt-3 p-3 bg-[#161616] border border-[#2b2b2b] rounded-2xl">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-1.5">
-              <span class="text-sm">🎨</span>
-              <span class="text-xs font-bold text-zinc-200">Photo Filters</span>
-              <span class="text-[11px] text-zinc-400">· <span id="activeFilterName" class="text-gold font-bold">${esc(activeF.name)}</span></span>
+        <!-- Editor Navigation Tabs -->
+        <div class="flex items-center gap-1.5 p-1 bg-[#141414] border border-[#272727] rounded-xl mt-3 overflow-x-auto">
+          <button type="button" class="sf-editor-tab active" data-img-tab="crop">✂️ Crop & Framing</button>
+          <button type="button" class="sf-editor-tab" data-img-tab="res">📐 Resolution</button>
+          <button type="button" class="sf-editor-tab" data-img-tab="filters">🎨 Photo Filters</button>
+          <button type="button" class="sf-editor-tab" data-img-tab="tune">🎚️ Fine-Tune</button>
+        </div>
+
+        <!-- TAB 1: CROP & FRAMING -->
+        <div id="imgTab_crop" class="mt-3 space-y-3">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-zinc-200">Choose Aspect Ratio</span>
+            <div class="flex items-center gap-2">
+              <button type="button" id="btnToggleGrid" class="text-[11px] px-2 py-1 rounded-lg bg-[#202020] border border-[#333] hover:border-zinc-500 text-gold font-semibold transition" title="Toggle 3x3 Rule-of-Thirds Grid">▦ Grid</button>
+              <button type="button" id="btnResetCrop" class="text-[11px] px-2 py-1 rounded-lg bg-[#202020] border border-[#333] hover:border-zinc-500 text-zinc-300 font-semibold transition">↺ Reset</button>
             </div>
-            <span id="activeFilterDesc" class="text-[10px] text-zinc-500 hidden sm:inline truncate max-w-[180px]">${esc(activeF.desc)}</span>
           </div>
 
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
+            <button type="button" class="ratio-chip active" data-img-ratio="original">📐 Original</button>
+            <button type="button" class="ratio-chip" data-img-ratio="9:16">📱 9:16 (For You Reel)</button>
+            <button type="button" class="ratio-chip" data-img-ratio="1:1">⏹️ 1:1 (Square)</button>
+            <button type="button" class="ratio-chip" data-img-ratio="4:5">🖼️ 4:5 (Portrait)</button>
+            <button type="button" class="ratio-chip" data-img-ratio="16:9">🖥️ 16:9 (Landscape)</button>
+            <button type="button" class="ratio-chip" data-img-ratio="3:4">📸 3:4 (Photo)</button>
+          </div>
+
+          <!-- Framing & Pan Controls -->
+          <div class="p-3 bg-[#171717] border border-[#2b2b2b] rounded-xl space-y-3">
+            <div>
+              <div class="flex justify-between text-xs text-zinc-300 mb-1">
+                <span>↔️ Horizontal Framing (Pan X)</span>
+                <span id="valPanX" class="text-gold font-mono">50%</span>
+              </div>
+              <input id="imgPanX" type="range" min="0" max="100" value="${imageCropState.panX}" class="w-full accent-gold cursor-pointer">
+              <div class="flex justify-between text-[10px] text-zinc-500 mt-0.5">
+                <button type="button" id="quickPanLeft" class="hover:text-gold">Left</button>
+                <button type="button" id="quickPanCenter" class="hover:text-gold">Center</button>
+                <button type="button" id="quickPanRight" class="hover:text-gold">Right</button>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs text-zinc-300 mb-1">
+                <span>↕️ Vertical Framing (Pan Y)</span>
+                <span id="valPanY" class="text-gold font-mono">50%</span>
+              </div>
+              <input id="imgPanY" type="range" min="0" max="100" value="${imageCropState.panY}" class="w-full accent-gold cursor-pointer">
+              <div class="flex justify-between text-[10px] text-zinc-500 mt-0.5">
+                <button type="button" id="quickPanTop" class="hover:text-gold">Top</button>
+                <button type="button" id="quickPanMiddle" class="hover:text-gold">Center</button>
+                <button type="button" id="quickPanBottom" class="hover:text-gold">Bottom</button>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs text-zinc-300 mb-1">
+                <span>🔍 Zoom into Crop</span>
+                <span id="valZoom" class="text-gold font-mono">${imageCropState.zoom.toFixed(1)}x</span>
+              </div>
+              <input id="imgZoom" type="range" min="10" max="25" value="${Math.round(imageCropState.zoom * 10)}" class="w-full accent-gold cursor-pointer">
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: RESOLUTION SELECTION -->
+        <div id="imgTab_res" class="mt-3 space-y-3 hide">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-zinc-200">Select Export Resolution</span>
+            <span class="text-[11px] text-zinc-400">High-fidelity export</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button type="button" class="res-card ${imageResolution==='original'?'active':''}" data-img-res="original">
+              <div class="flex items-center justify-between">
+                <b class="text-xs">Original (Native)</b>
+                <span class="text-[9px] bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded font-bold">Max Quality</span>
+              </div>
+              <p class="text-[11px] text-zinc-400 mt-1">Preserves full camera resolution without downsampling.</p>
+            </button>
+
+            <button type="button" class="res-card ${imageResolution==='4k'?'active':''}" data-img-res="4k">
+              <div class="flex items-center justify-between">
+                <b class="text-xs">4K Ultra HD</b>
+                <span class="text-[9px] bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded font-bold">2160p</span>
+              </div>
+              <p class="text-[11px] text-zinc-400 mt-1">Ultra sharp 3840×2160 canvas for large screens.</p>
+            </button>
+
+            <button type="button" class="res-card ${imageResolution==='1080p'?'active':''}" data-img-res="1080p">
+              <div class="flex items-center justify-between">
+                <b class="text-xs text-gold">1080p Full HD ★</b>
+                <span class="text-[9px] bg-gold/20 text-gold border border-gold/40 px-1.5 py-0.5 rounded font-bold">Recommended</span>
+              </div>
+              <p class="text-[11px] text-zinc-400 mt-1">Ideal for SellerFlow Reels, For You feed, and stores.</p>
+            </button>
+
+            <button type="button" class="res-card ${imageResolution==='720p'?'active':''}" data-img-res="720p">
+              <div class="flex items-center justify-between">
+                <b class="text-xs">720p HD</b>
+                <span class="text-[9px] bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded font-bold">Mobile Fast</span>
+              </div>
+              <p class="text-[11px] text-zinc-400 mt-1">Smooth fast loading over mobile data networks in Ghana.</p>
+            </button>
+
+            <button type="button" class="res-card ${imageResolution==='480p'?'active':''}" data-img-res="480p">
+              <div class="flex items-center justify-between">
+                <b class="text-xs">480p Compact</b>
+                <span class="text-[9px] bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded font-bold">Data Saver</span>
+              </div>
+              <p class="text-[11px] text-zinc-400 mt-1">Ultra-light image file size for low-bandwidth connections.</p>
+            </button>
+          </div>
+
+          <!-- Live Target Resolution readout -->
+          <div class="p-3 bg-[#181818] border border-gold/30 rounded-xl flex items-center justify-between text-xs">
+            <div>
+              <span class="text-zinc-400">Target output:</span>
+              <b id="targetResDimensions" class="text-gold font-mono ml-1">1080 × 1920 px</b>
+              <span id="targetResAspect" class="text-zinc-400 ml-1">(9:16 Reel)</span>
+            </div>
+            <span id="targetResQualityBadge" class="bg-gold/20 text-gold border border-gold/40 px-2 py-0.5 rounded-md font-bold text-[10px]">Full HD</span>
+          </div>
+        </div>
+
+        <!-- TAB 3: PHOTO FILTERS -->
+        <div id="imgTab_filters" class="mt-3 space-y-2 hide">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-zinc-200">Ghanaian Aesthetic Filters</span>
+            <span class="text-[11px] text-gold font-semibold" id="filterLabelDesc">Normal</span>
+          </div>
           <div class="filter-strip" id="filterCarousel">
             ${SF_PHOTO_FILTERS.map(f=>{
-              const isSelected=f.id===imageState.filter;
+              const isSelected = f.id === imageFilters.filter;
               return `
                 <button type="button" class="photo-filter-chip flex flex-col items-center shrink-0 cursor-pointer group focus:outline-none" data-sf-filter="${f.id}" title="${esc(f.name)}: ${esc(f.desc)}">
                   <div class="filter-thumb-box w-14 h-14 rounded-xl overflow-hidden border-2 transition-all duration-150 ${isSelected?'border-gold ring-2 ring-gold/40 shadow-md scale-105':'border-[#333] hover:border-zinc-500'}">
@@ -4581,228 +5109,652 @@ init();
           </div>
         </div>
 
-        <!-- Toolbar: Fine-tune toggle, Rotate, Reset -->
-        <div class="flex items-center justify-between mt-2.5 gap-2">
-          <button type="button" id="toggleSlidersBtn" class="flex items-center gap-1.5 text-xs text-zinc-300 hover:text-white px-2.5 py-1.5 rounded-xl border border-[#333] bg-[#191919] transition">
-            <span>🎚️</span>
-            <span>Fine-tune adjustments</span>
-            <span id="tuneDot" class="w-1.5 h-1.5 rounded-full bg-gold ${hasCustomTune?'':'hide'}"></span>
-          </button>
-          <div class="flex items-center gap-1.5">
-            <button type="button" id="edRotate" class="text-xs text-zinc-300 hover:text-white px-2.5 py-1.5 rounded-xl border border-[#333] bg-[#191919] transition" title="Rotate 90 degrees">↻ Rotate 90°</button>
-            <button type="button" id="edReset" class="text-xs text-zinc-400 hover:text-zinc-200 px-2.5 py-1.5 rounded-xl border border-[#2b2b2b] bg-transparent transition">Reset</button>
+        <!-- TAB 4: FINE-TUNE & ROTATE -->
+        <div id="imgTab_tune" class="mt-3 p-3 bg-[#171717] border border-[#2b2b2b] rounded-xl space-y-3 hide">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-zinc-200">Color & Exposure Adjustments</span>
+            <div class="flex items-center gap-1.5">
+              <button type="button" id="btnRotate90" class="text-xs text-zinc-300 hover:text-white px-2.5 py-1 rounded-lg border border-[#333] bg-[#202020] transition">↻ Rotate 90°</button>
+              <button type="button" id="btnResetAdjust" class="text-xs text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg border border-[#2b2b2b] bg-transparent transition">Reset</button>
+            </div>
           </div>
-        </div>
 
-        <!-- Collapsible Fine-tune sliders -->
-        <div id="slidersPanel" class="editor-tools mt-2.5 ${showFineTuneSliders?'':'hide'}">
-          <div class="editor-tool">
-            <div class="flex justify-between text-xs text-zinc-300 mb-1"><span>Brightness</span><span id="valBright" class="text-zinc-400">${imageState.brightness}%</span></div>
-            <div class="range-row"><input id="edBright" type="range" min="50" max="150" value="${imageState.brightness}"></div>
+          <div>
+            <div class="flex justify-between text-xs text-zinc-300 mb-1"><span>Brightness</span><span id="valBright" class="text-zinc-400">${imageFilters.brightness}%</span></div>
+            <input id="edBright" type="range" min="50" max="150" value="${imageFilters.brightness}" class="w-full accent-gold cursor-pointer">
           </div>
-          <div class="editor-tool">
-            <div class="flex justify-between text-xs text-zinc-300 mb-1"><span>Contrast</span><span id="valContrast" class="text-zinc-400">${imageState.contrast}%</span></div>
-            <div class="range-row"><input id="edContrast" type="range" min="50" max="150" value="${imageState.contrast}"></div>
+
+          <div>
+            <div class="flex justify-between text-xs text-zinc-300 mb-1"><span>Contrast</span><span id="valContrast" class="text-zinc-400">${imageFilters.contrast}%</span></div>
+            <input id="edContrast" type="range" min="50" max="150" value="${imageFilters.contrast}" class="w-full accent-gold cursor-pointer">
           </div>
-          <div class="editor-tool">
-            <div class="flex justify-between text-xs text-zinc-300 mb-1"><span>Saturation</span><span id="valSat" class="text-zinc-400">${imageState.saturation}%</span></div>
-            <div class="range-row"><input id="edSat" type="range" min="0" max="180" value="${imageState.saturation}"></div>
-          </div>
-          <div class="editor-tool">
-            <div class="flex justify-between text-xs text-zinc-300 mb-1"><span>Zoom</span><span id="valZoom" class="text-zinc-400">${Math.round(imageState.zoom*100)}%</span></div>
-            <div class="range-row"><input id="edZoom" type="range" min="80" max="140" value="${Math.round(imageState.zoom*100)}"></div>
+
+          <div>
+            <div class="flex justify-between text-xs text-zinc-300 mb-1"><span>Saturation</span><span id="valSat" class="text-zinc-400">${imageFilters.saturation}%</span></div>
+            <input id="edSat" type="range" min="0" max="180" value="${imageFilters.saturation}" class="w-full accent-gold cursor-pointer">
           </div>
         </div>
       `;
 
-      // Attach filter chip click handlers
-      document.querySelectorAll('[data-sf-filter]').forEach(btn=>{
-        btn.onclick=()=>{
-          imageState.filter=btn.dataset.sfFilter;
-          applyImageStyles();
-          document.querySelectorAll('[data-sf-filter]').forEach(b=>{
-            const isSelected=b.dataset.sfFilter===imageState.filter;
-            const thumb=b.querySelector('.filter-thumb-box');
-            const label=b.querySelector('.filter-thumb-label');
-            if(thumb){
-              thumb.className=`filter-thumb-box w-14 h-14 rounded-xl overflow-hidden border-2 transition-all duration-150 ${isSelected?'border-gold ring-2 ring-gold/40 shadow-md scale-105':'border-[#333] hover:border-zinc-500'}`;
-            }
-            if(label){
-              label.className=`filter-thumb-label text-[10px] font-semibold mt-1 transition-colors ${isSelected?'text-gold':'text-zinc-400 group-hover:text-zinc-200'}`;
-            }
+      // Event Listeners for Tabs
+      document.querySelectorAll('[data-img-tab]').forEach(btn => {
+        btn.onclick = () => {
+          activeImageTab = btn.dataset.imgTab;
+          updateImageEditorUI();
+        };
+      });
+
+      // Aspect Ratio Selection
+      document.querySelectorAll('[data-img-ratio]').forEach(btn => {
+        btn.onclick = () => {
+          imageCropState.ratio = btn.dataset.imgRatio;
+          updateImageEditorUI();
+        };
+      });
+
+      // Resolution Selection
+      document.querySelectorAll('[data-img-res]').forEach(btn => {
+        btn.onclick = () => {
+          imageResolution = btn.dataset.imgRes;
+          updateImageEditorUI();
+        };
+      });
+
+      // Pan & Zoom
+      if($('imgPanX')) $('imgPanX').oninput = () => {
+        imageCropState.panX = Number($('imgPanX').value);
+        updateImageEditorUI();
+      };
+      if($('imgPanY')) $('imgPanY').oninput = () => {
+        imageCropState.panY = Number($('imgPanY').value);
+        updateImageEditorUI();
+      };
+      if($('imgZoom')) $('imgZoom').oninput = () => {
+        imageCropState.zoom = Number($('imgZoom').value) / 10;
+        updateImageEditorUI();
+      };
+
+      // Quick alignment buttons
+      if($('quickPanLeft')) $('quickPanLeft').onclick = () => { imageCropState.panX = 0; if($('imgPanX')) $('imgPanX').value = 0; updateImageEditorUI(); };
+      if($('quickPanCenter')) $('quickPanCenter').onclick = () => { imageCropState.panX = 50; if($('imgPanX')) $('imgPanX').value = 50; updateImageEditorUI(); };
+      if($('quickPanRight')) $('quickPanRight').onclick = () => { imageCropState.panX = 100; if($('imgPanX')) $('imgPanX').value = 100; updateImageEditorUI(); };
+      if($('quickPanTop')) $('quickPanTop').onclick = () => { imageCropState.panY = 0; if($('imgPanY')) $('imgPanY').value = 0; updateImageEditorUI(); };
+      if($('quickPanMiddle')) $('quickPanMiddle').onclick = () => { imageCropState.panY = 50; if($('imgPanY')) $('imgPanY').value = 50; updateImageEditorUI(); };
+      if($('quickPanBottom')) $('quickPanBottom').onclick = () => { imageCropState.panY = 100; if($('imgPanY')) $('imgPanY').value = 100; updateImageEditorUI(); };
+
+      if($('btnToggleGrid')) $('btnToggleGrid').onclick = () => {
+        showCropGrid = !showCropGrid;
+        updateImageEditorUI();
+      };
+
+      if($('btnResetCrop')) $('btnResetCrop').onclick = () => {
+        imageCropState.ratio = 'original';
+        imageCropState.panX = 50;
+        imageCropState.panY = 50;
+        imageCropState.zoom = 1;
+        imageCropState.rotation = 0;
+        if($('imgPanX')) $('imgPanX').value = 50;
+        if($('imgPanY')) $('imgPanY').value = 50;
+        if($('imgZoom')) $('imgZoom').value = 10;
+        updateImageEditorUI();
+      };
+
+      // Photo filters
+      document.querySelectorAll('[data-sf-filter]').forEach(btn => {
+        btn.onclick = () => {
+          imageFilters.filter = btn.dataset.sfFilter;
+          const fObj = SF_PHOTO_FILTERS.find(f => f.id === imageFilters.filter);
+          if($('filterLabelDesc')) $('filterLabelDesc').textContent = fObj ? fObj.name : 'Normal';
+          updateImageEditorUI();
+          document.querySelectorAll('[data-sf-filter]').forEach(b => {
+            const isSelected = b.dataset.sfFilter === imageFilters.filter;
+            const thumb = b.querySelector('.filter-thumb-box');
+            const label = b.querySelector('.filter-thumb-label');
+            if(thumb) thumb.className = `filter-thumb-box w-14 h-14 rounded-xl overflow-hidden border-2 transition-all duration-150 ${isSelected?'border-gold ring-2 ring-gold/40 shadow-md scale-105':'border-[#333] hover:border-zinc-500'}`;
+            if(label) label.className = `filter-thumb-label text-[10px] font-semibold mt-1 transition-colors ${isSelected?'text-gold':'text-zinc-400 group-hover:text-zinc-200'}`;
           });
         };
       });
 
-      // Toggle sliders button
-      $('toggleSlidersBtn').onclick=()=>{
-        showFineTuneSliders=!showFineTuneSliders;
-        const panel=$('slidersPanel');
-        if(panel)panel.classList.toggle('hide',!showFineTuneSliders);
+      // Fine tune sliders
+      if($('edBright')) $('edBright').oninput = () => {
+        imageFilters.brightness = Number($('edBright').value);
+        updateImageEditorUI();
+      };
+      if($('edContrast')) $('edContrast').oninput = () => {
+        imageFilters.contrast = Number($('edContrast').value);
+        updateImageEditorUI();
+      };
+      if($('edSat')) $('edSat').oninput = () => {
+        imageFilters.saturation = Number($('edSat').value);
+        updateImageEditorUI();
+      };
+      if($('btnRotate90')) $('btnRotate90').onclick = () => {
+        imageCropState.rotation = (imageCropState.rotation + 90) % 360;
+        updateImageEditorUI();
+      };
+      if($('btnResetAdjust')) $('btnResetAdjust').onclick = () => {
+        imageFilters = { filter: 'normal', brightness: 100, contrast: 100, saturation: 100 };
+        if($('edBright')) $('edBright').value = 100;
+        if($('edContrast')) $('edContrast').value = 100;
+        if($('edSat')) $('edSat').value = 100;
+        updateImageEditorUI();
       };
 
-      // Range sliders
-      $('edBright').oninput=()=>{
-        imageState.brightness=+$('edBright').value;
-        if($('valBright'))$('valBright').textContent=imageState.brightness+'%';
-        applyImageStyles();
+      const tempImg = new Image();
+      tempImg.onload = () => {
+        imgNaturalW = tempImg.naturalWidth;
+        imgNaturalH = tempImg.naturalHeight;
+        updateImageEditorUI();
       };
-      $('edContrast').oninput=()=>{
-        imageState.contrast=+$('edContrast').value;
-        if($('valContrast'))$('valContrast').textContent=imageState.contrast+'%';
-        applyImageStyles();
-      };
-      $('edSat').oninput=()=>{
-        imageState.saturation=+$('edSat').value;
-        if($('valSat'))$('valSat').textContent=imageState.saturation+'%';
-        applyImageStyles();
-      };
-      $('edZoom').oninput=()=>{
-        imageState.zoom=+$('edZoom').value/100;
-        if($('valZoom'))$('valZoom').textContent=Math.round(imageState.zoom*100)+'%';
-        applyImageStyles();
-      };
+      tempImg.src = url;
 
-      $('edRotate').onclick=()=>{
-        imageState.rotation=(imageState.rotation+90)%360;
-        applyImageStyles();
-      };
-
-      $('edReset').onclick=()=>{
-        imageState={filter:'normal',brightness:100,contrast:100,saturation:100,rotation:0,zoom:1};
-        drawImage();
-      };
+      updateImageEditorUI();
     }
 
-    function setupVideoCoverSelection(videoEl){
-      const canvas=$('coverCanvas');
-      if(!canvas||!videoEl)return;
-      const ctx=canvas.getContext('2d');
-      const updateCanvasCover=()=>{
-        if(!videoEl.videoWidth||!videoEl.videoHeight)return;
-        canvas.width=videoEl.videoWidth;
-        canvas.height=videoEl.videoHeight;
-        ctx.drawImage(videoEl,0,0,canvas.width,canvas.height);
-        canvas.toBlob(b=>{capturedCoverBlob=b},'image/jpeg',0.9);
+    function updateVideoCoverCanvas(){
+      const vEl = $('editorVideo');
+      const cvCanvas = $('coverCanvas');
+      if(!vEl || !cvCanvas || !vEl.videoWidth || !vEl.videoHeight) return;
+
+      const { targetW, targetH, targetRatio } = calculateTargetDimensions(vEl.videoWidth, vEl.videoHeight, videoCropState.ratio, videoResolution);
+      cvCanvas.width = targetW;
+      cvCanvas.height = targetH;
+      const ctx = cvCanvas.getContext('2d');
+      const { cropX, cropY, cropW, cropH } = getSourceCropRect(vEl.videoWidth, vEl.videoHeight, targetRatio, videoCropState.panX, videoCropState.panY, videoCropState.zoom);
+      ctx.drawImage(vEl, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
+      cvCanvas.toBlob(b => { capturedCoverBlob = b; }, 'image/jpeg', 0.90);
+    }
+
+    function updateVideoEditorUI(){
+      const box = $('cropViewportBox');
+      const vid = $('editorVideo');
+      if(!box || !vid) return;
+
+      const natW = vidNaturalW || vid.videoWidth || 1080;
+      const natH = vidNaturalH || vid.videoHeight || 1920;
+      const { targetW, targetH, targetRatio } = calculateTargetDimensions(natW, natH, videoCropState.ratio, videoResolution);
+
+      // Adjust viewport container
+      if(videoCropState.ratio === '9:16'){
+        box.style.aspectRatio = '9 / 16';
+        box.style.maxHeight = '370px';
+        box.style.maxWidth = '225px';
+        box.style.margin = '0 auto';
+        box.style.width = '100%';
+      } else if(videoCropState.ratio === '1:1'){
+        box.style.aspectRatio = '1 / 1';
+        box.style.maxHeight = '310px';
+        box.style.maxWidth = '310px';
+        box.style.margin = '0 auto';
+        box.style.width = '100%';
+      } else if(videoCropState.ratio === '4:5'){
+        box.style.aspectRatio = '4 / 5';
+        box.style.maxHeight = '350px';
+        box.style.maxWidth = '280px';
+        box.style.margin = '0 auto';
+        box.style.width = '100%';
+      } else if(videoCropState.ratio === '16:9'){
+        box.style.aspectRatio = '16 / 9';
+        box.style.maxHeight = '270px';
+        box.style.maxWidth = '100%';
+        box.style.margin = '0 auto';
+        box.style.width = '100%';
+      } else if(videoCropState.ratio === '3:4'){
+        box.style.aspectRatio = '3 / 4';
+        box.style.maxHeight = '340px';
+        box.style.maxWidth = '255px';
+        box.style.margin = '0 auto';
+        box.style.width = '100%';
+      } else {
+        box.style.aspectRatio = `${natW} / ${natH}`;
+        box.style.maxHeight = '330px';
+        box.style.maxWidth = '100%';
+        box.style.margin = '0 auto';
+        box.style.width = 'auto';
+      }
+
+      // Style video framing
+      vid.style.width = '100%';
+      vid.style.height = '100%';
+      vid.style.objectFit = 'cover';
+      vid.style.objectPosition = `${videoCropState.panX}% ${videoCropState.panY}%`;
+      vid.style.transform = `scale(${videoCropState.zoom})`;
+
+      // Update badges
+      const ratioLabels = {
+        'original': 'Original Aspect',
+        '9:16': '9:16 Reel',
+        '1:1': '1:1 Square',
+        '4:5': '4:5 Portrait',
+        '16:9': '16:9 Landscape',
+        '3:4': '3:4 Photo'
       };
-      videoEl.onloadeddata=()=>{
-        videoEl.currentTime=0.1;
-      };
-      videoEl.onseeked=()=>{
-        updateCanvasCover();
-        if($('coverTimeLabel'))$('coverTimeLabel').textContent=videoEl.currentTime.toFixed(1)+'s';
-      };
-      $('coverRange')?.addEventListener('input',e=>{
-        const pct=Number(e.target.value);
-        if(videoEl.duration){
-          videoEl.currentTime=(pct/100)*videoEl.duration;
-        }
+      if($('vidRatioText')) $('vidRatioText').textContent = ratioLabels[videoCropState.ratio] || videoCropState.ratio;
+      if($('vidResBadge')) $('vidResBadge').textContent = `${targetW} × ${targetH}`;
+      if($('vidTargetResDimensions')) $('vidTargetResDimensions').textContent = `${targetW} × ${targetH} px`;
+      if($('vidTargetResAspect')) $('vidTargetResAspect').textContent = `(${videoCropState.ratio === 'original' ? 'Native' : videoCropState.ratio})`;
+
+      const qLabels = { '1080p': 'Full HD', '720p': 'HD', '480p': 'SD', '360p': 'Mobile', 'original': 'Native' };
+      if($('vidTargetResQualityBadge')) $('vidTargetResQualityBadge').textContent = qLabels[videoResolution] || videoResolution.toUpperCase();
+
+      // Active tab highlights
+      document.querySelectorAll('[data-vid-tab]').forEach(b => {
+        b.classList.toggle('active', b.dataset.vidTab === activeVideoTab);
       });
+      ['crop', 'res', 'cover'].forEach(tab => {
+        const p = $('vidTab_' + tab);
+        if(p) p.classList.toggle('hide', tab !== activeVideoTab);
+      });
+
+      // Ratio chip active
+      document.querySelectorAll('[data-vid-ratio]').forEach(b => {
+        b.classList.toggle('active', b.dataset.vidRatio === videoCropState.ratio);
+      });
+
+      // Resolution card active
+      document.querySelectorAll('[data-vid-res]').forEach(b => {
+        b.classList.toggle('active', b.dataset.vidRes === videoResolution);
+      });
+
+      // Sliders readouts
+      if($('vidValPanX')) $('vidValPanX').textContent = Math.round(videoCropState.panX) + '%';
+      if($('vidValPanY')) $('vidValPanY').textContent = Math.round(videoCropState.panY) + '%';
+      if($('vidValZoom')) $('vidValZoom').textContent = videoCropState.zoom.toFixed(1) + 'x';
+
+      // Grid toggle
+      const grid = $('cropGridOverlay');
+      if(grid) grid.style.display = showVideoCropGrid ? 'grid' : 'none';
+      if($('btnToggleVidGrid')) $('btnToggleVidGrid').classList.toggle('text-gold', showVideoCropGrid);
+
+      updateVideoCoverCanvas();
     }
 
-    $('postFile').onchange=()=>{
-      file=$('postFile').files[0];
-      if(!file){area.innerHTML='';capturedCoverBlob=null;return}
-      kind=file.type.startsWith('video')?'video':'image';
-      if(kind==='image'){
-        capturedCoverBlob=null;
-        drawImage();
-      }else{
-        const u=URL.createObjectURL(file);
-        area.innerHTML=`
-          <div class="rounded-2xl overflow-hidden bg-black border border-[#333]">
-            <video id="editorVideo" class="w-full max-h-[300px] object-contain" src="${u}" controls playsinline></video>
+    function drawVideo(){
+      if(!file) return;
+      const url = URL.createObjectURL(file);
+
+      area.innerHTML = `
+        <!-- Live Video Viewport & Crop Framing Box -->
+        <div class="crop-viewport-box" id="cropViewportBox">
+          <video id="editorVideo" class="transition-all duration-75 select-none" src="${url}" controls playsinline preload="auto"></video>
+          
+          <div id="cropGridOverlay" class="crop-grid-3x3">
+            <div></div><div></div><div></div>
+            <div></div><div></div><div></div>
+            <div></div><div></div><div></div>
           </div>
           
-          <!-- TikTok style video cover picker -->
-          <div class="p-3.5 bg-[#161616] border border-[#2b2b2b] rounded-2xl mt-3">
-            <div class="flex items-center justify-between text-xs mb-2">
-              <span class="font-bold flex items-center gap-1.5 text-zinc-200">
-                <span>🖼️</span> Select video cover frame
-              </span>
-              <span id="coverTimeLabel" class="text-gold font-mono font-bold">0.1s</span>
+          <div class="crop-corner crop-corner-tl"></div>
+          <div class="crop-corner crop-corner-tr"></div>
+          <div class="crop-corner crop-corner-bl"></div>
+          <div class="crop-corner crop-corner-br"></div>
+
+          <div id="previewRatioBadge" class="absolute top-2.5 left-2.5 bg-black/85 backdrop-blur-sm border border-gold/40 text-gold text-[10px] font-bold px-2.5 py-0.5 rounded-full z-20 flex items-center gap-1 shadow">
+            <span>📐</span><span id="vidRatioText">Original Aspect</span>
+          </div>
+          <div id="previewResBadge" class="absolute top-2.5 right-2.5 bg-black/85 backdrop-blur-sm border border-zinc-700 text-zinc-200 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full z-20 shadow">
+            <span id="vidResBadge">720p</span>
+          </div>
+        </div>
+
+        <!-- Video Editor Tabs -->
+        <div class="flex items-center gap-1.5 p-1 bg-[#141414] border border-[#272727] rounded-xl mt-3 overflow-x-auto">
+          <button type="button" class="sf-editor-tab active" data-vid-tab="crop">✂️ Crop & Framing</button>
+          <button type="button" class="sf-editor-tab" data-vid-tab="res">📐 Resolution</button>
+          <button type="button" class="sf-editor-tab" data-vid-tab="cover">🖼️ Cover Frame</button>
+        </div>
+
+        <!-- TAB 1: VIDEO CROP & FRAMING -->
+        <div id="vidTab_crop" class="mt-3 space-y-3">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-zinc-200">Video Aspect Ratio</span>
+            <div class="flex items-center gap-2">
+              <button type="button" id="btnToggleVidGrid" class="text-[11px] px-2 py-1 rounded-lg bg-[#202020] border border-[#333] hover:border-zinc-500 text-gold font-semibold transition" title="Toggle 3x3 Grid">▦ Grid</button>
+              <button type="button" id="btnResetVidCrop" class="text-[11px] px-2 py-1 rounded-lg bg-[#202020] border border-[#333] hover:border-zinc-500 text-zinc-300 font-semibold transition">↺ Reset</button>
             </div>
-            <div class="flex items-center gap-3">
-              <div class="relative w-16 h-24 shrink-0 rounded-xl overflow-hidden bg-black border border-gold shadow-md">
-                <canvas id="coverCanvas" class="w-full h-full object-cover"></canvas>
-                <span class="absolute bottom-1 right-1 bg-black/80 text-[8px] px-1 rounded text-gold font-bold">Cover</span>
+          </div>
+
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
+            <button type="button" class="ratio-chip active" data-vid-ratio="original">📐 Original</button>
+            <button type="button" class="ratio-chip" data-vid-ratio="9:16">📱 9:16 (For You Reel)</button>
+            <button type="button" class="ratio-chip" data-vid-ratio="1:1">⏹️ 1:1 (Square)</button>
+            <button type="button" class="ratio-chip" data-vid-ratio="4:5">🖼️ 4:5 (Portrait)</button>
+            <button type="button" class="ratio-chip" data-vid-ratio="16:9">🖥️ 16:9 (Landscape)</button>
+            <button type="button" class="ratio-chip" data-vid-ratio="3:4">📸 3:4 (Photo)</button>
+          </div>
+
+          <!-- Video Framing Sliders -->
+          <div class="p-3 bg-[#171717] border border-[#2b2b2b] rounded-xl space-y-3">
+            <div>
+              <div class="flex justify-between text-xs text-zinc-300 mb-1">
+                <span>↔️ Horizontal Framing (Pan X)</span>
+                <span id="vidValPanX" class="text-gold font-mono">50%</span>
               </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-[11px] text-zinc-400 mb-2">Drag the slider across the video to select the exact thumbnail frame viewers see on your profile:</p>
-                <input type="range" id="coverRange" min="0" max="100" value="0" step="0.5" class="w-full accent-gold cursor-pointer">
-                <div class="flex justify-between text-[10px] text-zinc-500 mt-1">
-                  <span>Beginning</span>
-                  <span>Middle</span>
-                  <span>End</span>
-                </div>
+              <input id="vidPanX" type="range" min="0" max="100" value="${videoCropState.panX}" class="w-full accent-gold cursor-pointer">
+              <div class="flex justify-between text-[10px] text-zinc-500 mt-0.5">
+                <button type="button" id="vidQuickLeft" class="hover:text-gold">Left</button>
+                <button type="button" id="vidQuickCenter" class="hover:text-gold">Center</button>
+                <button type="button" id="vidQuickRight" class="hover:text-gold">Right</button>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs text-zinc-300 mb-1">
+                <span>↕️ Vertical Framing (Pan Y)</span>
+                <span id="vidValPanY" class="text-gold font-mono">50%</span>
+              </div>
+              <input id="vidPanY" type="range" min="0" max="100" value="${videoCropState.panY}" class="w-full accent-gold cursor-pointer">
+              <div class="flex justify-between text-[10px] text-zinc-500 mt-0.5">
+                <button type="button" id="vidQuickTop" class="hover:text-gold">Top</button>
+                <button type="button" id="vidQuickMiddle" class="hover:text-gold">Center</button>
+                <button type="button" id="vidQuickBottom" class="hover:text-gold">Bottom</button>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs text-zinc-300 mb-1">
+                <span>🔍 Video Zoom Scale</span>
+                <span id="vidValZoom" class="text-gold font-mono">${videoCropState.zoom.toFixed(1)}x</span>
+              </div>
+              <input id="vidZoom" type="range" min="10" max="22" value="${Math.round(videoCropState.zoom * 10)}" class="w-full accent-gold cursor-pointer">
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: VIDEO RESOLUTION -->
+        <div id="vidTab_res" class="mt-3 space-y-3 hide">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-zinc-200">Select Video Resolution</span>
+            <span class="text-[11px] text-zinc-400">Optimized playback</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button type="button" class="res-card ${videoResolution==='original'?'active':''}" data-vid-res="original">
+              <div class="flex items-center justify-between">
+                <b class="text-xs">Original (Native)</b>
+                <span class="text-[9px] bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded font-bold">Source</span>
+              </div>
+              <p class="text-[11px] text-zinc-400 mt-1">Upload original recorded resolution without alteration.</p>
+            </button>
+
+            <button type="button" class="res-card ${videoResolution==='1080p'?'active':''}" data-vid-res="1080p">
+              <div class="flex items-center justify-between">
+                <b class="text-xs">1080p Full HD</b>
+                <span class="text-[9px] bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded font-bold">High Def</span>
+              </div>
+              <p class="text-[11px] text-zinc-400 mt-1">Crisp high-definition 1080×1920 video for modern smartphones.</p>
+            </button>
+
+            <button type="button" class="res-card ${videoResolution==='720p'?'active':''}" data-vid-res="720p">
+              <div class="flex items-center justify-between">
+                <b class="text-xs text-gold">720p HD ★</b>
+                <span class="text-[9px] bg-gold/20 text-gold border border-gold/40 px-1.5 py-0.5 rounded font-bold">Recommended</span>
+              </div>
+              <p class="text-[11px] text-zinc-400 mt-1">Optimal standard for Ghana: fast streaming, high sharpness, data friendly.</p>
+            </button>
+
+            <button type="button" class="res-card ${videoResolution==='480p'?'active':''}" data-vid-res="480p">
+              <div class="flex items-center justify-between">
+                <b class="text-xs">480p SD</b>
+                <span class="text-[9px] bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded font-bold">Data Saver</span>
+              </div>
+              <p class="text-[11px] text-zinc-400 mt-1">Fast upload and low-data consumption for buyers on 3G/4G.</p>
+            </button>
+
+            <button type="button" class="res-card ${videoResolution==='360p'?'active':''}" data-vid-res="360p">
+              <div class="flex items-center justify-between">
+                <b class="text-xs">360p Mobile</b>
+                <span class="text-[9px] bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded font-bold">Ultra Light</span>
+              </div>
+              <p class="text-[11px] text-zinc-400 mt-1">Compact video size for rapid upload on low-bandwidth networks.</p>
+            </button>
+          </div>
+
+          <!-- Live Target Resolution readout -->
+          <div class="p-3 bg-[#181818] border border-gold/30 rounded-xl flex items-center justify-between text-xs">
+            <div>
+              <span class="text-zinc-400">Delivery target:</span>
+              <b id="vidTargetResDimensions" class="text-gold font-mono ml-1">720 × 1280 px</b>
+              <span id="vidTargetResAspect" class="text-zinc-400 ml-1">(9:16 Reel)</span>
+            </div>
+            <span id="vidTargetResQualityBadge" class="bg-gold/20 text-gold border border-gold/40 px-2 py-0.5 rounded-md font-bold text-[10px]">HD</span>
+          </div>
+        </div>
+
+        <!-- TAB 3: COVER FRAME PICKER -->
+        <div id="vidTab_cover" class="mt-3 p-3.5 bg-[#161616] border border-[#2b2b2b] rounded-2xl space-y-3 hide">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold flex items-center gap-1.5 text-zinc-200">
+              <span>🖼️</span> Select Video Thumbnail Cover
+            </span>
+            <span id="coverTimeLabel" class="text-gold font-mono font-bold">0.1s</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="relative w-16 h-24 shrink-0 rounded-xl overflow-hidden bg-black border border-gold shadow-md">
+              <canvas id="coverCanvas" class="w-full h-full object-cover"></canvas>
+              <span class="absolute bottom-1 right-1 bg-black/80 text-[8px] px-1 rounded text-gold font-bold">Cover</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[11px] text-zinc-400 mb-2">Drag the timeline slider to pick the frame that best showcases your product or video:</p>
+              <input type="range" id="coverRange" min="0" max="100" value="0" step="0.5" class="w-full accent-gold cursor-pointer">
+              <div class="flex justify-between text-[10px] text-zinc-500 mt-1">
+                <span>Start</span>
+                <span>Middle</span>
+                <span>End</span>
               </div>
             </div>
           </div>
-        `;
-        const vEl=$('editorVideo');
-        setupVideoCoverSelection(vEl);
+        </div>
+      `;
+
+      const vEl = $('editorVideo');
+      if(vEl){
+        vEl.onloadedmetadata = () => {
+          vidNaturalW = vEl.videoWidth;
+          vidNaturalH = vEl.videoHeight;
+          updateVideoEditorUI();
+        };
+        vEl.onloadeddata = () => {
+          vEl.currentTime = 0.1;
+        };
+        vEl.onseeked = () => {
+          updateVideoCoverCanvas();
+          if($('coverTimeLabel')) $('coverTimeLabel').textContent = vEl.currentTime.toFixed(1) + 's';
+        };
+      }
+
+      // Tab switcher
+      document.querySelectorAll('[data-vid-tab]').forEach(btn => {
+        btn.onclick = () => {
+          activeVideoTab = btn.dataset.vidTab;
+          updateVideoEditorUI();
+        };
+      });
+
+      // Ratio selection
+      document.querySelectorAll('[data-vid-ratio]').forEach(btn => {
+        btn.onclick = () => {
+          videoCropState.ratio = btn.dataset.vidRatio;
+          updateVideoEditorUI();
+        };
+      });
+
+      // Resolution selection
+      document.querySelectorAll('[data-vid-res]').forEach(btn => {
+        btn.onclick = () => {
+          videoResolution = btn.dataset.vidRes;
+          updateVideoEditorUI();
+        };
+      });
+
+      // Pan & Zoom
+      if($('vidPanX')) $('vidPanX').oninput = () => {
+        videoCropState.panX = Number($('vidPanX').value);
+        updateVideoEditorUI();
+      };
+      if($('vidPanY')) $('vidPanY').oninput = () => {
+        videoCropState.panY = Number($('vidPanY').value);
+        updateVideoEditorUI();
+      };
+      if($('vidZoom')) $('vidZoom').oninput = () => {
+        videoCropState.zoom = Number($('vidZoom').value) / 10;
+        updateVideoEditorUI();
+      };
+
+      // Alignment shortcuts
+      if($('vidQuickLeft')) $('vidQuickLeft').onclick = () => { videoCropState.panX = 0; if($('vidPanX')) $('vidPanX').value = 0; updateVideoEditorUI(); };
+      if($('vidQuickCenter')) $('vidQuickCenter').onclick = () => { videoCropState.panX = 50; if($('vidPanX')) $('vidPanX').value = 50; updateVideoEditorUI(); };
+      if($('vidQuickRight')) $('vidQuickRight').onclick = () => { videoCropState.panX = 100; if($('vidPanX')) $('vidPanX').value = 100; updateVideoEditorUI(); };
+      if($('vidQuickTop')) $('vidQuickTop').onclick = () => { videoCropState.panY = 0; if($('vidPanY')) $('vidPanY').value = 0; updateVideoEditorUI(); };
+      if($('vidQuickMiddle')) $('vidQuickMiddle').onclick = () => { videoCropState.panY = 50; if($('vidPanY')) $('vidPanY').value = 50; updateVideoEditorUI(); };
+      if($('vidQuickBottom')) $('vidQuickBottom').onclick = () => { videoCropState.panY = 100; if($('vidPanY')) $('vidPanY').value = 100; updateVideoEditorUI(); };
+
+      if($('btnToggleVidGrid')) $('btnToggleVidGrid').onclick = () => {
+        showVideoCropGrid = !showVideoCropGrid;
+        updateVideoEditorUI();
+      };
+
+      if($('btnResetVidCrop')) $('btnResetVidCrop').onclick = () => {
+        videoCropState.ratio = 'original';
+        videoCropState.panX = 50;
+        videoCropState.panY = 50;
+        videoCropState.zoom = 1;
+        if($('vidPanX')) $('vidPanX').value = 50;
+        if($('vidPanY')) $('vidPanY').value = 50;
+        if($('vidZoom')) $('vidZoom').value = 10;
+        updateVideoEditorUI();
+      };
+
+      // Cover slider
+      $('coverRange')?.addEventListener('input', e => {
+        const pct = Number(e.target.value);
+        if(vEl && vEl.duration){
+          vEl.currentTime = (pct / 100) * vEl.duration;
+        }
+      });
+
+      updateVideoEditorUI();
+    }
+
+    if($('postFile')) $('postFile').onchange = () => {
+      file = $('postFile').files[0];
+      if(!file){ area.innerHTML = ''; capturedCoverBlob = null; return; }
+      kind = file.type.startsWith('video') ? 'video' : 'image';
+      if(kind === 'image'){
+        capturedCoverBlob = null;
+        drawImage();
+      } else {
+        drawVideo();
       }
     };
 
-    $('publishPost').onclick=async()=>{
-      try{
-        const text=$('postText').value.trim();
-        const isAiGenerated=!!$('aiGeneratedCheckbox')?.checked;
-        const privacy=$('postPrivacySelect')?.value||'public';
-        if(!text&&!file)throw Error('Add text or media to publish.');
-        loading('Publishing your SellerFlow post…');
+    $('publishPost').onclick = async () => {
+      try {
+        const text = $('postText').value.trim();
+        const isAiGenerated = !!$('aiGeneratedCheckbox')?.checked;
+        const privacy = $('postPrivacySelect')?.value || 'public';
+        if(!text && !file) throw Error('Add text or media to publish.');
+        loading('Processing & publishing your post…');
 
-        let uploadFile=file;
-        if(file&&kind==='image'){
-          const img=new Image();
-          img.src=URL.createObjectURL(file);
+        let uploadFile = file;
+        let finalResolution = '1080p';
+        let finalCropRatio = 'original';
+        let finalDimensions = '';
+
+        // Precision Canvas Crop & Resolution Scaling for Images
+        if(file && kind === 'image'){
+          loading('Rendering photo at selected resolution & crop…');
+          const img = new Image();
+          img.src = URL.createObjectURL(file);
           await img.decode();
-          const c=document.createElement('canvas');
-          const max=2200,scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
-          c.width=Math.round(img.naturalWidth*scale);
-          c.height=Math.round(img.naturalHeight*scale);
-          const ctx=c.getContext('2d');
-          const fCss=getCombinedFilterCss();
-          if(fCss&&fCss!=='none'){
-            try{
-              ctx.filter=fCss;
-            }catch(fErr){
-              console.warn('Canvas filter application fallback',fErr);
+          
+          const natW = img.naturalWidth || 1080;
+          const natH = img.naturalHeight || 1920;
+          const { targetW, targetH, targetRatio } = calculateTargetDimensions(natW, natH, imageCropState.ratio, imageResolution);
+          finalResolution = imageResolution;
+          finalCropRatio = imageCropState.ratio;
+          finalDimensions = `${targetW}×${targetH}`;
+
+          const { cropX, cropY, cropW, cropH } = getSourceCropRect(natW, natH, targetRatio, imageCropState.panX, imageCropState.panY, imageCropState.zoom);
+
+          const c = document.createElement('canvas');
+          c.width = targetW;
+          c.height = targetH;
+          const ctx = c.getContext('2d');
+
+          const fCss = getCombinedFilterCss();
+          if(fCss && fCss !== 'none'){
+            try { ctx.filter = fCss; } catch(fErr){ console.warn('Canvas filter application fallback', fErr); }
+          }
+
+          if(imageCropState.rotation){
+            ctx.translate(c.width / 2, c.height / 2);
+            ctx.rotate(imageCropState.rotation * Math.PI / 180);
+            ctx.drawImage(img, cropX, cropY, cropW, cropH, -c.width / 2, -c.height / 2, c.width, c.height);
+          } else {
+            ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
+          }
+
+          const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.90));
+          uploadFile = new File([blob], `sellerflow-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+        }
+
+        // Cropped & Resolution Scaled Cover Thumbnail for Videos
+        if(file && kind === 'video'){
+          finalResolution = videoResolution;
+          finalCropRatio = videoCropState.ratio;
+          const vEl = $('editorVideo');
+          const vNatW = vidNaturalW || vEl?.videoWidth || 1080;
+          const vNatH = vidNaturalH || vEl?.videoHeight || 1920;
+          const { targetW, targetH, targetRatio } = calculateTargetDimensions(vNatW, vNatH, videoCropState.ratio, videoResolution);
+          finalDimensions = `${targetW}×${targetH}`;
+
+          if(vEl && vNatW && vNatH){
+            try {
+              const cvCanvas = document.createElement('canvas');
+              cvCanvas.width = targetW;
+              cvCanvas.height = targetH;
+              const cvCtx = cvCanvas.getContext('2d');
+              const { cropX, cropY, cropW, cropH } = getSourceCropRect(vNatW, vNatH, targetRatio, videoCropState.panX, videoCropState.panY, videoCropState.zoom);
+              cvCtx.drawImage(vEl, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
+              const cvBlob = await new Promise(r => cvCanvas.toBlob(r, 'image/jpeg', 0.90));
+              if(cvBlob) capturedCoverBlob = cvBlob;
+            } catch(cErr){
+              console.warn('Cover capture fallback', cErr);
             }
           }
-          ctx.translate(c.width/2,c.height/2);
-          ctx.rotate(imageState.rotation*Math.PI/180);
-          ctx.scale(imageState.zoom,imageState.zoom);
-          ctx.drawImage(img,-c.width/(2*imageState.zoom),-c.height/(2*imageState.zoom),c.width/imageState.zoom,c.height/imageState.zoom);
-          const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.9));
-          uploadFile=new File([blob],`sellerflow-photo-${Date.now()}.jpg`,{type:'image/jpeg'});
         }
 
-        let mediaUrl='',mediaType='',mediaPath='';
+        let mediaUrl = '', mediaType = '', mediaPath = '';
         if(uploadFile){
-          validFile(uploadFile,['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm','video/quicktime'],80);
-          const x=await uploadPublic(uploadFile,'posts');
-          mediaUrl=x.url;
-          mediaPath=x.path;
-          mediaType=uploadFile.type;
+          validFile(uploadFile, ['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm','video/quicktime'], 80);
+          loading('Uploading media to SellerFlow storage…');
+          const x = await uploadPublic(uploadFile, 'posts');
+          mediaUrl = x.url;
+          mediaPath = x.path;
+          mediaType = uploadFile.type;
         }
 
-        // Upload custom captured cover thumbnail if video
-        let thumbnailUrl='',thumbnailPath='';
-        if(kind==='video'&&capturedCoverBlob){
-          try{
-            const coverFile=new File([capturedCoverBlob],`cover-${Date.now()}.jpg`,{type:'image/jpeg'});
-            const cvUp=await uploadPublic(coverFile,'covers');
-            thumbnailUrl=cvUp.url;
-            thumbnailPath=cvUp.path;
-          }catch(cErr){console.warn('Cover upload fallback',cErr)}
+        // Upload custom cropped cover thumbnail if video
+        let thumbnailUrl = '', thumbnailPath = '';
+        if(kind === 'video' && capturedCoverBlob){
+          try {
+            const coverFile = new File([capturedCoverBlob], `cover-${Date.now()}.jpg`, { type: 'image/jpeg' });
+            const cvUp = await uploadPublic(coverFile, 'covers');
+            thumbnailUrl = cvUp.url;
+            thumbnailPath = cvUp.path;
+          } catch(cErr){
+            console.warn('Cover upload fallback', cErr);
+          }
         }
 
-        const sound=active||null;
-        const activeFilterObj=SF_PHOTO_FILTERS.find(f=>f.id===imageState.filter)||SF_PHOTO_FILTERS[0];
-        const finalFilterCss=getCombinedFilterCss();
-        const postData={
-          sellerId:currentUser.uid,
+        const sound = active || null;
+        const activeFilterObj = SF_PHOTO_FILTERS.find(f => f.id === imageFilters.filter) || SF_PHOTO_FILTERS[0];
+        const finalFilterCss = getCombinedFilterCss();
+
+        const postData = {
+          sellerId: currentUser.uid,
           text,
           mediaUrl,
           mediaPath,
@@ -4811,53 +5763,63 @@ init();
           thumbnailPath,
           isAiGenerated,
           privacy,
-          photoFilter:imageState.filter||'normal',
-          photoFilterName:activeFilterObj.name||'Normal',
-          photoFilterCss:finalFilterCss==='none'?'':finalFilterCss,
-          likes:[],
-          saves:[],
-          comments:[],
-          reposts:[],
-          views:0,
-          status:'hidden',
-          createdAt:serverTimestamp(),
-          submittedAt:serverTimestamp(),
-          reviewStatus:'under_review',
-          contentType:contentType({text,mediaType}),
-          safeContent:false,
-          soundId:sound?.soundId||'',
-          soundName:sound?.soundName||(mediaType.startsWith('video')?'Original sound':''),
-          soundOriginPostId:sound?.originPostId||'',
-          soundOriginatorId:sound?.originatorId||currentUser.uid,
-          soundOriginName:sound?.originatorName||(isAdmin?'SellerFlow':currentProfile.name||'SellerFlow creator'),
-          platformLabel:'SellerFlow',
-          isAdminPost:!!isAdmin
+          cropRatio: finalCropRatio,
+          resolution: finalResolution,
+          resolutionDimensions: finalDimensions,
+          photoFilter: kind === 'image' ? (imageFilters.filter || 'normal') : 'normal',
+          photoFilterName: kind === 'image' ? (activeFilterObj.name || 'Normal') : '',
+          photoFilterCss: kind === 'image' && finalFilterCss !== 'none' ? finalFilterCss : '',
+          videoCrop: kind === 'video' ? {
+            ratio: videoCropState.ratio,
+            panX: videoCropState.panX,
+            panY: videoCropState.panY,
+            zoom: videoCropState.zoom
+          } : null,
+          likes: [],
+          saves: [],
+          comments: [],
+          reposts: [],
+          views: 0,
+          status: 'hidden',
+          createdAt: serverTimestamp(),
+          submittedAt: serverTimestamp(),
+          reviewStatus: 'under_review',
+          contentType: contentType({ text, mediaType }),
+          safeContent: false,
+          soundId: sound?.soundId || '',
+          soundName: sound?.soundName || (mediaType.startsWith('video') ? 'Original sound' : ''),
+          soundOriginPostId: sound?.originPostId || '',
+          soundOriginatorId: sound?.originatorId || currentUser.uid,
+          soundOriginName: sound?.originatorName || (isAdmin ? 'SellerFlow' : currentProfile.name || 'SellerFlow creator'),
+          platformLabel: 'SellerFlow',
+          isAdminPost: !!isAdmin
         };
 
-        const {ref,verdict,evalResult}=await executeSellerFlowAiPostPublish(postData, uploadFile, $('editorVideo'));
-        if(mediaType.startsWith('video')&&!sound){
-          await setDoc(doc(db,'sounds',ref.id),{
-            soundId:ref.id,
-            originPostId:ref.id,
-            originatorId:currentUser.uid,
-            originatorName:isAdmin?'SellerFlow':(currentProfile.name||currentProfile.username||'SellerFlow creator'),
-            soundName:`Original sound · ${currentProfile.name||'SellerFlow creator'}`,
-            createdAt:serverTimestamp()
-          },{merge:true});
+        loading('Checking safety with SellerFlow AI…');
+        const { ref, verdict, evalResult } = await executeSellerFlowAiPostPublish(postData, uploadFile, $('editorVideo'));
+        if(mediaType.startsWith('video') && !sound){
+          await setDoc(doc(db, 'sounds', ref.id), {
+            soundId: ref.id,
+            originPostId: ref.id,
+            originatorId: currentUser.uid,
+            originatorName: isAdmin ? 'SellerFlow' : (currentProfile.name || currentProfile.username || 'SellerFlow creator'),
+            soundName: `Original sound · ${currentProfile.name || 'SellerFlow creator'}`,
+            createdAt: serverTimestamp()
+          }, { merge: true });
         }
 
         closeModal();
-        if(verdict==='VIOLATION'){
-          toast(`⚠️ Safety Warning: Post hidden from public view due to a policy violation (${evalResult.detectedRule}). A warning has been recorded in your account.`,'error');
-        }else if(verdict==='REVIEW'){
-          toast('Post submitted. It is currently queued for SellerFlow safety review.','success');
-        }else{
-          toast('Post published successfully to For You!','success');
+        if(verdict === 'VIOLATION'){
+          toast(`⚠️ Safety Warning: Post hidden from public view due to a policy violation (${evalResult.detectedRule}). A warning has been recorded in your account.`, 'error');
+        } else if(verdict === 'REVIEW'){
+          toast('Post submitted. It is currently queued for SellerFlow safety review.', 'success');
+        } else {
+          toast('Post published successfully to For You!', 'success');
         }
         navigate('feed');
-      }catch(e){
-        toast(errMsg(e),'error');
-      }finally{
+      } catch(e){
+        toast(errMsg(e), 'error');
+      } finally {
         ready();
       }
     };
@@ -5071,8 +6033,10 @@ init();
             try{await updateDoc(doc(db,'users',currentUser.uid),{following:isFollowing?arrayRemove(uid):arrayUnion(uid)})}catch(_){}
             if(!isFollowing && window.notifyFollow)await window.notifyFollow(uid);
             await refreshProfile();
-            b.textContent=isFollowing?'Follow back':'Following';
-            b.className=isFollowing?'btn px-3 py-1.5 text-xs rounded-xl font-bold bg-gold text-black':'btn px-3 py-1.5 text-xs rounded-xl font-bold border border-[#444] text-zinc-300';
+            if(b){
+              b.textContent=isFollowing?'Follow back':'Following';
+              b.className=isFollowing?'btn px-3 py-1.5 text-xs rounded-xl font-bold bg-gold text-black':'btn px-3 py-1.5 text-xs rounded-xl font-bold border border-[#444] text-zinc-300';
+            }
             toast(isFollowing?'Unfollowed':'Following','success');
           }catch(e){toast(errMsg(e),'error')}
         };
