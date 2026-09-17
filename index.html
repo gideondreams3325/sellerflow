@@ -60,19 +60,20 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 .app-main-scroll{flex:1 1 0%;min-height:0;width:100%;max-width:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;display:flex;flex-direction:column}
 .app-main-scroll>main{flex:1 0 auto;width:100%;max-width:80rem;min-width:0}
 .app-main-scroll>footer{flex-shrink:0;margin-top:auto}
-#app.is-feed-page #appMainScroll,.app-main-scroll.is-feed-scroll{overflow:hidden!important;height:100%!important;max-height:100%!important;display:flex!important;flex-direction:column!important;overscroll-behavior:none!important}
+#app.is-feed-page #appMainScroll,.app-main-scroll.is-feed-scroll{overflow:hidden!important;flex:1 1 0%!important;min-height:0!important;height:auto!important;max-height:100%!important;display:flex!important;flex-direction:column!important;overscroll-behavior:none!important}
 #app.is-feed-page #page,.is-feed-scroll>#page{flex:1 1 0%!important;height:100%!important;min-height:0!important;max-height:100%!important;padding:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;width:100%!important;max-width:100%!important}
 #app.is-feed-page footer,.is-feed-scroll>footer{display:none!important}
-.reel-feed{width:100%;height:100%;flex:1 1 0%;min-height:0;overflow-y:scroll;overflow-x:hidden;scroll-snap-type:y mandatory;scroll-snap-stop:always;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;padding:0;margin:0}
-.reel-card{position:relative;width:100%;height:100%;min-height:100%;max-height:100%;scroll-snap-align:start;scroll-snap-stop:always;background:#050505;border-bottom:1px solid #1a1a1a;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.reel-feed{width:100%;height:auto;flex:1 1 0%;min-height:0;overflow-y:scroll;overflow-x:hidden;scroll-snap-type:y mandatory;scroll-snap-stop:always;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;padding:0;margin:0}
+.reel-card{position:relative;width:100%;height:100%;min-height:100%;max-height:100%;scroll-snap-align:start;scroll-snap-stop:always;background:#050505;border-bottom:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;align-items:center;justify-content:center}
 @media(min-width:641px){.reel-feed{padding:0}.reel-card{max-width:460px;margin:0 auto;border-left:1px solid #242424;border-right:1px solid #242424;border-bottom:0;box-shadow:0 0 60px rgba(0,0,0,.6);height:100%;min-height:100%}}
 @media(max-width:640px){.reel-card{border-radius:0;border-left:0;border-right:0}}
 .reel-media-wrap{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;background:#050505}
 .reel-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#050505}
 .reel-shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.88),rgba(0,0,0,.08) 50%,rgba(0,0,0,.25));pointer-events:none}
-.reel-content{position:absolute;left:0;right:68px;bottom:0;padding:16px;max-height:44%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;z-index:5}
+.reel-content{position:absolute;left:0;right:68px;bottom:calc(12px + env(safe-area-inset-bottom, 0px));padding:16px;max-height:46%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;z-index:5}
 .reel-content p{max-width:100%;word-break:break-word;overflow-wrap:anywhere}
-.reel-actions{position:absolute;right:12px;bottom:24px;display:flex;flex-direction:column;align-items:center;gap:12px;z-index:10}
+.reel-actions{position:absolute;right:12px;bottom:calc(20px + env(safe-area-inset-bottom, 0px));display:flex;flex-direction:column;align-items:center;gap:11px;z-index:10;max-height:calc(100% - 24px - env(safe-area-inset-bottom, 0px));overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
+.reel-actions::-webkit-scrollbar{display:none}
 .reel-action-group{display:flex;flex-direction:column;align-items:center;gap:3px}
 .reel-action{width:46px;height:46px;border-radius:50%;background:rgba(18,18,22,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.16);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:transform .16s cubic-bezier(0.16,1,0.3,1),background .16s ease,border-color .16s ease,box-shadow .16s ease;cursor:pointer;padding:0;line-height:1}
 .reel-action:hover{border-color:rgba(245,185,66,.6);background:rgba(28,28,34,.88);transform:scale(1.08);box-shadow:0 6px 20px rgba(0,0,0,.65)}
@@ -179,13 +180,13 @@ button, a, .reel-action, .navbtn, input, select, textarea, .action-btn, [role="b
 
 @media(max-width:640px){
   .page-selector-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .reel-actions{right:8px;bottom:20px;gap:11px}
-  .reel-action{width:44px;height:44px}
-  .reel-creator-stack{margin-bottom:5px}
-  .reel-avatar-btn{width:44px;height:44px}
-  .reel-follow-badge{width:20px;height:20px;font-size:13px;bottom:-6px}
-  .reel-sound-disc{width:40px;height:40px}
-  .reel-content{right:64px;padding:12px;bottom:2px}
+  .reel-actions{right:8px;bottom:calc(14px + env(safe-area-inset-bottom, 0px));gap:8px;max-height:calc(100% - 20px - env(safe-area-inset-bottom, 0px))}
+  .reel-action{width:42px;height:42px}
+  .reel-creator-stack{margin-bottom:4px}
+  .reel-avatar-btn{width:42px;height:42px}
+  .reel-follow-badge{width:19px;height:19px;font-size:12px;bottom:-5px}
+  .reel-sound-disc{width:38px;height:38px}
+  .reel-content{right:58px;padding:12px;bottom:calc(10px + env(safe-area-inset-bottom, 0px));max-height:48%}
   .modal{padding:8px}
   .modal-card{border-radius:20px;padding:16px;max-height:94vh}
 }
@@ -748,7 +749,7 @@ async function renderFeed(targetPostId, options){
         `}
       </div>
     </div>
-    <div class="reel-feed flex-1 min-h-0 h-full w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
+    <div class="reel-feed flex-1 min-h-0 w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
       ${feedPosts.length?feedPosts.map(postCard).join(''):`
         <div class="h-full flex items-center justify-center p-6">
           <div class="card p-8 text-center max-w-md">
@@ -2768,7 +2769,7 @@ init();
         <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0 whitespace-nowrap">＋ Upload</button>
       </div>
     </div>
-    <div class="reel-feed flex-1 min-h-0 h-full w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
+    <div class="reel-feed flex-1 min-h-0 w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
       ${feedPosts.length?feedPosts.map(postCard).join(''):`<div class="h-full flex items-center justify-center p-6"><div class="card p-8 text-center max-w-md"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2 text-sm">Share a safe photo or video to start building your audience.</p><button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button></div></div>`}
     </div>`;
     $('feedBackProfile')?.addEventListener('click',()=>navigate('profile'));
@@ -2814,6 +2815,8 @@ init();
 
   function openPostSettingsModal(id,p){
     const isMine=(currentUser&&p.sellerId===currentUser.uid)||isAdmin;
+    const isCreator=Boolean(currentUser&&p.sellerId===currentUser.uid);
+    const canReport=!isCreator||isAdmin;
     const curPrivacy=p.privacy||'public';
     modal(`<div>
       <div class="flex items-center justify-between pb-3 border-b border-[#292929]">
@@ -2875,7 +2878,93 @@ init();
         </div>
       </div>
       `}
+
+      ${canReport ? `
+      <div class="mt-4 p-4 rounded-2xl bg-[#1a1212] border border-red-900/40">
+        <div class="flex items-center justify-between">
+          <div class="font-bold text-sm text-red-400 flex items-center gap-1.5">
+            <span>🚩</span> Report post
+          </div>
+          <span class="text-[10px] uppercase font-bold text-red-400/90 bg-red-950/60 border border-red-900/60 px-2 py-0.5 rounded-full tracking-wider">Moderation</span>
+        </div>
+        <p class="text-xs text-zinc-400 mt-1">Flag this content for moderation review by the SellerFlow safety team.</p>
+        
+        <div class="mt-3">
+          <label for="postReportReason" class="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
+            Select reason <span class="text-red-400">*</span>
+          </label>
+          <select id="postReportReason" class="w-full p-2.5 rounded-xl bg-[#121212] border border-[#333] text-xs text-white focus:border-gold outline-none cursor-pointer">
+            <option value="scam" selected>⚠️ MoMo scam, financial fraud, or counterfeit currency</option>
+            <option value="counterfeit">🏷️ Fake, replica, or misleading product</option>
+            <option value="prohibited">🚫 Prohibited goods (weapons, illegal drugs, unauthorized medicine)</option>
+            <option value="inappropriate">🔞 Adult, sexually explicit, or graphic violence</option>
+            <option value="harassment">🛑 Harassment, hate speech, bullying, or threats</option>
+            <option value="spam">📢 Spam, phishing, or deceptive advertising</option>
+            <option value="copyright">©️ Copyright or intellectual property infringement</option>
+            <option value="other">⚖️ Other community guideline or safety violation</option>
+          </select>
+        </div>
+
+        <div class="mt-2.5">
+          <label for="postReportDetails" class="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
+            Additional details <span class="text-zinc-500 font-normal lowercase">(optional)</span>
+          </label>
+          <textarea id="postReportDetails" rows="2" class="w-full p-2.5 rounded-xl bg-[#121212] border border-[#333] text-xs text-white focus:border-gold outline-none placeholder-zinc-600" placeholder="Provide additional context for safety moderators…"></textarea>
+        </div>
+
+        <button type="button" id="submitPostReportBtn" class="mt-3 w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-md shadow-red-950/40">
+          <span>🚩</span> Report post for moderation
+        </button>
+      </div>
+      ` : ''}
     </div>`);
+
+    if(canReport){
+      $('submitPostReportBtn')?.addEventListener('click',async()=>{
+        if(!currentUser){
+          closeModal();
+          return showAuthPrompt('report this post for moderation');
+        }
+        const selectEl=$('postReportReason');
+        const reasonVal=selectEl?.value||'other';
+        const reasonLabel=selectEl?.selectedOptions?.[0]?.text||reasonVal;
+        const detailsVal=$('postReportDetails')?.value?.trim()||'';
+
+        const submitBtn=$('submitPostReportBtn');
+        if(submitBtn){
+          submitBtn.disabled=true;
+          submitBtn.innerHTML='<span class="spin w-3.5 h-3.5 border-2 border-white border-t-transparent inline-block rounded-full"></span> Submitting report…';
+        }
+
+        try{
+          await addDoc(collection(db,'scamReports'),{
+            postId:id,
+            sellerId:p.sellerId||'',
+            reporterId:currentUser.uid,
+            reporterEmail:currentUser.email||'',
+            reporterName:currentProfile?.name||currentProfile?.username||'User',
+            reason:reasonVal,
+            reasonLabel:reasonLabel,
+            details:detailsVal,
+            postText:p.text||'',
+            postMediaUrl:p.mediaUrl||'',
+            postMediaType:p.mediaType||'',
+            status:'pending',
+            type:'post',
+            createdAt:serverTimestamp()
+          });
+
+          toast('Post flagged for moderation. Our safety team will review it.','success');
+          closeModal();
+        }catch(err){
+          toast(errMsg(err),'error');
+          if(submitBtn){
+            submitBtn.disabled=false;
+            submitBtn.innerHTML='<span>🚩</span> Report post for moderation';
+          }
+        }
+      });
+    }
 
     if(isMine){
       $('saveCaptionBtn')?.addEventListener('click',async()=>{
@@ -3664,8 +3753,8 @@ init();
             <div class="muted text-xs">@${esc(s.username||'seller')} · ${new Date(ts(p.createdAt)||Date.now()).toLocaleDateString('en-GH',{day:'numeric',month:'short'})}</div>
           </button>
         </div>
-        ${p.text?`<p class="mt-4 text-sm md:text-base whitespace-pre-wrap leading-relaxed max-w-2xl">${esc(p.text)}</p>`:''}
-        <div class="mt-3 flex flex-wrap items-center gap-2">
+        ${p.text?`<p class="mt-2.5 sm:mt-4 text-sm md:text-base whitespace-pre-wrap leading-relaxed max-w-2xl">${esc(p.text)}</p>`:''}
+        <div class="mt-2 sm:mt-3 flex flex-wrap items-center gap-2">
           <span class="sound-chip">🎵 ${esc(soundText)}</span>
           ${p.soundOriginName?`<span class="post-origin">Original by ${esc(p.soundOriginName)}</span>`:''}
           ${aiBadge}
@@ -3749,12 +3838,13 @@ init();
     if(!isAdmin){$('page').innerHTML=pageTitle('Access denied');return}
     const [users,posts,reports,termsSnap]=await Promise.all([getDocs(query(collection(db,'users'),limit(300))),getDocs(query(collection(db,'posts'),limit(200))),getDocs(query(collection(db,'scamReports'),limit(100))),getDoc(doc(db,'settings','terms'))]);
     const pending=users.docs.filter(d=>d.data().verificationStatus==='pending');const reviewPosts=posts.docs.map(d=>({id:d.id,data:d.data()})).filter(x=>x.data.reviewStatus==='under_review'||x.data.reviewStatus==='violation'||x.data.violationDetected||x.data.reviewStatus==='review'||(x.data.status==='published'&&x.data.reviewStatus!=='reviewed'&&x.data.reviewStatus!=='safe'));const livePosts=posts.docs.map(d=>({id:d.id,data:d.data()})).filter(x=>x.data.status==='published'||x.data.status==='approved');const termData=snapshotExists(termsSnap)?termsSnap.data():{text:DEFAULT_TERMS,version:appTermsVersion};
-    $('page').innerHTML=pageTitle('Admin control center','Professional platform management, content review and account oversight.')+`<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"><button class="sf-stat-card rounded-2xl p-5" id="adminUsersStat"><div class="muted text-sm">Users</div><b class="text-3xl block mt-1">${users.size}</b><div class="text-xs gold mt-2">View all accounts →</div></button><button class="sf-stat-card rounded-2xl p-5" id="adminPendingStat"><div class="muted text-sm">Pending verification</div><b class="text-3xl block mt-1">${pending.length}</b><div class="text-xs gold mt-2">Review applications →</div></button><button class="sf-stat-card rounded-2xl p-5" id="adminReviewStat"><div class="muted text-sm">Posts to review</div><b class="text-3xl block mt-1">${reviewPosts.length}</b><div class="text-xs gold mt-2">Open safety review →</div></button><button class="sf-stat-card rounded-2xl p-5" id="adminLiveStat"><div class="muted text-sm">Live posts</div><b class="text-3xl block mt-1">${livePosts.length}</b><div class="text-xs gold mt-2">Manage live content →</div></button></div><div class="flex items-center gap-2 overflow-x-auto mt-6 pb-2 border-b border-[#242424]" id="adminTabsBar"><button class="admin-tab active" data-admin-tab="overview">📊 Overview</button><button class="admin-tab" data-admin-tab="review">🛡️ Safety Review (${reviewPosts.length})</button><button class="admin-tab" data-admin-tab="pending">📝 Verification (${pending.length})</button><button class="admin-tab" data-admin-tab="live">🎬 Live Posts (${livePosts.length})</button><button class="admin-tab" data-admin-tab="users">👥 Users (${users.size})</button><button class="admin-tab" data-admin-tab="notify">🔔 Broadcasts</button><button class="admin-tab" data-admin-tab="terms">📜 Terms</button></div><div id="adminWorkspace" class="mt-5"></div>`;
+    $('page').innerHTML=pageTitle('Admin control center','Professional platform management, content review and account oversight.')+`<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"><button class="sf-stat-card rounded-2xl p-5" id="adminUsersStat"><div class="muted text-sm">Users</div><b class="text-3xl block mt-1">${users.size}</b><div class="text-xs gold mt-2">View all accounts →</div></button><button class="sf-stat-card rounded-2xl p-5" id="adminPendingStat"><div class="muted text-sm">Pending verification</div><b class="text-3xl block mt-1">${pending.length}</b><div class="text-xs gold mt-2">Review applications →</div></button><button class="sf-stat-card rounded-2xl p-5" id="adminReviewStat"><div class="muted text-sm">Posts to review</div><b class="text-3xl block mt-1">${reviewPosts.length}</b><div class="text-xs gold mt-2">Open safety review →</div></button><button class="sf-stat-card rounded-2xl p-5" id="adminLiveStat"><div class="muted text-sm">Live posts</div><b class="text-3xl block mt-1">${livePosts.length}</b><div class="text-xs gold mt-2">Manage live content →</div></button></div><div class="flex items-center gap-2 overflow-x-auto mt-6 pb-2 border-b border-[#242424]" id="adminTabsBar"><button class="admin-tab active" data-admin-tab="overview">📊 Overview</button><button class="admin-tab" data-admin-tab="review">🛡️ Safety Review (${reviewPosts.length})</button><button class="admin-tab" data-admin-tab="reports">🚩 Reports (${reports.size})</button><button class="admin-tab" data-admin-tab="pending">📝 Verification (${pending.length})</button><button class="admin-tab" data-admin-tab="live">🎬 Live Posts (${livePosts.length})</button><button class="admin-tab" data-admin-tab="users">👥 Users (${users.size})</button><button class="admin-tab" data-admin-tab="notify">🔔 Broadcasts</button><button class="admin-tab" data-admin-tab="terms">📜 Terms</button></div><div id="adminWorkspace" class="mt-5"></div>`;
     
     function setAdminTab(tabName){
       document.querySelectorAll('[data-admin-tab]').forEach(t=>t.classList.toggle('active',t.dataset.adminTab===tabName));
       if(tabName==='overview')sfAdminHome(users,pending,reviewPosts,livePosts,termData);
       else if(tabName==='review')sfAdminReview(reviewPosts);
+      else if(tabName==='reports')sfAdminReports(reports);
       else if(tabName==='pending')sfAdminPending(pending);
       else if(tabName==='live')sfAdminLive(livePosts);
       else if(tabName==='users')sfAdminUsers(users);
@@ -3791,6 +3881,42 @@ init();
   function sfAdminPending(pending){$('adminWorkspace').innerHTML=`<div class="card p-5"><div class="flex justify-between"><div><h2 class="text-xl font-black">Pending verification (${pending.length})</h2><p class="muted text-sm">Review submitted seller identities.</p></div><button id="pendingBack" class="border border-[#444] rounded-xl px-4 py-2">← Back</button></div><div class="space-y-3 mt-5">${pending.length?pending.map(d=>adminUserCard(d.id,d.data())).join(''):'<div class="muted">No pending applications.</div>'}</div></div>`;$('pendingBack').onclick=sfAdminBack;document.querySelectorAll('[data-approve-user]').forEach(b=>b.onclick=()=>reviewVerification(b.dataset.approveUser,true));document.querySelectorAll('[data-reject-user]').forEach(b=>b.onclick=()=>reviewVerification(b.dataset.rejectUser,false));document.querySelectorAll('[data-view-card]').forEach(b=>b.onclick=()=>viewVerificationRecord(b.dataset.viewCard))}
   function sfAdminReview(items){$('adminWorkspace').innerHTML=`<div class="card p-5"><div class="flex justify-between"><div><h2 class="text-xl font-black">Posts waiting for safety review (${items.length})</h2><p class="muted text-sm">Preview every photo and video here before approval.</p></div><button id="reviewBack" class="border border-[#444] rounded-xl px-4 py-2">← Back</button></div><div class="space-y-4 mt-5">${items.length?items.map(x=>adminPostCard(x.id,x.data)).join(''):'<div class="muted">No posts are waiting for review.</div>'}</div></div>`;$('reviewBack').onclick=sfAdminBack;document.querySelectorAll('[data-admin-approve-post]').forEach(b=>b.onclick=()=>reviewPost(b.dataset.adminApprovePost,true));document.querySelectorAll('[data-admin-takedown-post]').forEach(b=>b.onclick=()=>adminTakeDown(b.dataset.adminTakedownPost))}
   function sfAdminLive(items){$('adminWorkspace').innerHTML=`<div class="card p-5"><div class="flex justify-between"><div><h2 class="text-xl font-black">Live For You content (${items.length})</h2><p class="muted text-sm">Take down any existing live photo or video, even if previously approved.</p></div><button id="liveBack" class="border border-[#444] rounded-xl px-4 py-2">← Back</button></div><div class="grid lg:grid-cols-2 gap-4 mt-5">${items.length?items.map(x=>adminPostCard(x.id,x.data)).join(''):'<div class="muted">No live posts.</div>'}</div></div>`;$('liveBack').onclick=sfAdminBack;document.querySelectorAll('[data-admin-approve-post]').forEach(b=>b.onclick=()=>reviewPost(b.dataset.adminApprovePost,true));document.querySelectorAll('[data-admin-takedown-post]').forEach(b=>b.onclick=()=>adminTakeDown(b.dataset.adminTakedownPost))}
+  function sfAdminReports(reports){
+    $('adminWorkspace').innerHTML=`<div class="card p-5"><div class="flex justify-between items-center"><div><h2 class="text-xl font-black">Community safety reports (${reports.size})</h2><p class="muted text-sm">Review posts and sellers flagged by community members for moderation.</p></div><button id="reportsBack" class="border border-[#444] rounded-xl px-4 py-2 text-sm font-bold">← Back</button></div><div class="space-y-4 mt-5">${reports.size?reports.docs.map(d=>{
+      const r=d.data();
+      return `<div class="p-4 rounded-2xl border border-[#2c2c2c] bg-[#141414]">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-bold text-red-400 bg-red-950/40 border border-red-900/40 px-2.5 py-1 rounded-full">🚩 ${esc(r.reasonLabel||r.reason||'Flagged')}</span>
+            <span class="text-xs muted">Reported by ${esc(r.reporterName||r.reporterEmail||r.reporterId)}</span>
+          </div>
+          <span class="text-xs text-zinc-500">${new Date(ts(r.createdAt)||Date.now()).toLocaleString('en-GH')}</span>
+        </div>
+        ${r.details?`<div class="mt-2 text-xs text-zinc-300 bg-[#1c1c1c] p-2.5 rounded-xl border border-[#333]"><b>User comment:</b> ${esc(r.details)}</div>`:''}
+        <div class="mt-3 p-3 rounded-xl bg-[#181818] border border-[#262626] flex items-center gap-3">
+          ${r.postMediaUrl?`<div class="w-12 h-12 rounded-lg overflow-hidden bg-black shrink-0 relative">${r.postMediaType?.startsWith('video')?`<video src="${esc(r.postMediaUrl)}" class="w-full h-full object-cover" muted></video>`:`<img src="${esc(r.postMediaUrl)}" class="w-full h-full object-cover">`}</div>`:''}
+          <div class="flex-1 min-w-0">
+            <div class="text-xs muted">Post ID: <span class="font-mono text-zinc-300">${esc(r.postId||'')}</span> · Author: <span class="font-mono text-zinc-300">${esc(r.sellerId||'')}</span></div>
+            <div class="text-sm text-zinc-200 truncate mt-0.5">${esc(r.postText||'(No caption)')}</div>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 mt-3 justify-end">
+          ${r.postId?`<button class="border border-[#444] hover:border-gold rounded-xl px-3 py-1.5 text-xs font-bold text-white" onclick="navigate('feed','${esc(r.postId)}')">View in Feed</button>`:''}
+          ${r.postId?`<button class="border border-red-800 bg-red-950/30 hover:bg-red-900/50 text-red-400 rounded-xl px-3 py-1.5 text-xs font-bold" data-admin-takedown-post="${esc(r.postId)}">Take down post</button>`:''}
+          <button class="bg-[#242424] hover:bg-[#333] border border-[#444] text-zinc-300 rounded-xl px-3 py-1.5 text-xs font-bold" data-admin-dismiss-report="${d.id}">Dismiss report</button>
+        </div>
+      </div>`;
+    }).join(''):'<div class="muted py-8 text-center">No community reports submitted. The platform is clean.</div>'}</div></div>`;
+    $('reportsBack').onclick=sfAdminBack;
+    document.querySelectorAll('[data-admin-takedown-post]').forEach(b=>b.onclick=()=>adminTakeDown(b.dataset.adminTakedownPost));
+    document.querySelectorAll('[data-admin-dismiss-report]').forEach(b=>b.onclick=async()=>{
+      try{
+        await deleteDoc(doc(db,'scamReports',b.dataset.adminDismissReport));
+        toast('Report dismissed','success');
+        renderAdmin();
+      }catch(e){toast(errMsg(e),'error')}
+    });
+  }
 })();
 </script>
 
