@@ -371,26 +371,30 @@ app.get('/api/config', (req, res) => {
 });
 
 const distPath = path.join(__dirname, 'dist');
+const isProd = process.env.NODE_ENV === 'production';
 
 app.get('/sw.js', (req, res) => {
-  const swPath = fs.existsSync(path.join(distPath, 'sw.js'))
+  const swPath = isProd && fs.existsSync(path.join(distPath, 'sw.js'))
     ? path.join(distPath, 'sw.js')
-    : path.join(__dirname, 'sw.js');
+    : (fs.existsSync(path.join(__dirname, 'sw.js')) ? path.join(__dirname, 'sw.js') : path.join(distPath, 'sw.js'));
   res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
   res.setHeader('Service-Worker-Allowed', '/');
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(swPath);
 });
 
-if (fs.existsSync(distPath)) {
+if (isProd && fs.existsSync(distPath)) {
   app.use(express.static(distPath));
 }
 app.use(express.static(__dirname, { dotfiles: 'ignore', index: false }));
+if (!isProd && fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+}
 
 app.get('*', (req, res) => {
-  const indexPath = fs.existsSync(path.join(distPath, 'index.html'))
+  const indexPath = isProd && fs.existsSync(path.join(distPath, 'index.html'))
     ? path.join(distPath, 'index.html')
-    : path.join(__dirname, 'index.html');
+    : (fs.existsSync(path.join(__dirname, 'index.html')) ? path.join(__dirname, 'index.html') : path.join(distPath, 'index.html'));
   res.sendFile(indexPath);
 });
 

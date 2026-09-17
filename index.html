@@ -45,8 +45,40 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 .modal-card .chat-window{display:flex;flex-direction:column;height:100%;max-height:100%;min-height:0;flex:1 1 0%;overflow:hidden}
 .modal-card .chat-messages{flex:1 1 0%;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .modal-card #chatForm{flex-shrink:0}
-.toast{position:fixed;right:16px;bottom:18px;z-index:300;max-width:360px}
-.toast>div{margin-top:8px;padding:13px 15px;border-radius:12px;background:#1b1b1b;border:1px solid #333;box-shadow:0 8px 30px #000}
+/* Modern Toast Notification System */
+.toast-container{position:fixed;top:18px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;max-width:380px;width:calc(100vw - 36px)}
+@media(max-width:640px){.toast-container{top:14px;left:50%;right:auto;transform:translateX(-50%);max-width:calc(100vw - 28px)}}
+.modern-toast{pointer-events:auto;display:flex;align-items:flex-start;gap:12px;padding:12px 15px;border-radius:16px;background:rgba(18,18,22,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 14px 34px -6px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#fff;animation:toastSlideIn .28s cubic-bezier(.16,1,.3,1) forwards;transition:opacity .22s ease,transform .22s ease;position:relative;overflow:hidden}
+.modern-toast.toast-hiding{opacity:0;transform:translateY(-8px) scale(0.96)}
+@keyframes toastSlideIn{from{opacity:0;transform:translateY(-12px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.toast-icon-wrap{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:1px}
+.toast-success .toast-icon-wrap{background:rgba(16,185,129,0.18);color:#34d399;border:1px solid rgba(16,185,129,0.35)}
+.toast-success{border-color:rgba(16,185,129,0.38)}
+.toast-error .toast-icon-wrap{background:rgba(239,68,68,0.18);color:#f87171;border:1px solid rgba(239,68,68,0.35)}
+.toast-error{border-color:rgba(239,68,68,0.38)}
+.toast-warning .toast-icon-wrap{background:rgba(245,158,11,0.18);color:#fbbf24;border:1px solid rgba(245,158,11,0.35)}
+.toast-warning{border-color:rgba(245,158,11,0.38)}
+.toast-info .toast-icon-wrap{background:rgba(245,185,66,0.18);color:#f5b942;border:1px solid rgba(245,185,66,0.35)}
+.toast-info{border-color:rgba(245,185,66,0.38)}
+.toast-content{flex:1;min-width:0}
+.toast-title{font-size:12.5px;font-weight:700;letter-spacing:-0.01em;margin-bottom:2px}
+.toast-success .toast-title{color:#34d399}
+.toast-error .toast-title{color:#f87171}
+.toast-warning .toast-title{color:#fbbf24}
+.toast-info .toast-title{color:#f5b942}
+.toast-message{font-size:12px;line-height:1.45;color:#d4d4d8;word-break:break-word}
+.toast-close-btn{background:transparent;border:none;color:#71717a;cursor:pointer;padding:2px 6px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;transition:color .15s}
+.toast-close-btn:hover{color:#fff}
+.toast-progress-bar{position:absolute;bottom:0;left:0;height:2px;background:currentColor;opacity:.3;width:100%;animation:toastProgress linear forwards}
+@keyframes toastProgress{from{width:100%}to{width:0%}}
+
+/* Pull-to-Refresh Indicator */
+.pull-refresh-indicator{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-70px);z-index:9000;pointer-events:none;transition:transform .2s cubic-bezier(.2,.9,.3,1),opacity .2s ease;opacity:0}
+.pull-refresh-indicator.visible{opacity:1}
+.pull-refresh-content{display:inline-flex;align-items:center;gap:9px;padding:8px 18px;border-radius:9999px;background:rgba(22,22,26,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(245,185,66,0.4);box-shadow:0 12px 28px -6px rgba(0,0,0,0.7);color:#fff;font-size:12px;font-weight:700;letter-spacing:-.01em}
+.pull-refresh-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;color:#f5b942;font-size:14px;transition:transform .15s ease}
+.pull-refresh-icon.spinning{animation:pullSpin .7s linear infinite}
+@keyframes pullSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .navbtn{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:13px;color:#a1a1aa;border-radius:10px;transition:all .16s ease;letter-spacing:-.01em}
 .navbtn:hover{color:#f4f4f5;background:rgba(255,255,255,.05)}
 .navbtn.active{color:#f5b942;border-bottom:2px solid #f5b942;font-weight:700}
@@ -267,7 +299,8 @@ button,a,input,textarea,select{position:relative;z-index:1}
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
 <div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 SellerFlow™ · All rights reserved.</div></div></div>
 <div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center gap-1.5 sm:gap-3 overflow-hidden"><button id="mobileMenu" class="md:hidden" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold shrink-0 whitespace-nowrap">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0"><button type="button" id="headerLoginBtn" class="border border-[#444] hover:border-gold px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-[#181818] text-white transition shrink-0 whitespace-nowrap">Sign In</button><button type="button" id="headerRegisterBtn" class="hidden sm:inline-flex bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Register</button></div></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-2 grid grid-cols-3 gap-1"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
-<div id="modalRoot"></div><div id="toast" class="toast"></div>
+<div id="pullRefreshIndicator" class="pull-refresh-indicator"><div class="pull-refresh-content"><span class="pull-refresh-icon">↻</span><span class="pull-refresh-text">Pull to refresh</span></div></div>
+<div id="modalRoot"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
 (function(){
   function $x(id){return document.getElementById(id)}
@@ -365,7 +398,7 @@ function snapshotExists(snap){return !!snap && (typeof snap.exists==='function' 
 
 
 const firebaseConfig={apiKey:'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk',authDomain:'sellerflow-efaab.firebaseapp.com',databaseURL:'https://sellerflow-efaab-default-rtdb.firebaseio.com',projectId:'sellerflow-efaab',storageBucket:'sellerflow-efaab.firebasestorage.app',messagingSenderId:'987175352360',appId:'1:987175352360:web:53e44304aaf11b98c61d1d'};
-const ADMIN_EMAILS=['gideondreams99@gmail.com','gideondreams3325@gmail.com','sjssaloon@gmail.com'];
+const ADMIN_EMAILS=['gideonappiahfriempong@gmail.com','gideondreams99@gmail.com','gideondreams3325@gmail.com','sjssaloon@gmail.com'];
 const isUserAdminEmail=(email)=>ADMIN_EMAILS.includes((email||'').toLowerCase());
 const ADMIN_EMAIL=ADMIN_EMAILS[0];
 let supabaseUrl='https://vvpwntehstjbccarqqzp.supabase.co';
@@ -377,7 +410,63 @@ const $=id=>document.getElementById(id), show=e=>e?.classList.remove('hide'), hi
 function esc(v=''){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function money(n){return new Intl.NumberFormat('en-GH',{style:'currency',currency:'GHS',maximumFractionDigits:2}).format(Number(n)||0)}
 function ts(v){return v?.toMillis?v.toMillis():v?.seconds?v.seconds*1000:0}
-function toast(msg,type='info'){const d=document.createElement('div');d.innerHTML=`<div class="${type==='error'?'border-red-500':type==='success'?'border-green-500':'border-[#333]'}">${esc(msg)}</div>`;$('toast').appendChild(d);setTimeout(()=>d.remove(),3500)}
+
+/* Modern Professional Notification & Toast System */
+function toast(msg, type='info', duration=3600){
+  const container = $('toast');
+  if(!container){
+    console.log(`[SellerFlow Toast ${type}]:`, msg);
+    return;
+  }
+  const t = document.createElement('div');
+  t.className = `modern-toast toast-${type}`;
+  
+  let icon = 'ℹ️';
+  let title = 'SellerFlow';
+  if(type === 'success'){
+    icon = '✓';
+    title = 'Confirmed';
+  } else if(type === 'error'){
+    icon = '✕';
+    title = 'Attention';
+  } else if(type === 'warning'){
+    icon = '⚠️';
+    title = 'Notice';
+  }
+  
+  t.innerHTML = `
+    <div class="toast-icon-wrap" aria-hidden="true">${icon}</div>
+    <div class="toast-content">
+      <div class="toast-title">${title}</div>
+      <div class="toast-message">${esc(msg)}</div>
+    </div>
+    <button type="button" class="toast-close-btn" aria-label="Close notification">✕</button>
+    <div class="toast-progress-bar" style="animation-duration:${duration}ms"></div>
+  `;
+  
+  let timer = null;
+  const dismiss = () => {
+    if(!t.parentElement || t.classList.contains('toast-hiding')) return;
+    t.classList.add('toast-hiding');
+    setTimeout(() => { if(t.parentElement) t.remove(); }, 220);
+  };
+  
+  t.querySelector('.toast-close-btn').onclick = (e) => {
+    e.stopPropagation();
+    if(timer) clearTimeout(timer);
+    dismiss();
+  };
+  
+  timer = setTimeout(dismiss, duration);
+  t.onmouseenter = () => { if(timer) clearTimeout(timer); };
+  t.onmouseleave = () => { timer = setTimeout(dismiss, 1600); };
+  
+  container.appendChild(t);
+  while(container.children.length > 4){
+    container.firstElementChild.remove();
+  }
+}
+
 function errMsg(e){const c=e?.code||'';const m={ 'auth/email-already-in-use':'That email is already registered.','auth/invalid-credential':'Incorrect email or password.','auth/invalid-email':'Enter a valid email address.','auth/weak-password':'Use a stronger password.','auth/popup-closed-by-user':'Google sign-in was cancelled.','auth/network-request-failed':'Network error. Check your connection.','permission-denied':'You do not have permission for this action.','storage/unauthorized':'Storage permission denied. Check Firebase Storage Rules.'};return m[c]||e?.message||'Something went wrong.'}
 function loading(t='Working…'){show($('loading'));const lt=$('loadingText');if(lt)lt.textContent=t}
 function ready(){hide($('loading'))}
@@ -385,6 +474,56 @@ function pageTitle(t,sub=''){const back=currentPage&&currentPage!=='feed'?`<butt
 function button(t,id='',cls='bg-gold text-black'){return `<button type="button" id="${id}" class="btn px-4 py-2 rounded-xl font-semibold ${cls}">${esc(t)}</button>`}
 function avatar(p,cls='avatar'){return p?.avatarUrl?`<img class="${cls}" src="${esc(p.avatarUrl)}" alt="">`:`<div class="${cls} flex items-center justify-center font-bold">${esc((p?.name||p?.username||'?')[0].toUpperCase())}</div>`}
 function validFile(file,types,maxMB){if(!file)return false;if(!types.includes(file.type))throw Error('Unsupported file type.');if(file.size>maxMB*1024*1024)throw Error(`File is too large. Maximum is ${maxMB}MB.`);return true}
+
+/* Video Duration Validator (Supports up to 1 minute / 60 seconds) */
+function checkVideoDuration(file, maxSeconds=60){
+  return new Promise((resolve, reject) => {
+    if(!file || !file.type || !file.type.startsWith('video/')){
+      return resolve(0);
+    }
+    const tempVideo = document.createElement('video');
+    tempVideo.preload = 'metadata';
+    let url = '';
+    try {
+      url = URL.createObjectURL(file);
+    } catch(_) {
+      return resolve(0);
+    }
+    let settled = false;
+    const cleanup = () => {
+      if(url){
+        try { URL.revokeObjectURL(url); } catch(_){}
+      }
+    };
+    tempVideo.onloadedmetadata = () => {
+      if(settled) return;
+      settled = true;
+      const dur = tempVideo.duration;
+      cleanup();
+      if(Number.isFinite(dur) && dur > (maxSeconds + 0.9)){
+        const formatted = Math.round(dur);
+        reject(new Error(`Video duration is ${formatted}s. Videos on SellerFlow must be 1 minute or less (${maxSeconds}s).`));
+      } else {
+        resolve(dur);
+      }
+    };
+    tempVideo.onerror = () => {
+      if(settled) return;
+      settled = true;
+      cleanup();
+      resolve(0);
+    };
+    tempVideo.src = url;
+    setTimeout(() => {
+      if(!settled){
+        settled = true;
+        cleanup();
+        resolve(0);
+      }
+    }, 4000);
+  });
+}
+
 async function supabaseUpload(file,path,maxMB){
   if(!file) throw Error('No file selected.');
   const endpoint=`${supabaseUrl}/storage/v1/object/${SUPABASE_BUCKET}/${path}`;
@@ -392,7 +531,7 @@ async function supabaseUpload(file,path,maxMB){
   if(!res.ok){let msg='Upload failed';try{const j=await res.json();msg=j.message||j.error||msg}catch(_){}throw Error(`Secure document upload failed: ${msg}`)}
   return path;
 }
-async function uploadPublic(file,folder){validFile(file,['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm'],50);const ext=(file.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').toLowerCase();const path=`media/${currentUser.uid}/${folder}/${Date.now()}_${crypto.randomUUID()}.${ext}`;await supabaseUpload(file,path,50);return{url:`${supabaseUrl}/storage/v1/object/public/${SUPABASE_BUCKET}/${path}`,path,type:file.type}}
+async function uploadPublic(file,folder){validFile(file,['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm','video/quicktime'],100);const ext=(file.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').toLowerCase();const path=`media/${currentUser.uid}/${folder}/${Date.now()}_${crypto.randomUUID()}.${ext}`;await supabaseUpload(file,path,100);return{url:`${supabaseUrl}/storage/v1/object/public/${SUPABASE_BUCKET}/${path}`,path,type:file.type}}
 async function loadPrivateMedia(path,video){try{const res=await fetch(`${supabaseUrl}/storage/v1/object/${SUPABASE_BUCKET}/${path}`,{headers:{apikey:supabaseKey,Authorization:`Bearer ${supabaseKey}`}});if(!res.ok)throw Error('Media could not be loaded');const blob=await res.blob();const objectUrl=URL.createObjectURL(blob);video.src=objectUrl;video.dataset.objectUrl=objectUrl;video.load();video.play().catch(()=>{});return true}catch(e){console.warn('Private media fallback failed:',e);return false}}
 async function uploadPrivate(file,folder){validFile(file,['image/jpeg','image/png','image/webp','application/pdf'],10);const ext=(file.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').toLowerCase();const path=`verification/${currentUser.uid}/${folder}_${Date.now()}.${ext}`;await supabaseUpload(file,path,10);return path}
 
@@ -4714,16 +4853,29 @@ init();
   /* Media editor: Picture and video upload editor with resolution selection, framing & crop */
   window.__openPostModal = openPostModal = function(){
     if(!currentUser) return showAuthPrompt('create a post');
+    if(currentProfile?.blocked){
+      return toast('Your account has been blocked by an administrator from accessing SellerFlow features.', 'error', 5000);
+    }
+    if(currentProfile?.postingRestricted){
+      return toast('Your account is currently restricted from creating or publishing new posts.', 'error', 5000);
+    }
+    if(currentProfile?.suspendedUntil && ts(currentProfile.suspendedUntil) > Date.now()){
+      const untilStr = new Date(ts(currentProfile.suspendedUntil)).toLocaleString('en-GH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      return toast(`Your account is suspended until ${untilStr}. You cannot create posts.`, 'error', 5000);
+    }
     const active = getActiveSound();
     modal(`<div>
       <div class="flex items-center justify-between pb-3 border-b border-[#262626]">
         <div>
           <h2 class="text-xl font-black text-white">Create post</h2>
-          <p class="muted text-xs">Upload, crop, select resolution & edit photos or videos for SellerFlow.</p>
+          <p class="muted text-xs">Upload, crop, select resolution & edit photos or videos (up to 1 min / 60s) for SellerFlow.</p>
         </div>
       </div>
       <div class="mt-4">
-        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Select photo or video</label>
+        <label class="block text-xs font-semibold text-zinc-300 mb-1.5 flex items-center justify-between">
+          <span>Select photo or video</span>
+          <span class="text-[11px] text-gold font-medium">Videos up to 1 min (60s max)</span>
+        </label>
         <input id="postFile" type="file" accept="image/*,video/mp4,video/webm,video/quicktime" class="w-full p-2.5 rounded-xl bg-[#191919] border border-[#333] text-sm text-zinc-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-gold file:text-black hover:file:opacity-90 cursor-pointer">
       </div>
       <div id="editorArea" class="mt-4"></div>
@@ -5798,6 +5950,9 @@ init();
           <div id="previewResBadge" class="absolute top-2.5 right-2.5 bg-black/85 backdrop-blur-sm border border-zinc-700 text-zinc-200 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full z-20 shadow">
             <span id="vidResBadge">720p</span>
           </div>
+          <div id="previewDurationBadge" class="absolute bottom-2.5 left-2.5 bg-black/85 backdrop-blur-sm border border-gold/40 text-gold text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full z-20 shadow flex items-center gap-1">
+            <span>⏱️</span><span id="vidDurationText">Video up to 1:00 max</span>
+          </div>
         </div>
 
         <!-- Video Editor Tabs -->
@@ -6039,10 +6194,24 @@ init();
       updateVideoEditorUI();
     }
 
-    if($('postFile')) $('postFile').onchange = () => {
+    if($('postFile')) $('postFile').onchange = async () => {
       file = $('postFile').files[0];
       if(!file){ area.innerHTML = ''; capturedCoverBlob = null; return; }
       kind = file.type.startsWith('video') ? 'video' : 'image';
+      if(kind === 'video'){
+        try {
+          loading('Verifying video length…');
+          const duration = await checkVideoDuration(file, 60);
+          ready();
+        } catch(durErr){
+          ready();
+          $('postFile').value = '';
+          file = null;
+          area.innerHTML = '';
+          toast(durErr.message || 'Video exceeds 1 minute limit (60s max). Please choose a shorter video.', 'error', 4500);
+          return;
+        }
+      }
       if(kind === 'image'){
         capturedCoverBlob = null;
         drawImage();
@@ -6053,10 +6222,20 @@ init();
 
     $('publishPost').onclick = async () => {
       try {
+        if(currentProfile?.blocked) throw Error('Your account has been blocked from SellerFlow.');
+        if(currentProfile?.postingRestricted) throw Error('Your account is restricted from posting by an administrator.');
+        if(currentProfile?.suspendedUntil && ts(currentProfile.suspendedUntil) > Date.now()){
+          throw Error('Your account is currently suspended. You cannot publish new posts.');
+        }
         const text = $('postText').value.trim();
         const isAiGenerated = !!$('aiGeneratedCheckbox')?.checked;
         const privacy = $('postPrivacySelect')?.value || 'public';
         if(!text && !file) throw Error('Add text or media to publish.');
+        
+        if(file && kind === 'video'){
+          await checkVideoDuration(file, 60);
+        }
+
         loading('Processing & publishing your post…');
 
         let uploadFile = file;
@@ -6286,13 +6465,7 @@ init();
   }
   window.adminTakeDown=adminTakeDown;
   reviewPost=async function(uid,approve){try{const s=await getDoc(doc(db,'posts',uid));if(!snapshotExists(s))throw Error('Post not found.');const x=s.data();await updateDoc(doc(db,'posts',uid),{status:approve?'published':'removed',reviewStatus:approve?'reviewed':'removed',reviewedAt:serverTimestamp(),reviewedBy:currentUser?.uid||'admin'});if(x.sellerId&&x.sellerId!==(currentUser?.uid||''))await addDoc(collection(db,'notifications'),{recipientId:x.sellerId,senderName:'SellerFlow',title:approve?'SellerFlow post approved':'SellerFlow post removed',message:approve?'Your post passed SellerFlow safety review and remains live.':'Your post was removed because it did not meet SellerFlow safety requirements.',fromAdmin:true,postId:uid,read:false,createdAt:serverTimestamp()});toast(approve?'Post approved':'Post removed','success');navigate('admin')}catch(e){toast(errMsg(e),'error')}};
-  renderAdmin=async function(){
-    if(!isAdmin){$('page').innerHTML=pageTitle('Access denied');return}
-    const [users,posts,reports,termsSnap]=await Promise.all([getDocs(query(collection(db,'users'),limit(300))),getDocs(query(collection(db,'posts'),limit(200))),getDocs(query(collection(db,'scamReports'),limit(100))),getDoc(doc(db,'settings','terms'))]);
-    const pending=users.docs.filter(d=>d.data().verificationStatus==='pending');const reviewPosts=posts.docs.map(d=>({id:d.id,data:d.data()})).filter(x=>x.data.reviewStatus==='under_review'||(x.data.status==='published'&&x.data.reviewStatus!=='reviewed'));const livePosts=posts.docs.map(d=>({id:d.id,data:d.data()})).filter(x=>x.data.status==='published'||x.data.status==='approved');const termData=snapshotExists(termsSnap)?termsSnap.data():{text:DEFAULT_TERMS,version:appTermsVersion};
-    $('page').innerHTML=pageTitle('Admin control center','Review identity, content, users, updates and platform safety.')+`<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"><div class="card p-5"><div class="muted">Users</div><b class="text-3xl">${users.size}</b></div><div class="card p-5"><div class="muted">Pending verification</div><b class="text-3xl">${pending.length}</b></div><div class="card p-5"><div class="muted">Posts to review</div><b class="text-3xl">${reviewPosts.length}</b></div><div class="card p-5"><div class="muted">Live posts</div><b class="text-3xl">${livePosts.length}</b></div></div><div class="grid lg:grid-cols-2 gap-5 mt-5"><div class="card p-5"><div class="flex items-center justify-between"><div><h2 class="text-xl font-bold">Post safety review</h2><p class="muted text-sm mt-1">Watch videos and view photos before keeping them live.</p></div>${button('＋ Post as SellerFlow','adminCreatePost','border border-[#444] bg-transparent text-white')}</div><div class="space-y-4 mt-4">${reviewPosts.length?reviewPosts.map(x=>adminPostCard(x.id,x.data)).join(''):'<div class="muted">No posts currently awaiting review.</div>'}</div></div><div class="card p-5"><h2 class="text-xl font-bold">Seller verification</h2><p class="muted text-sm mt-1">Admin accounts do not require verification.</p><div class="space-y-3 mt-4">${pending.length?pending.map(d=>adminUserCard(d.id,d.data())).join(''):'<div class="muted">No pending applications.</div>'}</div></div></div><div class="card p-5 mt-5"><div class="flex items-center justify-between"><div><h2 class="text-xl font-bold">Live For You content control</h2><p class="muted text-sm mt-1">Administrators can take down any existing video or photo, even after approval.</p></div></div><div class="grid lg:grid-cols-2 gap-4 mt-4">${livePosts.length?livePosts.map(x=>adminPostCard(x.id,x.data)).join(''):'<div class="muted">No live posts.</div>'}</div></div><div class="card p-5 mt-5"><h2 class="text-xl font-bold">Update & notification panel</h2><p class="muted text-sm mt-1">Send an individual SellerFlow message or an app-wide notification.</p><div class="grid md:grid-cols-3 gap-3 mt-4"><select id="notifyUser" class="p-3 rounded-xl bg-[#191919] border border-[#333]"><option value="">Select user</option>${users.docs.filter(d=>d.id!==(currentUser?.uid||'')).map(d=>`<option value="${d.id}">${esc(d.data().name||d.data().email||d.id)} — ${esc(d.data().email||'')}</option>`).join('')}</select><input id="notifyTitle" class="p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Notification title"><select id="notifyType" class="p-3 rounded-xl bg-[#191919] border border-[#333]"><option>Update</option><option>Important</option><option>Order</option><option>Safety</option><option>Promotion</option></select></div><textarea id="notifyMessage" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Write the message..."></textarea><div class="flex flex-wrap gap-2 mt-3">${button('Send to selected user','sendUserNotification')}${button('Send to everyone','sendAllNotification','border border-[#444] bg-transparent text-white')}</div></div><div class="card p-5 mt-5"><h2 class="text-xl font-bold">Terms & Conditions</h2><textarea id="termsEditor" rows="10" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]">${esc(termData.text||DEFAULT_TERMS)}</textarea><div class="flex gap-2 mt-3"><input id="termsVersion" value="${esc(termData.version||appTermsVersion)}" class="p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Version">${button('Save terms','saveTerms')}</div></div>`;
-    $('adminCreatePost')?.addEventListener('click',openPostModal);document.querySelectorAll('[data-approve-user]').forEach(b=>b.onclick=()=>reviewVerification(b.dataset.approveUser,true));document.querySelectorAll('[data-reject-user]').forEach(b=>b.onclick=()=>reviewVerification(b.dataset.rejectUser,false));document.querySelectorAll('[data-block-user]').forEach(b=>b.onclick=()=>toggleBlock(b.dataset.blockUser,b.dataset.blocked==='1'));document.querySelectorAll('[data-view-card]').forEach(b=>b.onclick=()=>viewVerificationRecord(b.dataset.viewCard));document.querySelectorAll('[data-admin-approve-post]').forEach(b=>b.onclick=()=>reviewPost(b.dataset.adminApprovePost,true));document.querySelectorAll('[data-admin-takedown-post]').forEach(b=>b.onclick=()=>adminTakeDown(b.dataset.adminTakedownPost));document.querySelectorAll('[data-admin-notify]').forEach(b=>b.onclick=()=>{navigate('admin');setTimeout(()=>{$('notifyUser').value=b.dataset.adminNotify;$('notifyTitle').focus()},50)});$('sendUserNotification').onclick=async()=>{try{await sendAdminNotification($('notifyUser').value,$('notifyTitle').value.trim(),$('notifyMessage').value.trim());$('notifyMessage').value=''}catch(e){toast(errMsg(e),'error')};};$('sendAllNotification').onclick=async()=>{try{await sendAdminBroadcast($('notifyTitle').value.trim(),$('notifyMessage').value.trim());$('notifyMessage').value=''}catch(e){toast(errMsg(e),'error')};};$('saveTerms').onclick=async()=>{try{const text=$('termsEditor').value.trim(),version=$('termsVersion').value.trim()||appTermsVersion;if(text.length<200)throw Error('Terms & Conditions are too short.');await setDoc(doc(db,'settings','terms'),{text,version,updatedAt:serverTimestamp(),updatedBy:currentUser?.uid||'admin'},{merge:true});appTerms=text;appTermsVersion=version;toast('Terms & Conditions updated','success')}catch(e){toast(errMsg(e),'error')}};$('shutdownApp')?.addEventListener('click',()=>setShutdown(true));$('restartApp')?.addEventListener('click',()=>setShutdown(false));
-  };
+  /* renderAdmin is defined with the full modern dashboard control center below */
 
   /* TikTok-style grouped notifications and dedicated SellerFlow updates page support */
   function formatNotifDate(v){
@@ -6660,94 +6833,1553 @@ init();
     $('sfSaveProfile').onclick=async()=>{try{const name=$('sfEditName').value.trim(),username=usernameClean($('sfEditUsername').value),bio=$('sfEditBio').value.trim(),file=$('sfEditAvatar').files[0];if(name.length<2)throw Error('Enter a valid full name.');if(username.length<3)throw Error('Username must be at least 3 characters.');if(username!==currentProfile.username&&!(await uniqueUsername(username,currentUser.uid)))throw Error('That username is already taken.');let avatarUrl=currentProfile.avatarUrl||'';let avatarPath=currentProfile.avatarPath||'';if(file){validFile(file,['image/jpeg','image/png','image/webp'],10);const x=await uploadPublic(file,'profiles');avatarUrl=x.url;avatarPath=x.path}loading('Saving profile…');const patch={name,username,usernameLower:username.toLowerCase(),bio,avatarUrl,avatarPath,nameLastChanged:serverTimestamp(),usernameLastChanged:serverTimestamp(),updatedAt:serverTimestamp()};await updateDoc(doc(db,'users',currentUser.uid),patch);await setDoc(doc(db,'publicProfiles',currentUser.uid),{uid:currentUser.uid,name,username,usernameLower:username.toLowerCase(),bio,avatarUrl,avatarPath,verified:!!currentProfile.verified,followers:currentProfile.followers||[],following:currentProfile.following||[],role:currentProfile.role||'seller',online:true,lastSeen:serverTimestamp()},{merge:true});await refreshProfile();closeModal();toast('Profile updated successfully','success');await navigate('profile')}catch(e){toast(errMsg(e),'error')}finally{ready()}};
   }
 
-  /* Admin dashboard stats are true navigation controls. */
-  renderAdmin=async function(){
-    if(!isAdmin){$('page').innerHTML=pageTitle('Access denied');return}
-    const [users,posts,reports,termsSnap]=await Promise.all([getDocs(query(collection(db,'users'),limit(300))),getDocs(query(collection(db,'posts'),limit(200))),getDocs(query(collection(db,'scamReports'),limit(100))),getDoc(doc(db,'settings','terms'))]);
-    const pending=users.docs.filter(d=>d.data().verificationStatus==='pending');const reviewPosts=posts.docs.map(d=>({id:d.id,data:d.data()})).filter(x=>x.data.reviewStatus==='under_review'||x.data.reviewStatus==='violation'||x.data.violationDetected||x.data.reviewStatus==='review'||(x.data.status==='published'&&x.data.reviewStatus!=='reviewed'&&x.data.reviewStatus!=='safe'));const livePosts=posts.docs.map(d=>({id:d.id,data:d.data()})).filter(x=>x.data.status==='published'||x.data.status==='approved');const termData=snapshotExists(termsSnap)?termsSnap.data():{text:DEFAULT_TERMS,version:appTermsVersion};
-    $('page').innerHTML=pageTitle('Admin control center','Professional platform management, content review and account oversight.')+`<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"><button class="sf-stat-card rounded-2xl p-5" id="adminUsersStat"><div class="muted text-sm">Users</div><b class="text-3xl block mt-1">${users.size}</b><div class="text-xs gold mt-2">View all accounts →</div></button><button class="sf-stat-card rounded-2xl p-5" id="adminPendingStat"><div class="muted text-sm">Pending verification</div><b class="text-3xl block mt-1">${pending.length}</b><div class="text-xs gold mt-2">Review applications →</div></button><button class="sf-stat-card rounded-2xl p-5" id="adminReviewStat"><div class="muted text-sm">Posts to review</div><b class="text-3xl block mt-1">${reviewPosts.length}</b><div class="text-xs gold mt-2">Open safety review →</div></button><button class="sf-stat-card rounded-2xl p-5" id="adminLiveStat"><div class="muted text-sm">Live posts</div><b class="text-3xl block mt-1">${livePosts.length}</b><div class="text-xs gold mt-2">Manage live content →</div></button></div><div class="flex items-center gap-2 overflow-x-auto mt-6 pb-2 border-b border-[#242424]" id="adminTabsBar"><button class="admin-tab active" data-admin-tab="overview">📊 Overview</button><button class="admin-tab" data-admin-tab="review">🛡️ Safety Review (${reviewPosts.length})</button><button class="admin-tab" data-admin-tab="reports">🚩 Reports (${reports.size})</button><button class="admin-tab" data-admin-tab="pending">📝 Verification (${pending.length})</button><button class="admin-tab" data-admin-tab="live">🎬 Live Posts (${livePosts.length})</button><button class="admin-tab" data-admin-tab="users">👥 Users (${users.size})</button><button class="admin-tab" data-admin-tab="notify">🔔 Broadcasts</button><button class="admin-tab" data-admin-tab="terms">📜 Terms</button></div><div id="adminWorkspace" class="mt-5"></div>`;
-    
-    function setAdminTab(tabName){
-      document.querySelectorAll('[data-admin-tab]').forEach(t=>t.classList.toggle('active',t.dataset.adminTab===tabName));
-      if(tabName==='overview')sfAdminHome(users,pending,reviewPosts,livePosts,termData);
-      else if(tabName==='review')sfAdminReview(reviewPosts);
-      else if(tabName==='reports')sfAdminReports(reports);
-      else if(tabName==='pending')sfAdminPending(pending);
-      else if(tabName==='live')sfAdminLive(livePosts);
-      else if(tabName==='users')sfAdminUsers(users);
-      else if(tabName==='notify')sfAdminNotifyTab(users);
-      else if(tabName==='terms')sfAdminTermsTab(termData);
+  /* Admin Post Restoration & Account Restrictions Engine */
+  async function adminRestorePost(postId){
+    if(!postId) return;
+    if(!confirm('Restore this post back to the live For You feed?')) return;
+    try {
+      loading('Restoring post to live feed…');
+      const s = await getDoc(doc(db, 'posts', postId));
+      if(!snapshotExists(s)) throw Error('Post not found in database.');
+      const x = s.data();
+      await updateDoc(doc(db, 'posts', postId), {
+        status: 'published',
+        reviewStatus: 'reviewed',
+        safeContent: true,
+        restoredAt: serverTimestamp(),
+        restoredBy: currentUser?.uid || 'admin'
+      });
+      if(x && x.sellerId && (!currentUser || x.sellerId !== currentUser.uid)){
+        await addDoc(collection(db, 'notifications'), {
+          recipientId: x.sellerId,
+          senderName: 'SellerFlow',
+          title: 'Post restored',
+          message: 'An administrator restored your post back to the live For You feed.',
+          fromAdmin: true,
+          postId: postId,
+          read: false,
+          createdAt: serverTimestamp()
+        });
+      }
+      toast('Post restored back to live For You feed!', 'success', 3500);
+      if(typeof renderAdmin === 'function' && currentPage === 'admin'){
+        await renderAdmin();
+        const tab = document.querySelector('[data-admin-tab="restoration"]');
+        if(tab) tab.click();
+      } else if(typeof renderPage === 'function') {
+        renderPage();
+      }
+    } catch(e) {
+      toast(errMsg(e), 'error');
+    } finally {
+      ready();
     }
-    document.querySelectorAll('[data-admin-tab]').forEach(btn=>btn.onclick=()=>setAdminTab(btn.dataset.adminTab));
-    $('adminUsersStat').onclick=()=>{setAdminTab('users')};
-    $('adminPendingStat').onclick=()=>{setAdminTab('pending')};
-    $('adminReviewStat').onclick=()=>{setAdminTab('review')};
-    $('adminLiveStat').onclick=()=>{setAdminTab('live')};
-    sfAdminHome(users,pending,reviewPosts,livePosts,termData);
-  };
-  function sfAdminHome(users,pending,reviewPosts,livePosts,termData){
-    $('adminWorkspace').innerHTML=`<div class="grid lg:grid-cols-2 gap-5"><div class="card p-5"><div class="flex items-center justify-between"><h2 class="text-xl font-bold">Safety review queue</h2><span class="text-xs gold bg-[#1f180c] px-2.5 py-1 rounded-full border border-[#3e2e15]">${reviewPosts.length} pending</span></div><p class="muted text-sm mt-1">Review photos and videos submitted by users.</p><div class="space-y-4 mt-4">${reviewPosts.slice(0,2).map(x=>adminPostCard(x.id,x.data)).join('')||'<div class="muted">No posts currently awaiting review.</div>'}</div><button id="openAllReview" class="mt-4 border border-[#444] hover:border-gold rounded-xl px-4 py-2 text-sm font-bold w-full">Open full safety review queue (${reviewPosts.length}) →</button></div><div class="card p-5"><div class="flex items-center justify-between"><h2 class="text-xl font-bold">Account overview</h2><span class="text-xs text-green-400 bg-[#0d2114] px-2.5 py-1 rounded-full border border-[#1b4329]">${users.size} registered</span></div><p class="muted text-sm mt-1">Accounts with live presence indicators.</p><div class="space-y-2 mt-4">${users.docs.slice(0,5).map(d=>{const u=d.data();return `<button class="sf-user-row w-full flex items-center gap-3 p-3 rounded-xl border border-[#292929] text-left" data-admin-user-detail="${d.id}">${avatar(u)}<span class="flex-1"><b>${esc(u.name||u.email||'User')}</b><div class="muted text-xs">@${esc(u.username||'')} · ${esc(u.email||'')}</div></span>${sfPresenceBadge(u)}</button>`}).join('')}</div><button id="openAllUsers" class="mt-4 bg-gold text-black rounded-xl px-4 py-2 font-bold text-sm w-full">Manage all accounts →</button></div></div>`;
-    document.querySelectorAll('[data-admin-user-detail]').forEach(b=>b.onclick=()=>sfAdminUserDetail(b.dataset.adminUserDetail));
-    $('openAllUsers').onclick=()=>{const t=document.querySelector('[data-admin-tab="users"]');if(t)t.click();else sfAdminUsers(users)};
-    $('openAllReview').onclick=()=>{const t=document.querySelector('[data-admin-tab="review"]');if(t)t.click();else sfAdminReview(reviewPosts)};
-    bindAdminControls(users,termData);
   }
-  function sfAdminNotifyTab(users){
-    $('adminWorkspace').innerHTML=`<div class="card p-5 max-w-3xl"><h2 class="text-xl font-bold">Update & notification panel</h2><p class="muted text-sm mt-1">Send SellerFlow updates to an individual user or broadcast to the entire community.</p><div class="grid md:grid-cols-3 gap-3 mt-4"><select id="notifyUser" class="p-3 rounded-xl bg-[#191919] border border-[#333]"><option value="">Select user</option>${users.docs.filter(d=>d.id!==(currentUser?.uid||'')).map(d=>`<option value="${d.id}">${esc(d.data().name||d.data().email||d.id)} — ${esc(d.data().email||'')}</option>`).join('')}</select><input id="notifyTitle" class="p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Notification title"><select id="notifyType" class="p-3 rounded-xl bg-[#191919] border border-[#333]"><option>Update</option><option>Important</option><option>Order</option><option>Safety</option><option>Promotion</option></select></div><textarea id="notifyMessage" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Write the notification message…"></textarea><div class="flex flex-wrap gap-2 mt-4">${button('Send to selected user','sendUserNotification')}${button('Send to everyone','sendAllNotification','border border-[#444] bg-transparent text-white')}</div></div>`;
-    $('sendUserNotification').onclick=async()=>{try{await sendAdminNotification($('notifyUser').value,$('notifyTitle').value.trim(),$('notifyMessage').value.trim());$('notifyMessage').value=''}catch(e){toast(errMsg(e),'error')}};
-    $('sendAllNotification').onclick=async()=>{try{await sendAdminBroadcast($('notifyTitle').value.trim(),$('notifyMessage').value.trim());$('notifyMessage').value=''}catch(e){toast(errMsg(e),'error')}};
+  window.adminRestorePost = adminRestorePost;
+
+  async function adminPermanentlyDeletePost(postId){
+    if(!postId) return;
+    if(!confirm('Permanently delete this post from SellerFlow? This cannot be undone.')) return;
+    try {
+      loading('Deleting post permanently…');
+      await deleteDoc(doc(db, 'posts', postId));
+      toast('Post permanently removed from SellerFlow.', 'info', 3500);
+      if(typeof renderAdmin === 'function' && currentPage === 'admin'){
+        await renderAdmin();
+        const tab = document.querySelector('[data-admin-tab="restoration"]');
+        if(tab) tab.click();
+      }
+    } catch(e) {
+      toast(errMsg(e), 'error');
+    } finally {
+      ready();
+    }
   }
-  function sfAdminTermsTab(termData){
-    $('adminWorkspace').innerHTML=`<div class="card p-5 max-w-3xl"><h2 class="text-xl font-bold">Terms & Conditions management</h2><p class="muted text-sm mt-1">Users are prompted to accept these terms before using the platform.</p><textarea id="termsEditor" rows="12" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333] font-mono text-sm leading-relaxed">${esc(termData.text||DEFAULT_TERMS)}</textarea><div class="flex items-center gap-3 mt-4"><input id="termsVersion" value="${esc(termData.version||appTermsVersion)}" class="p-3 rounded-xl bg-[#191919] border border-[#333] w-40" placeholder="Version">${button('Save Terms & Conditions','saveTerms')}</div></div>`;
-    $('saveTerms').onclick=async()=>{try{const text=$('termsEditor').value.trim(),version=$('termsVersion').value.trim()||appTermsVersion;if(text.length<200)throw Error('Terms & Conditions are too short.');await setDoc(doc(db,'settings','terms'),{text,version,updatedAt:serverTimestamp(),updatedBy:currentUser?.uid||'admin'},{merge:true});appTerms=text;appTermsVersion=version;toast('Terms & Conditions updated','success')}catch(e){toast(errMsg(e),'error')}};
+  window.adminPermanentlyDeletePost = adminPermanentlyDeletePost;
+
+  async function adminToggleBlockUser(uid, currentlyBlocked){
+    if(!uid) return;
+    const action = currentlyBlocked ? 'unblock' : 'block from SellerFlow';
+    if(!confirm(`Are you sure you want to ${action} this account?`)) return;
+    try {
+      loading(`${currentlyBlocked ? 'Unblocking' : 'Blocking'} user…`);
+      await updateDoc(doc(db, 'users', uid), {
+        blocked: !currentlyBlocked,
+        blockedAt: currentlyBlocked ? null : serverTimestamp(),
+        unblockedAt: currentlyBlocked ? serverTimestamp() : null
+      });
+      try {
+        await updateDoc(doc(db, 'publicProfiles', uid), {
+          blocked: !currentlyBlocked
+        });
+      } catch(_){}
+      toast(currentlyBlocked ? 'Account unblocked successfully.' : 'Account blocked from SellerFlow.', 'success', 3500);
+      if(typeof renderAdmin === 'function' && currentPage === 'admin'){
+        await renderAdmin();
+        const tab = document.querySelector('[data-admin-tab="users"]');
+        if(tab) tab.click();
+      }
+    } catch(e) {
+      toast(errMsg(e), 'error');
+    } finally {
+      ready();
+    }
   }
-  function bindAdminControls(users,termData){document.querySelectorAll('[data-admin-approve-post]').forEach(b=>b.onclick=()=>reviewPost(b.dataset.adminApprovePost,true));document.querySelectorAll('[data-admin-takedown-post]').forEach(b=>b.onclick=()=>adminTakeDown(b.dataset.adminTakedownPost));}
-  function sfAdminBack(){const t=document.querySelector('[data-admin-tab="overview"]');if(t)t.click();else renderAdmin()}
-  function sfAdminUsers(users){$('adminWorkspace').innerHTML=`<div class="card p-5"><div class="flex items-center justify-between gap-3"><div><h2 class="text-xl font-black">All SellerFlow accounts (${users.size})</h2><p class="muted text-sm mt-1">Online and offline accounts with live presence indicators.</p></div><button id="adminUsersBack" class="border border-[#444] rounded-xl px-4 py-2">← Back</button></div><div class="grid sm:grid-cols-2 gap-3 mt-5">${users.docs.map(d=>{const u=d.data();return `<button class="sf-user-row flex items-center gap-3 p-4 rounded-2xl border border-[#292929] text-left" data-admin-user-detail="${d.id}">${avatar(u,'w-12 h-12 rounded-full object-cover bg-[#222]')}<span class="flex-1 min-w-0"><b>${esc(u.name||u.email||'User')}</b><div class="muted text-xs truncate">@${esc(u.username||'')} · ${esc(u.email||'')}</div><div class="mt-2">${sfPresenceBadge(u)} ${u.verified?'<span class="verified-badge ml-2">✓</span>':''}</div></span></button>`}).join('')}</div></div>`;$('adminUsersBack').onclick=sfAdminBack;document.querySelectorAll('[data-admin-user-detail]').forEach(b=>b.onclick=()=>sfAdminUserDetail(b.dataset.adminUserDetail))}
-  async function sfAdminUserDetail(uid){const s=await getDoc(doc(db,'users',uid));if(!snapshotExists(s))return toast('User record not found.','error');const u=s.data();modal(`<div><div class="flex items-center gap-4">${avatar(u,'w-20 h-20 rounded-full object-cover bg-[#222]')}<div><h2 class="text-xl font-black">${esc(u.name||'User')}</h2><div class="muted">@${esc(u.username||'')}</div><div class="mt-2">${sfPresenceBadge(u)}</div></div></div><div class="grid sm:grid-cols-2 gap-3 mt-5"><div class="bg-[#171717] rounded-xl p-4"><div class="muted text-xs">Email</div><b class="break-all">${esc(u.email||'')}</b></div><div class="bg-[#171717] rounded-xl p-4"><div class="muted text-xs">Role</div><b>${esc(u.role||'seller')}</b></div><div class="bg-[#171717] rounded-xl p-4"><div class="muted text-xs">Verification</div><b>${u.verified?'Verified':'Not verified'}</b></div><div class="bg-[#171717] rounded-xl p-4"><div class="muted text-xs">Account</div><b>${u.blocked?'Blocked':'Active'}</b></div></div><div class="flex gap-2 mt-5"><button data-modal-back class="border border-[#444] rounded-xl px-4 py-2">← Back</button><button data-close-modal class="bg-gold text-black rounded-xl px-4 py-2">Close</button></div></div>`)}
-  function sfAdminPending(pending){$('adminWorkspace').innerHTML=`<div class="card p-5"><div class="flex justify-between"><div><h2 class="text-xl font-black">Pending verification (${pending.length})</h2><p class="muted text-sm">Review submitted seller identities.</p></div><button id="pendingBack" class="border border-[#444] rounded-xl px-4 py-2">← Back</button></div><div class="space-y-3 mt-5">${pending.length?pending.map(d=>adminUserCard(d.id,d.data())).join(''):'<div class="muted">No pending applications.</div>'}</div></div>`;$('pendingBack').onclick=sfAdminBack;document.querySelectorAll('[data-approve-user]').forEach(b=>b.onclick=()=>reviewVerification(b.dataset.approveUser,true));document.querySelectorAll('[data-reject-user]').forEach(b=>b.onclick=()=>reviewVerification(b.dataset.rejectUser,false));document.querySelectorAll('[data-view-card]').forEach(b=>b.onclick=()=>viewVerificationRecord(b.dataset.viewCard))}
-  function sfAdminReview(items){$('adminWorkspace').innerHTML=`<div class="card p-5"><div class="flex justify-between"><div><h2 class="text-xl font-black">Posts waiting for safety review (${items.length})</h2><p class="muted text-sm">Preview every photo and video here before approval.</p></div><button id="reviewBack" class="border border-[#444] rounded-xl px-4 py-2">← Back</button></div><div class="space-y-4 mt-5">${items.length?items.map(x=>adminPostCard(x.id,x.data)).join(''):'<div class="muted">No posts are waiting for review.</div>'}</div></div>`;$('reviewBack').onclick=sfAdminBack;document.querySelectorAll('[data-admin-approve-post]').forEach(b=>b.onclick=()=>reviewPost(b.dataset.adminApprovePost,true));document.querySelectorAll('[data-admin-takedown-post]').forEach(b=>b.onclick=()=>adminTakeDown(b.dataset.adminTakedownPost))}
-  function sfAdminLive(items){$('adminWorkspace').innerHTML=`<div class="card p-5"><div class="flex justify-between"><div><h2 class="text-xl font-black">Live For You content (${items.length})</h2><p class="muted text-sm">Take down any existing live photo or video, even if previously approved.</p></div><button id="liveBack" class="border border-[#444] rounded-xl px-4 py-2">← Back</button></div><div class="grid lg:grid-cols-2 gap-4 mt-5">${items.length?items.map(x=>adminPostCard(x.id,x.data)).join(''):'<div class="muted">No live posts.</div>'}</div></div>`;$('liveBack').onclick=sfAdminBack;document.querySelectorAll('[data-admin-approve-post]').forEach(b=>b.onclick=()=>reviewPost(b.dataset.adminApprovePost,true));document.querySelectorAll('[data-admin-takedown-post]').forEach(b=>b.onclick=()=>adminTakeDown(b.dataset.adminTakedownPost))}
-  function sfAdminReports(reports){
-    $('adminWorkspace').innerHTML=`<div class="card p-5"><div class="flex justify-between items-center"><div><h2 class="text-xl font-black">Community safety reports (${reports.size})</h2><p class="muted text-sm">Review posts and sellers flagged by community members for moderation.</p></div><button id="reportsBack" class="border border-[#444] rounded-xl px-4 py-2 text-sm font-bold">← Back</button></div><div class="space-y-4 mt-5">${reports.size?reports.docs.map(d=>{
-      const r=d.data();
-      return `<div class="p-4 rounded-2xl border border-[#2c2c2c] bg-[#141414]">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-bold text-red-400 bg-red-950/40 border border-red-900/40 px-2.5 py-1 rounded-full">🚩 ${esc(r.reasonLabel||r.reason||'Flagged')}</span>
-            <span class="text-xs muted">Reported by ${esc(r.reporterName||r.reporterEmail||r.reporterId)}</span>
-          </div>
-          <span class="text-xs text-zinc-500">${new Date(ts(r.createdAt)||Date.now()).toLocaleString('en-GH')}</span>
+  window.adminToggleBlockUser = adminToggleBlockUser;
+
+  async function adminTogglePostingRestriction(uid, currentlyRestricted){
+    if(!uid) return;
+    const action = currentlyRestricted ? 'allow posting for' : 'restrict posting privileges for';
+    if(!confirm(`Are you sure you want to ${action} this user? ${currentlyRestricted ? 'They will be permitted to publish posts again.' : 'They will still be able to browse and shop, but cannot publish new posts.'}`)) return;
+    try {
+      loading('Updating posting permissions…');
+      await updateDoc(doc(db, 'users', uid), {
+        postingRestricted: !currentlyRestricted,
+        postingRestrictedAt: currentlyRestricted ? null : serverTimestamp()
+      });
+      await addDoc(collection(db, 'notifications'), {
+        recipientId: uid,
+        senderName: 'SellerFlow',
+        title: currentlyRestricted ? 'Posting privileges restored' : 'Posting privileges restricted',
+        message: currentlyRestricted 
+          ? 'Your SellerFlow posting privileges have been restored by an administrator.' 
+          : 'Your account has been restricted from creating or publishing new posts by an administrator.',
+        fromAdmin: true,
+        read: false,
+        createdAt: serverTimestamp()
+      });
+      toast(currentlyRestricted ? 'Posting privileges restored.' : 'User restricted from posting.', 'success', 3500);
+      if(typeof renderAdmin === 'function' && currentPage === 'admin'){
+        await renderAdmin();
+        const tab = document.querySelector('[data-admin-tab="users"]');
+        if(tab) tab.click();
+      }
+    } catch(e) {
+      toast(errMsg(e), 'error');
+    } finally {
+      ready();
+    }
+  }
+  window.adminTogglePostingRestriction = adminTogglePostingRestriction;
+
+  async function adminSuspendUserModal(uid){
+    if(!uid) return;
+    const snap = await getDoc(doc(db, 'users', uid));
+    if(!snapshotExists(snap)) return toast('User not found.', 'error');
+    const u = snap.data();
+    const isSuspended = !!u.suspended || (u.suspendedUntil && ts(u.suspendedUntil) > Date.now());
+
+    modal(`<div>
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-950/60 border border-amber-900/60 flex items-center justify-center text-xl text-amber-400">⏳</div>
+        <div>
+          <h2 class="text-xl font-black">Account Suspension</h2>
+          <p class="muted text-sm">Manage temporary or indefinite suspension for @${esc(u.username || u.name || 'user')}.</p>
         </div>
-        ${r.details?`<div class="mt-2 text-xs text-zinc-300 bg-[#1c1c1c] p-2.5 rounded-xl border border-[#333]"><b>User comment:</b> ${esc(r.details)}</div>`:''}
-        <div class="mt-3 p-3 rounded-xl bg-[#181818] border border-[#262626] flex items-center gap-3">
-          ${r.postMediaUrl?`<div class="w-12 h-12 rounded-lg overflow-hidden bg-black shrink-0 relative">${r.postMediaType?.startsWith('video')?`<video src="${esc(r.postMediaUrl)}" class="w-full h-full object-cover" muted></video>`:`<img src="${esc(r.postMediaUrl)}" class="w-full h-full object-cover">`}</div>`:''}
-          <div class="flex-1 min-w-0">
-            <div class="text-xs muted">Post ID: <span class="font-mono text-zinc-300">${esc(r.postId||'')}</span> · Author: <span class="font-mono text-zinc-300">${esc(r.sellerId||'')}</span></div>
-            <div class="text-sm text-zinc-200 truncate mt-0.5">${esc(r.postText||'(No caption)')}</div>
-          </div>
+      </div>
+      
+      <div class="mt-4 p-3.5 rounded-xl bg-[#171717] border border-[#2b2b2b]">
+        <div class="flex items-center justify-between">
+          <span class="text-sm muted">Current Status:</span>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full ${isSuspended ? 'bg-amber-950/60 text-amber-400 border border-amber-800' : 'bg-green-950/60 text-green-400 border border-green-800'}">
+            ${isSuspended ? `Suspended until ${u.suspendedUntil ? new Date(ts(u.suspendedUntil)).toLocaleString('en-GH', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Indefinite'}` : 'Active / Not suspended'}
+          </span>
         </div>
-        <div class="flex flex-wrap items-center gap-2 mt-3 justify-end">
-          ${r.postId?`<button class="border border-[#444] hover:border-gold rounded-xl px-3 py-1.5 text-xs font-bold text-white" onclick="navigate('feed','${esc(r.postId)}')">View in Feed</button>`:''}
-          ${r.postId?`<button class="border border-red-800 bg-red-950/30 hover:bg-red-900/50 text-red-400 rounded-xl px-3 py-1.5 text-xs font-bold" data-admin-takedown-post="${esc(r.postId)}">Take down post</button>`:''}
-          <button class="bg-[#242424] hover:bg-[#333] border border-[#444] text-zinc-300 rounded-xl px-3 py-1.5 text-xs font-bold" data-admin-dismiss-report="${d.id}">Dismiss report</button>
-        </div>
-      </div>`;
-    }).join(''):'<div class="muted py-8 text-center">No community reports submitted. The platform is clean.</div>'}</div></div>`;
-    $('reportsBack').onclick=sfAdminBack;
-    document.querySelectorAll('[data-admin-takedown-post]').forEach(b=>b.onclick=()=>adminTakeDown(b.dataset.adminTakedownPost));
-    document.querySelectorAll('[data-admin-dismiss-report]').forEach(b=>b.onclick=async()=>{
-      try{
-        await deleteDoc(doc(db,'scamReports',b.dataset.adminDismissReport));
-        toast('Report dismissed','success');
-        renderAdmin();
-      }catch(e){toast(errMsg(e),'error')}
+        ${u.suspendedReason ? `<div class="text-xs text-zinc-400 mt-2"><b>Reason:</b> ${esc(u.suspendedReason)}</div>` : ''}
+      </div>
+
+      <div class="mt-4">
+        <label class="text-xs muted block mb-1.5 font-bold">Select Suspension Duration</label>
+        <select id="sfSuspendDuration" class="field w-full p-3 rounded-xl bg-[#191919] border border-[#333] text-sm">
+          <option value="24h">24 Hours (1 Day)</option>
+          <option value="3d">3 Days</option>
+          <option value="7d">7 Days (1 Week)</option>
+          <option value="30d">30 Days (1 Month)</option>
+          <option value="indefinite">Indefinite (Until manually lifted)</option>
+        </select>
+      </div>
+
+      <div class="mt-3">
+        <label class="text-xs muted block mb-1.5 font-bold">Moderation Reason (Optional)</label>
+        <input id="sfSuspendReason" class="field w-full p-3 rounded-xl bg-[#191919] border border-[#333] text-sm" placeholder="e.g. Terms violation, spam behavior, dispute">
+      </div>
+
+      <div class="flex flex-wrap gap-2 justify-end mt-5">
+        ${isSuspended ? `<button type="button" id="sfLiftSuspensionBtn" class="px-4 py-2 rounded-xl border border-green-800 bg-green-950/40 text-green-300 font-bold text-sm hover:bg-green-900/50">🟢 Lift Suspension</button>` : ''}
+        <button data-close-modal class="px-4 py-2 rounded-xl border border-[#333] text-sm">Cancel</button>
+        <button type="button" id="sfApplySuspensionBtn" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm">Apply Suspension</button>
+      </div>
+    </div>`);
+
+    if($('sfLiftSuspensionBtn')){
+      $('sfLiftSuspensionBtn').onclick = async () => {
+        try {
+          loading('Lifting suspension…');
+          await updateDoc(doc(db, 'users', uid), {
+            suspended: false,
+            suspendedUntil: null,
+            suspendedReason: null,
+            suspensionLiftedAt: serverTimestamp()
+          });
+          closeModal();
+          toast('Account suspension lifted successfully.', 'success', 3500);
+          if(typeof renderAdmin === 'function' && currentPage === 'admin') renderAdmin();
+        } catch(err) {
+          toast(errMsg(err), 'error');
+        } finally {
+          ready();
+        }
+      };
+    }
+
+    $('sfApplySuspensionBtn').onclick = async () => {
+      try {
+        const dur = $('sfSuspendDuration').value;
+        const reason = $('sfSuspendReason').value.trim() || 'Administrator safety moderation';
+        let ms = 0;
+        if(dur === '24h') ms = 24 * 60 * 60 * 1000;
+        else if(dur === '3d') ms = 3 * 24 * 60 * 60 * 1000;
+        else if(dur === '7d') ms = 7 * 24 * 60 * 60 * 1000;
+        else if(dur === '30d') ms = 30 * 24 * 60 * 60 * 1000;
+
+        const untilDate = ms > 0 ? new Date(Date.now() + ms) : null;
+
+        loading('Applying suspension…');
+        await updateDoc(doc(db, 'users', uid), {
+          suspended: true,
+          suspendedUntil: untilDate,
+          suspendedReason: reason,
+          suspendedAt: serverTimestamp()
+        });
+        await addDoc(collection(db, 'notifications'), {
+          recipientId: uid,
+          senderName: 'SellerFlow',
+          title: 'Account suspended',
+          message: `Your account has been suspended by an administrator${untilDate ? ` until ${untilDate.toLocaleDateString('en-GH')}` : ''}. Reason: ${reason}.`,
+          fromAdmin: true,
+          read: false,
+          createdAt: serverTimestamp()
+        });
+        closeModal();
+        toast(`User @${u.username || 'user'} suspended successfully.`, 'success', 3500);
+        if(typeof renderAdmin === 'function' && currentPage === 'admin') renderAdmin();
+      } catch(err) {
+        toast(errMsg(err), 'error');
+      } finally {
+        ready();
+      }
+    };
+  }
+  window.adminSuspendUserModal = adminSuspendUserModal;
+
+  async function adminDeleteUserPermanently(uid, username){
+    if(!uid) return;
+    const confirmText = prompt(`WARNING: This permanently deletes @${username || 'user'} and all related account records.\n\nType "DELETE" to confirm:`);
+    if(confirmText !== 'DELETE') return toast('Deletion cancelled.', 'info', 2500);
+    try {
+      loading('Permanently deleting user account…');
+      await deleteDoc(doc(db, 'users', uid));
+      try { await deleteDoc(doc(db, 'publicProfiles', uid)); } catch(_){}
+      toast('Account permanently deleted.', 'success', 3500);
+      if(typeof renderAdmin === 'function' && currentPage === 'admin'){
+        await renderAdmin();
+        const tab = document.querySelector('[data-admin-tab="users"]');
+        if(tab) tab.click();
+      }
+    } catch(e) {
+      toast(errMsg(e), 'error');
+    } finally {
+      ready();
+    }
+  }
+  window.adminDeleteUserPermanently = adminDeleteUserPermanently;
+
+  /* Admin Modern Dashboard & Control Center */
+  renderAdmin = async function(){
+    if(!isAdmin){ $('page').innerHTML = pageTitle('Access denied', 'You do not have permission to access the SellerFlow Admin Control Center.'); return; }
+    const [users, posts, reports, termsSnap] = await Promise.all([
+      getDocs(query(collection(db, 'users'), limit(300))),
+      getDocs(query(collection(db, 'posts'), limit(250))),
+      getDocs(query(collection(db, 'scamReports'), limit(100))),
+      getDoc(doc(db, 'settings', 'terms'))
+    ]);
+
+    const pending = users.docs.filter(d => d.data().verificationStatus === 'pending');
+    const verifiedUsers = users.docs.filter(d => !!d.data().verified);
+    const restrictedUsers = users.docs.filter(d => {
+      const u = d.data();
+      const isSusp = !!u.suspended || (u.suspendedUntil && ts(u.suspendedUntil) > Date.now());
+      return !!u.blocked || isSusp || !!u.postingRestricted;
     });
+    const activeUsers = users.docs.filter(d => {
+      const u = d.data();
+      const isSusp = !!u.suspended || (u.suspendedUntil && ts(u.suspendedUntil) > Date.now());
+      return !u.blocked && !isSusp && !u.postingRestricted;
+    });
+    
+    // Safety review queue: posts flagged or awaiting review
+    const reviewPosts = posts.docs
+      .map(d => ({ id: d.id, data: d.data() }))
+      .filter(x => x.data.status !== 'removed' && (x.data.reviewStatus === 'under_review' || x.data.reviewStatus === 'violation' || x.data.violationDetected || x.data.reviewStatus === 'review' || (x.data.status === 'published' && x.data.reviewStatus !== 'reviewed' && x.data.reviewStatus !== 'safe')));
+
+    // Live posts currently serving on For You feed
+    const livePosts = posts.docs
+      .map(d => ({ id: d.id, data: d.data() }))
+      .filter(x => x.data.status === 'published' || x.data.status === 'approved');
+
+    // Restoration queue: taken down, hidden or removed posts
+    const takenDownPosts = posts.docs
+      .map(d => ({ id: d.id, data: d.data() }))
+      .filter(x => x.data.status === 'removed' || x.data.reviewStatus === 'removed' || x.data.status === 'taken_down' || (x.data.status === 'hidden' && x.data.reviewStatus === 'violation'));
+
+    const termData = snapshotExists(termsSnap) ? termsSnap.data() : { text: DEFAULT_TERMS, version: appTermsVersion };
+    const initialTab = window._currentAdminTab || 'overview';
+
+    $('page').innerHTML = `
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <div>
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+            <h1 class="text-2xl sm:text-3xl font-black text-white">Admin Control Center</h1>
+            <span class="text-[11px] font-bold bg-gold/15 text-gold border border-gold/30 px-2.5 py-0.5 rounded-full">LIVE MODERATION</span>
+          </div>
+          <p class="muted text-xs sm:text-sm mt-1">Platform management: user directories, live posts, community reports & content restoration.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" id="adminRefreshBtn" class="border border-[#333] hover:border-gold px-3.5 py-2 rounded-xl text-xs font-bold bg-[#141414] text-zinc-200 transition flex items-center gap-1.5 shadow-sm">
+            <span>🔄</span> Refresh
+          </button>
+          <button type="button" id="adminCreatePostBtn" class="bg-gold text-black hover:brightness-110 px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-md">
+            <span>＋</span> Post as SellerFlow
+          </button>
+        </div>
+      </div>
+
+      <!-- Dashboard-Style Executive Cards Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Card 1: Users & Accounts -->
+        <button type="button" class="sf-dash-card group" id="dashCardUsers">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Users & Accounts</span>
+              <span class="text-xl p-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/50">👥</span>
+            </div>
+            <div class="text-3xl font-black text-white mt-2 group-hover:text-gold transition">${users.size}</div>
+            <div class="flex flex-wrap gap-1.5 mt-2.5">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800">${activeUsers.length} Active</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded ${pending.length ? 'bg-amber-950/80 text-amber-300 border border-amber-800' : 'bg-zinc-800/80 text-zinc-400'}">${pending.length} ID Pending</span>
+              ${restrictedUsers.length ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-950/80 text-rose-300 border border-rose-800">${restrictedUsers.length} Restricted</span>` : ''}
+            </div>
+          </div>
+          <div class="text-[11px] font-bold text-gold group-hover:underline mt-4 flex items-center justify-between">
+            <span>Manage accounts directory</span>
+            <span>→</span>
+          </div>
+        </button>
+
+        <!-- Card 2: Posts & Feed -->
+        <button type="button" class="sf-dash-card group" id="dashCardPosts">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Posts & Feed</span>
+              <span class="text-xl p-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/50">🎬</span>
+            </div>
+            <div class="text-3xl font-black text-white mt-2 group-hover:text-gold transition">${posts.size}</div>
+            <div class="flex flex-wrap gap-1.5 mt-2.5">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-950/80 text-blue-400 border border-blue-800">${livePosts.length} Live on Feed</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded ${reviewPosts.length ? 'bg-amber-950/80 text-amber-300 border border-amber-800' : 'bg-zinc-800 text-zinc-400'}">${reviewPosts.length} Queued Review</span>
+            </div>
+          </div>
+          <div class="text-[11px] font-bold text-gold group-hover:underline mt-4 flex items-center justify-between">
+            <span>Browse posts & moderation</span>
+            <span>→</span>
+          </div>
+        </button>
+
+        <!-- Card 3: Community Reports -->
+        <button type="button" class="sf-dash-card group ${reports.size ? 'border-rose-500/40' : ''}" id="dashCardReports">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Community Reports</span>
+              <span class="text-xl p-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/50">🚩</span>
+            </div>
+            <div class="text-3xl font-black ${reports.size ? 'text-rose-400' : 'text-white'} mt-2 group-hover:text-gold transition">${reports.size}</div>
+            <div class="flex flex-wrap gap-1.5 mt-2.5">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded ${reports.size ? 'bg-rose-950/80 text-rose-300 border border-rose-800' : 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'}">
+                ${reports.size ? '⚡ Action Needed' : '✓ Community Safe'}
+              </span>
+            </div>
+          </div>
+          <div class="text-[11px] font-bold text-gold group-hover:underline mt-4 flex items-center justify-between">
+            <span>Investigate community flags</span>
+            <span>→</span>
+          </div>
+        </button>
+
+        <!-- Card 4: Safety & Restoration Hub -->
+        <button type="button" class="sf-dash-card group" id="dashCardRestoration">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Restoration Hub</span>
+              <span class="text-xl p-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/50">🔄</span>
+            </div>
+            <div class="text-3xl font-black ${takenDownPosts.length ? 'text-rose-400' : 'text-white'} mt-2 group-hover:text-gold transition">${takenDownPosts.length}</div>
+            <div class="flex flex-wrap gap-1.5 mt-2.5">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded ${takenDownPosts.length ? 'bg-rose-950/80 text-rose-300 border border-rose-800' : 'bg-zinc-800 text-zinc-400'}">
+                ${takenDownPosts.length ? `${takenDownPosts.length} Taken Down` : '0 In Archive'}
+              </span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">1-Click Restore</span>
+            </div>
+          </div>
+          <div class="text-[11px] font-bold text-gold group-hover:underline mt-4 flex items-center justify-between">
+            <span>Open restoration queue</span>
+            <span>→</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Sleek Tab-Based Interface for Navigation -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#242424] scrollbar-none mb-6" id="adminTabsBar">
+        <button class="admin-tab ${initialTab === 'overview' ? 'active' : ''}" data-admin-tab="overview">
+          <span>📊 Overview</span>
+        </button>
+        <button class="admin-tab ${initialTab === 'users' ? 'active' : ''}" data-admin-tab="users">
+          <span>👥 Users</span>
+          <span class="admin-tab-count">${users.size}</span>
+        </button>
+        <button class="admin-tab ${initialTab === 'posts' ? 'active' : ''}" data-admin-tab="posts">
+          <span>🎬 Posts</span>
+          <span class="admin-tab-count">${posts.size}</span>
+        </button>
+        <button class="admin-tab ${initialTab === 'reports' ? 'active' : ''}" data-admin-tab="reports">
+          <span>🚩 Reports</span>
+          <span class="admin-tab-count ${reports.size ? 'bg-rose-950 text-rose-300' : ''}">${reports.size}</span>
+        </button>
+        <button class="admin-tab ${initialTab === 'notify' ? 'active' : ''}" data-admin-tab="notify">
+          <span>🔔 Broadcasts</span>
+        </button>
+        <button class="admin-tab ${initialTab === 'terms' ? 'active' : ''}" data-admin-tab="terms">
+          <span>📜 Policies</span>
+        </button>
+      </div>
+
+      <div id="adminWorkspace"></div>
+    `;
+
+    $('adminRefreshBtn')?.addEventListener('click', renderAdmin);
+    $('adminCreatePostBtn')?.addEventListener('click', openPostModal);
+
+    function setAdminTab(tabName, subOption){
+      // Support legacy sub-route redirects
+      if(tabName === 'restoration'){ tabName = 'posts'; subOption = 'restoration'; }
+      else if(tabName === 'review'){ tabName = 'posts'; subOption = 'review'; }
+      else if(tabName === 'live'){ tabName = 'posts'; subOption = 'live'; }
+      else if(tabName === 'pending'){ tabName = 'users'; subOption = 'pending'; }
+
+      window._currentAdminTab = tabName;
+      document.querySelectorAll('[data-admin-tab]').forEach(t => t.classList.toggle('active', t.dataset.adminTab === tabName));
+
+      if(tabName === 'overview') sfAdminOverview(users, pending, reviewPosts, livePosts, takenDownPosts, reports, termData);
+      else if(tabName === 'users') sfAdminUsers(users, pending, subOption);
+      else if(tabName === 'posts') sfAdminPosts(posts, livePosts, reviewPosts, takenDownPosts, subOption);
+      else if(tabName === 'reports') sfAdminReports(reports);
+      else if(tabName === 'notify') sfAdminNotifyTab(users);
+      else if(tabName === 'terms') sfAdminTermsTab(termData);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    window.setAdminTab = setAdminTab;
+
+    document.querySelectorAll('[data-admin-tab]').forEach(btn => {
+      btn.onclick = () => setAdminTab(btn.dataset.adminTab);
+    });
+
+    $('dashCardUsers').onclick = () => setAdminTab('users');
+    $('dashCardPosts').onclick = () => setAdminTab('posts');
+    $('dashCardReports').onclick = () => setAdminTab('reports');
+    $('dashCardRestoration').onclick = () => setAdminTab('posts', 'restoration');
+
+    setAdminTab(initialTab);
+  };
+
+  function sfAdminOverview(users, pending, reviewPosts, livePosts, takenDownPosts, reports, termData){
+    const activeCount = users.docs.filter(d => {
+      const u = d.data();
+      const isSusp = !!u.suspended || (u.suspendedUntil && ts(u.suspendedUntil) > Date.now());
+      return !u.blocked && !isSusp && !u.postingRestricted;
+    }).length;
+
+    $('adminWorkspace').innerHTML = `
+      <div class="space-y-6">
+        <!-- Distinct Section Quick-Launch Cards -->
+        <div class="grid md:grid-cols-3 gap-4">
+          <!-- Launchpad 1: Users -->
+          <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-2xl p-2 rounded-xl bg-zinc-800/80 border border-zinc-700/50">👥</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">${users.size} Accounts</span>
+              </div>
+              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Users & Restrictions</h2>
+              <p class="muted text-xs mt-1 leading-relaxed">Directory of registered creators and buyers. Enforce suspensions, toggle account blocks, and restrict posting privileges.</p>
+              
+              <div class="flex flex-wrap gap-2 mt-4">
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">${activeCount} Active</span>
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${pending.length ? 'bg-amber-950/60 text-amber-300 border border-amber-800/60' : 'bg-zinc-800 text-zinc-400'}">${pending.length} Ghana Cards</span>
+              </div>
+            </div>
+            <button type="button" id="jumpToUsersBtn" class="mt-5 w-full bg-[#1c1c1c] hover:bg-gold hover:text-black border border-[#333] hover:border-gold text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
+              <span>Open Users Section</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          <!-- Launchpad 2: Posts -->
+          <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-2xl p-2 rounded-xl bg-zinc-800/80 border border-zinc-700/50">🎬</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">${posts.size} Total</span>
+              </div>
+              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Posts & Moderation</h2>
+              <p class="muted text-xs mt-1 leading-relaxed">Unified control of live For You video/photo content, safety review queue, and 1-click restoration archive for taken-down media.</p>
+              
+              <div class="flex flex-wrap gap-2 mt-4">
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-950/60 text-blue-300 border border-blue-800/60">${livePosts.length} Live on Feed</span>
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${takenDownPosts.length ? 'bg-rose-950/60 text-rose-300 border border-rose-800/60' : 'bg-zinc-800 text-zinc-400'}">${takenDownPosts.length} Removed</span>
+              </div>
+            </div>
+            <button type="button" id="jumpToPostsBtn" class="mt-5 w-full bg-[#1c1c1c] hover:bg-gold hover:text-black border border-[#333] hover:border-gold text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
+              <span>Open Posts Section</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          <!-- Launchpad 3: Reports -->
+          <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-2xl p-2 rounded-xl bg-zinc-800/80 border border-zinc-700/50">🚩</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full ${reports.size ? 'bg-rose-950 text-rose-300 border border-rose-800' : 'bg-zinc-800 text-zinc-300'}">${reports.size} Reports</span>
+              </div>
+              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Community Reports</h2>
+              <p class="muted text-xs mt-1 leading-relaxed">Review user alerts regarding scams, fraud, counterfeit items, harassment, and policy violations with direct moderation tools.</p>
+              
+              <div class="flex flex-wrap gap-2 mt-4">
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${reports.size ? 'bg-rose-950/60 text-rose-300 border border-rose-800/60' : 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60'}">
+                  ${reports.size ? 'Requires Attention' : 'Community Clean'}
+                </span>
+              </div>
+            </div>
+            <button type="button" id="jumpToReportsBtn" class="mt-5 w-full bg-[#1c1c1c] hover:bg-gold hover:text-black border border-[#333] hover:border-gold text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
+              <span>Open Reports Section</span>
+              <span>→</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Priority Attention Row: Restoration & Review Queues -->
+        <div class="grid lg:grid-cols-2 gap-5">
+          <!-- Restoration Queue Card -->
+          <div class="card p-5 border border-[#2b2b2b]">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="text-xl">🔄</span>
+                <div>
+                  <h3 class="text-base font-black text-white">Post Restoration Hub</h3>
+                  <p class="muted text-xs">Taken down or hidden posts available for one-click restore.</p>
+                </div>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full ${takenDownPosts.length ? 'bg-rose-950/60 text-rose-400 border border-rose-800' : 'bg-zinc-800 text-zinc-400'}">${takenDownPosts.length} in archive</span>
+            </div>
+            <div class="space-y-3 mt-4">
+              ${takenDownPosts.slice(0, 2).map(x => adminRestoreCard(x.id, x.data)).join('') || '<div class="p-8 text-center muted text-xs bg-[#141414] rounded-xl border border-[#262626]">No taken-down posts in archive. All clear!</div>'}
+            </div>
+            <button id="openAllRestoration" class="mt-4 border border-[#444] hover:border-gold rounded-xl px-4 py-2.5 text-xs font-bold w-full transition text-white bg-[#161616]">
+              View All Taken-Down Posts (${takenDownPosts.length}) →
+            </button>
+          </div>
+
+          <!-- Safety Review Queue Card -->
+          <div class="card p-5 border border-[#2b2b2b]">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="text-xl">🛡️</span>
+                <div>
+                  <h3 class="text-base font-black text-white">Safety Review Queue</h3>
+                  <p class="muted text-xs">Submissions pending safety verification.</p>
+                </div>
+              </div>
+              <span class="text-xs gold bg-[#1f180c] px-2.5 py-1 rounded-full border border-[#3e2e15] font-bold">${reviewPosts.length} queued</span>
+            </div>
+            <div class="space-y-3 mt-4">
+              ${reviewPosts.slice(0, 2).map(x => adminPostCard(x.id, x.data)).join('') || '<div class="p-8 text-center muted text-xs bg-[#141414] rounded-xl border border-[#262626]">No posts waiting for safety review.</div>'}
+            </div>
+            <button id="openAllReview" class="mt-4 border border-[#444] hover:border-gold rounded-xl px-4 py-2.5 text-xs font-bold w-full transition text-white bg-[#161616]">
+              View Safety Review Queue (${reviewPosts.length}) →
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    $('jumpToUsersBtn')?.addEventListener('click', () => setAdminTab('users'));
+    $('jumpToPostsBtn')?.addEventListener('click', () => setAdminTab('posts'));
+    $('jumpToReportsBtn')?.addEventListener('click', () => setAdminTab('reports'));
+    $('openAllRestoration')?.addEventListener('click', () => setAdminTab('posts', 'restoration'));
+    $('openAllReview')?.addEventListener('click', () => setAdminTab('posts', 'review'));
+
+    bindAdminControls();
+  }
+  function sfAdminHome(users, pending, reviewPosts, livePosts, takenDownPosts, termData){
+    sfAdminOverview(users, pending, reviewPosts, livePosts, takenDownPosts, { size: 0, docs: [] }, termData);
+  }
+
+  /* Dedicated Post Restoration & Moderation Cards */
+  function adminRestoreCard(uid, p){
+    return renderAdminPostItem(uid, p, 'restoration');
+  }
+
+  function renderAdminPostItem(uid, p, mode){
+    const s = p.platformLabel === 'SellerFlow' && p.isAdminPost 
+      ? { ...sellerProfile(p.sellerId), name: 'SellerFlow', username: 'sellerflow', verified: true }
+      : sellerProfile(p.sellerId);
+    const isVid = p.mediaType?.startsWith('video');
+    const removedDateStr = p.removedAt ? new Date(ts(p.removedAt)).toLocaleString('en-GH', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Prior session';
+    const createdDateStr = p.createdAt ? new Date(ts(p.createdAt)).toLocaleString('en-GH', {month:'short',day:'numeric'}) : 'Recently';
+
+    let mediaElement = '';
+    if(p.mediaUrl){
+      if(isVid){
+        mediaElement = `
+          <div class="relative w-full sm:w-44 h-48 rounded-2xl overflow-hidden bg-black shrink-0 border border-[#262626] group">
+            <video src="${esc(p.mediaUrl)}" class="w-full h-full object-cover" controls preload="metadata" playsinline></video>
+            <span class="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/80 text-white backdrop-blur-md flex items-center gap-1 border border-white/10 pointer-events-none">
+              <span>▶</span> Video (up to 1m)
+            </span>
+          </div>
+        `;
+      } else {
+        mediaElement = `
+          <div class="relative w-full sm:w-44 h-48 rounded-2xl overflow-hidden bg-black shrink-0 border border-[#262626] group">
+            <img src="${esc(p.mediaUrl)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" alt="Post preview" loading="lazy">
+            <span class="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/80 text-white backdrop-blur-md flex items-center gap-1 border border-white/10 pointer-events-none">
+              <span>📷</span> Photo
+            </span>
+          </div>
+        `;
+      }
+    }
+
+    let statusPill = '';
+    let actionButtons = '';
+
+    if(mode === 'restoration'){
+      statusPill = `<span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-800">🚫 Taken Down</span>`;
+      actionButtons = `
+        <button type="button" class="bg-gold hover:brightness-110 text-black rounded-xl px-4 py-2 font-black text-xs flex items-center justify-center gap-1.5 transition shadow" data-admin-restore-post="${uid}">
+          <span>🔄</span> Restore to For You Feed
+        </button>
+        <button type="button" class="border border-red-900/60 bg-red-950/30 hover:bg-red-900/50 text-red-400 rounded-xl px-4 py-1.5 font-bold text-xs flex items-center justify-center gap-1 transition" data-admin-delete-post="${uid}">
+          <span>🗑️</span> Delete Permanently
+        </button>
+      `;
+    } else if(mode === 'review'){
+      statusPill = `<span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-950/80 text-amber-300 border border-amber-800">🛡️ Queued Review</span>`;
+      actionButtons = `
+        <button type="button" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl px-4 py-2 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow" data-admin-approve-post="${uid}">
+          <span>✓</span> Approve & Keep Live
+        </button>
+        <button type="button" class="border border-red-800 hover:bg-red-950/40 text-red-400 rounded-xl px-4 py-1.5 font-bold text-xs flex items-center justify-center gap-1 transition" data-admin-takedown-post="${uid}">
+          <span>🚫</span> Take Down / Violation
+        </button>
+      `;
+    } else {
+      // Live mode
+      statusPill = `<span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-800">🟢 Live on Feed</span>`;
+      actionButtons = `
+        <button type="button" class="border border-[#444] hover:border-gold text-white rounded-xl px-3.5 py-1.5 font-bold text-xs flex items-center justify-center gap-1.5 transition bg-[#161616]" onclick="navigate('feed','${esc(uid)}')">
+          <span>🎬</span> Watch in Feed
+        </button>
+        <button type="button" class="border border-red-900/60 bg-red-950/30 hover:bg-red-900/50 text-red-400 rounded-xl px-3.5 py-1.5 font-bold text-xs flex items-center justify-center gap-1 transition" data-admin-takedown-post="${uid}">
+          <span>🚫</span> Take Down Post
+        </button>
+      `;
+    }
+
+    return `
+      <div class="p-4 sm:p-5 rounded-2xl border border-[#2b2b2b] bg-[#141414] flex flex-col sm:flex-row gap-4 items-start justify-between transition hover:border-[#383838]">
+        <div class="flex flex-col sm:flex-row gap-4 min-w-0 flex-1 w-full">
+          ${mediaElement}
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2 mb-2">
+              ${statusPill}
+              <span class="text-xs muted">${mode === 'restoration' ? `Removed: ${removedDateStr}` : `Posted: ${createdDateStr}`}</span>
+              ${p.likes ? `<span class="text-[11px] text-zinc-400">❤️ ${p.likes}</span>` : ''}
+              ${p.commentCount ? `<span class="text-[11px] text-zinc-400">💬 ${p.commentCount}</span>` : ''}
+            </div>
+
+            <div class="flex items-center gap-2 mt-1">
+              ${avatar(s, 'w-6 h-6 rounded-full object-cover')}
+              <b class="text-xs text-white truncate">${esc(s.name || s.username || 'Creator')}</b>
+              ${s.verified ? '<span class="verified-badge text-[10px]">✓</span>' : ''}
+              <span class="text-xs muted">@${esc(s.username || 'seller')}</span>
+            </div>
+
+            <p class="text-xs sm:text-sm text-zinc-200 mt-2.5 line-clamp-3 leading-relaxed">${esc(p.text || '(No text caption provided)')}</p>
+            <div class="text-[10px] font-mono text-zinc-500 mt-2">Post ID: ${esc(uid)}</div>
+          </div>
+        </div>
+
+        <div class="flex sm:flex-col gap-2 shrink-0 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-[#222]">
+          ${actionButtons}
+        </div>
+      </div>
+    `;
+  }
+
+  /* Distinct Section: Posts & Content Moderation Hub */
+  function sfAdminPosts(posts, livePosts, reviewPosts, takenDownPosts, initialSubTab){
+    // Resolve full list from fallback if called standalone
+    const allPostsDocs = posts?.docs || [];
+    const allLive = livePosts || allPostsDocs.map(d => ({ id: d.id, data: d.data() })).filter(x => x.data.status === 'published' || x.data.status === 'approved');
+    const allReview = reviewPosts || allPostsDocs.map(d => ({ id: d.id, data: d.data() })).filter(x => x.data.status !== 'removed' && (x.data.reviewStatus === 'under_review' || x.data.reviewStatus === 'violation' || x.data.violationDetected || x.data.reviewStatus === 'review' || (x.data.status === 'published' && x.data.reviewStatus !== 'reviewed' && x.data.reviewStatus !== 'safe')));
+    const allRestoration = takenDownPosts || allPostsDocs.map(d => ({ id: d.id, data: d.data() })).filter(x => x.data.status === 'removed' || x.data.reviewStatus === 'removed' || x.data.status === 'taken_down' || (x.data.status === 'hidden' && x.data.reviewStatus === 'violation'));
+
+    let activeSubTab = initialSubTab || window._currentAdminPostsSubTab || 'live';
+    window._currentAdminPostsSubTab = activeSubTab;
+
+    const totalCount = (posts?.size || (allLive.length + allReview.length + allRestoration.length));
+    const videoCount = allPostsDocs.filter(d => d.data().mediaType?.startsWith('video')).length;
+    const photoCount = totalCount - videoCount;
+
+    $('adminWorkspace').innerHTML = `
+      <div class="space-y-5">
+        <!-- Section Header -->
+        <div class="card p-5 border border-[#2b2b2b]">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl">🎬</span>
+                <h2 class="text-xl font-black text-white">Content Moderation & Post Hub</h2>
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">${totalCount} Posts</span>
+              </div>
+              <p class="muted text-xs sm:text-sm mt-1">Unified post management across the live For You feed, safety review queue, and post restoration archive.</p>
+            </div>
+            <button id="postsBackOverview" class="border border-[#444] hover:border-gold rounded-xl px-4 py-2 text-xs font-bold text-white transition self-start sm:self-auto">
+              ← Back to Overview
+            </button>
+          </div>
+
+          <!-- Quick Metrics Strip -->
+          <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-[#222]">
+            <span class="text-xs font-bold px-3 py-1 rounded-xl bg-blue-950/80 text-blue-300 border border-blue-800/80">🟢 ${allLive.length} Live on Feed</span>
+            <span class="text-xs font-bold px-3 py-1 rounded-xl ${allReview.length ? 'bg-amber-950/80 text-amber-300 border border-amber-800/80' : 'bg-zinc-800 text-zinc-400'}">🛡️ ${allReview.length} Queued Review</span>
+            <span class="text-xs font-bold px-3 py-1 rounded-xl ${allRestoration.length ? 'bg-rose-950/80 text-rose-300 border border-rose-800/80' : 'bg-zinc-800 text-zinc-400'}">🔄 ${allRestoration.length} in Restoration Hub</span>
+            <span class="text-xs font-bold px-3 py-1 rounded-xl bg-zinc-800/80 text-zinc-300 border border-zinc-700/80">▶ Videos up to 1m</span>
+          </div>
+        </div>
+
+        <!-- Sleek Segmented Subtabs for Posts Section -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-1.5 p-1 rounded-2xl bg-[#121212] border border-[#292929] w-full sm:w-auto overflow-x-auto scrollbar-none" id="postsSubTabs">
+            <button type="button" class="admin-subtab ${activeSubTab === 'live' ? 'active' : ''}" data-posts-subtab="live">
+              <span>🟢 Live Feed</span>
+              <span class="ml-1 text-[11px] px-1.5 py-0.2 rounded bg-black/40">${allLive.length}</span>
+            </button>
+            <button type="button" class="admin-subtab ${activeSubTab === 'review' ? 'active' : ''}" data-posts-subtab="review">
+              <span>🛡️ Review Queue</span>
+              <span class="ml-1 text-[11px] px-1.5 py-0.2 rounded bg-black/40">${allReview.length}</span>
+            </button>
+            <button type="button" class="admin-subtab ${activeSubTab === 'restoration' ? 'active' : ''}" data-posts-subtab="restoration">
+              <span>🔄 Restoration Archive</span>
+              <span class="ml-1 text-[11px] px-1.5 py-0.2 rounded bg-black/40">${allRestoration.length}</span>
+            </button>
+          </div>
+
+          <!-- Search & Format Filter Controls -->
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <input id="postSearchInput" type="text" placeholder="Search caption, creator, post ID..." class="p-2.5 rounded-xl bg-[#191919] border border-[#333] text-xs flex-1 sm:w-64">
+            <select id="postFormatFilter" class="p-2.5 rounded-xl bg-[#191919] border border-[#333] text-xs shrink-0 text-zinc-300">
+              <option value="all">All Media</option>
+              <option value="video">▶ Videos Only</option>
+              <option value="photo">📷 Photos Only</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Dynamic Post List Container -->
+        <div id="postsListContainer" class="space-y-4"></div>
+      </div>
+    `;
+
+    $('postsBackOverview').onclick = () => window.setAdminTab ? window.setAdminTab('overview') : renderAdmin();
+
+    function renderActivePostsList(){
+      let currentList = [];
+      if(activeSubTab === 'restoration') currentList = allRestoration;
+      else if(activeSubTab === 'review') currentList = allReview;
+      else currentList = allLive;
+
+      const q = ($('postSearchInput')?.value || '').toLowerCase().trim();
+      const format = $('postFormatFilter')?.value || 'all';
+
+      let filtered = currentList.filter(x => {
+        const isVid = x.data.mediaType?.startsWith('video');
+        if(format === 'video' && !isVid) return false;
+        if(format === 'photo' && isVid) return false;
+        if(!q) return true;
+
+        const caption = (x.data.text || '').toLowerCase();
+        const author = sellerProfile(x.data.sellerId);
+        const name = (author.name || '').toLowerCase();
+        const username = (author.username || '').toLowerCase();
+        return caption.includes(q) || name.includes(q) || username.includes(q) || x.id.toLowerCase().includes(q);
+      });
+
+      const container = $('postsListContainer');
+      if(!container) return;
+
+      if(!filtered.length){
+        container.innerHTML = `
+          <div class="p-12 text-center muted border border-[#2b2b2b] rounded-2xl bg-[#121212]">
+            <div class="text-3xl mb-2">${activeSubTab === 'restoration' ? '✨' : activeSubTab === 'review' ? '🛡️' : '🎬'}</div>
+            <h3 class="text-base font-bold text-white">No posts match this view</h3>
+            <p class="text-xs mt-1 text-zinc-400">Try adjusting your search query or media filter.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(x => renderAdminPostItem(x.id, x.data, activeSubTab)).join('');
+
+      // Wire up action handlers
+      container.querySelectorAll('[data-admin-restore-post]').forEach(b => {
+        b.onclick = () => adminRestorePost(b.dataset.adminRestorePost);
+      });
+      container.querySelectorAll('[data-admin-delete-post]').forEach(b => {
+        b.onclick = () => adminPermanentlyDeletePost(b.dataset.adminDeletePost);
+      });
+      container.querySelectorAll('[data-admin-approve-post]').forEach(b => {
+        b.onclick = () => reviewPost(b.dataset.adminApprovePost, true);
+      });
+      container.querySelectorAll('[data-admin-takedown-post]').forEach(b => {
+        b.onclick = () => adminTakeDown(b.dataset.adminTakedownPost);
+      });
+    }
+
+    // Subtab click handlers
+    document.querySelectorAll('[data-posts-subtab]').forEach(btn => {
+      btn.onclick = () => {
+        activeSubTab = btn.dataset.postsSubtab;
+        window._currentAdminPostsSubTab = activeSubTab;
+        document.querySelectorAll('[data-posts-subtab]').forEach(b => b.classList.toggle('active', b === btn));
+        renderActivePostsList();
+      };
+    });
+
+    $('postSearchInput')?.addEventListener('input', renderActivePostsList);
+    $('postFormatFilter')?.addEventListener('change', renderActivePostsList);
+
+    renderActivePostsList();
+  }
+
+  // Backwards compatibility aliases
+  function sfAdminRestoration(takenDownPosts){
+    sfAdminPosts(null, null, null, takenDownPosts, 'restoration');
+  }
+  function sfAdminLive(livePosts){
+    sfAdminPosts(null, livePosts, null, null, 'live');
+  }
+  function sfAdminReview(reviewPosts){
+    sfAdminPosts(null, null, reviewPosts, null, 'review');
+  }
+
+  /* Distinct Section: User Management & Restrictions View */
+  function sfAdminUsers(users, pending, initialFilter){
+    const allPending = pending || users.docs.filter(d => d.data().verificationStatus === 'pending');
+    const restrictedDocs = users.docs.filter(d => {
+      const u = d.data();
+      const isSusp = !!u.suspended || (u.suspendedUntil && ts(u.suspendedUntil) > Date.now());
+      return !!u.blocked || isSusp || !!u.postingRestricted;
+    });
+    const verifiedDocs = users.docs.filter(d => !!d.data().verified);
+    const activeDocs = users.docs.filter(d => {
+      const u = d.data();
+      const isSusp = !!u.suspended || (u.suspendedUntil && ts(u.suspendedUntil) > Date.now());
+      return !u.blocked && !isSusp && !u.postingRestricted;
+    });
+
+    let userFilter = initialFilter || 'all';
+
+    $('adminWorkspace').innerHTML = `
+      <div class="space-y-5">
+        <!-- Section Header -->
+        <div class="card p-5 border border-[#2b2b2b]">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl">👥</span>
+                <h2 class="text-xl font-black text-white">Users & Account Management</h2>
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">${users.size} Accounts</span>
+              </div>
+              <p class="muted text-xs sm:text-sm mt-1">Search registered accounts, verify Ghana Card identity credentials, enforce suspensions, toggle account blocks, and restrict publishing privileges.</p>
+            </div>
+            <button id="adminUsersBack" class="border border-[#444] hover:border-gold rounded-xl px-4 py-2 text-xs font-bold text-white transition self-start sm:self-auto">
+              ← Back to Overview
+            </button>
+          </div>
+
+          <!-- Quick Metrics Strip -->
+          <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-[#222]">
+            <span class="text-xs font-bold px-3 py-1 rounded-xl bg-emerald-950/80 text-emerald-300 border border-emerald-800/80">🟢 ${activeDocs.length} Active</span>
+            <span class="text-xs font-bold px-3 py-1 rounded-xl ${allPending.length ? 'bg-amber-950/80 text-amber-300 border border-amber-800/80' : 'bg-zinc-800 text-zinc-400'}">📝 ${allPending.length} Ghana Cards Pending</span>
+            <span class="text-xs font-bold px-3 py-1 rounded-xl ${restrictedDocs.length ? 'bg-rose-950/80 text-rose-300 border border-rose-800/80' : 'bg-zinc-800 text-zinc-400'}">🚫 ${restrictedDocs.length} Restricted</span>
+            <span class="text-xs font-bold px-3 py-1 rounded-xl bg-blue-950/80 text-blue-300 border border-blue-800/80">✓ ${verifiedDocs.length} Verified</span>
+          </div>
+        </div>
+
+        <!-- Filter Subtabs & Search Bar -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-1.5 p-1 rounded-2xl bg-[#121212] border border-[#292929] w-full sm:w-auto overflow-x-auto scrollbar-none" id="usersFilterSubtabs">
+            <button class="admin-subtab ${userFilter === 'all' ? 'active' : ''}" data-user-filter="all">
+              <span>All (${users.size})</span>
+            </button>
+            <button class="admin-subtab ${userFilter === 'pending' ? 'active' : ''}" data-user-filter="pending">
+              <span>📝 Ghana Cards</span>
+              <span class="ml-1 text-[11px] px-1.5 py-0.2 rounded ${allPending.length ? 'bg-amber-950 text-amber-300' : 'bg-black/40'}">${allPending.length}</span>
+            </button>
+            <button class="admin-subtab ${userFilter === 'restricted' ? 'active' : ''}" data-user-filter="restricted">
+              <span>🚫 Restricted</span>
+              <span class="ml-1 text-[11px] px-1.5 py-0.2 rounded bg-black/40">${restrictedDocs.length}</span>
+            </button>
+            <button class="admin-subtab ${userFilter === 'verified' ? 'active' : ''}" data-user-filter="verified">
+              <span>✓ Verified</span>
+              <span class="ml-1 text-[11px] px-1.5 py-0.2 rounded bg-black/40">${verifiedDocs.length}</span>
+            </button>
+          </div>
+
+          <div class="w-full sm:w-72">
+            <input id="sfAdminUserSearch" type="text" placeholder="Search name, @username, email, ID…" class="p-2.5 rounded-xl bg-[#191919] border border-[#333] text-xs w-full">
+          </div>
+        </div>
+
+        <!-- Dynamic User List / Verification Queue -->
+        <div id="adminUsersList" class="grid sm:grid-cols-2 gap-3.5"></div>
+      </div>
+    `;
+
+    $('adminUsersBack').onclick = () => window.setAdminTab ? window.setAdminTab('overview') : renderAdmin();
+
+    function renderUserGrid(){
+      const q = ($('sfAdminUserSearch')?.value || '').toLowerCase().trim();
+      const listEl = $('adminUsersList');
+      if(!listEl) return;
+
+      if(userFilter === 'pending'){
+        const filteredPending = allPending.filter(d => {
+          if(!q) return true;
+          const u = d.data();
+          const name = (u.name || '').toLowerCase();
+          const uname = (u.username || '').toLowerCase();
+          const email = (u.email || '').toLowerCase();
+          return name.includes(q) || uname.includes(q) || email.includes(q) || d.id.toLowerCase().includes(q);
+        });
+
+        if(!filteredPending.length){
+          listEl.innerHTML = `
+            <div class="sm:col-span-2 p-12 text-center muted border border-[#2b2b2b] rounded-2xl bg-[#121212]">
+              <div class="text-4xl mb-2">🎉</div>
+              <h3 class="text-base font-bold text-white">No Ghana Card Applications Pending</h3>
+              <p class="text-xs mt-1 text-zinc-400">All creator identity submissions have been reviewed.</p>
+            </div>
+          `;
+          return;
+        }
+
+        listEl.innerHTML = filteredPending.map(d => adminUserCard(d.id, d.data())).join('');
+        listEl.querySelectorAll('[data-approve-user]').forEach(b => b.onclick = () => reviewVerification(b.dataset.approveUser, true));
+        listEl.querySelectorAll('[data-reject-user]').forEach(b => b.onclick = () => reviewVerification(b.dataset.rejectUser, false));
+        listEl.querySelectorAll('[data-view-card]').forEach(b => b.onclick = () => viewVerificationRecord(b.dataset.viewCard));
+        return;
+      }
+
+      const filtered = users.docs.filter(d => {
+        const u = d.data();
+        const isSusp = !!u.suspended || (u.suspendedUntil && ts(u.suspendedUntil) > Date.now());
+        const isRestr = !!u.blocked || isSusp || !!u.postingRestricted;
+
+        if(userFilter === 'restricted' && !isRestr) return false;
+        if(userFilter === 'verified' && !u.verified) return false;
+
+        if(!q) return true;
+        const name = (u.name || '').toLowerCase();
+        const uname = (u.username || '').toLowerCase();
+        const email = (u.email || '').toLowerCase();
+        return name.includes(q) || uname.includes(q) || email.includes(q) || d.id.toLowerCase().includes(q);
+      });
+
+      if(!filtered.length){
+        listEl.innerHTML = `
+          <div class="sm:col-span-2 p-12 text-center muted border border-[#2b2b2b] rounded-2xl bg-[#121212]">
+            <div class="text-4xl mb-3">🔍</div>
+            <h3 class="text-base font-bold text-white">No accounts found</h3>
+            <p class="text-xs mt-1 text-zinc-400">Try modifying your search query or sub-filter.</p>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(d => {
+        const u = d.data();
+        const isSusp = !!u.suspended || (u.suspendedUntil && ts(u.suspendedUntil) > Date.now());
+        return `
+          <div class="sf-user-row flex flex-col justify-between p-4 rounded-2xl border border-[#292929] bg-[#141414] gap-3.5">
+            <div class="flex items-start gap-3.5">
+              ${avatar(u, 'w-12 h-12 rounded-full object-cover bg-[#222] shrink-0')}
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <b class="text-sm text-white truncate">${esc(u.name || u.email || 'User')}</b>
+                  ${u.verified ? '<span class="verified-badge">✓</span>' : ''}
+                  ${u.role === 'admin' ? '<span class="text-[10px] bg-gold/20 text-gold border border-gold/40 px-1.5 py-0.2 rounded font-bold">Admin</span>' : ''}
+                </div>
+                <div class="muted text-xs truncate mt-0.5">@${esc(u.username || 'user')} · <span class="text-zinc-500">${esc(u.email || '')}</span></div>
+                <div class="mt-2 flex flex-wrap items-center gap-1.5">
+                  ${sfPresenceBadge(u)}
+                  ${u.blocked ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-red-950/80 text-red-400 border border-red-800">🚫 Blocked from App</span>' : ''}
+                  ${isSusp ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-950/80 text-amber-400 border border-amber-800">⏳ Suspended</span>' : ''}
+                  ${u.postingRestricted ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-800">🔇 Posting Restricted</span>' : ''}
+                  ${!u.blocked && !isSusp && !u.postingRestricted ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800">🟢 Active</span>' : ''}
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Action Restriction Buttons -->
+            <div class="border-t border-[#222] pt-3 flex flex-wrap gap-1.5 items-center justify-between">
+              <div class="flex flex-wrap gap-1.5">
+                <button type="button" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold border ${u.blocked ? 'border-green-800 bg-green-950/40 text-green-300' : 'border-red-800 bg-red-950/30 text-red-400'} hover:brightness-110" data-admin-toggle-block="${d.id}" data-blocked="${u.blocked ? '1' : '0'}">
+                  ${u.blocked ? '✓ Unblock' : '🚫 Block'}
+                </button>
+                <button type="button" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold border border-amber-800 bg-amber-950/30 text-amber-400 hover:bg-amber-900/40" data-admin-suspend="${d.id}">
+                  ⏳ ${isSusp ? 'Suspended (Edit)' : 'Suspend'}
+                </button>
+                <button type="button" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold border ${u.postingRestricted ? 'border-purple-800 bg-purple-950/40 text-purple-300' : 'border-zinc-700 bg-zinc-800/60 text-zinc-300'} hover:brightness-110" data-admin-toggle-post-restr="${d.id}" data-restr="${u.postingRestricted ? '1' : '0'}">
+                  ${u.postingRestricted ? '🔊 Allow Posting' : '🔇 Restrict Posting'}
+                </button>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button type="button" class="p-1.5 text-zinc-400 hover:text-red-400 text-xs" title="Delete account permanently" data-admin-delete-user="${d.id}" data-username="${esc(u.username || '')}">
+                  🗑️
+                </button>
+                <button type="button" class="p-1.5 text-gold text-xs font-bold hover:underline" data-admin-user-detail="${d.id}">
+                  Details →
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      listEl.querySelectorAll('[data-admin-toggle-block]').forEach(b => {
+        b.onclick = () => adminToggleBlockUser(b.dataset.adminToggleBlock, b.dataset.blocked === '1');
+      });
+      listEl.querySelectorAll('[data-admin-suspend]').forEach(b => {
+        b.onclick = () => adminSuspendUserModal(b.dataset.adminSuspend);
+      });
+      listEl.querySelectorAll('[data-admin-toggle-post-restr]').forEach(b => {
+        b.onclick = () => adminTogglePostingRestriction(b.dataset.adminTogglePostRestr, b.dataset.restr === '1');
+      });
+      listEl.querySelectorAll('[data-admin-delete-user]').forEach(b => {
+        b.onclick = () => adminDeleteUserPermanently(b.dataset.adminDeleteUser, b.dataset.username);
+      });
+      listEl.querySelectorAll('[data-admin-user-detail]').forEach(b => {
+        b.onclick = () => sfAdminUserDetail(b.dataset.adminUserDetail);
+      });
+    }
+
+    $('sfAdminUserSearch')?.addEventListener('input', renderUserGrid);
+    document.querySelectorAll('[data-user-filter]').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('[data-user-filter]').forEach(b => {
+          b.classList.remove('bg-gold', 'text-black');
+          b.classList.add('bg-[#181818]', 'border', 'border-[#333]', 'text-zinc-300');
+        });
+        btn.classList.remove('bg-[#181818]', 'border', 'border-[#333]', 'text-zinc-300');
+        btn.classList.add('bg-gold', 'text-black');
+        userFilter = btn.dataset.userFilter;
+        renderUserGrid();
+      };
+    });
+
+    renderUserGrid();
+  }
+
+  async function sfAdminUserDetail(uid){
+    const s = await getDoc(doc(db, 'users', uid));
+    if(!snapshotExists(s)) return toast('User record not found in database.', 'error');
+    const u = s.data();
+    const isSusp = !!u.suspended || (u.suspendedUntil && ts(u.suspendedUntil) > Date.now());
+
+    modal(`<div>
+      <div class="flex items-center gap-4">
+        ${avatar(u, 'w-20 h-20 rounded-full object-cover bg-[#222] border-2 border-gold/40')}
+        <div>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <h2 class="text-xl font-black text-white">${esc(u.name || 'User')}</h2>
+            ${u.verified ? '<span class="verified-badge">✓</span>' : ''}
+          </div>
+          <div class="muted text-sm">@${esc(u.username || '')}</div>
+          <div class="mt-2 flex items-center gap-2">${sfPresenceBadge(u)}</div>
+        </div>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-3 mt-5">
+        <div class="bg-[#171717] rounded-xl p-3.5 border border-[#2b2b2b]">
+          <div class="muted text-xs">Email Address</div>
+          <b class="break-all text-sm text-white mt-0.5 block">${esc(u.email || 'N/A')}</b>
+        </div>
+        <div class="bg-[#171717] rounded-xl p-3.5 border border-[#2b2b2b]">
+          <div class="muted text-xs">User Role</div>
+          <b class="text-sm text-white mt-0.5 block">${esc(u.role || 'seller')}</b>
+        </div>
+        <div class="bg-[#171717] rounded-xl p-3.5 border border-[#2b2b2b]">
+          <div class="muted text-xs">Ghana Card / Identity Verification</div>
+          <b class="text-sm mt-0.5 block ${u.verified ? 'text-green-400' : 'text-zinc-400'}">${u.verified ? 'Verified Creator' : 'Not verified'}</b>
+        </div>
+        <div class="bg-[#171717] rounded-xl p-3.5 border border-[#2b2b2b]">
+          <div class="muted text-xs">Account Status</div>
+          <b class="text-sm mt-0.5 block ${u.blocked ? 'text-red-400' : isSusp ? 'text-amber-400' : 'text-emerald-400'}">
+            ${u.blocked ? '🚫 Blocked from App' : isSusp ? '⏳ Suspended' : '🟢 Active'}
+          </b>
+        </div>
+      </div>
+
+      <!-- Account Moderation & Restrictions Panel -->
+      <div class="mt-5 p-4 rounded-2xl bg-[#121212] border border-[#333]">
+        <h3 class="text-sm font-black text-white mb-2 flex items-center gap-2">
+          <span>⚙️</span> Account Restrictions & Enforcement
+        </h3>
+        <p class="text-xs text-zinc-400 mb-3">Apply account penalties or restore user permissions as needed.</p>
+
+        <div class="grid sm:grid-cols-2 gap-2.5">
+          <button type="button" id="detailToggleBlockBtn" class="p-3 rounded-xl border text-left flex items-center justify-between ${u.blocked ? 'border-green-800 bg-green-950/30 text-green-300' : 'border-red-800 bg-red-950/20 text-red-300'}">
+            <div>
+              <div class="font-bold text-xs">${u.blocked ? '✓ Unblock Account' : '🚫 Block from App'}</div>
+              <div class="text-[10px] muted mt-0.5">${u.blocked ? 'Permit user back into SellerFlow' : 'Deny all login and app access'}</div>
+            </div>
+            <span class="text-base">${u.blocked ? '🔓' : '🔒'}</span>
+          </button>
+
+          <button type="button" id="detailSuspendBtn" class="p-3 rounded-xl border border-amber-800 bg-amber-950/20 text-amber-300 text-left flex items-center justify-between">
+            <div>
+              <div class="font-bold text-xs">⏳ ${isSusp ? 'Edit Suspension' : 'Suspend Account'}</div>
+              <div class="text-[10px] muted mt-0.5">${isSusp ? 'Currently suspended' : 'Choose 24h, 7d, 30d, or indefinite'}</div>
+            </div>
+            <span class="text-base">⏱️</span>
+          </button>
+
+          <button type="button" id="detailTogglePostingBtn" class="p-3 rounded-xl border text-left flex items-center justify-between ${u.postingRestricted ? 'border-purple-800 bg-purple-950/30 text-purple-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'}">
+            <div>
+              <div class="font-bold text-xs">${u.postingRestricted ? '🔊 Allow Posting' : '🔇 Restrict From Posting'}</div>
+              <div class="text-[10px] muted mt-0.5">${u.postingRestricted ? 'Posting currently blocked' : 'Can browse/shop, but cannot publish'}</div>
+            </div>
+            <span class="text-base">${u.postingRestricted ? '✅' : '🛑'}</span>
+          </button>
+
+          <button type="button" id="detailDeleteUserBtn" class="p-3 rounded-xl border border-red-900 bg-red-950/40 text-red-400 text-left flex items-center justify-between hover:bg-red-900/30">
+            <div>
+              <div class="font-bold text-xs">🗑️ Delete Account Permanently</div>
+              <div class="text-[10px] muted mt-0.5">Permanent wipe of account and profile</div>
+            </div>
+            <span class="text-base">⚠️</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-5">
+        <button data-close-modal class="border border-[#444] rounded-xl px-5 py-2 text-xs font-bold">Close</button>
+      </div>
+    </div>`);
+
+    $('detailToggleBlockBtn')?.addEventListener('click', () => {
+      closeModal();
+      adminToggleBlockUser(uid, !!u.blocked);
+    });
+    $('detailSuspendBtn')?.addEventListener('click', () => {
+      closeModal();
+      adminSuspendUserModal(uid);
+    });
+    $('detailTogglePostingBtn')?.addEventListener('click', () => {
+      closeModal();
+      adminTogglePostingRestriction(uid, !!u.postingRestricted);
+    });
+    $('detailDeleteUserBtn')?.addEventListener('click', () => {
+      closeModal();
+      adminDeleteUserPermanently(uid, u.username);
+    });
+  }
+
+  function sfAdminPending(pending){
+    $('adminWorkspace').innerHTML = `
+      <div class="card p-5 border border-[#2b2b2b]">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-black text-white">Pending Verification Applications (${pending.length})</h2>
+            <p class="muted text-xs sm:text-sm mt-0.5">Review seller identity submissions and Ghana Card credentials.</p>
+          </div>
+          <button id="pendingBack" class="border border-[#444] hover:border-gold rounded-xl px-4 py-2 text-xs font-bold">← Back</button>
+        </div>
+        <div class="space-y-3 mt-5">
+          ${pending.length ? pending.map(d => adminUserCard(d.id, d.data())).join('') : '<div class="muted p-8 text-center bg-[#141414] rounded-2xl border border-[#222]">No pending applications. All caught up!</div>'}
+        </div>
+      </div>
+    `;
+    $('pendingBack').onclick = sfAdminBack;
+    document.querySelectorAll('[data-approve-user]').forEach(b => b.onclick = () => reviewVerification(b.dataset.approveUser, true));
+    document.querySelectorAll('[data-reject-user]').forEach(b => b.onclick = () => reviewVerification(b.dataset.rejectUser, false));
+    document.querySelectorAll('[data-view-card]').forEach(b => b.onclick = () => viewVerificationRecord(b.dataset.viewCard));
+  }
+
+  function sfAdminReview(items){
+    $('adminWorkspace').innerHTML = `
+      <div class="card p-5 border border-[#2b2b2b]">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-black text-white">Posts Awaiting Safety Review (${items.length})</h2>
+            <p class="muted text-xs sm:text-sm mt-0.5">Preview photo and video submissions before keeping them live.</p>
+          </div>
+          <button id="reviewBack" class="border border-[#444] hover:border-gold rounded-xl px-4 py-2 text-xs font-bold">← Back</button>
+        </div>
+        <div class="space-y-4 mt-5">
+          ${items.length ? items.map(x => adminPostCard(x.id, x.data)).join('') : '<div class="muted p-8 text-center bg-[#141414] rounded-2xl border border-[#222]">No posts are waiting for safety review.</div>'}
+        </div>
+      </div>
+    `;
+    $('reviewBack').onclick = sfAdminBack;
+    document.querySelectorAll('[data-admin-approve-post]').forEach(b => b.onclick = () => reviewPost(b.dataset.adminApprovePost, true));
+    document.querySelectorAll('[data-admin-takedown-post]').forEach(b => b.onclick = () => adminTakeDown(b.dataset.adminTakedownPost));
+  }
+
+  function sfAdminLive(items){
+    $('adminWorkspace').innerHTML = `
+      <div class="card p-5 border border-[#2b2b2b]">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-black text-white">Live For You Content (${items.length})</h2>
+            <p class="muted text-xs sm:text-sm mt-0.5">Active photos and videos currently shown to users. Taking down a post moves it to the Restoration Archive.</p>
+          </div>
+          <button id="liveBack" class="border border-[#444] hover:border-gold rounded-xl px-4 py-2 text-xs font-bold">← Back</button>
+        </div>
+        <div class="grid lg:grid-cols-2 gap-4 mt-5">
+          ${items.length ? items.map(x => adminPostCard(x.id, x.data)).join('') : '<div class="muted p-8 text-center bg-[#141414] rounded-2xl border border-[#222]">No live posts on feed.</div>'}
+        </div>
+      </div>
+    `;
+    $('liveBack').onclick = sfAdminBack;
+    document.querySelectorAll('[data-admin-approve-post]').forEach(b => b.onclick = () => reviewPost(b.dataset.adminApprovePost, true));
+    document.querySelectorAll('[data-admin-takedown-post]').forEach(b => b.onclick = () => adminTakeDown(b.dataset.adminTakedownPost));
+  }
+
+  /* Distinct Section: Community Safety & Fraud Reports */
+  function sfAdminReports(reports){
+    const docs = reports.docs || [];
+    const scamDocs = docs.filter(d => {
+      const r = d.data();
+      const cat = (r.reason || r.reasonLabel || '').toLowerCase();
+      return cat.includes('scam') || cat.includes('fraud') || cat.includes('payment');
+    });
+    const fakeDocs = docs.filter(d => {
+      const r = d.data();
+      const cat = (r.reason || r.reasonLabel || '').toLowerCase();
+      return cat.includes('fake') || cat.includes('counterfeit');
+    });
+    const otherDocs = docs.filter(d => !scamDocs.includes(d) && !fakeDocs.includes(d));
+
+    let reportFilter = 'all';
+
+    $('adminWorkspace').innerHTML = `
+      <div class="space-y-5">
+        <!-- Section Header -->
+        <div class="card p-5 border border-[#2b2b2b]">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl">🚩</span>
+                <h2 class="text-xl font-black text-white">Community Safety & Reports</h2>
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${docs.length ? 'bg-rose-950 text-rose-300 border border-rose-800' : 'bg-zinc-800 text-zinc-300 border border-zinc-700'}">${docs.length} Reports</span>
+              </div>
+              <p class="muted text-xs sm:text-sm mt-1">Review community flags regarding scams, fraud, counterfeit items, harassment, and platform policy breaches.</p>
+            </div>
+            <button id="reportsBack" class="border border-[#444] hover:border-gold rounded-xl px-4 py-2 text-xs font-bold text-white transition self-start sm:self-auto">
+              ← Back to Overview
+            </button>
+          </div>
+
+          <!-- Quick Metrics Strip -->
+          <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-[#222]">
+            <span class="text-xs font-bold px-3 py-1 rounded-xl ${docs.length ? 'bg-rose-950/80 text-rose-300 border border-rose-800/80' : 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/80'}">${docs.length ? `⚠️ ${docs.length} Total Alerts` : '🟢 0 Active Reports'}</span>
+            <span class="text-xs font-bold px-3 py-1 rounded-xl ${scamDocs.length ? 'bg-amber-950/80 text-amber-300 border border-amber-800/80' : 'bg-zinc-800 text-zinc-400'}">🚨 ${scamDocs.length} Scam / Fraud</span>
+            <span class="text-xs font-bold px-3 py-1 rounded-xl ${fakeDocs.length ? 'bg-purple-950/80 text-purple-300 border border-purple-800/80' : 'bg-zinc-800 text-zinc-400'}">🏷️ ${fakeDocs.length} Counterfeits</span>
+            <span class="text-xs font-bold px-3 py-1 rounded-xl bg-zinc-800 text-zinc-400">🛡️ ${otherDocs.length} Policy Alerts</span>
+          </div>
+        </div>
+
+        <!-- Filter Subtabs & Search Bar -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-1.5 p-1 rounded-2xl bg-[#121212] border border-[#292929] w-full sm:w-auto overflow-x-auto scrollbar-none" id="reportsFilterSubtabs">
+            <button class="admin-subtab active" data-report-filter="all">
+              <span>All (${docs.length})</span>
+            </button>
+            <button class="admin-subtab" data-report-filter="scam">
+              <span>🚨 Scams (${scamDocs.length})</span>
+            </button>
+            <button class="admin-subtab" data-report-filter="fake">
+              <span>🏷️ Counterfeit (${fakeDocs.length})</span>
+            </button>
+            <button class="admin-subtab" data-report-filter="other">
+              <span>🛡️ Other (${otherDocs.length})</span>
+            </button>
+          </div>
+
+          <div class="w-full sm:w-72">
+            <input id="sfAdminReportSearch" type="text" placeholder="Search reporter, author, post, details…" class="p-2.5 rounded-xl bg-[#191919] border border-[#333] text-xs w-full">
+          </div>
+        </div>
+
+        <!-- Dynamic Reports List -->
+        <div id="adminReportsList" class="space-y-4"></div>
+      </div>
+    `;
+
+    $('reportsBack').onclick = () => window.setAdminTab ? window.setAdminTab('overview') : renderAdmin();
+
+    function renderReportsList(){
+      const q = ($('sfAdminReportSearch')?.value || '').toLowerCase().trim();
+      const listEl = $('adminReportsList');
+      if(!listEl) return;
+
+      let sourceDocs = docs;
+      if(reportFilter === 'scam') sourceDocs = scamDocs;
+      else if(reportFilter === 'fake') sourceDocs = fakeDocs;
+      else if(reportFilter === 'other') sourceDocs = otherDocs;
+
+      const filtered = sourceDocs.filter(d => {
+        if(!q) return true;
+        const r = d.data();
+        const reason = (r.reasonLabel || r.reason || '').toLowerCase();
+        const details = (r.details || '').toLowerCase();
+        const rep = (r.reporterName || r.reporterEmail || r.reporterId || '').toLowerCase();
+        const pid = (r.postId || '').toLowerCase();
+        const sid = (r.sellerId || '').toLowerCase();
+        return reason.includes(q) || details.includes(q) || rep.includes(q) || pid.includes(q) || sid.includes(q);
+      });
+
+      if(!filtered.length){
+        listEl.innerHTML = `
+          <div class="p-12 text-center muted border border-[#2b2b2b] rounded-2xl bg-[#121212]">
+            <div class="text-4xl mb-3">🛡️</div>
+            <h3 class="text-base font-bold text-white">No community reports in this category</h3>
+            <p class="text-xs mt-1 text-zinc-400">The platform community is clean and no active violations were reported.</p>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(d => {
+        const r = d.data();
+        return `
+          <div class="p-4 sm:p-5 rounded-2xl border border-[#2c2c2c] bg-[#141414] transition hover:border-[#383838]">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-red-400 bg-red-950/60 border border-red-900/60 px-3 py-1 rounded-full">🚩 ${esc(r.reasonLabel || r.reason || 'Safety Alert')}</span>
+                <span class="text-xs muted">Reported by: <b class="text-zinc-300 font-normal">${esc(r.reporterName || r.reporterEmail || r.reporterId || 'Community User')}</b></span>
+              </div>
+              <span class="text-xs text-zinc-500 font-mono">${new Date(ts(r.createdAt) || Date.now()).toLocaleString('en-GH', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+            </div>
+
+            ${r.details ? `<div class="mt-3 text-xs sm:text-sm text-zinc-300 bg-[#1c1c1c] p-3 rounded-xl border border-[#333] leading-relaxed"><b>User Details:</b> "${esc(r.details)}"</div>` : ''}
+
+            <div class="mt-3 p-3.5 rounded-xl bg-[#181818] border border-[#262626] flex items-center gap-3.5">
+              ${r.postMediaUrl ? `
+                <div class="w-14 h-14 rounded-xl overflow-hidden bg-black shrink-0 relative border border-[#333]">
+                  ${r.postMediaType?.startsWith('video') 
+                    ? `<video src="${esc(r.postMediaUrl)}" class="w-full h-full object-cover" muted></video><span class="absolute bottom-1 right-1 text-[9px] bg-black/80 px-1 rounded text-white">▶</span>` 
+                    : `<img src="${esc(r.postMediaUrl)}" class="w-full h-full object-cover" alt="Reported item">`}
+                </div>
+              ` : ''}
+              <div class="flex-1 min-w-0">
+                <div class="text-xs muted">Post ID: <span class="font-mono text-zinc-300">${esc(r.postId || 'N/A')}</span> · Author: <span class="font-mono text-zinc-300">${esc(r.sellerId || 'N/A')}</span></div>
+                <div class="text-xs sm:text-sm text-zinc-200 truncate mt-0.5">${esc(r.postText || '(No caption provided)')}</div>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-[#222] justify-end">
+              ${r.postId ? `<button type="button" class="border border-[#444] hover:border-gold rounded-xl px-3.5 py-1.5 text-xs font-bold text-white bg-[#181818] transition" onclick="navigate('feed','${esc(r.postId)}')">🎬 View in Feed</button>` : ''}
+              ${r.postId ? `<button type="button" class="border border-red-800 bg-red-950/30 hover:bg-red-900/50 text-red-400 rounded-xl px-3.5 py-1.5 text-xs font-bold transition" data-admin-takedown-post="${esc(r.postId)}">🚫 Take Down Post</button>` : ''}
+              ${r.sellerId ? `<button type="button" class="border border-amber-800 bg-amber-950/30 hover:bg-amber-900/50 text-amber-400 rounded-xl px-3.5 py-1.5 text-xs font-bold transition" data-admin-suspend="${esc(r.sellerId)}">⏳ Suspend Seller</button>` : ''}
+              <button type="button" class="bg-[#242424] hover:bg-[#333] border border-[#444] text-zinc-300 rounded-xl px-3.5 py-1.5 text-xs font-bold transition" data-admin-dismiss-report="${d.id}">🛡️ Dismiss Report</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      listEl.querySelectorAll('[data-admin-takedown-post]').forEach(b => b.onclick = () => adminTakeDown(b.dataset.adminTakedownPost));
+      listEl.querySelectorAll('[data-admin-suspend]').forEach(b => b.onclick = () => adminSuspendUserModal(b.dataset.adminSuspend));
+      listEl.querySelectorAll('[data-admin-dismiss-report]').forEach(b => b.onclick = async () => {
+        try {
+          await deleteDoc(doc(db, 'scamReports', b.dataset.adminDismissReport));
+          toast('Community report dismissed', 'success', 2500);
+          renderAdmin();
+        } catch(e) {
+          toast(errMsg(e), 'error');
+        }
+      });
+    }
+
+    $('sfAdminReportSearch')?.addEventListener('input', renderReportsList);
+    document.querySelectorAll('[data-report-filter]').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('[data-report-filter]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        reportFilter = btn.dataset.reportFilter;
+        renderReportsList();
+      };
+    });
+
+    renderReportsList();
+  }
+
+  function sfAdminBack(){
+    const t = document.querySelector('[data-admin-tab="overview"]');
+    if(t) t.click();
+    else renderAdmin();
+  }
+
+  function sfAdminNotifyTab(users){
+    $('adminWorkspace').innerHTML = `
+      <div class="card p-5 max-w-3xl border border-[#2b2b2b]">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h2 class="text-xl font-black text-white">Broadcasts & User Notifications</h2>
+            <p class="muted text-xs sm:text-sm mt-0.5">Send custom SellerFlow notifications to a specific user or broadcast to all registered accounts.</p>
+          </div>
+          <button id="notifyBack" class="border border-[#444] hover:border-gold rounded-xl px-4 py-2 text-xs font-bold">← Back</button>
+        </div>
+        <div class="grid md:grid-cols-3 gap-3 mt-4">
+          <select id="notifyUser" class="p-3 rounded-xl bg-[#191919] border border-[#333] text-sm">
+            <option value="">Select target user</option>
+            ${users.docs.filter(d => d.id !== (currentUser?.uid || '')).map(d => `<option value="${d.id}">${esc(d.data().name || d.data().username || d.data().email || d.id)} — @${esc(d.data().username || 'user')}</option>`).join('')}
+          </select>
+          <input id="notifyTitle" class="p-3 rounded-xl bg-[#191919] border border-[#333] text-sm" placeholder="Notification Title">
+          <select id="notifyType" class="p-3 rounded-xl bg-[#191919] border border-[#333] text-sm">
+            <option value="Update">🔔 Update</option>
+            <option value="Important">⚠️ Important</option>
+            <option value="Safety">🛡️ Safety</option>
+            <option value="Promotion">🎉 Promotion</option>
+          </select>
+        </div>
+        <textarea id="notifyMessage" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333] text-sm" placeholder="Write notification message content here…"></textarea>
+        <div class="flex flex-wrap gap-2 mt-4 justify-end">
+          <button type="button" id="sendUserNotification" class="bg-gold text-black rounded-xl px-4 py-2 font-bold text-xs hover:brightness-110">
+            Send to Selected User
+          </button>
+          <button type="button" id="sendAllNotification" class="border border-[#444] hover:border-gold text-white rounded-xl px-4 py-2 font-bold text-xs">
+            📢 Broadcast to Everyone (${users.size})
+          </button>
+        </div>
+      </div>
+    `;
+    $('notifyBack').onclick = sfAdminBack;
+    $('sendUserNotification').onclick = async () => {
+      try {
+        const uid = $('notifyUser').value;
+        const title = $('notifyTitle').value.trim();
+        const msg = $('notifyMessage').value.trim();
+        if(!uid) throw Error('Please select a recipient user.');
+        if(!title || !msg) throw Error('Please provide both title and message.');
+        await sendAdminNotification(uid, title, msg);
+        $('notifyMessage').value = '';
+        toast('Notification sent successfully.', 'success', 3000);
+      } catch(e) {
+        toast(errMsg(e), 'error');
+      }
+    };
+    $('sendAllNotification').onclick = async () => {
+      try {
+        const title = $('notifyTitle').value.trim();
+        const msg = $('notifyMessage').value.trim();
+        if(!title || !msg) throw Error('Please provide both title and message.');
+        if(!confirm(`Send broadcast notification to all ${users.size} users?`)) return;
+        await sendAdminBroadcast(title, msg);
+        $('notifyMessage').value = '';
+        toast('Broadcast dispatched to all users.', 'success', 3000);
+      } catch(e) {
+        toast(errMsg(e), 'error');
+      }
+    };
+  }
+
+  function sfAdminTermsTab(termData){
+    $('adminWorkspace').innerHTML = `
+      <div class="card p-5 max-w-3xl border border-[#2b2b2b]">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h2 class="text-xl font-black text-white">Terms & Policies Management</h2>
+            <p class="muted text-xs sm:text-sm mt-0.5">Update the legal agreements and terms of service required for all community sellers.</p>
+          </div>
+          <button id="termsBack" class="border border-[#444] hover:border-gold rounded-xl px-4 py-2 text-xs font-bold">← Back</button>
+        </div>
+        <textarea id="termsEditor" rows="12" class="w-full mt-2 p-3.5 rounded-xl bg-[#191919] border border-[#333] font-mono text-xs leading-relaxed text-zinc-300">${esc(termData.text || DEFAULT_TERMS)}</textarea>
+        <div class="flex flex-wrap items-center justify-between gap-3 mt-4">
+          <div class="flex items-center gap-2">
+            <span class="text-xs muted">Policy Version:</span>
+            <input id="termsVersion" value="${esc(termData.version || appTermsVersion)}" class="p-2 rounded-lg bg-[#191919] border border-[#333] text-xs font-bold w-24">
+          </div>
+          <button type="button" id="saveTerms" class="bg-gold text-black rounded-xl px-5 py-2 font-bold text-xs hover:brightness-110">
+            Save Terms & Policies
+          </button>
+        </div>
+      </div>
+    `;
+    $('termsBack').onclick = sfAdminBack;
+    $('saveTerms').onclick = async () => {
+      try {
+        const text = $('termsEditor').value.trim();
+        const version = $('termsVersion').value.trim() || appTermsVersion;
+        if(text.length < 200) throw Error('Terms & conditions content is too short.');
+        await setDoc(doc(db, 'settings', 'terms'), {
+          text,
+          version,
+          updatedAt: serverTimestamp(),
+          updatedBy: currentUser?.uid || 'admin'
+        }, { merge: true });
+        appTerms = text;
+        appTermsVersion = version;
+        toast('Terms & policies updated successfully.', 'success', 3000);
+      } catch(e) {
+        toast(errMsg(e), 'error');
+      }
+    };
   }
 })();
 </script>
 
 <style>
+/* Sleek Admin Control Center Styles */
+.admin-tab{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:12px;font-size:12.5px;font-weight:700;white-space:nowrap;transition:all .18s cubic-bezier(0.16,1,0.3,1);cursor:pointer;background:#141416;color:#a1a1aa;border:1px solid #26262a;position:relative}
+.admin-tab:hover{background:#1c1c20;border-color:#383840;color:#fff;transform:translateY(-1px)}
+.admin-tab:active{transform:scale(0.98)}
+.admin-tab.active{background:#f5b942;color:#0a0a0c;border-color:#f5b942;box-shadow:0 3px 14px rgba(245,185,66,0.35);font-weight:800}
+.admin-tab-count{display:inline-flex;align-items:center;justify-content:center;padding:1px 7px;border-radius:999px;font-size:10.5px;font-weight:800;line-height:1.2;background:rgba(255,255,255,0.1);color:inherit}
+.admin-tab.active .admin-tab-count{background:rgba(0,0,0,0.18);color:#0a0a0c}
+
+.admin-subtab{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;font-size:12px;font-weight:700;white-space:nowrap;transition:all .15s ease;cursor:pointer;background:#151518;color:#a1a1aa;border:1px solid #282830}
+.admin-subtab:hover{border-color:#3f3f4c;color:#fff;background:#1a1a20}
+.admin-subtab.active{background:linear-gradient(135deg,rgba(245,185,66,0.2),rgba(245,185,66,0.08));border-color:rgba(245,185,66,0.6);color:#f5b942;box-shadow:0 2px 10px rgba(0,0,0,0.3)}
+
+.sf-dash-card{position:relative;overflow:hidden;border:1px solid #26262c;border-radius:20px;background:linear-gradient(145deg,#151518,#0f0f12);padding:18px;transition:all .22s cubic-bezier(0.16,1,0.3,1);text-align:left;display:flex;flex-direction:column;justify-content:space-between;min-height:138px}
+.sf-dash-card:hover{border-color:rgba(245,185,66,0.45);background:linear-gradient(145deg,#19191d,#121216);transform:translateY(-2px);box-shadow:0 12px 30px -8px rgba(0,0,0,0.5)}
+.sf-dash-card:active{transform:scale(0.985)}
+
 @media(min-width:641px){.sf-search-btn{min-width:42px}}
 .sf-search-results{max-height:60vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#333 transparent}
 .sf-result-card{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #262630;border-radius:14px;background:#141418;min-width:0;transition:all .18s ease;text-align:left;width:100%}
@@ -7570,6 +9202,146 @@ init();
   const oldShowApp=showApp;showApp=function(){oldShowApp();installSearch();setNav()};
   window.startSellerFlowChat=startChat;
   document.addEventListener('click',e=>{const m=e.target.closest('[data-message-user]');if(m)startChat(m.dataset.messageUser)});
+
+  /* Pull-To-Refresh App Controller */
+  async function refreshApp(){
+    try {
+      if(typeof refreshProfile === 'function' && currentUser){
+        try { await refreshProfile(); } catch(_){}
+      }
+      if(currentPage === 'admin' && typeof renderAdmin === 'function'){
+        await renderAdmin();
+      } else if(currentPage === 'chats' && typeof renderChats === 'function'){
+        await renderChats();
+      } else if(typeof renderPage === 'function'){
+        await renderPage();
+      }
+    } catch(err) {
+      console.warn('App refresh notice:', err);
+    }
+  }
+  window.refreshApp = refreshApp;
+
+  function initPullToRefresh() {
+    const indicator = document.getElementById('pullRefreshIndicator');
+    if(!indicator) return;
+    const icon = indicator.querySelector('.pull-refresh-icon');
+    const text = indicator.querySelector('.pull-refresh-text');
+
+    let startY = 0;
+    let currentY = 0;
+    let isPulling = false;
+    let isRefreshing = false;
+    const threshold = 68;
+    const maxPull = 110;
+
+    function getScrollTop() {
+      if (currentPage === 'feed') {
+        const rf = document.querySelector('.reel-feed');
+        if (rf) return rf.scrollTop;
+      }
+      const appScroll = document.getElementById('appMainScroll');
+      if (appScroll && appScroll.scrollTop > 0) return appScroll.scrollTop;
+      return window.pageYOffset || document.documentElement.scrollTop || 0;
+    }
+
+    async function performRefresh() {
+      if (isRefreshing) return;
+      isRefreshing = true;
+      indicator.classList.add('visible');
+      indicator.style.transform = 'translateX(-50%) translateY(16px)';
+      if (icon) {
+        icon.classList.add('spinning');
+        icon.textContent = '↻';
+      }
+      if (text) text.textContent = 'Refreshing SellerFlow…';
+
+      try {
+        await refreshApp();
+        if (text) text.textContent = 'Refreshed ✓';
+        if (icon) icon.classList.remove('spinning');
+        toast('SellerFlow refreshed', 'info', 2200);
+      } catch(err) {
+        if (text) text.textContent = 'Refresh failed';
+      } finally {
+        setTimeout(() => {
+          indicator.style.transform = '';
+          indicator.classList.remove('visible');
+          if (icon) {
+            icon.classList.remove('spinning');
+            icon.textContent = '↻';
+            icon.style.transform = '';
+          }
+          if (text) text.textContent = 'Pull to refresh';
+          isRefreshing = false;
+        }, 450);
+      }
+    }
+
+    window.triggerPullRefresh = performRefresh;
+
+    document.addEventListener('touchstart', (e) => {
+      if (isRefreshing) return;
+      if (getScrollTop() <= 2) {
+        startY = e.touches[0].clientY;
+        currentY = startY;
+        isPulling = true;
+      } else {
+        isPulling = false;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!isPulling || isRefreshing) return;
+      currentY = e.touches[0].clientY;
+      const diff = currentY - startY;
+
+      if (diff > 0 && getScrollTop() <= 2) {
+        const pull = Math.min(diff * 0.45, maxPull);
+        const translateY = -70 + pull;
+        indicator.classList.add('visible');
+        indicator.style.transform = `translateX(-50%) translateY(${translateY}px)`;
+        const rotation = Math.min((pull / threshold) * 180, 180);
+        if (icon) icon.style.transform = `rotate(${rotation}deg)`;
+
+        if (pull >= threshold) {
+          if (text) text.textContent = 'Release to refresh';
+          if (icon) icon.style.color = '#34d399';
+        } else {
+          if (text) text.textContent = 'Pull to refresh';
+          if (icon) icon.style.color = '#f5b942';
+        }
+      } else {
+        indicator.style.transform = '';
+        indicator.classList.remove('visible');
+      }
+    }, { passive: true });
+
+    const endTouch = () => {
+      if (!isPulling || isRefreshing) return;
+      isPulling = false;
+      const diff = currentY - startY;
+      const pull = Math.min(diff * 0.45, maxPull);
+
+      if (pull >= threshold && getScrollTop() <= 2) {
+        performRefresh();
+      } else {
+        indicator.style.transform = '';
+        indicator.classList.remove('visible');
+        if (icon) {
+          icon.style.transform = '';
+          icon.style.color = '#f5b942';
+        }
+        if (text) text.textContent = 'Pull to refresh';
+      }
+    };
+
+    document.addEventListener('touchend', endTouch, { passive: true });
+    document.addEventListener('touchcancel', endTouch, { passive: true });
+  }
+
+  initPullToRefresh();
+
   if (typeof initServiceWorker === 'function') {
     initServiceWorker();
   }
