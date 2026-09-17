@@ -8327,8 +8327,8 @@ init();
     try{
       loading('Taking down product…');
       const s = await getDoc(doc(db, 'products', id));
-      const prodName = s.exists() ? s.data().name : 'Product';
-      const sellerId = s.exists() ? s.data().sellerId : '';
+      const prodName = snapshotExists(s) ? s.data().name : 'Product';
+      const sellerId = snapshotExists(s) ? s.data().sellerId : '';
       await updateDoc(doc(db, 'products', id), {
         status: 'taken_down',
         reviewStatus: 'taken_down',
@@ -8366,7 +8366,7 @@ init();
         approvedBy: currentUser?.uid || 'admin'
       });
       const s = await getDoc(doc(db, 'products', id));
-      if(s.exists() && s.data().sellerId && (!currentUser || s.data().sellerId !== currentUser.uid)){
+      if(snapshotExists(s) && s.data().sellerId && (!currentUser || s.data().sellerId !== currentUser.uid)){
         await addDoc(collection(db, 'notifications'), {
           recipientId: s.data().sellerId,
           senderName: 'SellerFlow Admin',
@@ -8399,7 +8399,7 @@ init();
         rejectedBy: currentUser?.uid || 'admin'
       });
       const s = await getDoc(doc(db, 'products', id));
-      if(s.exists() && s.data().sellerId && (!currentUser || s.data().sellerId !== currentUser.uid)){
+      if(snapshotExists(s) && s.data().sellerId && (!currentUser || s.data().sellerId !== currentUser.uid)){
         await addDoc(collection(db, 'notifications'), {
           recipientId: s.data().sellerId,
           senderName: 'SellerFlow Admin',
