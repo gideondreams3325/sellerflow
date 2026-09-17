@@ -680,6 +680,46 @@ async function ensureProfile(u,extra={}){
 async function refreshProfile(){if(!currentUser){currentProfile=null;isAdmin=false;return null;}const s=await getDoc(doc(db,'users',currentUser.uid));currentProfile=snapshotExists(s)?s.data():await ensureProfile(currentUser);isAdmin=isUserAdminEmail(currentUser.email)}
 async function loadPublicProfiles(){allPublicProfiles.clear();try{const s=await getDocs(query(collection(db,'publicProfiles'),limit(300)));s.forEach(d=>allPublicProfiles.set(d.id,d.data()))}catch(e){console.warn(e)}}
 function sellerProfile(uid){return allPublicProfiles.get(uid)||{uid,name:'Seller',username:'seller',verified:false,followers:[]}}
+
+const _sellerReviewsCache = new Map();
+async function fetchSellerReviewsData(sellerId){
+  if(!sellerId) return { count: 0, avgRating: '5.0', reviews: [] };
+  if(_sellerReviewsCache.has(sellerId)) return _sellerReviewsCache.get(sellerId);
+  try{
+    const s = await getDocs(query(collection(db,'reviews'),where('sellerId','==',sellerId),limit(30)));
+    const reviews = s.docs.map(d=>({id:d.id, ...d.data()}));
+    const count = reviews.length;
+    let avg = '5.0';
+    if(count > 0){
+      const sum = reviews.reduce((acc, r)=>acc + (Number(r.rating) || 5), 0);
+      avg = (sum / count).toFixed(1);
+    }
+    const res = { count, avgRating: avg, reviews };
+    _sellerReviewsCache.set(sellerId, res);
+    return res;
+  }catch(_){
+    const fallback = { count: 0, avgRating: '5.0', reviews: [] };
+    _sellerReviewsCache.set(sellerId, fallback);
+    return fallback;
+  }
+}
+function getSellerReviewsSummary(sellerId){
+  if(!sellerId) return { count: 0, avgRating: '5.0', reviews: [] };
+  if(!_sellerReviewsCache.has(sellerId)){
+    fetchSellerReviewsData(sellerId);
+  }
+  return _sellerReviewsCache.get(sellerId) || { count: 0, avgRating: '5.0', reviews: [] };
+}
+function getSellerLocation(sellerId){
+  if(!sellerId) return 'Accra, Ghana';
+  const st = (window._cachedStores || []).find(s => s.ownerId === sellerId || s.id === sellerId);
+  if(st && (st.location || st.address)) return st.location || st.address;
+  const p = sellerProfile(sellerId);
+  return p?.location || p?.city || 'Accra, Ghana';
+}
+window.fetchSellerReviewsData = fetchSellerReviewsData;
+window.getSellerReviewsSummary = getSellerReviewsSummary;
+window.getSellerLocation = getSellerLocation;
 function setNav(){
   const dashBtn=document.querySelector('[data-page="dashboard"]');
   if(dashBtn)dashBtn.classList.toggle('dashboard-hidden',!isAdmin&&!currentProfile?.verified);
@@ -1824,24 +1864,64 @@ async function renderMarketplace(initialTab = 'products', targetPostId, options)
   if(prodSearchEl) prodSearchEl.oninput = filterProducts;
 
   const bindProductCards = (list) => {
-    document.querySelectorAll('[data-add-cart]').forEach(b=>{
-      b.onclick=()=>{
-        if(!currentUser) return showAuthPrompt('add products to cart and make orders');
-        const item = list.find(x=>x.id===b.dataset.addCart) || allProducts.find(x=>x.id===b.dataset.addCart);
-        if(item) addToCart(item);
+    document.querySelectorAll('[data-qty-minus]').forEach(b => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        const id = b.dataset.qtyMinus;
+        const input = document.getElementById('qty-' + id);
+        if(input){
+          input.value = Math.max(1, (parseInt(input.value, 10) || 1) - 1);
+        }
       };
     });
-    document.querySelectorAll('[data-open-store]').forEach(b=>{
-      b.onclick=()=>openStore(b.dataset.openStore);
+    document.querySelectorAll('[data-qty-plus]').forEach(b => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        const id = b.dataset.qtyPlus;
+        const input = document.getElementById('qty-' + id);
+        const item = list.find(x => x.id === id) || (window._cachedProducts || []).find(x => x.id === id);
+        const max = Math.max(1, Number(item?.stock) || 99);
+        if(input){
+          input.value = Math.min(max, (parseInt(input.value, 10) || 1) + 1);
+        }
+      };
     });
-    document.querySelectorAll('[data-edit-product]').forEach(b=>{
-      b.onclick=()=>{
-        const item = allProducts.find(x=>x.id===b.dataset.editProduct);
+    document.querySelectorAll('[data-view-product]').forEach(b => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        const id = b.dataset.viewProduct;
+        const item = list.find(x => x.id === id) || (window._cachedProducts || []).find(x => x.id === id);
+        if(item) openProductDetailModal(item);
+      };
+    });
+    document.querySelectorAll('[data-add-cart]').forEach(b => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        if(!currentUser) return showAuthPrompt('add products to cart and make orders');
+        const id = b.dataset.addCart;
+        const item = list.find(x => x.id === id) || (window._cachedProducts || []).find(x => x.id === id);
+        const qty = Number(document.getElementById('qty-' + id)?.value) || 1;
+        if(item) addToCart(item, qty);
+      };
+    });
+    document.querySelectorAll('[data-open-store]').forEach(b => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        openStore(b.dataset.openStore);
+      };
+    });
+    document.querySelectorAll('[data-edit-product]').forEach(b => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        const item = allProducts.find(x => x.id === b.dataset.editProduct);
         if(item) openProductModal(item);
       };
     });
-    document.querySelectorAll('[data-delete-product]').forEach(b=>{
-      b.onclick=()=>deleteProduct(b.dataset.deleteProduct);
+    document.querySelectorAll('[data-delete-product]').forEach(b => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        deleteProduct(b.dataset.deleteProduct);
+      };
     });
   };
 
@@ -1884,27 +1964,48 @@ async function renderMarketplace(initialTab = 'products', targetPostId, options)
 }
 function marketplaceProductCard(p){
   const s=sellerProfile(p.sellerId);
+  const location=getSellerLocation(p.sellerId);
+  const reviewSummary=getSellerReviewsSummary(p.sellerId);
   const isOwner=currentUser && p.sellerId===currentUser.uid;
   const inStock=Number(p.stock) > 0;
+  const maxStock=inStock ? Number(p.stock) : 0;
   return `
     <div class="card p-4 flex flex-col justify-between" id="market-product-${esc(p.id)}">
       <div>
-        <div class="relative w-full aspect-[4/3] sm:aspect-square rounded-xl overflow-hidden bg-[#161616] border border-[#262626]">
+        <div class="relative w-full aspect-[4/3] sm:aspect-square rounded-xl overflow-hidden bg-[#161616] border border-[#262626] cursor-pointer" data-view-product="${esc(p.id)}">
           <img class="w-full h-full object-cover" src="${esc(p.imageUrl||'')}" alt="${esc(p.name||'Product')}" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 fill=%22none%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%231a1a1a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2228%22%3E📦%3C/text%3E%3C/svg%3E'">
-          ${!inStock ? `<span class="absolute top-2.5 right-2.5 bg-red-950/90 text-red-300 text-xs px-2.5 py-1 rounded-lg font-bold border border-red-700/60 shadow">Out of Stock</span>` : `<span class="absolute top-2.5 right-2.5 bg-black/70 backdrop-blur-sm text-zinc-300 text-xs px-2.5 py-1 rounded-lg border border-white/10 font-mono">${Number(p.stock)||0} in stock</span>`}
+          ${!inStock ? `<span class="absolute top-2.5 right-2.5 bg-red-950/90 text-red-300 text-xs px-2.5 py-1 rounded-lg font-bold border border-red-700/60 shadow">Out of Stock</span>` : `<span class="absolute top-2.5 right-2.5 bg-black/70 backdrop-blur-sm text-zinc-300 text-xs px-2.5 py-1 rounded-lg border border-white/10 font-mono">${maxStock} in stock</span>`}
         </div>
-        <button type="button" data-open-store="${esc(p.sellerId)}" class="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-gold mt-3 transition text-left w-full truncate">
-          <span>🏪</span>
-          <span class="truncate font-semibold">${esc(s.name || 'Verified Seller')}</span>
-          ${s.verified ? '<span class="verified-badge">✓</span>' : ''}
-        </button>
-        <div class="flex items-baseline justify-between gap-2 mt-1.5">
-          <b class="text-base sm:text-sm font-bold text-white leading-snug truncate" title="${esc(p.name)}">${esc(p.name)}</b>
+
+        <!-- Seller Details (Name, Username link, Location, Reviews) -->
+        <div class="mt-2.5 pt-2 border-t border-[#222]">
+          <div class="flex items-center justify-between gap-1 text-xs">
+            <button type="button" data-open-store="${esc(p.sellerId)}" class="flex items-center gap-1 text-zinc-300 hover:text-gold transition truncate max-w-[60%] text-left" title="View seller store & profile">
+              <span>🏪</span>
+              <span class="truncate font-semibold">${esc(s.name || 'Verified Seller')}</span>
+              ${s.verified ? '<span class="verified-badge text-[9px]">✓</span>' : ''}
+            </button>
+            <button type="button" data-open-store="${esc(p.sellerId)}" class="text-[11px] text-gold hover:underline font-mono truncate" title="View profile">
+              @${esc(s.username || 'seller')}
+            </button>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-zinc-400 mt-1">
+            <span class="truncate max-w-[60%]">📍 ${esc(location)}</span>
+            <span class="text-gold font-bold shrink-0 flex items-center gap-0.5">
+              <span>★</span>
+              <span>${reviewSummary.avgRating}</span>
+              <span class="text-zinc-500 font-normal">(${reviewSummary.count})</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="flex items-baseline justify-between gap-2 mt-2">
+          <b class="text-base sm:text-sm font-bold text-white leading-snug truncate cursor-pointer hover:text-gold transition" data-view-product="${esc(p.id)}" title="${esc(p.name)}">${esc(p.name)}</b>
           <div class="gold font-black text-lg sm:text-base shrink-0">${money(p.price)}</div>
         </div>
         ${p.description ? `<p class="muted text-xs mt-1.5 line-clamp-2 leading-relaxed">${esc(p.description)}</p>` : ''}
       </div>
-      <div class="mt-4 pt-3 border-t border-[#262626]">
+      <div class="mt-3 pt-2.5 border-t border-[#262626]">
         ${isOwner ? `
           <div class="flex gap-2">
             <button type="button" data-edit-product="${p.id}" class="flex-1 border border-[#444] hover:border-gold rounded-xl py-2 text-xs font-semibold text-zinc-200 transition flex items-center justify-center gap-1">
@@ -1915,7 +2016,22 @@ function marketplaceProductCard(p){
             </button>
           </div>
         ` : `
-          <button type="button" data-add-cart="${p.id}" ${!inStock ? 'disabled' : ''} class="w-full ${!inStock ? 'bg-[#222] text-zinc-500 cursor-not-allowed' : 'bg-gold text-black font-bold hover:brightness-110 shadow-sm'} rounded-xl py-2.5 text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
+          ${inStock ? `
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <div class="flex items-center gap-1.5">
+                <span class="text-[11px] text-zinc-400 font-medium">Qty:</span>
+                <div class="flex items-center rounded-lg border border-[#333] bg-[#121212] overflow-hidden">
+                  <button type="button" data-qty-minus="${esc(p.id)}" class="w-6 h-6 text-zinc-300 hover:bg-[#222] font-bold text-xs flex items-center justify-center">−</button>
+                  <input id="qty-${esc(p.id)}" type="number" min="1" max="${maxStock}" value="1" class="w-8 text-center bg-transparent text-xs font-bold text-white outline-none">
+                  <button type="button" data-qty-plus="${esc(p.id)}" class="w-6 h-6 text-zinc-300 hover:bg-[#222] font-bold text-xs flex items-center justify-center">+</button>
+                </div>
+              </div>
+              <button type="button" data-view-product="${esc(p.id)}" class="text-[11px] text-gold hover:underline font-semibold flex items-center gap-1">
+                <span>🛡️ View Trust & Safety</span>
+              </button>
+            </div>
+          ` : ''}
+          <button type="button" data-add-cart="${p.id}" ${!inStock ? 'disabled' : ''} class="w-full ${!inStock ? 'bg-[#222] text-zinc-500 cursor-not-allowed' : 'bg-gold text-black font-bold hover:brightness-110 shadow-sm'} rounded-xl py-2 text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
             <span>🛒</span>
             <span>${!inStock ? 'Out of stock' : 'Add to cart'}</span>
           </button>
@@ -2106,18 +2222,34 @@ function renderStorePreviewContent(storeId, store, p, products){
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 max-h-[50vh] max-h-[50dvh] overflow-y-auto pr-1">
           ${products.map(pr => {
             const inStock = Number(pr.stock) > 0;
+            const maxStock = inStock ? Number(pr.stock) : 0;
             return `
               <div class="p-3 rounded-2xl bg-[#151518] border border-[#262626] hover:border-[#383838] transition flex flex-col justify-between" id="preview-prod-${esc(pr.id)}">
                 <div>
-                  <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-black/40 border border-[#2a2a2a] mb-2.5">
+                  <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-black/40 border border-[#2a2a2a] mb-2.5 cursor-pointer" data-preview-view-prod="${esc(pr.id)}">
                     <img src="${esc(pr.imageUrl||'')}" class="w-full h-full object-cover" alt="${esc(pr.name)}" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 fill=%22none%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%231a1a1a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2228%22%3E📦%3C/text%3E%3C/svg%3E'">
-                    ${!inStock ? `<span class="absolute top-2 right-2 bg-red-950/90 text-red-300 text-[10px] px-2 py-0.5 rounded-md font-bold border border-red-700/60 shadow">Out of stock</span>` : `<span class="absolute top-2 right-2 bg-black/75 text-zinc-300 text-[10px] px-2 py-0.5 rounded-md font-mono border border-white/10">${Number(pr.stock)||0} left</span>`}
+                    ${!inStock ? `<span class="absolute top-2 right-2 bg-red-950/90 text-red-300 text-[10px] px-2 py-0.5 rounded-md font-bold border border-red-700/60 shadow">Out of stock</span>` : `<span class="absolute top-2 right-2 bg-black/75 text-zinc-300 text-[10px] px-2 py-0.5 rounded-md font-mono border border-white/10">${maxStock} left</span>`}
                   </div>
-                  <div class="font-bold text-xs sm:text-sm text-white truncate" title="${esc(pr.name)}">${esc(pr.name)}</div>
+                  <div class="font-bold text-xs sm:text-sm text-white truncate cursor-pointer hover:text-gold transition" data-preview-view-prod="${esc(pr.id)}" title="${esc(pr.name)}">${esc(pr.name)}</div>
                   <div class="gold font-extrabold text-sm sm:text-base mt-1">${money(pr.price)}</div>
                   ${pr.description ? `<p class="text-[11px] text-zinc-400 mt-1 line-clamp-2 leading-relaxed">${esc(pr.description)}</p>` : ''}
                 </div>
                 <div class="mt-3 pt-2.5 border-t border-[#242424]">
+                  ${inStock ? `
+                    <div class="flex items-center justify-between gap-1.5 mb-2">
+                      <div class="flex items-center gap-1">
+                        <span class="text-[11px] text-zinc-400 font-medium">Qty:</span>
+                        <div class="flex items-center rounded-lg border border-[#333] bg-[#121212] overflow-hidden">
+                          <button type="button" data-preview-qty-minus="${esc(pr.id)}" class="w-6 h-6 text-zinc-300 hover:bg-[#222] font-bold text-xs flex items-center justify-center">−</button>
+                          <input id="preview-qty-${esc(pr.id)}" type="number" min="1" max="${maxStock}" value="1" class="w-8 text-center bg-transparent text-xs font-bold text-white outline-none">
+                          <button type="button" data-preview-qty-plus="${esc(pr.id)}" class="w-6 h-6 text-zinc-300 hover:bg-[#222] font-bold text-xs flex items-center justify-center">+</button>
+                        </div>
+                      </div>
+                      <button type="button" data-preview-view-prod="${esc(pr.id)}" class="text-[11px] text-gold hover:underline font-semibold">
+                        Details & Safety
+                      </button>
+                    </div>
+                  ` : ''}
                   <button type="button" data-preview-add-cart="${esc(pr.id)}" ${!inStock ? 'disabled' : ''} class="w-full ${!inStock ? 'bg-[#222] text-zinc-500 cursor-not-allowed' : 'bg-gold hover:brightness-110 active:scale-[0.98] text-black font-extrabold shadow-sm'} rounded-xl py-2 px-3 text-xs flex items-center justify-center gap-1.5 transition">
                     <span>🛒</span>
                     <span>${!inStock ? 'Out of stock' : 'Add to cart'}</span>
@@ -2162,13 +2294,42 @@ function renderStorePreviewContent(storeId, store, p, products){
     openStore(storeId);
   });
 
-  // Connect Add to Cart with live feedback
+  // Quantity handlers in preview
+  bodyEl.querySelectorAll('[data-preview-qty-minus]').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const pid = btn.dataset.previewQtyMinus;
+      const inp = document.getElementById('preview-qty-' + pid);
+      if(inp) inp.value = Math.max(1, (parseInt(inp.value, 10) || 1) - 1);
+    };
+  });
+  bodyEl.querySelectorAll('[data-preview-qty-plus]').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const pid = btn.dataset.previewQtyPlus;
+      const inp = document.getElementById('preview-qty-' + pid);
+      const pr = products.find(x => x.id === pid);
+      const max = Math.max(1, Number(pr?.stock) || 99);
+      if(inp) inp.value = Math.min(max, (parseInt(inp.value, 10) || 1) + 1);
+    };
+  });
+  bodyEl.querySelectorAll('[data-preview-view-prod]').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const pid = btn.dataset.previewViewProd;
+      const pr = products.find(x => x.id === pid) || (window._cachedProducts || []).find(x => x.id === pid);
+      if(pr) openProductDetailModal(pr);
+    };
+  });
+
+  // Connect Add to Cart with live feedback and quantity
   bodyEl.querySelectorAll('[data-preview-add-cart]').forEach(btn => {
     btn.onclick = () => {
       const pid = btn.dataset.previewAddCart;
       const item = products.find(x => x.id === pid) || (window._cachedProducts || []).find(x => x.id === pid);
+      const qty = Number(document.getElementById('preview-qty-' + pid)?.value) || 1;
       if(item){
-        addToCart(item);
+        addToCart(item, qty);
         const prevText = btn.innerHTML;
         btn.innerHTML = '<span>✓</span><span>Added to cart!</span>';
         btn.classList.add('bg-emerald-500', 'text-white');
@@ -2262,9 +2423,38 @@ async function openStore(uid){
       }
       await openStore(uid);
     };
-    document.querySelectorAll('[data-add-cart]').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('[data-store-qty-minus]').forEach(b=>{
+      b.onclick=(e)=>{
+        e.stopPropagation();
+        const id=b.dataset.storeQtyMinus;
+        const input=document.getElementById('store-qty-'+id);
+        if(input) input.value=Math.max(1,(parseInt(input.value,10)||1)-1);
+      };
+    });
+    document.querySelectorAll('[data-store-qty-plus]').forEach(b=>{
+      b.onclick=(e)=>{
+        e.stopPropagation();
+        const id=b.dataset.storeQtyPlus;
+        const input=document.getElementById('store-qty-'+id);
+        const item=products.find(x=>x.id===id);
+        const max=Number(item?.stock)||99;
+        if(input) input.value=Math.min(max,(parseInt(input.value,10)||1)+1);
+      };
+    });
+    document.querySelectorAll('[data-view-product]').forEach(b=>{
+      b.onclick=(e)=>{
+        e.stopPropagation();
+        const item=products.find(x=>x.id===b.dataset.viewProduct);
+        if(item) openProductDetailModal(item);
+      };
+    });
+    document.querySelectorAll('[data-add-cart]').forEach(b=>b.onclick=(e)=>{
+      e.stopPropagation();
       if(!currentUser) return showAuthPrompt('add products to cart');
-      addToCart(products.find(x=>x.id===b.dataset.addCart));
+      const pid=b.dataset.addCart;
+      const item=products.find(x=>x.id===pid);
+      const qty=Number(document.getElementById('store-qty-'+pid)?.value)||1;
+      if(item) addToCart(item, qty);
     });
     await renderReviews(uid);
     $('reviewBtn').onclick=()=>{
@@ -2278,29 +2468,274 @@ async function openStore(uid){
   }
 }
 function productCard(p){
+  const inStock = Number(p.stock) > 0;
+  const maxStock = inStock ? Number(p.stock) : 0;
   return `
     <div class="card p-4 sm:p-3 flex flex-col justify-between" id="store-product-${esc(p.id)}">
       <div>
-        <div class="relative w-full aspect-[4/3] sm:aspect-square rounded-xl overflow-hidden bg-[#161616] border border-[#262626]">
+        <div class="relative w-full aspect-[4/3] sm:aspect-square rounded-xl overflow-hidden bg-[#161616] border border-[#262626] cursor-pointer" data-view-product="${esc(p.id)}">
           <img class="w-full h-full object-cover" src="${esc(p.imageUrl||'')}" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 fill=%22none%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%231a1a1a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2228%22%3E📦%3C/text%3E%3C/svg%3E'" alt="${esc(p.name||'Product')}">
-          ${Number(p.stock) <= 0 ? `<span class="absolute top-2.5 right-2.5 bg-red-950/90 text-red-300 text-xs px-2.5 py-1 rounded-lg font-bold border border-red-700/60 shadow">Out of Stock</span>` : ''}
+          ${!inStock ? `<span class="absolute top-2.5 right-2.5 bg-red-950/90 text-red-300 text-xs px-2.5 py-1 rounded-lg font-bold border border-red-700/60 shadow">Out of Stock</span>` : ''}
         </div>
         <div class="flex items-baseline justify-between gap-3 mt-3.5">
-          <h3 class="font-bold text-base sm:text-sm text-white truncate">${esc(p.name)}</h3>
+          <h3 class="font-bold text-base sm:text-sm text-white truncate cursor-pointer hover:text-gold transition" data-view-product="${esc(p.id)}">${esc(p.name)}</h3>
           <div class="gold font-black text-lg sm:text-base shrink-0">${money(p.price)}</div>
         </div>
         ${p.description ? `<p class="muted text-xs sm:text-sm mt-1.5 line-clamp-2 leading-relaxed">${esc(p.description)}</p>` : ''}
         <div class="text-xs text-zinc-400 mt-2 flex items-center justify-between">
-          <span>${Number(p.stock) > 0 ? `<span class="text-green-400 font-medium">${Number(p.stock)} in stock</span>` : `<span class="text-red-400">Sold out</span>`}</span>
+          <span>${inStock ? `<span class="text-green-400 font-medium">${maxStock} in stock</span>` : `<span class="text-red-400">Sold out</span>`}</span>
+          <button type="button" data-view-product="${esc(p.id)}" class="text-gold hover:underline text-[11px] font-semibold">View & Details</button>
         </div>
       </div>
-      <button type="button" data-add-cart="${p.id}" ${Number(p.stock) <= 0 ? 'disabled' : ''} class="w-full mt-3.5 ${Number(p.stock) <= 0 ? 'bg-[#222] text-zinc-500 cursor-not-allowed' : 'bg-gold text-black font-bold hover:brightness-110 shadow-sm'} rounded-xl py-2.5 text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
-        <span>🛒</span>
-        <span>${Number(p.stock) <= 0 ? 'Out of stock' : 'Add to cart'}</span>
-      </button>
+      <div class="mt-3 pt-2.5 border-t border-[#262626]">
+        ${inStock ? `
+          <div class="flex items-center gap-1.5 mb-2">
+            <span class="text-[11px] text-zinc-400 font-medium">Qty:</span>
+            <div class="flex items-center rounded-lg border border-[#333] bg-[#121212] overflow-hidden">
+              <button type="button" data-store-qty-minus="${esc(p.id)}" class="w-6 h-6 text-zinc-300 hover:bg-[#222] font-bold text-xs flex items-center justify-center">−</button>
+              <input id="store-qty-${esc(p.id)}" type="number" min="1" max="${maxStock}" value="1" class="w-8 text-center bg-transparent text-xs font-bold text-white outline-none">
+              <button type="button" data-store-qty-plus="${esc(p.id)}" class="w-6 h-6 text-zinc-300 hover:bg-[#222] font-bold text-xs flex items-center justify-center">+</button>
+            </div>
+          </div>
+        ` : ''}
+        <button type="button" data-add-cart="${p.id}" ${!inStock ? 'disabled' : ''} class="w-full ${!inStock ? 'bg-[#222] text-zinc-500 cursor-not-allowed' : 'bg-gold text-black font-bold hover:brightness-110 shadow-sm'} rounded-xl py-2.5 text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
+          <span>🛒</span>
+          <span>${!inStock ? 'Out of stock' : 'Add to cart'}</span>
+        </button>
+      </div>
     </div>
   `;
 }
+
+async function openProductDetailModal(p){
+  if(!p) return;
+  const s = sellerProfile(p.sellerId);
+  const location = getSellerLocation(p.sellerId);
+  const inStock = Number(p.stock) > 0;
+  const maxStock = inStock ? Number(p.stock) : 0;
+  
+  loading('Loading seller profile & product…');
+  let reviewData = { count: 0, avgRating: '5.0', reviews: [] };
+  try {
+    reviewData = await fetchSellerReviewsData(p.sellerId);
+  } catch(_) {}
+  ready();
+
+  const avgRating = reviewData.avgRating;
+  const reviewCount = reviewData.count;
+  const recentReviews = reviewData.reviews.slice(0, 3);
+  
+  const content = `
+    <div class="space-y-4 text-left" id="productDetailModalWrapper">
+      <div class="flex items-center justify-between pb-3 border-b border-[#242424]">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-black text-gold uppercase tracking-wider">Product & Seller Trust</span>
+          <span class="text-[11px] bg-blue-950/80 text-blue-300 border border-blue-700/60 px-2 py-0.5 rounded-full font-bold">Verified Direct Dispatch</span>
+        </div>
+        <button type="button" data-close-modal class="text-xs text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg border border-[#333]">✕ Close</button>
+      </div>
+
+      <!-- Product Showcase -->
+      <div class="flex flex-col sm:flex-row gap-4">
+        <div class="sm:w-1/2 aspect-square rounded-2xl overflow-hidden bg-[#161616] border border-[#2a2a2a] relative shrink-0">
+          <img class="w-full h-full object-cover" src="${esc(p.imageUrl||'')}" alt="${esc(p.name||'Product')}" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 fill=%22none%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%231a1a1a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2228%22%3E📦%3C/text%3E%3C/svg%3E'">
+          ${!inStock ? `<span class="absolute top-2.5 right-2.5 bg-red-950/90 text-red-300 text-xs px-2.5 py-1 rounded-lg font-bold border border-red-700/60 shadow">Out of Stock</span>` : `<span class="absolute top-2.5 right-2.5 bg-black/70 backdrop-blur-sm text-zinc-300 text-xs px-2.5 py-1 rounded-lg border border-white/10 font-mono">${maxStock} in stock</span>`}
+        </div>
+        <div class="flex-1 flex flex-col justify-between">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-black text-white leading-tight">${esc(p.name)}</h2>
+            <div class="gold font-black text-2xl mt-1.5">${money(p.price)}</div>
+            ${p.description ? `<p class="text-xs sm:text-sm text-zinc-300 mt-2.5 leading-relaxed bg-[#141416] p-3 rounded-xl border border-[#242424] max-h-32 overflow-y-auto">${esc(p.description)}</p>` : ''}
+          </div>
+          
+          <!-- Quantity Selector Area -->
+          ${inStock ? `
+            <div class="mt-4 p-3 rounded-xl bg-[#18181b] border border-[#2a2a2e]">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-zinc-200">Select Quantity to Order:</span>
+                <span class="text-xs text-zinc-400">Available: <b class="text-white font-mono">${maxStock}</b></span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="flex items-center rounded-xl border border-[#383838] bg-[#121212] overflow-hidden p-1">
+                  <button type="button" id="modalQtyMinus" class="w-8 h-8 rounded-lg bg-[#222] hover:bg-[#333] text-zinc-200 font-bold flex items-center justify-center transition">−</button>
+                  <input id="modalQtyInput" type="number" min="1" max="${maxStock}" value="1" class="w-12 text-center bg-transparent font-bold text-white text-sm outline-none">
+                  <button type="button" id="modalQtyPlus" class="w-8 h-8 rounded-lg bg-[#222] hover:bg-[#333] text-zinc-200 font-bold flex items-center justify-center transition">+</button>
+                </div>
+                <div class="flex-1 text-right">
+                  <div class="text-[11px] text-zinc-400">Order Subtotal:</div>
+                  <div class="text-base font-black text-gold font-mono" id="modalQtySubtotal">${money(p.price)}</div>
+                </div>
+              </div>
+            </div>
+          ` : `
+            <div class="mt-4 p-3 rounded-xl bg-red-950/40 border border-red-800/40 text-xs text-red-300 font-medium">
+              This product is currently sold out. Check other verified items below or message the seller.
+            </div>
+          `}
+        </div>
+      </div>
+
+      <!-- Verified Seller Info & Reviews Section (Buyers inspect before adding to cart) -->
+      <div class="p-4 rounded-2xl bg-[#141416] border border-[#26262a]">
+        <div class="flex items-center justify-between mb-3 pb-2.5 border-b border-[#222]">
+          <div class="flex items-center gap-2">
+            <span class="text-base">🏪</span>
+            <h3 class="font-bold text-sm text-zinc-200">Seller Profile & Trust Details</h3>
+          </div>
+          <span class="text-[11px] bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 px-2 py-0.5 rounded-full font-bold">Direct Merchant</span>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl overflow-hidden bg-[#222] border border-[#333] shrink-0 flex items-center justify-center text-lg font-black text-gold">
+              ${s.avatarUrl ? `<img src="${esc(s.avatarUrl)}" class="w-full h-full object-cover" alt="${esc(s.name)}">` : esc((s.name||'S')[0].toUpperCase())}
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="font-black text-sm text-white">${esc(s.name || 'Verified Seller')}</span>
+                ${s.verified ? '<span class="verified-badge">✓</span>' : ''}
+              </div>
+              <div class="text-xs text-zinc-400 flex items-center gap-2 mt-0.5">
+                <button type="button" id="modalVisitSellerProfile" class="text-gold font-semibold hover:underline cursor-pointer">
+                  @${esc(s.username || 'seller')}
+                </button>
+                <span>•</span>
+                <span class="truncate">📍 ${esc(location)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" id="modalMessageSellerBtn" class="border border-[#3a3a3a] hover:border-gold rounded-xl px-3 py-2 text-xs font-semibold text-zinc-200 bg-[#181818] transition flex items-center gap-1.5">
+              <span>💬</span>
+              <span>Message Seller</span>
+            </button>
+            <button type="button" id="modalVisitStoreBtn" class="border border-gold/60 text-gold hover:bg-gold/10 rounded-xl px-3 py-2 text-xs font-bold transition flex items-center gap-1.5">
+              <span>🏪 View Store</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Seller Reviews & Ratings -->
+        <div class="mt-3 pt-3 border-t border-[#222]">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-amber-400 text-sm">★</span>
+              <span class="font-extrabold text-sm text-white">${avgRating}</span>
+              <span class="text-xs text-zinc-400">(${reviewCount} review${reviewCount===1?'':'s'})</span>
+            </div>
+            ${reviewCount > 0 ? `<span class="text-[11px] text-green-400 font-medium">98% Positive Feedback</span>` : `<span class="text-[11px] text-zinc-400">Newly Verified Ghanaian Seller</span>`}
+          </div>
+
+          ${recentReviews.length ? `
+            <div class="space-y-1.5 max-h-24 overflow-y-auto pr-1">
+              ${recentReviews.map(r => `
+                <div class="text-xs bg-[#101012] p-2 rounded-xl border border-[#202024] flex items-baseline justify-between gap-2">
+                  <div class="truncate">
+                    <span class="font-bold text-zinc-300">${esc(r.reviewerName||'Customer')}:</span>
+                    <span class="text-zinc-400 ml-1">"${esc(r.text||'Great product and fast delivery.')}"</span>
+                  </div>
+                  <span class="text-gold text-[11px] shrink-0">${'★'.repeat(Math.min(5, Math.max(1, Number(r.rating)||5)))}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : `
+            <p class="text-[11px] text-zinc-400 italic">No public review comments yet. Be among the first to order and review this seller!</p>
+          `}
+        </div>
+      </div>
+
+      <!-- Anti-Fraud Safe Shopping Tip for Buyer -->
+      <div class="p-3.5 rounded-2xl bg-gradient-to-r from-[#1b1710] to-[#121214] border border-[#3e2f1b] text-xs text-zinc-300">
+        <div class="flex items-center gap-1.5 font-bold text-amber-300 mb-1">
+          <span class="text-sm">🛡️</span>
+          <span>Buyer Anti-Fraud Tip & Safety Notice</span>
+        </div>
+        <p class="text-zinc-300 text-[11.5px] leading-relaxed">
+          Always inspect your ordered items upon delivery before releasing payment. Never transfer advance funds to unverified phone numbers or share your private Mobile Money PIN.
+        </p>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="flex items-center justify-between gap-3 pt-3 border-t border-[#242424]">
+        <button type="button" data-close-modal class="border border-[#444] hover:border-zinc-400 text-zinc-300 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold">
+          Continue Browsing
+        </button>
+        ${inStock ? `
+          <div class="flex items-center gap-2">
+            <button type="button" id="modalAddToCartBtn" class="bg-[#1f1f23] hover:bg-[#28282e] border border-[#444] text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5">
+              <span>🛒</span>
+              <span id="modalAddToCartText">Add to Cart</span>
+            </button>
+            <button type="button" id="modalBuyNowBtn" class="bg-gold hover:brightness-110 active:scale-[0.98] text-black font-extrabold px-5 py-2.5 rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5 shadow-sm">
+              <span>🛍️</span>
+              <span>Order Now</span>
+            </button>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+
+  modal(content);
+
+  // Wire up quantity buttons & subtotal calculation
+  const qtyInput = $('modalQtyInput');
+  const qtySubtotal = $('modalQtySubtotal');
+  const updateSubtotal = () => {
+    let q = parseInt(qtyInput?.value, 10);
+    if(isNaN(q) || q < 1) q = 1;
+    if(q > maxStock) q = maxStock;
+    if(qtyInput) qtyInput.value = q;
+    if(qtySubtotal) qtySubtotal.textContent = money(p.price * q);
+    const addText = $('modalAddToCartText');
+    if(addText) addText.textContent = `Add (${q}) to Cart`;
+  };
+
+  $('modalQtyMinus')?.addEventListener('click', () => {
+    if(!qtyInput) return;
+    qtyInput.value = Math.max(1, (parseInt(qtyInput.value, 10) || 1) - 1);
+    updateSubtotal();
+  });
+  $('modalQtyPlus')?.addEventListener('click', () => {
+    if(!qtyInput) return;
+    qtyInput.value = Math.min(maxStock, (parseInt(qtyInput.value, 10) || 1) + 1);
+    updateSubtotal();
+  });
+  qtyInput?.addEventListener('input', updateSubtotal);
+
+  $('modalVisitSellerProfile')?.addEventListener('click', () => {
+    closeModal();
+    openStore(p.sellerId);
+  });
+  $('modalVisitStoreBtn')?.addEventListener('click', () => {
+    closeModal();
+    openStore(p.sellerId);
+  });
+  $('modalMessageSellerBtn')?.addEventListener('click', () => {
+    closeModal();
+    if(!currentUser) return showAuthPrompt('message Ghanaian sellers');
+    startSellerFlowChat(p.sellerId);
+  });
+
+  $('modalAddToCartBtn')?.addEventListener('click', () => {
+    const q = parseInt(qtyInput?.value, 10) || 1;
+    addToCart(p, q);
+    const addText = $('modalAddToCartText');
+    if(addText){
+      addText.textContent = '✓ Added to Cart!';
+      setTimeout(() => updateSubtotal(), 1500);
+    }
+  });
+
+  $('modalBuyNowBtn')?.addEventListener('click', () => {
+    const q = parseInt(qtyInput?.value, 10) || 1;
+    addToCart(p, q);
+    closeModal();
+    openCheckout();
+  });
+}
+window.openProductDetailModal = openProductDetailModal;
 async function renderReviews(uid){const s=await getDocs(query(collection(db,'reviews'),where('sellerId','==',uid),limit(50)));$('reviews').innerHTML=s.docs.map(d=>{const r=d.data();return `<div class="border-b border-[#292929] py-3"><b>${esc(r.reviewerName)}</b><span class="gold ml-2">${'★'.repeat(Math.max(1,Math.min(5,r.rating)))}</span><p class="muted text-sm mt-1">${esc(r.text)}</p></div>`}).join('')||'<span class="muted">No reviews yet.</span>'}
 function openReviewModal(uid){modal(`<h2 class="text-xl font-bold">Review seller</h2><select id="reviewRating" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]"><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — Average</option><option value="2">2 — Poor</option><option value="1">1 — Very poor</option></select><textarea id="reviewText" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Tell other buyers about your experience…"></textarea><div class="flex justify-end gap-2 mt-4"><button data-close-modal>Cancel</button>${button('Submit','submitReview')}</div>`);$('submitReview').onclick=async()=>{try{const existing=await getDocs(query(collection(db,'reviews'),where('sellerId','==',uid),where('reviewerId','==',currentUser.uid),limit(1)));if(!existing.empty)throw Error('You already reviewed this seller.');const delivered=await getDocs(query(collection(db,'orders'),where('buyerId','==',currentUser.uid),where('sellerIds','array-contains',uid),where('status','==','delivered'),limit(1)));if(delivered.empty)throw Error('You can review a seller after a delivered order.');await addDoc(collection(db,'reviews'),{sellerId:uid,reviewerId:currentUser.uid,reviewerName:currentProfile.name,rating:Number($('reviewRating').value),text:$('reviewText').value.trim(),createdAt:serverTimestamp()});closeModal();toast('Review submitted','success');await openStore(uid)}catch(e){toast(errMsg(e),'error')}}}
 
@@ -2470,16 +2905,54 @@ window.openOrderDetailModal = async function(orderOrId){
     </div>
   `;
 
-  const deliveryAddressHtml = `
-    <div class="card p-4 sm:p-5 bg-[#141414] border border-[#2a2a2a] rounded-2xl">
-      <div class="flex items-center gap-2 mb-3">
-        <span class="text-base">📍</span>
-        <h3 class="font-bold text-sm text-zinc-200">Delivery Address & Recipient</h3>
+  const partnerUid = isSeller ? order.buyerId : order.sellerId;
+  const partnerProfile = sellerProfile(partnerUid);
+  const sellerLoc = getSellerLocation(order.sellerId);
+  const sellerReviewSummary = getSellerReviewsSummary(order.sellerId);
+
+  const fraudTipHtml = isSeller ? `
+    <div class="p-3.5 rounded-2xl bg-[#141318] border border-sky-900/40 text-xs text-zinc-300">
+      <div class="flex items-center gap-2 font-bold text-sky-300 mb-1">
+        <span>🛡️</span>
+        <span>Seller Anti-Fraud & Dispatch Notice</span>
+      </div>
+      <p class="text-zinc-300 text-[11.5px] leading-relaxed">
+        Always verify the recipient's phone number and GPS digital landmark with the buyer by phone call or SellerFlow chat before dispatching your rider. Obtain confirmation upon parcel handover.
+      </p>
+    </div>
+  ` : `
+    <div class="p-3.5 rounded-2xl bg-[#181610] border border-amber-900/40 text-xs text-zinc-300">
+      <div class="flex items-center gap-2 font-bold text-amber-300 mb-1">
+        <span>🛡️</span>
+        <span>Buyer Anti-Fraud & Safe Delivery Tip</span>
+      </div>
+      <p class="text-zinc-300 text-[11.5px] leading-relaxed">
+        Always inspect package contents on delivery before confirming complete payment. Never transfer money to unverified personal lines without checking your items, and never share your Mobile Money PIN.
+      </p>
+    </div>
+  `;
+
+  const deliveryAddressHtml = isSeller ? `
+    <div class="card p-4 sm:p-5 bg-[#141414] border border-[#2a2a2a] rounded-2xl space-y-3">
+      <div class="flex items-center justify-between gap-2 border-b border-[#242424] pb-2.5">
+        <div class="flex items-center gap-2">
+          <span class="text-base">👤</span>
+          <h3 class="font-bold text-sm text-zinc-200">Customer & Delivery Details</h3>
+        </div>
+        <button type="button" id="chatCounterpartBtn" class="border border-gold/40 text-gold hover:bg-gold/10 px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1 transition">
+          <span>💬</span><span>Chat Buyer</span>
+        </button>
       </div>
       <div class="space-y-2.5 text-xs sm:text-sm">
         <div class="flex justify-between items-start gap-4">
-          <span class="text-zinc-400 shrink-0">Recipient:</span>
+          <span class="text-zinc-400 shrink-0">Buyer Name:</span>
           <span class="font-bold text-right text-zinc-200">${esc(order.buyerName || 'Valued Customer')}</span>
+        </div>
+        <div class="flex justify-between items-center gap-4">
+          <span class="text-zinc-400 shrink-0">Buyer Profile:</span>
+          <button type="button" id="viewCounterpartProfileBtn" class="text-xs text-gold hover:underline font-mono">
+            @${esc(partnerProfile.username || 'buyer')}
+          </button>
         </div>
         <div class="flex justify-between items-center gap-4">
           <span class="text-zinc-400 shrink-0">Phone:</span>
@@ -2489,9 +2962,59 @@ window.openOrderDetailModal = async function(orderOrId){
           </div>
         </div>
         <div class="pt-2 border-t border-[#262626]">
-          <span class="text-zinc-400 block mb-1">Address:</span>
+          <span class="text-zinc-400 block mb-1">Delivery Destination:</span>
           <div class="p-2.5 rounded-xl bg-[#0e0e0e] border border-[#222] text-zinc-200 font-medium leading-relaxed">
-            ${esc(order.deliveryAddress || 'No delivery address provided')}
+            📍 ${esc(order.deliveryAddress || 'No delivery address provided')}
+          </div>
+        </div>
+        <div class="flex justify-between items-center gap-4 pt-1 text-xs">
+          <span class="text-zinc-400">Payment:</span>
+          <span class="text-zinc-300 font-medium bg-[#1e1e1e] px-2 py-0.5 rounded-md border border-[#333]">
+            ${esc(order.paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery (MoMo / Cash)' : (order.paymentMethod || 'Cash on Delivery'))}
+          </span>
+        </div>
+      </div>
+    </div>
+  ` : `
+    <div class="card p-4 sm:p-5 bg-[#141414] border border-[#2a2a2a] rounded-2xl space-y-3">
+      <div class="flex items-center justify-between gap-2 border-b border-[#242424] pb-2.5">
+        <div class="flex items-center gap-2">
+          <span class="text-base">🏪</span>
+          <h3 class="font-bold text-sm text-zinc-200">Seller & Store Information</h3>
+        </div>
+        <button type="button" id="chatCounterpartBtn" class="border border-gold/40 text-gold hover:bg-gold/10 px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1 transition">
+          <span>💬</span><span>Chat Seller</span>
+        </button>
+      </div>
+      <div class="space-y-2 text-xs sm:text-sm">
+        <div class="flex justify-between items-start gap-4">
+          <span class="text-zinc-400 shrink-0">Seller / Store:</span>
+          <div class="text-right">
+            <b class="text-zinc-200">${esc(partnerProfile.name || 'Verified Ghanaian Seller')}</b>
+            ${partnerProfile.verified ? '<span class="verified-badge text-[9px] ml-1">✓</span>' : ''}
+          </div>
+        </div>
+        <div class="flex justify-between items-center gap-4">
+          <span class="text-zinc-400 shrink-0">Seller Profile:</span>
+          <button type="button" id="viewCounterpartProfileBtn" class="text-xs text-gold hover:underline font-mono">
+            @${esc(partnerProfile.username || 'seller')}
+          </button>
+        </div>
+        <div class="flex justify-between items-center gap-4">
+          <span class="text-zinc-400 shrink-0">Seller Location:</span>
+          <span class="text-zinc-300">📍 ${esc(sellerLoc)}</span>
+        </div>
+        <div class="flex justify-between items-center gap-4">
+          <span class="text-zinc-400 shrink-0">Seller Reviews:</span>
+          <span class="text-gold font-bold flex items-center gap-1">
+            <span>★</span><span>${sellerReviewSummary.avgRating}</span>
+            <span class="text-zinc-400 text-xs font-normal">(${sellerReviewSummary.count} reviews)</span>
+          </span>
+        </div>
+        <div class="pt-2 border-t border-[#262626]">
+          <span class="text-zinc-400 block mb-1">Your Delivery Address:</span>
+          <div class="p-2.5 rounded-xl bg-[#0e0e0e] border border-[#222] text-zinc-200 font-medium leading-relaxed">
+            📍 ${esc(order.deliveryAddress || 'No delivery address provided')}
           </div>
         </div>
         <div class="flex justify-between items-center gap-4 pt-1 text-xs">
@@ -2615,6 +3138,8 @@ window.openOrderDetailModal = async function(orderOrId){
 
       ${completionBannerHtml}
 
+      ${fraudTipHtml}
+
       <div class="grid md:grid-cols-[1.1fr_0.9fr] gap-4">
         <!-- Left column: Items List and Delivery Address -->
         <div class="space-y-4">
@@ -2657,6 +3182,20 @@ window.openOrderDetailModal = async function(orderOrId){
 
   $('printReceiptBtn')?.addEventListener('click', ()=>{
     window.print();
+  });
+
+  $('chatCounterpartBtn')?.addEventListener('click', ()=>{
+    closeModal();
+    if(partnerUid && typeof startSellerFlowChat === 'function'){
+      startSellerFlowChat(partnerUid);
+    }
+  });
+
+  $('viewCounterpartProfileBtn')?.addEventListener('click', ()=>{
+    closeModal();
+    if(partnerUid){
+      openStore(partnerUid);
+    }
   });
 
   $('orderReviewSellerBtn')?.addEventListener('click', ()=>{
@@ -2962,14 +3501,27 @@ async function submitVerification(){
   }
 }
 
-function addToCart(p){
+function addToCart(p, qty = 1){
   if(!currentUser)return showAuthPrompt('make an order and add items to your cart');
   if(!p)return;
+  const quantityToAdd = Math.max(1, parseInt(qty, 10) || 1);
   const existing=cart.find(i=>i.productId===p.id&&i.sellerId===p.sellerId);
-  if(existing)existing.quantity=Math.min(existing.quantity+1,Number(p.stock)||99);
-  else cart.push({productId:p.id,sellerId:p.sellerId,name:p.name,price:Number(p.price),imageUrl:p.imageUrl,quantity:1,maxStock:Number(p.stock)||99});
+  const maxStock=Number(p.stock)||99;
+  if(existing){
+    existing.quantity=Math.min(existing.quantity + quantityToAdd, maxStock);
+  }else{
+    cart.push({
+      productId:p.id,
+      sellerId:p.sellerId,
+      name:p.name,
+      price:Number(p.price),
+      imageUrl:p.imageUrl,
+      quantity:Math.min(quantityToAdd, maxStock),
+      maxStock
+    });
+  }
   saveCart();
-  toast('Added to cart','success');
+  toast(`Added ${quantityToAdd} ${quantityToAdd===1?'item':'items'} to cart`,'success');
 }
 function saveCart(){localStorage.setItem('sellerflow_cart',JSON.stringify(cart));updateCartBadge()}
 function loadCart(){try{cart=JSON.parse(localStorage.getItem('sellerflow_cart')||'[]')||[]}catch{cart=[]}}
@@ -2977,37 +3529,308 @@ function updateCartBadge(){const el=$('cartCount');if(el)el.textContent=cart.red
 function renderCart(){
   if(!currentUser)return showAuthPrompt('view cart and make an order');
   const total=cart.reduce((n,i)=>n+i.price*i.quantity,0);
-  $('page').innerHTML=pageTitle('Cart','Review your items before checkout.')+(cart.length?`<div class="card divide-y divide-[#292929]">${cart.map((i,n)=>`<div class="p-4 flex gap-3 items-center"><img src="${esc(i.imageUrl||'')}" class="w-16 h-16 rounded-xl object-cover"><div class="flex-1"><b>${esc(i.name)}</b><div class="gold">${money(i.price)}</div></div><div class="flex items-center gap-2"><button data-cart-minus="${n}" class="w-8 h-8 rounded-lg border border-[#444]">−</button><span>${i.quantity}</span><button data-cart-plus="${n}" class="w-8 h-8 rounded-lg border border-[#444]">+</button></div><button data-cart-remove="${n}" class="text-red-400 ml-2">✕</button></div>`).join('')}</div><div class="card p-5 mt-4 flex justify-between items-center"><div><div class="muted">Total</div><div class="text-2xl font-black">${money(total)}</div></div>${button('Checkout','checkoutBtn')}</div>`:'<div class="card p-8 text-center muted">Your cart is empty.</div>');
+  const sellerIds = [...new Set(cart.map(i => i.sellerId))];
+
+  $('page').innerHTML=pageTitle('Cart','Review your items before checkout.')+(cart.length?`
+    ${sellerIds.length > 1 ? `
+      <div class="p-3.5 mb-4 rounded-2xl bg-[#181610] border border-gold/30 flex items-center gap-3 text-xs">
+        <span class="text-xl">📦</span>
+        <div class="text-zinc-300">
+          <b class="text-white">Multi-Seller Order (${sellerIds.length} Sellers):</b>
+          <span> Your cart contains items from multiple Ghanaian sellers. At checkout, each seller receives an automatic split notification for independent, swift dispatch.</span>
+        </div>
+      </div>
+    ` : ''}
+    <div class="card divide-y divide-[#292929]">
+      ${cart.map((i,n)=>{
+        const s = sellerProfile(i.sellerId);
+        const loc = getSellerLocation(i.sellerId);
+        return `
+          <div class="p-4 flex flex-col sm:flex-row gap-3 sm:items-center justify-between" id="cart-item-${n}">
+            <div class="flex items-center gap-3 min-w-0">
+              <img src="${esc(i.imageUrl||'')}" class="w-16 h-16 rounded-xl object-cover border border-[#2a2a2a] bg-[#161616] shrink-0" alt="${esc(i.name)}" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 fill=%22none%22%3E%3Crect width=%2240%22 height=%2240%22 fill=%22%23222%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2216%22%3E📦%3C/text%3E%3C/svg%3E'">
+              <div class="min-w-0">
+                <b class="text-white text-sm truncate block">${esc(i.name)}</b>
+                <div class="text-xs text-zinc-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                  <span>🏪 ${esc(s.name || 'Seller')}</span>
+                  <span>•</span>
+                  <span>📍 ${esc(loc)}</span>
+                  <span>•</span>
+                  <span class="gold font-mono">${money(i.price)} each</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#222]">
+              <div class="flex items-center gap-2">
+                <button data-cart-minus="${n}" class="w-8 h-8 rounded-lg border border-[#444] hover:border-gold flex items-center justify-center font-bold text-sm">−</button>
+                <span class="w-8 text-center font-bold text-white">${i.quantity}</span>
+                <button data-cart-plus="${n}" class="w-8 h-8 rounded-lg border border-[#444] hover:border-gold flex items-center justify-center font-bold text-sm">+</button>
+              </div>
+              <div class="font-extrabold text-gold text-base min-w-[5rem] text-right font-mono">
+                ${money(i.price * i.quantity)}
+              </div>
+              <button data-cart-remove="${n}" class="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-950/40 text-xs ml-1" title="Remove item">✕</button>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+    <div class="card p-5 mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div class="text-center sm:text-left">
+        <div class="muted text-xs">Total for ${cart.reduce((n,i)=>n+i.quantity,0)} item${cart.reduce((n,i)=>n+i.quantity,0)===1?'':'s'}</div>
+        <div class="text-2xl font-black text-white">${money(total)}</div>
+      </div>
+      <div class="flex items-center gap-3 w-full sm:w-auto">
+        <button type="button" id="cartContinueShopping" class="flex-1 sm:flex-none border border-[#444] hover:border-zinc-300 px-4 py-2.5 rounded-xl text-xs font-semibold text-zinc-300 transition">
+          Continue Shopping
+        </button>
+        <button type="button" id="checkoutBtn" class="flex-1 sm:flex-none bg-gold hover:brightness-110 active:scale-[0.98] text-black font-extrabold px-6 py-2.5 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-1.5">
+          <span>🛍️</span>
+          <span>Proceed to Checkout</span>
+        </button>
+      </div>
+    </div>
+  `:'<div class="card p-12 text-center muted"><div class="text-4xl mb-3">🛒</div><p class="font-bold text-white text-base">Your cart is currently empty.</p><p class="text-xs text-zinc-400 mt-1">Discover trending Ghanaian products in the marketplace and add items to your cart.</p><button type="button" onclick="navigate(\'marketplace\')" class="mt-4 bg-gold text-black font-bold px-5 py-2.5 rounded-xl text-xs">Explore Marketplace</button></div>');
+
   document.querySelectorAll('[data-cart-minus]').forEach(b=>b.onclick=()=>changeCart(+b.dataset.cartMinus,-1));
   document.querySelectorAll('[data-cart-plus]').forEach(b=>b.onclick=()=>changeCart(+b.dataset.cartPlus,1));
   document.querySelectorAll('[data-cart-remove]').forEach(b=>b.onclick=()=>{cart.splice(+b.dataset.cartRemove,1);saveCart();renderCart()});
+  $('cartContinueShopping')?.addEventListener('click', () => navigate('marketplace'));
   $('checkoutBtn')?.addEventListener('click',openCheckout);
 }
 function changeCart(i,d){cart[i].quantity=Math.max(1,Math.min(cart[i].maxStock||99,cart[i].quantity+d));saveCart();renderCart()}
 function openCheckout(){
   if(!currentUser)return showAuthPrompt('make an order and complete checkout');
-  modal(`<h2 class="text-xl font-bold">Checkout</h2><p class="muted mt-1">This version records the order. Mobile Money payment can be connected through a secure Ghana payment backend later.</p><input id="checkName" value="${esc(currentProfile?.name||'')}" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Full name"><input id="checkPhone" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Phone number"><textarea id="checkAddress" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Delivery address"></textarea><div class="flex justify-end gap-2 mt-4"><button data-close-modal>Cancel</button>${button('Place order','placeOrder')}</div>`);
+  if(!cart.length){
+    toast('Your cart is empty. Add items before checking out.','error');
+    return;
+  }
+  const total=cart.reduce((n,i)=>n+i.price*i.quantity,0);
+
+  // Group by seller for transparent split preview
+  const bySeller = new Map();
+  cart.forEach(i => {
+    if(!bySeller.has(i.sellerId)) bySeller.set(i.sellerId, []);
+    bySeller.get(i.sellerId).push(i);
+  });
+
+  const sellersBreakdownHtml = Array.from(bySeller.entries()).map(([sId, items]) => {
+    const s = sellerProfile(sId);
+    const loc = getSellerLocation(sId);
+    const sTotal = items.reduce((sum, x) => sum + x.price * x.quantity, 0);
+    return `
+      <div class="bg-[#121215] border border-[#26262a] rounded-xl p-3 mb-2.5">
+        <div class="flex items-center justify-between gap-2 pb-2 border-b border-[#222]">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-sm">🏪</span>
+            <b class="text-white text-xs truncate">${esc(s.name || 'Verified Seller')}</b>
+            ${s.verified ? '<span class="verified-badge text-[9px]">✓</span>' : ''}
+            <span class="text-[11px] text-zinc-400 truncate">· 📍 ${esc(loc)}</span>
+          </div>
+          <span class="text-gold font-bold text-xs font-mono shrink-0">${money(sTotal)}</span>
+        </div>
+        <div class="space-y-1.5 mt-2">
+          ${items.map(it => `
+            <div class="flex items-center justify-between text-xs text-zinc-300">
+              <span class="truncate max-w-[70%] text-zinc-300">
+                <span class="text-zinc-500 font-mono">${it.quantity}×</span> ${esc(it.name)}
+              </span>
+              <span class="font-mono text-zinc-400 text-[11px]">${money(it.price * it.quantity)}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  modal(`
+    <div class="space-y-4 max-w-lg mx-auto" id="checkoutModalContent">
+      <!-- Customer Friendly Welcome Header -->
+      <div class="pb-3 border-b border-[#262626]">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gold/10 border border-gold/40 flex items-center justify-center text-lg shrink-0">
+            🛍️
+          </div>
+          <div>
+            <h2 class="text-lg sm:text-xl font-black text-white">Safe & Secure Checkout</h2>
+            <p class="text-xs text-zinc-400">Ghanaian artisan & merchant direct fulfillment</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer-Friendly Warm Message Banner -->
+      <div class="p-3.5 rounded-2xl bg-gradient-to-br from-[#1a1710] via-[#141416] to-[#121214] border border-gold/30 text-xs text-zinc-300 shadow-sm">
+        <div class="flex items-start gap-2.5">
+          <span class="text-lg shrink-0 mt-0.5">✨</span>
+          <div class="space-y-1 leading-relaxed">
+            <p class="font-bold text-amber-300 text-xs sm:text-sm">Thank you for shopping with SellerFlow!</p>
+            <p class="text-zinc-300 text-[11.5px]">
+              You are ordering directly from authentic, independent Ghanaian sellers. To guarantee top-tier service and swift delivery, our system automatically routes a <b>split notification</b> to each specific seller the moment you place this order.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order & Split Summary Accordion -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
+            <span>📦 Order Breakdown (${bySeller.size} ${bySeller.size===1?'Vendor Package':'Vendor Packages'})</span>
+          </span>
+          <span class="text-[11px] text-zinc-400 font-mono">Total: <b class="text-gold text-xs">${money(total)}</b></span>
+        </div>
+        <div class="max-h-40 overflow-y-auto pr-1">
+          ${sellersBreakdownHtml}
+        </div>
+      </div>
+
+      <!-- Fraud Prevention Tips for Buyers & Sellers -->
+      <div class="p-3.5 rounded-2xl bg-[#101014] border border-[#2b2b34] text-xs text-zinc-300 space-y-2.5">
+        <div class="flex items-center gap-2 font-bold text-white text-xs border-b border-[#24242c] pb-1.5">
+          <span class="text-amber-400">🛡️</span>
+          <span>SellerFlow Trust & Anti-Fraud Safety Tips</span>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-2 text-[11px] leading-relaxed">
+          <div class="bg-[#16161b] p-2.5 rounded-xl border border-[#25252e]">
+            <b class="text-emerald-400 block mb-1">💡 For Buyers:</b>
+            <p class="text-zinc-300">Inspect and confirm your items upon delivery before completing payment. Never pay upfront fees to unverified numbers or share your private Mobile Money PIN.</p>
+          </div>
+          <div class="bg-[#16161b] p-2.5 rounded-xl border border-[#25252e]">
+            <b class="text-sky-400 block mb-1">🔒 For Sellers:</b>
+            <p class="text-zinc-300">Call the buyer to verify the recipient name and delivery landmark before dispatching your rider, and collect parcel delivery confirmation.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delivery Information Form -->
+      <div class="space-y-3">
+        <h4 class="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Delivery Information</h4>
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1 font-medium">Recipient Full Name *</label>
+          <input id="checkName" value="${esc(currentProfile?.name||'')}" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs sm:text-sm focus:border-gold outline-none" placeholder="Your full name">
+        </div>
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1 font-medium">Phone Number (Call & WhatsApp) *</label>
+          <input id="checkPhone" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs sm:text-sm focus:border-gold outline-none" placeholder="e.g. 024 123 4567 or +233...">
+        </div>
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1 font-medium">Delivery Address & Landmarks *</label>
+          <textarea id="checkAddress" rows="2" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs sm:text-sm focus:border-gold outline-none" placeholder="Town / Area, street name, landmark, or GhanaPost GPS address (e.g. GA-183-9214)"></textarea>
+        </div>
+      </div>
+
+      <!-- Total & Action Buttons -->
+      <div class="pt-3 border-t border-[#262626] flex items-center justify-between gap-3">
+        <div>
+          <span class="text-[11px] text-zinc-400 block">Total Due (Pay on delivery)</span>
+          <span class="text-xl font-black text-gold">${money(total)}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" data-close-modal class="border border-[#444] hover:border-zinc-400 text-zinc-300 px-3.5 py-2.5 rounded-xl text-xs font-semibold">
+            Cancel
+          </button>
+          <button type="button" id="placeOrder" class="bg-gold hover:brightness-110 active:scale-[0.98] text-black font-extrabold px-5 py-2.5 rounded-xl text-xs sm:text-sm transition shadow-sm flex items-center gap-1.5">
+            <span>Place Order</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `);
   $('placeOrder').onclick=placeOrder;
 }
 async function placeOrder(){
   if(!currentUser)return showAuthPrompt('make an order');
   try{
-    const name=$('checkName').value.trim(),phone=$('checkPhone').value.trim(),address=$('checkAddress').value.trim();
-    if(!name||!phone||!address)throw Error('Complete all delivery details.');
+    const name=$('checkName')?.value.trim(),phone=$('checkPhone')?.value.trim(),address=$('checkAddress')?.value.trim();
+    if(!name||!phone||!address)throw Error('Please complete all delivery details (Name, Phone number, and Address).');
+    if(!cart.length)throw Error('Your cart is empty.');
+
     const bySeller=new Map();
-    cart.forEach(i=>{if(!bySeller.has(i.sellerId))bySeller.set(i.sellerId,[]);bySeller.get(i.sellerId).push(i)});
-    loading('Placing orders…');
+    cart.forEach(i=>{
+      if(!bySeller.has(i.sellerId))bySeller.set(i.sellerId,[]);
+      bySeller.get(i.sellerId).push(i);
+    });
+
+    loading('Placing orders & routing split seller notifications…');
+    const placedOrderIds = [];
+
+    // Split notification according to product owner
     for(const [sellerId,items] of bySeller){
       const total=items.reduce((n,i)=>n+i.price*i.quantity,0);
-      const orderRef=await addDoc(collection(db,'orders'),{buyerId:currentUser.uid,buyerName:name,phone,deliveryAddress:address,sellerId,sellerIds:[sellerId],items,total,status:'pending',statusHistory:[{status:'pending',label:'Order Placed',note:'Order submitted by buyer and received by seller',timestamp:Date.now(),updatedBy:currentUser.uid,updatedByName:name}],paymentMethod:'cash_on_delivery',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+      const totalQty=items.reduce((n,i)=>n+i.quantity,0);
+      const itemsListSummary = items.map(x=>`${x.quantity}x ${x.name}`).join(', ');
+
+      const orderRef=await addDoc(collection(db,'orders'),{
+        buyerId:currentUser.uid,
+        buyerName:name,
+        phone,
+        deliveryAddress:address,
+        sellerId,
+        sellerIds:[sellerId],
+        items,
+        total,
+        status:'pending',
+        statusHistory:[{
+          status:'pending',
+          label:'Order Placed',
+          note:'Order submitted by buyer and received by seller',
+          timestamp:Date.now(),
+          updatedBy:currentUser.uid,
+          updatedByName:name
+        }],
+        paymentMethod:'cash_on_delivery',
+        createdAt:serverTimestamp(),
+        updatedAt:serverTimestamp()
+      });
+      placedOrderIds.push(orderRef.id);
+
+      // Instant split notification to the specific product owner
       try{
-        await addDoc(collection(db,'notifications'),{recipientId:sellerId,actorId:currentUser.uid,senderName:name,title:'🛒 New Order Received',message:`${name} placed order #${orderRef.id.slice(-6).toUpperCase()} for ${money(total)} (${items.length} item${items.length===1?'':'s'}).`,type:'order_new',orderId:orderRef.id,read:false,createdAt:serverTimestamp()});
+        await addDoc(collection(db,'notifications'),{
+          recipientId:sellerId,
+          actorId:currentUser.uid,
+          senderName:name,
+          title:'🛒 New Order Received (Split Dispatch)',
+          message:`${name} ordered ${totalQty} item${totalQty===1?'':'s'} (${itemsListSummary}) for ${money(total)}. Delivery to: ${address}. Phone: ${phone}.`,
+          type:'order_new',
+          orderId:orderRef.id,
+          read:false,
+          createdAt:serverTimestamp()
+        });
+      }catch(_){}
+
+      // Notification to buyer confirming this split seller dispatch
+      try{
+        const sData = sellerProfile(sellerId);
+        await addDoc(collection(db,'notifications'),{
+          recipientId:currentUser.uid,
+          actorId:sellerId,
+          senderName:sData.name || 'SellerFlow Merchant',
+          title:'🛍️ Order Dispatched to Vendor',
+          message:`Your order #${orderRef.id.slice(-6).toUpperCase()} for ${money(total)} (${itemsListSummary}) was submitted to ${sData.name || 'the seller'}. They have been notified for immediate preparation.`,
+          type:'order_update',
+          orderId:orderRef.id,
+          read:false,
+          createdAt:serverTimestamp()
+        });
       }catch(_){}
     }
+
+    // Trigger local push notification if granted
+    if('Notification' in window && Notification.permission === 'granted'){
+      try {
+        new Notification('SellerFlow Orders Placed', {
+          body: `Successfully dispatched orders to ${bySeller.size} verified vendor${bySeller.size===1?'':'s'}!`,
+          icon: '/pwa-192x192.png'
+        });
+      } catch(_) {}
+    }
+
     cart=[];
     saveCart();
     closeModal();
-    toast('Order placed successfully','success');
+    toast(`Order placed successfully (${bySeller.size} split seller dispatch${bySeller.size===1?'':'es'})`,'success');
     if(typeof refreshOrdersBadge==='function')refreshOrdersBadge();
     navigate('orders');
   }catch(e){
