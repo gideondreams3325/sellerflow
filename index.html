@@ -1677,8 +1677,24 @@ async function renderMarketplace(initialTab = 'products', targetPostId, options)
     getDocs(query(collection(db,'stores'),limit(100))),
     getDocs(query(collection(db,'products'),limit(300)))
   ]);
-  const validStores = storesSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>sellerProfile(s.ownerId).verified);
-  const allProducts = productsSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const validStores = storesSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s => {
+    if(s.status === 'taken_down' || s.reviewStatus === 'taken_down' || s.status === 'rejected' || s.reviewStatus === 'rejected') {
+      return currentUser && (isAdmin || s.ownerId === currentUser.uid);
+    }
+    if(s.status === 'pending_review' || s.reviewStatus === 'pending') {
+      return currentUser && (isAdmin || s.ownerId === currentUser.uid);
+    }
+    return s.status === 'approved' || sellerProfile(s.ownerId).verified;
+  });
+  const allProducts = productsSnap.docs.map(d=>({id:d.id,...d.data()})).filter(p => {
+    if(p.status === 'taken_down' || p.reviewStatus === 'taken_down' || p.status === 'rejected' || p.reviewStatus === 'rejected') {
+      return currentUser && (isAdmin || p.sellerId === currentUser.uid);
+    }
+    if(p.status === 'pending_review' || p.reviewStatus === 'pending') {
+      return currentUser && (isAdmin || p.sellerId === currentUser.uid);
+    }
+    return true;
+  });
   window._cachedStores = validStores;
   window._cachedProducts = allProducts;
   
@@ -1923,6 +1939,18 @@ async function renderMarketplace(initialTab = 'products', targetPostId, options)
         deleteProduct(b.dataset.deleteProduct);
       };
     });
+    document.querySelectorAll('[data-admin-takedown-product]').forEach(b => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        adminTakeDownProduct(b.dataset.adminTakedownProduct);
+      };
+    });
+    document.querySelectorAll('[data-admin-approve-product]').forEach(b => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        adminApproveProduct(b.dataset.adminApproveProduct);
+      };
+    });
   };
 
   bindProductCards(allProducts);
@@ -2036,6 +2064,18 @@ function marketplaceProductCard(p){
             <span>${!inStock ? 'Out of stock' : 'Add to cart'}</span>
           </button>
         `}
+        ${isAdmin ? `
+          <div class="mt-2 pt-2 border-t border-[#222] flex gap-1.5">
+            <button type="button" data-admin-takedown-product="${esc(p.id)}" class="flex-1 border border-rose-800/80 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 rounded-xl py-1.5 px-2 text-xs font-bold transition flex items-center justify-center gap-1" title="Take down product from marketplace">
+              <span>🚫</span><span>Take Down</span>
+            </button>
+            ${(p.status === 'pending_review' || p.reviewStatus === 'pending') ? `
+              <button type="button" data-admin-approve-product="${esc(p.id)}" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-1.5 px-2 text-xs font-bold transition flex items-center justify-center gap-1" title="Approve product">
+                <span>✓</span><span>Approve</span>
+              </button>
+            ` : ''}
+          </div>
+        ` : ''}
       </div>
     </div>
   `;
@@ -2048,9 +2088,16 @@ function storeCard(s){
   return `
     <div class="card p-5 flex flex-col justify-between hover:border-gold/60 transition group cursor-pointer relative" id="market-store-${esc(s.ownerId)}" data-preview-store="${esc(s.ownerId)}">
       <div>
+        ${s.bannerUrl ? `
+          <div class="w-full h-24 rounded-xl overflow-hidden mb-3 border border-[#2a2a2a] bg-[#111]">
+            <img src="${esc(s.bannerUrl)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" alt="Store Banner">
+          </div>
+        ` : ''}
         <div class="flex items-start justify-between gap-3">
           <div class="flex items-center gap-3 min-w-0">
-            ${avatar(p, 'w-12 h-12 rounded-2xl object-cover shrink-0 border border-[#333]')}
+            ${s.logoUrl ? `
+              <img src="${esc(s.logoUrl)}" class="w-12 h-12 rounded-2xl object-cover shrink-0 border border-[#333]" alt="Store Logo">
+            ` : avatar(p, 'w-12 h-12 rounded-2xl object-cover shrink-0 border border-[#333]')}
             <div class="min-w-0">
               <b class="truncate block text-white font-bold text-sm sm:text-base group-hover:text-gold transition">${esc(s.name)}</b>
               <div class="text-xs mt-0.5 flex items-center gap-1 text-zinc-400">
@@ -2090,6 +2137,18 @@ function storeCard(s){
           <span>Visit Full Storefront</span>
           <span>→</span>
         </button>
+        ${isAdmin ? `
+          <div class="pt-1 flex gap-1.5">
+            <button type="button" data-admin-takedown-store="${esc(s.ownerId)}" class="flex-1 border border-rose-800/80 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 rounded-xl py-2 px-3 text-xs font-bold transition flex items-center justify-center gap-1">
+              <span>🚫</span><span>Take Down Store</span>
+            </button>
+            ${(s.status === 'pending_review' || s.reviewStatus === 'pending') ? `
+              <button type="button" data-admin-approve-store="${esc(s.ownerId)}" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-2 px-3 text-xs font-bold transition flex items-center justify-center gap-1">
+                <span>✓</span><span>Approve</span>
+              </button>
+            ` : ''}
+          </div>
+        ` : ''}
       </div>
     </div>
   `;
@@ -2108,6 +2167,18 @@ function bindStoreCards(){
     b.onclick = (e) => {
       e.stopPropagation();
       openStore(b.dataset.openStore);
+    };
+  });
+  document.querySelectorAll('[data-admin-takedown-store]').forEach(b => {
+    b.onclick = (e) => {
+      e.stopPropagation();
+      adminTakeDownStore(b.dataset.adminTakedownStore);
+    };
+  });
+  document.querySelectorAll('[data-admin-approve-store]').forEach(b => {
+    b.onclick = (e) => {
+      e.stopPropagation();
+      adminApproveStore(b.dataset.adminApproveStore);
     };
   });
 }
@@ -2365,17 +2436,85 @@ async function openStore(uid){
     if(currentUser){
       addDoc(collection(db,'profileVisits'),{visitorId:currentUser.uid,profileId:uid,createdAt:serverTimestamp()}).catch(()=>{});
     }
+    const isOwner = currentUser && currentUser.uid === uid;
+    const isStoreTakenDown = store?.status === 'taken_down' || store?.reviewStatus === 'taken_down';
+    const isStorePending = store?.status === 'pending_review' || store?.reviewStatus === 'pending';
+
+    let storeStatusNotice = '';
+    if(isStoreTakenDown){
+      storeStatusNotice = `
+        <div class="mb-4 p-4 rounded-2xl bg-rose-950/40 border border-rose-800/80 flex items-start gap-3">
+          <span class="text-2xl">🚫</span>
+          <div>
+            <b class="text-rose-300 text-sm">Storefront Taken Down</b>
+            <p class="text-xs text-rose-200/80 mt-1">${esc(store?.takedownReason || 'This store is currently taken down from public view by administration.')}</p>
+          </div>
+        </div>
+      `;
+    } else if(isStorePending){
+      storeStatusNotice = `
+        <div class="mb-4 p-4 rounded-2xl bg-amber-950/40 border border-amber-800/80 flex items-start gap-3">
+          <span class="text-2xl">⏳</span>
+          <div>
+            <b class="text-amber-300 text-sm">Store Under Admin Review</b>
+            <p class="text-xs text-amber-200/80 mt-1">This storefront is currently pending administrator approval before public release.</p>
+          </div>
+        </div>
+      `;
+    }
+
     $('page').innerHTML=`
-      <div class="flex items-center gap-3 mb-5">
-        <button type="button" id="backMarket" class="back-page-btn border border-[#333] hover:border-gold rounded-xl px-3 py-2 text-sm font-bold bg-[#141414]">
-          ← Back to For You
-        </button>
-        <div>${avatar(p,'w-16 h-16 rounded-full object-cover bg-[#222]')}</div>
-        <div>
-          <h1 class="text-2xl font-black">${esc(store?.name||p.name)}${p.verified?' <span class="verified-badge ml-1">✓</span>':''}</h1>
-          <div class="muted">@${esc(p.username)} · ${(p.followers||[]).length} followers</div>
+      ${store?.bannerUrl ? `
+        <div class="w-full h-40 sm:h-56 rounded-2xl overflow-hidden mb-5 border border-[#2b2b2b] bg-[#111] relative">
+          <img src="${esc(store.bannerUrl)}" class="w-full h-full object-cover" alt="Store banner">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
+        </div>
+      ` : ''}
+
+      ${storeStatusNotice}
+
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+        <div class="flex items-center gap-3">
+          <button type="button" id="backMarket" class="back-page-btn border border-[#333] hover:border-gold rounded-xl px-3 py-2 text-sm font-bold bg-[#141414]">
+            ← Back to For You
+          </button>
+          <div>
+            ${store?.logoUrl ? `
+              <img src="${esc(store.logoUrl)}" class="w-16 h-16 rounded-2xl object-cover border border-[#333] bg-[#222]" alt="Store logo">
+            ` : avatar(p,'w-16 h-16 rounded-2xl object-cover bg-[#222]')}
+          </div>
+          <div>
+            <h1 class="text-2xl font-black text-white flex items-center gap-1.5 flex-wrap">
+              <span>${esc(store?.name||p.name)}</span>
+              ${p.verified?' <span class="verified-badge">✓</span>':''}
+            </h1>
+            <div class="muted text-xs sm:text-sm">@${esc(p.username)} · ${(p.followers||[]).length} followers</div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          ${isOwner ? `
+            <button type="button" id="ownerEditStoreBtn" class="border border-[#444] hover:border-gold px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-[#141414] transition flex items-center gap-1.5">
+              <span>✏️</span><span>Edit Store</span>
+            </button>
+            <button type="button" id="ownerAddProductBtn" class="bg-gold text-black hover:brightness-110 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+              <span>＋</span><span>Add Product</span>
+            </button>
+          ` : ''}
+
+          ${isAdmin ? `
+            <button type="button" id="adminStoreTakedownBtn" class="border border-rose-800/80 hover:bg-rose-950 text-rose-300 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1">
+              <span>🚫</span><span>${isStoreTakenDown ? 'Restore Store' : 'Admin: Take Down Store'}</span>
+            </button>
+            ${!store?.status || store?.status === 'pending_review' ? `
+              <button type="button" id="adminStoreApproveBtn" class="bg-emerald-500 hover:bg-emerald-400 text-black px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                <span>✓</span><span>Admin: Approve Store</span>
+              </button>
+            ` : ''}
+          ` : ''}
         </div>
       </div>
+
       <div class="store-map-card p-5 mb-5">
         <div class="grid sm:grid-cols-3 gap-3 mb-4">
           <div class="bg-[#111] rounded-xl p-3"><div class="muted text-xs">📍 Location</div><b>${esc(store?.location||'Location not added')}</b></div>
@@ -2385,13 +2524,14 @@ async function openStore(uid){
         <p>${esc(store?.description||'')}</p>
         <div class="flex flex-wrap gap-2 mt-4">
           ${store?.location||store?.address?`<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((store?.address||'')+' '+(store?.location||''))}" class="px-4 py-2 rounded-xl border border-[#444]">📍 Open location</a>`:''}
-          <button type="button" id="followBtn" class="px-4 py-2 rounded-xl ${following?'border border-[#444]':'bg-gold text-black font-bold'}">${following?'Following':'Follow'}</button>
-          <button type="button" id="messageSellerBtn" class="px-4 py-2 rounded-xl border border-[#444]">💬 Message</button>
+          ${!isOwner ? `<button type="button" id="followBtn" class="px-4 py-2 rounded-xl ${following?'border border-[#444]':'bg-gold text-black font-bold'}">${following?'Following':'Follow'}</button>` : ''}
+          ${!isOwner ? `<button type="button" id="messageSellerBtn" class="px-4 py-2 rounded-xl border border-[#444]">💬 Message</button>` : ''}
           ${store?.whatsapp?`<a target="_blank" href="https://wa.me/${encodeURIComponent(store.whatsapp.replace(/\D/g,''))}" class="px-4 py-2 rounded-xl border border-[#444]">WhatsApp</a>`:''}
         </div>
       </div>
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-bold">Products</h2>
+        <h2 class="text-xl font-bold">Products (${products.length})</h2>
+        ${isOwner ? `<button type="button" id="ownerAddProdSubBtn" class="text-xs text-gold font-bold hover:underline">＋ Add item</button>` : ''}
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         ${products.length?products.map(productCard).join(''):'<div class="card p-6 muted">No products listed yet.</div>'}
@@ -2402,6 +2542,16 @@ async function openStore(uid){
         <button type="button" id="reviewBtn" class="mt-4 border border-[#444] rounded-xl px-4 py-2">Write a review</button>
       </div>
     `;
+
+    $('ownerEditStoreBtn')?.addEventListener('click', () => navigate('store'));
+    $('ownerAddProductBtn')?.addEventListener('click', () => openProductModal());
+    $('ownerAddProdSubBtn')?.addEventListener('click', () => openProductModal());
+
+    $('adminStoreTakedownBtn')?.addEventListener('click', () => {
+      if(isStoreTakenDown) adminRestoreStore(uid);
+      else adminTakeDownStore(uid);
+    });
+    $('adminStoreApproveBtn')?.addEventListener('click', () => adminApproveStore(uid));
 
     $('backMarket').onclick=()=>navigate(previousPage==='marketplace'?'marketplace':'feed');
     $('messageSellerBtn')?.addEventListener('click',()=>{
@@ -2742,8 +2892,179 @@ function openReviewModal(uid){modal(`<h2 class="text-xl font-bold">Review seller
 async function renderProducts(targetPostId, options){
   return renderMarketplace('products', targetPostId, options);
 }
-function openProductModal(p=null){modal(`<h2 class="text-xl font-bold">${p?'Edit product':'Add product'}</h2><input id="prodName" value="${esc(p?.name||'')}" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Product name"><input id="prodPrice" type="number" min="0" step="0.01" value="${p?.price??''}" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Price in GHS"><input id="prodStock" type="number" min="0" step="1" value="${p?.stock??0}" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Stock"><textarea id="prodDesc" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Description">${esc(p?.description||'')}</textarea><input id="prodFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-3"><p class="muted text-xs mt-2">Product image: maximum 10MB.</p><div class="flex justify-end gap-2 mt-4"><button data-close-modal>Cancel</button>${button(p?'Save changes':'Add product','saveProduct')}</div>`);$('saveProduct').onclick=async()=>{try{const name=$('prodName').value.trim(),price=Number($('prodPrice').value),stock=Number($('prodStock').value),description=$('prodDesc').value.trim(),file=$('prodFile').files[0];if(!name||!Number.isFinite(price)||price<0||!Number.isInteger(stock)||stock<0)throw Error('Enter a valid name, price and stock.');let imageUrl=p?.imageUrl||'',imagePath=p?.imagePath||'';if(file){validFile(file,['image/jpeg','image/png','image/webp'],10);const x=await uploadPublic(file,'products');imageUrl=x.url;imagePath=x.path}if(!imageUrl)throw Error('Choose a product image.');const data={sellerId:currentUser.uid,name,price,stock,description,imageUrl,imagePath,updatedAt:serverTimestamp()};if(p)await updateDoc(doc(db,'products',p.id),data);else await addDoc(collection(db,'products'),{...data,createdAt:serverTimestamp()});closeModal();toast(p?'Product updated':'Product added','success');navigate('products')}catch(e){toast(errMsg(e),'error')}}}
-async function deleteProduct(id){if(!confirm('Delete this product?'))return;try{const s=await getDoc(doc(db,'products',id));if(!snapshotExists(s)||s.data().sellerId!==currentUser.uid)throw Error('You cannot delete this product.');await deleteDoc(doc(db,'products',id));toast('Product deleted','success');navigate('products')}catch(e){toast(errMsg(e),'error')}}
+
+function openProductModal(p=null){
+  if(!currentUser) return showAuthPrompt('add or manage products');
+  if(!currentProfile?.verified && !isAdmin){
+    toast('Identity verification is required before publishing products in the marketplace.', 'info');
+    return openVerificationModal();
+  }
+  const isEdit = !!p;
+  modal(`
+    <div class="space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gold/15 border border-gold/30 flex items-center justify-center text-xl shrink-0">📦</div>
+        <div>
+          <h2 class="text-xl font-bold text-white">${isEdit ? 'Edit Product' : 'Add New Product'}</h2>
+          <p class="muted text-xs">Products are reviewed by SellerFlow administration before appearing live in the marketplace.</p>
+        </div>
+      </div>
+
+      ${!isAdmin ? `
+        <div class="p-3 rounded-xl bg-amber-950/40 border border-amber-600/40 text-xs text-amber-300 flex items-center gap-2">
+          <span>⏳</span>
+          <span>Sellers submit products for admin review. Once approved, your product will appear in the Ghanaian marketplace.</span>
+        </div>
+      ` : ''}
+
+      <div>
+        <label class="muted text-xs block mb-1">Product name</label>
+        <input id="prodName" value="${esc(p?.name||'')}" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white" placeholder="e.g. Handmade Kente Scarf, iPhone 14 Pro Max">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="muted text-xs block mb-1">Price (GHS)</label>
+          <input id="prodPrice" type="number" min="0" step="0.01" value="${p?.price??''}" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white" placeholder="0.00">
+        </div>
+        <div>
+          <label class="muted text-xs block mb-1">Stock quantity</label>
+          <input id="prodStock" type="number" min="0" step="1" value="${p?.stock??1}" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white" placeholder="1">
+        </div>
+      </div>
+
+      <div>
+        <label class="muted text-xs block mb-1">Description</label>
+        <textarea id="prodDesc" rows="3" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white" placeholder="Detail condition, specifications, sizing, delivery or warranty…">${esc(p?.description||'')}</textarea>
+      </div>
+
+      <div>
+        <label class="muted text-xs block mb-1">Product image</label>
+        ${p?.imageUrl ? `
+          <div class="flex items-center gap-3 mb-2 p-2 rounded-xl bg-[#161616] border border-[#2a2a2a]">
+            <img src="${esc(p.imageUrl)}" class="w-12 h-12 rounded-lg object-cover" alt="">
+            <span class="text-xs text-zinc-400">Current image (choose a new file below to replace)</span>
+          </div>
+        ` : ''}
+        <input id="prodFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full text-xs text-zinc-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700">
+        <p class="muted text-[11px] mt-1">JPG, PNG, or WebP · maximum 10MB.</p>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-[#262626]">
+        <button data-close-modal class="px-4 py-2.5 rounded-xl border border-[#333] hover:border-zinc-500 text-xs font-bold text-zinc-300">Cancel</button>
+        <button id="saveProduct" class="bg-gold text-black px-5 py-2.5 rounded-xl font-black text-xs hover:brightness-110 shadow-sm flex items-center gap-1.5">
+          <span>${isAdmin ? '✓ Save Product' : '📤 Submit for Admin Review'}</span>
+        </button>
+      </div>
+    </div>
+  `);
+
+  $('saveProduct').onclick = async () => {
+    try {
+      const name = $('prodName').value.trim();
+      const price = Number($('prodPrice').value);
+      const stock = Number($('prodStock').value);
+      const description = $('prodDesc').value.trim();
+      const file = $('prodFile').files[0];
+
+      if(!name || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0) {
+        throw Error('Enter a valid name, price, and stock quantity.');
+      }
+
+      let imageUrl = p?.imageUrl || '', imagePath = p?.imagePath || '';
+      if(file){
+        validFile(file, ['image/jpeg','image/png','image/webp'], 10);
+        loading('Uploading product image…');
+        const x = await uploadPublic(file, 'products');
+        imageUrl = x.url;
+        imagePath = x.path;
+      }
+
+      if(!imageUrl) throw Error('Choose a product image.');
+
+      const productStatus = isAdmin ? 'approved' : 'pending_review';
+      const reviewStatus = isAdmin ? 'approved' : 'pending';
+
+      const data = {
+        sellerId: p?.sellerId || currentUser.uid,
+        name,
+        price,
+        stock,
+        description,
+        imageUrl,
+        imagePath,
+        status: productStatus,
+        reviewStatus: reviewStatus,
+        rejectionReason: '',
+        submittedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      loading('Saving product…');
+      if(isEdit){
+        await updateDoc(doc(db, 'products', p.id), data);
+      } else {
+        await addDoc(collection(db, 'products'), { ...data, createdAt: serverTimestamp() });
+      }
+
+      closeModal();
+      if(isAdmin){
+        toast(isEdit ? 'Product updated' : 'Product published', 'success');
+      } else {
+        toast('Product submitted for admin review. Once approved, it will appear in the marketplace.', 'success');
+      }
+
+      if(currentPage === 'marketplace' || currentPage === 'products') renderMarketplace('products');
+      else if(currentPage === 'store') openStore(currentUser.uid);
+      else if(currentPage === 'admin') renderAdmin();
+      else navigate('products');
+    } catch(e){
+      toast(errMsg(e), 'error');
+    } finally {
+      ready();
+    }
+  };
+}
+
+async function deleteProduct(id){
+  if(!id) return;
+  if(!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
+  try {
+    const s = await getDoc(doc(db, 'products', id));
+    if(!snapshotExists(s)) throw Error('Product not found.');
+    const data = s.data();
+    if(data.sellerId !== currentUser.uid && !isAdmin) throw Error('You do not have permission to delete this product.');
+    await deleteDoc(doc(db, 'products', id));
+    toast('Product deleted successfully', 'success');
+    if(currentPage === 'store') openStore(data.sellerId);
+    else if(currentPage === 'marketplace' || currentPage === 'products') renderMarketplace('products');
+    else if(currentPage === 'admin') renderAdmin();
+    else navigate('products');
+  } catch(e){
+    toast(errMsg(e), 'error');
+  }
+}
+window.deleteProduct = deleteProduct;
+
+async function deleteStore(storeId){
+  if(!storeId) return;
+  if(!confirm('Are you sure you want to delete this store? Your storefront profile and business details will be removed.')) return;
+  try {
+    const s = await getDoc(doc(db, 'stores', storeId));
+    if(!snapshotExists(s)) throw Error('Store not found.');
+    const data = s.data();
+    if(data.ownerId !== currentUser.uid && !isAdmin) throw Error('You do not have permission to delete this store.');
+    await deleteDoc(doc(db, 'stores', storeId));
+    toast('Store deleted successfully', 'success');
+    if(currentPage === 'store') navigate('marketplace');
+    else if(currentPage === 'marketplace') renderMarketplace('stores');
+    else if(currentPage === 'admin') renderAdmin();
+    else navigate('profile');
+  } catch(e){
+    toast(errMsg(e), 'error');
+  }
+}
+window.deleteStore = deleteStore;
 
 let currentOrdersFilter = 'all';
 
@@ -3431,7 +3752,414 @@ async function renderStore(){
     showAuthPrompt('view or manage your store');
     return;
   }
-  const s=await getDoc(doc(db,'stores',currentUser.uid));const store=snapshotExists(s)?s.data():{};$('page').innerHTML=pageTitle('Store','Your public storefront settings.')+(!currentProfile.verified?`<div class="card p-5 mb-5 border-yellow-700"><b>Verification required.</b><p class="muted mt-1">Your store becomes public after seller verification.</p></div>`:'')+`<div class="card p-6 max-w-2xl"><label class="muted text-sm">Store name</label><input id="storeName" value="${esc(store.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><label class="muted text-sm block mt-4">Description</label><textarea id="storeDesc" rows="5" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]">${esc(store.description||'')}</textarea><label class="muted text-sm block mt-4">Location / Area</label><input id="storeLocation" value="${esc(store.location||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="East Legon, Accra"><label class="muted text-sm block mt-4">Business address</label><input id="storeAddress" value="${esc(store.address||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Street / landmark"><label class="muted text-sm block mt-4">Opening hours</label><input id="storeHours" value="${esc(store.hours||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Mon–Sat · 8:00 AM – 7:00 PM"><label class="muted text-sm block mt-4">WhatsApp number</label><input id="storeWhatsApp" value="${esc(store.whatsapp||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="233XXXXXXXXX"><button id="saveStore" class="mt-5 bg-gold text-black px-5 py-3 rounded-xl font-bold">Save store</button></div>`;$('saveStore').onclick=async()=>{try{if(!currentProfile.verified)throw Error('Verify your seller account first.');const name=$('storeName').value.trim();if(name.length<2)throw Error('Enter a store name.');const wa=$('storeWhatsApp').value.replace(/\D/g,'');if(wa&&wa.length<10)throw Error('Enter a valid WhatsApp number.');await setDoc(doc(db,'stores',currentUser.uid),{ownerId:currentUser.uid,name,description:$('storeDesc').value.trim(),location:$('storeLocation').value.trim(),address:$('storeAddress').value.trim(),hours:$('storeHours').value.trim(),whatsapp:wa,updatedAt:serverTimestamp()},{merge:true});toast('Store saved','success')}catch(e){toast(errMsg(e),'error')}}}
+  loading('Loading store details…');
+  try {
+    const [storeSnap, prodsSnap] = await Promise.all([
+      getDoc(doc(db, 'stores', currentUser.uid)),
+      getDocs(query(collection(db, 'products'), where('sellerId', '==', currentUser.uid)))
+    ]);
+    const store = snapshotExists(storeSnap) ? storeSnap.data() : {};
+    const myProducts = prodsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const isApproved = store.status === 'approved' || (!store.status && currentProfile.verified);
+    const isPending = store.status === 'pending_review' || store.reviewStatus === 'pending';
+    const isTakenDown = store.status === 'taken_down' || store.reviewStatus === 'taken_down';
+    const isRejected = store.status === 'rejected' || store.reviewStatus === 'rejected';
+
+    let statusAlert = '';
+    if(isTakenDown){
+      statusAlert = `
+        <div class="mb-5 p-4 rounded-2xl bg-rose-950/40 border border-rose-800/80 flex items-start gap-3">
+          <span class="text-2xl">🚫</span>
+          <div class="flex-1 min-w-0">
+            <b class="text-rose-300 text-sm">Storefront Taken Down by Administration</b>
+            <p class="text-xs text-rose-200/80 mt-1">${esc(store.takedownReason || 'Your storefront was taken down following a safety review. You may update your store information and re-submit for review.')}</p>
+          </div>
+        </div>
+      `;
+    } else if(isPending){
+      statusAlert = `
+        <div class="mb-5 p-4 rounded-2xl bg-amber-950/40 border border-amber-800/80 flex items-start gap-3">
+          <span class="text-2xl">⏳</span>
+          <div class="flex-1 min-w-0">
+            <b class="text-amber-300 text-sm">Storefront Under Admin Review</b>
+            <p class="text-xs text-amber-200/80 mt-1">Your store details have been submitted and are pending review by SellerFlow Administration. Once approved, your storefront will become publicly accessible across the marketplace.</p>
+          </div>
+        </div>
+      `;
+    } else if(isRejected){
+      statusAlert = `
+        <div class="mb-5 p-4 rounded-2xl bg-orange-950/40 border border-orange-800/80 flex items-start gap-3">
+          <span class="text-2xl">⚠️</span>
+          <div class="flex-1 min-w-0">
+            <b class="text-orange-300 text-sm">Changes Requested by Admin</b>
+            <p class="text-xs text-orange-200/80 mt-1">${esc(store.rejectionReason || 'Please review your store information and resubmit for approval.')}</p>
+          </div>
+        </div>
+      `;
+    } else if(isApproved){
+      statusAlert = `
+        <div class="mb-5 p-4 rounded-2xl bg-emerald-950/30 border border-emerald-800/60 flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-2.5">
+            <span class="text-emerald-400 text-lg">✓</span>
+            <span class="text-emerald-300 font-bold text-xs sm:text-sm">Your store is live and visible to customers in Ghana!</span>
+          </div>
+          <button type="button" id="previewStorefrontBtn" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-700/60 transition">
+            View Public Storefront →
+          </button>
+        </div>
+      `;
+    }
+
+    $('page').innerHTML = `
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-black text-white flex items-center gap-2">
+            <span>🏪</span><span>Store Settings & Branding</span>
+          </h1>
+          <p class="muted text-xs sm:text-sm mt-1">Manage your public Ghanaian storefront, banner, logo, and catalogue.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          ${snapshotExists(storeSnap) ? `
+            <button type="button" id="previewStoreBtnTop" class="border border-[#444] hover:border-gold px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-[#161616] transition flex items-center gap-1.5">
+              <span>👁️</span><span>Preview Store</span>
+            </button>
+          ` : ''}
+          <button type="button" id="addNewProductStoreBtn" class="bg-gold text-black hover:brightness-110 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+            <span>＋</span><span>Add Product</span>
+          </button>
+        </div>
+      </div>
+
+      ${statusAlert}
+
+      <div class="grid lg:grid-cols-[1.5fr_1fr] gap-6">
+        <!-- Left column: Store branding and business details -->
+        <div class="space-y-5">
+          <!-- Store Banner Upload Card -->
+          <div class="card p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <h2 class="font-bold text-base text-white flex items-center gap-2">
+                <span>🖼️</span><span>Store Banner</span>
+              </h2>
+              <span class="text-xs text-zinc-400 font-mono">1200 × 400 recommended</span>
+            </div>
+
+            <div id="storeBannerPreviewContainer" class="relative w-full h-40 sm:h-52 rounded-2xl overflow-hidden bg-gradient-to-r from-zinc-900 to-[#221f18] border border-[#333] flex items-center justify-center">
+              ${store.bannerUrl ? `
+                <img id="storeBannerPreviewImg" src="${esc(store.bannerUrl)}" class="w-full h-full object-cover" alt="Store banner">
+              ` : `
+                <div id="storeBannerPlaceholder" class="flex flex-col items-center justify-center text-zinc-500">
+                  <span class="text-4xl mb-1 opacity-40">🏪</span>
+                  <span class="text-xs font-semibold">No store banner uploaded yet</span>
+                  <span class="text-[10px] text-zinc-600 mt-0.5">Upload a banner to highlight your brand to shoppers</span>
+                </div>
+              `}
+            </div>
+
+            <div class="flex items-center gap-3">
+              <input id="storeBannerFile" type="file" accept="image/jpeg,image/png,image/webp" class="text-xs text-zinc-400 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer flex-1">
+              ${store.bannerUrl ? `
+                <button type="button" id="removeBannerBtn" class="text-xs text-rose-400 hover:underline px-2 py-1">Remove banner</button>
+              ` : ''}
+            </div>
+          </div>
+
+          <!-- Store Profile Picture / Logo Upload Card -->
+          <div class="card p-5 space-y-4">
+            <h2 class="font-bold text-base text-white flex items-center gap-2">
+              <span>🏷️</span><span>Store Profile Picture / Logo</span>
+            </h2>
+
+            <div class="flex items-center gap-4">
+              <div id="storeLogoPreviewContainer" class="w-20 h-20 rounded-2xl overflow-hidden border-2 border-[#333] bg-[#1a1a1a] shrink-0 flex items-center justify-center shadow-md">
+                ${store.logoUrl ? `
+                  <img id="storeLogoPreviewImg" src="${esc(store.logoUrl)}" class="w-full h-full object-cover" alt="Store logo">
+                ` : currentProfile.avatarUrl ? `
+                  <img id="storeLogoPreviewImg" src="${esc(currentProfile.avatarUrl)}" class="w-full h-full object-cover" alt="Profile avatar">
+                ` : `
+                  <div class="text-2xl font-black text-gold">${esc((store.name || currentProfile.name || '?')[0].toUpperCase())}</div>
+                `}
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <label class="text-xs font-semibold text-zinc-300 block mb-1">Choose store logo or brand avatar</label>
+                <input id="storeLogoFile" type="file" accept="image/jpeg,image/png,image/webp" class="text-xs text-zinc-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer w-full">
+                <p class="muted text-[11px] mt-1">Square format · JPG, PNG or WebP · max 10MB.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Store Business Information Form -->
+          <div class="card p-5 space-y-4">
+            <h2 class="font-bold text-base text-white flex items-center gap-2">
+              <span>📝</span><span>Store Business Information</span>
+            </h2>
+
+            <div>
+              <label class="muted text-xs block mb-1">Store name *</label>
+              <input id="storeName" value="${esc(store.name || currentProfile.name || '')}" class="w-full p-3 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-sm text-white" placeholder="e.g. Accra Boutique, Kofi Tech Hub">
+            </div>
+
+            <div>
+              <label class="muted text-xs block mb-1">Description / Bio</label>
+              <textarea id="storeDesc" rows="4" class="w-full p-3 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-sm text-white" placeholder="Tell customers what you specialize in, policies, delivery regions, and product authenticity…">${esc(store.description || '')}</textarea>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-3">
+              <div>
+                <label class="muted text-xs block mb-1">Location / City / Area *</label>
+                <input id="storeLocation" value="${esc(store.location || '')}" class="w-full p-3 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-sm text-white" placeholder="e.g. East Legon, Accra / Kumasi Central">
+              </div>
+              <div>
+                <label class="muted text-xs block mb-1">WhatsApp number</label>
+                <input id="storeWhatsApp" value="${esc(store.whatsapp || '')}" class="w-full p-3 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-sm text-white" placeholder="e.g. 233XXXXXXXXX">
+              </div>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-3">
+              <div>
+                <label class="muted text-xs block mb-1">Physical address / Landmark</label>
+                <input id="storeAddress" value="${esc(store.address || '')}" class="w-full p-3 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-sm text-white" placeholder="e.g. Lagos Avenue, Near Shell Station">
+              </div>
+              <div>
+                <label class="muted text-xs block mb-1">Opening hours</label>
+                <input id="storeHours" value="${esc(store.hours || '')}" class="w-full p-3 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-sm text-white" placeholder="e.g. Mon–Sat · 8:00 AM – 7:00 PM">
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-[#262626] flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <button id="saveStore" class="bg-gold text-black px-6 py-3 rounded-xl font-black text-sm hover:brightness-110 shadow-md flex items-center gap-2 transition">
+                  <span>${isAdmin ? '✓ Save & Publish Store' : '📤 Submit Store for Admin Review'}</span>
+                </button>
+              </div>
+
+              ${snapshotExists(storeSnap) ? `
+                <button type="button" id="deleteStoreBtn" class="border border-rose-900/60 hover:bg-rose-950/40 text-rose-400 px-4 py-3 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                  <span>🗑️</span><span>Delete Store</span>
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column: Products in this store & Quick actions -->
+        <div class="space-y-5">
+          <div class="card p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <h2 class="font-bold text-base text-white flex items-center gap-2">
+                <span>📦</span><span>Store Products (${myProducts.length})</span>
+              </h2>
+              <button type="button" id="sideAddProductBtn" class="text-xs font-bold text-gold hover:underline flex items-center gap-1">
+                <span>＋</span><span>Add product</span>
+              </button>
+            </div>
+
+            <p class="text-xs text-zinc-400">Products are reviewed by administration before becoming publicly visible to shoppers.</p>
+
+            <div class="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+              ${myProducts.length ? myProducts.map(prod => {
+                const inStock = Number(prod.stock) > 0;
+                const prodApproved = prod.status === 'approved' || (!prod.status && prod.reviewStatus !== 'pending_review' && prod.status !== 'taken_down' && prod.status !== 'rejected');
+                const prodPending = prod.status === 'pending_review' || prod.reviewStatus === 'pending';
+                const prodTakenDown = prod.status === 'taken_down' || prod.reviewStatus === 'taken_down';
+                const prodRejected = prod.status === 'rejected' || prod.reviewStatus === 'rejected';
+
+                const badge = prodTakenDown
+                  ? `<span class="text-[10px] font-bold text-rose-400 bg-rose-950/70 px-2 py-0.5 rounded border border-rose-800">Taken Down</span>`
+                  : prodPending
+                  ? `<span class="text-[10px] font-bold text-amber-400 bg-amber-950/70 px-2 py-0.5 rounded border border-amber-800">Pending Review</span>`
+                  : prodRejected
+                  ? `<span class="text-[10px] font-bold text-orange-400 bg-orange-950/70 px-2 py-0.5 rounded border border-orange-800">Changes Requested</span>`
+                  : `<span class="text-[10px] font-bold text-emerald-400 bg-emerald-950/70 px-2 py-0.5 rounded border border-emerald-800">Live</span>`;
+
+                return `
+                  <div class="p-3 rounded-xl bg-[#181818] border border-[#2b2b2b] flex items-center gap-3 justify-between">
+                    <div class="w-12 h-12 rounded-lg bg-[#111] overflow-hidden shrink-0 border border-[#333]">
+                      <img src="${esc(prod.imageUrl || '')}" class="w-full h-full object-cover" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 fill=%22none%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23222%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23555%22 font-size=%2220%22%3E📦%3C/text%3E%3C/svg%3E'">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <b class="text-xs text-white block truncate">${esc(prod.name)}</b>
+                      <div class="text-[11px] text-zinc-400 flex items-center gap-2 mt-0.5">
+                        <span class="text-gold font-bold">${money(prod.price)}</span>
+                        <span>·</span>
+                        <span>${inStock ? `${prod.stock} in stock` : 'Out of stock'}</span>
+                      </div>
+                      <div class="mt-1">${badge}</div>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                      <button type="button" data-store-edit-prod="${prod.id}" class="p-2 text-xs rounded-lg border border-[#444] hover:border-gold text-zinc-300 transition" title="Edit product">✏️</button>
+                      <button type="button" data-store-delete-prod="${prod.id}" class="p-2 text-xs rounded-lg border border-[#444] hover:border-rose-700 text-rose-400 transition" title="Delete product">🗑️</button>
+                    </div>
+                  </div>
+                `;
+              }).join('') : `
+                <div class="p-8 text-center muted border border-dashed border-[#333] rounded-2xl">
+                  <div class="text-3xl mb-1">📦</div>
+                  <div class="text-xs font-bold text-zinc-300">No products added yet</div>
+                  <p class="text-[11px] text-zinc-500 mt-1">Add items to your store catalogue so shoppers can purchase them.</p>
+                  <button type="button" id="emptyAddProductBtn" class="mt-3 px-3 py-1.5 rounded-xl bg-gold text-black font-bold text-xs">＋ Add first product</button>
+                </div>
+              `}
+            </div>
+          </div>
+
+          <!-- Ghana Card verification check card -->
+          <div class="card p-5 space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">🛡️</span>
+              <b class="text-sm text-white">Seller Verification</b>
+            </div>
+            <p class="text-xs text-zinc-400 leading-relaxed">
+              ${currentProfile.verified ? 'Your seller identity is verified with Ghana Card. Your blue verification badge is active across all your posts and storefront.' : 'Submit your Ghana Card in Settings to receive the verified seller badge and unlock instant trust from Ghanaian buyers.'}
+            </p>
+            ${!currentProfile.verified ? `
+              <button type="button" id="storeGoVerificationBtn" class="mt-2 text-xs font-bold text-gold hover:underline flex items-center gap-1">
+                <span>Complete Ghana Card Verification</span><span>→</span>
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Banner file preview
+    $('storeBannerFile')?.addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if(f){
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          $('storeBannerPreviewContainer').innerHTML = `<img id="storeBannerPreviewImg" src="${ev.target.result}" class="w-full h-full object-cover" alt="Banner preview">`;
+        };
+        reader.readAsDataURL(f);
+      }
+    });
+
+    // Logo file preview
+    $('storeLogoFile')?.addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if(f){
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          $('storeLogoPreviewContainer').innerHTML = `<img id="storeLogoPreviewImg" src="${ev.target.result}" class="w-full h-full object-cover" alt="Logo preview">`;
+        };
+        reader.readAsDataURL(f);
+      }
+    });
+
+    $('removeBannerBtn')?.addEventListener('click', async () => {
+      if(!confirm('Remove store banner?')) return;
+      try {
+        loading('Removing banner…');
+        await updateDoc(doc(db, 'stores', currentUser.uid), { bannerUrl: '', bannerPath: '', updatedAt: serverTimestamp() });
+        toast('Store banner removed', 'info');
+        renderStore();
+      } catch(e) {
+        toast(errMsg(e), 'error');
+      } finally {
+        ready();
+      }
+    });
+
+    $('previewStoreBtnTop')?.addEventListener('click', () => openStore(currentUser.uid));
+    $('previewStorefrontBtn')?.addEventListener('click', () => openStore(currentUser.uid));
+    $('addNewProductStoreBtn')?.addEventListener('click', () => openProductModal());
+    $('sideAddProductBtn')?.addEventListener('click', () => openProductModal());
+    $('emptyAddProductBtn')?.addEventListener('click', () => openProductModal());
+    $('storeGoVerificationBtn')?.addEventListener('click', () => openVerificationModal());
+    $('deleteStoreBtn')?.addEventListener('click', () => deleteStore(currentUser.uid));
+
+    document.querySelectorAll('[data-store-edit-prod]').forEach(b => {
+      b.onclick = () => {
+        const pId = b.dataset.storeEditProd;
+        const p = myProducts.find(x => x.id === pId);
+        if(p) openProductModal(p);
+      };
+    });
+
+    document.querySelectorAll('[data-store-delete-prod]').forEach(b => {
+      b.onclick = () => {
+        deleteProduct(b.dataset.storeDeleteProd);
+      };
+    });
+
+    $('saveStore').onclick = async () => {
+      try {
+        const name = $('storeName').value.trim();
+        if(name.length < 2) throw Error('Enter a valid store name (at least 2 characters).');
+
+        const location = $('storeLocation').value.trim();
+        if(!location) throw Error('Please provide your location or area (e.g. East Legon, Accra).');
+
+        const wa = $('storeWhatsApp').value.replace(/\D/g, '');
+        if(wa && wa.length < 10) throw Error('Enter a valid WhatsApp number (at least 10 digits).');
+
+        const bannerFile = $('storeBannerFile')?.files[0];
+        const logoFile = $('storeLogoFile')?.files[0];
+
+        let bannerUrl = store.bannerUrl || '', bannerPath = store.bannerPath || '';
+        let logoUrl = store.logoUrl || '', logoPath = store.logoPath || '';
+
+        if(bannerFile){
+          validFile(bannerFile, ['image/jpeg','image/png','image/webp'], 10);
+          loading('Uploading store banner…');
+          const up = await uploadPublic(bannerFile, 'stores');
+          bannerUrl = up.url;
+          bannerPath = up.path;
+        }
+
+        if(logoFile){
+          validFile(logoFile, ['image/jpeg','image/png','image/webp'], 10);
+          loading('Uploading store profile picture…');
+          const up = await uploadPublic(logoFile, 'stores');
+          logoUrl = up.url;
+          logoPath = up.path;
+        }
+
+        loading('Saving store…');
+        const storeStatus = isAdmin ? 'approved' : 'pending_review';
+        const reviewStatus = isAdmin ? 'approved' : 'pending';
+
+        const storeData = {
+          ownerId: currentUser.uid,
+          name,
+          description: $('storeDesc').value.trim(),
+          location,
+          address: $('storeAddress').value.trim(),
+          hours: $('storeHours').value.trim(),
+          whatsapp: wa,
+          bannerUrl,
+          bannerPath,
+          logoUrl,
+          logoPath,
+          status: storeStatus,
+          reviewStatus: reviewStatus,
+          rejectionReason: '',
+          submittedAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+
+        await setDoc(doc(db, 'stores', currentUser.uid), storeData, { merge: true });
+
+        if(isAdmin){
+          toast('Store settings saved and published.', 'success');
+        } else {
+          toast('Store submitted for admin review. Once approved, it will appear in the marketplace.', 'success', 4500);
+        }
+        await renderStore();
+      } catch(e) {
+        toast(errMsg(e), 'error');
+      } finally {
+        ready();
+      }
+    };
+  } catch(err) {
+    $('page').innerHTML = pageTitle('Store', 'Error loading store.') + `<div class="card p-6 text-rose-400">${esc(errMsg(err))}</div>`;
+  } finally {
+    ready();
+  }
+}
 
 async function renderProfile(){const p=currentProfile;const privateDoc=await getDoc(doc(db,'users',currentUser.uid));const verification=privateDoc.data()||{};$('page').innerHTML=pageTitle('Profile','Manage your account details and profile picture.')+`<div class="grid lg:grid-cols-[1fr_1.3fr] gap-5"><div class="card p-6"><div class="flex items-center gap-4">${avatar(p,'w-20 h-20 rounded-full object-cover bg-[#222]')}<div><h2 class="text-xl font-bold">${esc(p.name)}</h2><div class="muted">@${esc(p.username)}</div>${p.verified?'<div class="text-sm font-bold mt-1 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':''}</div></div><input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-5"><button id="uploadAvatar" class="mt-3 border border-[#444] rounded-xl px-4 py-2">Update profile picture</button><label class="muted text-sm block mt-5">Full name</label><input id="profileName" value="${esc(p.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><label class="muted text-sm block mt-4">Username</label><input id="profileUsername" value="${esc(p.username||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><button id="saveProfile" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Save profile</button><div class="muted text-sm mt-4">${esc(currentUser.email)} · ${currentUser.emailVerified?'Email verified':'Email not verified'}</div>${!currentUser.emailVerified?`<button id="verifyEmail" class="mt-2 text-sm gold">Send verification email</button>`:''}</div><div class="card p-6"><h2 class="text-xl font-bold">Seller identity</h2><p class="muted mt-2">Verification is managed from Settings. Approved sellers receive the modern blue SellerFlow verification badge.</p><button id="openSettingsVerification" class="mt-4 bg-gold text-black px-5 py-3 rounded-xl font-bold">Open Settings</button></div></div>`;$('uploadAvatar').onclick=async()=>{try{const f=$('avatarFile').files[0];if(!f)return toast('Choose a picture first','error');const x=await uploadPublic(f,'profiles');await updateDoc(doc(db,'users',currentUser.uid),{avatarUrl:x.url});await updateDoc(doc(db,'publicProfiles',currentUser.uid),{avatarUrl:x.url});currentProfile.avatarUrl=x.url;toast('Profile picture updated','success');navigate('profile')}catch(e){toast(errMsg(e),'error')}};$('saveProfile').onclick=saveProfile;$('verifyEmail')?.addEventListener('click',async()=>{await sendEmailVerification(currentUser);toast('Verification email sent','success')});$('openSettingsVerification')?.addEventListener('click',openVerificationModal)}
 async function saveProfile(){try{const name=$('profileName').value.trim(),username=usernameClean($('profileUsername').value);if(name.length<2||username.length<3)throw Error('Enter a valid name and username.');if(username!==currentProfile.username){if(!(await uniqueUsername(username,currentUser.uid)))throw Error('That username is already taken.');}await updateDoc(doc(db,'users',currentUser.uid),{name,username,usernameLower:username.toLowerCase(),nameLastChanged:serverTimestamp(),usernameLastChanged:serverTimestamp()});try{await setDoc(doc(db,'publicProfiles',currentUser.uid),{uid:currentUser.uid,name,username,usernameLower:username.toLowerCase(),avatarUrl:currentProfile.avatarUrl||'',verified:!!currentProfile.verified,followers:currentProfile.followers||[],following:currentProfile.following||[],role:currentProfile.role||'seller'},{merge:true})}catch(e){console.warn('Public profile sync skipped:',e)}await refreshProfile();toast('Profile saved','success');navigate('profile')}catch(e){toast(errMsg(e),'error')}}
@@ -7431,9 +8159,16 @@ init();
         if(kind === 'video' && capturedCoverBlob){
           try {
             const coverFile = new File([capturedCoverBlob], `cover-${Date.now()}.jpg`, { type: 'image/jpeg' });
-            const cvUp = await uploadPublic(coverFile, 'covers');
-            thumbnailUrl = cvUp.url;
-            thumbnailPath = cvUp.path;
+            let cvUp;
+            try {
+              cvUp = await uploadPublic(coverFile, 'posts');
+            } catch(_) {
+              cvUp = await uploadPublic(coverFile, 'covers');
+            }
+            if(cvUp){
+              thumbnailUrl = cvUp.url;
+              thumbnailPath = cvUp.path;
+            }
           } catch(cErr){
             console.warn('Cover upload fallback', cErr);
           }
@@ -7521,6 +8256,8 @@ init();
     let type='post',uid=arg1;
     if(arg2){type=arg1;uid=arg2}
     if(!uid)return;
+    if(type==='product') return adminTakeDownProduct(uid);
+    if(type==='store') return adminTakeDownStore(uid);
     if(!confirm('Take down this '+type+'?'))return;
     try{
       if(type==='post'){
@@ -7535,18 +8272,227 @@ init();
           await deleteDoc(doc(db,'posts',uid));
         }
         toast('Post taken down','success');
-      }else if(type==='product'){
-        await deleteDoc(doc(db,'products',uid));
-        toast('Product removed','success');
-      }else if(type==='store'){
-        await deleteDoc(doc(db,'stores',uid));
-        toast('Store removed','success');
       }
       if(typeof renderAdmin==='function'&&currentPage==='admin')renderAdmin();
       else if(typeof renderPage==='function')renderPage();
     }catch(e){toast(errMsg(e),'error')}
   }
   window.adminTakeDown=adminTakeDown;
+
+  async function adminTakeDownProduct(id){
+    if(!confirm('Are you sure you want to take down this product from the marketplace?')) return;
+    const reason = prompt('Reason for takedown (optional):', 'Violates marketplace listing guidelines.');
+    try{
+      loading('Taking down product…');
+      const s = await getDoc(doc(db, 'products', id));
+      const prodName = s.exists() ? s.data().name : 'Product';
+      const sellerId = s.exists() ? s.data().sellerId : '';
+      await updateDoc(doc(db, 'products', id), {
+        status: 'taken_down',
+        reviewStatus: 'taken_down',
+        takedownReason: reason || 'Taken down by administration',
+        takenDownAt: serverTimestamp(),
+        takenDownBy: currentUser?.uid || 'admin'
+      });
+      if(sellerId && (!currentUser || sellerId !== currentUser.uid)){
+        await addDoc(collection(db, 'notifications'), {
+          recipientId: sellerId,
+          senderName: 'SellerFlow Admin',
+          title: 'Product Taken Down',
+          message: `Your product "${prodName}" was removed from the public marketplace by an administrator: ${reason || 'Safety/policy review.'}`,
+          fromAdmin: true,
+          productId: id,
+          read: false,
+          createdAt: serverTimestamp()
+        }).catch(()=>{});
+      }
+      toast('Product taken down from marketplace', 'success');
+      if(typeof renderAdmin==='function'&&currentPage==='admin') renderAdmin();
+      else if(currentPage==='store') openStore(sellerId || currentUser.uid);
+      else if(currentPage==='marketplace'||currentPage==='products') renderMarketplace('products');
+    }catch(e){toast(errMsg(e),'error')}finally{ready()}
+  }
+  window.adminTakeDownProduct = adminTakeDownProduct;
+
+  async function adminApproveProduct(id){
+    try{
+      loading('Approving product…');
+      await updateDoc(doc(db, 'products', id), {
+        status: 'approved',
+        reviewStatus: 'approved',
+        approvedAt: serverTimestamp(),
+        approvedBy: currentUser?.uid || 'admin'
+      });
+      const s = await getDoc(doc(db, 'products', id));
+      if(s.exists() && s.data().sellerId && (!currentUser || s.data().sellerId !== currentUser.uid)){
+        await addDoc(collection(db, 'notifications'), {
+          recipientId: s.data().sellerId,
+          senderName: 'SellerFlow Admin',
+          title: 'Product Approved! 🎉',
+          message: `Your product "${s.data().name}" has been approved and is now live in the Ghanaian marketplace.`,
+          fromAdmin: true,
+          productId: id,
+          read: false,
+          createdAt: serverTimestamp()
+        }).catch(()=>{});
+      }
+      toast('Product approved and live in marketplace', 'success');
+      if(typeof renderAdmin==='function'&&currentPage==='admin') renderAdmin();
+      else if(currentPage==='store') openStore(s.data()?.sellerId || currentUser.uid);
+      else if(currentPage==='marketplace'||currentPage==='products') renderMarketplace('products');
+    }catch(e){toast(errMsg(e),'error')}finally{ready()}
+  }
+  window.adminApproveProduct = adminApproveProduct;
+
+  async function adminRejectProductPrompt(id){
+    const reason = prompt('Enter the reason for rejecting this product (or requested changes):', 'Please update the product image and provide a clearer description.');
+    if(!reason) return;
+    try{
+      loading('Updating product review status…');
+      await updateDoc(doc(db, 'products', id), {
+        status: 'rejected',
+        reviewStatus: 'rejected',
+        rejectionReason: reason,
+        rejectedAt: serverTimestamp(),
+        rejectedBy: currentUser?.uid || 'admin'
+      });
+      const s = await getDoc(doc(db, 'products', id));
+      if(s.exists() && s.data().sellerId && (!currentUser || s.data().sellerId !== currentUser.uid)){
+        await addDoc(collection(db, 'notifications'), {
+          recipientId: s.data().sellerId,
+          senderName: 'SellerFlow Admin',
+          title: 'Product Review: Changes Requested',
+          message: `Administrator notice for "${s.data().name}": ${reason}`,
+          fromAdmin: true,
+          productId: id,
+          read: false,
+          createdAt: serverTimestamp()
+        }).catch(()=>{});
+      }
+      toast('Product rejected with feedback sent to seller', 'info');
+      if(typeof renderAdmin==='function'&&currentPage==='admin') renderAdmin();
+    }catch(e){toast(errMsg(e),'error')}finally{ready()}
+  }
+  window.adminRejectProduct = adminRejectProductPrompt;
+
+  async function adminRestoreProduct(id){
+    try{
+      loading('Restoring product…');
+      await updateDoc(doc(db, 'products', id), {
+        status: 'approved',
+        reviewStatus: 'approved',
+        restoredAt: serverTimestamp(),
+        restoredBy: currentUser?.uid || 'admin'
+      });
+      toast('Product restored to live marketplace', 'success');
+      if(typeof renderAdmin==='function'&&currentPage==='admin') renderAdmin();
+    }catch(e){toast(errMsg(e),'error')}finally{ready()}
+  }
+  window.adminRestoreProduct = adminRestoreProduct;
+
+  async function adminTakeDownStore(uid){
+    if(!confirm('Are you sure you want to take down this store from the marketplace?')) return;
+    const reason = prompt('Reason for store takedown (optional):', 'Violates merchant safety and verification standards.');
+    try{
+      loading('Taking down store…');
+      await updateDoc(doc(db, 'stores', uid), {
+        status: 'taken_down',
+        reviewStatus: 'taken_down',
+        takedownReason: reason || 'Taken down by administration',
+        takenDownAt: serverTimestamp(),
+        takenDownBy: currentUser?.uid || 'admin'
+      });
+      if(!currentUser || uid !== currentUser.uid){
+        await addDoc(collection(db, 'notifications'), {
+          recipientId: uid,
+          senderName: 'SellerFlow Admin',
+          title: 'Storefront Taken Down',
+          message: `Your storefront was removed from public view by administration: ${reason || 'Compliance review.'}`,
+          fromAdmin: true,
+          read: false,
+          createdAt: serverTimestamp()
+        }).catch(()=>{});
+      }
+      toast('Store taken down from marketplace', 'success');
+      if(typeof renderAdmin==='function'&&currentPage==='admin') renderAdmin();
+      else if(currentPage==='store') openStore(uid);
+      else if(currentPage==='marketplace') renderMarketplace('stores');
+    }catch(e){toast(errMsg(e),'error')}finally{ready()}
+  }
+  window.adminTakeDownStore = adminTakeDownStore;
+
+  async function adminApproveStore(uid){
+    try{
+      loading('Approving store…');
+      await updateDoc(doc(db, 'stores', uid), {
+        status: 'approved',
+        reviewStatus: 'approved',
+        approvedAt: serverTimestamp(),
+        approvedBy: currentUser?.uid || 'admin'
+      });
+      if(!currentUser || uid !== currentUser.uid){
+        await addDoc(collection(db, 'notifications'), {
+          recipientId: uid,
+          senderName: 'SellerFlow Admin',
+          title: 'Store Approved! 🎉',
+          message: 'Congratulations! Your store has been approved by administration and is now live in the Ghanaian marketplace.',
+          fromAdmin: true,
+          read: false,
+          createdAt: serverTimestamp()
+        }).catch(()=>{});
+      }
+      toast('Store approved and live in marketplace', 'success');
+      if(typeof renderAdmin==='function'&&currentPage==='admin') renderAdmin();
+      else if(currentPage==='store') openStore(uid);
+      else if(currentPage==='marketplace') renderMarketplace('stores');
+    }catch(e){toast(errMsg(e),'error')}finally{ready()}
+  }
+  window.adminApproveStore = adminApproveStore;
+
+  async function adminRejectStorePrompt(uid){
+    const reason = prompt('Enter the reason for rejecting this store (or requested changes):', 'Please provide a valid location/address and upload a store banner.');
+    if(!reason) return;
+    try{
+      loading('Updating store review status…');
+      await updateDoc(doc(db, 'stores', uid), {
+        status: 'rejected',
+        reviewStatus: 'rejected',
+        rejectionReason: reason,
+        rejectedAt: serverTimestamp(),
+        rejectedBy: currentUser?.uid || 'admin'
+      });
+      if(!currentUser || uid !== currentUser.uid){
+        await addDoc(collection(db, 'notifications'), {
+          recipientId: uid,
+          senderName: 'SellerFlow Admin',
+          title: 'Store Review: Changes Requested',
+          message: `Administrator review feedback for your store: ${reason}`,
+          fromAdmin: true,
+          read: false,
+          createdAt: serverTimestamp()
+        }).catch(()=>{});
+      }
+      toast('Store rejected with feedback sent to owner', 'info');
+      if(typeof renderAdmin==='function'&&currentPage==='admin') renderAdmin();
+    }catch(e){toast(errMsg(e),'error')}finally{ready()}
+  }
+  window.adminRejectStore = adminRejectStorePrompt;
+
+  async function adminRestoreStore(uid){
+    try{
+      loading('Restoring store…');
+      await updateDoc(doc(db, 'stores', uid), {
+        status: 'approved',
+        reviewStatus: 'approved',
+        restoredAt: serverTimestamp(),
+        restoredBy: currentUser?.uid || 'admin'
+      });
+      toast('Store restored to live marketplace', 'success');
+      if(typeof renderAdmin==='function'&&currentPage==='admin') renderAdmin();
+    }catch(e){toast(errMsg(e),'error')}finally{ready()}
+  }
+  window.adminRestoreStore = adminRestoreStore;
+
   reviewPost=async function(uid,approve){try{const s=await getDoc(doc(db,'posts',uid));if(!snapshotExists(s))throw Error('Post not found.');const x=s.data();await updateDoc(doc(db,'posts',uid),{status:approve?'published':'removed',reviewStatus:approve?'reviewed':'removed',reviewedAt:serverTimestamp(),reviewedBy:currentUser?.uid||'admin'});if(x.sellerId&&x.sellerId!==(currentUser?.uid||''))await addDoc(collection(db,'notifications'),{recipientId:x.sellerId,senderName:'SellerFlow',title:approve?'SellerFlow post approved':'SellerFlow post removed',message:approve?'Your post passed SellerFlow safety review and remains live.':'Your post was removed because it did not meet SellerFlow safety requirements.',fromAdmin:true,postId:uid,read:false,createdAt:serverTimestamp()});toast(approve?'Post approved':'Post removed','success');navigate('admin')}catch(e){toast(errMsg(e),'error')}};
   /* renderAdmin is defined with the full modern dashboard control center below */
 
@@ -7784,6 +8730,10 @@ init();
   .sf-tile-meta{position:absolute;left:8px;right:8px;bottom:7px;z-index:2;font-size:11px;display:flex;justify-content:space-between}
   .sf-media-status{padding:7px 10px;border-radius:10px;background:#171717;border:1px solid #333;font-size:12px}
   .sf-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}@media(max-width:640px){.sf-edit-grid{grid-template-columns:1fr}}
+  .sf-store-banner{position:relative;min-height:160px;height:180px;border-radius:22px;overflow:hidden;background:radial-gradient(circle at 85% 15%,rgba(245,185,66,.18),transparent 45%),linear-gradient(145deg,#1c1b18,#0f0f0f);border:1px solid #292929}
+  .sf-store-banner img{width:100%;height:100%;object-fit:cover}
+  .sf-store-banner:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.65) 100%);pointer-events:none}
+  .sf-store-logo{width:88px;height:88px;border-radius:20px;object-fit:cover;border:4px solid #141414;box-shadow:0 8px 24px rgba(0,0,0,.5);background:#222}
 </style>
 <script>
 (function(){
@@ -7801,6 +8751,83 @@ init();
   }
   function sfMediaAttrs(p){return `data-media-path="${esc(p.mediaPath||'')}" onerror="window.__sfMediaFallback(this)"`}
   window.__sfMediaFallback=function(el){const path=el?.dataset?.mediaPath;if(path)sfLoadPrivate(path,el)};
+
+  window._sfVideoCoverCache = window._sfVideoCoverCache || {};
+  window.__sfExtractVideoFrame = function(imgEl, videoUrl, postId){
+    if(!imgEl) return;
+    if(postId && window._sfVideoCoverCache[postId]){
+      imgEl.src = window._sfVideoCoverCache[postId];
+      imgEl.onerror = null;
+      return;
+    }
+    if(!videoUrl){
+      imgEl.style.display = 'none';
+      return;
+    }
+    let handled = false;
+    const fallbackInlineVideo = () => {
+      if(handled) return;
+      handled = true;
+      try {
+        const vid = document.createElement('video');
+        vid.src = videoUrl + '#t=0.5';
+        vid.muted = true;
+        vid.playsInline = true;
+        vid.autoplay = true;
+        vid.loop = true;
+        vid.className = imgEl.className;
+        vid.style.pointerEvents = 'none';
+        vid.style.width = '100%';
+        vid.style.height = '100%';
+        vid.style.objectFit = 'cover';
+        if(imgEl.parentNode){
+          imgEl.parentNode.replaceChild(vid, imgEl);
+        }
+      } catch(_) {}
+    };
+
+    try {
+      const v = document.createElement('video');
+      v.crossOrigin = 'anonymous';
+      v.src = videoUrl;
+      v.muted = true;
+      v.playsInline = true;
+      v.preload = 'metadata';
+
+      const finish = (canvas) => {
+        if(handled) return;
+        handled = true;
+        try {
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          if(postId) window._sfVideoCoverCache[postId] = dataUrl;
+          imgEl.src = dataUrl;
+          imgEl.onerror = null;
+        } catch(_) {
+          fallbackInlineVideo();
+        }
+      };
+
+      v.onloadeddata = () => {
+        try { v.currentTime = 0.5; } catch(_) { fallbackInlineVideo(); }
+      };
+      v.onseeked = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = v.videoWidth || 360;
+          canvas.height = v.videoHeight || 640;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+          finish(canvas);
+        } catch(_) {
+          fallbackInlineVideo();
+        }
+      };
+      v.onerror = fallbackInlineVideo;
+      setTimeout(() => { if(!handled) fallbackInlineVideo(); }, 3500);
+    } catch(_) {
+      fallbackInlineVideo();
+    }
+  };
 
   /* Replace feed cards so both images and videos can recover from private-bucket/public-URL failures. */
   postCard=function(p){
@@ -7871,31 +8898,106 @@ init();
     if(!currentUser){showAuthPrompt('view your profile');return;}
     const p=currentProfile||{};let posts=[];try{const s=await getDocs(query(collection(db,'posts'),where('sellerId','==',currentUser.uid),limit(100)));posts=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.status!=='removed').sort((a,b)=>ts(b.createdAt)-ts(a.createdAt))}catch(_){ }
     const followers=(p.followers||[]).length,following=(p.following||[]).length,likes=posts.reduce((n,x)=>n+(x.likes||[]).length,0),views=posts.reduce((n,x)=>n+Number(x.views||0),0);
-    $('page').innerHTML=pageTitle('Profile','Your public creator identity, audience and content.')+`<section class="sf-profile-cover"><div class="relative z-10 p-5 md:p-7"><div class="flex flex-col md:flex-row md:items-end gap-5"><button type="button" id="profilePhotoBtn" class="shrink-0 border-0 bg-transparent cursor-pointer">${p.avatarUrl?`<img class="sf-profile-avatar" src="${esc(p.avatarUrl)}" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'Profile picture')}" onerror="window.__sfMediaFallback(this)">`:`<div class="sf-profile-avatar flex items-center justify-center text-4xl font-black">${esc((p.name||'?')[0].toUpperCase())}</div>`}</button><div class="flex-1 min-w-0"><div class="flex flex-wrap items-center gap-2"><h2 class="text-3xl font-black">${esc(p.name||'SellerFlow User')}</h2>${verifyBadge(p)}</div><div class="muted mt-1">@${esc(p.username||'seller')} · ${sfPresenceBadge(p)}</div><p class="text-sm md:text-base mt-3 max-w-2xl">${esc(p.bio||'Tell customers and followers what you create, sell or share.')}</p><div class="flex flex-wrap gap-2 mt-5"><button id="editProfileTop" class="btn btn-primary px-5 py-2.5 rounded-xl font-bold">Edit profile</button>${button('＋ Create post','profileCreatePost','border border-[#444] bg-[#171717] text-white font-bold')}<button id="profileOpenStore" class="border border-[#444] hover:border-gold px-4 py-2.5 rounded-xl text-sm font-bold bg-[#141414]">Storefront</button><button id="profileOpenSettings" class="border border-[#444] hover:border-gold px-4 py-2.5 rounded-xl text-sm font-bold bg-[#141414]">Settings & Privacy</button></div></div></div><div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-7"><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="posts"><div class="text-2xl font-black">${posts.length}</div><div class="muted text-xs mt-1">Posts</div></button><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="views"><div class="text-2xl font-black">${views}</div><div class="muted text-xs mt-1">Views</div></button><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="likes"><div class="text-2xl font-black">${likes}</div><div class="muted text-xs mt-1">Likes</div></button><button class="sf-stat-card rounded-2xl p-4" data-profile-stat="followers"><div class="text-2xl font-black">${followers}</div><div class="muted text-xs mt-1">Followers</div></button></div></div></section><section class="card mt-5 overflow-hidden"><div class="sf-profile-tabs flex items-center justify-between border-b border-[#292929] px-4"><div class="flex"><button class="sf-profile-tab active" id="tabMyPosts">Posts (${posts.length})</button><button class="sf-profile-tab" id="profileFollowingTab">Following (${following})</button></div><div class="text-xs muted hidden sm:block">Tap any post to watch in For You</div></div><div class="p-3"><div class="profile-grid">${posts.length?posts.map(x=>{
-      const isVid=x.mediaType?.startsWith('video');
-      let mediaPreview='';
-      if(isVid){
-        if(x.thumbnailUrl){
-          mediaPreview=`<img src="${esc(x.thumbnailUrl)}" class="w-full h-full object-cover" alt="Video thumbnail"><span class="sf-video-indicator">▶ Video</span>`;
-        } else if(x.mediaUrl){
-          mediaPreview=`<video src="${esc(x.mediaUrl)}#t=0.1" preload="metadata" muted playsinline class="w-full h-full object-cover pointer-events-none" data-media-path="${esc(x.mediaPath||'')}" onerror="window.__sfMediaFallback(this)"></video><span class="sf-video-indicator">▶ Video</span>`;
-        } else {
-          mediaPreview=`<div class="w-full h-full flex flex-col items-center justify-center bg-[#151515] p-3 text-center"><span class="text-3xl mb-1">🎥</span><span class="sf-video-indicator">▶ Video</span></div>`;
-        }
-      } else if(x.mediaUrl){
-        mediaPreview=`<img src="${esc(x.mediaUrl)}" style="${x.photoFilterCss ? `filter:${esc(x.photoFilterCss)};` : ''}" data-media-path="${esc(x.mediaPath||'')}" alt="Post photo" class="w-full h-full object-cover ${x.photoFilter ? `sf-filter-${esc(x.photoFilter)}` : ''}" onerror="window.__sfMediaFallback(this)"><span class="sf-photo-indicator">📷 Photo</span>`;
-      } else {
-        mediaPreview=`<div class="w-full h-full flex flex-col items-center justify-center p-4 text-center bg-[#161616]"><span class="text-3xl mb-1">🛍️</span><p class="text-xs line-clamp-3 text-zinc-300">${esc(x.text||'SellerFlow post')}</p></div>`;
-      }
-      const aiBadge=x.isAiGenerated?`<span class="ai-badge">✨ AI</span>`:'';
-      const privBadge=x.privacy==='private'?'<span class="absolute top-2 right-2 bg-black/80 text-[10px] px-1.5 py-0.5 rounded text-zinc-300">🔒</span>':x.privacy==='followers'?'<span class="absolute top-2 right-2 bg-black/80 text-[10px] px-1.5 py-0.5 rounded text-gold">👥</span>':'';
-      return `<button type="button" class="sf-post-tile relative overflow-hidden group cursor-pointer" data-profile-post="${x.id}" title="Watch post in For You feed">${mediaPreview}${aiBadge}${privBadge}<div class="sf-tile-meta flex items-center justify-between"><span>${isVid?'▶ Video':x.mediaUrl?'📷 Photo':'Text'}</span><span>❤️ ${x.likes?.length||0} · 👁️ ${x.views||0}</span></div></button>`;
-    }).join(''):'<div class="col-span-3 p-12 text-center muted"><div class="text-4xl mb-2">📸</div><h3 class="font-bold text-lg text-white">No posts published yet</h3><p class="text-sm mt-1">Tap "+ Create post" above to share your first photo or video with the SellerFlow community.</p></div>'}</div></div></section>`;
+    $('page').innerHTML=pageTitle('Profile','Your public creator identity, audience and content.')+`
+      <section class="sf-profile-cover">
+        <div class="relative z-10 p-5 md:p-7">
+          <div class="flex flex-col md:flex-row md:items-end gap-5">
+            <button type="button" id="profilePhotoBtn" class="shrink-0 border-0 bg-transparent cursor-pointer relative group" title="Change or view profile picture">
+              ${p.avatarUrl?`<img class="sf-profile-avatar" src="${esc(p.avatarUrl)}" data-media-path="${esc((p.avatarPath||''))}" alt="" onerror="window.__sfMediaFallback(this)">`:`<div class="sf-profile-avatar flex items-center justify-center text-4xl font-black text-gold">${esc((p.name||'?')[0].toUpperCase())}</div>`}
+              <span class="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-gold text-black flex items-center justify-center text-sm shadow-md border-2 border-[#121212] group-hover:scale-110 transition">📷</span>
+            </button>
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <h2 class="text-2xl sm:text-3xl font-black text-white">${esc(p.name||'SellerFlow User')}</h2>
+                ${verifyBadge(p)}
+              </div>
+              <div class="text-xs sm:text-sm text-zinc-400 mt-1 flex flex-wrap items-center gap-2 font-mono">
+                <span class="text-gold font-bold">@${esc(p.username||'seller')}</span>
+                <span class="text-zinc-600">·</span>
+                <span>${sfPresenceBadge(p)}</span>
+                <span class="text-zinc-600">·</span>
+                <span class="text-xs font-sans px-2 py-0.5 rounded-full bg-zinc-800/80 text-zinc-300 border border-zinc-700/80">🇬🇭 Ghana</span>
+              </div>
+              <div class="mt-3 text-xs sm:text-sm text-zinc-200 bg-black/40 backdrop-blur-xs border border-white/5 rounded-xl p-3 max-w-2xl leading-relaxed">
+                ${esc(p.bio||'Tell customers and followers what you create, sell or share.')}
+              </div>
+              <div class="flex flex-wrap gap-2 mt-4">
+                <button id="editProfileTop" class="btn btn-primary px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm">
+                  <span>✏️</span><span>Edit profile</span>
+                </button>
+                <button id="profileCreatePost" class="border border-[#444] hover:border-gold bg-[#171717] text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition">
+                  <span>＋</span><span>Create post</span>
+                </button>
+                <button id="profileOpenStore" class="border border-[#444] hover:border-gold px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#141414] text-white flex items-center gap-1.5 transition">
+                  <span>🏪</span><span>Storefront</span>
+                </button>
+                <button id="profileOpenSettings" class="border border-[#444] hover:border-gold px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-[#141414] text-white flex items-center gap-1.5 transition">
+                  <span>⚙️</span><span>Settings</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 mt-6">
+            <button class="sf-stat-card rounded-2xl p-4" data-profile-stat="posts">
+              <div class="text-2xl font-black text-white">${posts.length}</div>
+              <div class="muted text-xs mt-0.5">Posts</div>
+            </button>
+            <button class="sf-stat-card rounded-2xl p-4" data-profile-stat="views">
+              <div class="text-2xl font-black text-gold">${views}</div>
+              <div class="muted text-xs mt-0.5">Views</div>
+            </button>
+            <button class="sf-stat-card rounded-2xl p-4" data-profile-stat="likes">
+              <div class="text-2xl font-black text-rose-400">${likes}</div>
+              <div class="muted text-xs mt-0.5">Likes</div>
+            </button>
+            <button class="sf-stat-card rounded-2xl p-4" data-profile-stat="followers">
+              <div class="text-2xl font-black text-emerald-400">${followers}</div>
+              <div class="muted text-xs mt-0.5">Followers</div>
+            </button>
+          </div>
+        </div>
+      </section>
+      <section class="card mt-5 overflow-hidden border border-[#2b2b2b]">
+        <div class="sf-profile-tabs flex items-center justify-between border-b border-[#292929] px-4">
+          <div class="flex">
+            <button class="sf-profile-tab active" id="tabMyPosts">Posts (${posts.length})</button>
+            <button class="sf-profile-tab" id="profileFollowingTab">Following (${following})</button>
+          </div>
+          <div class="text-xs muted hidden sm:block">Tap any post to watch in For You</div>
+        </div>
+        <div class="p-3">
+          <div class="profile-grid">${posts.length?posts.map(x=>{
+            const isVid=x.mediaType?.startsWith('video');
+            let mediaPreview='';
+            let typeBadge='';
+            if(isVid){
+              typeBadge=`<span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[10px] font-bold text-white border border-white/10 flex items-center gap-1 shadow-sm">▶ Video</span>`;
+              if(x.thumbnailUrl){
+                mediaPreview=`<img src="${esc(x.thumbnailUrl)}" class="w-full h-full object-cover" alt="" onerror="window.__sfExtractVideoFrame(this, '${esc(x.mediaUrl||'')}', '${x.id}')">`;
+              } else if(x.mediaUrl){
+                mediaPreview=`<video src="${esc(x.mediaUrl)}#t=0.5" preload="metadata" muted playsinline loop autoplay class="w-full h-full object-cover pointer-events-none" data-media-path="${esc(x.mediaPath||'')}" onerror="window.__sfMediaFallback(this)"></video>`;
+              } else {
+                mediaPreview=`<div class="w-full h-full flex flex-col items-center justify-center bg-[#151515] p-3 text-center"><span class="text-3xl mb-1">🎬</span><span class="text-[11px] text-zinc-400 font-bold">Video</span></div>`;
+              }
+            } else if(x.mediaUrl){
+              typeBadge=`<span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[10px] font-bold text-white border border-white/10 flex items-center gap-1 shadow-sm">📷 Photo</span>`;
+              mediaPreview=`<img src="${esc(x.mediaUrl)}" style="${x.photoFilterCss ? `filter:${esc(x.photoFilterCss)};` : ''}" data-media-path="${esc(x.mediaPath||'')}" alt="" class="w-full h-full object-cover ${x.photoFilter ? `sf-filter-${esc(x.photoFilter)}` : ''}" onerror="window.__sfMediaFallback(this)">`;
+            } else {
+              typeBadge=`<span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[10px] font-bold text-white border border-white/10 flex items-center gap-1 shadow-sm">💬 Post</span>`;
+              mediaPreview=`<div class="w-full h-full flex flex-col items-center justify-center p-4 text-center bg-[#161616]"><span class="text-3xl mb-1">🛍️</span><p class="text-xs line-clamp-3 text-zinc-300 font-medium">${esc(x.text||'SellerFlow post')}</p></div>`;
+            }
+            const aiBadge=x.isAiGenerated?`<span class="ai-badge">✨ AI</span>`:'';
+            const privBadge=x.privacy==='private'?'<span class="absolute top-2 left-2 bg-black/80 text-[10px] px-1.5 py-0.5 rounded text-zinc-300">🔒</span>':x.privacy==='followers'?'<span class="absolute top-2 left-2 bg-black/80 text-[10px] px-1.5 py-0.5 rounded text-gold">👥</span>':'';
+            return `<button type="button" class="sf-post-tile relative overflow-hidden group cursor-pointer" data-profile-post="${x.id}" title="Watch post in For You feed">${mediaPreview}${typeBadge}${aiBadge}${privBadge}<div class="sf-tile-meta flex items-center justify-between"><span>${isVid?'🎬 Video':x.mediaUrl?'📷 Photo':'💬 Post'}</span><span>❤️ ${x.likes?.length||0} · 👁️ ${x.views||0}</span></div></button>`;
+          }).join(''):'<div class="col-span-3 p-12 text-center muted"><div class="text-4xl mb-2">📸</div><h3 class="font-bold text-lg text-white">No posts published yet</h3><p class="text-sm mt-1">Tap "+ Create post" above to share your first photo or video with the SellerFlow community.</p></div>'}</div>
+        </div>
+      </section>
+    `;
     $('profileCreatePost').onclick=openPostModal;
     $('editProfileTop').onclick=sfOpenProfileEditor;
-    $('profileOpenStore')?.addEventListener('click',()=>navigate('store'));
+    $('profileOpenStore')?.addEventListener('click',()=>openStore(currentUser.uid));
     $('profileOpenSettings')?.addEventListener('click',()=>navigate('settings'));
-    $('profilePhotoBtn')?.addEventListener('click',()=>p.avatarUrl&&sfOpenImage(p.avatarUrl,'Profile picture'));
+    $('profilePhotoBtn')?.addEventListener('click',sfOpenProfileEditor);
     document.querySelectorAll('[data-profile-post]').forEach(b=>b.onclick=()=>{
       const id=b.dataset.profilePost;
       if(id){
@@ -8176,11 +9278,13 @@ init();
   /* Admin Modern Dashboard & Control Center */
   renderAdmin = async function(){
     if(!isAdmin){ $('page').innerHTML = pageTitle('Access denied', 'You do not have permission to access the SellerFlow Admin Control Center.'); return; }
-    const [users, posts, reports, termsSnap] = await Promise.all([
+    const [users, posts, reports, termsSnap, storesSnap, productsSnap] = await Promise.all([
       getDocs(query(collection(db, 'users'), limit(300))),
       getDocs(query(collection(db, 'posts'), limit(250))),
       getDocs(query(collection(db, 'scamReports'), limit(100))),
-      getDoc(doc(db, 'settings', 'terms'))
+      getDoc(doc(db, 'settings', 'terms')),
+      getDocs(query(collection(db, 'stores'), limit(300))),
+      getDocs(query(collection(db, 'products'), limit(300)))
     ]);
 
     const pending = users.docs.filter(d => d.data().verificationStatus === 'pending');
@@ -8211,6 +9315,20 @@ init();
       .map(d => ({ id: d.id, data: d.data() }))
       .filter(x => x.data.status === 'removed' || x.data.reviewStatus === 'removed' || x.data.status === 'taken_down' || (x.data.status === 'hidden' && x.data.reviewStatus === 'violation'));
 
+    // Stores metrics
+    const allStoreDocs = storesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const liveStores = allStoreDocs.filter(s => s.status === 'approved' || (!s.status && s.reviewStatus !== 'pending_review' && s.status !== 'taken_down' && s.status !== 'rejected'));
+    const pendingStores = allStoreDocs.filter(s => s.status === 'pending_review' || s.reviewStatus === 'pending');
+    const takenDownStores = allStoreDocs.filter(s => s.status === 'taken_down' || s.reviewStatus === 'taken_down');
+    const rejectedStores = allStoreDocs.filter(s => s.status === 'rejected' || s.reviewStatus === 'rejected');
+
+    // Products metrics
+    const allProductDocs = productsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const liveProducts = allProductDocs.filter(p => p.status === 'approved' || (!p.status && p.reviewStatus !== 'pending_review' && p.status !== 'taken_down' && p.status !== 'rejected'));
+    const pendingProducts = allProductDocs.filter(p => p.status === 'pending_review' || p.reviewStatus === 'pending');
+    const takenDownProducts = allProductDocs.filter(p => p.status === 'taken_down' || p.reviewStatus === 'taken_down');
+    const rejectedProducts = allProductDocs.filter(p => p.status === 'rejected' || p.reviewStatus === 'rejected');
+
     const termData = snapshotExists(termsSnap) ? termsSnap.data() : { text: DEFAULT_TERMS, version: appTermsVersion };
     const initialTab = window._currentAdminTab || 'overview';
 
@@ -8222,7 +9340,7 @@ init();
             <h1 class="text-2xl sm:text-3xl font-black text-white">Admin Control Center</h1>
             <span class="text-[11px] font-bold bg-gold/15 text-gold border border-gold/30 px-2.5 py-0.5 rounded-full">LIVE MODERATION</span>
           </div>
-          <p class="muted text-xs sm:text-sm mt-1">Platform management: user directories, live posts, community reports & content restoration.</p>
+          <p class="muted text-xs sm:text-sm mt-1">Platform management: user directories, live posts, store & product review, community reports & restoration.</p>
         </div>
         <div class="flex items-center gap-2">
           <button type="button" id="adminRefreshBtn" class="border border-[#333] hover:border-gold px-3.5 py-2 rounded-xl text-xs font-bold bg-[#141414] text-zinc-200 transition flex items-center gap-1.5 shadow-sm">
@@ -8235,23 +9353,22 @@ init();
       </div>
 
       <!-- Dashboard-Style Executive Cards Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
         <!-- Card 1: Users & Accounts -->
         <button type="button" class="sf-dash-card group" id="dashCardUsers">
           <div>
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Users & Accounts</span>
-              <span class="text-xl p-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/50">👥</span>
+              <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Users</span>
+              <span class="text-lg p-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50">👥</span>
             </div>
-            <div class="text-3xl font-black text-white mt-2 group-hover:text-gold transition">${users.size}</div>
-            <div class="flex flex-wrap gap-1.5 mt-2.5">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800">${activeUsers.length} Active</span>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded ${pending.length ? 'bg-amber-950/80 text-amber-300 border border-amber-800' : 'bg-zinc-800/80 text-zinc-400'}">${pending.length} ID Pending</span>
-              ${restrictedUsers.length ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-950/80 text-rose-300 border border-rose-800">${restrictedUsers.length} Restricted</span>` : ''}
+            <div class="text-2xl font-black text-white mt-1.5 group-hover:text-gold transition">${users.size}</div>
+            <div class="flex flex-wrap gap-1 mt-2">
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800">${activeUsers.length} Active</span>
+              ${pending.length ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-800">${pending.length} ID</span>` : ''}
             </div>
           </div>
-          <div class="text-[11px] font-bold text-gold group-hover:underline mt-4 flex items-center justify-between">
-            <span>Manage accounts directory</span>
+          <div class="text-[10px] font-bold text-gold group-hover:underline mt-3 flex items-center justify-between">
+            <span>Accounts</span>
             <span>→</span>
           </div>
         </button>
@@ -8260,58 +9377,97 @@ init();
         <button type="button" class="sf-dash-card group" id="dashCardPosts">
           <div>
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Posts & Feed</span>
-              <span class="text-xl p-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/50">🎬</span>
+              <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Posts</span>
+              <span class="text-lg p-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50">🎬</span>
             </div>
-            <div class="text-3xl font-black text-white mt-2 group-hover:text-gold transition">${posts.size}</div>
-            <div class="flex flex-wrap gap-1.5 mt-2.5">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-950/80 text-blue-400 border border-blue-800">${livePosts.length} Live on Feed</span>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded ${reviewPosts.length ? 'bg-amber-950/80 text-amber-300 border border-amber-800' : 'bg-zinc-800 text-zinc-400'}">${reviewPosts.length} Queued Review</span>
+            <div class="text-2xl font-black text-white mt-1.5 group-hover:text-gold transition">${posts.size}</div>
+            <div class="flex flex-wrap gap-1 mt-2">
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-950/80 text-blue-400 border border-blue-800">${livePosts.length} Live</span>
+              ${reviewPosts.length ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-800">${reviewPosts.length} Review</span>` : ''}
             </div>
           </div>
-          <div class="text-[11px] font-bold text-gold group-hover:underline mt-4 flex items-center justify-between">
-            <span>Browse posts & moderation</span>
+          <div class="text-[10px] font-bold text-gold group-hover:underline mt-3 flex items-center justify-between">
+            <span>Posts Hub</span>
             <span>→</span>
           </div>
         </button>
 
-        <!-- Card 3: Community Reports -->
+        <!-- Card 3: Stores & Merchants -->
+        <button type="button" class="sf-dash-card group ${pendingStores.length ? 'border-amber-500/50' : ''}" id="dashCardStores">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Stores</span>
+              <span class="text-lg p-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50">🏪</span>
+            </div>
+            <div class="text-2xl font-black text-white mt-1.5 group-hover:text-gold transition">${storesSnap.size}</div>
+            <div class="flex flex-wrap gap-1 mt-2">
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800">${liveStores.length} Live</span>
+              ${pendingStores.length ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-950/90 text-amber-300 border border-amber-800 animate-pulse">${pendingStores.length} Review</span>` : ''}
+              ${takenDownStores.length ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-950/80 text-rose-300 border border-rose-800">${takenDownStores.length} Takedown</span>` : ''}
+            </div>
+          </div>
+          <div class="text-[10px] font-bold text-gold group-hover:underline mt-3 flex items-center justify-between">
+            <span>Stores Directory</span>
+            <span>→</span>
+          </div>
+        </button>
+
+        <!-- Card 4: Products & Catalogue -->
+        <button type="button" class="sf-dash-card group ${pendingProducts.length ? 'border-amber-500/50' : ''}" id="dashCardProducts">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Products</span>
+              <span class="text-lg p-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50">🛍️</span>
+            </div>
+            <div class="text-2xl font-black text-white mt-1.5 group-hover:text-gold transition">${productsSnap.size}</div>
+            <div class="flex flex-wrap gap-1 mt-2">
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800">${liveProducts.length} Live</span>
+              ${pendingProducts.length ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-950/90 text-amber-300 border border-amber-800 animate-pulse">${pendingProducts.length} Review</span>` : ''}
+              ${takenDownProducts.length ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-950/80 text-rose-300 border border-rose-800">${takenDownProducts.length} Takedown</span>` : ''}
+            </div>
+          </div>
+          <div class="text-[10px] font-bold text-gold group-hover:underline mt-3 flex items-center justify-between">
+            <span>Catalogue</span>
+            <span>→</span>
+          </div>
+        </button>
+
+        <!-- Card 5: Reports -->
         <button type="button" class="sf-dash-card group ${reports.size ? 'border-rose-500/40' : ''}" id="dashCardReports">
           <div>
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Community Reports</span>
-              <span class="text-xl p-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/50">🚩</span>
+              <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Reports</span>
+              <span class="text-lg p-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50">🚩</span>
             </div>
-            <div class="text-3xl font-black ${reports.size ? 'text-rose-400' : 'text-white'} mt-2 group-hover:text-gold transition">${reports.size}</div>
-            <div class="flex flex-wrap gap-1.5 mt-2.5">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded ${reports.size ? 'bg-rose-950/80 text-rose-300 border border-rose-800' : 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'}">
-                ${reports.size ? '⚡ Action Needed' : '✓ Community Safe'}
+            <div class="text-2xl font-black ${reports.size ? 'text-rose-400' : 'text-white'} mt-1.5 group-hover:text-gold transition">${reports.size}</div>
+            <div class="flex flex-wrap gap-1 mt-2">
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${reports.size ? 'bg-rose-950/80 text-rose-300 border border-rose-800' : 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'}">
+                ${reports.size ? '⚡ Attention' : '✓ Clean'}
               </span>
             </div>
           </div>
-          <div class="text-[11px] font-bold text-gold group-hover:underline mt-4 flex items-center justify-between">
-            <span>Investigate community flags</span>
+          <div class="text-[10px] font-bold text-gold group-hover:underline mt-3 flex items-center justify-between">
+            <span>Reports</span>
             <span>→</span>
           </div>
         </button>
 
-        <!-- Card 4: Safety & Restoration Hub -->
+        <!-- Card 6: Restoration Hub -->
         <button type="button" class="sf-dash-card group" id="dashCardRestoration">
           <div>
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Restoration Hub</span>
-              <span class="text-xl p-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/50">🔄</span>
+              <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Restoration</span>
+              <span class="text-lg p-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50">🔄</span>
             </div>
-            <div class="text-3xl font-black ${takenDownPosts.length ? 'text-rose-400' : 'text-white'} mt-2 group-hover:text-gold transition">${takenDownPosts.length}</div>
-            <div class="flex flex-wrap gap-1.5 mt-2.5">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded ${takenDownPosts.length ? 'bg-rose-950/80 text-rose-300 border border-rose-800' : 'bg-zinc-800 text-zinc-400'}">
-                ${takenDownPosts.length ? `${takenDownPosts.length} Taken Down` : '0 In Archive'}
+            <div class="text-2xl font-black ${takenDownPosts.length ? 'text-rose-400' : 'text-white'} mt-1.5 group-hover:text-gold transition">${takenDownPosts.length}</div>
+            <div class="flex flex-wrap gap-1 mt-2">
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${takenDownPosts.length ? 'bg-rose-950/80 text-rose-300 border border-rose-800' : 'bg-zinc-800 text-zinc-400'}">
+                ${takenDownPosts.length ? `${takenDownPosts.length} Removed` : '0 Clean'}
               </span>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">1-Click Restore</span>
             </div>
           </div>
-          <div class="text-[11px] font-bold text-gold group-hover:underline mt-4 flex items-center justify-between">
-            <span>Open restoration queue</span>
+          <div class="text-[10px] font-bold text-gold group-hover:underline mt-3 flex items-center justify-between">
+            <span>Restore Hub</span>
             <span>→</span>
           </div>
         </button>
@@ -8329,6 +9485,14 @@ init();
         <button class="admin-tab ${initialTab === 'posts' ? 'active' : ''}" data-admin-tab="posts">
           <span>🎬 Posts</span>
           <span class="admin-tab-count">${posts.size}</span>
+        </button>
+        <button class="admin-tab ${initialTab === 'stores' ? 'active' : ''}" data-admin-tab="stores">
+          <span>🏪 Stores</span>
+          <span class="admin-tab-count ${pendingStores.length ? 'bg-amber-950 text-amber-300 border border-amber-800' : ''}">${storesSnap.size}</span>
+        </button>
+        <button class="admin-tab ${initialTab === 'products' ? 'active' : ''}" data-admin-tab="products">
+          <span>🛍️ Products</span>
+          <span class="admin-tab-count ${pendingProducts.length ? 'bg-amber-950 text-amber-300 border border-amber-800' : ''}">${productsSnap.size}</span>
         </button>
         <button class="admin-tab ${initialTab === 'reports' ? 'active' : ''}" data-admin-tab="reports">
           <span>🚩 Reports</span>
@@ -8358,9 +9522,11 @@ init();
       window._currentAdminTab = tabName;
       document.querySelectorAll('[data-admin-tab]').forEach(t => t.classList.toggle('active', t.dataset.adminTab === tabName));
 
-      if(tabName === 'overview') sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData);
+      if(tabName === 'overview') sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts);
       else if(tabName === 'users') sfAdminUsers(users, pending, subOption);
       else if(tabName === 'posts') sfAdminPosts(posts, livePosts, reviewPosts, takenDownPosts, subOption);
+      else if(tabName === 'stores') sfAdminStores(storesSnap, liveStores, pendingStores, takenDownStores, rejectedStores, subOption);
+      else if(tabName === 'products') sfAdminProducts(productsSnap, liveProducts, pendingProducts, takenDownProducts, rejectedProducts, subOption);
       else if(tabName === 'reports') sfAdminReports(reports);
       else if(tabName === 'notify') sfAdminNotifyTab(users);
       else if(tabName === 'terms') sfAdminTermsTab(termData);
@@ -8374,24 +9540,28 @@ init();
 
     $('dashCardUsers').onclick = () => setAdminTab('users');
     $('dashCardPosts').onclick = () => setAdminTab('posts');
+    $('dashCardStores').onclick = () => setAdminTab('stores');
+    $('dashCardProducts').onclick = () => setAdminTab('products');
     $('dashCardReports').onclick = () => setAdminTab('reports');
     $('dashCardRestoration').onclick = () => setAdminTab('posts', 'restoration');
 
     setAdminTab(initialTab);
   };
 
-  function sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData){
+  function sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts){
     const activeCount = users.docs.filter(d => {
       const u = d.data();
       const isSusp = !!u.suspended || (u.suspendedUntil && ts(u.suspendedUntil) > Date.now());
       return !u.blocked && !isSusp && !u.postingRestricted;
     }).length;
     const totalPostsCount = (posts && typeof posts.size === 'number') ? posts.size : (Array.isArray(posts) ? posts.length : ((livePosts?.length || 0) + (takenDownPosts?.length || 0)));
+    const totalStoresCount = storesSnap?.size || liveStores?.length || 0;
+    const totalProductsCount = productsSnap?.size || liveProducts?.length || 0;
 
     $('adminWorkspace').innerHTML = `
       <div class="space-y-6">
         <!-- Distinct Section Quick-Launch Cards -->
-        <div class="grid md:grid-cols-3 gap-4">
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <!-- Launchpad 1: Users -->
           <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
             <div>
@@ -8399,12 +9569,12 @@ init();
                 <span class="text-2xl p-2 rounded-xl bg-zinc-800/80 border border-zinc-700/50">👥</span>
                 <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">${users.size} Accounts</span>
               </div>
-              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Users & Restrictions</h2>
-              <p class="muted text-xs mt-1 leading-relaxed">Directory of registered creators and buyers. Enforce suspensions, toggle account blocks, and restrict posting privileges.</p>
+              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Users & ID Checks</h2>
+              <p class="muted text-xs mt-1 leading-relaxed">Directory of registered creators and buyers. Enforce suspensions, toggle account blocks, and review Ghana Card submissions.</p>
               
               <div class="flex flex-wrap gap-2 mt-4">
                 <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">${activeCount} Active</span>
-                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${pending.length ? 'bg-amber-950/60 text-amber-300 border border-amber-800/60' : 'bg-zinc-800 text-zinc-400'}">${pending.length} Ghana Cards</span>
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${pending.length ? 'bg-amber-950/60 text-amber-300 border border-amber-800/60' : 'bg-zinc-800 text-zinc-400'}">${pending.length} ID Pending</span>
               </div>
             </div>
             <button type="button" id="jumpToUsersBtn" class="mt-5 w-full bg-[#1c1c1c] hover:bg-gold hover:text-black border border-[#333] hover:border-gold text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
@@ -8413,14 +9583,58 @@ init();
             </button>
           </div>
 
-          <!-- Launchpad 2: Posts -->
+          <!-- Launchpad 2: Stores & Moderation -->
+          <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-2xl p-2 rounded-xl bg-zinc-800/80 border border-zinc-700/50">🏪</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">${totalStoresCount} Stores</span>
+              </div>
+              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Store Moderation</h2>
+              <p class="muted text-xs mt-1 leading-relaxed">Review pending store submissions before they appear in the marketplace. Direct 1-click Store Takedown, Approve, or Request Changes.</p>
+              
+              <div class="flex flex-wrap gap-2 mt-4">
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">${liveStores?.length || 0} Live</span>
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${pendingStores?.length ? 'bg-amber-950/60 text-amber-300 border border-amber-800/60 animate-pulse' : 'bg-zinc-800 text-zinc-400'}">${pendingStores?.length || 0} Review Needed</span>
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${takenDownStores?.length ? 'bg-rose-950/60 text-rose-300 border border-rose-800/60' : 'bg-zinc-800 text-zinc-400'}">${takenDownStores?.length || 0} Taken Down</span>
+              </div>
+            </div>
+            <button type="button" id="jumpToStoresBtn" class="mt-5 w-full bg-[#1c1c1c] hover:bg-gold hover:text-black border border-[#333] hover:border-gold text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
+              <span>Manage Stores & Takedown</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          <!-- Launchpad 3: Products & Moderation -->
+          <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-2xl p-2 rounded-xl bg-zinc-800/80 border border-zinc-700/50">🛍️</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">${totalProductsCount} Products</span>
+              </div>
+              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Product Moderation</h2>
+              <p class="muted text-xs mt-1 leading-relaxed">Approve or reject seller product listings before they appear in search and market. Instant 1-click Product Takedown and Restore.</p>
+              
+              <div class="flex flex-wrap gap-2 mt-4">
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">${liveProducts?.length || 0} Live</span>
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${pendingProducts?.length ? 'bg-amber-950/60 text-amber-300 border border-amber-800/60 animate-pulse' : 'bg-zinc-800 text-zinc-400'}">${pendingProducts?.length || 0} Review Needed</span>
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${takenDownProducts?.length ? 'bg-rose-950/60 text-rose-300 border border-rose-800/60' : 'bg-zinc-800 text-zinc-400'}">${takenDownProducts?.length || 0} Taken Down</span>
+              </div>
+            </div>
+            <button type="button" id="jumpToProductsBtn" class="mt-5 w-full bg-[#1c1c1c] hover:bg-gold hover:text-black border border-[#333] hover:border-gold text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
+              <span>Manage Products & Takedown</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          <!-- Launchpad 4: Posts & Media -->
           <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
             <div>
               <div class="flex items-center justify-between mb-3">
                 <span class="text-2xl p-2 rounded-xl bg-zinc-800/80 border border-zinc-700/50">🎬</span>
                 <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">${totalPostsCount} Total</span>
               </div>
-              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Posts & Moderation</h2>
+              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Posts & Video Media</h2>
               <p class="muted text-xs mt-1 leading-relaxed">Unified control of live For You video/photo content, safety review queue, and 1-click restoration archive for taken-down media.</p>
               
               <div class="flex flex-wrap gap-2 mt-4">
@@ -8433,31 +9647,52 @@ init();
               <span>→</span>
             </button>
           </div>
+        </div>
 
-          <!-- Launchpad 3: Reports -->
-          <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
-            <div>
-              <div class="flex items-center justify-between mb-3">
-                <span class="text-2xl p-2 rounded-xl bg-zinc-800/80 border border-zinc-700/50">🚩</span>
-                <span class="text-xs font-bold px-2 py-0.5 rounded-full ${reports.size ? 'bg-rose-950 text-rose-300 border border-rose-800' : 'bg-zinc-800 text-zinc-300'}">${reports.size} Reports</span>
+        <!-- Priority Review Queues: Stores, Products, Posts -->
+        <div class="grid lg:grid-cols-2 gap-5">
+          <!-- Store Moderation Hub Card -->
+          <div class="card p-5 border border-[#2b2b2b]">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="text-xl">🏪</span>
+                <div>
+                  <h3 class="text-base font-black text-white">Store Review & Takedown Hub</h3>
+                  <p class="muted text-xs">Submitted merchant stores requiring verification or review.</p>
+                </div>
               </div>
-              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Community Reports</h2>
-              <p class="muted text-xs mt-1 leading-relaxed">Review user alerts regarding scams, fraud, counterfeit items, harassment, and policy violations with direct moderation tools.</p>
-              
-              <div class="flex flex-wrap gap-2 mt-4">
-                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${reports.size ? 'bg-rose-950/60 text-rose-300 border border-rose-800/60' : 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60'}">
-                  ${reports.size ? 'Requires Attention' : 'Community Clean'}
-                </span>
-              </div>
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full ${pendingStores?.length ? 'bg-amber-950/80 text-amber-300 border border-amber-800 animate-pulse' : 'bg-zinc-800 text-zinc-400'}">${pendingStores?.length || 0} awaiting</span>
             </div>
-            <button type="button" id="jumpToReportsBtn" class="mt-5 w-full bg-[#1c1c1c] hover:bg-gold hover:text-black border border-[#333] hover:border-gold text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
-              <span>Open Reports Section</span>
-              <span>→</span>
+            <div class="space-y-3 mt-4">
+              ${(pendingStores || []).slice(0, 2).map(s => renderAdminStoreItem(s, 'pending')).join('') || '<div class="p-8 text-center muted text-xs bg-[#141414] rounded-xl border border-[#262626]">No stores pending review. All clear!</div>'}
+            </div>
+            <button id="openAllStoreModeration" class="mt-4 border border-[#444] hover:border-gold rounded-xl px-4 py-2.5 text-xs font-bold w-full transition text-white bg-[#161616]">
+              View All Stores & Takedown Queue (${totalStoresCount}) →
+            </button>
+          </div>
+
+          <!-- Product Moderation Hub Card -->
+          <div class="card p-5 border border-[#2b2b2b]">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="text-xl">🛍️</span>
+                <div>
+                  <h3 class="text-base font-black text-white">Product Review & Takedown Hub</h3>
+                  <p class="muted text-xs">Seller listings submitted for review before marketplace launch.</p>
+                </div>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full ${pendingProducts?.length ? 'bg-amber-950/80 text-amber-300 border border-amber-800 animate-pulse' : 'bg-zinc-800 text-zinc-400'}">${pendingProducts?.length || 0} awaiting</span>
+            </div>
+            <div class="space-y-3 mt-4">
+              ${(pendingProducts || []).slice(0, 2).map(p => renderAdminProductItem(p, 'pending')).join('') || '<div class="p-8 text-center muted text-xs bg-[#141414] rounded-xl border border-[#262626]">No products pending review. All clear!</div>'}
+            </div>
+            <button id="openAllProductModeration" class="mt-4 border border-[#444] hover:border-gold rounded-xl px-4 py-2.5 text-xs font-bold w-full transition text-white bg-[#161616]">
+              View All Products & Takedown Queue (${totalProductsCount}) →
             </button>
           </div>
         </div>
 
-        <!-- Priority Attention Row: Restoration & Review Queues -->
+        <!-- Priority Attention Row: Post Restoration & Review Queues -->
         <div class="grid lg:grid-cols-2 gap-5">
           <!-- Restoration Queue Card -->
           <div class="card p-5 border border-[#2b2b2b]">
@@ -8503,8 +9738,11 @@ init();
     `;
 
     $('jumpToUsersBtn')?.addEventListener('click', () => setAdminTab('users'));
+    $('jumpToStoresBtn')?.addEventListener('click', () => setAdminTab('stores'));
+    $('jumpToProductsBtn')?.addEventListener('click', () => setAdminTab('products'));
     $('jumpToPostsBtn')?.addEventListener('click', () => setAdminTab('posts'));
-    $('jumpToReportsBtn')?.addEventListener('click', () => setAdminTab('reports'));
+    $('openAllStoreModeration')?.addEventListener('click', () => setAdminTab('stores'));
+    $('openAllProductModeration')?.addEventListener('click', () => setAdminTab('products'));
     $('openAllRestoration')?.addEventListener('click', () => setAdminTab('posts', 'restoration'));
     $('openAllReview')?.addEventListener('click', () => setAdminTab('posts', 'review'));
 
@@ -8545,6 +9783,43 @@ init();
     });
     document.querySelectorAll('[data-admin-takedown-post]').forEach(b => {
       b.onclick = () => adminTakeDown(b.dataset.adminTakedownPost);
+    });
+
+    // Admin Store Controls
+    document.querySelectorAll('[data-admin-takedown-store]').forEach(b => {
+      b.onclick = (e) => { e.stopPropagation(); adminTakeDownStore(b.dataset.adminTakedownStore); };
+    });
+    document.querySelectorAll('[data-admin-approve-store]').forEach(b => {
+      b.onclick = (e) => { e.stopPropagation(); adminApproveStore(b.dataset.adminApproveStore); };
+    });
+    document.querySelectorAll('[data-admin-reject-store]').forEach(b => {
+      b.onclick = (e) => { e.stopPropagation(); adminRejectStore(b.dataset.adminRejectStore); };
+    });
+    document.querySelectorAll('[data-admin-restore-store]').forEach(b => {
+      b.onclick = (e) => { e.stopPropagation(); adminRestoreStore(b.dataset.adminRestoreStore); };
+    });
+    document.querySelectorAll('[data-admin-delete-store]').forEach(b => {
+      b.onclick = (e) => { e.stopPropagation(); deleteStore(b.dataset.adminDeleteStore); };
+    });
+    document.querySelectorAll('[data-admin-view-store]').forEach(b => {
+      b.onclick = (e) => { e.stopPropagation(); openStore(b.dataset.adminViewStore); };
+    });
+
+    // Admin Product Controls
+    document.querySelectorAll('[data-admin-takedown-product]').forEach(b => {
+      b.onclick = (e) => { e.stopPropagation(); adminTakeDownProduct(b.dataset.adminTakedownProduct); };
+    });
+    document.querySelectorAll('[data-admin-approve-product]').forEach(b => {
+      b.onclick = (e) => { e.stopPropagation(); adminApproveProduct(b.dataset.adminApproveProduct); };
+    });
+    document.querySelectorAll('[data-admin-reject-product]').forEach(b => {
+      b.onclick = (e) => { e.stopPropagation(); adminRejectProduct(b.dataset.adminRejectProduct); };
+    });
+    document.querySelectorAll('[data-admin-restore-product]').forEach(b => {
+      b.onclick = (e) => { e.stopPropagation(); adminRestoreProduct(b.dataset.adminRestoreProduct); };
+    });
+    document.querySelectorAll('[data-admin-delete-product]').forEach(b => {
+      b.onclick = (e) => { e.stopPropagation(); deleteProduct(b.dataset.adminDeleteProduct); };
     });
   }
 
@@ -8806,6 +10081,335 @@ init();
   }
   function sfAdminReview(reviewPosts){
     sfAdminPosts(null, null, reviewPosts, null, 'review');
+  }
+
+  /* Admin Stores Management Section */
+  function renderAdminStoreItem(s, mode){
+    const p = sellerProfile(s.ownerId);
+    const storeName = s.name || p?.name || 'Seller Store';
+    const isTakenDown = s.status === 'taken_down' || s.reviewStatus === 'taken_down';
+    const isPending = s.status === 'pending_review' || s.reviewStatus === 'pending';
+    const isRejected = s.status === 'rejected' || s.reviewStatus === 'rejected';
+    const isApproved = s.status === 'approved' || (!s.status && !isPending && !isTakenDown && !isRejected);
+
+    let statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800">🟢 Live Store</span>`;
+    if(isPending) statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800 animate-pulse">⏳ Pending Admin Review</span>`;
+    if(isTakenDown) statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800">🚫 Taken Down</span>`;
+    if(isRejected) statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-950 text-orange-300 border border-orange-800">⚠️ Changes Requested</span>`;
+
+    return `
+      <div class="card p-4 border border-[#2b2b2b] hover:border-gold/40 transition flex flex-col justify-between" id="admin-store-card-${esc(s.id)}">
+        <div>
+          ${s.bannerUrl ? `
+            <div class="w-full h-24 rounded-xl overflow-hidden mb-3 border border-[#262626] bg-[#111]">
+              <img src="${esc(s.bannerUrl)}" class="w-full h-full object-cover" alt="Banner">
+            </div>
+          ` : ''}
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+              ${s.logoUrl ? `
+                <img src="${esc(s.logoUrl)}" class="w-11 h-11 rounded-xl object-cover border border-[#333] shrink-0" alt="Logo">
+              ` : avatar(p, 'w-11 h-11 rounded-xl object-cover border border-[#333] shrink-0')}
+              <div class="min-w-0">
+                <div class="font-bold text-sm text-white truncate flex items-center gap-1.5">
+                  <span>${esc(storeName)}</span>
+                  ${p?.verified ? `<span class="verified-badge text-[10px]">✓</span>` : ''}
+                </div>
+                <div class="text-[11px] text-zinc-400 truncate">Owner: @${esc(p?.username || s.ownerId?.slice(0, 8))}</div>
+              </div>
+            </div>
+            ${statusPill}
+          </div>
+
+          <p class="muted text-xs mt-2.5 line-clamp-2 leading-relaxed">${esc(s.description || 'No description provided.')}</p>
+          
+          <div class="flex flex-wrap gap-2 text-[11px] text-zinc-400 mt-2.5">
+            ${s.location || s.address ? `<span class="flex items-center gap-1">📍 ${esc(s.location || s.address)}</span>` : ''}
+            ${s.phone ? `<span class="flex items-center gap-1">📞 ${esc(s.phone)}</span>` : ''}
+            ${s.whatsapp ? `<span class="flex items-center gap-1">💬 ${esc(s.whatsapp)}</span>` : ''}
+          </div>
+
+          ${isTakenDown && s.takedownReason ? `
+            <div class="mt-2.5 p-2 rounded-lg bg-rose-950/40 border border-rose-900/60 text-rose-300 text-xs">
+              <span class="font-bold">Takedown Reason:</span> ${esc(s.takedownReason)}
+            </div>
+          ` : ''}
+          ${isRejected && s.rejectionReason ? `
+            <div class="mt-2.5 p-2 rounded-lg bg-orange-950/40 border border-orange-900/60 text-orange-300 text-xs">
+              <span class="font-bold">Review Feedback:</span> ${esc(s.rejectionReason)}
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-[#242424] flex flex-wrap items-center gap-1.5">
+          <button type="button" data-admin-view-store="${esc(s.ownerId || s.id)}" class="border border-[#333] hover:border-gold hover:text-white text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+            <span>👁️</span><span>Visit</span>
+          </button>
+          ${isTakenDown ? `
+            <button type="button" data-admin-restore-store="${esc(s.ownerId || s.id)}" class="bg-amber-500 hover:bg-amber-400 text-black px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+              <span>🔄</span><span>Restore Store</span>
+            </button>
+          ` : `
+            <button type="button" data-admin-takedown-store="${esc(s.ownerId || s.id)}" class="bg-rose-950 border border-rose-800 text-rose-300 hover:bg-rose-900 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+              <span>🚫</span><span>Take Down Store</span>
+            </button>
+          `}
+          ${(isPending || isRejected) ? `
+            <button type="button" data-admin-approve-store="${esc(s.ownerId || s.id)}" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+              <span>✓</span><span>Approve Store</span>
+            </button>
+          ` : ''}
+          ${(!isRejected && !isTakenDown) ? `
+            <button type="button" data-admin-reject-store="${esc(s.ownerId || s.id)}" class="border border-orange-800/80 bg-orange-950/40 hover:bg-orange-900/60 text-orange-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+              <span>⚠️</span><span>Request Changes</span>
+            </button>
+          ` : ''}
+          <button type="button" data-admin-delete-store="${esc(s.ownerId || s.id)}" class="border border-red-900/60 hover:bg-red-950 text-red-400 px-2.5 py-1.5 rounded-lg text-xs transition ml-auto flex items-center gap-1" title="Permanently Delete Store">
+            <span>🗑️</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function sfAdminStores(storesSnap, liveStores, pendingStores, takenDownStores, rejectedStores, initialSubTab){
+    let activeSubTab = initialSubTab || (pendingStores?.length ? 'pending' : 'all');
+    const allStores = storesSnap?.docs ? storesSnap.docs.map(d => ({ id: d.id, ...d.data() })) : (Array.isArray(storesSnap) ? storesSnap : []);
+
+    $('adminWorkspace').innerHTML = `
+      <div class="space-y-4">
+        <!-- Stores Navigation Sub-Tabs -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <button class="admin-subtab ${activeSubTab === 'pending' ? 'active' : ''}" data-stores-subtab="pending">
+              <span>⏳ Pending Review</span>
+              <span class="admin-tab-count ${pendingStores?.length ? 'bg-amber-950 text-amber-300 border border-amber-800' : ''}">${pendingStores?.length || 0}</span>
+            </button>
+            <button class="admin-subtab ${activeSubTab === 'live' ? 'active' : ''}" data-stores-subtab="live">
+              <span>🟢 Live Stores</span>
+              <span class="admin-tab-count">${liveStores?.length || 0}</span>
+            </button>
+            <button class="admin-subtab ${activeSubTab === 'takedown' ? 'active' : ''}" data-stores-subtab="takedown">
+              <span>🚫 Taken Down</span>
+              <span class="admin-tab-count ${takenDownStores?.length ? 'bg-rose-950 text-rose-300 border border-rose-800' : ''}">${takenDownStores?.length || 0}</span>
+            </button>
+            <button class="admin-subtab ${activeSubTab === 'rejected' ? 'active' : ''}" data-stores-subtab="rejected">
+              <span>⚠️ Changes Requested</span>
+              <span class="admin-tab-count">${rejectedStores?.length || 0}</span>
+            </button>
+            <button class="admin-subtab ${activeSubTab === 'all' ? 'active' : ''}" data-stores-subtab="all">
+              <span>🏪 All Stores</span>
+              <span class="admin-tab-count">${allStores.length}</span>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input id="storeSearchInput" type="text" placeholder="Search store name, owner, city..." class="bg-[#121212] border border-[#2b2b2b] rounded-xl px-3.5 py-1.5 text-xs text-white placeholder-zinc-500 outline-none focus:border-gold w-48 sm:w-64">
+          </div>
+        </div>
+
+        <div id="adminStoresContainer" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </div>
+    `;
+
+    function renderActiveStoresList(){
+      const container = $('adminStoresContainer');
+      if(!container) return;
+      const q = ($('storeSearchInput')?.value || '').toLowerCase().trim();
+
+      let pool = allStores;
+      if(activeSubTab === 'pending') pool = pendingStores || [];
+      else if(activeSubTab === 'live') pool = liveStores || [];
+      else if(activeSubTab === 'takedown') pool = takenDownStores || [];
+      else if(activeSubTab === 'rejected') pool = rejectedStores || [];
+
+      const filtered = pool.filter(s => {
+        if(!q) return true;
+        const haystack = `${s.name || ''} ${s.description || ''} ${s.location || ''} ${s.address || ''} ${s.phone || ''} ${s.ownerId || ''}`.toLowerCase();
+        return haystack.includes(q);
+      });
+
+      if(!filtered.length){
+        container.innerHTML = `
+          <div class="col-span-full card p-10 text-center muted">
+            <div class="text-3xl mb-2">🏪</div>
+            <p class="font-bold text-white">No stores found in this category.</p>
+            <p class="text-xs mt-1">Check another tab or clear your search term.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(s => renderAdminStoreItem(s, activeSubTab)).join('');
+      bindAdminControls();
+    }
+
+    document.querySelectorAll('[data-stores-subtab]').forEach(btn => {
+      btn.onclick = () => {
+        activeSubTab = btn.dataset.storesSubtab;
+        document.querySelectorAll('[data-stores-subtab]').forEach(b => b.classList.toggle('active', b === btn));
+        renderActiveStoresList();
+      };
+    });
+
+    $('storeSearchInput')?.addEventListener('input', renderActiveStoresList);
+    renderActiveStoresList();
+  }
+
+  /* Admin Products Management Section */
+  function renderAdminProductItem(p, mode){
+    const s = sellerProfile(p.sellerId);
+    const isTakenDown = p.status === 'taken_down' || p.reviewStatus === 'taken_down';
+    const isPending = p.status === 'pending_review' || p.reviewStatus === 'pending';
+    const isRejected = p.status === 'rejected' || p.reviewStatus === 'rejected';
+    const isApproved = p.status === 'approved' || (!p.status && !isPending && !isTakenDown && !isRejected);
+
+    let statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800">🟢 Live in Market</span>`;
+    if(isPending) statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800 animate-pulse">⏳ Pending Admin Review</span>`;
+    if(isTakenDown) statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800">🚫 Taken Down</span>`;
+    if(isRejected) statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-950 text-orange-300 border border-orange-800">⚠️ Changes Requested</span>`;
+
+    return `
+      <div class="card p-4 border border-[#2b2b2b] hover:border-gold/40 transition flex flex-col justify-between" id="admin-prod-card-${esc(p.id)}">
+        <div>
+          <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-3 bg-[#141414] border border-[#252525]">
+            <img src="${esc(p.imageUrl || '')}" class="w-full h-full object-cover" alt="" onerror="this.src=''; this.parentElement.innerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center text-zinc-600\\'>🛍️<span class=\\'text-[10px] mt-1\\'>No image</span></div>'">
+            <div class="absolute top-2 right-2">${statusPill}</div>
+            <div class="absolute bottom-2 left-2 bg-black/80 backdrop-blur px-2.5 py-1 rounded-lg font-black text-gold text-xs">${money(p.price)}</div>
+          </div>
+
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="font-bold text-sm text-white truncate flex-1">${esc(p.name)}</h3>
+            <span class="text-[10px] text-zinc-400 border border-[#333] px-1.5 py-0.5 rounded">${Number(p.stock) || 0} in stock</span>
+          </div>
+          <div class="text-[11px] text-zinc-400 mt-0.5 truncate">Seller: @${esc(s?.username || p.sellerId?.slice(0, 8))}</div>
+          <p class="muted text-xs mt-2 line-clamp-2 leading-relaxed">${esc(p.description || 'No description.')}</p>
+
+          ${isTakenDown && p.takedownReason ? `
+            <div class="mt-2.5 p-2 rounded-lg bg-rose-950/40 border border-rose-900/60 text-rose-300 text-xs">
+              <span class="font-bold">Takedown Reason:</span> ${esc(p.takedownReason)}
+            </div>
+          ` : ''}
+          ${isRejected && p.rejectionReason ? `
+            <div class="mt-2.5 p-2 rounded-lg bg-orange-950/40 border border-orange-900/60 text-orange-300 text-xs">
+              <span class="font-bold">Review Feedback:</span> ${esc(p.rejectionReason)}
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-[#242424] flex flex-wrap items-center gap-1.5">
+          ${isTakenDown ? `
+            <button type="button" data-admin-restore-product="${esc(p.id)}" class="bg-amber-500 hover:bg-amber-400 text-black px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+              <span>🔄</span><span>Restore</span>
+            </button>
+          ` : `
+            <button type="button" data-admin-takedown-product="${esc(p.id)}" class="bg-rose-950 border border-rose-800 text-rose-300 hover:bg-rose-900 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+              <span>🚫</span><span>Take Down</span>
+            </button>
+          `}
+          ${(isPending || isRejected) ? `
+            <button type="button" data-admin-approve-product="${esc(p.id)}" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+              <span>✓</span><span>Approve</span>
+            </button>
+          ` : ''}
+          ${(!isRejected && !isTakenDown) ? `
+            <button type="button" data-admin-reject-product="${esc(p.id)}" class="border border-orange-800/80 bg-orange-950/40 hover:bg-orange-900/60 text-orange-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+              <span>⚠️</span><span>Request Changes</span>
+            </button>
+          ` : ''}
+          <button type="button" data-edit-product="${esc(p.id)}" class="border border-[#333] hover:border-gold hover:text-white text-zinc-300 px-2.5 py-1.5 rounded-lg text-xs transition flex items-center gap-1" title="Edit Product">
+            <span>✏️</span>
+          </button>
+          <button type="button" data-admin-delete-product="${esc(p.id)}" class="border border-red-900/60 hover:bg-red-950 text-red-400 px-2.5 py-1.5 rounded-lg text-xs transition ml-auto flex items-center gap-1" title="Delete Product">
+            <span>🗑️</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function sfAdminProducts(productsSnap, liveProducts, pendingProducts, takenDownProducts, rejectedProducts, initialSubTab){
+    let activeSubTab = initialSubTab || (pendingProducts?.length ? 'pending' : 'all');
+    const allProducts = productsSnap?.docs ? productsSnap.docs.map(d => ({ id: d.id, ...d.data() })) : (Array.isArray(productsSnap) ? productsSnap : []);
+
+    $('adminWorkspace').innerHTML = `
+      <div class="space-y-4">
+        <!-- Products Navigation Sub-Tabs -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <button class="admin-subtab ${activeSubTab === 'pending' ? 'active' : ''}" data-prods-subtab="pending">
+              <span>⏳ Pending Review</span>
+              <span class="admin-tab-count ${pendingProducts?.length ? 'bg-amber-950 text-amber-300 border border-amber-800' : ''}">${pendingProducts?.length || 0}</span>
+            </button>
+            <button class="admin-subtab ${activeSubTab === 'live' ? 'active' : ''}" data-prods-subtab="live">
+              <span>🟢 Live in Market</span>
+              <span class="admin-tab-count">${liveProducts?.length || 0}</span>
+            </button>
+            <button class="admin-subtab ${activeSubTab === 'takedown' ? 'active' : ''}" data-prods-subtab="takedown">
+              <span>🚫 Taken Down</span>
+              <span class="admin-tab-count ${takenDownProducts?.length ? 'bg-rose-950 text-rose-300 border border-rose-800' : ''}">${takenDownProducts?.length || 0}</span>
+            </button>
+            <button class="admin-subtab ${activeSubTab === 'rejected' ? 'active' : ''}" data-prods-subtab="rejected">
+              <span>⚠️ Changes Requested</span>
+              <span class="admin-tab-count">${rejectedProducts?.length || 0}</span>
+            </button>
+            <button class="admin-subtab ${activeSubTab === 'all' ? 'active' : ''}" data-prods-subtab="all">
+              <span>📦 All Products</span>
+              <span class="admin-tab-count">${allProducts.length}</span>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input id="productSearchInput" type="text" placeholder="Search product name, category, seller..." class="bg-[#121212] border border-[#2b2b2b] rounded-xl px-3.5 py-1.5 text-xs text-white placeholder-zinc-500 outline-none focus:border-gold w-48 sm:w-64">
+          </div>
+        </div>
+
+        <div id="adminProductsContainer" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+      </div>
+    `;
+
+    function renderActiveProductsList(){
+      const container = $('adminProductsContainer');
+      if(!container) return;
+      const q = ($('productSearchInput')?.value || '').toLowerCase().trim();
+
+      let pool = allProducts;
+      if(activeSubTab === 'pending') pool = pendingProducts || [];
+      else if(activeSubTab === 'live') pool = liveProducts || [];
+      else if(activeSubTab === 'takedown') pool = takenDownProducts || [];
+      else if(activeSubTab === 'rejected') pool = rejectedProducts || [];
+
+      const filtered = pool.filter(p => {
+        if(!q) return true;
+        const haystack = `${p.name || ''} ${p.description || ''} ${p.category || ''} ${p.sellerId || ''}`.toLowerCase();
+        return haystack.includes(q);
+      });
+
+      if(!filtered.length){
+        container.innerHTML = `
+          <div class="col-span-full card p-10 text-center muted">
+            <div class="text-3xl mb-2">📦</div>
+            <p class="font-bold text-white">No products found in this category.</p>
+            <p class="text-xs mt-1">Check another tab or clear your search query.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(p => renderAdminProductItem(p, activeSubTab)).join('');
+      bindAdminControls();
+    }
+
+    document.querySelectorAll('[data-prods-subtab]').forEach(btn => {
+      btn.onclick = () => {
+        activeSubTab = btn.dataset.prodsSubtab;
+        document.querySelectorAll('[data-prods-subtab]').forEach(b => b.classList.toggle('active', b === btn));
+        renderActiveProductsList();
+      };
+    });
+
+    $('productSearchInput')?.addEventListener('input', renderActiveProductsList);
+    renderActiveProductsList();
   }
 
   /* Distinct Section: User Management & Restrictions View */
