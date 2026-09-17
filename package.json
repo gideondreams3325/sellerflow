@@ -6,11 +6,13 @@
     "dev": "node server.js",
     "build": "node -e \"import('node:fs').then(fs=>{fs.mkdirSync('dist',{recursive:true});fs.copyFileSync('index.html','dist/index.html');if(fs.existsSync('_redirects'))fs.copyFileSync('_redirects','dist/_redirects');console.log('Build complete: static assets ready in dist/');})\"",
     "start": "node server.js",
-    "lint": "node -e \"console.log('Lint passed')\""
+    "lint": "node -e \"console.log('Lint passed')\"",
+    "test": "node tests/moderation-security.test.js"
   },
   "dependencies": {
     "express": "^4.21.2",
     "firebase-admin": "^14.4.0",
-    "firebase-functions": "^7.4.0"
+    "firebase-functions": "^7.4.0",
+    "jose": "^6.2.12"
   }
 }

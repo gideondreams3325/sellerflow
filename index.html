@@ -1868,6 +1868,7 @@ async function init(){
         if(cfg.firebaseApiKey)firebaseConfig.apiKey=cfg.firebaseApiKey;
         if(cfg.supabaseUrl)supabaseUrl=cfg.supabaseUrl;
         if(cfg.supabaseKey)supabaseKey=cfg.supabaseKey;
+        if(cfg.moderationFunctionUrl)window.SELLERFLOW_MODERATION_URL=cfg.moderationFunctionUrl;
       }
     }catch(_){}
     firebaseApp=initializeApp(firebaseConfig);
@@ -2214,8 +2215,8 @@ init();
     };
   }
 
-  /* Authoritative Production Moderation Endpoint: Firebase Cloud Function "moderatePost" */
-  const SELLERFLOW_PROD_MODERATION_URL = 'https://us-central1-sellerflow-efaab.cloudfunctions.net/moderatePost';
+  /* Authoritative Production Moderation Endpoint: Supabase Edge Function "moderatePost" */
+  const SELLERFLOW_PROD_MODERATION_URL = 'https://vvpwntehstjbccarqqzp.supabase.co/functions/v1/moderatePost';
 
   /* Server-Side SellerFlow AI Moderation Helper */
   async function sellerFlowAiModerator(input){

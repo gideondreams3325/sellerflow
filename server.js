@@ -356,12 +356,16 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
   }
 });
 
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 app.get('/api/config', (req, res) => {
   res.json({
     firebaseApiKey: process.env.FIREBASE_API_KEY || '',
     supabaseUrl: process.env.SUPABASE_URL || '',
     supabaseKey: process.env.SUPABASE_KEY || '',
-    moderationFunctionUrl: process.env.MODERATION_FUNCTION_URL || 'https://us-central1-sellerflow-efaab.cloudfunctions.net/moderatePost'
+    moderationFunctionUrl: process.env.MODERATION_FUNCTION_URL || (process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL.replace(/\/+$/, '')}/functions/v1/moderatePost` : 'https://vvpwntehstjbccarqqzp.supabase.co/functions/v1/moderatePost')
   });
 });
 
@@ -369,7 +373,7 @@ const distPath = path.join(__dirname, 'dist');
 if (fs.existsSync(distPath)) {
   app.use(express.static(distPath));
 }
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, { dotfiles: 'ignore', index: false }));
 
 app.get('*', (req, res) => {
   const indexPath = fs.existsSync(path.join(distPath, 'index.html'))

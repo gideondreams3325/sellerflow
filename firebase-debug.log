@@ -1,81 +1,25 @@
-[debug] [2026-09-17T01:06:26.424Z] ----------------------------------------------------------------------
-[debug] [2026-09-17T01:06:26.426Z] Command:       /usr/local/bin/node /usr/local/bin/firebase deploy --only functions:moderatePost --project sellerflow-efaab
-[debug] [2026-09-17T01:06:26.427Z] CLI Version:   15.29.0
-[debug] [2026-09-17T01:06:26.427Z] Platform:      linux
-[debug] [2026-09-17T01:06:26.427Z] Node Version:  v22.23.2
-[debug] [2026-09-17T01:06:26.427Z] Detected Agent: unknown
-[debug] [2026-09-17T01:06:26.427Z] Time:          Thu Sep 17 2026 01:06:26 GMT+0000 (Coordinated Universal Time)
-[debug] [2026-09-17T01:06:26.428Z] ----------------------------------------------------------------------
+[debug] [2026-09-17T02:54:27.075Z] ----------------------------------------------------------------------
+[debug] [2026-09-17T02:54:27.078Z] Command:       /usr/local/bin/node /usr/local/bin/firebase projects:list
+[debug] [2026-09-17T02:54:27.078Z] CLI Version:   15.29.0
+[debug] [2026-09-17T02:54:27.079Z] Platform:      linux
+[debug] [2026-09-17T02:54:27.079Z] Node Version:  v22.23.2
+[debug] [2026-09-17T02:54:27.079Z] Detected Agent: unknown
+[debug] [2026-09-17T02:54:27.079Z] Time:          Thu Sep 17 2026 02:54:27 GMT+0000 (Coordinated Universal Time)
+[debug] [2026-09-17T02:54:27.080Z] ----------------------------------------------------------------------
 [debug] 
-[debug] [2026-09-17T01:06:30.535Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
-[debug] [2026-09-17T01:06:30.558Z] Running auto auth
-[debug] [2026-09-17T01:06:30.561Z] [iam] checking project sellerflow-efaab for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
-[debug] [2026-09-17T01:06:30.581Z] No OAuth tokens found
-[debug] [2026-09-17T01:06:30.583Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/sellerflow-efaab:testIamPermissions [none]
-[debug] [2026-09-17T01:06:30.583Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/sellerflow-efaab:testIamPermissions  x-goog-user-project=sellerflow-efaab
-[debug] [2026-09-17T01:06:30.583Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/sellerflow-efaab:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
-[debug] [2026-09-17T01:06:31.310Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/sellerflow-efaab:testIamPermissions 403
-[debug] [2026-09-17T01:06:31.310Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/sellerflow-efaab:testIamPermissions {"error":{"code":403,"message":"Caller does not have required permission to use project sellerflow-efaab. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=sellerflow-efaab and then retry. Propagation of the new permission may take a few minutes.","status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"USER_PROJECT_DENIED","domain":"googleapis.com","metadata":{"consumer":"projects/sellerflow-efaab","service":"cloudresourcemanager.googleapis.com","consoleUrl":"https://console.developers.google.com/iam-admin/iam?project=sellerflow-efaab","containerInfo":"sellerflow-efaab"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Caller does not have required permission to use project sellerflow-efaab. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=sellerflow-efaab and then retry. Propagation of the new permission may take a few minutes."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developer console IAM admin","url":"https://console.developers.google.com/iam-admin/iam?project=sellerflow-efaab"}]}]}}
-[debug] [2026-09-17T01:06:31.311Z] [iam] error while checking permissions, command may fail: Request to https://cloudresourcemanager.googleapis.com/v1/projects/sellerflow-efaab:testIamPermissions had HTTP Error: 403, Caller does not have required permission to use project sellerflow-efaab. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=sellerflow-efaab and then retry. Propagation of the new permission may take a few minutes.
-[debug] [2026-09-17T01:06:31.311Z] No OAuth tokens found
-[debug] [2026-09-17T01:06:31.311Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/sellerflow-efaab/serviceAccounts/sellerflow-efaab@appspot.gserviceaccount.com:testIamPermissions [none]
-[debug] [2026-09-17T01:06:31.311Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/sellerflow-efaab/serviceAccounts/sellerflow-efaab@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
-[debug] [2026-09-17T01:06:31.497Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/sellerflow-efaab/serviceAccounts/sellerflow-efaab@appspot.gserviceaccount.com:testIamPermissions 404
-[debug] [2026-09-17T01:06:31.497Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/sellerflow-efaab/serviceAccounts/sellerflow-efaab@appspot.gserviceaccount.com:testIamPermissions {"error":{"code":404,"message":"Unknown service account","status":"NOT_FOUND"}}
-[debug] [2026-09-17T01:06:31.497Z] [functions] service account IAM check errored, deploy may fail: Request to https://iam.googleapis.com/v1/projects/sellerflow-efaab/serviceAccounts/sellerflow-efaab@appspot.gserviceaccount.com:testIamPermissions had HTTP Error: 404, Unknown service account {"name":"FirebaseError","children":[],"context":{"body":{"error":{"code":404,"message":"Unknown service account","status":"NOT_FOUND"}},"response":{"statusCode":404}},"exit":1,"message":"Request to https://iam.googleapis.com/v1/projects/sellerflow-efaab/serviceAccounts/sellerflow-efaab@appspot.gserviceaccount.com:testIamPermissions had HTTP Error: 404, Unknown service account","status":404}
-[info] 
-[info] === Deploying to 'sellerflow-efaab'...
-[info] 
-[info] i  deploying functions 
-[debug] [2026-09-17T01:06:31.501Z] No OAuth tokens found
-[debug] [2026-09-17T01:06:31.501Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/sellerflow-efaab/services/cloudresourcemanager.googleapis.com [none]
-[debug] [2026-09-17T01:06:31.501Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/sellerflow-efaab/services/cloudresourcemanager.googleapis.com  x-goog-user-project=sellerflow-efaab
-[debug] [2026-09-17T01:06:32.200Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/sellerflow-efaab/services/cloudresourcemanager.googleapis.com 403
-[debug] [2026-09-17T01:06:32.200Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/sellerflow-efaab/services/cloudresourcemanager.googleapis.com [omitted]
-[debug] [2026-09-17T01:06:32.200Z] Unable to check that https://cloudresourcemanager.googleapis.com is enabled on sellerflow-efaab. Calls to it will fail if it is not enabled
-[debug] [2026-09-17T01:06:32.201Z] No OAuth tokens found
-[debug] [2026-09-17T01:06:32.201Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/sellerflow-efaab [none]
-[debug] [2026-09-17T01:06:32.318Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/sellerflow-efaab 403
-[debug] [2026-09-17T01:06:32.319Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/sellerflow-efaab {"error":{"code":403,"message":"Cloud Resource Manager API has not been used in project 123405530511 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudresourcemanager.googleapis.com/overview?project=123405530511 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"SERVICE_DISABLED","domain":"googleapis.com","metadata":{"containerInfo":"123405530511","service":"cloudresourcemanager.googleapis.com","serviceTitle":"Cloud Resource Manager API","consumer":"projects/123405530511","activationUrl":"https://console.developers.google.com/apis/api/cloudresourcemanager.googleapis.com/overview?project=123405530511"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Cloud Resource Manager API has not been used in project 123405530511 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudresourcemanager.googleapis.com/overview?project=123405530511 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developers console API activation","url":"https://console.developers.google.com/apis/api/cloudresourcemanager.googleapis.com/overview?project=123405530511"}]}]}}
+[debug] [2026-09-17T02:54:27.106Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-09-17T02:54:27.476Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-09-17T02:54:27.528Z] Running auto auth
+[debug] [2026-09-17T02:54:27.534Z] No OAuth tokens found
+[debug] [2026-09-17T02:54:27.535Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=1000
+[debug] [2026-09-17T02:54:27.594Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 403
+[debug] [2026-09-17T02:54:27.594Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
+[debug] [2026-09-17T02:54:27.594Z] Request to https://firebase.googleapis.com/v1beta1/projects?pageSize=1000 had HTTP Error: 403, Firebase Management API has not been used in project 404136744563 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/firebase.googleapis.com/overview?project=404136744563 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+[debug] [2026-09-17T02:54:27.596Z] FirebaseError: Request to https://firebase.googleapis.com/v1beta1/projects?pageSize=1000 had HTTP Error: 403, Firebase Management API has not been used in project 404136744563 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/firebase.googleapis.com/overview?project=404136744563 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+    at responseToError (/usr/local/lib/node_modules/firebase-tools/lib/responseToError.js:53:12)
+    at RetryOperation._fn (/usr/local/lib/node_modules/firebase-tools/lib/apiv2.js:415:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
 [error] 
-[error] Error: Request to https://cloudresourcemanager.googleapis.com/v1/projects/sellerflow-efaab had HTTP Error: 403, Cloud Resource Manager API has not been used in project 123405530511 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudresourcemanager.googleapis.com/overview?project=123405530511 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
-[debug] [2026-09-17T01:06:32.321Z] Error Context: {
-  "body": {
-    "error": {
-      "code": 403,
-      "message": "Cloud Resource Manager API has not been used in project 123405530511 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudresourcemanager.googleapis.com/overview?project=123405530511 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.",
-      "status": "PERMISSION_DENIED",
-      "details": [
-        {
-          "@type": "type.googleapis.com/google.rpc.ErrorInfo",
-          "reason": "SERVICE_DISABLED",
-          "domain": "googleapis.com",
-          "metadata": {
-            "containerInfo": "123405530511",
-            "service": "cloudresourcemanager.googleapis.com",
-            "serviceTitle": "Cloud Resource Manager API",
-            "consumer": "projects/123405530511",
-            "activationUrl": "https://console.developers.google.com/apis/api/cloudresourcemanager.googleapis.com/overview?project=123405530511"
-          }
-        },
-        {
-          "@type": "type.googleapis.com/google.rpc.LocalizedMessage",
-          "locale": "en-US",
-          "message": "Cloud Resource Manager API has not been used in project 123405530511 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudresourcemanager.googleapis.com/overview?project=123405530511 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
-        },
-        {
-          "@type": "type.googleapis.com/google.rpc.Help",
-          "links": [
-            {
-              "description": "Google developers console API activation",
-              "url": "https://console.developers.google.com/apis/api/cloudresourcemanager.googleapis.com/overview?project=123405530511"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "response": {
-    "statusCode": 403
-  }
-}
+[error] Error: Failed to list Firebase projects. See firebase-debug.log for more info.
+[debug] [2026-09-17T02:54:27.728Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-09-17T02:54:27.728Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
