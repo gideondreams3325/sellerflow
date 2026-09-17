@@ -25,9 +25,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
 <!-- Firebase Compat is used here for broad Android/WebView compatibility. -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js" crossorigin="anonymous"></script>
 <script>tailwind.config={theme:{extend:{colors:{gold:'#f5b942'}}}}</script>
 <style>
 *{box-sizing:border-box}
@@ -5691,6 +5691,16 @@ async function init(){
     firebaseApp=initializeApp(firebaseConfig);
     auth=getAuth(firebaseApp);
     db=getFirestore(firebaseApp);
+    try{
+      if(db && typeof db.settings==='function'){
+        db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+      }
+    }catch(_){}
+    try{
+      if(db && typeof db.enablePersistence==='function'){
+        db.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
+      }
+    }catch(_){}
     onAuthStateChanged(auth,async u=>{
       if(!u){
         if(typeof stopOrdersWatcher==='function')stopOrdersWatcher();
