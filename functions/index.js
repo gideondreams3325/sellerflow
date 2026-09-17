@@ -1,41 +1,16 @@
-import express from 'express';
-import fs from 'fs';
-import path from 'path';
-import crypto from 'crypto';
-import { fileURLToPath } from 'url';
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
+/**
+ * SellerFlow Trusted Firebase Cloud Functions
+ * Authoritative Server-Side AI Moderation Pipeline
+ */
+import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
+import { onRequest } from 'firebase-functions/v2/https';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const app = getApps().length ? getApps()[0] : initializeApp();
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-const app = express();
-const PORT = 3000;
-
-app.use(express.json({ limit: '10mb' }));
-
-/* Initialize Trusted Firebase Admin SDK */
-let adminApp;
-if (!getApps().length) {
-  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    try {
-      const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-      adminApp = initializeApp({ credential: cert(sa), projectId: sa.project_id || 'sellerflow-efaab' });
-    } catch (_) {
-      adminApp = initializeApp({ projectId: 'sellerflow-efaab' });
-    }
-  } else {
-    adminApp = initializeApp({ projectId: 'sellerflow-efaab' });
-  }
-} else {
-  adminApp = getApps()[0];
-}
-
-const adminAuth = getAuth(adminApp);
-const adminDb = getFirestore(adminApp);
-
-/* Trusted SellerFlow Ghana AI Moderation Rules & Statutory Regulations */
 const GHANA_MODERATION_RULES = [
   {
     id: 'GHANA_LAW_FINANCIAL_FRAUD',
@@ -116,20 +91,17 @@ const GHANA_MODERATION_RULES = [
   }
 ];
 
-/* Server-Side AI Moderation Engine */
-function inspectPostSafetyServer(input) {
+function inspectPostSafety(input) {
   const text = typeof input === 'string' ? input : (input?.text || '');
   const fileName = (input?.fileName || '').toLowerCase();
   const normalizedText = (text + ' ' + fileName).toLowerCase().replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
 
-  // 1. Prohibited file naming check
   if (/(nude|porn|xxx|sex_tape|hookup_girls|escort_accra)/i.test(fileName)) {
     return {
       verdict: 'VIOLATION',
       detectedRule: 'GHANA_LAW_SEXUAL_EXPLOITATION_ADULT',
       reason: 'Prohibited adult content or sexual media detected in uploaded file name.',
-      confidence: 0.99,
-      timestamp: new Date().toISOString()
+      confidence: 0.99
     };
   }
   if (/(fake_ghana_card|fake_passport|fake_dvla|counterfeit_cedi|momo_hack)/i.test(fileName)) {
@@ -137,8 +109,7 @@ function inspectPostSafetyServer(input) {
       verdict: 'VIOLATION',
       detectedRule: /(fake_ghana_card|fake_passport|fake_dvla)/i.test(fileName) ? 'GHANA_LAW_FORGED_DOCUMENTS' : 'GHANA_LAW_FINANCIAL_FRAUD',
       reason: 'Unlawful fraudulent materials or forged official statutory documents detected in uploaded file.',
-      confidence: 0.99,
-      timestamp: new Date().toISOString()
+      confidence: 0.99
     };
   }
   if (/(tramadol|weed_for_sale|loud_plug|cocaine)/i.test(fileName)) {
@@ -146,195 +117,160 @@ function inspectPostSafetyServer(input) {
       verdict: 'VIOLATION',
       detectedRule: 'GHANA_LAW_PROHIBITED_NARCOTICS',
       reason: 'Controlled narcotics or prescription opioid substances detected in uploaded file.',
-      confidence: 0.99,
-      timestamp: new Date().toISOString()
+      confidence: 0.99
     };
   }
 
-  // 2. Strict text rules check for violations
   for (const rule of GHANA_MODERATION_RULES) {
     if (rule.violationRegex.test(normalizedText)) {
       return {
         verdict: 'VIOLATION',
         detectedRule: rule.id,
         reason: rule.violationReason,
-        confidence: rule.confidence || 0.98,
-        timestamp: new Date().toISOString()
+        confidence: rule.confidence || 0.98
       };
     }
   }
 
-  // 3. Review rules check for flagged claims requiring admin review
   for (const rule of GHANA_MODERATION_RULES) {
     if (rule.reviewRegex && rule.reviewRegex.test(normalizedText)) {
       return {
         verdict: 'REVIEW',
         detectedRule: rule.id,
         reason: rule.reviewReason,
-        confidence: rule.reviewConfidence || 0.70,
-        timestamp: new Date().toISOString()
+        confidence: rule.reviewConfidence || 0.70
       };
     }
   }
 
-  // 4. Safe post
   return {
     verdict: 'SAFE',
     detectedRule: null,
     reason: 'Complies with SellerFlow Ghana safety and legal policies.',
-    confidence: 0.99,
-    timestamp: new Date().toISOString()
+    confidence: 0.99
   };
 }
 
 /**
- * DEVELOPMENT & LOCAL CONTAINER FALLBACK MODERATION ENDPOINT
- * 
- * ROLE CLASSIFICATION: DEVELOPMENT-ONLY FALLBACK
- * - The SOLE production moderation authority is the Firebase Cloud Function "moderatePost" (functions/index.js).
- * - This Express endpoint is NOT the production authority. It is preserved strictly as a
- *   development-only fallback for local container testing when the external Cloud Function is unavailable.
+ * Cloud Function: moderatePost
+ * Authoritatively verifies caller authentication, inspects content, and writes decision to Firestore via Admin SDK.
  */
-app.post('/api/moderation/inspect-post', async (req, res) => {
+export const moderatePost = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
   try {
-    // 1. Authenticate moderation requests with Firebase Admin SDK
     const authHeader = req.headers.authorization || '';
     if (!authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: 'Unauthorized: Missing or malformed Firebase ID token in Authorization header'
-      });
+      return res.status(401).json({ error: 'Unauthorized: Missing or malformed authentication token' });
     }
-
     const idToken = authHeader.split('Bearer ')[1].trim();
+
     let decodedToken;
     try {
-      decodedToken = await adminAuth.verifyIdToken(idToken);
-    } catch (authErr) {
-      return res.status(401).json({
-        success: false,
-        error: 'Unauthorized: Invalid, expired, or rejected Firebase ID token',
-        details: authErr.message
-      });
+      decodedToken = await auth.verifyIdToken(idToken);
+    } catch (err) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid or expired Firebase ID token', details: err.message });
     }
 
     const callerUid = decodedToken.uid;
-    const { postId, text, fileName, mediaUrl, mediaType, sellerId } = req.body || {};
+    const { postId, text, fileName, mediaUrl, mediaType } = req.body || {};
 
     if (!postId) {
-      return res.status(400).json({
-        success: false,
-        error: 'Bad Request: Missing postId'
+      return res.status(400).json({ error: 'Bad Request: Missing postId' });
+    }
+
+    const postRef = db.collection('posts').doc(postId);
+    const postSnap = await postRef.get();
+
+    if (!postSnap.exists) {
+      return res.status(404).json({ error: 'Not Found: Post does not exist' });
+    }
+
+    const postData = postSnap.data() || {};
+    if (postData.sellerId !== callerUid) {
+      return res.status(403).json({ error: 'Forbidden: You can only moderate your own posts' });
+    }
+
+    // Idempotency: If already marked VIOLATION, do not overwrite or republish
+    if (postData.reviewStatus === 'violation') {
+      return res.json({
+        success: true,
+        verdict: 'VIOLATION',
+        alreadyProcessed: true,
+        reason: postData.violationReason || 'Content previously flagged as violation.'
       });
     }
 
-    // Reject requests attempting to moderate another user's post
-    if (sellerId && sellerId !== callerUid) {
-      return res.status(403).json({
-        success: false,
-        error: 'Forbidden: Authenticated user does not match the post seller/creator'
+    const evalResult = inspectPostSafety({
+      text: text || postData.text || '',
+      fileName: fileName || '',
+      mediaUrl: mediaUrl || postData.mediaUrl || '',
+      mediaType: mediaType || postData.mediaType || ''
+    });
+
+    const verdict = evalResult.verdict;
+
+    if (verdict === 'VIOLATION') {
+      await postRef.update({
+        status: 'hidden',
+        reviewStatus: 'violation',
+        safeContent: false,
+        violationDetected: true,
+        violationRule: evalResult.detectedRule,
+        violationReason: evalResult.reason,
+        violationConfidence: evalResult.confidence,
+        hiddenAt: FieldValue.serverTimestamp()
       });
-    }
 
-    // 2. Perform authoritative inspection
-    const evalResult = inspectPostSafetyServer({ text, fileName, mediaUrl, mediaType });
-    const verdict = evalResult.verdict; // 'SAFE', 'REVIEW', or 'VIOLATION'
+      // Deterministic ID for idempotency: one review per post
+      await db.collection('adminReviews').doc(`rev_${postId}`).set({
+        userId: callerUid,
+        postId: postId,
+        detectedRule: evalResult.detectedRule,
+        reason: evalResult.reason,
+        confidence: evalResult.confidence,
+        status: 'violation_hidden',
+        timestamp: FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+        postText: text || postData.text || '',
+        mediaUrl: mediaUrl || postData.mediaUrl || '',
+        mediaType: mediaType || postData.mediaType || ''
+      }, { merge: true });
 
-    // 3. Authoritative Firestore updates via Firebase Admin SDK
-    try {
-      const postRef = adminDb.collection('posts').doc(postId);
-      const postSnap = await postRef.get();
-      if (postSnap.exists) {
-        const postData = postSnap.data() || {};
-        if (postData.sellerId && postData.sellerId !== callerUid) {
-          return res.status(403).json({
-            success: false,
-            error: 'Forbidden: Post seller does not match authenticated caller'
-          });
-        }
-        // Idempotency: Never re-publish or overwrite if already marked as violation
-        if (postData.reviewStatus === 'violation') {
-          return res.json({
-            success: true,
-            verdict: 'VIOLATION',
-            alreadyProcessed: true,
-            reason: postData.violationReason || 'Content previously flagged as violation'
-          });
-        }
-      }
+      // Deterministic ID for idempotency: one warning per post
+      await db.collection('notifications').doc(`warn_${postId}`).set({
+        recipientId: callerUid,
+        userId: callerUid,
+        senderName: 'SellerFlow Safety AI',
+        title: '⚠️ Safety Policy Violation Warning',
+        message: `Your post was hidden from public view because it violated SellerFlow Ghana safety policies: ${evalResult.reason} (Detected Rule: ${evalResult.detectedRule}).`,
+        type: 'warning',
+        fromAdmin: true,
+        read: false,
+        postId: postId,
+        detectedRule: evalResult.detectedRule,
+        createdAt: FieldValue.serverTimestamp()
+      }, { merge: true });
 
-      if (verdict === 'VIOLATION') {
-        // VIOLATION: hide post, safeContent = false
-        await postRef.set({
-          status: 'hidden',
-          reviewStatus: 'violation',
-          safeContent: false,
-          violationDetected: true,
-          violationRule: evalResult.detectedRule,
-          violationReason: evalResult.reason,
-          violationConfidence: evalResult.confidence,
-          hiddenAt: FieldValue.serverTimestamp()
-        }, { merge: true });
-
-        // Deterministic ID for idempotency: one adminReview per post
-        await adminDb.collection('adminReviews').doc(`rev_${postId}`).set({
-          userId: callerUid,
-          postId: postId,
-          detectedRule: evalResult.detectedRule,
-          reason: evalResult.reason,
-          confidence: evalResult.confidence,
-          status: 'violation_hidden',
-          timestamp: FieldValue.serverTimestamp(),
-          createdAt: FieldValue.serverTimestamp(),
-          postText: text || '',
-          mediaUrl: mediaUrl || '',
-          mediaType: mediaType || ''
-        }, { merge: true });
-
-        // Deterministic ID for idempotency: one official warning per post
-        await adminDb.collection('notifications').doc(`warn_${postId}`).set({
-          recipientId: callerUid,
-          userId: callerUid,
-          senderName: 'SellerFlow Safety AI',
-          title: '⚠️ Safety Policy Violation Warning',
-          message: `Your post was hidden from public view because it violated SellerFlow Ghana safety policies: ${evalResult.reason} (Detected Rule: ${evalResult.detectedRule}).`,
-          type: 'warning',
-          fromAdmin: true,
-          read: false,
-          postId: postId,
-          detectedRule: evalResult.detectedRule,
-          createdAt: FieldValue.serverTimestamp()
-        }, { merge: true });
-
-      } else if (verdict === 'REVIEW') {
-        // REVIEW: remain hidden/under_review
-        await postRef.set({
-          status: 'hidden',
-          reviewStatus: 'under_review',
-          safeContent: false,
-          needsAdminReview: true,
-          reviewRule: evalResult.detectedRule,
-          reviewReason: evalResult.reason,
-          reviewConfidence: evalResult.confidence
-        }, { merge: true });
-
-      } else {
-        // SAFE: Server alone transitions post to published
-        await postRef.set({
-          status: 'published',
-          reviewStatus: 'safe',
-          safeContent: true,
-          moderatedAt: FieldValue.serverTimestamp()
-        }, { merge: true });
-      }
-    } catch (dbErr) {
-      console.warn('Firestore Admin SDK write notice:', dbErr.message);
-      // FAIL CLOSED: If database update fails, do NOT publish
-      return res.status(500).json({
-        success: false,
-        verdict: 'REVIEW',
-        error: 'Failed authoritative database update. Post remains hidden and under review.',
-        details: dbErr.message
+    } else if (verdict === 'REVIEW') {
+      await postRef.update({
+        status: 'hidden',
+        reviewStatus: 'under_review',
+        safeContent: false,
+        needsAdminReview: true,
+        reviewRule: evalResult.detectedRule,
+        reviewReason: evalResult.reason,
+        reviewConfidence: evalResult.confidence
+      });
+    } else {
+      // SAFE: ONLY the trusted backend transitions the post to published
+      await postRef.update({
+        status: 'published',
+        reviewStatus: 'safe',
+        safeContent: true,
+        moderatedAt: FieldValue.serverTimestamp()
       });
     }
 
@@ -344,41 +280,13 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
       evalResult
     });
 
-  } catch (err) {
-    console.error('Server moderation endpoint error:', err);
-    // FAIL CLOSED
+  } catch (error) {
+    console.error('Cloud Function moderation error:', error);
+    // FAIL CLOSED: Do not publish on error
     return res.status(500).json({
       success: false,
       verdict: 'REVIEW',
-      error: err.message,
-      reason: 'Server fault. Post remains securely hidden and under review.'
+      error: error.message
     });
   }
 });
-
-app.get('/api/config', (req, res) => {
-  res.json({
-    firebaseApiKey: process.env.FIREBASE_API_KEY || '',
-    supabaseUrl: process.env.SUPABASE_URL || '',
-    supabaseKey: process.env.SUPABASE_KEY || '',
-    moderationFunctionUrl: process.env.MODERATION_FUNCTION_URL || 'https://us-central1-sellerflow-efaab.cloudfunctions.net/moderatePost'
-  });
-});
-
-const distPath = path.join(__dirname, 'dist');
-if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath));
-}
-app.use(express.static(__dirname));
-
-app.get('*', (req, res) => {
-  const indexPath = fs.existsSync(path.join(distPath, 'index.html'))
-    ? path.join(distPath, 'index.html')
-    : path.join(__dirname, 'index.html');
-  res.sendFile(indexPath);
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`SellerFlow server is running on http://0.0.0.0:${PORT}`);
-});
-

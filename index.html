@@ -1301,7 +1301,7 @@ window.toggleFollowSeller=toggleFollowSeller;
 function openCommentPanel(id,p){const root=$('modalRoot');root.innerHTML=`<div class="comment-backdrop" id="commentBackdrop"></div><section class="comment-sheet"><div class="flex items-center justify-between"><div><h2 class="text-xl font-bold">Comments</h2><p class="muted text-sm">Your Reel stays visible and playing while you comment.</p></div><button type="button" id="closeCommentPanel" class="w-10 h-10 rounded-full border border-[#333]">×</button></div><div class="space-y-3 my-5 max-h-64 overflow-auto">${(p.comments||[]).slice(-30).map(c=>`<div class="bg-[#191919] p-3 rounded-xl"><b>${esc(c.name||'User')}</b><div class="text-sm mt-1">${esc(c.text)}</div></div>`).join('')||'<p class="muted">No comments yet.</p>'}</div><textarea id="commentText" class="w-full bg-[#191919] border border-[#333] rounded-xl p-3" rows="3" placeholder="Write a comment…"></textarea><div class="flex justify-end mt-3">${button('Comment','submitComment')}</div></section>`;$('closeCommentPanel').onclick=closeModal;$('commentBackdrop').onclick=closeModal;$('submitComment').onclick=async()=>{if(!currentUser){closeModal();return showAuthPrompt('post comments on SellerFlow');}const text=$('commentText').value.trim();if(!text)return toast('Write a comment first','error');await updateDoc(doc(db,'posts',id),{comments:arrayUnion({uid:currentUser.uid,name:isAdmin?'SellerFlow':(currentProfile.name||'SellerFlow user'),createdAt:Date.now(),text})});closeModal();toast('Comment added','success')}}
 async function saveSoundForUser(id,p){try{const soundId=p.soundId||id,originId=p.soundOriginPostId||id,originUid=p.soundOriginatorId||p.sellerId,origin=sellerProfile(originUid);await setDoc(doc(db,'savedSounds',currentUser.uid,'items',soundId),{soundId,originPostId:originId,originatorId:originUid,originatorName:origin.name||origin.username||'SellerFlow creator',soundName:p.soundName||'Original sound',savedAt:serverTimestamp()},{merge:true});localStorage.setItem('sellerflow_active_sound',JSON.stringify({soundId,originPostId:originId,originatorId:originUid,soundName:p.soundName||'Original sound',originatorName:origin.name||origin.username||'SellerFlow creator'}));toast(`Sound saved — original by ${origin.name||origin.username||'SellerFlow creator'}`,'success')}catch(e){toast(errMsg(e),'error')}}
 function getActiveSound(){try{return JSON.parse(localStorage.getItem('sellerflow_active_sound')||'null')}catch{return null}}
-function openPostModal(){const active=getActiveSound();modal(`<h2 class="text-xl font-bold">Create SellerFlow post</h2><p class="muted text-sm mt-1">Photos and videos publish immediately while SellerFlow reviews them for safety.</p>${active?`<div class="sound-chip mt-4">🎵 Using sound: ${esc(active.soundName)} · Original by ${esc(active.originatorName)}</div>`:''}<textarea id="postText" class="w-full mt-4 bg-[#191919] border border-[#333] rounded-xl p-3" rows="5" placeholder="What do you want to share?"></textarea><input id="postFile" type="file" accept="image/*,video/mp4,video/webm" class="w-full mt-3"><p class="muted text-xs mt-2">Images up to 10MB; videos up to 50MB.</p><div class="flex justify-end gap-2 mt-4"><button data-close-modal class="px-4 py-2">Cancel</button>${button('Publish to For You','publishPost')}</div>`);$('publishPost').onclick=async()=>{try{const text=$('postText').value.trim(),file=$('postFile').files[0];if(!text&&!file)throw Error('Add text or media.');loading('Checking safety with SellerFlow AI…');let mediaUrl='',mediaType='',mediaPath='';if(file){validFile(file,['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm'],50);const x=await uploadPublic(file,'posts');mediaUrl=x.url;mediaPath=x.path;mediaType=file.type}const sound=active||null;const postData={sellerId:currentUser.uid,text,mediaUrl,mediaPath,mediaType,likes:[],saves:[],comments:[],status:'published',createdAt:serverTimestamp(),submittedAt:serverTimestamp(),reviewStatus:'under_review',soundId:sound?.soundId||'',soundName:sound?.soundName||(mediaType.startsWith('video')?'Original sound':''),soundOriginPostId:sound?.originPostId||'',soundOriginatorId:sound?.originatorId||currentUser.uid,soundOriginName:sound?.originatorName||(isAdmin?'SellerFlow':currentProfile.name||'SellerFlow creator'),platformLabel:'SellerFlow',isAdminPost:!!isAdmin};const {ref,verdict,evalResult}=await executeSellerFlowAiPostPublish(postData,file,null);if(mediaType.startsWith('video')&&!sound)await setDoc(doc(db,'sounds',ref.id),{soundId:ref.id,originPostId:ref.id,originatorId:currentUser.uid,originatorName:isAdmin?'SellerFlow':(currentProfile.name||currentProfile.username||'SellerFlow creator'),soundName:`Original sound · ${currentProfile.name||'SellerFlow creator'}`,createdAt:serverTimestamp()},{merge:true});closeModal();if(verdict==='VIOLATION'){toast(`⚠️ Safety Policy Warning: Post hidden from public view due to a policy violation (${evalResult.detectedRule}). A warning has been recorded.`,'error');}else if(verdict==='REVIEW'){toast('Post submitted. It is currently queued for SellerFlow safety review.','success');}else{toast('Published to For You. Verified safe by SellerFlow AI.','success');}navigate('feed')}catch(e){toast(errMsg(e),'error')}finally{ready()}}}
+function openPostModal(){const active=getActiveSound();modal(`<h2 class="text-xl font-bold">Create SellerFlow post</h2><p class="muted text-sm mt-1">Photos and videos publish immediately while SellerFlow reviews them for safety.</p>${active?`<div class="sound-chip mt-4">🎵 Using sound: ${esc(active.soundName)} · Original by ${esc(active.originatorName)}</div>`:''}<textarea id="postText" class="w-full mt-4 bg-[#191919] border border-[#333] rounded-xl p-3" rows="5" placeholder="What do you want to share?"></textarea><input id="postFile" type="file" accept="image/*,video/mp4,video/webm" class="w-full mt-3"><p class="muted text-xs mt-2">Images up to 10MB; videos up to 50MB.</p><div class="flex justify-end gap-2 mt-4"><button data-close-modal class="px-4 py-2">Cancel</button>${button('Publish to For You','publishPost')}</div>`);$('publishPost').onclick=async()=>{try{const text=$('postText').value.trim(),file=$('postFile').files[0];if(!text&&!file)throw Error('Add text or media.');loading('Checking safety with SellerFlow AI…');let mediaUrl='',mediaType='',mediaPath='';if(file){validFile(file,['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm'],50);const x=await uploadPublic(file,'posts');mediaUrl=x.url;mediaPath=x.path;mediaType=file.type}const sound=active||null;const postData={sellerId:currentUser.uid,text,mediaUrl,mediaPath,mediaType,likes:[],saves:[],comments:[],status:'hidden',safeContent:false,createdAt:serverTimestamp(),submittedAt:serverTimestamp(),reviewStatus:'under_review',soundId:sound?.soundId||'',soundName:sound?.soundName||(mediaType.startsWith('video')?'Original sound':''),soundOriginPostId:sound?.originPostId||'',soundOriginatorId:sound?.originatorId||currentUser.uid,soundOriginName:sound?.originatorName||(isAdmin?'SellerFlow':currentProfile.name||'SellerFlow creator'),platformLabel:'SellerFlow',isAdminPost:!!isAdmin};const {ref,verdict,evalResult}=await executeSellerFlowAiPostPublish(postData,file,null);if(mediaType.startsWith('video')&&!sound)await setDoc(doc(db,'sounds',ref.id),{soundId:ref.id,originPostId:ref.id,originatorId:currentUser.uid,originatorName:isAdmin?'SellerFlow':(currentProfile.name||currentProfile.username||'SellerFlow creator'),soundName:`Original sound · ${currentProfile.name||'SellerFlow creator'}`,createdAt:serverTimestamp()},{merge:true});closeModal();if(verdict==='VIOLATION'){toast(`⚠️ Safety Policy Warning: Post hidden from public view due to a policy violation (${evalResult.detectedRule}). A warning has been recorded.`,'error');}else if(verdict==='REVIEW'){toast('Post submitted. It is currently queued for SellerFlow safety review.','success');}else{toast('Published to For You. Verified safe by SellerFlow AI.','success');}navigate('feed')}catch(e){toast(errMsg(e),'error')}finally{ready()}}}
 
 async function renderDashboard(){if(!currentProfile?.verified&&!isAdmin){$('page').innerHTML=pageTitle('Dashboard unavailable','Seller dashboards are available after identity verification.')+`<div class="card p-8 text-center"><div class="text-5xl">🛡️</div><h2 class="text-xl font-bold mt-3">Verify to unlock your dashboard</h2><p class="muted mt-2">You can still use For You, publish community content and shop. Your business dashboard unlocks after verification.</p>${button('Go to Settings','dashboardVerify','mt-5')}</div>`;$('dashboardVerify').onclick=()=>navigate('settings');return}const [products,orders]=await Promise.all([getDocs(query(collection(db,'products'),where('sellerId','==',currentUser.uid))),getDocs(query(collection(db,'orders'),where('sellerIds','array-contains',currentUser.uid)))]);let revenue=0,pending=0;orders.forEach(d=>{const o=d.data();if(o.sellerId===currentUser.uid&&o.status!=='cancelled')revenue+=Number(o.total)||0;if(o.sellerId===currentUser.uid&&['pending','confirmed','processing'].includes(o.status))pending++});$('page').innerHTML=pageTitle('Dashboard','Your SellerFlow business overview.')+`<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"><div class="card p-5"><div class="muted text-sm">Products</div><div class="text-3xl font-black mt-2">${products.size}</div></div><div class="card p-5"><div class="muted text-sm">Orders</div><div class="text-3xl font-black mt-2">${orders.size}</div></div><div class="card p-5"><div class="muted text-sm">Pending</div><div class="text-3xl font-black mt-2">${pending}</div></div><div class="card p-5"><div class="muted text-sm">Revenue</div><div class="text-3xl font-black mt-2">${money(revenue)}</div></div></div><div class="grid lg:grid-cols-2 gap-5 mt-5"><div class="card p-6"><h2 class="font-bold text-xl">Seller verification</h2><p class="muted mt-2">${currentProfile.verified?'Your seller account is verified.':'Submit your Ghana Card so an admin can review your identity.'}</p>${currentProfile.verified?'<div class="font-bold mt-4 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':`<div class="muted text-sm mt-4">Verification is managed in Settings.</div>`}</div><div class="card p-6"><h2 class="font-bold text-xl">Store</h2><p class="muted mt-2">${currentProfile.verified?'Create or update your public storefront.':'Verification is required before opening a store.'}</p>${button('Manage store','storeDash','mt-4 border border-[#444] bg-transparent text-white')}</div></div>`;$('storeDash')?.addEventListener('click',()=>navigate('store'))}
 
@@ -2214,7 +2214,10 @@ init();
     };
   }
 
-  /* Trusted Server-Side SellerFlow AI Moderation Layer: Returns ONLY 'SAFE', 'REVIEW', or 'VIOLATION' from backend */
+  /* Authoritative Production Moderation Endpoint: Firebase Cloud Function "moderatePost" */
+  const SELLERFLOW_PROD_MODERATION_URL = 'https://us-central1-sellerflow-efaab.cloudfunctions.net/moderatePost';
+
+  /* Server-Side SellerFlow AI Moderation Helper */
   async function sellerFlowAiModerator(input){
     try{
       const payload = {
@@ -2223,12 +2226,31 @@ init();
         mediaUrl: input?.mediaUrl || '',
         mediaType: input?.mediaType || ''
       };
-      const res = await fetch('/api/moderation/inspect-post', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if(res.ok){
+      const token = currentUser ? await currentUser.getIdToken() : '';
+      const prodUrl = window.SELLERFLOW_MODERATION_URL || SELLERFLOW_PROD_MODERATION_URL;
+      let res = null;
+      try {
+        res = await fetch(prodUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify(payload)
+        });
+      } catch(_) {}
+      // Local development container fallback only
+      if ((!res || !res.ok) && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        res = await fetch('/api/moderation/inspect-post', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify(payload)
+        });
+      }
+      if(res && res.ok){
         const data = await res.json();
         return data.verdict || 'REVIEW';
       }
@@ -2241,9 +2263,9 @@ init();
   window.evaluateSellerFlowAiModeration = evaluateSellerFlowAiModeration;
   window.GHANA_MODERATION_RULES = GHANA_MODERATION_RULES;
 
-  /* Centralized AI post publishing executor: Decision governed by trusted server-side moderation */
+  /* Centralized AI post publishing executor: Decision governed solely by authoritative Cloud Function */
   async function executeSellerFlowAiPostPublish(postData, uploadFile, videoElement){
-    // Enforce initial non-public status: client is not trusted to mark its own post SAFE or published
+    // Enforce initial non-public status: client can only create hidden/under_review
     postData.status = 'hidden';
     postData.reviewStatus = 'under_review';
     postData.safeContent = false;
@@ -2251,29 +2273,64 @@ init();
     // 1. Initial post document created in Firestore in under_review status
     const ref = await addDoc(collection(db, 'posts'), postData);
 
-    // 2. Query trusted server-side moderation endpoint to inspect the post
+    // 2. Query authoritative server-side moderation Cloud Function with Firebase Auth ID token
     let evalResult = null;
     let verdict = 'REVIEW';
     try{
-      const res = await fetch('/api/moderation/inspect-post', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          postId: ref.id,
-          sellerId: currentUser.uid,
-          text: postData.text || '',
-          fileName: uploadFile?.name || '',
-          mediaUrl: postData.mediaUrl || '',
-          mediaType: postData.mediaType || ''
-        })
-      });
-      if(res.ok){
+      if(!currentUser){
+        throw new Error('User not authenticated');
+      }
+      const idToken = await currentUser.getIdToken();
+      const moderationPayload = {
+        postId: ref.id,
+        sellerId: currentUser.uid,
+        text: postData.text || '',
+        fileName: uploadFile?.name || '',
+        mediaUrl: postData.mediaUrl || '',
+        mediaType: postData.mediaType || ''
+      };
+
+      // PRIMARY PRODUCTION TARGET: Deployed Firebase Cloud Function "moderatePost"
+      const prodUrl = window.SELLERFLOW_MODERATION_URL || SELLERFLOW_PROD_MODERATION_URL;
+      let res = null;
+      try {
+        res = await fetch(prodUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          body: JSON.stringify(moderationPayload)
+        });
+      } catch(cfErr) {
+        console.warn('Production Cloud Function moderatePost fetch attempt error:', cfErr);
+      }
+
+      // If Cloud Function is not available (e.g. running in local development container fallback)
+      if ((!res || !res.ok) && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        try {
+          res = await fetch('/api/moderation/inspect-post', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify(moderationPayload)
+          });
+        } catch(devErr) {
+          console.warn('Local development fallback moderation error:', devErr);
+        }
+      }
+
+      if(res && res.ok){
         const data = await res.json();
         verdict = data.verdict || 'REVIEW';
         evalResult = data.evalResult || data;
+      } else {
+        console.warn('Moderation backend returned non-OK status or unreached; post remains hidden/under_review');
       }
     }catch(err){
-      console.warn('Server moderation inspection error; defaulting to secure REVIEW queue', err);
+      console.warn('Server moderation request error; post remains securely in hidden/under_review state', err);
     }
 
     if(!evalResult){
@@ -2281,107 +2338,18 @@ init();
         verdict: 'REVIEW',
         detectedRule: 'PENDING_SERVER_INSPECTION',
         reason: 'Post queued for SellerFlow safety review.',
-        confidence: 0.70,
-        moderatedBy: 'SellerFlow AI Server'
+        confidence: 0.70
       };
       verdict = 'REVIEW';
     }
 
-    // 3. Apply server moderation outcome
-    if(verdict === 'VIOLATION'){
-      // VIOLATION must hide the post
-      await updateDoc(doc(db, 'posts', ref.id), {
-        status: 'hidden',
-        reviewStatus: 'violation',
-        hiddenFromPublic: true,
-        violationDetected: true,
-        violationRule: evalResult.detectedRule,
-        violationReason: evalResult.reason,
-        violationConfidence: evalResult.confidence,
-        moderatedBy: 'SellerFlow AI Server',
-        moderationToken: evalResult.moderationToken || '',
-        hiddenAt: serverTimestamp(),
-        safeContent: false
-      });
-
-      // Send the user a warning notification
-      try{
-        await addDoc(collection(db, 'notifications'), {
-          recipientId: currentUser.uid,
-          userId: currentUser.uid,
-          senderName: 'SellerFlow Safety AI',
-          title: '⚠️ Safety Policy Violation Warning',
-          message: `Your post was immediately hidden from public view because it violated SellerFlow's Ghana safety policy: ${evalResult.reason} (Detected Rule: ${evalResult.detectedRule}).`,
-          type: 'warning',
-          fromAdmin: true,
-          read: false,
-          detectedRule: evalResult.detectedRule,
-          postId: ref.id,
-          createdAt: serverTimestamp()
-        });
-      }catch(nErr){ console.warn('Warning notification error', nErr); }
-
-      // Create an Admin Review record containing user ID, post ID, detected rule, reason, confidence and timestamp
-      try{
-        await addDoc(collection(db, 'adminReviews'), {
-          userId: currentUser.uid,
-          postId: ref.id,
-          detectedRule: evalResult.detectedRule,
-          reason: evalResult.reason,
-          confidence: evalResult.confidence,
-          timestamp: serverTimestamp(),
-          createdAt: serverTimestamp(),
-          status: 'violation_hidden',
-          postText: postData.text || '',
-          mediaType: postData.mediaType || '',
-          mediaUrl: postData.mediaUrl || '',
-          moderatedBy: 'SellerFlow AI Server',
-          moderationToken: evalResult.moderationToken || ''
-        });
-      }catch(arErr){ console.warn('Admin review record error', arErr); }
-
-      // Mirror into scamReports so existing Admin report views also reflect the incident
-      try{
-        await addDoc(collection(db, 'scamReports'), {
-          userId: currentUser.uid,
-          postId: ref.id,
-          targetId: ref.id,
-          targetType: 'post',
-          detectedRule: evalResult.detectedRule,
-          reason: evalResult.reason,
-          confidence: evalResult.confidence,
-          timestamp: serverTimestamp(),
-          reporterId: 'system_ai_moderator',
-          type: 'ai_violation',
-          status: 'pending_review',
-          createdAt: serverTimestamp()
-        });
-      }catch(_){}
-
-    } else if(verdict === 'REVIEW'){
-      // REVIEW must remain hidden/under review until Admin review
-      await updateDoc(doc(db, 'posts', ref.id), {
-        status: 'hidden',
-        reviewStatus: 'under_review',
-        needsAdminReview: true,
-        reviewRule: evalResult.detectedRule,
-        reviewReason: evalResult.reason,
-        reviewConfidence: evalResult.confidence,
-        moderatedBy: 'SellerFlow AI Server',
-        moderationToken: evalResult.moderationToken || '',
-        safeContent: false
-      });
-    } else {
-      // SAFE can become publicly visible
-      await updateDoc(doc(db, 'posts', ref.id), {
-        status: 'published',
-        reviewStatus: 'safe',
-        safeContent: true,
-        moderatedBy: 'SellerFlow AI Server',
-        moderationToken: evalResult.moderationToken || '',
-        moderatedAt: serverTimestamp()
-      });
-    }
+    // 3. The browser does NOT perform the approval/publishing write!
+    // The trusted backend (or Cloud Function) is the authoritative writer for:
+    // - status ('published' or 'hidden')
+    // - reviewStatus ('safe', 'under_review', or 'violation')
+    // - safeContent (true or false)
+    // - adminReviews and official warning creation
+    // If the server failed or is under review, the post already defaults to hidden/under_review.
 
     return { ref, verdict, evalResult };
   }
@@ -2961,12 +2929,12 @@ init();
           comments:[],
           reposts:[],
           views:0,
-          status:'published',
+          status:'hidden',
           createdAt:serverTimestamp(),
           submittedAt:serverTimestamp(),
           reviewStatus:'under_review',
           contentType:contentType({text,mediaType}),
-          safeContent:true,
+          safeContent:false,
           soundId:sound?.soundId||'',
           soundName:sound?.soundName||(mediaType.startsWith('video')?'Original sound':''),
           soundOriginPostId:sound?.originPostId||'',

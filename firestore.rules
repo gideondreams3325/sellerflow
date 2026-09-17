@@ -76,10 +76,9 @@ service cloud.firestore {
 
     // 3. For You Feed Posts & Video Reels
     // - Anyone can view published posts
-    // - Only post author or admin can edit/delete their posts
-    // - The client is NOT trusted to mark its own post SAFE on create
-    // - Posts become published only after verified safe by SellerFlow AI Server
-    // - Authors CANNOT change sellerId or reinstate posts hidden for violations
+    // - Normal clients can ONLY create posts in initial hidden/under_review state
+    // - Normal clients CANNOT transition posts to published or safe (server-only approval via Admin SDK)
+    // - Normal clients CANNOT modify moderation fields or reinstate posts in violation status
     // - Other users can ONLY interact (like, comment, save, view, share, repost)
     match /posts/{postId} {
       allow read: if true;
@@ -87,6 +86,7 @@ service cloud.firestore {
         request.resource.data.sellerId == request.auth.uid || isAdmin()
       ) && (
         isAdmin() || (
+          // Normal users can ONLY create initial post in hidden/under_review state
           request.resource.data.get('status', 'hidden') == 'hidden' &&
           request.resource.data.get('reviewStatus', 'under_review') == 'under_review' &&
           request.resource.data.get('safeContent', false) == false
@@ -94,23 +94,20 @@ service cloud.firestore {
       );
       allow update: if isSignedIn() && (
         isAdmin() ||
-        // Post author updating post content or transitioning after server verification
+        // Post author normal content edits: cannot self-approve or alter moderation state
         (
           resource.data.sellerId == request.auth.uid &&
           request.resource.data.sellerId == resource.data.sellerId &&
-          // Cannot reinstate posts hidden for violations
+          // Cannot modify posts in violation status
           resource.data.get('reviewStatus', '') != 'violation' &&
           request.resource.data.get('reviewStatus', '') != 'violation' &&
-          // Author can transition to published only when marked safe by SellerFlow AI Server
-          (
-            request.resource.data.get('status', '') == resource.data.get('status', '') ||
-            (
-              request.resource.data.get('status', '') == 'published' &&
-              request.resource.data.get('reviewStatus', '') == 'safe' &&
-              request.resource.data.get('moderatedBy', '') == 'SellerFlow AI Server'
-            ) ||
-            request.resource.data.get('status', '') == 'hidden'
-          )
+          // Normal users CANNOT change status to published or reviewStatus to safe
+          request.resource.data.get('status', '') == resource.data.get('status', '') &&
+          request.resource.data.get('reviewStatus', '') == resource.data.get('reviewStatus', '') &&
+          request.resource.data.get('safeContent', false) == resource.data.get('safeContent', false) &&
+          // Normal users cannot tamper with moderation flags
+          request.resource.data.get('moderatedBy', '') == resource.data.get('moderatedBy', '') &&
+          request.resource.data.get('moderationToken', '') == resource.data.get('moderationToken', '')
         ) ||
         // Community interaction: other users can ONLY modify social interaction counters/arrays
         (
@@ -212,14 +209,8 @@ service cloud.firestore {
       );
       allow create: if isSignedIn() && (
         isAdmin() ||
-        // Users can receive their own system-generated warnings
+        // Normal users notifying others or themselves cannot spoof admin identity or issue policy warnings
         (
-          request.resource.data.recipientId == request.auth.uid &&
-          request.resource.data.get('userId', request.auth.uid) == request.auth.uid
-        ) ||
-        // Non-admins notifying others cannot spoof admin identity or issue policy warnings
-        (
-          request.resource.data.recipientId != request.auth.uid &&
           request.resource.data.get('fromAdmin', false) == false &&
           request.resource.data.get('type', '') != 'warning' &&
           request.resource.data.get('type', '') != 'admin_broadcast' &&
@@ -251,15 +242,9 @@ service cloud.firestore {
     }
 
     // 9b. AI Admin Review Records & Moderation Logs
-    // ONLY trusted server/admin processes can create or manage AI moderation audit records
+    // ONLY trusted server processes (via Firebase Admin SDK bypass) and authorized admins can create or manage audit records
     match /adminReviews/{reviewId} {
-      allow create: if isAdmin() || (
-        isSignedIn() &&
-        request.resource.data.userId == request.auth.uid &&
-        request.resource.data.get('status', '') == 'violation_hidden' &&
-        request.resource.data.get('moderatedBy', '') == 'SellerFlow AI Server'
-      );
-      allow read, update, delete: if isAdmin();
+      allow create, read, update, delete: if isAdmin();
     }
 
     // 10. Direct Chats & Conversations
