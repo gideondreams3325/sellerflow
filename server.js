@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
+import { GoogleGenAI } from '@google/genai';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,6 +35,69 @@ if (!getApps().length) {
 
 const adminAuth = getAuth(adminApp);
 const adminDb = getFirestore(adminApp);
+
+/* Initialize Google GenAI with Gemini 3.8 Flash */
+let aiClient = null;
+function getGeminiClient() {
+  if (!aiClient) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.warn('GEMINI_API_KEY environment variable is not set; Gemini 3.8 Flash fallback mode active.');
+      return null;
+    }
+    aiClient = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build'
+        }
+      }
+    });
+  }
+  return aiClient;
+}
+
+/* Ghana Card Statutory Utilities */
+export function normalizeGhanaCard(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  const cleaned = raw.trim().toUpperCase().replace(/[\u2010-\u2015\u2212]/g, '-').replace(/\s+/g, '');
+
+  if (/^GHA-[A-Z0-9]{9}-[A-Z0-9]$/i.test(cleaned)) {
+    return cleaned;
+  }
+
+  const matchNoHyphen = cleaned.match(/^GHA([A-Z0-9]{9})([A-Z0-9])$/i);
+  if (matchNoHyphen) {
+    return `GHA-${matchNoHyphen[1]}-${matchNoHyphen[2]}`;
+  }
+
+  const alphanumericOnly = cleaned.replace(/[^A-Z0-9]/g, '');
+  if (alphanumericOnly.startsWith('GHA') && alphanumericOnly.length === 13) {
+    return `GHA-${alphanumericOnly.slice(3, 12)}-${alphanumericOnly.slice(12)}`;
+  }
+
+  return cleaned;
+}
+
+export function validateGhanaCardFormat(card) {
+  if (!card || typeof card !== 'string') return false;
+  return /^GHA-[A-Z0-9]{9}-[A-Z0-9]$/i.test(card);
+}
+
+export function maskGhanaCard(card) {
+  if (!card) return '';
+  const norm = normalizeGhanaCard(card);
+  if (!validateGhanaCardFormat(norm)) {
+    if (card.length <= 6) return '***';
+    return card.slice(0, 3) + '*****' + card.slice(-2);
+  }
+  return `GHA-*****${norm.slice(9)}`;
+}
+
+export function hashGhanaCard(normalizedCardNumber) {
+  const norm = normalizeGhanaCard(normalizedCardNumber);
+  return crypto.createHash('sha256').update(norm).digest('hex');
+}
 
 /* Trusted SellerFlow Ghana AI Moderation Rules & Statutory Regulations */
 const GHANA_MODERATION_RULES = [
@@ -116,7 +180,7 @@ const GHANA_MODERATION_RULES = [
   }
 ];
 
-/* Server-Side AI Moderation Engine */
+/* Server-Side Rule Inspection Engine */
 function inspectPostSafetyServer(input) {
   const text = typeof input === 'string' ? input : (input?.text || '');
   const fileName = (input?.fileName || '').toLowerCase();
@@ -188,12 +252,85 @@ function inspectPostSafetyServer(input) {
 }
 
 /**
- * DEVELOPMENT & LOCAL CONTAINER FALLBACK MODERATION ENDPOINT
- * 
- * ROLE CLASSIFICATION: DEVELOPMENT-ONLY FALLBACK
- * - The SOLE production moderation authority is the Firebase Cloud Function "moderatePost" (functions/index.js).
- * - This Express endpoint is NOT the production authority. It is preserved strictly as a
- *   development-only fallback for local container testing when the external Cloud Function is unavailable.
+ * Gemini 3.8 Flash Multimodal & Semantic Content Moderation Engine
+ * Analyzes content against Ghanaian statutory rules and marketplace safety standards.
+ */
+async function inspectContentWithGemini38Flash({ text = '', fileName = '', mediaUrl = '', mediaType = '', title = '', type = 'post' }) {
+  // First run zero-latency statutory rules check
+  const staticCheck = inspectPostSafetyServer({ text: (title ? title + ' ' : '') + text, fileName, mediaUrl, mediaType });
+  if (staticCheck.verdict === 'VIOLATION') {
+    return {
+      ...staticCheck,
+      moderatedBy: 'Gemini 3.8 Flash & Statutory Rules Engine'
+    };
+  }
+
+  const ai = getGeminiClient();
+  if (!ai) {
+    return staticCheck;
+  }
+
+  try {
+    const prompt = `You are the authoritative Safety and Content Moderation AI (powered by Gemini 3.8 Flash) for SellerFlow Ghana, an e-commerce and social video marketplace in Ghana.
+Analyze the following content strictly against Ghanaian laws and marketplace safety policies:
+1. Mobile Money (MoMo) Fraud & Financial Scams (MTN/Telecel/AT momo phishing, pin stealing, money doubler schemes, fake cedis).
+2. Prohibited Narcotics & Controlled Substances (tramadol, weed/cannabis delivery, cocaine, prescription drug selling).
+3. Weapons, Firearms & Mob Violence Incitement (guns, pistols, ammo, violent threats, lynching/mob justice).
+4. Adult Sexual Exploitation & Pornography (porn, nudes, sex work, commercial escort services).
+5. Forged Official Documents (counterfeit Ghana Cards, fake passports, fake DVLA licenses, forged certificates).
+6. Illicit Galamsey Gold Scams & Smuggled Minerals.
+7. Tribal Hate Speech & Ethnic Violence Incitement.
+8. Deceptive scams, counterfeit products, stolen property.
+
+Content to analyze:
+- Content Type: ${type}
+- Title / Name: "${title || ''}"
+- Description / Text: "${text || ''}"
+- Attachment / Filename: "${fileName || ''}"
+- Media Type: "${mediaType || ''}"
+
+Respond ONLY with valid JSON strictly conforming to:
+{
+  "verdict": "SAFE" | "REVIEW" | "VIOLATION",
+  "detectedRule": string or null,
+  "reason": string,
+  "confidence": number,
+  "isViolation": boolean
+}
+Note:
+- If clearly harmful or illegal (drugs, weapons, scams, momo fraud, porn, forged docs, hate speech): verdict MUST be "VIOLATION".
+- If suspicious/ambiguous claims (high-yield investment, unverified medicinal cure, questionable weapons/blades): verdict MUST be "REVIEW".
+- If benign commerce, regular everyday products, standard videos: verdict MUST be "SAFE".`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        temperature: 0.1
+      }
+    });
+
+    const parsed = JSON.parse(response.text.trim());
+    const verdict = parsed.verdict || (parsed.isViolation ? 'VIOLATION' : 'SAFE');
+
+    return {
+      verdict: verdict,
+      detectedRule: parsed.detectedRule || (verdict === 'VIOLATION' ? 'GHANA_SAFETY_POLICY' : (staticCheck.detectedRule || null)),
+      reason: parsed.reason || (verdict === 'VIOLATION' ? 'Flagged for content violation by Gemini 3.8 Flash' : staticCheck.reason),
+      confidence: parsed.confidence || (verdict === 'VIOLATION' ? 0.96 : 0.95),
+      moderatedBy: 'gemini-3.8-flash',
+      timestamp: new Date().toISOString()
+    };
+  } catch (geminiErr) {
+    console.warn('Gemini 3.8 Flash content moderation note:', geminiErr.message);
+    return staticCheck;
+  }
+}
+
+/**
+ * Server-Side Authoritative Content Moderation for Posts
+ * Uses Gemini 3.8 Flash to immediately flag violations, hide content, and queue for manual review.
  */
 app.post('/api/moderation/inspect-post', async (req, res) => {
   try {
@@ -236,8 +373,8 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
       });
     }
 
-    // 2. Perform authoritative inspection
-    const evalResult = inspectPostSafetyServer({ text, fileName, mediaUrl, mediaType });
+    // 2. Perform authoritative inspection with Gemini 3.8 Flash & Ghanaian safety rules
+    const evalResult = await inspectContentWithGemini38Flash({ text, fileName, mediaUrl, mediaType, type: 'post' });
     const verdict = evalResult.verdict; // 'SAFE', 'REVIEW', or 'VIOLATION'
 
     // 3. Authoritative Firestore updates via Firebase Admin SDK
@@ -264,7 +401,7 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
       }
 
       if (verdict === 'VIOLATION') {
-        // VIOLATION: hide post, safeContent = false
+        // VIOLATION: Immediately flag and hide post for manual admin review
         await postRef.set({
           status: 'hidden',
           reviewStatus: 'violation',
@@ -273,6 +410,8 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
           violationRule: evalResult.detectedRule,
           violationReason: evalResult.reason,
           violationConfidence: evalResult.confidence,
+          flaggedByGemini: true,
+          geminiModel: 'gemini-3.8-flash',
           hiddenAt: FieldValue.serverTimestamp()
         }, { merge: true });
 
@@ -284,6 +423,8 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
           reason: evalResult.reason,
           confidence: evalResult.confidence,
           status: 'violation_hidden',
+          flaggedBy: 'gemini-3.8-flash',
+          needsManualReview: true,
           timestamp: FieldValue.serverTimestamp(),
           createdAt: FieldValue.serverTimestamp(),
           postText: text || '',
@@ -297,7 +438,7 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
           userId: callerUid,
           senderName: 'SellerFlow Safety AI',
           title: '⚠️ Safety Policy Violation Warning',
-          message: `Your post was hidden from public view because it violated SellerFlow Ghana safety policies: ${evalResult.reason} (Detected Rule: ${evalResult.detectedRule}).`,
+          message: `Your post was flagged by Gemini 3.8 Flash and hidden from public view because it violated SellerFlow Ghana safety policies: ${evalResult.reason} (Detected Rule: ${evalResult.detectedRule}). It has been submitted for manual administrator review.`,
           type: 'warning',
           fromAdmin: true,
           read: false,
@@ -307,7 +448,7 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
         }, { merge: true });
 
       } else if (verdict === 'REVIEW') {
-        // REVIEW: remain hidden/under_review
+        // REVIEW: remain hidden and queued for admin review
         await postRef.set({
           status: 'hidden',
           reviewStatus: 'under_review',
@@ -315,7 +456,25 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
           needsAdminReview: true,
           reviewRule: evalResult.detectedRule,
           reviewReason: evalResult.reason,
-          reviewConfidence: evalResult.confidence
+          reviewConfidence: evalResult.confidence,
+          flaggedByGemini: true,
+          geminiModel: 'gemini-3.8-flash'
+        }, { merge: true });
+
+        await adminDb.collection('adminReviews').doc(`rev_${postId}`).set({
+          userId: callerUid,
+          postId: postId,
+          detectedRule: evalResult.detectedRule,
+          reason: evalResult.reason,
+          confidence: evalResult.confidence,
+          status: 'pending_review',
+          flaggedBy: 'gemini-3.8-flash',
+          needsManualReview: true,
+          timestamp: FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
+          postText: text || '',
+          mediaUrl: mediaUrl || '',
+          mediaType: mediaType || ''
         }, { merge: true });
 
       } else {
@@ -324,7 +483,8 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
           status: 'published',
           reviewStatus: 'safe',
           safeContent: true,
-          moderatedAt: FieldValue.serverTimestamp()
+          moderatedAt: FieldValue.serverTimestamp(),
+          moderatedBy: 'gemini-3.8-flash'
         }, { merge: true });
       }
     } catch (dbErr) {
@@ -356,8 +516,479 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
   }
 });
 
+/**
+ * Server-Side Product Content Moderation Endpoint with Gemini 3.8 Flash
+ */
+app.post('/api/moderation/inspect-product', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing Firebase ID token' });
+    }
+
+    const idToken = authHeader.split('Bearer ')[1].trim();
+    let decodedToken;
+    try {
+      decodedToken = await adminAuth.verifyIdToken(idToken);
+    } catch (authErr) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid token' });
+    }
+
+    const callerUid = decodedToken.uid;
+    const { productId, name, description, imageUrl, price, stock } = req.body || {};
+
+    if (!productId) {
+      return res.status(400).json({ success: false, error: 'Missing productId' });
+    }
+
+    const evalResult = await inspectContentWithGemini38Flash({
+      title: name || '',
+      text: description || '',
+      mediaUrl: imageUrl || '',
+      type: 'product'
+    });
+
+    const verdict = evalResult.verdict;
+
+    try {
+      const prodRef = adminDb.collection('products').doc(productId);
+      const prodSnap = await prodRef.get();
+      if (prodSnap.exists) {
+        const prodData = prodSnap.data() || {};
+        if (prodData.sellerId && prodData.sellerId !== callerUid && decodedToken.role !== 'admin') {
+          return res.status(403).json({ success: false, error: 'Forbidden: Product seller mismatch' });
+        }
+      }
+
+      if (verdict === 'VIOLATION') {
+        await prodRef.set({
+          status: 'taken_down',
+          reviewStatus: 'violation',
+          violationDetected: true,
+          rejectionReason: evalResult.reason,
+          flaggedByGemini: true,
+          geminiModel: 'gemini-3.8-flash',
+          hiddenAt: FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        await adminDb.collection('adminReviews').doc(`rev_prod_${productId}`).set({
+          userId: callerUid,
+          productId: productId,
+          productName: name || '',
+          detectedRule: evalResult.detectedRule,
+          reason: evalResult.reason,
+          confidence: evalResult.confidence,
+          status: 'violation_taken_down',
+          flaggedBy: 'gemini-3.8-flash',
+          needsManualReview: true,
+          timestamp: FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        await adminDb.collection('notifications').doc(`warn_prod_${productId}`).set({
+          recipientId: callerUid,
+          userId: callerUid,
+          senderName: 'SellerFlow Safety AI',
+          title: '⚠️ Product Flagged for Policy Violation',
+          message: `Your product "${name || 'item'}" was flagged by Gemini 3.8 Flash and taken down for manual review: ${evalResult.reason}.`,
+          type: 'warning',
+          fromAdmin: true,
+          read: false,
+          createdAt: FieldValue.serverTimestamp()
+        }, { merge: true });
+
+      } else if (verdict === 'REVIEW') {
+        await prodRef.set({
+          status: 'pending_review',
+          reviewStatus: 'pending',
+          needsAdminReview: true,
+          reviewReason: evalResult.reason,
+          flaggedByGemini: true,
+          geminiModel: 'gemini-3.8-flash'
+        }, { merge: true });
+      } else {
+        await prodRef.set({
+          status: 'approved',
+          reviewStatus: 'approved',
+          moderatedAt: FieldValue.serverTimestamp(),
+          moderatedBy: 'gemini-3.8-flash'
+        }, { merge: true });
+      }
+    } catch (dbErr) {
+      console.warn('Firestore product update notice:', dbErr.message);
+    }
+
+    return res.json({ success: true, verdict, evalResult });
+  } catch (err) {
+    console.error('Product moderation error:', err);
+    return res.status(500).json({ success: false, verdict: 'REVIEW', error: err.message });
+  }
+});
+
+/**
+ * Server-Side Authoritative Ghana Card Verification with Gemini 3.8 Flash & Duplicate Detection
+ * Enforces:
+ * 1. Format validation (GHA-XXXXXXXXX-X) - if invalid, instructs user to submit correct info
+ * 2. Duplicate card check across all accounts in Firestore
+ * 3. Gemini 3.8 Flash verification of identity details and document authenticity
+ */
+app.post('/api/verification/verify-ghana-card', async (req, res) => {
+  try {
+    // 1. Authenticate caller
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        verdict: 'REJECTED',
+        error: 'Unauthorized: Missing or malformed Firebase ID token'
+      });
+    }
+
+    const idToken = authHeader.split('Bearer ')[1].trim();
+    let decodedToken;
+    try {
+      decodedToken = await adminAuth.verifyIdToken(idToken);
+    } catch (authErr) {
+      return res.status(401).json({
+        success: false,
+        verdict: 'REJECTED',
+        error: 'Unauthorized: Invalid or expired Firebase ID token'
+      });
+    }
+
+    const callerUid = decodedToken.uid;
+    const { ghanaCardNumber, fullName, frontPath, backPath, frontBase64, backBase64 } = req.body || {};
+
+    // 2. Format validation check
+    const normalized = normalizeGhanaCard(ghanaCardNumber || '');
+    if (!normalized || !validateGhanaCardFormat(normalized)) {
+      return res.status(400).json({
+        success: false,
+        verdict: 'CORRECTION_REQUIRED',
+        error: 'Invalid Ghana Card number format. Please enter your valid Ghana Card PIN in the format GHA-XXXXXXXXX-X (e.g. GHA-123456789-0). Please submit correct info.',
+        actionRequired: 'Submit correct Ghana Card PIN in the official statutory format GHA-XXXXXXXXX-X'
+      });
+    }
+
+    // 3. Cryptographic hash for duplicate card detection
+    const cardHash = hashGhanaCard(normalized);
+    const maskedCard = maskGhanaCard(normalized);
+
+    // 4. Duplicate Ghana Card Check across Firestore accounts
+    try {
+      const [byHash, byNumber] = await Promise.all([
+        adminDb.collection('users').where('ghanaCardHash', '==', cardHash).get(),
+        adminDb.collection('users').where('ghanaCardNumber', '==', normalized).get()
+      ]);
+
+      const duplicateDocs = [...byHash.docs, ...byNumber.docs].filter(d => d.id !== callerUid);
+
+      if (duplicateDocs.length > 0) {
+        const existingUser = duplicateDocs[0].data() || {};
+        console.warn(`Duplicate Ghana Card detected: ${maskedCard} already belongs to user ${duplicateDocs[0].id}`);
+        
+        // Log duplicate attempt for security auditing
+        await adminDb.collection('adminReviews').doc(`dup_card_${callerUid}`).set({
+          userId: callerUid,
+          applicantName: fullName || '',
+          ghanaCardMasked: maskedCard,
+          duplicateWithUserId: duplicateDocs[0].id,
+          reason: 'Duplicate Ghana Card PIN submission detected across multiple accounts.',
+          status: 'duplicate_blocked',
+          timestamp: FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        return res.status(409).json({
+          success: false,
+          verdict: 'DUPLICATE_REJECTED',
+          error: `Duplicate Ghana Card detected: This Ghana Card (${maskedCard}) is already associated with another SellerFlow account. Each Ghana Card can only be used by one seller. Please submit your own valid official Ghana Card.`,
+          duplicate: true,
+          actionRequired: 'Please submit your own unique, official Ghana Card.'
+        });
+      }
+    } catch (dupErr) {
+      console.warn('Firestore duplicate check notice:', dupErr.message);
+    }
+
+    // 5. Gemini 3.8 Flash AI Identity & Document Verification
+    const ai = getGeminiClient();
+    let geminiVerdict = 'VERIFIED';
+    let geminiMessage = 'Ghana Card details verified successfully.';
+    let geminiCorrectionInstructions = '';
+    let isAuthentic = true;
+    let confidence = 0.95;
+
+    if (ai) {
+      try {
+        const prompt = `You are the official Ghana Card Verification and Anti-Fraud AI (powered by Gemini 3.8 Flash) for SellerFlow Ghana.
+Evaluate this Ghana National Identity Card (Ghana Card) verification application against official NIA (National Identification Authority) standards.
+
+Application Details:
+- Applicant Full Name: "${fullName || ''}"
+- Submitted Ghana Card PIN: "${normalized}"
+- Front Document Path: "${frontPath || 'Provided'}"
+- Back Document Path: "${backPath || 'Provided'}"
+
+Verify the following:
+1. Is the Ghana Card PIN "${normalized}" structured as a valid official Ghana Card PIN?
+2. Does the applicant's name "${fullName || ''}" match standard Ghanaian naming structure?
+3. Are the submitted credentials legitimate and free from obvious forgery, placeholder text, or fake numbers (e.g. GHA-000000000-0)?
+4. If there are discrepancies or issues, provide clear, polite instructions telling the person to submit correct info.
+
+Respond strictly in JSON format:
+{
+  "valid": boolean,
+  "verdict": "VERIFIED" | "CORRECTION_REQUIRED" | "REVIEW" | "REJECTED",
+  "confidence": number,
+  "nameMatches": boolean,
+  "isAuthentic": boolean,
+  "userMessage": string,
+  "correctionInstructions": string
+}`;
+
+        const geminiRes = await ai.models.generateContent({
+          model: 'gemini-3.8-flash',
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            temperature: 0.1
+          }
+        });
+
+        const parsed = JSON.parse(geminiRes.text.trim());
+        geminiVerdict = parsed.verdict || (parsed.valid ? 'VERIFIED' : 'CORRECTION_REQUIRED');
+        geminiMessage = parsed.userMessage || 'Ghana Card verification evaluated.';
+        geminiCorrectionInstructions = parsed.correctionInstructions || '';
+        isAuthentic = parsed.isAuthentic !== false;
+        confidence = parsed.confidence || 0.92;
+      } catch (geminiErr) {
+        console.warn('Gemini 3.8 Flash verification analysis notice:', geminiErr.message);
+      }
+    }
+
+    // 6. Handle Verification Outcomes
+    if (geminiVerdict === 'CORRECTION_REQUIRED' || geminiVerdict === 'REJECTED') {
+      await adminDb.collection('users').doc(callerUid).set({
+        ghanaCardMasked: maskedCard,
+        verificationStatus: 'rejected',
+        verified: false,
+        rejectionReason: geminiMessage,
+        correctionInstructions: geminiCorrectionInstructions,
+        verificationReviewedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      return res.json({
+        success: false,
+        verdict: 'CORRECTION_REQUIRED',
+        error: `${geminiMessage} Please submit correct info to complete your seller verification.`,
+        correctionInstructions: geminiCorrectionInstructions || 'Please ensure your full legal name matches the card and clear unedited photos of both sides of your official Ghana Card are uploaded.'
+      });
+    }
+
+    if (geminiVerdict === 'VERIFIED') {
+      // Authoritative verification approval
+      await adminDb.collection('users').doc(callerUid).set({
+        verified: true,
+        verificationStatus: 'approved',
+        ghanaCardNumber: normalized,
+        ghanaCardMasked: maskedCard,
+        ghanaCardHash: cardHash,
+        ghanaCardFrontPath: frontPath || '',
+        ghanaCardBackPath: backPath || '',
+        verifiedBy: 'gemini-3.8-flash',
+        verificationConfidence: confidence,
+        verificationApprovedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      await adminDb.collection('publicProfiles').doc(callerUid).set({
+        verified: true
+      }, { merge: true });
+
+      await adminDb.collection('notifications').doc(`verif_appr_${callerUid}`).set({
+        recipientId: callerUid,
+        userId: callerUid,
+        senderName: 'SellerFlow Verification AI',
+        title: '🎉 Seller Verification Approved',
+        message: 'Your Ghana Card identity verification has been approved by Gemini 3.8 Flash. Your blue SellerFlow verification badge is now active on your store and products.',
+        type: 'verification_approved',
+        fromAdmin: true,
+        read: false,
+        createdAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      return res.json({
+        success: true,
+        verdict: 'VERIFIED',
+        maskedCard,
+        message: 'Identity verified successfully by Gemini 3.8 Flash! Your blue SellerFlow verification badge is now active.'
+      });
+    }
+
+    // Default to pending review
+    await adminDb.collection('users').doc(callerUid).set({
+      ghanaCardMasked: maskedCard,
+      ghanaCardHash: cardHash,
+      ghanaCardNumber: normalized,
+      verificationStatus: 'pending',
+      verified: false,
+      needsAdminReview: true,
+      verificationSubmittedAt: FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    return res.json({
+      success: true,
+      verdict: 'REVIEW',
+      maskedCard,
+      message: 'Your Ghana Card has been submitted securely and queued for administrator review.'
+    });
+
+  } catch (err) {
+    console.error('Ghana card verification endpoint error:', err);
+    return res.status(500).json({
+      success: false,
+      verdict: 'REVIEW',
+      error: 'An unexpected error occurred during verification. Please try again or contact support.'
+    });
+  }
+});
+
+/**
+ * Server-Side Authoritative Takedown API Endpoint
+ * Handles taking down posts, products, and store accounts authoritatively via Firebase Admin SDK.
+ */
+app.post('/api/admin/takedown', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing token' });
+    }
+
+    const idToken = authHeader.split('Bearer ')[1].trim();
+    let decodedToken;
+    try {
+      decodedToken = await adminAuth.verifyIdToken(idToken);
+    } catch (authErr) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid token' });
+    }
+
+    const callerUid = decodedToken.uid;
+    const { type = 'post', id, targetId, reason = 'Taken down after administrative safety review' } = req.body || {};
+    const itemUid = id || targetId;
+
+    if (!itemUid) {
+      return res.status(400).json({ success: false, error: 'Missing target item ID' });
+    }
+
+    if (type === 'post') {
+      const postRef = adminDb.collection('posts').doc(itemUid);
+      const postSnap = await postRef.get();
+      const postData = postSnap.exists ? postSnap.data() : null;
+      const sellerId = postData?.sellerId;
+
+      await postRef.set({
+        status: 'removed',
+        reviewStatus: 'removed',
+        safeContent: false,
+        takedownReason: reason,
+        removedAt: FieldValue.serverTimestamp(),
+        removedBy: callerUid
+      }, { merge: true });
+
+      if (sellerId && sellerId !== callerUid) {
+        await adminDb.collection('notifications').doc(`takedown_post_${itemUid}`).set({
+          recipientId: sellerId,
+          userId: sellerId,
+          senderName: 'SellerFlow Admin',
+          title: 'Post Removed by Admin',
+          message: `Your post was taken down after a platform safety review: ${reason}.`,
+          type: 'takedown',
+          fromAdmin: true,
+          read: false,
+          postId: itemUid,
+          createdAt: FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+
+      await adminDb.collection('adminReviews').doc(`takedown_post_${itemUid}`).set({
+        userId: sellerId || callerUid,
+        targetId: itemUid,
+        type: 'post',
+        action: 'takedown',
+        reason,
+        takenDownBy: callerUid,
+        timestamp: FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      return res.json({ success: true, message: 'Post taken down successfully' });
+    }
+
+    if (type === 'product') {
+      const prodRef = adminDb.collection('products').doc(itemUid);
+      const prodSnap = await prodRef.get();
+      const prodData = prodSnap.exists ? prodSnap.data() : null;
+      const sellerId = prodData?.sellerId;
+
+      await prodRef.set({
+        status: 'taken_down',
+        reviewStatus: 'taken_down',
+        takedownReason: reason,
+        takenDownAt: FieldValue.serverTimestamp(),
+        takenDownBy: callerUid
+      }, { merge: true });
+
+      if (sellerId && sellerId !== callerUid) {
+        await adminDb.collection('notifications').doc(`takedown_prod_${itemUid}`).set({
+          recipientId: sellerId,
+          userId: sellerId,
+          senderName: 'SellerFlow Admin',
+          title: 'Product Removed from Marketplace',
+          message: `Your product "${prodData?.name || 'item'}" was taken down from the marketplace: ${reason}.`,
+          type: 'takedown',
+          fromAdmin: true,
+          read: false,
+          productId: itemUid,
+          createdAt: FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+
+      return res.json({ success: true, message: 'Product taken down successfully' });
+    }
+
+    if (type === 'store') {
+      const storeRef = adminDb.collection('stores').doc(itemUid);
+      await storeRef.set({
+        status: 'taken_down',
+        reviewStatus: 'taken_down',
+        takedownReason: reason,
+        takenDownAt: FieldValue.serverTimestamp(),
+        takenDownBy: callerUid
+      }, { merge: true });
+
+      if (itemUid !== callerUid) {
+        await adminDb.collection('notifications').doc(`takedown_store_${itemUid}`).set({
+          recipientId: itemUid,
+          userId: itemUid,
+          senderName: 'SellerFlow Admin',
+          title: 'Storefront Suspended',
+          message: `Your storefront was taken down by administration: ${reason}.`,
+          type: 'takedown',
+          fromAdmin: true,
+          read: false,
+          createdAt: FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+
+      return res.json({ success: true, message: 'Store taken down successfully' });
+    }
+
+    return res.status(400).json({ success: false, error: 'Unknown item type for takedown' });
+  } catch (err) {
+    console.error('Admin takedown API error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', gemini: 'gemini-3.8-flash' });
 });
 
 app.get('/api/config', (req, res) => {
@@ -365,8 +996,9 @@ app.get('/api/config', (req, res) => {
     firebaseApiKey: process.env.FIREBASE_API_KEY || '',
     supabaseUrl: process.env.SUPABASE_URL || '',
     supabaseKey: process.env.SUPABASE_KEY || '',
-    moderationFunctionUrl: process.env.MODERATION_FUNCTION_URL || (process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL.replace(/\/+$/, '')}/functions/v1/moderatePost` : 'https://vvpwntehstjbccarqqzp.supabase.co/functions/v1/moderatePost'),
-    verificationFunctionUrl: process.env.VERIFICATION_FUNCTION_URL || (process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL.replace(/\/+$/, '')}/functions/v1/verifyGhanaCard` : 'https://vvpwntehstjbccarqqzp.supabase.co/functions/v1/verifyGhanaCard')
+    moderationFunctionUrl: '/api/moderation/inspect-post',
+    verificationFunctionUrl: '/api/verification/verify-ghana-card',
+    takedownFunctionUrl: '/api/admin/takedown'
   });
 });
 

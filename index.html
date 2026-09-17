@@ -299,7 +299,7 @@ button,a,input,textarea,select{position:relative;z-index:1}
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center"><div class="text-center"><div class="spin mx-auto mb-4"></div><div class="gold font-bold text-xl">SellerFlow</div><div id="loadingText" class="muted text-sm mt-2">Starting secure app…</div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
 <div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 SellerFlow™ · All rights reserved.</div></div></div>
-<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center gap-1.5 sm:gap-3 overflow-hidden"><button id="mobileMenu" class="md:hidden" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold shrink-0 whitespace-nowrap">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0"><button type="button" id="headerLoginBtn" class="border border-[#444] hover:border-gold px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-[#181818] text-white transition shrink-0 whitespace-nowrap">Sign In</button><button type="button" id="headerRegisterBtn" class="hidden sm:inline-flex bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Register</button></div></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-2 grid grid-cols-3 gap-1"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center gap-1.5 sm:gap-3 overflow-hidden"><button id="mobileMenu" class="md:hidden" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold shrink-0 whitespace-nowrap">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0"><button type="button" id="headerLoginBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Sign In</button></div></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-2 grid grid-cols-3 gap-1"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="pullRefreshIndicator" class="pull-refresh-indicator"><div class="pull-refresh-content"><span class="pull-refresh-icon">↻</span><span class="pull-refresh-text">Pull to refresh</span></div></div>
 <div id="modalRoot"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
@@ -746,9 +746,8 @@ function setNav(){
   const rightActions=$('headerRightActions')||$('logoutBtn')?.parentElement||document.querySelector('header .ml-auto');
   if(rightActions){
     if(!currentUser){
-      rightActions.innerHTML=`<button type="button" id="headerLoginBtn" class="border border-[#444] hover:border-gold px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-[#181818] text-white transition shrink-0 whitespace-nowrap">Sign In</button><button type="button" id="headerRegisterBtn" class="hidden sm:inline-flex bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Register</button>`;
+      rightActions.innerHTML=`<button type="button" id="headerLoginBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Sign In</button>`;
       $('headerLoginBtn')?.addEventListener('click',()=>showAuth('login'));
-      $('headerRegisterBtn')?.addEventListener('click',()=>showAuth('register'));
     } else {
       rightActions.innerHTML=`<button id="notificationBtn" class="bell-btn p-2 shrink-0" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2 shrink-0">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1 hide">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2 shrink-0">Logout</button>`;
       $('notificationBtn')?.addEventListener('click',()=>{
@@ -1003,10 +1002,6 @@ async function renderFeed(targetPostId, options){
           </div>
         </div>
       `}
-    </div>
-    <div class="hidden lg:flex flex-col gap-2 fixed right-6 bottom-1/2 translate-y-1/2 z-20">
-      <button id="feedPrevBtn" class="w-10 h-10 rounded-full bg-[#181818]/90 border border-[#333] hover:border-gold hover:text-gold flex items-center justify-center text-sm shadow-xl" title="Previous post (↑)">▲</button>
-      <button id="feedNextBtn" class="w-10 h-10 rounded-full bg-[#181818]/90 border border-[#333] hover:border-gold hover:text-gold flex items-center justify-center text-sm shadow-xl" title="Next post (↓)">▼</button>
     </div>
   `;
 
@@ -2998,11 +2993,48 @@ function openProductModal(p=null){
         updatedAt: serverTimestamp()
       };
 
-      loading('Saving product…');
+      loading('Evaluating safety & saving product…');
+      let docRef = null;
       if(isEdit){
-        await updateDoc(doc(db, 'products', p.id), data);
+        docRef = doc(db, 'products', p.id);
+        await updateDoc(docRef, data);
       } else {
-        await addDoc(collection(db, 'products'), { ...data, createdAt: serverTimestamp() });
+        docRef = await addDoc(collection(db, 'products'), { ...data, createdAt: serverTimestamp() });
+      }
+
+      const prodId = isEdit ? p.id : docRef.id;
+
+      // Authoritative product content moderation with Gemini 3.8 Flash
+      try {
+        const token = currentUser ? await currentUser.getIdToken() : '';
+        const modRes = await fetch('/api/moderation/inspect-product', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            productId: prodId,
+            name,
+            description,
+            imageUrl,
+            price,
+            stock
+          })
+        });
+
+        if(modRes.ok) {
+          const modData = await modRes.json();
+          if(modData.verdict === 'VIOLATION') {
+            toast(`Product was flagged by Gemini 3.8 Flash and hidden for manual review: ${modData.evalResult?.reason || 'Safety policy violation'}`, 'error');
+            closeModal();
+            if(currentPage === 'admin') renderAdmin();
+            else navigate('products');
+            return;
+          }
+        }
+      } catch(modErr) {
+        console.warn('Product moderation inspect notice:', modErr);
       }
 
       closeModal();
@@ -4163,8 +4195,15 @@ async function renderProfile(){const p=currentProfile;const privateDoc=await get
 async function saveProfile(){try{const name=$('profileName').value.trim(),username=usernameClean($('profileUsername').value);if(name.length<2||username.length<3)throw Error('Enter a valid name and username.');if(username!==currentProfile.username){if(!(await uniqueUsername(username,currentUser.uid)))throw Error('That username is already taken.');}await updateDoc(doc(db,'users',currentUser.uid),{name,username,usernameLower:username.toLowerCase(),nameLastChanged:serverTimestamp(),usernameLastChanged:serverTimestamp()});try{await setDoc(doc(db,'publicProfiles',currentUser.uid),{uid:currentUser.uid,name,username,usernameLower:username.toLowerCase(),avatarUrl:currentProfile.avatarUrl||'',verified:!!currentProfile.verified,followers:currentProfile.followers||[],following:currentProfile.following||[],role:currentProfile.role||'seller'},{merge:true})}catch(e){console.warn('Public profile sync skipped:',e)}await refreshProfile();toast('Profile saved','success');navigate('profile')}catch(e){toast(errMsg(e),'error')}}
 async function submitVerification(){
   try{
-    const n=$('ghanaCard').value.trim(),front=$('cardFront').files[0],back=$('cardBack').files[0];
-    if(!n||!front||!back)throw Error('Enter the Ghana Card number and upload both sides.');
+    const rawNum=$('ghanaCard').value.trim();
+    const front=$('cardFront').files[0],back=$('cardBack').files[0];
+    if(!rawNum||!front||!back)throw Error('Enter the Ghana Card number and upload both front and back images.');
+
+    const n = rawNum.toUpperCase().replace(/\s+/g, '');
+    if(!/^GHA-[A-Z0-9]{9}-[A-Z0-9]$/i.test(n) && !/^GHA[A-Z0-9]{10}$/i.test(n)){
+      throw Error('Invalid Ghana Card format. Please enter your valid PIN in the format GHA-XXXXXXXXX-X (e.g. GHA-123456789-0). Please submit correct info.');
+    }
+
     validFile(front,['image/jpeg','image/png','image/webp','application/pdf'],10);
     validFile(back,['image/jpeg','image/png','image/webp','application/pdf'],10);
     loading('Uploading identity documents securely…');
@@ -4179,11 +4218,10 @@ async function submitVerification(){
       verificationSubmittedAt:serverTimestamp()
     });
 
-    loading('Authoritatively verifying Ghana Card identity…');
-    // Call authoritative server-side Edge Function with caller's authentication token
+    loading('Authoritatively verifying Ghana Card identity with Gemini 3.8 Flash…');
     try {
       const token = currentUser ? await currentUser.getIdToken() : '';
-      const endpoint = window.SELLERFLOW_VERIFICATION_URL || SELLERFLOW_PROD_VERIFICATION_URL;
+      const endpoint = '/api/verification/verify-ghana-card';
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -4198,22 +4236,26 @@ async function submitVerification(){
         })
       });
 
-      if(res.ok){
-        const data = await res.json();
+      const data = await res.json();
+      if(res.ok && data.success){
         if(data.verdict === 'VERIFIED'){
-          toast('Identity verified! Your blue SellerFlow badge is now active.','success');
+          toast('🎉 Identity verified by Gemini 3.8 Flash! Your blue SellerFlow badge is now active.','success');
         } else if(data.verdict === 'REVIEW'){
           toast('Verification submitted securely and queued for administrator review.','info');
-        } else if(data.verdict === 'REJECTED'){
-          toast(data.message || 'Verification could not be approved. Please review details.','error');
         } else {
           toast(data.message || 'Verification submitted for review.','success');
         }
       } else {
-        toast('Verification submitted securely for administrator review.','info');
+        if(data.verdict === 'DUPLICATE_REJECTED' || data.duplicate){
+          toast(data.error || 'Duplicate Ghana Card: This card is already linked to another account.','error');
+        } else if(data.verdict === 'CORRECTION_REQUIRED'){
+          toast(data.error || 'Verification requirement: Please submit correct info.','error');
+        } else {
+          toast(data.error || data.message || 'Please submit correct info and valid documents for Ghana Card review.','error');
+        }
       }
     } catch(callErr){
-      console.warn('Authoritative verification Edge Function notice:', callErr);
+      console.warn('Verification endpoint notice:', callErr);
       toast('Verification submitted securely for administrator review.','info');
     }
 
@@ -6124,29 +6166,14 @@ init();
         mediaType: input?.mediaType || ''
       };
       const token = currentUser ? await currentUser.getIdToken() : '';
-      const prodUrl = window.SELLERFLOW_MODERATION_URL || SELLERFLOW_PROD_MODERATION_URL;
-      let res = null;
-      try {
-        res = await fetch(prodUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-          },
-          body: JSON.stringify(payload)
-        });
-      } catch(_) {}
-      // Local development container fallback only
-      if ((!res || !res.ok) && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-        res = await fetch('/api/moderation/inspect-post', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-          },
-          body: JSON.stringify(payload)
-        });
-      }
+      let res = await fetch('/api/moderation/inspect-post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
       if(res && res.ok){
         const data = await res.json();
         return data.verdict || 'REVIEW';
@@ -6160,7 +6187,7 @@ init();
   window.evaluateSellerFlowAiModeration = evaluateSellerFlowAiModeration;
   window.GHANA_MODERATION_RULES = GHANA_MODERATION_RULES;
 
-  /* Centralized AI post publishing executor: Decision governed solely by authoritative Cloud Function */
+  /* Centralized AI post publishing executor: Powered by Gemini 3.8 Flash */
   async function executeSellerFlowAiPostPublish(postData, uploadFile, videoElement){
     // Enforce initial non-public status: client can only create hidden/under_review
     postData.status = 'hidden';
@@ -6170,7 +6197,7 @@ init();
     // 1. Initial post document created in Firestore in under_review status
     const ref = await addDoc(collection(db, 'posts'), postData);
 
-    // 2. Query authoritative server-side moderation Cloud Function with Firebase Auth ID token
+    // 2. Query authoritative server-side moderation endpoint with Gemini 3.8 Flash
     let evalResult = null;
     let verdict = 'REVIEW';
     try{
@@ -6187,44 +6214,21 @@ init();
         mediaType: postData.mediaType || ''
       };
 
-      // PRIMARY PRODUCTION TARGET: Deployed Firebase Cloud Function "moderatePost"
-      const prodUrl = window.SELLERFLOW_MODERATION_URL || SELLERFLOW_PROD_MODERATION_URL;
-      let res = null;
-      try {
-        res = await fetch(prodUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`
-          },
-          body: JSON.stringify(moderationPayload)
-        });
-      } catch(cfErr) {
-        console.warn('Production Cloud Function moderatePost fetch attempt error:', cfErr);
-      }
-
-      // If Cloud Function is not available (e.g. running in local development container fallback)
-      if ((!res || !res.ok) && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-        try {
-          res = await fetch('/api/moderation/inspect-post', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${idToken}`
-            },
-            body: JSON.stringify(moderationPayload)
-          });
-        } catch(devErr) {
-          console.warn('Local development fallback moderation error:', devErr);
-        }
-      }
+      let res = await fetch('/api/moderation/inspect-post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify(moderationPayload)
+      });
 
       if(res && res.ok){
         const data = await res.json();
         verdict = data.verdict || 'REVIEW';
         evalResult = data.evalResult || data;
       } else {
-        console.warn('Moderation backend returned non-OK status or unreached; post remains hidden/under_review');
+        console.warn('Moderation backend returned non-OK status; post remains hidden/under_review');
       }
     }catch(err){
       console.warn('Server moderation request error; post remains securely in hidden/under_review state', err);
@@ -8312,22 +8316,48 @@ init();
     if(type==='store') return adminTakeDownStore(uid);
     if(!confirm('Take down this '+type+'?'))return;
     try{
-      if(type==='post'){
-        const s=await getDoc(doc(db,'posts',uid));
-        if(s&&snapshotExists(s)){
-          const x=s.data();
-          await updateDoc(doc(db,'posts',uid),{status:'removed',reviewStatus:'removed',removedAt:serverTimestamp(),removedBy:currentUser?currentUser.uid:'admin'});
-          if(x&&x.sellerId&&(!currentUser||x.sellerId!==currentUser.uid)){
-            await addDoc(collection(db,'notifications'),{recipientId:x.sellerId,senderName:'SellerFlow',title:'Post taken down',message:'An administrator removed your SellerFlow post after a platform safety review.',fromAdmin:true,postId:uid,read:false,createdAt:serverTimestamp()});
-          }
-        }else{
-          await deleteDoc(doc(db,'posts',uid));
+      loading('Taking down post…');
+      let serverSuccess = false;
+      try {
+        const token = currentUser ? await currentUser.getIdToken() : '';
+        const res = await fetch('/api/admin/takedown', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({ type: 'post', id: uid, reason: 'Administrative safety takedown' })
+        });
+        if (res.ok) serverSuccess = true;
+      } catch (_) {}
+
+      const s = await getDoc(doc(db, 'posts', uid)).catch(() => null);
+      if(s && snapshotExists(s)){
+        const x = s.data();
+        await updateDoc(doc(db, 'posts', uid), {
+          status: 'removed',
+          reviewStatus: 'removed',
+          safeContent: false,
+          removedAt: serverTimestamp(),
+          removedBy: currentUser ? currentUser.uid : 'admin'
+        }).catch(() => {});
+        if(x && x.sellerId && (!currentUser || x.sellerId !== currentUser.uid)){
+          await addDoc(collection(db, 'notifications'), {
+            recipientId: x.sellerId,
+            senderName: 'SellerFlow',
+            title: 'Post taken down',
+            message: 'An administrator removed your SellerFlow post after a platform safety review.',
+            fromAdmin: true,
+            postId: uid,
+            read: false,
+            createdAt: serverTimestamp()
+          }).catch(() => {});
         }
-        toast('Post taken down','success');
       }
-      if(typeof renderAdmin==='function'&&currentPage==='admin')renderAdmin();
-      else if(typeof renderPage==='function')renderPage();
-    }catch(e){toast(errMsg(e),'error')}
+      toast('Post taken down successfully', 'success');
+      if(typeof renderAdmin==='function'&&currentPage==='admin') renderAdmin();
+      else if(typeof renderPage==='function') renderPage();
+    }catch(e){toast(errMsg(e),'error')}finally{ready()}
   }
   window.adminTakeDown=adminTakeDown;
 
@@ -8336,16 +8366,36 @@ init();
     const reason = prompt('Reason for takedown (optional):', 'Violates marketplace listing guidelines.');
     try{
       loading('Taking down product…');
-      const s = await getDoc(doc(db, 'products', id));
-      const prodName = snapshotExists(s) ? s.data().name : 'Product';
-      const sellerId = snapshotExists(s) ? s.data().sellerId : '';
+      let sellerId = '';
+      let prodName = 'Product';
+      try {
+        const s = await getDoc(doc(db, 'products', id));
+        if (snapshotExists(s)) {
+          prodName = s.data().name || 'Product';
+          sellerId = s.data().sellerId || '';
+        }
+      } catch (_) {}
+
+      try {
+        const token = currentUser ? await currentUser.getIdToken() : '';
+        await fetch('/api/admin/takedown', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({ type: 'product', id, reason: reason || 'Taken down by administration' })
+        });
+      } catch (_) {}
+
       await updateDoc(doc(db, 'products', id), {
         status: 'taken_down',
         reviewStatus: 'taken_down',
         takedownReason: reason || 'Taken down by administration',
         takenDownAt: serverTimestamp(),
         takenDownBy: currentUser?.uid || 'admin'
-      });
+      }).catch(() => {});
+
       if(sellerId && (!currentUser || sellerId !== currentUser.uid)){
         await addDoc(collection(db, 'notifications'), {
           recipientId: sellerId,
