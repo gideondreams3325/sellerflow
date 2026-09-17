@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>SellerFlow — Ghana Seller Marketplace</title>
+<title>SellerFlow</title>
 <meta name="description" content="Ghana's social selling marketplace where sellers build stores, publish products, share video/photo content, and manage orders.">
-<meta property="og:title" content="SellerFlow — Ghana Seller Marketplace">
+<meta property="og:title" content="SellerFlow">
 <meta property="og:description" content="Ghana's social selling marketplace where sellers build stores, publish products, share video/photo content, and manage orders.">
 <script src="https://cdn.tailwindcss.com"></script>
 <!-- Firebase Compat is used here for broad Android/WebView compatibility. -->
@@ -91,6 +91,9 @@ body,input,textarea,select,button,.card,.reel-content,.chat-bubble,.sf-stat-card
 .market-filter.active{background:#f5b942!important;color:#080808!important;border-color:#f5b942!important}
 .verified-badge{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:#1d9bf0;color:white;font-size:11px;font-weight:900;box-shadow:0 0 0 2px rgba(29,155,240,.15);flex-shrink:0}
 .notification-badge{position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#ef4444;color:white;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.orders-nav-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#ef4444;color:#fff;font-size:10px;font-weight:900;line-height:1;box-shadow:0 0 10px rgba(239,68,68,.5);pointer-events:none;transition:transform .18s ease,opacity .18s ease}
+.orders-nav-badge.pulse{animation:ordersBadgePulse 2s cubic-bezier(0.4,0,0.6,1) infinite}
+@keyframes ordersBadgePulse{0%,100%{transform:scale(1);box-shadow:0 0 8px rgba(239,68,68,.5)}50%{transform:scale(1.15);box-shadow:0 0 14px rgba(239,68,68,.85)}}
 .bell-btn{position:relative}
 .policy-hero{background:radial-gradient(circle at top right,rgba(245,185,66,.16),transparent 38%),linear-gradient(145deg,#171717,#0d0d0d);border:1px solid #303030;border-radius:24px;min-width:0}
 .policy-icon{width:58px;height:58px;border-radius:18px;background:#f5b942;color:#080808;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;flex-shrink:0}
@@ -142,7 +145,7 @@ button,a,input,textarea,select{position:relative;z-index:1}
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center"><div class="text-center"><div class="spin mx-auto mb-4"></div><div class="gold font-bold text-xl">SellerFlow</div><div id="loadingText" class="muted text-sm mt-2">Starting secure app…</div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
 <div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 SellerFlow™ · All rights reserved.</div></div></div>
-<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3"><button id="mobileMenu" class="md:hidden p-2" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden p-2" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2" data-page="orders">Orders</button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-2"><button id="notificationBtn" class="bell-btn p-2" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2">Logout</button></div></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-2 grid grid-cols-3 gap-1"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3"><button id="mobileMenu" class="md:hidden p-2" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden p-2" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-2"><button id="notificationBtn" class="bell-btn p-2" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2">Logout</button></div></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-2 grid grid-cols-3 gap-1"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="modalRoot"></div><div id="toast" class="toast"></div>
 <script>
 (function(){
@@ -241,7 +244,9 @@ function snapshotExists(snap){return !!snap && (typeof snap.exists==='function' 
 
 
 const firebaseConfig={apiKey:'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk',authDomain:'sellerflow-efaab.firebaseapp.com',databaseURL:'https://sellerflow-efaab-default-rtdb.firebaseio.com',projectId:'sellerflow-efaab',storageBucket:'sellerflow-efaab.firebasestorage.app',messagingSenderId:'987175352360',appId:'1:987175352360:web:53e44304aaf11b98c61d1d'};
-const ADMIN_EMAIL='gideondreams3325@gmail.com';
+const ADMIN_EMAILS=['gideondreams99@gmail.com','gideondreams3325@gmail.com','sjssaloon@gmail.com'];
+const isUserAdminEmail=(email)=>ADMIN_EMAILS.includes((email||'').toLowerCase());
+const ADMIN_EMAIL=ADMIN_EMAILS[0];
 let supabaseUrl='https://vvpwntehstjbccarqqzp.supabase.co';
 let supabaseKey='sb_publishable_uxIZMAka2Om0ZFD4tg3xfQ__7Bl_J0V';
 const SUPABASE_BUCKET='ghana-card-documents';
@@ -382,11 +387,11 @@ async function ensureProfile(u,extra={}){
     try{await setDoc(doc(db,'users',u.uid),extra,{merge:true});p={...p,...extra};currentProfile=p}catch(e){console.warn('Profile update skipped:',e)}
   }
   currentProfile=p;
-  isAdmin=(u.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
+  isAdmin=isUserAdminEmail(u.email);
   return p;
 }
 
-async function refreshProfile(){const s=await getDoc(doc(db,'users',currentUser.uid));currentProfile=snapshotExists(s)?s.data():await ensureProfile(currentUser);isAdmin=(currentUser.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase()}
+async function refreshProfile(){const s=await getDoc(doc(db,'users',currentUser.uid));currentProfile=snapshotExists(s)?s.data():await ensureProfile(currentUser);isAdmin=isUserAdminEmail(currentUser.email)}
 async function loadPublicProfiles(){allPublicProfiles.clear();try{const s=await getDocs(query(collection(db,'publicProfiles'),limit(300)));s.forEach(d=>allPublicProfiles.set(d.id,d.data()))}catch(e){console.warn(e)}}
 function sellerProfile(uid){return allPublicProfiles.get(uid)||{uid,name:'Seller',username:'seller',verified:false,followers:[]}}
 function setNav(){
@@ -413,9 +418,10 @@ function setNav(){
   }
 
   const navPages=isAdmin?['feed','dashboard','marketplace','products','orders','store','profile','settings']:(currentProfile?.verified?['feed','dashboard','marketplace','products','orders','store','profile','settings']:['feed','marketplace','orders','profile','settings']);
-  $('mobileNav').innerHTML=navPages.map(p=>`<button type="button" class="p-3 rounded-xl ${p===currentPage?'bg-[#202020] gold':''}" data-mobile-page="${p}">${p==='feed'?'For You':p[0].toUpperCase()+p.slice(1)}</button>`).join('')+(isAdmin?`<button class="p-3 rounded-xl ${currentPage==='admin'?'bg-[#202020] gold':''}" data-mobile-page="admin">Admin</button>`:'')+(!currentUser?`<button class="p-3 rounded-xl text-gold font-bold" id="mobileAuthBtn">Sign In / Register</button>`:`<button id="mobileLogout" class="p-3 rounded-xl text-red-400" data-mobile-logout="1">Logout</button>`);
+  $('mobileNav').innerHTML=navPages.map(p=>`<button type="button" class="p-3 rounded-xl relative flex items-center justify-center gap-1.5 ${p===currentPage?'bg-[#202020] gold':''}" data-mobile-page="${p}"><span>${p==='feed'?'For You':p[0].toUpperCase()+p.slice(1)}</span>${p==='orders'?`<span id="mobileOrdersBadge" class="orders-nav-badge ${pendingOrdersCount>0?'':'hide'}">${pendingOrdersCount>99?'99+':pendingOrdersCount}</span>`:''}</button>`).join('')+(isAdmin?`<button class="p-3 rounded-xl ${currentPage==='admin'?'bg-[#202020] gold':''}" data-mobile-page="admin">Admin</button>`:'')+(!currentUser?`<button class="p-3 rounded-xl text-gold font-bold" id="mobileAuthBtn">Sign In / Register</button>`:`<button id="mobileLogout" class="p-3 rounded-xl text-red-400" data-mobile-logout="1">Logout</button>`);
   $('mobileLogout')?.addEventListener('click',logoutUser);
   $('mobileAuthBtn')?.addEventListener('click',()=>{hide($('mobileNav'));showAuth('login')});
+  if(typeof updateOrdersBadge==='function')updateOrdersBadge(pendingOrdersCount);
 }
 function pauseAllForYouVideos(destroyFeed=false){
   try{
@@ -601,12 +607,12 @@ async function renderPage(){
 
 async function renderFeed(targetPostId, options){
   const snap=await getDocs(query(collection(db,'posts'),limit(100)));
-  const posts=snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>p.sellerId&&(p.status==='published'||p.status==='approved')).sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
+  const posts=snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>p.sellerId&&(p.status==='published'||p.status==='approved')&&p.status!=='hidden'&&p.reviewStatus!=='violation').sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
   let feedPosts=[...posts];
   if(targetPostId && !feedPosts.some(p=>p.id===targetPostId)){
     try{
       const s=await getDoc(doc(db,'posts',targetPostId));
-      if(snapshotExists(s))feedPosts.unshift({id:s.id,...s.data()});
+      if(snapshotExists(s)&&s.data().status!=='hidden'&&s.data().reviewStatus!=='violation')feedPosts.unshift({id:s.id,...s.data()});
     }catch(_){}
   } else if(targetPostId){
     const idx=feedPosts.findIndex(p=>p.id===targetPostId);
@@ -1295,7 +1301,7 @@ window.toggleFollowSeller=toggleFollowSeller;
 function openCommentPanel(id,p){const root=$('modalRoot');root.innerHTML=`<div class="comment-backdrop" id="commentBackdrop"></div><section class="comment-sheet"><div class="flex items-center justify-between"><div><h2 class="text-xl font-bold">Comments</h2><p class="muted text-sm">Your Reel stays visible and playing while you comment.</p></div><button type="button" id="closeCommentPanel" class="w-10 h-10 rounded-full border border-[#333]">×</button></div><div class="space-y-3 my-5 max-h-64 overflow-auto">${(p.comments||[]).slice(-30).map(c=>`<div class="bg-[#191919] p-3 rounded-xl"><b>${esc(c.name||'User')}</b><div class="text-sm mt-1">${esc(c.text)}</div></div>`).join('')||'<p class="muted">No comments yet.</p>'}</div><textarea id="commentText" class="w-full bg-[#191919] border border-[#333] rounded-xl p-3" rows="3" placeholder="Write a comment…"></textarea><div class="flex justify-end mt-3">${button('Comment','submitComment')}</div></section>`;$('closeCommentPanel').onclick=closeModal;$('commentBackdrop').onclick=closeModal;$('submitComment').onclick=async()=>{if(!currentUser){closeModal();return showAuthPrompt('post comments on SellerFlow');}const text=$('commentText').value.trim();if(!text)return toast('Write a comment first','error');await updateDoc(doc(db,'posts',id),{comments:arrayUnion({uid:currentUser.uid,name:isAdmin?'SellerFlow':(currentProfile.name||'SellerFlow user'),createdAt:Date.now(),text})});closeModal();toast('Comment added','success')}}
 async function saveSoundForUser(id,p){try{const soundId=p.soundId||id,originId=p.soundOriginPostId||id,originUid=p.soundOriginatorId||p.sellerId,origin=sellerProfile(originUid);await setDoc(doc(db,'savedSounds',currentUser.uid,'items',soundId),{soundId,originPostId:originId,originatorId:originUid,originatorName:origin.name||origin.username||'SellerFlow creator',soundName:p.soundName||'Original sound',savedAt:serverTimestamp()},{merge:true});localStorage.setItem('sellerflow_active_sound',JSON.stringify({soundId,originPostId:originId,originatorId:originUid,soundName:p.soundName||'Original sound',originatorName:origin.name||origin.username||'SellerFlow creator'}));toast(`Sound saved — original by ${origin.name||origin.username||'SellerFlow creator'}`,'success')}catch(e){toast(errMsg(e),'error')}}
 function getActiveSound(){try{return JSON.parse(localStorage.getItem('sellerflow_active_sound')||'null')}catch{return null}}
-function openPostModal(){const active=getActiveSound();modal(`<h2 class="text-xl font-bold">Create SellerFlow post</h2><p class="muted text-sm mt-1">Photos and videos publish immediately while SellerFlow reviews them for safety.</p>${active?`<div class="sound-chip mt-4">🎵 Using sound: ${esc(active.soundName)} · Original by ${esc(active.originatorName)}</div>`:''}<textarea id="postText" class="w-full mt-4 bg-[#191919] border border-[#333] rounded-xl p-3" rows="5" placeholder="What do you want to share?"></textarea><input id="postFile" type="file" accept="image/*,video/mp4,video/webm" class="w-full mt-3"><p class="muted text-xs mt-2">Images up to 10MB; videos up to 50MB.</p><div class="flex justify-end gap-2 mt-4"><button data-close-modal class="px-4 py-2">Cancel</button>${button('Publish to For You','publishPost')}</div>`);$('publishPost').onclick=async()=>{try{const text=$('postText').value.trim(),file=$('postFile').files[0];if(!text&&!file)throw Error('Add text or media.');loading('Publishing to For You…');let mediaUrl='',mediaType='',mediaPath='';if(file){validFile(file,['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm'],50);const x=await uploadPublic(file,'posts');mediaUrl=x.url;mediaPath=x.path;mediaType=file.type}const sound=active||null;const ref=await addDoc(collection(db,'posts'),{sellerId:currentUser.uid,text,mediaUrl,mediaPath,mediaType,likes:[],saves:[],comments:[],status:'published',createdAt:serverTimestamp(),submittedAt:serverTimestamp(),reviewStatus:'under_review',soundId:sound?.soundId||'',soundName:sound?.soundName||(mediaType.startsWith('video')?'Original sound':''),soundOriginPostId:sound?.originPostId||'',soundOriginatorId:sound?.originatorId||currentUser.uid,soundOriginName:sound?.originatorName||(isAdmin?'SellerFlow':currentProfile.name||'SellerFlow creator'),platformLabel:'SellerFlow',isAdminPost:!!isAdmin});if(mediaType.startsWith('video')&&!sound)await setDoc(doc(db,'sounds',ref.id),{soundId:ref.id,originPostId:ref.id,originatorId:currentUser.uid,originatorName:isAdmin?'SellerFlow':(currentProfile.name||currentProfile.username||'SellerFlow creator'),soundName:`Original sound · ${currentProfile.name||'SellerFlow creator'}`,createdAt:serverTimestamp()},{merge:true});closeModal();toast('Published to For You. SellerFlow is reviewing it for safety.','success');navigate('feed')}catch(e){toast(errMsg(e),'error')}finally{ready()}}}
+function openPostModal(){const active=getActiveSound();modal(`<h2 class="text-xl font-bold">Create SellerFlow post</h2><p class="muted text-sm mt-1">Photos and videos publish immediately while SellerFlow reviews them for safety.</p>${active?`<div class="sound-chip mt-4">🎵 Using sound: ${esc(active.soundName)} · Original by ${esc(active.originatorName)}</div>`:''}<textarea id="postText" class="w-full mt-4 bg-[#191919] border border-[#333] rounded-xl p-3" rows="5" placeholder="What do you want to share?"></textarea><input id="postFile" type="file" accept="image/*,video/mp4,video/webm" class="w-full mt-3"><p class="muted text-xs mt-2">Images up to 10MB; videos up to 50MB.</p><div class="flex justify-end gap-2 mt-4"><button data-close-modal class="px-4 py-2">Cancel</button>${button('Publish to For You','publishPost')}</div>`);$('publishPost').onclick=async()=>{try{const text=$('postText').value.trim(),file=$('postFile').files[0];if(!text&&!file)throw Error('Add text or media.');loading('Checking safety with SellerFlow AI…');let mediaUrl='',mediaType='',mediaPath='';if(file){validFile(file,['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm'],50);const x=await uploadPublic(file,'posts');mediaUrl=x.url;mediaPath=x.path;mediaType=file.type}const sound=active||null;const postData={sellerId:currentUser.uid,text,mediaUrl,mediaPath,mediaType,likes:[],saves:[],comments:[],status:'published',createdAt:serverTimestamp(),submittedAt:serverTimestamp(),reviewStatus:'under_review',soundId:sound?.soundId||'',soundName:sound?.soundName||(mediaType.startsWith('video')?'Original sound':''),soundOriginPostId:sound?.originPostId||'',soundOriginatorId:sound?.originatorId||currentUser.uid,soundOriginName:sound?.originatorName||(isAdmin?'SellerFlow':currentProfile.name||'SellerFlow creator'),platformLabel:'SellerFlow',isAdminPost:!!isAdmin};const {ref,verdict,evalResult}=await executeSellerFlowAiPostPublish(postData,file,null);if(mediaType.startsWith('video')&&!sound)await setDoc(doc(db,'sounds',ref.id),{soundId:ref.id,originPostId:ref.id,originatorId:currentUser.uid,originatorName:isAdmin?'SellerFlow':(currentProfile.name||currentProfile.username||'SellerFlow creator'),soundName:`Original sound · ${currentProfile.name||'SellerFlow creator'}`,createdAt:serverTimestamp()},{merge:true});closeModal();if(verdict==='VIOLATION'){toast(`⚠️ Safety Policy Warning: Post hidden from public view due to a policy violation (${evalResult.detectedRule}). A warning has been recorded.`,'error');}else if(verdict==='REVIEW'){toast('Post submitted. It is currently queued for SellerFlow safety review.','success');}else{toast('Published to For You. Verified safe by SellerFlow AI.','success');}navigate('feed')}catch(e){toast(errMsg(e),'error')}finally{ready()}}}
 
 async function renderDashboard(){if(!currentProfile?.verified&&!isAdmin){$('page').innerHTML=pageTitle('Dashboard unavailable','Seller dashboards are available after identity verification.')+`<div class="card p-8 text-center"><div class="text-5xl">🛡️</div><h2 class="text-xl font-bold mt-3">Verify to unlock your dashboard</h2><p class="muted mt-2">You can still use For You, publish community content and shop. Your business dashboard unlocks after verification.</p>${button('Go to Settings','dashboardVerify','mt-5')}</div>`;$('dashboardVerify').onclick=()=>navigate('settings');return}const [products,orders]=await Promise.all([getDocs(query(collection(db,'products'),where('sellerId','==',currentUser.uid))),getDocs(query(collection(db,'orders'),where('sellerIds','array-contains',currentUser.uid)))]);let revenue=0,pending=0;orders.forEach(d=>{const o=d.data();if(o.sellerId===currentUser.uid&&o.status!=='cancelled')revenue+=Number(o.total)||0;if(o.sellerId===currentUser.uid&&['pending','confirmed','processing'].includes(o.status))pending++});$('page').innerHTML=pageTitle('Dashboard','Your SellerFlow business overview.')+`<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"><div class="card p-5"><div class="muted text-sm">Products</div><div class="text-3xl font-black mt-2">${products.size}</div></div><div class="card p-5"><div class="muted text-sm">Orders</div><div class="text-3xl font-black mt-2">${orders.size}</div></div><div class="card p-5"><div class="muted text-sm">Pending</div><div class="text-3xl font-black mt-2">${pending}</div></div><div class="card p-5"><div class="muted text-sm">Revenue</div><div class="text-3xl font-black mt-2">${money(revenue)}</div></div></div><div class="grid lg:grid-cols-2 gap-5 mt-5"><div class="card p-6"><h2 class="font-bold text-xl">Seller verification</h2><p class="muted mt-2">${currentProfile.verified?'Your seller account is verified.':'Submit your Ghana Card so an admin can review your identity.'}</p>${currentProfile.verified?'<div class="font-bold mt-4 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':`<div class="muted text-sm mt-4">Verification is managed in Settings.</div>`}</div><div class="card p-6"><h2 class="font-bold text-xl">Store</h2><p class="muted mt-2">${currentProfile.verified?'Create or update your public storefront.':'Verification is required before opening a store.'}</p>${button('Manage store','storeDash','mt-4 border border-[#444] bg-transparent text-white')}</div></div>`;$('storeDash')?.addEventListener('click',()=>navigate('store'))}
 
@@ -1460,9 +1466,9 @@ async function renderProducts(){if(!currentProfile.verified){$('page').innerHTML
 function openProductModal(p=null){modal(`<h2 class="text-xl font-bold">${p?'Edit product':'Add product'}</h2><input id="prodName" value="${esc(p?.name||'')}" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Product name"><input id="prodPrice" type="number" min="0" step="0.01" value="${p?.price??''}" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Price in GHS"><input id="prodStock" type="number" min="0" step="1" value="${p?.stock??0}" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Stock"><textarea id="prodDesc" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Description">${esc(p?.description||'')}</textarea><input id="prodFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-3"><p class="muted text-xs mt-2">Product image: maximum 10MB.</p><div class="flex justify-end gap-2 mt-4"><button data-close-modal>Cancel</button>${button(p?'Save changes':'Add product','saveProduct')}</div>`);$('saveProduct').onclick=async()=>{try{const name=$('prodName').value.trim(),price=Number($('prodPrice').value),stock=Number($('prodStock').value),description=$('prodDesc').value.trim(),file=$('prodFile').files[0];if(!name||!Number.isFinite(price)||price<0||!Number.isInteger(stock)||stock<0)throw Error('Enter a valid name, price and stock.');let imageUrl=p?.imageUrl||'',imagePath=p?.imagePath||'';if(file){validFile(file,['image/jpeg','image/png','image/webp'],10);const x=await uploadPublic(file,'products');imageUrl=x.url;imagePath=x.path}if(!imageUrl)throw Error('Choose a product image.');const data={sellerId:currentUser.uid,name,price,stock,description,imageUrl,imagePath,updatedAt:serverTimestamp()};if(p)await updateDoc(doc(db,'products',p.id),data);else await addDoc(collection(db,'products'),{...data,createdAt:serverTimestamp()});closeModal();toast(p?'Product updated':'Product added','success');navigate('products')}catch(e){toast(errMsg(e),'error')}}}
 async function deleteProduct(id){if(!confirm('Delete this product?'))return;try{const s=await getDoc(doc(db,'products',id));if(!snapshotExists(s)||s.data().sellerId!==currentUser.uid)throw Error('You cannot delete this product.');await deleteDoc(doc(db,'products',id));toast('Product deleted','success');navigate('products')}catch(e){toast(errMsg(e),'error')}}
 
-async function renderOrders(){const buyer=getDocs(query(collection(db,'orders'),where('buyerId','==',currentUser.uid),limit(100)));const seller=getDocs(query(collection(db,'orders'),where('sellerId','==',currentUser.uid),limit(100)));const [bs,ss]=await Promise.all([buyer,seller]);const mine=bs.docs.map(d=>({id:d.id,...d.data(),view:'buyer'}));const sales=ss.docs.map(d=>({id:d.id,...d.data(),view:'seller'}));$('page').innerHTML=pageTitle('Orders','Buyer purchases and seller orders.')+`<div class="grid lg:grid-cols-2 gap-5"><div><h2 class="font-bold text-xl mb-3">My purchases</h2><div class="space-y-3">${mine.length?mine.map(orderCard).join(''):'<div class="card p-5 muted">No purchases yet.</div>'}</div></div><div><h2 class="font-bold text-xl mb-3">Customer orders</h2><div class="space-y-3">${sales.length?sales.map(orderCard).join(''):'<div class="card p-5 muted">No customer orders yet.</div>'}</div></div></div>`;document.querySelectorAll('[data-order-status]').forEach(b=>b.onclick=()=>updateOrderStatus(b.dataset.orderStatus,b.dataset.orderId))}
+async function renderOrders(){if(typeof refreshOrdersBadge==='function')refreshOrdersBadge();const buyer=getDocs(query(collection(db,'orders'),where('buyerId','==',currentUser.uid),limit(100)));const seller=getDocs(query(collection(db,'orders'),where('sellerId','==',currentUser.uid),limit(100)));const [bs,ss]=await Promise.all([buyer,seller]);const mine=bs.docs.map(d=>({id:d.id,...d.data(),view:'buyer'}));const sales=ss.docs.map(d=>({id:d.id,...d.data(),view:'seller'}));$('page').innerHTML=pageTitle('Orders','Buyer purchases and seller orders.')+`<div class="grid lg:grid-cols-2 gap-5"><div><h2 class="font-bold text-xl mb-3">My purchases</h2><div class="space-y-3">${mine.length?mine.map(orderCard).join(''):'<div class="card p-5 muted">No purchases yet.</div>'}</div></div><div><h2 class="font-bold text-xl mb-3">Customer orders</h2><div class="space-y-3">${sales.length?sales.map(orderCard).join(''):'<div class="card p-5 muted">No customer orders yet.</div>'}</div></div></div>`;document.querySelectorAll('[data-order-status]').forEach(b=>b.onclick=()=>updateOrderStatus(b.dataset.orderStatus,b.dataset.orderId))}
 function orderCard(o){const items=(o.items||[]).map(i=>`${esc(i.name)} × ${i.quantity}`).join(', ');const canUpdate=o.view==='seller'&&!['delivered','cancelled'].includes(o.status);return `<div class="card p-5"><div class="flex justify-between gap-3"><b>Order #${esc(o.id.slice(0,8).toUpperCase())}</b><span class="gold">${esc(o.status||'pending')}</span></div><p class="muted text-sm mt-2">${items}</p><div class="font-black mt-3">${money(o.total)}</div><p class="text-sm mt-2">${esc(o.buyerName||'Buyer')} · ${esc(o.phone||'')}</p>${o.deliveryAddress?`<p class="muted text-sm">${esc(o.deliveryAddress)}</p>`:''}${canUpdate?`<div class="flex flex-wrap gap-2 mt-4"><button data-order-status="confirmed" data-order-id="${o.id}" class="border border-[#444] rounded-xl px-3 py-2">Confirm</button><button data-order-status="processing" data-order-id="${o.id}" class="border border-[#444] rounded-xl px-3 py-2">Processing</button><button data-order-status="shipped" data-order-id="${o.id}" class="border border-[#444] rounded-xl px-3 py-2">Shipped</button><button data-order-status="delivered" data-order-id="${o.id}" class="bg-gold text-black rounded-xl px-3 py-2">Delivered</button><button data-order-status="cancelled" data-order-id="${o.id}" class="border border-red-700 text-red-400 rounded-xl px-3 py-2">Cancel</button></div>`:''}</div>`}
-async function updateOrderStatus(id,status){try{const r=doc(db,'orders',id),s=await getDoc(r);if(!snapshotExists(s)||s.data().sellerId!==currentUser.uid)throw Error('You cannot update this order.');await updateDoc(r,{status,updatedAt:serverTimestamp()});toast('Order updated','success');navigate('orders')}catch(e){toast(errMsg(e),'error')}}
+async function updateOrderStatus(id,status){try{const r=doc(db,'orders',id),s=await getDoc(r);if(!snapshotExists(s)||s.data().sellerId!==currentUser.uid)throw Error('You cannot update this order.');await updateDoc(r,{status,updatedAt:serverTimestamp()});toast('Order updated','success');if(typeof refreshOrdersBadge==='function')refreshOrdersBadge();navigate('orders')}catch(e){toast(errMsg(e),'error')}}
 
 async function renderStore(){const s=await getDoc(doc(db,'stores',currentUser.uid));const store=snapshotExists(s)?s.data():{};$('page').innerHTML=pageTitle('Store','Your public storefront settings.')+(!currentProfile.verified?`<div class="card p-5 mb-5 border-yellow-700"><b>Verification required.</b><p class="muted mt-1">Your store becomes public after seller verification.</p></div>`:'')+`<div class="card p-6 max-w-2xl"><label class="muted text-sm">Store name</label><input id="storeName" value="${esc(store.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><label class="muted text-sm block mt-4">Description</label><textarea id="storeDesc" rows="5" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]">${esc(store.description||'')}</textarea><label class="muted text-sm block mt-4">Location / Area</label><input id="storeLocation" value="${esc(store.location||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="East Legon, Accra"><label class="muted text-sm block mt-4">Business address</label><input id="storeAddress" value="${esc(store.address||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Street / landmark"><label class="muted text-sm block mt-4">Opening hours</label><input id="storeHours" value="${esc(store.hours||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Mon–Sat · 8:00 AM – 7:00 PM"><label class="muted text-sm block mt-4">WhatsApp number</label><input id="storeWhatsApp" value="${esc(store.whatsapp||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="233XXXXXXXXX"><button id="saveStore" class="mt-5 bg-gold text-black px-5 py-3 rounded-xl font-bold">Save store</button></div>`;$('saveStore').onclick=async()=>{try{if(!currentProfile.verified)throw Error('Verify your seller account first.');const name=$('storeName').value.trim();if(name.length<2)throw Error('Enter a store name.');const wa=$('storeWhatsApp').value.replace(/\D/g,'');if(wa&&wa.length<10)throw Error('Enter a valid WhatsApp number.');await setDoc(doc(db,'stores',currentUser.uid),{ownerId:currentUser.uid,name,description:$('storeDesc').value.trim(),location:$('storeLocation').value.trim(),address:$('storeAddress').value.trim(),hours:$('storeHours').value.trim(),whatsapp:wa,updatedAt:serverTimestamp()},{merge:true});toast('Store saved','success')}catch(e){toast(errMsg(e),'error')}}}
 
@@ -1477,7 +1483,7 @@ function updateCartBadge(){$('cartCount').textContent=cart.reduce((n,i)=>n+i.qua
 function renderCart(){const total=cart.reduce((n,i)=>n+i.price*i.quantity,0);$('page').innerHTML=pageTitle('Cart','Review your items before checkout.')+(cart.length?`<div class="card divide-y divide-[#292929]">${cart.map((i,n)=>`<div class="p-4 flex gap-3 items-center"><img src="${esc(i.imageUrl||'')}" class="w-16 h-16 rounded-xl object-cover"><div class="flex-1"><b>${esc(i.name)}</b><div class="gold">${money(i.price)}</div></div><div class="flex items-center gap-2"><button data-cart-minus="${n}" class="w-8 h-8 rounded-lg border border-[#444]">−</button><span>${i.quantity}</span><button data-cart-plus="${n}" class="w-8 h-8 rounded-lg border border-[#444]">+</button></div><button data-cart-remove="${n}" class="text-red-400 ml-2">✕</button></div>`).join('')}</div><div class="card p-5 mt-4 flex justify-between items-center"><div><div class="muted">Total</div><div class="text-2xl font-black">${money(total)}</div></div>${button('Checkout','checkoutBtn')}</div>`:'<div class="card p-8 text-center muted">Your cart is empty.</div>');document.querySelectorAll('[data-cart-minus]').forEach(b=>b.onclick=()=>changeCart(+b.dataset.cartMinus,-1));document.querySelectorAll('[data-cart-plus]').forEach(b=>b.onclick=()=>changeCart(+b.dataset.cartPlus,1));document.querySelectorAll('[data-cart-remove]').forEach(b=>b.onclick=()=>{cart.splice(+b.dataset.cartRemove,1);saveCart();renderCart()});$('checkoutBtn')?.addEventListener('click',openCheckout)}
 function changeCart(i,d){cart[i].quantity=Math.max(1,Math.min(cart[i].maxStock||99,cart[i].quantity+d));saveCart();renderCart()}
 function openCheckout(){modal(`<h2 class="text-xl font-bold">Checkout</h2><p class="muted mt-1">This version records the order. Mobile Money payment can be connected through a secure Ghana payment backend later.</p><input id="checkName" value="${esc(currentProfile.name||'')}" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Full name"><input id="checkPhone" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Phone number"><textarea id="checkAddress" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Delivery address"></textarea><div class="flex justify-end gap-2 mt-4"><button data-close-modal>Cancel</button>${button('Place order','placeOrder')}</div>`);$('placeOrder').onclick=placeOrder}
-async function placeOrder(){try{const name=$('checkName').value.trim(),phone=$('checkPhone').value.trim(),address=$('checkAddress').value.trim();if(!name||!phone||!address)throw Error('Complete all delivery details.');const bySeller=new Map();cart.forEach(i=>{if(!bySeller.has(i.sellerId))bySeller.set(i.sellerId,[]);bySeller.get(i.sellerId).push(i)});loading('Placing orders…');for(const [sellerId,items] of bySeller){const total=items.reduce((n,i)=>n+i.price*i.quantity,0);await addDoc(collection(db,'orders'),{buyerId:currentUser.uid,buyerName:name,phone,deliveryAddress:address,sellerId,sellerIds:[sellerId],items,total,status:'pending',paymentMethod:'cash_on_delivery',createdAt:serverTimestamp(),updatedAt:serverTimestamp()})}cart=[];saveCart();closeModal();toast('Order placed successfully','success');navigate('orders')}catch(e){toast(errMsg(e),'error')}finally{ready()}}
+async function placeOrder(){try{const name=$('checkName').value.trim(),phone=$('checkPhone').value.trim(),address=$('checkAddress').value.trim();if(!name||!phone||!address)throw Error('Complete all delivery details.');const bySeller=new Map();cart.forEach(i=>{if(!bySeller.has(i.sellerId))bySeller.set(i.sellerId,[]);bySeller.get(i.sellerId).push(i)});loading('Placing orders…');for(const [sellerId,items] of bySeller){const total=items.reduce((n,i)=>n+i.price*i.quantity,0);await addDoc(collection(db,'orders'),{buyerId:currentUser.uid,buyerName:name,phone,deliveryAddress:address,sellerId,sellerIds:[sellerId],items,total,status:'pending',paymentMethod:'cash_on_delivery',createdAt:serverTimestamp(),updatedAt:serverTimestamp()})}cart=[];saveCart();closeModal();toast('Order placed successfully','success');if(typeof refreshOrdersBadge==='function')refreshOrdersBadge();navigate('orders')}catch(e){toast(errMsg(e),'error')}finally{ready()}}
 
 const DEFAULT_TERMS=`SellerFlow Terms & Conditions
 
@@ -1534,6 +1540,125 @@ let notificationWatcherStarted=false;let knownNotificationIds=new Set(JSON.parse
 async function requestNotificationPermission(){try{if(!('Notification' in window))throw Error('Device/browser notifications are not supported here. In-app notifications remain available.');const p=await Notification.requestPermission();toast(p==='granted'?'Device notifications enabled.':'Notifications were not enabled.','success');if(p==='granted')loadNotifications(true)}catch(e){toast(errMsg(e),'error')}}
 async function loadNotifications(announce=false){if(!currentUser)return;try{const snap=await getDocs(query(collection(db,'notifications'),where('recipientId','==',currentUser.uid),limit(100)));const incoming=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));if(announce&&knownNotificationIds.size&&'Notification' in window&&Notification.permission==='granted'){incoming.filter(n=>!knownNotificationIds.has(n.id)).slice(0,3).forEach(n=>{try{new Notification(n.title||'SellerFlow',{body:n.message||'You have a new SellerFlow notification.',tag:'sellerflow-'+n.id})}catch(_){} });}notificationCache=incoming.length?incoming:[{id:'sample_sf_update',senderName:'SellerFlow',title:'SellerFlow post review complete',message:'Your post remains live on SellerFlow after safety review.',fromAdmin:true,read:false,createdAt:Date.now()-1000*60*30},{id:'sample_repost',senderName:'Gideon Appiah',type:'post_engagement',engagementType:'repost',read:false,createdAt:Date.now()-1000*60*60*2},{id:'sample_like',senderName:'Gideon Appiah',type:'post_engagement',engagementType:'like',read:true,createdAt:Date.now()-1000*60*60*24},{id:'sample_follow',senderName:'Gideon Appiah',type:'follow',actorId:'sample_gideon',read:true,createdAt:Date.now()-1000*60*60*24}];incoming.forEach(n=>knownNotificationIds.add(n.id));const saveIds=[...knownNotificationIds].slice(-200);knownNotificationIds=new Set(saveIds);localStorage.setItem('sellerflow_seen_notifications',JSON.stringify(saveIds));const unread=notificationCache.filter(n=>!n.read).length;const badge=$('notificationCount');if(badge){badge.textContent=unread>99?'99+':String(unread);badge.classList.toggle('hide',unread===0)}}catch(e){console.warn('Notifications unavailable',e)}}
 function startNotificationWatcher(){if(notificationWatcherStarted)return;notificationWatcherStarted=true;loadNotifications(false).then(()=>setInterval(()=>{if(currentUser)loadNotifications(true)},20000))}
+let ordersWatcherUnsubscribe=null;let pendingOrdersCount=0;let knownPendingOrderIds=new Set();let ordersWatcherInitialized=false;
+function playOrderAlertSound(){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    if(ctx.state==='suspended')ctx.resume();
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.type='sine';
+    osc.frequency.setValueAtTime(587.33,ctx.currentTime);
+    osc.frequency.setValueAtTime(880,ctx.currentTime+0.12);
+    gain.gain.setValueAtTime(0.2,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.45);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime+0.46);
+  }catch(_){}
+}
+function updateOrdersBadge(count){
+  pendingOrdersCount=Math.max(0,Number(count)||0);
+  const text=pendingOrdersCount>99?'99+':String(pendingOrdersCount);
+  const badges=document.querySelectorAll('.orders-nav-badge, #desktopOrdersBadge, #mobileOrdersBadge');
+  badges.forEach(b=>{
+    b.textContent=text;
+    if(pendingOrdersCount>0){
+      b.classList.remove('hide');
+      b.classList.add('pulse');
+    }else{
+      b.classList.add('hide');
+      b.classList.remove('pulse');
+    }
+  });
+}
+function handleOrdersSnapshot(snap,suppressAlert=false){
+  const docs=snap?.docs||(Array.isArray(snap)?snap:[]);
+  const currentPending=[];
+  docs.forEach(d=>{
+    const data=typeof d?.data==='function'?d.data():(d?.data||d||{});
+    const st=String(data?.status||'pending').toLowerCase();
+    if(st==='pending'){
+      currentPending.push({id:d?.id||data?.id||('ord_'+Math.random().toString(36).slice(2)),...data});
+    }
+  });
+  const count=currentPending.length;
+  if(!suppressAlert){
+    const newOrders=currentPending.filter(o=>!knownPendingOrderIds.has(o.id));
+    if(newOrders.length>0){
+      playOrderAlertSound();
+      newOrders.forEach(o=>{
+        toast('New Order Received','success');
+        try{
+          if('Notification' in window&&Notification.permission==='granted'){
+            new Notification('SellerFlow: New Order Received',{
+              body:'New order received. Tap to review in Orders.',
+              tag:'sellerflow-order-'+o.id
+            });
+          }
+        }catch(_){}
+        try{if(navigator.vibrate)navigator.vibrate([100,50,100]);}catch(_){}
+      });
+    }
+  }
+  knownPendingOrderIds=new Set(currentPending.map(o=>o.id));
+  ordersWatcherInitialized=true;
+  updateOrdersBadge(count);
+}
+function startOrdersWatcher(){
+  if(!currentUser)return;
+  stopOrdersWatcher();
+  ordersWatcherInitialized=false;
+  knownPendingOrderIds.clear();
+  let isInitialSnapshot=true;
+  try{
+    const coll=collection(db,'orders');
+    const q=query(coll,where('sellerId','==',currentUser.uid));
+    if(q&&typeof q.onSnapshot==='function'){
+      ordersWatcherUnsubscribe=q.onSnapshot(snap=>{
+        handleOrdersSnapshot(snap,isInitialSnapshot);
+        isInitialSnapshot=false;
+      },err=>{
+        console.warn('Real-time seller orders listener error:',err);
+        refreshOrdersBadge(false);
+      });
+    }else{
+      refreshOrdersBadge(false);
+    }
+  }catch(e){
+    console.warn('Orders watcher init failed:',e);
+    refreshOrdersBadge(false);
+  }
+  if(!window._ordersPollInterval){
+    window._ordersPollInterval=setInterval(()=>{
+      if(currentUser)refreshOrdersBadge(false);
+    },20000);
+  }
+}
+function stopOrdersWatcher(){
+  if(ordersWatcherUnsubscribe){
+    try{ordersWatcherUnsubscribe();}catch(_){}
+    ordersWatcherUnsubscribe=null;
+  }
+  ordersWatcherInitialized=false;
+  knownPendingOrderIds.clear();
+  updateOrdersBadge(0);
+}
+async function refreshOrdersBadge(triggerAlert=false){
+  if(!currentUser)return;
+  try{
+    const snap=await getDocs(query(collection(db,'orders'),where('sellerId','==',currentUser.uid),limit(100)));
+    handleOrdersSnapshot(snap,!triggerAlert);
+  }catch(e){
+    console.warn('Orders badge refresh skipped:',e);
+  }
+}
+window.startOrdersWatcher=startOrdersWatcher;
+window.stopOrdersWatcher=stopOrdersWatcher;
+window.refreshOrdersBadge=refreshOrdersBadge;
+window.updateOrdersBadge=updateOrdersBadge;
+window.handleOrdersSnapshot=handleOrdersSnapshot;
 async function openNotifications(){if(window.renderGroupedNotifications){return window.renderGroupedNotifications()}if(window.openNotifications&&window.openNotifications!==openNotifications){return window.openNotifications()}}
 async function markAllNotifications(){try{for(const n of notificationCache.filter(x=>!x.read)){if(!n.id.startsWith('sample_')){try{await updateDoc(doc(db,'notifications',n.id),{read:true,readAt:serverTimestamp()})}catch(_){}}else{n.read=true}}await loadNotifications();closeModal();(window.renderGroupedNotifications||window.openNotifications||openNotifications)()}catch(e){toast(errMsg(e),'error')}}
 async function sendAdminNotification(recipientId,title,message){if(!isAdmin)throw Error('Admin access required.');if(!recipientId||!title||!message)throw Error('Recipient, title and message are required.');await addDoc(collection(db,'notifications'),{recipientId,title,message,fromAdmin:true,senderName:'SellerFlow',read:false,createdAt:serverTimestamp()});const recipient=allPublicProfiles.get(recipientId);try{if(recipientId===currentUser.uid&&'Notification' in window&&Notification.permission==='granted')new Notification(title,{body:message})}catch(_){}toast('Notification sent','success')}
@@ -1605,7 +1730,7 @@ function openPageSelector(){
   pauseAllForYouVideos(false);
   const items=[['feed','🎬','For You'],...(isAdmin||currentProfile?.verified?[['dashboard','📊','Dashboard']]:[]),['marketplace','🛍️','Marketplace'],['products','📦','Products'],['orders','🧾','Orders'],['store','🏪','Store'],['profile','👤','Profile'],['settings','⚙️','Settings']];
   if(isAdmin)items.push(['admin','🛡️','Admin']);
-  $('modalRoot').innerHTML=`<div class="page-selector" id="pageSelector"><div class="page-selector-card"><div class="flex items-center justify-between mb-3"><div><h2 class="text-xl font-black">Choose a page</h2><p class="muted text-sm mt-1">Tap where you want to go.</p></div><button type="button" data-close-selector class="w-10 h-10 rounded-full border border-[#333]">×</button></div><div class="page-selector-grid">${items.map(x=>`<button type="button" class="page-selector-item ${x[0]===currentPage?'active':''}" data-selector-page="${x[0]}"><span class="page-icon">${x[1]}</span><b>${x[2]}</b></button>`).join('')}</div><button type="button" data-close-selector class="page-selector-close border border-[#333] rounded-xl py-3">Close</button></div></div>`;
+  $('modalRoot').innerHTML=`<div class="page-selector" id="pageSelector"><div class="page-selector-card"><div class="flex items-center justify-between mb-3"><div><h2 class="text-xl font-black">Choose a page</h2><p class="muted text-sm mt-1">Tap where you want to go.</p></div><button type="button" data-close-selector class="w-10 h-10 rounded-full border border-[#333]">×</button></div><div class="page-selector-grid">${items.map(x=>`<button type="button" class="page-selector-item relative ${x[0]===currentPage?'active':''}" data-selector-page="${x[0]}"><span class="page-icon">${x[1]}</span><b>${x[2]}</b>${x[0]==='orders'&&pendingOrdersCount>0?`<span class="orders-nav-badge absolute top-2 right-2 pulse">${pendingOrdersCount>99?'99+':pendingOrdersCount}</span>`:''}</button>`).join('')}</div><button type="button" data-close-selector class="page-selector-close border border-[#333] rounded-xl py-3">Close</button></div></div>`;
   document.querySelectorAll('[data-selector-page]').forEach(b=>b.onclick=()=>{closePageSelector();navigate(b.dataset.selectorPage)});document.querySelectorAll('[data-close-selector]').forEach(b=>b.onclick=closePageSelector);
 }
 function closePageSelector(){$('modalRoot').innerHTML=''}
@@ -1671,7 +1796,7 @@ async function startUser(u){
   if(bootingUid===u.uid && currentUser?.uid===u.uid && !$('app').classList.contains('hide'))return;
   bootingUid=u.uid;
   currentUser=u;
-  isAdmin=(u.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
+  isAdmin=isUserAdminEmail(u.email);
   currentProfile=null;
   try{
     const snap=await getDoc(doc(db,'users',u.uid));
@@ -1697,6 +1822,7 @@ async function startUser(u){
   showApp();
   loadNotifications(false);
   startNotificationWatcher();
+  startOrdersWatcher();
   ready();
   try{await navigate('feed');if(!isAdmin&&!currentProfile?.termsAccepted)showTermsModal(true)}catch(e){console.error('Feed navigation failed:',e);$('page').innerHTML='<div class="card p-6"><h2 class="font-bold text-xl">You are signed in</h2><p class="muted mt-2">SellerFlow could not load the feed yet.</p><button id="retrySignedIn" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Try again</button></div>';$('retrySignedIn')?.addEventListener('click',()=>navigate('feed'))}
   bootingUid=null;
@@ -1713,6 +1839,7 @@ async function logoutUser(){
   isAdmin=false;
   cart=[];
   localStorage.removeItem('sellerflow_cart');
+  stopOrdersWatcher();
   hide($('authPage'));
   hide($('shutdown'));
   showApp();
@@ -1748,6 +1875,7 @@ async function init(){
     db=getFirestore(firebaseApp);
     onAuthStateChanged(auth,async u=>{
       if(!u){
+        if(typeof stopOrdersWatcher==='function')stopOrdersWatcher();
         currentUser=null;currentProfile=null;isAdmin=false;
         showApp();
         navigate('feed');
@@ -1760,7 +1888,7 @@ async function init(){
         console.error('Authenticated startup issue:',e);
         // Never sign out a valid Firebase session because a secondary app service failed.
         currentUser=u;
-        isAdmin=(u.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
+        isAdmin=isUserAdminEmail(u.email);
         showApp();
         ready();
         toast('You are signed in. Some SellerFlow data may need another try.','error');
@@ -1840,7 +1968,370 @@ init();
   window.notifyFollow=notifyFollow;
 
   function contentType(p){const t=(p.text||'').toLowerCase();if(/product|shop|buy|price|sale|order|ghana cedi|ghs/.test(t))return'product';if(/how to|tip|learn|tutorial|guide|business|money|finance/.test(t))return'education';if(/funny|comedy|joke|laugh/.test(t))return'comedy';if(/hair|barber|beauty|fashion|makeup/.test(t))return'beauty';if(p.mediaType?.startsWith('video'))return'video';if(p.mediaType?.startsWith('image'))return'photo';return'story'}
-  function isSafePost(p){return !/(sex|sexual|porn|nude|naked|xxx|onlyfans|explicit|adult content|erotic)/i.test(p.text||'')}
+
+  /* ==========================================================================
+     SellerFlow AI Moderation Layer
+     Ghana-Focused Safety & Legal Policy Rules
+     ========================================================================== */
+  const GHANA_MODERATION_RULES = [
+    {
+      id: 'GHANA_LAW_FINANCIAL_FRAUD',
+      title: 'MoMo Fraud, Financial Scams & Counterfeit Currency',
+      lawReference: 'Ghana Electronic Transactions Act & Criminal Offences Act (Act 29)',
+      violationRegex: /(double\s*(your\s*)?(momo|money|cedi|cedis|cash)|momo\s*(hack|glitch|doubl|flip)|send\s*momo\s*(fee|pin|code|password)|(mtn|telecel|at|airteltigo)\s*momo\s*pin|fake\s*(cedi|cedis|currency|banknote|money)\s*(for\s*sale|available)|counterfeit\s*(cedi|cedis|currency|money)|buy\s*(fake|counterfeit)\s*cedi|419\s*(money|scam|scheme)|sakawa\s*(ritual|money|scam)|western\s*union\s*flip)/i,
+      violationReason: 'MoMo financial fraud, mobile money phishing, or counterfeit Ghana Cedi currency prohibited under Ghanaian law.',
+      confidence: 0.98,
+      reviewRegex: /(invest\s*\d+%\s*daily|guaranteed\s*high\s*return|forex\s*doubler|instant\s*cash\s*flip|momo\s*cashback\s*reward|unclaimed\s*consignment)/i,
+      reviewReason: 'Suspicious financial or high-yield investment claim requiring admin verification.',
+      reviewConfidence: 0.72
+    },
+    {
+      id: 'GHANA_LAW_PROHIBITED_NARCOTICS',
+      title: 'Controlled Substances & Unlawful Pharmaceuticals',
+      lawReference: 'Ghana Narcotics Control Commission Act (Act 1019) & FDA Regulations',
+      violationRegex: /(tramadol\s*(for\s*sale|available|delivery|\d+mg)|wee\s*(for\s*sale|delivery|plug|abofra)|buy\s*(weed|cannabis|marijuana|loud|tramadol|cocaine|heroin|meth|shrooms|ecstasy)|(marijuana|cannabis|weed)\s*(delivery|plug|seller)\s*(accra|kumasi|ghana)|(pure\s*cocaine|crack\s*cocaine|crystal\s*meth)|diazepam\s*no\s*prescription)/i,
+      violationReason: 'Sale or distribution of controlled narcotics or prescription pharmaceuticals prohibited under Ghana Narcotics Control Commission Act.',
+      confidence: 0.98,
+      reviewRegex: /(herbal\s*concoction\s*cure|traditional\s*bitters\s*cure\s*all|enhancement\s*pills|slimming\s*tea\s*fast)/i,
+      reviewReason: 'Unverified medicinal supplement claim requiring health safety review.',
+      reviewConfidence: 0.68
+    },
+    {
+      id: 'GHANA_LAW_WEAPONS_VIOLENCE',
+      title: 'Firearms, Weapons & Mob Violence Incitement',
+      lawReference: 'Ghana Criminal Offences Act (Act 29)',
+      violationRegex: /(buy\s*(gun|guns|pistol|pistols|revolver|rifle|ak47|ak-47|shotgun|firearm)|(guns?|pistols?|firearms?)\s*(for\s*sale|available)|(ammunition|bullets|explosives|dynamite)\s*(for\s*sale|supply)|(lynch|burn)\s*(the\s*)?(thief|person|witch|criminal)|instant\s*justice\s*kill|hire\s*a\s*hitman|death\s*threat|i\s*will\s*kill\s*you)/i,
+      violationReason: 'Unlicensed weapons sales, violent threats, or mob justice incitement prohibited under Ghanaian law.',
+      confidence: 0.97,
+      reviewRegex: /(hunting\s*knife|tactical\s*blade|machete\s*wholesale|martial\s*arts\s*combat)/i,
+      reviewReason: 'Sharp tactical tool or martial merchandise requiring verification.',
+      reviewConfidence: 0.65
+    },
+    {
+      id: 'GHANA_LAW_SEXUAL_EXPLOITATION_ADULT',
+      title: 'Pornography, Escort Services & Sexual Exploitation',
+      lawReference: 'Ghana Criminal Offences Act (Act 29)',
+      violationRegex: /(sex\s*(video|tape|service|worker)|porn|pornography|xxx|nude\s*(video|photo|pic)|naked\s*(girls?|women|men)|hookup\s*(girls?|accra|kumasi|tema|ghana)|momo\s*hookup|escort\s*(service|agency|accra|kumasi)|erotic\s*massage|selling\s*(nudes|pussy|sex)|onlyfans\s*leak|adult\s*webcam)/i,
+      violationReason: 'Explicit adult pornography or commercial sexual exploitation prohibited under SellerFlow policy and Ghanaian law.',
+      confidence: 0.98,
+      reviewRegex: /(lingerie\s*model|swimwear\s*shoot|erotic|sensual\s*massage|adult\s*party)/i,
+      reviewReason: 'Intimate apparel or adult entertainment content requiring admin review.',
+      reviewConfidence: 0.72
+    },
+    {
+      id: 'GHANA_LAW_FORGED_DOCUMENTS',
+      title: 'Counterfeit Ghana Cards & Forged Official Documents',
+      lawReference: 'Ghana Criminal Offences Act & National Identity Register Act',
+      violationRegex: /(fake|counterfeit|forged)\s*(ghana\s*card|passport|voter('?s)?\s*id|dvla|driver('?s)?\s*licen[sc]e|wassce|certificate|diploma)|buy\s*(registered\s*)?(ghana\s*card|wassce\s*result|drivers?\s*licen[sc]e)|upgrade\s*wassce\s*results?|fake\s*bank\s*statement/i,
+      violationReason: 'Forgery of official statutory documents (Ghana Card, Passport, DVLA) prohibited under Ghanaian law.',
+      confidence: 0.99,
+      reviewRegex: /(passport\s*express\s*agent|dvla\s*middleman|fast\s*track\s*ghana\s*card)/i,
+      reviewReason: 'Third-party official documentation assistance requiring seller credentials check.',
+      reviewConfidence: 0.70
+    },
+    {
+      id: 'GHANA_LAW_SMUGGLED_MINERALS',
+      title: 'Illicit Galamsey Gold Trading & Mineral Smuggling',
+      lawReference: 'Ghana Minerals and Mining Act (Act 703)',
+      violationRegex: /(unregistered|illegal|raw)\s*gold\s*(dust|bars?)\s*(for\s*sale|available)|galamsey\s*gold\s*(cheap|deal|sale)|smuggled\s*gold|gold\s*consignment\s*fee|send\s*money\s*for\s*gold\s*boxes/i,
+      violationReason: 'Illegal mineral trading or smuggled gold violating Ghana Minerals and Mining Act.',
+      confidence: 0.95,
+      reviewRegex: /(gold\s*dust|unrefined\s*gold|concession\s*investment)/i,
+      reviewReason: 'Precious metals transaction requiring proof of Minerals Commission license.',
+      reviewConfidence: 0.65
+    },
+    {
+      id: 'GHANA_LAW_TRIBAL_HATE_SPEECH',
+      title: 'Ethnic Hate Speech & Tribal Discrimination',
+      lawReference: 'Constitution of the Republic of Ghana (1992)',
+      violationRegex: /(all\s*(ashantis?|ewes?|gas?|fantes?|dagombas?|northerners?|hausas?)\s*(are\s*(thieves|monkeys|dogs|evil|criminals)|must\s*(die|be\s*killed|be\s*driven\s*out))|kill\s*all\s*(ashantis?|ewes?|gas?|fantes?|dagombas?)|tribal\s*war\s*in\s*ghana)/i,
+      violationReason: 'Ethnic hate speech or tribal hostility prohibited under the Constitution of Ghana.',
+      confidence: 0.97,
+      reviewRegex: /(tribal\s*dominance|ethnic\s*politics\s*scandal|chieftaincy\s*dispute\s*threat)/i,
+      reviewReason: 'Sensitive communal conflict discussion requiring moderation review.',
+      reviewConfidence: 0.65
+    }
+  ];
+
+  /* AI Visual inspection of images and video frames */
+  async function analyzeMediaVisualSafety(file, mediaUrl, videoElement){
+    try{
+      let canvas=null, width=160, height=120;
+      if(videoElement && (videoElement.videoWidth||videoElement.clientWidth)){
+        canvas=document.createElement('canvas');
+        canvas.width=width; canvas.height=height;
+        const ctx=canvas.getContext('2d');
+        ctx.drawImage(videoElement,0,0,width,height);
+      }else if(file && file.type?.startsWith('image')){
+        canvas=document.createElement('canvas');
+        canvas.width=width; canvas.height=height;
+        const img=new Image();
+        const objectUrl=URL.createObjectURL(file);
+        await new Promise((res,rej)=>{
+          img.onload=res;
+          img.onerror=rej;
+          img.src=objectUrl;
+        });
+        const ctx=canvas.getContext('2d');
+        ctx.drawImage(img,0,0,width,height);
+        URL.revokeObjectURL(objectUrl);
+      }else if(mediaUrl && (!file || file.type?.startsWith('image'))){
+        try{
+          canvas=document.createElement('canvas');
+          canvas.width=width; canvas.height=height;
+          const img=new Image();
+          img.crossOrigin='anonymous';
+          await new Promise((res,rej)=>{
+            img.onload=res;
+            img.onerror=rej;
+            img.src=mediaUrl;
+          });
+          const ctx=canvas.getContext('2d');
+          ctx.drawImage(img,0,0,width,height);
+        }catch(_){ canvas=null; }
+      }
+      if(!canvas) return { skinRatio: 0, checked: false };
+      const ctx=canvas.getContext('2d');
+      const imgData=ctx.getImageData(0,0,width,height);
+      const data=imgData.data;
+      let skinPixels=0, totalSampled=0;
+      for(let i=0; i<data.length; i+=16){
+        const r=data[i], g=data[i+1], b=data[i+2], a=data[i+3];
+        if(a<128) continue;
+        totalSampled++;
+        const max=Math.max(r,g,b), min=Math.min(r,g,b);
+        const isFairSkin=(r>95 && g>40 && b>20 && (max-min)>15 && Math.abs(r-g)>15 && r>g && r>b);
+        const isDeepSkin=(r>50 && g>30 && b>15 && r>=g && g>=b && (r-b)>=10 && (max-min)>10);
+        if(isFairSkin || isDeepSkin) skinPixels++;
+      }
+      const ratio = totalSampled > 0 ? (skinPixels / totalSampled) : 0;
+      return { skinRatio: ratio, checked: true };
+    }catch(e){
+      return { skinRatio: 0, checked: false, error: e.message };
+    }
+  }
+
+  /* Core AI moderation diagnostics */
+  async function evaluateSellerFlowAiModeration(input){
+    const text=typeof input==='string'?input:(input?.text||'');
+    const file=input?.file||null;
+    const mediaUrl=input?.mediaUrl||'';
+    const videoElement=input?.videoElement||null;
+    const fileName=(file?.name||'').toLowerCase();
+    const normalizedText=(text+' '+fileName).toLowerCase().replace(/[\u200B-\u200D\uFEFF]/g,'').trim();
+
+    // 1. Check prohibited file naming
+    if(/(nude|porn|xxx|sex_tape|hookup_girls|escort_accra)/i.test(fileName)){
+      return {
+        verdict: 'VIOLATION',
+        detectedRule: 'GHANA_LAW_SEXUAL_EXPLOITATION_ADULT',
+        reason: 'Prohibited adult content or sexual media detected in uploaded file name.',
+        confidence: 0.99,
+        timestamp: new Date().toISOString()
+      };
+    }
+    if(/(fake_ghana_card|fake_passport|fake_dvla|counterfeit_cedi|momo_hack)/i.test(fileName)){
+      return {
+        verdict: 'VIOLATION',
+        detectedRule: /(fake_ghana_card|fake_passport|fake_dvla)/i.test(fileName)?'GHANA_LAW_FORGED_DOCUMENTS':'GHANA_LAW_FINANCIAL_FRAUD',
+        reason: 'Unlawful fraudulent materials or forged official statutory documents detected in uploaded file.',
+        confidence: 0.99,
+        timestamp: new Date().toISOString()
+      };
+    }
+    if(/(tramadol|weed_for_sale|loud_plug|cocaine)/i.test(fileName)){
+      return {
+        verdict: 'VIOLATION',
+        detectedRule: 'GHANA_LAW_PROHIBITED_NARCOTICS',
+        reason: 'Controlled narcotics or prescription opioid substances detected in uploaded file.',
+        confidence: 0.99,
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    // 2. Check Text Rules for clear violations
+    for(const rule of GHANA_MODERATION_RULES){
+      if(rule.violationRegex.test(normalizedText)){
+        return {
+          verdict: 'VIOLATION',
+          detectedRule: rule.id,
+          reason: rule.violationReason,
+          confidence: rule.confidence || 0.98,
+          timestamp: new Date().toISOString()
+        };
+      }
+    }
+
+    // 3. Check Visual media skin/nudity analysis
+    const visual=await analyzeMediaVisualSafety(file, mediaUrl, videoElement);
+    if(visual.checked && visual.skinRatio > 0.52){
+      if(/(body|naked|nude|sex|hot|bed|touch|dm for|private|service)/i.test(normalizedText)){
+        return {
+          verdict: 'VIOLATION',
+          detectedRule: 'GHANA_LAW_SEXUAL_EXPLOITATION_ADULT',
+          reason: 'Explicit photographic exposure with adult intent detected by AI visual inspection.',
+          confidence: 0.96,
+          timestamp: new Date().toISOString()
+        };
+      }
+      return {
+        verdict: 'REVIEW',
+        detectedRule: 'GHANA_LAW_SEXUAL_EXPLOITATION_ADULT',
+        reason: 'Significant skin exposure detected in media frame requiring admin verification.',
+        confidence: 0.74,
+        timestamp: new Date().toISOString()
+      };
+    } else if(visual.checked && visual.skinRatio > 0.40){
+      return {
+        verdict: 'REVIEW',
+        detectedRule: 'GHANA_LAW_SEXUAL_EXPLOITATION_ADULT',
+        reason: 'Elevated skin exposure in media requiring admin safety review before broad distribution.',
+        confidence: 0.68,
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    // 4. Check Review/Uncertain Rules
+    for(const rule of GHANA_MODERATION_RULES){
+      if(rule.reviewRegex && rule.reviewRegex.test(normalizedText)){
+        return {
+          verdict: 'REVIEW',
+          detectedRule: rule.id,
+          reason: rule.reviewReason,
+          confidence: rule.reviewConfidence || 0.70,
+          timestamp: new Date().toISOString()
+        };
+      }
+    }
+
+    // 5. If completely clean
+    return {
+      verdict: 'SAFE',
+      detectedRule: null,
+      reason: 'Complies with SellerFlow Ghana safety and legal policies.',
+      confidence: 0.99,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  /* SellerFlow AI Moderation Layer: Returns ONLY 'SAFE', 'REVIEW', or 'VIOLATION' */
+  async function sellerFlowAiModerator(input){
+    const res = await evaluateSellerFlowAiModeration(input);
+    return res.verdict; // Returns strictly 'SAFE', 'REVIEW', or 'VIOLATION'
+  }
+  window.sellerFlowAiModerator = sellerFlowAiModerator;
+  window.evaluateSellerFlowAiModeration = evaluateSellerFlowAiModeration;
+  window.GHANA_MODERATION_RULES = GHANA_MODERATION_RULES;
+
+  /* Centralized AI post publishing executor */
+  async function executeSellerFlowAiPostPublish(postData, uploadFile, videoElement){
+    const evalResult = await evaluateSellerFlowAiModeration({
+      text: postData.text || '',
+      file: uploadFile,
+      mediaUrl: postData.mediaUrl || '',
+      mediaType: postData.mediaType || '',
+      videoElement: videoElement
+    });
+    const verdict = evalResult.verdict; // 'SAFE', 'REVIEW', or 'VIOLATION'
+
+    if(verdict === 'VIOLATION'){
+      // Immediately hide the post from public view
+      postData.status = 'hidden';
+      postData.reviewStatus = 'violation';
+      postData.hiddenFromPublic = true;
+      postData.violationDetected = true;
+      postData.violationRule = evalResult.detectedRule;
+      postData.violationReason = evalResult.reason;
+      postData.violationConfidence = evalResult.confidence;
+      postData.hiddenAt = serverTimestamp();
+      postData.safeContent = false;
+    } else if(verdict === 'REVIEW'){
+      // Keep uncertain cases as REVIEW for Admin
+      postData.status = 'published';
+      postData.reviewStatus = 'under_review';
+      postData.needsAdminReview = true;
+      postData.reviewRule = evalResult.detectedRule;
+      postData.reviewReason = evalResult.reason;
+      postData.reviewConfidence = evalResult.confidence;
+      postData.safeContent = true;
+    } else {
+      // SAFE
+      postData.status = 'published';
+      postData.reviewStatus = 'safe';
+      postData.safeContent = true;
+    }
+
+    const ref = await addDoc(collection(db, 'posts'), postData);
+
+    if(verdict === 'VIOLATION'){
+      // Send the user a warning
+      try{
+        await addDoc(collection(db, 'notifications'), {
+          recipientId: currentUser.uid,
+          userId: currentUser.uid,
+          senderName: 'SellerFlow Safety AI',
+          title: '⚠️ Safety Policy Violation Warning',
+          message: `Your post was immediately hidden from public view because it violated SellerFlow's Ghana safety policy: ${evalResult.reason} (Detected Rule: ${evalResult.detectedRule}).`,
+          type: 'warning',
+          fromAdmin: true,
+          read: false,
+          detectedRule: evalResult.detectedRule,
+          postId: ref.id,
+          createdAt: serverTimestamp()
+        });
+      }catch(nErr){ console.warn('Warning notification error', nErr); }
+
+      // Create an Admin Review record containing user ID, post ID, detected rule, reason, confidence and timestamp
+      try{
+        await addDoc(collection(db, 'adminReviews'), {
+          userId: currentUser.uid,
+          postId: ref.id,
+          detectedRule: evalResult.detectedRule,
+          reason: evalResult.reason,
+          confidence: evalResult.confidence,
+          timestamp: serverTimestamp(),
+          createdAt: serverTimestamp(),
+          status: 'violation_hidden',
+          postText: postData.text || '',
+          mediaType: postData.mediaType || '',
+          mediaUrl: postData.mediaUrl || ''
+        });
+      }catch(arErr){ console.warn('Admin review record error', arErr); }
+
+      // Mirror into scamReports so existing Admin report views also reflect the incident
+      try{
+        await addDoc(collection(db, 'scamReports'), {
+          userId: currentUser.uid,
+          postId: ref.id,
+          targetId: ref.id,
+          targetType: 'post',
+          detectedRule: evalResult.detectedRule,
+          reason: evalResult.reason,
+          confidence: evalResult.confidence,
+          timestamp: serverTimestamp(),
+          reporterId: 'system_ai_moderator',
+          type: 'ai_violation',
+          status: 'pending_review',
+          createdAt: serverTimestamp()
+        });
+      }catch(_){}
+
+      // DO NOT permanently delete the account! The account is kept intact.
+      // DO NOT remove existing features!
+    }
+
+    return { ref, verdict, evalResult };
+  }
+  window.executeSellerFlowAiPostPublish = executeSellerFlowAiPostPublish;
+
+  function isSafePost(p){
+    if(p.violationDetected || p.status==='hidden' || p.reviewStatus==='violation') return false;
+    const t=(p.text||'').toLowerCase();
+    for(const r of GHANA_MODERATION_RULES){
+      if(r.violationRegex.test(t)) return false;
+    }
+    return !/(sex|sexual|porn|nude|naked|xxx|onlyfans|explicit|adult content|erotic)/i.test(t);
+  }
   function rankPost(p,creatorStats){
     const now=Date.now(), ageH=Math.max(0,(now-ts(p.createdAt)||now)/3600000), recent=Math.max(0,1-ageH/168);
     const likes=(p.likes||[]).length, comments=(p.comments||[]).length, saves=(p.saves||[]).length, views=Number(p.views||0);
@@ -1854,7 +2345,7 @@ init();
 
   async function getRankedPosts(){
     const snap=await getDocs(query(collection(db,'posts'),limit(200)));
-    const raw=snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>p.sellerId&&(p.status==='published'||p.status==='approved'));
+    const raw=snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>p.sellerId&&(p.status==='published'||p.status==='approved')&&p.status!=='hidden'&&p.reviewStatus!=='violation');
     const counts={};raw.forEach(p=>{counts[p.sellerId]=(counts[p.sellerId]||0)+1});
     return raw.map(p=>({p,score:rankPost(p,{...sellerProfile(p.sellerId),postCount:counts[p.sellerId]||1})})).sort((a,b)=>b.score-a.score).map(x=>x.p);
   }
@@ -1866,7 +2357,7 @@ init();
     if(targetPostId && !feedPosts.some(p=>p.id===targetPostId)){
       try{
         const s=await getDoc(doc(db,'posts',targetPostId));
-        if(snapshotExists(s))feedPosts.unshift({id:s.id,...s.data()});
+        if(snapshotExists(s)&&s.data().status!=='hidden'&&s.data().reviewStatus!=='violation')feedPosts.unshift({id:s.id,...s.data()});
       }catch(_){}
     } else if(targetPostId){
       const idx=feedPosts.findIndex(p=>p.id===targetPostId);
@@ -2412,7 +2903,7 @@ init();
           submittedAt:serverTimestamp(),
           reviewStatus:'under_review',
           contentType:contentType({text,mediaType}),
-          safeContent:isSafePost({text}),
+          safeContent:true,
           soundId:sound?.soundId||'',
           soundName:sound?.soundName||(mediaType.startsWith('video')?'Original sound':''),
           soundOriginPostId:sound?.originPostId||'',
@@ -2422,7 +2913,7 @@ init();
           isAdminPost:!!isAdmin
         };
 
-        const ref=await addDoc(collection(db,'posts'),postData);
+        const {ref,verdict,evalResult}=await executeSellerFlowAiPostPublish(postData, uploadFile, $('editorVideo'));
         if(mediaType.startsWith('video')&&!sound){
           await setDoc(doc(db,'sounds',ref.id),{
             soundId:ref.id,
@@ -2435,7 +2926,13 @@ init();
         }
 
         closeModal();
-        toast('Post published successfully to For You!','success');
+        if(verdict==='VIOLATION'){
+          toast(`⚠️ Safety Warning: Post hidden from public view due to a policy violation (${evalResult.detectedRule}). A warning has been recorded in your account.`,'error');
+        }else if(verdict==='REVIEW'){
+          toast('Post submitted. It is currently queued for SellerFlow safety review.','success');
+        }else{
+          toast('Post published successfully to For You!','success');
+        }
         navigate('feed');
       }catch(e){
         toast(errMsg(e),'error');
@@ -2783,7 +3280,13 @@ init();
     const s=p.platformLabel==='SellerFlow'&&p.isAdminPost?{...sellerProfile(p.sellerId),name:'SellerFlow',username:'sellerflow',verified:true}:sellerProfile(p.sellerId);
     let media='';
     if(p.mediaUrl){if(p.mediaType?.startsWith('video'))media=`<div class="mt-4"><div class="sf-media-status mb-2">🎥 Video preview · ${esc(p.reviewStatus||'under review')}</div><video class="admin-media-preview" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" controls playsinline preload="metadata" onerror="window.__sfMediaFallback(this)"></video></div>`;else media=`<div class="mt-4"><div class="sf-media-status mb-2">🖼️ Photo preview · ${esc(p.reviewStatus||'under review')}</div><img class="admin-media-preview" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" alt="SellerFlow submitted photo" onerror="window.__sfMediaFallback(this)"></div>`;}
-    return `<div class="bg-[#181818] rounded-2xl p-4 border border-[#2b2b2b]"><div class="flex gap-3 items-center">${avatar(s,'avatar')}<div class="flex-1"><b>${esc(s.name||s.username)}</b>${verifyBadge(s)}<div class="muted text-xs">@${esc(s.username||'seller')}</div><div class="text-sm mt-2">${esc(p.text||'No caption')}</div><div class="muted text-xs mt-1">${esc(p.mediaType||'text')} · ${esc(p.status||'pending')} · ${esc(p.reviewStatus||'not reviewed')}</div></div></div>${media}<div class="flex gap-2 mt-3 flex-wrap"><button data-admin-approve-post="${uid}" class="bg-gold text-black rounded-xl px-3 py-2">Keep live / Approve</button><button data-admin-takedown-post="${uid}" class="border border-red-700 text-red-400 rounded-xl px-3 py-2">Take down</button></div></div>`;
+    let aiDiagnostic='';
+    if(p.reviewStatus==='violation'||p.violationDetected){
+      aiDiagnostic=`<div class="mt-2.5 p-2.5 rounded-xl bg-red-950/60 border border-red-700 text-xs text-red-200"><div class="font-bold flex items-center gap-1"><span>🚫 AI Violation:</span> <code class="text-red-300 font-mono">${esc(p.violationRule||'GHANA_POLICY_RULE')}</code></div><div class="mt-1">${esc(p.violationReason||'Content violated SellerFlow safety policy')}</div><div class="text-[11px] text-red-400 mt-1">Confidence: ${Math.round((p.violationConfidence||0.98)*100)}% · Hidden immediately from public feed</div></div>`;
+    }else if(p.reviewRule||p.reviewStatus==='under_review'){
+      aiDiagnostic=`<div class="mt-2.5 p-2.5 rounded-xl bg-amber-950/50 border border-amber-700 text-xs text-amber-200"><div class="font-bold flex items-center gap-1"><span>🔍 AI Review Flag:</span> <code class="text-amber-300 font-mono">${esc(p.reviewRule||'SAFETY_REVIEW')}</code></div><div class="mt-1">${esc(p.reviewReason||'Queued for safety verification')}</div><div class="text-[11px] text-amber-400 mt-1">Confidence: ${Math.round((p.reviewConfidence||0.70)*100)}%</div></div>`;
+    }
+    return `<div class="bg-[#181818] rounded-2xl p-4 border border-[#2b2b2b]"><div class="flex gap-3 items-center">${avatar(s,'avatar')}<div class="flex-1 min-w-0"><b>${esc(s.name||s.username)}</b>${verifyBadge(s)}<div class="muted text-xs">@${esc(s.username||'seller')}</div><div class="text-sm mt-2">${esc(p.text||'No caption')}</div><div class="muted text-xs mt-1">${esc(p.mediaType||'text')} · ${esc(p.status||'pending')} · ${esc(p.reviewStatus||'not reviewed')}</div>${aiDiagnostic}</div></div>${media}<div class="flex gap-2 mt-3 flex-wrap"><button data-admin-approve-post="${uid}" class="bg-gold text-black rounded-xl px-3 py-2 font-bold text-xs">Keep live / Approve</button><button data-admin-takedown-post="${uid}" class="border border-red-700 text-red-400 rounded-xl px-3 py-2 text-xs">Take down</button></div></div>`;
   };
 
   /* Real online/offline indicators. lastSeen is refreshed while the app is open; offline means stale/no heartbeat. */
@@ -2843,7 +3346,7 @@ init();
   renderAdmin=async function(){
     if(!isAdmin){$('page').innerHTML=pageTitle('Access denied');return}
     const [users,posts,reports,termsSnap]=await Promise.all([getDocs(query(collection(db,'users'),limit(300))),getDocs(query(collection(db,'posts'),limit(200))),getDocs(query(collection(db,'scamReports'),limit(100))),getDoc(doc(db,'settings','terms'))]);
-    const pending=users.docs.filter(d=>d.data().verificationStatus==='pending');const reviewPosts=posts.docs.map(d=>({id:d.id,data:d.data()})).filter(x=>x.data.reviewStatus==='under_review'||(x.data.status==='published'&&x.data.reviewStatus!=='reviewed'));const livePosts=posts.docs.map(d=>({id:d.id,data:d.data()})).filter(x=>x.data.status==='published'||x.data.status==='approved');const termData=snapshotExists(termsSnap)?termsSnap.data():{text:DEFAULT_TERMS,version:appTermsVersion};
+    const pending=users.docs.filter(d=>d.data().verificationStatus==='pending');const reviewPosts=posts.docs.map(d=>({id:d.id,data:d.data()})).filter(x=>x.data.reviewStatus==='under_review'||x.data.reviewStatus==='violation'||x.data.violationDetected||x.data.reviewStatus==='review'||(x.data.status==='published'&&x.data.reviewStatus!=='reviewed'&&x.data.reviewStatus!=='safe'));const livePosts=posts.docs.map(d=>({id:d.id,data:d.data()})).filter(x=>x.data.status==='published'||x.data.status==='approved');const termData=snapshotExists(termsSnap)?termsSnap.data():{text:DEFAULT_TERMS,version:appTermsVersion};
     $('page').innerHTML=pageTitle('Admin control center','Professional platform management, content review and account oversight.')+`<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"><button class="sf-stat-card rounded-2xl p-5" id="adminUsersStat"><div class="muted text-sm">Users</div><b class="text-3xl block mt-1">${users.size}</b><div class="text-xs gold mt-2">View all accounts →</div></button><button class="sf-stat-card rounded-2xl p-5" id="adminPendingStat"><div class="muted text-sm">Pending verification</div><b class="text-3xl block mt-1">${pending.length}</b><div class="text-xs gold mt-2">Review applications →</div></button><button class="sf-stat-card rounded-2xl p-5" id="adminReviewStat"><div class="muted text-sm">Posts to review</div><b class="text-3xl block mt-1">${reviewPosts.length}</b><div class="text-xs gold mt-2">Open safety review →</div></button><button class="sf-stat-card rounded-2xl p-5" id="adminLiveStat"><div class="muted text-sm">Live posts</div><b class="text-3xl block mt-1">${livePosts.length}</b><div class="text-xs gold mt-2">Manage live content →</div></button></div><div class="flex items-center gap-2 overflow-x-auto mt-6 pb-2 border-b border-[#242424]" id="adminTabsBar"><button class="admin-tab active" data-admin-tab="overview">📊 Overview</button><button class="admin-tab" data-admin-tab="review">🛡️ Safety Review (${reviewPosts.length})</button><button class="admin-tab" data-admin-tab="pending">📝 Verification (${pending.length})</button><button class="admin-tab" data-admin-tab="live">🎬 Live Posts (${livePosts.length})</button><button class="admin-tab" data-admin-tab="users">👥 Users (${users.size})</button><button class="admin-tab" data-admin-tab="notify">🔔 Broadcasts</button><button class="admin-tab" data-admin-tab="terms">📜 Terms</button></div><div id="adminWorkspace" class="mt-5"></div>`;
     
     function setAdminTab(tabName){

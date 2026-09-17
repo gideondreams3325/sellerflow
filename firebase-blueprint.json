@@ -1,0 +1,275 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Private user profile and KYC verification record",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "username": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "seller", "admin"] },
+        "verified": { "type": "boolean" },
+        "verificationStatus": { "type": "string", "enum": ["none", "pending", "approved", "rejected"] },
+        "ghanaCardNumber": { "type": "string" },
+        "ghanaCardFrontUrl": { "type": "string" },
+        "ghanaCardBackUrl": { "type": "string" },
+        "termsAccepted": { "type": "boolean" },
+        "termsVersion": { "type": "string" },
+        "termsAcceptedAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name"]
+    },
+    "PublicProfile": {
+      "title": "PublicProfile",
+      "description": "Public storefront seller identity and social counters",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "username": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "verified": { "type": "boolean" },
+        "bio": { "type": "string" },
+        "followers": { "type": "array" },
+        "lastSeen": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "username"]
+    },
+    "Post": {
+      "title": "Post",
+      "description": "Social commerce reel, video, or photo post",
+      "type": "object",
+      "properties": {
+        "sellerId": { "type": "string" },
+        "text": { "type": "string" },
+        "mediaUrl": { "type": "string" },
+        "mediaPath": { "type": "string" },
+        "mediaType": { "type": "string" },
+        "likes": { "type": "array" },
+        "saves": { "type": "array" },
+        "comments": { "type": "array" },
+        "status": { "type": "string", "enum": ["published", "hidden", "pending", "approved", "rejected"] },
+        "reviewStatus": { "type": "string", "enum": ["safe", "under_review", "violation", "reviewed"] },
+        "violationDetected": { "type": "boolean" },
+        "violationRule": { "type": "string" },
+        "violationReason": { "type": "string" },
+        "violationConfidence": { "type": "number" },
+        "needsAdminReview": { "type": "boolean" },
+        "soundId": { "type": "string" },
+        "soundName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sellerId", "status"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Marketplace listing for goods and inventory",
+      "type": "object",
+      "properties": {
+        "sellerId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "category": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "stock": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sellerId", "title", "price"]
+    },
+    "Store": {
+      "title": "Store",
+      "description": "Seller customized store presence and business details",
+      "type": "object",
+      "properties": {
+        "sellerId": { "type": "string" },
+        "storeName": { "type": "string" },
+        "tagline": { "type": "string" },
+        "bannerUrl": { "type": "string" },
+        "location": { "type": "string" },
+        "phone": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sellerId", "storeName"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Commerce order transaction between buyer and seller",
+      "type": "object",
+      "properties": {
+        "buyerId": { "type": "string" },
+        "buyerName": { "type": "string" },
+        "phone": { "type": "string" },
+        "deliveryAddress": { "type": "string" },
+        "sellerId": { "type": "string" },
+        "sellerIds": { "type": "array" },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "processing", "delivered", "cancelled"] },
+        "paymentMethod": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["buyerId", "sellerId", "total", "status"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Customer feedback and store rating after order fulfillment",
+      "type": "object",
+      "properties": {
+        "sellerId": { "type": "string" },
+        "reviewerId": { "type": "string" },
+        "reviewerName": { "type": "string" },
+        "rating": { "type": "number" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sellerId", "reviewerId", "rating"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "In-app alerts, order updates, broadcasts, and AI safety warnings",
+      "type": "object",
+      "properties": {
+        "recipientId": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string" },
+        "read": { "type": "boolean" },
+        "fromAdmin": { "type": "boolean" },
+        "postId": { "type": "string" },
+        "detectedRule": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["recipientId", "title", "message"]
+    },
+    "ScamReport": {
+      "title": "ScamReport",
+      "description": "Community and AI safety violation reports for admin oversight",
+      "type": "object",
+      "properties": {
+        "targetId": { "type": "string" },
+        "targetType": { "type": "string" },
+        "reason": { "type": "string" },
+        "detectedRule": { "type": "string" },
+        "confidence": { "type": "number" },
+        "reporterId": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["targetId", "reason"]
+    },
+    "AdminReview": {
+      "title": "AdminReview",
+      "description": "AI safety audit record generated when a policy violation occurs",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "postId": { "type": "string" },
+        "detectedRule": { "type": "string" },
+        "reason": { "type": "string" },
+        "confidence": { "type": "number" },
+        "status": { "type": "string" },
+        "postText": { "type": "string" },
+        "mediaType": { "type": "string" },
+        "mediaUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "postId", "detectedRule", "reason"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "Direct message thread between buyers and sellers",
+      "type": "object",
+      "properties": {
+        "participants": { "type": "array" },
+        "lastMessage": { "type": "string" },
+        "lastSenderId": { "type": "string" },
+        "lastUpdated": { "type": "string", "format": "date-time" }
+      },
+      "required": ["participants"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Individual chat message within a conversation",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "text"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Private user and seller accounts with KYC identity data"
+    },
+    "/publicProfiles/{userId}": {
+      "schema": { "$ref": "#/entities/PublicProfile" },
+      "description": "Public profile listings for sellers and buyers"
+    },
+    "/posts/{postId}": {
+      "schema": { "$ref": "#/entities/Post" },
+      "description": "For You feed posts, media reels, and status updates"
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Marketplace products and merchandise listings"
+    },
+    "/stores/{sellerId}": {
+      "schema": { "$ref": "#/entities/Store" },
+      "description": "Storefront configuration and public vendor information"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Purchases and order management records"
+    },
+    "/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/Review" },
+      "description": "Ratings and feedback for sellers"
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "User notifications, order alerts, and policy warnings"
+    },
+    "/scamReports/{reportId}": {
+      "schema": { "$ref": "#/entities/ScamReport" },
+      "description": "Scam, abuse, and safety reports for administrative triage"
+    },
+    "/adminReviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/AdminReview" },
+      "description": "AI safety moderation audit records and detection metrics"
+    },
+    "/conversations/{conversationId}": {
+      "schema": { "$ref": "#/entities/Conversation" },
+      "description": "Direct message chat threads"
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/Message" },
+      "description": "Chat messages within a conversation"
+    },
+    "/savedSounds/{userId}/items/{soundId}": {
+      "schema": "string",
+      "description": "User bookmarked audio sounds"
+    },
+    "/sounds/{soundId}": {
+      "schema": "string",
+      "description": "Platform reusable audio catalog"
+    },
+    "/profileVisits/{visitId}": {
+      "schema": "string",
+      "description": "Store profile analytics and visit counters"
+    },
+    "/settings/{settingId}": {
+      "schema": "string",
+      "description": "System terms of service and global configuration"
+    }
+  }
+}
