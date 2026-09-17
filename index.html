@@ -41,6 +41,7 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 .flex-1{min-width:0}.gold{color:#f5b942}.bg-gold{background:#f5b942;color:#080808}.border-gold{border-color:#f5b942}.card{background:#121212;border:1px solid #242424;border-radius:18px;min-width:0}.muted{color:#a1a1aa}.hide{display:none!important}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;overscroll-behavior:contain}
 .modal-card{width:min(720px,100%);max-height:90vh;max-height:90dvh;overflow-y:auto;overflow-x:hidden;background:#111;border:1px solid #333;border-radius:22px;padding:20px;-webkit-overflow-scrolling:touch}
+.modal-card:has(.store-preview-modal){width:min(860px,100%);max-width:860px;padding:18px}
 .modal-card:has(.chat-window),.modal-card.chat-modal-active{height:85vh;max-height:88dvh;display:flex;flex-direction:column;overflow:hidden;padding:16px}
 .modal-card .chat-window{display:flex;flex-direction:column;height:100%;max-height:100%;min-height:0;flex:1 1 0%;overflow:hidden}
 .modal-card .chat-messages{flex:1 1 0%;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -1638,6 +1639,8 @@ async function renderMarketplace(initialTab = 'products', targetPostId, options)
   ]);
   const validStores = storesSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>sellerProfile(s.ownerId).verified);
   const allProducts = productsSnap.docs.map(d=>({id:d.id,...d.data()}));
+  window._cachedStores = validStores;
+  window._cachedProducts = allProducts;
   
   let activeMarketTab = (initialTab === 'stores' || initialTab === 'products') ? initialTab : 'products';
   let activeStoreFilter = 'all';
@@ -1922,30 +1925,263 @@ function marketplaceProductCard(p){
   `;
 }
 function storeCard(s){
-  const p=sellerProfile(s.ownerId);
+  const p = sellerProfile(s.ownerId);
+  const prods = (window._cachedProducts || []).filter(x => x.sellerId === s.ownerId);
+  const prodCount = prods.length;
+
   return `
-    <div class="card p-5 flex flex-col justify-between" id="market-store-${esc(s.ownerId)}">
+    <div class="card p-5 flex flex-col justify-between hover:border-gold/60 transition group cursor-pointer relative" id="market-store-${esc(s.ownerId)}" data-preview-store="${esc(s.ownerId)}">
       <div>
-        <div class="flex items-center gap-3">
-          ${avatar(p)}
-          <div class="min-w-0">
-            <b class="truncate block">${esc(s.name)}</b>
-            <div class="text-xs mt-1 flex items-center gap-1">
-              <span class="verified-badge">✓</span>
-              <span class="muted">Verified Seller</span>
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            ${avatar(p, 'w-12 h-12 rounded-2xl object-cover shrink-0 border border-[#333]')}
+            <div class="min-w-0">
+              <b class="truncate block text-white font-bold text-sm sm:text-base group-hover:text-gold transition">${esc(s.name)}</b>
+              <div class="text-xs mt-0.5 flex items-center gap-1 text-zinc-400">
+                <span class="verified-badge text-[10px]">✓</span>
+                <span>Verified Seller</span>
+              </div>
             </div>
           </div>
+          <span class="text-[11px] font-bold text-gold/90 bg-gold/10 border border-gold/30 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0 whitespace-nowrap">
+            <span>🛍️</span>
+            <span>${prodCount ? `${prodCount} item${prodCount===1?'':'s'}` : 'Preview'}</span>
+          </span>
         </div>
-        <p class="muted text-sm mt-4 line-clamp-3">${esc(s.description||'')}</p>
-        ${s.location||s.address?`<div class="text-xs text-zinc-400 mt-2 truncate">📍 ${esc(s.location||s.address)}</div>`:''}
+
+        <p class="muted text-xs sm:text-sm mt-3 line-clamp-2 leading-relaxed">${esc(s.description || 'Verified Ghanaian merchant on SellerFlow.')}</p>
+        ${s.location || s.address ? `<div class="text-xs text-zinc-400 mt-2 truncate flex items-center gap-1"><span>📍</span><span>${esc(s.location || s.address)}</span></div>` : ''}
+
+        ${prodCount > 0 ? `
+          <div class="mt-3.5 pt-3 border-t border-[#222] flex items-center gap-1.5 overflow-hidden">
+            ${prods.slice(0, 3).map(pr => `
+              <div class="w-11 h-11 rounded-xl bg-[#191919] border border-[#2a2a2a] overflow-hidden shrink-0 relative" title="${esc(pr.name)}">
+                <img src="${esc(pr.imageUrl||'')}" class="w-full h-full object-cover" alt="" onerror="this.style.display='none'">
+              </div>
+            `).join('')}
+            ${prodCount > 3 ? `<div class="w-11 h-11 rounded-xl bg-[#18181c] border border-[#2a2a2a] flex items-center justify-center text-[10px] font-bold text-zinc-400 shrink-0">+${prodCount - 3}</div>` : ''}
+            <span class="text-[11px] text-zinc-400 ml-1 font-medium truncate">Expand to browse products</span>
+          </div>
+        ` : ''}
       </div>
-      <button type="button" data-open-store="${s.ownerId}" class="mt-4 w-full border ${currentUser?'border-[#444] hover:border-gold text-white':'border-gold/40 bg-gold/10 text-gold hover:bg-gold hover:text-black'} rounded-xl p-2.5 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2">
-        <span>${currentUser ? 'Visit store →' : '🔒 Visit store · Sign in required'}</span>
-      </button>
+
+      <div class="mt-4 pt-3 border-t border-[#222] flex flex-col gap-2">
+        <button type="button" data-preview-store="${esc(s.ownerId)}" class="w-full bg-gold hover:brightness-110 active:scale-[0.98] text-black font-extrabold rounded-xl py-2.5 px-3 text-xs sm:text-sm transition flex items-center justify-center gap-1.5 shadow-sm">
+          <span>🔍</span>
+          <span>Expand Store Preview</span>
+        </button>
+        <button type="button" data-open-store="${esc(s.ownerId)}" class="w-full border border-[#333] hover:border-zinc-500 hover:text-white text-zinc-400 rounded-xl py-2 px-3 text-xs font-semibold transition flex items-center justify-center gap-1.5">
+          <span>Visit Full Storefront</span>
+          <span>→</span>
+        </button>
+      </div>
     </div>
   `;
 }
-function bindStoreCards(){document.querySelectorAll('[data-open-store]').forEach(b=>b.onclick=()=>openStore(b.dataset.openStore))}
+
+function bindStoreCards(){
+  document.querySelectorAll('[data-preview-store]').forEach(el => {
+    el.onclick = (e) => {
+      if (e.target.closest('[data-open-store]')) return;
+      e.stopPropagation();
+      const storeId = el.dataset.previewStore;
+      if (storeId) openStorePreviewModal(storeId);
+    };
+  });
+  document.querySelectorAll('[data-open-store]').forEach(b => {
+    b.onclick = (e) => {
+      e.stopPropagation();
+      openStore(b.dataset.openStore);
+    };
+  });
+}
+
+async function openStorePreviewModal(storeId){
+  if(!storeId) return;
+
+  const cachedStore = (window._cachedStores || []).find(s => s.ownerId === storeId || s.id === storeId);
+  const profile = sellerProfile(storeId);
+  const storeName = cachedStore?.name || profile?.name || 'Verified Ghanaian Store';
+
+  // Open modal instantly with skeleton and store header
+  modal(`
+    <div class="store-preview-modal min-w-0 max-w-full">
+      <!-- Modal Header -->
+      <div class="flex items-start justify-between gap-3 pb-4 border-b border-[#262626]">
+        <div class="flex items-center gap-3 min-w-0">
+          ${avatar(profile, 'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover shrink-0 border border-[#333]')}
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <h3 class="text-base sm:text-lg font-black text-white truncate">${esc(storeName)}</h3>
+              <span class="verified-badge text-xs">✓</span>
+            </div>
+            <div class="text-xs text-zinc-400 mt-0.5 flex flex-wrap items-center gap-2">
+              <span class="text-amber-400 font-semibold">Verified Merchant</span>
+              ${cachedStore?.location || cachedStore?.address ? `<span>·</span><span>📍 ${esc(cachedStore.location || cachedStore.address)}</span>` : ''}
+            </div>
+          </div>
+        </div>
+        <button type="button" data-close-modal class="w-8 h-8 rounded-full bg-[#1e1e1e] hover:bg-[#2e2e2e] text-zinc-400 hover:text-white flex items-center justify-center text-sm font-bold shrink-0 transition" title="Close preview">✕</button>
+      </div>
+
+      <!-- Loading skeleton -->
+      <div id="storePreviewBody" class="py-14 text-center text-zinc-400 text-sm flex flex-col items-center justify-center gap-3">
+        <div class="w-7 h-7 border-2 border-gold border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-xs font-semibold text-zinc-300">Loading featured products gallery…</span>
+      </div>
+    </div>
+  `);
+
+  try {
+    const [ss, ps, prodsSnap] = await Promise.all([
+      getDoc(doc(db, 'stores', storeId)),
+      getDoc(doc(db, 'publicProfiles', storeId)),
+      getDocs(query(collection(db, 'products'), where('sellerId', '==', storeId), limit(50)))
+    ]);
+
+    const store = snapshotExists(ss) ? ss.data() : (cachedStore || {});
+    const p = snapshotExists(ps) ? { ...profile, ...ps.data() } : profile;
+    let products = prodsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if(!products.length && window._cachedProducts){
+      products = window._cachedProducts.filter(x => x.sellerId === storeId);
+    }
+
+    renderStorePreviewContent(storeId, store, p, products);
+  } catch(err) {
+    console.warn('Error loading store preview data:', err);
+    const store = cachedStore || {};
+    const products = (window._cachedProducts || []).filter(x => x.sellerId === storeId);
+    renderStorePreviewContent(storeId, store, profile, products);
+  }
+}
+
+function renderStorePreviewContent(storeId, store, p, products){
+  const bodyEl = $('storePreviewBody');
+  if(!bodyEl) return;
+
+  const storeDesc = store.description || p.bio || 'Verified Ghanaian merchant offering quality items with convenient local delivery.';
+
+  bodyEl.className = 'mt-4 space-y-4';
+  bodyEl.innerHTML = `
+    <!-- Store Highlights Bar -->
+    <div class="p-3.5 rounded-2xl bg-[#141416] border border-[#262626] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="min-w-0">
+        <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed line-clamp-2">${esc(storeDesc)}</p>
+        <div class="flex flex-wrap items-center gap-2 mt-2 text-[11px] font-semibold text-zinc-400">
+          <span class="px-2.5 py-0.5 rounded-lg bg-[#1f1f23] text-gold border border-gold/20">🛍️ ${products.length} product${products.length===1?'':'s'} available</span>
+          <span class="px-2.5 py-0.5 rounded-lg bg-[#1f1f23] text-zinc-300 border border-[#333]">🇬🇭 Mobile Money Accepted</span>
+          <span class="px-2.5 py-0.5 rounded-lg bg-[#1f1f23] text-emerald-400 border border-emerald-900/40">🛡️ Buyer Protection</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button type="button" id="previewChatSellerBtn" class="px-3.5 py-2 rounded-xl text-xs font-bold border border-[#3e3e3e] hover:border-gold text-zinc-200 hover:text-white bg-[#1a1a1a] transition flex items-center gap-1.5">
+          <span>💬</span>
+          <span>Message</span>
+        </button>
+        <button type="button" id="previewOpenStoreBtn" class="px-3.5 py-2 rounded-xl text-xs font-extrabold bg-gold text-black hover:brightness-110 shadow-sm transition flex items-center gap-1">
+          <span>Full Store</span>
+          <span>→</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Product Gallery Section -->
+    <div>
+      <div class="flex items-center justify-between mb-3 px-1">
+        <h4 class="text-sm font-extrabold text-white flex items-center gap-2">
+          <span>Featured Products Gallery</span>
+          <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">${products.length}</span>
+        </h4>
+        <span class="text-xs text-zinc-400 hidden sm:inline">Add items to cart without losing search results</span>
+      </div>
+
+      ${!products.length ? `
+        <div class="p-10 text-center bg-[#141416] rounded-2xl border border-[#242424]">
+          <div class="text-3xl mb-2">📦</div>
+          <h5 class="text-sm font-bold text-white">No products listed right now</h5>
+          <p class="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">This merchant currently does not have active products in their catalog. You can message them directly for inquiries.</p>
+        </div>
+      ` : `
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 max-h-[50vh] max-h-[50dvh] overflow-y-auto pr-1">
+          ${products.map(pr => {
+            const inStock = Number(pr.stock) > 0;
+            return `
+              <div class="p-3 rounded-2xl bg-[#151518] border border-[#262626] hover:border-[#383838] transition flex flex-col justify-between" id="preview-prod-${esc(pr.id)}">
+                <div>
+                  <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-black/40 border border-[#2a2a2a] mb-2.5">
+                    <img src="${esc(pr.imageUrl||'')}" class="w-full h-full object-cover" alt="${esc(pr.name)}" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 fill=%22none%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%231a1a1a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2228%22%3E📦%3C/text%3E%3C/svg%3E'">
+                    ${!inStock ? `<span class="absolute top-2 right-2 bg-red-950/90 text-red-300 text-[10px] px-2 py-0.5 rounded-md font-bold border border-red-700/60 shadow">Out of stock</span>` : `<span class="absolute top-2 right-2 bg-black/75 text-zinc-300 text-[10px] px-2 py-0.5 rounded-md font-mono border border-white/10">${Number(pr.stock)||0} left</span>`}
+                  </div>
+                  <div class="font-bold text-xs sm:text-sm text-white truncate" title="${esc(pr.name)}">${esc(pr.name)}</div>
+                  <div class="gold font-extrabold text-sm sm:text-base mt-1">${money(pr.price)}</div>
+                  ${pr.description ? `<p class="text-[11px] text-zinc-400 mt-1 line-clamp-2 leading-relaxed">${esc(pr.description)}</p>` : ''}
+                </div>
+                <div class="mt-3 pt-2.5 border-t border-[#242424]">
+                  <button type="button" data-preview-add-cart="${esc(pr.id)}" ${!inStock ? 'disabled' : ''} class="w-full ${!inStock ? 'bg-[#222] text-zinc-500 cursor-not-allowed' : 'bg-gold hover:brightness-110 active:scale-[0.98] text-black font-extrabold shadow-sm'} rounded-xl py-2 px-3 text-xs flex items-center justify-center gap-1.5 transition">
+                    <span>🛒</span>
+                    <span>${!inStock ? 'Out of stock' : 'Add to cart'}</span>
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `}
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="pt-3 border-t border-[#262626] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+      <div class="text-zinc-400 text-center sm:text-left flex items-center gap-1.5">
+        <span class="text-gold">✨</span>
+        <span>Browsing items in-modal · Your search results remain intact.</span>
+      </div>
+      <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+        <button type="button" data-close-modal class="flex-1 sm:flex-none border border-[#444] hover:border-zinc-400 rounded-xl px-4 py-2 font-bold text-zinc-200 transition">Close Preview</button>
+        <button type="button" id="footerOpenStoreBtn" class="flex-1 sm:flex-none border border-gold/60 text-gold hover:bg-gold hover:text-black rounded-xl px-4 py-2 font-bold transition flex items-center justify-center gap-1">
+          <span>Visit Full Storefront</span>
+          <span>→</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  $('previewChatSellerBtn')?.addEventListener('click', () => {
+    closeModal();
+    if(!currentUser) return showAuthPrompt('message this seller');
+    startChat(storeId);
+  });
+
+  $('previewOpenStoreBtn')?.addEventListener('click', () => {
+    closeModal();
+    openStore(storeId);
+  });
+
+  $('footerOpenStoreBtn')?.addEventListener('click', () => {
+    closeModal();
+    openStore(storeId);
+  });
+
+  // Connect Add to Cart with live feedback
+  bodyEl.querySelectorAll('[data-preview-add-cart]').forEach(btn => {
+    btn.onclick = () => {
+      const pid = btn.dataset.previewAddCart;
+      const item = products.find(x => x.id === pid) || (window._cachedProducts || []).find(x => x.id === pid);
+      if(item){
+        addToCart(item);
+        const prevText = btn.innerHTML;
+        btn.innerHTML = '<span>✓</span><span>Added to cart!</span>';
+        btn.classList.add('bg-emerald-500', 'text-white');
+        btn.classList.remove('bg-gold', 'text-black');
+        setTimeout(() => {
+          btn.innerHTML = prevText;
+          btn.classList.remove('bg-emerald-500', 'text-white');
+          btn.classList.add('bg-gold', 'text-black');
+        }, 1600);
+      }
+    };
+  });
+}
 async function openStore(uid){
   if(!currentUser){
     showAuthPrompt('view this verified store and browse the seller catalogue');
@@ -6788,18 +7024,14 @@ init();
     </article>`;
   };
 
-  /* Admin preview uses the same fallback for images and videos and shows a clear review state. */
-  adminPostCard=function(uid,p){
-    const s=p.platformLabel==='SellerFlow'&&p.isAdminPost?{...sellerProfile(p.sellerId),name:'SellerFlow',username:'sellerflow',verified:true}:sellerProfile(p.sellerId);
-    let media='';
-    if(p.mediaUrl){if(p.mediaType?.startsWith('video'))media=`<div class="mt-4"><div class="sf-media-status mb-2">🎥 Video preview · ${esc(p.reviewStatus||'under review')}</div><video class="admin-media-preview" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" controls playsinline preload="metadata" onerror="window.__sfMediaFallback(this)"></video></div>`;else media=`<div class="mt-4"><div class="sf-media-status mb-2">🖼️ Photo preview · ${esc(p.reviewStatus||'under review')}${p.photoFilterName ? ` · Filter: ${esc(p.photoFilterName)}` : ''}</div><img class="admin-media-preview ${p.photoFilter ? `sf-filter-${esc(p.photoFilter)}` : ''}" style="${p.photoFilterCss ? `filter:${esc(p.photoFilterCss)};` : ''}" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" alt="SellerFlow submitted photo" onerror="window.__sfMediaFallback(this)"></div>`;}
-    let aiDiagnostic='';
-    if(p.reviewStatus==='violation'||p.violationDetected){
-      aiDiagnostic=`<div class="mt-2.5 p-2.5 rounded-xl bg-red-950/60 border border-red-700 text-xs text-red-200"><div class="font-bold flex items-center gap-1"><span>🚫 AI Violation:</span> <code class="text-red-300 font-mono">${esc(p.violationRule||'GHANA_POLICY_RULE')}</code></div><div class="mt-1">${esc(p.violationReason||'Content violated SellerFlow safety policy')}</div><div class="text-[11px] text-red-400 mt-1">Confidence: ${Math.round((p.violationConfidence||0.98)*100)}% · Hidden immediately from public feed</div></div>`;
-    }else if(p.reviewRule||p.reviewStatus==='under_review'){
-      aiDiagnostic=`<div class="mt-2.5 p-2.5 rounded-xl bg-amber-950/50 border border-amber-700 text-xs text-amber-200"><div class="font-bold flex items-center gap-1"><span>🔍 AI Review Flag:</span> <code class="text-amber-300 font-mono">${esc(p.reviewRule||'SAFETY_REVIEW')}</code></div><div class="mt-1">${esc(p.reviewReason||'Queued for safety verification')}</div><div class="text-[11px] text-amber-400 mt-1">Confidence: ${Math.round((p.reviewConfidence||0.70)*100)}%</div></div>`;
-    }
-    return `<div class="bg-[#181818] rounded-2xl p-4 border border-[#2b2b2b]"><div class="flex gap-3 items-center">${avatar(s,'avatar')}<div class="flex-1 min-w-0"><b>${esc(s.name||s.username)}</b>${verifyBadge(s)}<div class="muted text-xs">@${esc(s.username||'seller')}</div><div class="text-sm mt-2">${esc(p.text||'No caption')}</div><div class="muted text-xs mt-1">${esc(p.mediaType||'text')} · ${esc(p.status||'pending')} · ${esc(p.reviewStatus||'not reviewed')}</div>${aiDiagnostic}</div></div>${media}<div class="flex gap-2 mt-3 flex-wrap"><button data-admin-approve-post="${uid}" class="bg-gold text-black rounded-xl px-3 py-2 font-bold text-xs">Keep live / Approve</button><button data-admin-takedown-post="${uid}" class="border border-red-700 text-red-400 rounded-xl px-3 py-2 text-xs">Take down</button></div></div>`;
+  /* Admin preview uses the unified responsive card matching all containers and viewport sizes */
+  adminPostCard = function(uid, p){
+    const mode = (p.status === 'removed' || p.reviewStatus === 'removed' || p.status === 'taken_down')
+      ? 'restoration'
+      : ((p.reviewStatus === 'under_review' || p.reviewStatus === 'violation' || p.violationDetected || p.reviewStatus === 'review')
+        ? 'review'
+        : 'live');
+    return renderAdminPostItem(uid, p, mode);
   };
 
   /* Real online/offline indicators. lastSeen is refreshed while the app is open; offline means stale/no heartbeat. */
@@ -7459,6 +7691,40 @@ init();
     sfAdminOverview(users, { size: (livePosts?.length || 0) + (takenDownPosts?.length || 0), docs: [] }, pending, reviewPosts, livePosts, takenDownPosts, { size: 0, docs: [] }, termData);
   }
 
+  /* Global Admin Media Error Handler */
+  window.__sfAdminMediaError = function(el, type){
+    if(!el) return;
+    el.style.display = 'none';
+    const parent = el.parentElement;
+    if(parent && !parent.querySelector('.media-fallback-placeholder')){
+      const fallbackDiv = document.createElement('div');
+      fallbackDiv.className = 'media-fallback-placeholder w-full h-full flex flex-col items-center justify-center p-3 text-center bg-[#151518] text-zinc-500 select-none';
+      fallbackDiv.innerHTML = `
+        <div class="w-9 h-9 rounded-xl bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center text-base mb-1 text-zinc-300">
+          ${type === 'video' ? '🎬' : '📷'}
+        </div>
+        <span class="text-[11px] font-bold text-zinc-300">${type === 'video' ? 'Video media unavailable' : 'Photo unavailable'}</span>
+        <span class="text-[10px] text-zinc-500 mt-0.5">Media could not be loaded</span>
+      `;
+      parent.appendChild(fallbackDiv);
+    }
+  };
+
+  function bindAdminControls(){
+    document.querySelectorAll('[data-admin-restore-post]').forEach(b => {
+      b.onclick = () => adminRestorePost(b.dataset.adminRestorePost);
+    });
+    document.querySelectorAll('[data-admin-delete-post]').forEach(b => {
+      b.onclick = () => adminPermanentlyDeletePost(b.dataset.adminDeletePost);
+    });
+    document.querySelectorAll('[data-admin-approve-post]').forEach(b => {
+      b.onclick = () => reviewPost(b.dataset.adminApprovePost, true);
+    });
+    document.querySelectorAll('[data-admin-takedown-post]').forEach(b => {
+      b.onclick = () => adminTakeDown(b.dataset.adminTakedownPost);
+    });
+  }
+
   /* Dedicated Post Restoration & Moderation Cards */
   function adminRestoreCard(uid, p){
     return renderAdminPostItem(uid, p, 'restoration');
@@ -7472,90 +7738,101 @@ init();
     const removedDateStr = p.removedAt ? new Date(ts(p.removedAt)).toLocaleString('en-GH', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Prior session';
     const createdDateStr = p.createdAt ? new Date(ts(p.createdAt)).toLocaleString('en-GH', {month:'short',day:'numeric'}) : 'Recently';
 
+    const likesCount = Array.isArray(p.likes) ? p.likes.length : (typeof p.likes === 'number' ? p.likes : 0);
+    const commentsCount = Array.isArray(p.comments) ? p.comments.length : (typeof p.commentCount === 'number' ? p.commentCount : (typeof p.comments === 'number' ? p.comments : 0));
+
     let mediaElement = '';
     if(p.mediaUrl){
       if(isVid){
         mediaElement = `
-          <div class="relative w-full sm:w-44 h-48 rounded-2xl overflow-hidden bg-black shrink-0 border border-[#262626] group">
-            <video src="${esc(p.mediaUrl)}" class="w-full h-full object-cover" controls preload="metadata" playsinline></video>
-            <span class="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/80 text-white backdrop-blur-md flex items-center gap-1 border border-white/10 pointer-events-none">
+          <div class="relative w-full sm:w-44 h-44 sm:h-48 rounded-2xl overflow-hidden bg-black shrink-0 border border-[#262626] group flex items-center justify-center">
+            <video src="${esc(p.mediaUrl)}" class="w-full h-full object-cover" controls preload="metadata" playsinline onerror="window.__sfAdminMediaError(this, 'video')"></video>
+            <span class="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/80 text-white backdrop-blur-md flex items-center gap-1 border border-white/10 pointer-events-none select-none z-10">
               <span>▶</span> Video (up to 1m)
             </span>
           </div>
         `;
       } else {
         mediaElement = `
-          <div class="relative w-full sm:w-44 h-48 rounded-2xl overflow-hidden bg-black shrink-0 border border-[#262626] group">
-            <img src="${esc(p.mediaUrl)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" alt="Post preview" loading="lazy">
-            <span class="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/80 text-white backdrop-blur-md flex items-center gap-1 border border-white/10 pointer-events-none">
+          <div class="relative w-full sm:w-44 h-44 sm:h-48 rounded-2xl overflow-hidden bg-black shrink-0 border border-[#262626] group flex items-center justify-center">
+            <img src="${esc(p.mediaUrl)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300 block" alt="" loading="lazy" onerror="window.__sfAdminMediaError(this, 'photo')">
+            <span class="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/80 text-white backdrop-blur-md flex items-center gap-1 border border-white/10 pointer-events-none select-none z-10">
               <span>📷</span> Photo
             </span>
           </div>
         `;
       }
+    } else {
+      mediaElement = `
+        <div class="relative w-full sm:w-44 h-28 sm:h-48 rounded-2xl overflow-hidden bg-[#16161a] shrink-0 border border-[#262626] flex flex-col items-center justify-center p-3 text-center text-zinc-500 select-none">
+          <span class="text-2xl mb-1 text-zinc-400">📝</span>
+          <span class="text-xs font-bold text-zinc-300">Text Post</span>
+          <span class="text-[10px] text-zinc-500 mt-0.5">No media attached</span>
+        </div>
+      `;
     }
 
     let statusPill = '';
     let actionButtons = '';
 
     if(mode === 'restoration'){
-      statusPill = `<span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-800">🚫 Taken Down</span>`;
+      statusPill = `<span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-800 whitespace-nowrap">🚫 Taken Down</span>`;
       actionButtons = `
-        <button type="button" class="bg-gold hover:brightness-110 text-black rounded-xl px-4 py-2 font-black text-xs flex items-center justify-center gap-1.5 transition shadow" data-admin-restore-post="${uid}">
-          <span>🔄</span> Restore to For You Feed
+        <button type="button" class="w-full bg-gold hover:brightness-110 active:scale-[0.98] text-black rounded-xl py-2.5 px-3 font-black text-xs flex items-center justify-center gap-1.5 transition shadow" data-admin-restore-post="${uid}">
+          <span>🔄</span> <span class="truncate">Restore to Feed</span>
         </button>
-        <button type="button" class="border border-red-900/60 bg-red-950/30 hover:bg-red-900/50 text-red-400 rounded-xl px-4 py-1.5 font-bold text-xs flex items-center justify-center gap-1 transition" data-admin-delete-post="${uid}">
-          <span>🗑️</span> Delete Permanently
+        <button type="button" class="w-full border border-red-900/60 bg-red-950/30 hover:bg-red-900/50 active:scale-[0.98] text-red-400 rounded-xl py-2 px-3 font-bold text-xs flex items-center justify-center gap-1.5 transition" data-admin-delete-post="${uid}">
+          <span>🗑️</span> <span class="truncate">Delete Permanently</span>
         </button>
       `;
     } else if(mode === 'review'){
-      statusPill = `<span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-950/80 text-amber-300 border border-amber-800">🛡️ Queued Review</span>`;
+      statusPill = `<span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-950/80 text-amber-300 border border-amber-800 whitespace-nowrap">🛡️ Queued Review</span>`;
       actionButtons = `
-        <button type="button" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl px-4 py-2 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow" data-admin-approve-post="${uid}">
-          <span>✓</span> Approve & Keep Live
+        <button type="button" class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white rounded-xl py-2.5 px-3 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow" data-admin-approve-post="${uid}">
+          <span>✓</span> <span class="truncate">Approve & Keep Live</span>
         </button>
-        <button type="button" class="border border-red-800 hover:bg-red-950/40 text-red-400 rounded-xl px-4 py-1.5 font-bold text-xs flex items-center justify-center gap-1 transition" data-admin-takedown-post="${uid}">
-          <span>🚫</span> Take Down / Violation
+        <button type="button" class="w-full border border-red-800 hover:bg-red-950/40 active:scale-[0.98] text-red-400 rounded-xl py-2 px-3 font-bold text-xs flex items-center justify-center gap-1.5 transition" data-admin-takedown-post="${uid}">
+          <span>🚫</span> <span class="truncate">Take Down Post</span>
         </button>
       `;
     } else {
       // Live mode
-      statusPill = `<span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-800">🟢 Live on Feed</span>`;
+      statusPill = `<span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-800 whitespace-nowrap">🟢 Live on Feed</span>`;
       actionButtons = `
-        <button type="button" class="border border-[#444] hover:border-gold text-white rounded-xl px-3.5 py-1.5 font-bold text-xs flex items-center justify-center gap-1.5 transition bg-[#161616]" onclick="navigate('feed','${esc(uid)}')">
-          <span>🎬</span> Watch in Feed
+        <button type="button" class="w-full border border-[#444] hover:border-gold active:scale-[0.98] text-white rounded-xl py-2 px-3 font-bold text-xs flex items-center justify-center gap-1.5 transition bg-[#161616]" onclick="navigate('feed','${esc(uid)}')">
+          <span>🎬</span> <span class="truncate">Watch in Feed</span>
         </button>
-        <button type="button" class="border border-red-900/60 bg-red-950/30 hover:bg-red-900/50 text-red-400 rounded-xl px-3.5 py-1.5 font-bold text-xs flex items-center justify-center gap-1 transition" data-admin-takedown-post="${uid}">
-          <span>🚫</span> Take Down Post
+        <button type="button" class="w-full border border-red-900/60 bg-red-950/30 hover:bg-red-900/50 active:scale-[0.98] text-red-400 rounded-xl py-2 px-3 font-bold text-xs flex items-center justify-center gap-1.5 transition" data-admin-takedown-post="${uid}">
+          <span>🚫</span> <span class="truncate">Take Down Post</span>
         </button>
       `;
     }
 
     return `
-      <div class="p-4 sm:p-5 rounded-2xl border border-[#2b2b2b] bg-[#141414] flex flex-col sm:flex-row gap-4 items-start justify-between transition hover:border-[#383838]">
-        <div class="flex flex-col sm:flex-row gap-4 min-w-0 flex-1 w-full">
+      <div class="p-3.5 sm:p-5 rounded-2xl border border-[#2b2b2b] bg-[#141414] flex flex-col sm:flex-row gap-4 items-start justify-between transition hover:border-[#383838] w-full max-w-full overflow-hidden">
+        <div class="flex flex-col sm:flex-row gap-4 min-w-0 flex-1 w-full overflow-hidden">
           ${mediaElement}
-          <div class="min-w-0 flex-1">
+          <div class="min-w-0 flex-1 w-full overflow-hidden">
             <div class="flex flex-wrap items-center gap-2 mb-2">
               ${statusPill}
-              <span class="text-xs muted">${mode === 'restoration' ? `Removed: ${removedDateStr}` : `Posted: ${createdDateStr}`}</span>
-              ${p.likes ? `<span class="text-[11px] text-zinc-400">❤️ ${p.likes}</span>` : ''}
-              ${p.commentCount ? `<span class="text-[11px] text-zinc-400">💬 ${p.commentCount}</span>` : ''}
+              <span class="text-xs text-zinc-400 whitespace-nowrap">${mode === 'restoration' ? `Removed: ${removedDateStr}` : `Posted: ${createdDateStr}`}</span>
+              ${likesCount > 0 ? `<span class="text-[11px] text-zinc-300 font-semibold inline-flex items-center gap-1 bg-zinc-800/60 px-2 py-0.5 rounded-md border border-zinc-700/50">❤️ ${likesCount}</span>` : ''}
+              ${commentsCount > 0 ? `<span class="text-[11px] text-zinc-300 font-semibold inline-flex items-center gap-1 bg-zinc-800/60 px-2 py-0.5 rounded-md border border-zinc-700/50">💬 ${commentsCount}</span>` : ''}
             </div>
 
-            <div class="flex items-center gap-2 mt-1">
-              ${avatar(s, 'w-6 h-6 rounded-full object-cover')}
-              <b class="text-xs text-white truncate">${esc(s.name || s.username || 'Creator')}</b>
-              ${s.verified ? '<span class="verified-badge text-[10px]">✓</span>' : ''}
-              <span class="text-xs muted">@${esc(s.username || 'seller')}</span>
+            <div class="flex items-center gap-2 mt-1 min-w-0">
+              ${avatar(s, 'w-6 h-6 rounded-full object-cover shrink-0')}
+              <b class="text-xs text-white truncate max-w-[130px] xs:max-w-[180px] sm:max-w-xs font-semibold">${esc(s.name || s.username || 'Creator')}</b>
+              ${s.verified ? '<span class="verified-badge text-[10px] shrink-0">✓</span>' : ''}
+              <span class="text-xs text-zinc-400 truncate max-w-[120px]">@${esc(s.username || 'seller')}</span>
             </div>
 
-            <p class="text-xs sm:text-sm text-zinc-200 mt-2.5 line-clamp-3 leading-relaxed">${esc(p.text || '(No text caption provided)')}</p>
-            <div class="text-[10px] font-mono text-zinc-500 mt-2">Post ID: ${esc(uid)}</div>
+            <p class="text-xs sm:text-sm text-zinc-200 mt-2 line-clamp-3 leading-relaxed break-words">${esc(p.text || '(No text caption provided)')}</p>
+            <div class="text-[10px] font-mono text-zinc-500 mt-2 break-all select-all flex items-center gap-1.5"><span class="text-zinc-600">ID:</span><span class="text-zinc-400">${esc(uid)}</span></div>
           </div>
         </div>
 
-        <div class="flex sm:flex-col gap-2 shrink-0 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-[#222]">
+        <div class="w-full sm:w-44 md:w-48 flex flex-col gap-2 shrink-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-[#222]">
           ${actionButtons}
         </div>
       </div>
@@ -7678,18 +7955,7 @@ init();
       container.innerHTML = filtered.map(x => renderAdminPostItem(x.id, x.data, activeSubTab)).join('');
 
       // Wire up action handlers
-      container.querySelectorAll('[data-admin-restore-post]').forEach(b => {
-        b.onclick = () => adminRestorePost(b.dataset.adminRestorePost);
-      });
-      container.querySelectorAll('[data-admin-delete-post]').forEach(b => {
-        b.onclick = () => adminPermanentlyDeletePost(b.dataset.adminDeletePost);
-      });
-      container.querySelectorAll('[data-admin-approve-post]').forEach(b => {
-        b.onclick = () => reviewPost(b.dataset.adminApprovePost, true);
-      });
-      container.querySelectorAll('[data-admin-takedown-post]').forEach(b => {
-        b.onclick = () => adminTakeDown(b.dataset.adminTakedownPost);
-      });
+      bindAdminControls();
     }
 
     // Subtab click handlers
@@ -8065,43 +8331,11 @@ init();
   }
 
   function sfAdminReview(items){
-    $('adminWorkspace').innerHTML = `
-      <div class="card p-5 border border-[#2b2b2b]">
-        <div class="flex justify-between items-center">
-          <div>
-            <h2 class="text-xl font-black text-white">Posts Awaiting Safety Review (${items.length})</h2>
-            <p class="muted text-xs sm:text-sm mt-0.5">Preview photo and video submissions before keeping them live.</p>
-          </div>
-          <button id="reviewBack" class="border border-[#444] hover:border-gold rounded-xl px-4 py-2 text-xs font-bold">← Back</button>
-        </div>
-        <div class="space-y-4 mt-5">
-          ${items.length ? items.map(x => adminPostCard(x.id, x.data)).join('') : '<div class="muted p-8 text-center bg-[#141414] rounded-2xl border border-[#222]">No posts are waiting for safety review.</div>'}
-        </div>
-      </div>
-    `;
-    $('reviewBack').onclick = sfAdminBack;
-    document.querySelectorAll('[data-admin-approve-post]').forEach(b => b.onclick = () => reviewPost(b.dataset.adminApprovePost, true));
-    document.querySelectorAll('[data-admin-takedown-post]').forEach(b => b.onclick = () => adminTakeDown(b.dataset.adminTakedownPost));
+    sfAdminPosts(null, null, items, null, 'review');
   }
 
   function sfAdminLive(items){
-    $('adminWorkspace').innerHTML = `
-      <div class="card p-5 border border-[#2b2b2b]">
-        <div class="flex justify-between items-center">
-          <div>
-            <h2 class="text-xl font-black text-white">Live For You Content (${items.length})</h2>
-            <p class="muted text-xs sm:text-sm mt-0.5">Active photos and videos currently shown to users. Taking down a post moves it to the Restoration Archive.</p>
-          </div>
-          <button id="liveBack" class="border border-[#444] hover:border-gold rounded-xl px-4 py-2 text-xs font-bold">← Back</button>
-        </div>
-        <div class="grid lg:grid-cols-2 gap-4 mt-5">
-          ${items.length ? items.map(x => adminPostCard(x.id, x.data)).join('') : '<div class="muted p-8 text-center bg-[#141414] rounded-2xl border border-[#222]">No live posts on feed.</div>'}
-        </div>
-      </div>
-    `;
-    $('liveBack').onclick = sfAdminBack;
-    document.querySelectorAll('[data-admin-approve-post]').forEach(b => b.onclick = () => reviewPost(b.dataset.adminApprovePost, true));
-    document.querySelectorAll('[data-admin-takedown-post]').forEach(b => b.onclick = () => adminTakeDown(b.dataset.adminTakedownPost));
+    sfAdminPosts(null, items, null, null, 'live');
   }
 
   /* Distinct Section: Community Safety & Fraud Reports */
