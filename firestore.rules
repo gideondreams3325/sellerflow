@@ -268,22 +268,30 @@ service cloud.firestore {
         isAdmin()
       );
       allow create: if isSignedIn() && (
-        request.auth.uid in request.resource.data.participants || isAdmin()
+        request.auth.uid in request.resource.data.participants ||
+        isAdmin()
       );
       allow update: if isSignedIn() && (
-        request.auth.uid in resource.data.participants || isAdmin()
+        request.auth.uid in resource.data.participants ||
+        isAdmin()
       );
       allow delete: if isAdmin();
 
       // Messages subcollection: strictly accessible only by conversation participants
       match /messages/{messageId} {
         allow read: if isSignedIn() && (
-          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants ||
-          isAdmin()
+          request.auth.uid == resource.data.senderId ||
+          request.auth.uid == resource.data.recipientId ||
+          isAdmin() ||
+          (exists(/databases/$(database)/documents/conversations/$(conversationId)) &&
+           request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants)
         );
         allow create: if isSignedIn() && (
           request.resource.data.senderId == request.auth.uid &&
-          (request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants || isAdmin())
+          (isAdmin() ||
+           request.resource.data.get('recipientId', '') != '' ||
+           (exists(/databases/$(database)/documents/conversations/$(conversationId)) &&
+            request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants))
         );
         allow update, delete: if isAdmin();
       }

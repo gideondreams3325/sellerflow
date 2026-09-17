@@ -341,8 +341,8 @@ const sendEmailVerification=(user)=>user.sendEmailVerification();
 const updateProfile=(user,data)=>user.updateProfile(data);
 const getFirestore=(app)=>firebase.firestore();
 function getDbSafe(database){
-  if(database && typeof database.collection === 'function') return database;
-  if(typeof db !== 'undefined' && db && typeof db.collection === 'function') return db;
+  if(database && (typeof database.collection === 'function' || typeof database.doc === 'function')) return database;
+  if(typeof db !== 'undefined' && db && (typeof db.collection === 'function' || typeof db.doc === 'function')) return db;
   if(typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && typeof firebase.firestore === 'function'){
     try {
       db = firebase.firestore();
@@ -351,8 +351,9 @@ function getDbSafe(database){
   }
   return null;
 }
-const collection=(database,path)=>{
+const collection=(database,...pathSegments)=>{
   const d = getDbSafe(database);
+  const path = pathSegments.filter(Boolean).join('/');
   if(!d){
     console.warn('Firestore collection requested before database ready:', path);
     return {
@@ -361,24 +362,47 @@ const collection=(database,path)=>{
       where: () => ({ where: () => ({ limit: () => ({ get: async () => ({ empty: true, docs: [] }) }), get: async () => ({ empty: true, docs: [] }) }), limit: () => ({ get: async () => ({ empty: true, docs: [] }) }), get: async () => ({ empty: true, docs: [] }) }),
       orderBy: () => ({ limit: () => ({ get: async () => ({ empty: true, docs: [] }) }), get: async () => ({ empty: true, docs: [] }) }),
       limit: () => ({ get: async () => ({ empty: true, docs: [] }) }),
-      doc: (id) => doc(d, path, id)
+      doc: (id) => doc(d, path, id),
+      onSnapshot: () => () => {}
     };
   }
-  return d.collection(path);
+  if(typeof d.collection === 'function'){
+    return d.collection(path);
+  }
+  return db.collection(path);
 };
-const doc=(database,path,id)=>{
+const doc=(database,...pathSegments)=>{
   const d = getDbSafe(database);
+  const path = pathSegments.filter(Boolean).join('/');
   if(!d){
-    console.warn('Firestore doc requested before database ready:', path, id);
+    console.warn('Firestore doc requested before database ready:', path);
     return {
       get: async () => ({ exists: () => false, data: () => null }),
       set: async () => {},
       update: async () => {},
-      delete: async () => {}
+      delete: async () => {},
+      onSnapshot: () => () => {}
     };
   }
-  return id===undefined?d.doc(path):d.collection(path).doc(id);
+  if(typeof d.doc === 'function'){
+    return path ? d.doc(path) : d.doc();
+  }
+  if(typeof d.collection === 'function'){
+    const segs = path.split('/').filter(Boolean);
+    if(segs.length % 2 === 0){
+      return d.doc(path);
+    }
+    return d.collection(path).doc();
+  }
+  return db.doc(path);
 };
+const onSnapshot=(target,...args)=>{
+  if(target && typeof target.onSnapshot === 'function'){
+    return target.onSnapshot(...args);
+  }
+  return () => {};
+};
+window.onSnapshot = onSnapshot;
 const getDoc=(ref)=>ref.get();
 const getDocs=(q)=>q.get();
 const setDoc=(ref,data,opts)=>ref.set(data,opts);
@@ -7279,7 +7303,7 @@ init();
       window._currentAdminTab = tabName;
       document.querySelectorAll('[data-admin-tab]').forEach(t => t.classList.toggle('active', t.dataset.adminTab === tabName));
 
-      if(tabName === 'overview') sfAdminOverview(users, pending, reviewPosts, livePosts, takenDownPosts, reports, termData);
+      if(tabName === 'overview') sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData);
       else if(tabName === 'users') sfAdminUsers(users, pending, subOption);
       else if(tabName === 'posts') sfAdminPosts(posts, livePosts, reviewPosts, takenDownPosts, subOption);
       else if(tabName === 'reports') sfAdminReports(reports);
@@ -7301,12 +7325,13 @@ init();
     setAdminTab(initialTab);
   };
 
-  function sfAdminOverview(users, pending, reviewPosts, livePosts, takenDownPosts, reports, termData){
+  function sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData){
     const activeCount = users.docs.filter(d => {
       const u = d.data();
       const isSusp = !!u.suspended || (u.suspendedUntil && ts(u.suspendedUntil) > Date.now());
       return !u.blocked && !isSusp && !u.postingRestricted;
     }).length;
+    const totalPostsCount = (posts && typeof posts.size === 'number') ? posts.size : (Array.isArray(posts) ? posts.length : ((livePosts?.length || 0) + (takenDownPosts?.length || 0)));
 
     $('adminWorkspace').innerHTML = `
       <div class="space-y-6">
@@ -7338,7 +7363,7 @@ init();
             <div>
               <div class="flex items-center justify-between mb-3">
                 <span class="text-2xl p-2 rounded-xl bg-zinc-800/80 border border-zinc-700/50">🎬</span>
-                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">${posts.size} Total</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">${totalPostsCount} Total</span>
               </div>
               <h2 class="text-lg font-black text-white group-hover:text-gold transition">Posts & Moderation</h2>
               <p class="muted text-xs mt-1 leading-relaxed">Unified control of live For You video/photo content, safety review queue, and 1-click restoration archive for taken-down media.</p>
@@ -7431,7 +7456,7 @@ init();
     bindAdminControls();
   }
   function sfAdminHome(users, pending, reviewPosts, livePosts, takenDownPosts, termData){
-    sfAdminOverview(users, pending, reviewPosts, livePosts, takenDownPosts, { size: 0, docs: [] }, termData);
+    sfAdminOverview(users, { size: (livePosts?.length || 0) + (takenDownPosts?.length || 0), docs: [] }, pending, reviewPosts, livePosts, takenDownPosts, { size: 0, docs: [] }, termData);
   }
 
   /* Dedicated Post Restoration & Moderation Cards */
@@ -8442,22 +8467,31 @@ init();
       const ref=doc(db,'conversations',id);
       const snap=await getDoc(ref);
       if(!snapshotExists(snap)){
-        await setDoc(ref,{participants:[currentUser.uid,uid],createdAt:serverTimestamp(),updatedAt:serverTimestamp(),lastMessage:'',lastSenderId:''});
+        await setDoc(ref,{participants:[currentUser.uid,uid],createdAt:serverTimestamp(),updatedAt:serverTimestamp(),lastMessage:'',lastSenderId:''},{merge:true});
       }
-      navigate('chats');
-      setTimeout(()=>openConversation(id,uid,other),80);
+      if(currentPage !== 'chats'){
+        await navigate('chats');
+      } else {
+        await renderChats();
+      }
+      openConversation(id,uid,other);
     }catch(e){toast(errMsg(e),'error')}
   }
 
   async function loadConversations(){
     if(!currentUser)return[];
-    const snap=await getDocs(query(collection(db,'conversations'),where('participants','array-contains',currentUser.uid),limit(100)));
-    return snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ts(b.updatedAt)-ts(a.updatedAt));
+    try {
+      const snap=await getDocs(query(collection(db,'conversations'),where('participants','array-contains',currentUser.uid),limit(100)));
+      return snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ts(b.updatedAt)-ts(a.updatedAt));
+    } catch(e) {
+      console.warn('loadConversations notice:', e);
+      return [];
+    }
   }
 
   function renderChatWindowHtml(cid, uid, selected, isModal = false){
     const isOnline = onlineNow(selected);
-    const storeObj = [...allStores.values()].find(s => s.ownerId === uid);
+    const storeObj = (typeof allStores !== 'undefined' && allStores instanceof Map ? [...allStores.values()].find(s => s.ownerId === uid) : null) || (selected?.verified ? { ownerId: uid } : null);
     return `
       <div class="chat-window flex flex-col h-full bg-[#0d0d11]">
         <!-- Modern Contact Header -->
@@ -8552,6 +8586,11 @@ init();
       mobileBack.onclick = () => {
         const chatLayout = $('chatLayoutContainer');
         if(chatLayout) chatLayout.classList.remove('in-active-chat');
+        window._activeConversationId = null;
+        if(window._activeChatUnsub){
+          try{ window._activeChatUnsub(); }catch(_){}
+          window._activeChatUnsub = null;
+        }
       };
     }
 
@@ -8583,50 +8622,70 @@ init();
       };
     });
 
-    const q=query(collection(db,'conversations',cid,'messages'),orderBy('createdAt','asc'),limit(300));
     let initialRender = true;
+    function renderChatMessagesList(docsOrArray){
+      const box=$('chatMessages');
+      if(!box) return;
+      const wasAtBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 80;
+      if(!docsOrArray || docsOrArray.length === 0){
+        box.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-center p-6 my-auto select-none">
+            <div class="w-14 h-14 rounded-2xl bg-[#171720] border border-[#292938] flex items-center justify-center text-2xl mb-3">💬</div>
+            <div class="font-bold text-white text-sm">Start the conversation</div>
+            <p class="text-zinc-400 text-xs mt-1 max-w-xs">Ask @${esc(selected.username||'user')} about products, pricing, store pickup or nationwide delivery in Ghana.</p>
+          </div>
+        `;
+        return;
+      }
+      let lastDateStr = '';
+      let html = '';
+      docsOrArray.forEach(item => {
+        const m = typeof item.data === 'function' ? item.data() : item;
+        const me = m.senderId === currentUser?.uid;
+        const msgTime = ts(m.createdAt) || Date.now();
+        const dateObj = new Date(msgTime);
+        const dateStr = dateObj.toLocaleDateString('en-GH', { weekday: 'short', month: 'short', day: 'numeric' });
+        if (dateStr !== lastDateStr) {
+          lastDateStr = dateStr;
+          const isToday = new Date().toDateString() === dateObj.toDateString();
+          const label = isToday ? 'Today' : dateStr;
+          html += `<div class="flex justify-center my-3"><span class="text-[10px] font-semibold tracking-wider text-zinc-400 bg-[#16161d] border border-[#282834] px-2.5 py-0.5 rounded-full select-none">${esc(label)}</span></div>`;
+        }
+        const timeStr = dateObj.toLocaleTimeString('en-GH', { hour: '2-digit', minute: '2-digit' });
+        html += `
+          <div class="flex flex-col ${me ? 'items-end' : 'items-start'} my-1">
+            <div class="chat-bubble ${me ? 'chat-me' : 'chat-them'}">
+              <div class="text-[13px] leading-relaxed break-words">${esc(m.text || '')}</div>
+              <div class="text-[10px] ${me ? 'text-black/75' : 'text-zinc-400'} mt-1 text-right select-none font-medium">${esc(timeStr)}</div>
+            </div>
+          </div>
+        `;
+      });
+      box.innerHTML = html;
+      if(initialRender || wasAtBottom) box.scrollTop=box.scrollHeight;
+      initialRender = false;
+    }
+
+    const q=query(collection(db,'conversations',cid,'messages'),orderBy('createdAt','asc'),limit(300));
+
+    // Direct fetch fallback for fast first-paint
+    getDocs(q).then(snap => {
+      if(window._activeConversationId === cid && snap && (!snap.empty || initialRender)){
+        renderChatMessagesList(snap.docs);
+      }
+    }).catch(err => {
+      console.warn('Initial chat messages fetch notice:', err);
+      const box = $('chatMessages');
+      if(box && box.innerHTML.includes('Loading conversation')){
+        renderChatMessagesList([]);
+      }
+    });
+
     if(q && typeof q.onSnapshot === 'function'){
       window._activeChatUnsub = q.onSnapshot(snap => {
-        const box=$('chatMessages');
-        if(!box) return;
-        const wasAtBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 80;
-        if(snap.empty){
-          box.innerHTML = `
-            <div class="h-full flex flex-col items-center justify-center text-center p-6 my-auto select-none">
-              <div class="w-14 h-14 rounded-2xl bg-[#171720] border border-[#292938] flex items-center justify-center text-2xl mb-3">💬</div>
-              <div class="font-bold text-white text-sm">Start the conversation</div>
-              <p class="text-zinc-400 text-xs mt-1 max-w-xs">Ask @${esc(selected.username||'user')} about products, pricing, store pickup or nationwide delivery in Ghana.</p>
-            </div>
-          `;
-        } else {
-          let lastDateStr = '';
-          let html = '';
-          snap.docs.forEach(d => {
-            const m = d.data();
-            const me = m.senderId === currentUser?.uid;
-            const msgTime = ts(m.createdAt) || Date.now();
-            const dateObj = new Date(msgTime);
-            const dateStr = dateObj.toLocaleDateString('en-GH', { weekday: 'short', month: 'short', day: 'numeric' });
-            if (dateStr !== lastDateStr) {
-              lastDateStr = dateStr;
-              const isToday = new Date().toDateString() === dateObj.toDateString();
-              const label = isToday ? 'Today' : dateStr;
-              html += `<div class="flex justify-center my-3"><span class="text-[10px] font-semibold tracking-wider text-zinc-400 bg-[#16161d] border border-[#282834] px-2.5 py-0.5 rounded-full select-none">${esc(label)}</span></div>`;
-            }
-            const timeStr = dateObj.toLocaleTimeString('en-GH', { hour: '2-digit', minute: '2-digit' });
-            html += `
-              <div class="flex flex-col ${me ? 'items-end' : 'items-start'} my-1">
-                <div class="chat-bubble ${me ? 'chat-me' : 'chat-them'}">
-                  <div class="text-[13px] leading-relaxed break-words">${esc(m.text || '')}</div>
-                  <div class="text-[10px] ${me ? 'text-black/75' : 'text-zinc-400'} mt-1 text-right select-none font-medium">${esc(timeStr)}</div>
-                </div>
-              </div>
-            `;
-          });
-          box.innerHTML = html;
+        if(window._activeConversationId === cid && snap){
+          renderChatMessagesList(snap.docs);
         }
-        if(initialRender || wasAtBottom) box.scrollTop=box.scrollHeight;
-        initialRender = false;
       }, err => console.warn('Chat real-time snapshot notice:', err));
     }
 
@@ -8638,10 +8697,37 @@ init();
         if(!text)return;
         input.disabled=true;
         try{
+          // Optimistic append
+          const box = $('chatMessages');
+          if(box){
+            const emptyEl = box.querySelector('.select-none');
+            if(emptyEl) box.innerHTML = '';
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-GH', { hour: '2-digit', minute: '2-digit' });
+            const optDiv = document.createElement('div');
+            optDiv.className = 'flex flex-col items-end my-1';
+            optDiv.innerHTML = `
+              <div class="chat-bubble chat-me">
+                <div class="text-[13px] leading-relaxed break-words">${esc(text)}</div>
+                <div class="text-[10px] text-black/75 mt-1 text-right select-none font-medium">${esc(timeStr)}</div>
+              </div>
+            `;
+            box.appendChild(optDiv);
+            box.scrollTop = box.scrollHeight;
+          }
+
+          input.value='';
+
           await addDoc(collection(db,'conversations',cid,'messages'),{senderId:currentUser.uid,recipientId:uid,text,createdAt:serverTimestamp()});
           await setDoc(ref,{participants:[currentUser.uid,uid],updatedAt:serverTimestamp(),lastMessage:text,lastSenderId:currentUser.uid},{merge:true});
           await addDoc(collection(db,'notifications'),{recipientId:uid,actorId:currentUser.uid,senderName:currentProfile?.name||currentProfile?.username||'SellerFlow user',title:'New chat message',message:text.length>120?text.slice(0,117)+'…':text,type:'chat_message',conversationId:cid,read:false,createdAt:serverTimestamp()});
-          input.value='';
+
+          // Update active conversation in list preview if present
+          const convoItem = document.querySelector(`.chat-convo-item[data-chat-id="${cid}"]`);
+          if(convoItem){
+            const previewSpan = convoItem.querySelector('span.text-xs.text-zinc-300');
+            if(previewSpan) previewSpan.textContent = `You: ${text}`;
+          }
         }catch(e){toast(errMsg(e),'error')}finally{input.disabled=false;input.focus()}
       };
     }
