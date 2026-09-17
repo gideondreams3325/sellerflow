@@ -7,6 +7,9 @@
 <meta property="og:title" content="SellerFlow">
 <meta property="og:description" content="Ghana's social selling marketplace where sellers build stores, publish products, share video/photo content, and manage orders.">
 <script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
 <!-- Firebase Compat is used here for broad Android/WebView compatibility. -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -15,11 +18,13 @@
 <style>
 *{box-sizing:border-box}
 html,body{width:100%;max-width:100%;height:100%;height:100dvh;margin:0;padding:0;overflow:hidden!important;overscroll-behavior:none!important;-webkit-overflow-scrolling:touch}
-body{position:fixed;inset:0;background:#080808;color:#f5f5f5;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{position:fixed;inset:0;background:#080808;color:#f5f5f5;font-family:'Plus Jakarta Sans',system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+h1,h2,h3,h4,.brand-font,#brandBtn{font-family:'Outfit','Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em}
 #landing,#authPage{position:fixed;inset:0;width:100%;height:100%;height:100dvh;max-height:100dvh;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
 img,video,iframe,canvas,svg{max-width:100%}video,img{box-sizing:border-box}button,input,textarea,select{font:inherit;max-width:100%}button:disabled{opacity:.5;cursor:not-allowed}
-body,input,textarea,select,button,.card,.reel-content,.chat-bubble,.sf-stat-card,.sf-user-row{overflow-wrap:anywhere;word-break:break-word}
-.flex-1{min-width:0}.gold{color:#f5b942}.bg-gold{background:#f5b942;color:#080808}.border-gold{border-color:#f5b942}.card{background:#121212;border:1px solid #292929;border-radius:18px;min-width:0}.muted{color:#a1a1aa}.hide{display:none!important}
+body,input,textarea,select,.card,.reel-content,.chat-bubble,.sf-stat-card,.sf-user-row{overflow-wrap:anywhere;word-break:break-word}
+button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-nav-badge,#brandBtn,#headerLoginBtn,#headerRegisterBtn,#feedLoginBtn,#feedRegisterBtn,#openFeedUpload,#feedPrevBtn,#feedNextBtn,.sf-search-btn{white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important}
+.flex-1{min-width:0}.gold{color:#f5b942}.bg-gold{background:#f5b942;color:#080808}.border-gold{border-color:#f5b942}.card{background:#121212;border:1px solid #242424;border-radius:18px;min-width:0}.muted{color:#a1a1aa}.hide{display:none!important}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;overscroll-behavior:contain}
 .modal-card{width:min(720px,100%);max-height:90vh;max-height:90dvh;overflow-y:auto;overflow-x:hidden;background:#111;border:1px solid #333;border-radius:22px;padding:20px;-webkit-overflow-scrolling:touch}
 .modal-card:has(.chat-window),.modal-card.chat-modal-active{height:85vh;max-height:88dvh;display:flex;flex-direction:column;overflow:hidden;padding:16px}
@@ -28,12 +33,15 @@ body,input,textarea,select,button,.card,.reel-content,.chat-bubble,.sf-stat-card
 .modal-card #chatForm{flex-shrink:0}
 .toast{position:fixed;right:16px;bottom:18px;z-index:300;max-width:360px}
 .toast>div{margin-top:8px;padding:13px 15px;border-radius:12px;background:#1b1b1b;border:1px solid #333;box-shadow:0 8px 30px #000}
-.navbtn.active{color:#f5b942;border-bottom:2px solid #f5b942}
+.navbtn{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:13px;color:#a1a1aa;border-radius:10px;transition:all .16s ease;letter-spacing:-.01em}
+.navbtn:hover{color:#f4f4f5;background:rgba(255,255,255,.05)}
+.navbtn.active{color:#f5b942;border-bottom:2px solid #f5b942;font-weight:700}
 .glass{background:linear-gradient(145deg,#161616,#0f0f0f);box-shadow:0 20px 50px rgba(0,0,0,.22)}
-.action-btn{border:1px solid #333;background:#171717;border-radius:999px;padding:8px 12px;font-size:13px}
-.action-btn:hover{border-color:#f5b942;color:#f5b942}
+.action-btn{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;color:#e4e4e7;transition:all .16s ease;display:inline-flex;align-items:center;gap:6px}
+.action-btn:hover{border-color:#f5b942;color:#f5b942;background:rgba(245,185,66,.08);transform:translateY(-.5px)}
+.action-btn:active{transform:scale(.96)}
 .media-preview{border-radius:16px;overflow:hidden;background:#050505}
-.brand-glow{text-shadow:0 0 28px rgba(245,185,66,.16)}
+.brand-glow{text-shadow:0 0 28px rgba(245,185,66,.2)}
 .avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#242424;flex-shrink:0}
 .product-img{aspect-ratio:1/1;object-fit:cover;width:100%;border-radius:14px;background:#191919}
 .post-media{max-height:620px;width:100%;object-fit:cover;background:#050505}
@@ -57,12 +65,12 @@ body,input,textarea,select,button,.card,.reel-content,.chat-bubble,.sf-stat-card
 .reel-content p{max-width:100%;word-break:break-word;overflow-wrap:anywhere}
 .reel-actions{position:absolute;right:12px;bottom:24px;display:flex;flex-direction:column;align-items:center;gap:12px;z-index:10}
 .reel-action-group{display:flex;flex-direction:column;align-items:center;gap:3px}
-.reel-action{width:46px;height:46px;border-radius:50%;background:rgba(20,20,20,.68);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.45);transition:transform .15s,background .15s,border-color .15s;cursor:pointer}
-.reel-action:hover{border-color:#f5b942;transform:scale(1.06)}
-.reel-action:active{transform:scale(.9)}
-.reel-action.is-liked{background:rgba(239,68,68,.25);border-color:#ef4444;box-shadow:0 0 16px rgba(239,68,68,.4)}
-.reel-action.is-saved{background:rgba(245,185,66,.25);border-color:#f5b942;box-shadow:0 0 16px rgba(245,185,66,.4)}
-.reel-action-count{font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.9);line-height:1;text-align:center;letter-spacing:.02em}
+.reel-action{width:46px;height:46px;border-radius:50%;background:rgba(18,18,22,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.16);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:transform .16s cubic-bezier(0.16,1,0.3,1),background .16s ease,border-color .16s ease,box-shadow .16s ease;cursor:pointer;padding:0;line-height:1}
+.reel-action:hover{border-color:rgba(245,185,66,.6);background:rgba(28,28,34,.88);transform:scale(1.08);box-shadow:0 6px 20px rgba(0,0,0,.65)}
+.reel-action:active{transform:scale(.92)}
+.reel-action.is-liked{background:rgba(239,68,68,.3);border-color:#ef4444;box-shadow:0 0 18px rgba(239,68,68,.5)}
+.reel-action.is-saved{background:rgba(245,185,66,.3);border-color:#f5b942;box-shadow:0 0 18px rgba(245,185,66,.5)}
+.reel-action>div,.reel-action-count{font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:750;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.9);line-height:1;margin-top:2px;letter-spacing:-.01em}
 
 .reel-creator-stack{position:relative;display:flex;flex-direction:column;align-items:center;margin-bottom:6px}
 .reel-avatar-btn{width:48px;height:48px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#f5b942,rgba(255,255,255,.8));box-shadow:0 4px 14px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;transition:transform .15s;cursor:pointer}
@@ -76,9 +84,9 @@ body,input,textarea,select,button,.card,.reel-content,.chat-bubble,.sf-stat-card
 .reel-sound-disc.is-spinning{animation:sfSpinDisc 4s linear infinite}
 @keyframes sfSpinDisc{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
-.reel-follow-pill{padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800;border:1px solid rgba(245,185,66,.7);color:#f5b942;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);transition:all .15s;cursor:pointer}
-.reel-follow-pill:hover{background:#f5b942;color:#000}
-.reel-store-pill{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,.25);color:#e4e4e7;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);transition:all .15s;cursor:pointer}
+.reel-follow-pill{padding:4px 12px;border-radius:999px;font-size:11px;font-weight:800;border:1px solid rgba(245,185,66,.8);color:#f5b942;background:rgba(0,0,0,.65);backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(0,0,0,.4);transition:all .15s ease;cursor:pointer}
+.reel-follow-pill:hover{background:#f5b942;color:#000;transform:translateY(-.5px)}
+.reel-store-pill{padding:4px 11px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,.25);color:#e4e4e7;background:rgba(0,0,0,.65);backdrop-filter:blur(8px);transition:all .15s ease;cursor:pointer}
 .reel-store-pill:hover{border-color:#f5b942;color:#f5b942}
 .reel-sound-ticker{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.5);backdrop-filter:blur(8px);border-radius:999px;padding:6px 12px;font-size:12px;color:#f4f4f5;transition:border-color .15s;cursor:pointer}
 .reel-sound-ticker:hover{border-color:#f5b942;color:#f5b942}
@@ -87,8 +95,8 @@ body,input,textarea,select,button,.card,.reel-content,.chat-bubble,.sf-stat-card
 .admin-tab{padding:8px 16px;border-radius:12px;background:#151515;border:1px solid #292929;color:#999;font-weight:600;white-space:nowrap;transition:.15s ease;cursor:pointer}
 .admin-tab:hover{color:#fff;border-color:#444}
 .admin-tab.active{background:#202020;border-color:#f5b942;color:#f5b942;font-weight:800}
-.market-filter{transition:.15s ease;cursor:pointer}
-.market-filter.active{background:#f5b942!important;color:#080808!important;border-color:#f5b942!important}
+.market-filter{transition:.15s ease;cursor:pointer;border-radius:999px;font-weight:600}
+.market-filter.active{background:#f5b942!important;color:#080808!important;border-color:#f5b942!important;box-shadow:0 2px 10px rgba(245,185,66,.3)}
 .verified-badge{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:#1d9bf0;color:white;font-size:11px;font-weight:900;box-shadow:0 0 0 2px rgba(29,155,240,.15);flex-shrink:0}
 .notification-badge{position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#ef4444;color:white;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
 .orders-nav-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#ef4444;color:#fff;font-size:10px;font-weight:900;line-height:1;box-shadow:0 0 10px rgba(239,68,68,.5);pointer-events:none;transition:transform .18s ease,opacity .18s ease}
@@ -103,11 +111,13 @@ body,input,textarea,select,button,.card,.reel-content,.chat-bubble,.sf-stat-card
 .page-selector{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.78);backdrop-filter:blur(10px);display:flex;align-items:flex-end;justify-content:center;padding:12px}
 .page-selector-card{width:min(680px,100%);max-height:88vh;overflow:auto;background:#111;border:1px solid #343434;border-radius:28px;padding:16px;box-shadow:0 25px 80px rgba(0,0,0,.6)}
 .page-selector-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.page-selector-item{min-height:84px;border:1px solid #303030;border-radius:18px;background:linear-gradient(145deg,#191919,#101010);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:10px;color:#fff;min-width:0}
+.page-selector-item{min-height:84px;border:1px solid #303030;border-radius:18px;background:linear-gradient(145deg,#191919,#101010);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:10px;color:#fff;min-width:0;transition:all .16s ease}
+.page-selector-item:hover{border-color:#444}
+.page-selector-item:active{transform:scale(.97)}
 .page-selector-item.active{border-color:#f5b942;box-shadow:0 0 0 1px rgba(245,185,66,.2),0 10px 30px rgba(0,0,0,.25)}
 .page-selector-item .page-icon{font-size:24px}
 .page-selector-close{width:100%;margin-top:12px}
-.back-page-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid #333;background:#151515;border-radius:12px;padding:8px 12px;color:#ddd;margin-bottom:12px}
+.back-page-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid #333;background:#151515;border-radius:12px;padding:8px 12px;color:#ddd;margin-bottom:12px;transition:all .15s ease}
 .back-page-btn:hover{border-color:#f5b942;color:#f5b942}
 .reel-video{cursor:pointer;touch-action:manipulation}
 .reel-play-toggle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;width:68px;height:68px;border-radius:50%;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(8px);font-size:28px;color:#fff;display:flex;align-items:center;justify-content:center;transition:opacity .2s,transform .2s;cursor:pointer;pointer-events:auto}
@@ -124,7 +134,7 @@ body,input,textarea,select,button,.card,.reel-content,.chat-bubble,.sf-stat-card
 @media(max-width:640px){
   .page-selector-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .reel-actions{right:8px;bottom:20px;gap:11px}
-  .reel-action{width:42px;height:42px}
+  .reel-action{width:44px;height:44px}
   .reel-creator-stack{margin-bottom:5px}
   .reel-avatar-btn{width:44px;height:44px}
   .reel-follow-badge{width:20px;height:20px;font-size:13px;bottom:-6px}
@@ -138,14 +148,63 @@ body,input,textarea,select,button,.card,.reel-content,.chat-bubble,.sf-stat-card
 #loading{pointer-events:auto}
 button,a,input,textarea,select{position:relative;z-index:1}
 
-.btn{transition:.18s ease;cursor:pointer}.btn:active{transform:scale(.98)}.btn-primary{background:#f5b942;color:#080808;font-weight:800}.btn-secondary{background:#171717;border:1px solid #333}.btn-danger{border:1px solid #7f1d1d;color:#fca5a5}.field{outline:none;transition:border-color .18s,box-shadow .18s}.field:focus{border-color:#f5b942!important;box-shadow:0 0 0 3px rgba(245,185,66,.08)}.skeleton{background:linear-gradient(90deg,#151515,#202020,#151515);background-size:200% 100%;animation:sh 1.4s infinite}@keyframes sh{to{background-position:-200% 0}}
+/* Modern eye-catching professional buttons & controls */
+#brandBtn{font-family:'Outfit',sans-serif;font-weight:900;font-size:1.32rem;letter-spacing:-0.03em;background:linear-gradient(135deg,#ffe082 0%,#f5b942 50%,#e29c1b 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:inline-flex;align-items:center;line-height:1;flex-shrink:0;transition:opacity .15s}
+#brandBtn:active{transform:scale(.97)}
+
+#mobileMenu,#pageSelectorBtn{width:36px;height:36px;min-width:36px;border-radius:11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#e4e4e7;display:inline-flex;align-items:center;justify-content:center;font-size:14px;padding:0;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:all .16s ease}
+#mobileMenu:hover,#pageSelectorBtn:hover{background:rgba(255,255,255,.1);border-color:rgba(245,185,66,.4);color:#f5b942}
+#mobileMenu:active,#pageSelectorBtn:active{transform:scale(.94)}
+
+.sf-search-btn{height:36px;min-height:36px;padding:0 12px;border-radius:11px;background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.1)!important;color:#d4d4d8!important;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:all .16s ease}
+@media(max-width:640px){.sf-search-btn{width:36px;min-width:36px;padding:0}}
+.sf-search-btn:hover{background:rgba(255,255,255,.1)!important;border-color:rgba(245,185,66,.4)!important;color:#f5b942!important}
+.sf-search-btn:active{transform:scale(.94)}
+
+#headerLoginBtn,#feedLoginBtn{background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.14)!important;color:#f4f4f5!important;font-family:inherit!important;font-weight:650!important;font-size:12px!important;padding:6px 13px!important;border-radius:11px!important;letter-spacing:-.01em!important;transition:all .16s cubic-bezier(0.16,1,0.3,1)!important;box-shadow:0 1px 3px rgba(0,0,0,.2)!important;flex-shrink:0!important}
+#headerLoginBtn:hover,#feedLoginBtn:hover{background:rgba(255,255,255,.12)!important;border-color:rgba(245,185,66,.45)!important;color:#f5b942!important;transform:translateY(-.5px)}
+#headerLoginBtn:active,#feedLoginBtn:active{transform:scale(.95)}
+
+#headerRegisterBtn,#feedRegisterBtn{background:linear-gradient(135deg,#f7c554 0%,#f5b942 52%,#e5a428 100%)!important;border:1px solid rgba(255,255,255,.28)!important;color:#080808!important;font-family:inherit!important;font-weight:750!important;font-size:12px!important;padding:6px 14px!important;border-radius:11px!important;letter-spacing:-.01em!important;box-shadow:0 2px 10px rgba(245,185,66,.28),inset 0 1px 0 rgba(255,255,255,.45)!important;transition:all .16s cubic-bezier(0.16,1,0.3,1)!important;flex-shrink:0!important}
+#headerRegisterBtn:hover,#feedRegisterBtn:hover{filter:brightness(1.08)!important;box-shadow:0 4px 16px rgba(245,185,66,.45),inset 0 1px 0 rgba(255,255,255,.55)!important;transform:translateY(-.5px)}
+#headerRegisterBtn:active,#feedRegisterBtn:active{transform:scale(.95);filter:brightness(.96)!important}
+
+#feedPrevBtn,#feedNextBtn,.feed-nav-btn{width:32px!important;height:32px!important;min-width:32px!important;padding:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;border-radius:10px!important;background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.11)!important;color:#d4d4d8!important;font-size:11px!important;box-shadow:0 1px 3px rgba(0,0,0,.25)!important;transition:all .15s ease!important;flex-shrink:0!important}
+#feedPrevBtn:hover,#feedNextBtn:hover,.feed-nav-btn:hover{background:rgba(255,255,255,.12)!important;border-color:rgba(245,185,66,.4)!important;color:#f5b942!important}
+#feedPrevBtn:active,#feedNextBtn:active,.feed-nav-btn:active{transform:scale(.92)}
+
+#openFeedUpload,#openFeedUploadEmpty{background:linear-gradient(135deg,#f7c554 0%,#f5b942 55%,#e5a428 100%)!important;color:#080808!important;font-family:inherit!important;font-weight:750!important;font-size:12px!important;padding:6px 14px!important;border-radius:11px!important;border:1px solid rgba(255,255,255,.28)!important;box-shadow:0 2px 10px rgba(245,185,66,.3),inset 0 1px 0 rgba(255,255,255,.45)!important;transition:all .16s cubic-bezier(0.16,1,0.3,1)!important;letter-spacing:-.01em!important;flex-shrink:0!important}
+#openFeedUpload:hover,#openFeedUploadEmpty:hover{filter:brightness(1.08)!important;box-shadow:0 4px 16px rgba(245,185,66,.45),inset 0 1px 0 rgba(255,255,255,.55)!important;transform:translateY(-.5px)}
+#openFeedUpload:active,#openFeedUploadEmpty:active{transform:scale(.95)}
+
+.btn{font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:650;letter-spacing:-.01em;border-radius:12px;transition:all .16s cubic-bezier(0.16,1,0.3,1);cursor:pointer;user-select:none}
+.btn:active{transform:scale(.97)}
+.btn-primary,.bg-gold.font-bold{background:linear-gradient(135deg,#f7c554 0%,#f5b942 55%,#e5a428 100%);color:#080808;font-weight:750;border:1px solid rgba(255,255,255,.25);box-shadow:0 3px 12px rgba(245,185,66,.26),inset 0 1px 0 rgba(255,255,255,.4)}
+.btn-primary:hover,.bg-gold.font-bold:hover{filter:brightness(1.06);box-shadow:0 5px 18px rgba(245,185,66,.4);transform:translateY(-.5px)}
+.btn-secondary{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#f4f4f5;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.btn-secondary:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.22);color:#fff;transform:translateY(-.5px)}
+.btn-danger{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#fca5a5}
+.btn-danger:hover{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.5);color:#fff}
+.field{outline:none;transition:border-color .18s,box-shadow .18s}
+.field:focus{border-color:#f5b942!important;box-shadow:0 0 0 3px rgba(245,185,66,.12)}
+.skeleton{background:linear-gradient(90deg,#151515,#202020,#151515);background-size:200% 100%;animation:sh 1.4s infinite}@keyframes sh{to{background-position:-200% 0}}
+#notificationBtn,#cartBtn{border-radius:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);transition:all .15s ease}
+#notificationBtn:hover,#cartBtn:hover{background:rgba(255,255,255,.08);border-color:rgba(245,185,66,.3)}
+#logoutBtn{border-radius:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);font-weight:600;font-size:12px;color:#d4d4d8;transition:all .15s ease}
+#logoutBtn:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:#fff}
+#authSubmit{background:linear-gradient(135deg,#f7c554 0%,#f5b942 55%,#e5a428 100%)!important;color:#080808!important;font-weight:800!important;box-shadow:0 3px 14px rgba(245,185,66,.3),inset 0 1px 0 rgba(255,255,255,.4)!important;border:1px solid rgba(255,255,255,.28)!important;transition:all .16s ease!important}
+#authSubmit:hover{filter:brightness(1.06)!important;box-shadow:0 5px 20px rgba(245,185,66,.42)!important;transform:translateY(-.5px)}
+#authSubmit:active{transform:scale(.98)}
+#googleBtn{background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.12)!important;font-weight:650!important;color:#f4f4f5!important;transition:all .16s ease!important}
+#googleBtn:hover{background:rgba(255,255,255,.09)!important;border-color:rgba(255,255,255,.22)!important;color:#fff!important;transform:translateY(-.5px)}
+#googleBtn:active{transform:scale(.98)}
 </style>
 </head>
 <body>
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center"><div class="text-center"><div class="spin mx-auto mb-4"></div><div class="gold font-bold text-xl">SellerFlow</div><div id="loadingText" class="muted text-sm mt-2">Starting secure app…</div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
 <div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 SellerFlow™ · All rights reserved.</div></div></div>
-<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3"><button id="mobileMenu" class="md:hidden p-2" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden p-2" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-2"><button id="notificationBtn" class="bell-btn p-2" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2">Logout</button></div></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-2 grid grid-cols-3 gap-1"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-3 sm:px-4 h-16 flex items-center gap-2 sm:gap-3"><button id="mobileMenu" class="md:hidden" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold shrink-0 whitespace-nowrap">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0"><button id="notificationBtn" class="bell-btn p-2" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2">Logout</button></div></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-2 grid grid-cols-3 gap-1"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="modalRoot"></div><div id="toast" class="toast"></div>
 <script>
 (function(){
@@ -405,11 +464,11 @@ function setNav(){
   const rightActions=$('headerRightActions')||$('logoutBtn')?.parentElement||document.querySelector('header .ml-auto');
   if(rightActions){
     if(!currentUser){
-      rightActions.innerHTML=`<button type="button" id="headerLoginBtn" class="border border-[#444] hover:border-gold px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#181818] text-white transition">Sign In</button><button type="button" id="headerRegisterBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm">Register</button>`;
+      rightActions.innerHTML=`<button type="button" id="headerLoginBtn" class="border border-[#444] hover:border-gold px-3 py-1.5 rounded-xl text-xs font-bold bg-[#181818] text-white transition shrink-0 whitespace-nowrap">Sign In</button><button type="button" id="headerRegisterBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Register</button>`;
       $('headerLoginBtn')?.addEventListener('click',()=>showAuth('login'));
       $('headerRegisterBtn')?.addEventListener('click',()=>showAuth('register'));
     } else {
-      rightActions.innerHTML=`<button id="notificationBtn" class="bell-btn p-2" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2">Logout</button>`;
+      rightActions.innerHTML=`<button id="notificationBtn" class="bell-btn p-2 shrink-0" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2 shrink-0">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2 shrink-0">Logout</button>`;
       $('notificationBtn')?.addEventListener('click',()=>{if(window.renderGroupedNotifications)return window.renderGroupedNotifications();if(window.openNotifications)return window.openNotifications();openNotifications();});
       $('cartBtn')?.addEventListener('click',()=>navigate('cart'));
       $('logoutBtn')?.addEventListener('click',logoutUser);
@@ -623,18 +682,20 @@ async function renderFeed(targetPostId, options){
   }
   const fromProfile=options?.fromProfile;
   $('page').innerHTML=`
-    <div class="feed-top-bar flex items-center justify-between px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10">
+    <div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10">
       <div class="flex items-center gap-2 min-w-0">
-        ${fromProfile?`<button type="button" id="feedBackProfile" class="border border-[#333] hover:border-gold px-2.5 py-1 rounded-xl text-xs font-bold mr-1">← Profile</button>`:''}
-        <h1 class="text-lg font-black tracking-tight text-white">For You</h1>
-        <span class="text-[11px] gold bg-[#1e170c] border border-[#3f2e14] px-2 py-0.5 rounded-full whitespace-nowrap">Ranked feed</span>
+        ${fromProfile?`<button type="button" id="feedBackProfile" class="border border-[#333] hover:border-gold px-2.5 py-1 rounded-xl text-xs font-bold mr-1 shrink-0 whitespace-nowrap">← Profile</button>`:''}
+        <h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap">For You</h1>
+        <span class="text-[11px] gold bg-[#1e170c] border border-[#3f2e14] px-2.5 py-0.5 rounded-full whitespace-nowrap font-medium">Ranked feed</span>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <button type="button" id="feedPrevBtn" class="feed-nav-btn shrink-0" title="Previous Reel"><svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg></button>
+        <button type="button" id="feedNextBtn" class="feed-nav-btn shrink-0" title="Next Reel"><svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg></button>
         ${!currentUser ? `
-          <button type="button" id="feedLoginBtn" class="border border-[#444] hover:border-gold px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#141414] text-white transition">Sign In</button>
-          <button type="button" id="feedRegisterBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 shadow-sm transition">Register</button>
+          <button type="button" id="feedLoginBtn" class="border border-[#444] hover:border-gold px-3 py-1.5 rounded-xl text-xs font-bold bg-[#141414] text-white transition shrink-0 whitespace-nowrap">Sign In</button>
+          <button type="button" id="feedRegisterBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 shadow-sm transition shrink-0 whitespace-nowrap">Register</button>
         ` : `
-          <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0">＋ Upload</button>
+          <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0 whitespace-nowrap">＋ Upload</button>
         `}
       </div>
     </div>
@@ -2400,16 +2461,16 @@ init();
       }
     }
     const fromProfile=options?.fromProfile;
-    $('page').innerHTML=`<div class="feed-top-bar flex items-center justify-between px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10">
+    $('page').innerHTML=`<div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10">
       <div class="flex items-center gap-2 min-w-0">
-        ${fromProfile?`<button type="button" id="feedBackProfile" class="border border-[#333] hover:border-gold px-2.5 py-1 rounded-xl text-xs font-bold mr-1">← Profile</button>`:''}
-        <h1 class="text-lg font-black tracking-tight text-white">For You</h1>
-        <span class="text-[11px] gold bg-[#1e170c] border border-[#3f2e14] px-2 py-0.5 rounded-full whitespace-nowrap">Ranked feed</span>
+        ${fromProfile?`<button type="button" id="feedBackProfile" class="border border-[#333] hover:border-gold px-2.5 py-1 rounded-xl text-xs font-bold mr-1 shrink-0 whitespace-nowrap">← Profile</button>`:''}
+        <h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap">For You</h1>
+        <span class="text-[11px] gold bg-[#1e170c] border border-[#3f2e14] px-2.5 py-0.5 rounded-full whitespace-nowrap font-medium">Ranked feed</span>
       </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <button type="button" id="feedPrevBtn" class="btn px-2.5 py-1 text-xs rounded-lg border border-[#333] hover:bg-[#222]" title="Previous Reel">▲</button>
-        <button type="button" id="feedNextBtn" class="btn px-2.5 py-1 text-xs rounded-lg border border-[#333] hover:bg-[#222]" title="Next Reel">▼</button>
-        <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black">＋ Upload</button>
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <button type="button" id="feedPrevBtn" class="feed-nav-btn shrink-0" title="Previous Reel"><svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg></button>
+        <button type="button" id="feedNextBtn" class="feed-nav-btn shrink-0" title="Next Reel"><svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg></button>
+        <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0 whitespace-nowrap">＋ Upload</button>
       </div>
     </div>
     <div class="reel-feed flex-1 min-h-0 h-full w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
