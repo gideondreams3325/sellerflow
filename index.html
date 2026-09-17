@@ -1,7 +1,16 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SellerFlow">
+<meta name="theme-color" content="#080808">
+<meta name="format-detection" content="telephone=no">
+<meta name="msapplication-TileColor" content="#080808">
+<meta name="msapplication-tap-highlight" content="no">
 <title>SellerFlow</title>
 <meta name="description" content="Ghana's social selling marketplace where sellers build stores, publish products, share video/photo content, and manage orders.">
 <meta property="og:title" content="SellerFlow">
@@ -123,7 +132,7 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 .reel-play-toggle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;width:68px;height:68px;border-radius:50%;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(8px);font-size:28px;color:#fff;display:flex;align-items:center;justify-content:center;transition:opacity .2s,transform .2s;cursor:pointer;pointer-events:auto}
 .reel-play-toggle.is-playing{opacity:0;pointer-events:none}
 .reel-sound-label{position:absolute;left:18px;top:18px;z-index:5;padding:7px 10px;border-radius:999px;background:rgba(0,0,0,.55);font-size:11px}
-.comment-sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(760px,100%);max-height:72vh;z-index:180;background:rgba(15,15,15,.96);backdrop-filter:blur(18px);border:1px solid #333;border-bottom:0;border-radius:24px 24px 0 0;box-shadow:0 -20px 70px rgba(0,0,0,.5);padding:16px;overflow:auto}
+.comment-sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(760px,100%);max-height:72vh;z-index:180;background:rgba(15,15,15,.96);backdrop-filter:blur(18px);border:1px solid #333;border-bottom:0;border-radius:24px 24px 0 0;box-shadow:0 -20px 70px rgba(0,0,0,.5);padding:16px;padding-bottom:max(18px,env(safe-area-inset-bottom));overflow:auto}
 .comment-backdrop{position:fixed;inset:0;z-index:175;background:rgba(0,0,0,.12)}
 .sound-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #333;background:#151515;border-radius:999px;padding:7px 10px;font-size:12px}
 .reel-upload-bar{display:flex;justify-content:flex-end;margin-bottom:12px}
@@ -131,6 +140,43 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 .dashboard-hidden{display:none!important}
 .post-origin{font-size:11px;color:#a1a1aa}
 .video-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:28px;text-align:center;background:radial-gradient(circle at center,#1d1d1d,#050505)}
+
+/* Cross-device safe areas & viewport handling for Android, iPhone, Windows, Mac */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+header, #appHeader {
+  padding-top: max(0px, env(safe-area-inset-top));
+  padding-left: max(0px, env(safe-area-inset-left));
+  padding-right: max(0px, env(safe-area-inset-right));
+}
+.feed-top-bar {
+  padding-top: max(8px, env(safe-area-inset-top));
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
+}
+#mobileNav {
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  padding-left: max(8px, env(safe-area-inset-left));
+  padding-right: max(8px, env(safe-area-inset-right));
+}
+.modal-card {
+  margin-top: max(0px, env(safe-area-inset-top));
+  margin-bottom: max(8px, env(safe-area-inset-bottom));
+}
+button, a, .reel-action, .navbtn, input, select, textarea, .action-btn, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0c0c0c; }
+::-webkit-scrollbar-thumb { background: #262626; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #f5b942; }
+* { scrollbar-width: thin; scrollbar-color: #262626 #0c0c0c; }
+
 @media(max-width:640px){
   .page-selector-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .reel-actions{right:8px;bottom:20px;gap:11px}
@@ -510,6 +556,9 @@ async function navigate(page, targetPostId, options){
   $('app')?.classList.toggle('is-feed-page',isFeed);
   $('appMainScroll')?.classList.toggle('is-feed-scroll',isFeed);
   const sc=$('appMainScroll');if(sc)sc.scrollTop=0;
+  if(!options?.fromPopState && typeof armHistoryState==='function'){
+    armHistoryState(true);
+  }
   loading('Loading…');
   try{
     await loadPublicProfiles();
@@ -1066,6 +1115,24 @@ function setupReelPlayback(targetPostId){
     }
 
     currentActiveCard=card;
+    window._sfCurrentActiveCard=card;
+    const currentId=card.dataset.reelId;
+    if(window._sfLastActiveId && window._sfLastActiveId!==currentId){
+      if(!window._sfReelViewHistory)window._sfReelViewHistory=[];
+      if(window._sfReelViewHistory[window._sfReelViewHistory.length-1]!==window._sfLastActiveId){
+        window._sfReelViewHistory.push(window._sfLastActiveId);
+        if(window._sfReelViewHistory.length>50)window._sfReelViewHistory.shift();
+      }
+    }
+    window._sfLastActiveId=currentId;
+    if(typeof armHistoryState==='function')armHistoryState(false);
+    if('mediaSession' in navigator && window.MediaMetadata){
+      try{
+        const title=card.querySelector('.reel-caption')?.textContent?.trim()||'SellerFlow Reel';
+        const seller=card.querySelector('b')?.textContent?.trim()||'SellerFlow';
+        navigator.mediaSession.metadata=new MediaMetadata({title,artist:seller,album:'SellerFlow For You'});
+      }catch(_){}
+    }
 
     if(activeVideo){
       enableAudio();
@@ -1233,48 +1300,43 @@ function setupReelPlayback(targetPostId){
     }
   };
 
-  const prevBtn=document.getElementById('feedPrevBtn');
-  const nextBtn=document.getElementById('feedNextBtn');
-  if(prevBtn){
-    prevBtn.onmouseenter=()=>{
+  window._sfScrollToReel=function(targetCard){
+    if(!targetCard)return;
+    if(currentActiveCard && currentActiveCard!==targetCard){
+      const v=currentActiveCard.querySelector('.reel-video');
+      if(v){
+        try{if(!v.paused)v.pause();}catch(_){}
+        updateCardButton(currentActiveCard,false);
+      }
+    }
+    preloadSurroundingReels(targetCard);
+    targetCard.scrollIntoView({behavior:'smooth',block:'start'});
+    activateCard(targetCard);
+  };
+
+  const handlePrevReel=()=>{
+    const idx=cards.indexOf(currentActiveCard||cards[0]);
+    if(idx>0)window._sfScrollToReel(cards[idx-1]);
+  };
+  const handleNextReel=()=>{
+    const idx=cards.indexOf(currentActiveCard||cards[0]);
+    if(idx<cards.length-1)window._sfScrollToReel(cards[idx+1]);
+  };
+
+  document.querySelectorAll('#feedPrevBtn, .feed-prev-btn').forEach(btn=>{
+    btn.onmouseenter=()=>{
       const idx=cards.indexOf(currentActiveCard||cards[0]);
       if(idx>0)preloadSurroundingReels(cards[idx-1]);
     };
-    prevBtn.onclick=()=>{
-      const idx=cards.indexOf(currentActiveCard||cards[0]);
-      if(idx>0){
-        if(currentActiveCard){
-          const v=currentActiveCard.querySelector('.reel-video');
-          if(v){
-            try{if(!v.paused)v.pause();}catch(_){}
-            updateCardButton(currentActiveCard,false);
-          }
-        }
-        preloadSurroundingReels(cards[idx-1]);
-        cards[idx-1].scrollIntoView({behavior:'smooth',block:'start'});
-      }
-    };
-  }
-  if(nextBtn){
-    nextBtn.onmouseenter=()=>{
+    btn.onclick=handlePrevReel;
+  });
+  document.querySelectorAll('#feedNextBtn, .feed-next-btn').forEach(btn=>{
+    btn.onmouseenter=()=>{
       const idx=cards.indexOf(currentActiveCard||cards[0]);
       if(idx<cards.length-1)preloadSurroundingReels(cards[idx+1]);
     };
-    nextBtn.onclick=()=>{
-      const idx=cards.indexOf(currentActiveCard||cards[0]);
-      if(idx<cards.length-1){
-        if(currentActiveCard){
-          const v=currentActiveCard.querySelector('.reel-video');
-          if(v){
-            try{if(!v.paused)v.pause();}catch(_){}
-            updateCardButton(currentActiveCard,false);
-          }
-        }
-        preloadSurroundingReels(cards[idx+1]);
-        cards[idx+1].scrollIntoView({behavior:'smooth',block:'start'});
-      }
-    };
-  }
+    btn.onclick=handleNextReel;
+  });
 
  if(targetPostId){
    const targetEl=document.querySelector(`[data-reel-id="${targetPostId}"]`);
@@ -1803,6 +1865,239 @@ function modal(html, keepVideoPlaying=false){
   document.querySelectorAll('[data-close-modal]').forEach(b=>b.onclick=closeModal);
 }
 function closeModal(){$('modalRoot').innerHTML=''}
+
+// =======================================================
+// Cross-Device Physical & System Navigation Architecture
+// (Android, iPhone, Windows, Mac, Linux, iPad, Tablets)
+// =======================================================
+window._sfReelViewHistory = [];
+let _sfHistoryArmed = false;
+
+function armHistoryState(forcePush = false){
+  try {
+    const currentId = window._sfCurrentActiveCard?.dataset?.reelId || 'video';
+    const stateObj = { sfApp: 'sellerflow', page: currentPage, reelId: currentId, ts: Date.now() };
+    if (!_sfHistoryArmed || forcePush) {
+      history.pushState(stateObj, '', location.hash || '#');
+      _sfHistoryArmed = true;
+    } else {
+      history.replaceState(stateObj, '', location.hash || '#');
+    }
+  } catch(_) {}
+}
+window.armHistoryState = armHistoryState;
+
+function loadAnotherVideoOnBack(){
+  const feedEl = document.getElementById('reelFeed');
+  if (!feedEl) return false;
+  const cards = [...feedEl.querySelectorAll('.reel-card')];
+  if (cards.length === 0) return false;
+  if (cards.length === 1) {
+    const v = cards[0].querySelector('.reel-video');
+    if (v) { v.currentTime = 0; v.play().catch(()=>{}); }
+    return true;
+  }
+
+  let currentCard = window._sfCurrentActiveCard;
+  if (!currentCard || !cards.includes(currentCard)) {
+    currentCard = cards.find(c => {
+      const r = c.getBoundingClientRect();
+      const fr = feedEl.getBoundingClientRect();
+      return Math.abs(r.top - fr.top) < fr.height / 2;
+    }) || cards[0];
+  }
+
+  const currentIdx = cards.indexOf(currentCard);
+  let targetIdx = -1;
+
+  // 1. Pop previous reel from history if available
+  if (window._sfReelViewHistory && window._sfReelViewHistory.length > 0) {
+    while (window._sfReelViewHistory.length > 0) {
+      const prevId = window._sfReelViewHistory.pop();
+      const foundIdx = cards.findIndex(c => c.dataset.reelId === prevId);
+      if (foundIdx >= 0 && foundIdx !== currentIdx) {
+        targetIdx = foundIdx;
+        break;
+      }
+    }
+  }
+
+  // 2. If no history or same card, step backward or cycle forward
+  if (targetIdx < 0) {
+    if (currentIdx > 0) {
+      targetIdx = currentIdx - 1;
+    } else {
+      targetIdx = (currentIdx + 1) % cards.length;
+    }
+  }
+
+  const targetCard = cards[targetIdx];
+  if (targetCard) {
+    if (typeof window._sfScrollToReel === 'function') {
+      window._sfScrollToReel(targetCard);
+    } else {
+      targetCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    return true;
+  }
+  return false;
+}
+window.loadAnotherVideoOnBack = loadAnotherVideoOnBack;
+
+// System back button & gesture navigation handler (Android physical back / swipe gesture, iPhone swipe back, browser back)
+window.addEventListener('popstate', function(e){
+  // 1. Dismiss any open modal, sheet, or overlay first
+  const modalRoot = document.getElementById('modalRoot');
+  if (modalRoot && modalRoot.innerHTML.trim() !== '') {
+    closeModal();
+    armHistoryState(true);
+    return;
+  }
+
+  // 2. Dismiss mobile drawer menu if open
+  const mobileNav = document.getElementById('mobileNav');
+  if (mobileNav && !mobileNav.classList.contains('hide')) {
+    mobileNav.classList.add('hide');
+    armHistoryState(true);
+    return;
+  }
+
+  // 3. Dismiss auth page if open
+  const authPage = document.getElementById('authPage');
+  if (authPage && !authPage.classList.contains('hide')) {
+    showHomeFeed();
+    navigate('feed', null, { fromPopState: true });
+    armHistoryState(true);
+    return;
+  }
+
+  // 4. On For You feed:
+  // "And bressing back on for you page will load another video until you press it again."
+  if (currentPage === 'feed') {
+    loadAnotherVideoOnBack();
+    // Re-arm history state immediately so the next back press loads another video again!
+    armHistoryState(true);
+    return;
+  }
+
+  // 5. On any other page, navigate back to For You feed
+  navigate('feed', null, { fromPopState: true });
+  armHistoryState(true);
+});
+
+// Hardware & keyboard physical navigation support for Windows, Mac & Linux
+window.addEventListener('keydown', function(e){
+  const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+
+  // Physical Back Shortcuts (Alt+Left, Cmd+[, or Backspace outside inputs)
+  if ((e.altKey && e.key === 'ArrowLeft') || (!isInput && e.key === 'Backspace') || (e.metaKey && e.key === '[')) {
+    e.preventDefault();
+    if (currentPage === 'feed') {
+      loadAnotherVideoOnBack();
+      armHistoryState(true);
+    } else {
+      history.back();
+    }
+    return;
+  }
+
+  // Escape key closes modals, drawers & comment sheet
+  if (e.key === 'Escape') {
+    const modalRoot = document.getElementById('modalRoot');
+    if (modalRoot && modalRoot.innerHTML.trim() !== '') {
+      e.preventDefault();
+      closeModal();
+      return;
+    }
+    const mobileNav = document.getElementById('mobileNav');
+    if (mobileNav && !mobileNav.classList.contains('hide')) {
+      e.preventDefault();
+      mobileNav.classList.add('hide');
+      return;
+    }
+  }
+
+  if (isInput) return;
+
+  // For You feed shortcuts (Arrow keys, J/K, Space, Mute, Like)
+  if (currentPage === 'feed') {
+    const feedEl = document.getElementById('reelFeed');
+    if (!feedEl) return;
+    const cards = [...feedEl.querySelectorAll('.reel-card')];
+    if (!cards.length) return;
+    const currentIdx = cards.indexOf(window._sfCurrentActiveCard || cards[0]);
+
+    if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key.toLowerCase() === 'j') {
+      e.preventDefault();
+      if (currentIdx < cards.length - 1 && typeof window._sfScrollToReel === 'function') {
+        window._sfScrollToReel(cards[currentIdx + 1]);
+      }
+    } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (currentIdx > 0 && typeof window._sfScrollToReel === 'function') {
+        window._sfScrollToReel(cards[currentIdx - 1]);
+      }
+    } else if (e.code === 'Space') {
+      e.preventDefault();
+      const v = window._sfCurrentActiveCard?.querySelector('.reel-video');
+      if (v) {
+        if (v.paused) { v.play().catch(()=>{}); }
+        else { v.pause(); }
+      }
+    } else if (e.key.toLowerCase() === 'm') {
+      e.preventDefault();
+      const videos = document.querySelectorAll('video');
+      const anyMuted = [...videos].some(v => v.muted);
+      videos.forEach(v => { v.muted = !anyMuted; });
+      toast(anyMuted ? '🔊 Audio unmuted' : '🔇 Audio muted', 'info');
+    } else if (e.key.toLowerCase() === 'l') {
+      e.preventDefault();
+      const likeBtn = window._sfCurrentActiveCard?.querySelector('[data-post-action="like"]');
+      if (likeBtn) likeBtn.click();
+    }
+  }
+});
+
+// System MediaSession Controls (Android lock screen, iOS dynamic island, Windows/Mac media keys)
+if ('mediaSession' in navigator) {
+  try {
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      if (currentPage === 'feed') {
+        loadAnotherVideoOnBack();
+        armHistoryState(true);
+      }
+    });
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      if (currentPage === 'feed') {
+        const feedEl = document.getElementById('reelFeed');
+        if (feedEl) {
+          const cards = [...feedEl.querySelectorAll('.reel-card')];
+          const idx = cards.indexOf(window._sfCurrentActiveCard || cards[0]);
+          if (idx < cards.length - 1 && typeof window._sfScrollToReel === 'function') {
+            window._sfScrollToReel(cards[idx + 1]);
+          }
+        }
+      }
+    });
+    navigator.mediaSession.setActionHandler('play', () => {
+      const v = window._sfCurrentActiveCard?.querySelector('.reel-video');
+      if (v) v.play().catch(()=>{});
+    });
+    navigator.mediaSession.setActionHandler('pause', () => {
+      const v = window._sfCurrentActiveCard?.querySelector('.reel-video');
+      if (v) v.pause();
+    });
+  } catch(_) {}
+}
+
+// Initial history state arming on load
+try {
+  if (!history.state || history.state.sfApp !== 'sellerflow') {
+    history.replaceState({ sfApp: 'sellerflow', root: true }, '', location.hash || '#');
+    history.pushState({ sfApp: 'sellerflow', page: 'feed', ts: Date.now() }, '', location.hash || '#');
+    _sfHistoryArmed = true;
+  }
+} catch(_) {}
 
 document.addEventListener('click',e=>{const seller=e.target.closest('[data-open-seller]');if(seller)openStore(seller.dataset.openSeller);const nav=e.target.closest('[data-mobile-page]');if(nav)navigate(nav.dataset.mobilePage);const back=e.target.closest('[data-global-back]');if(back)navigate('feed')});
 document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>navigate(b.dataset.page));
