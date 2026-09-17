@@ -3661,6 +3661,22 @@ init();
 .ai-badge{background:linear-gradient(135deg,rgba(245,185,66,.2),rgba(245,185,66,.05));border:1px solid rgba(245,185,66,.45);color:#f5b942}
 /* Media Upload Editor: Crop & Resolution Controls */
 .crop-viewport-box{position:relative;overflow:hidden;background:#050505;border:1px solid #333;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;transition:all .2s cubic-bezier(0.16,1,0.3,1)}
+.crop-stage-container{position:relative;display:inline-block;overflow:hidden;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.7);touch-action:none;user-select:none;max-width:100%;line-height:0}
+.crop-selection-box{position:absolute;border:2px solid #f5b942;box-shadow:0 0 0 9999px rgba(0,0,0,.68);cursor:move;touch-action:none;z-index:20;box-sizing:border-box}
+.crop-selection-box:hover,.crop-selection-box.is-dragging{border-color:#ffd566;box-shadow:0 0 0 9999px rgba(0,0,0,.74)}
+.crop-move-handle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.65);border:1.5px solid rgba(245,185,66,.7);display:flex;align-items:center;justify-content:center;color:#f5b942;pointer-events:none;opacity:.9;transition:opacity .15s}
+.crop-selection-box.is-resizing .crop-move-handle{opacity:.2}
+.crop-box-badge{position:absolute;top:6px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);backdrop-filter:blur(4px);border:1px solid rgba(245,185,66,.5);color:#f5b942;font-family:monospace;font-size:10px;font-weight:700;padding:2px 8px;border-radius:9999px;pointer-events:none;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.6);z-index:22}
+.crop-handle{position:absolute;background:#f5b942;border:2px solid #000;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.8);z-index:25;touch-action:none;box-sizing:border-box}
+.crop-handle::after{content:'';position:absolute;top:-10px;bottom:-10px;left:-10px;right:-10px}
+.crop-handle-tl{top:-7px;left:-7px;width:14px;height:14px;cursor:nwse-resize}
+.crop-handle-tr{top:-7px;right:-7px;width:14px;height:14px;cursor:nesw-resize}
+.crop-handle-bl{bottom:-7px;left:-7px;width:14px;height:14px;cursor:nesw-resize}
+.crop-handle-br{bottom:-7px;right:-7px;width:14px;height:14px;cursor:nwse-resize}
+.crop-handle-t{top:-5px;left:50%;transform:translateX(-50%);width:24px;height:8px;border-radius:4px;cursor:ns-resize}
+.crop-handle-b{bottom:-5px;left:50%;transform:translateX(-50%);width:24px;height:8px;border-radius:4px;cursor:ns-resize}
+.crop-handle-l{left:-5px;top:50%;transform:translateY(-50%);width:8px;height:24px;border-radius:4px;cursor:ew-resize}
+.crop-handle-r{right:-5px;top:50%;transform:translateY(-50%);width:8px;height:24px;border-radius:4px;cursor:ew-resize}
 .crop-grid-3x3{position:absolute;inset:0;pointer-events:none;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);border:1px solid rgba(255,255,255,.2);z-index:10}
 .crop-grid-3x3>div{border:0.5px dashed rgba(255,255,255,.16)}
 .crop-corner{position:absolute;width:14px;height:14px;pointer-events:none;z-index:11}
@@ -4717,6 +4733,7 @@ init();
 
     let file = null, kind = '';
     let imageCropState = { ratio: 'original', panX: 50, panY: 50, zoom: 1, rotation: 0 };
+    let imageCropBox = { x: 0, y: 0, w: 1, h: 1 }; // Normalized 0..1 bounding box coordinates on source image
     let imageResolution = '1080p'; // 'original' | '4k' | '1080p' | '720p' | '480p'
     let imageFilters = { filter: 'normal', brightness: 100, contrast: 100, saturation: 100 };
     let imgNaturalW = 0, imgNaturalH = 0;
@@ -4778,6 +4795,50 @@ init();
       return { targetW, targetH, targetRatio };
     }
 
+    function initCropBoxForRatio(ratioKey){
+      const natW = imgNaturalW || 1080;
+      const natH = imgNaturalH || 1920;
+      const imgAspect = natW / natH;
+
+      if(ratioKey === 'free'){
+        if(imageCropBox.w && imageCropBox.h && imageCropBox.w > 0.05 && imageCropBox.h > 0.05) return;
+        imageCropBox = { x: 0.05, y: 0.05, w: 0.9, h: 0.9 };
+        return;
+      }
+      if(ratioKey === 'original'){
+        imageCropBox = { x: 0, y: 0, w: 1, h: 1 };
+        return;
+      }
+
+      let targetRatio;
+      if(ratioKey === '9:16') targetRatio = 9 / 16;
+      else if(ratioKey === '1:1') targetRatio = 1;
+      else if(ratioKey === '4:5') targetRatio = 4 / 5;
+      else if(ratioKey === '16:9') targetRatio = 16 / 9;
+      else if(ratioKey === '3:4') targetRatio = 3 / 4;
+      else targetRatio = imgAspect;
+
+      if(imgAspect > targetRatio){
+        const normW = Math.min(1, targetRatio / imgAspect);
+        const normH = 1;
+        imageCropBox = {
+          x: Math.max(0, (1 - normW) / 2),
+          y: 0,
+          w: normW,
+          h: normH
+        };
+      } else {
+        const normW = 1;
+        const normH = Math.min(1, imgAspect / targetRatio);
+        imageCropBox = {
+          x: 0,
+          y: Math.max(0, (1 - normH) / 2),
+          w: normW,
+          h: normH
+        };
+      }
+    }
+
     function getSourceCropRect(srcW, srcH, targetRatio, panX, panY, zoom){
       const z = Math.max(1, zoom || 1);
       const curAspect = srcW / srcH;
@@ -4817,62 +4878,58 @@ init();
     function updateImageEditorUI(){
       const box = $('cropViewportBox');
       const img = $('editorImg');
+      const cropSelection = $('cropSelectionBox');
       if(!box || !img) return;
 
       const natW = imgNaturalW || 1080;
       const natH = imgNaturalH || 1920;
-      const { targetW, targetH, targetRatio } = calculateTargetDimensions(natW, natH, imageCropState.ratio, imageResolution);
 
-      // Adjust viewport box dimensions
-      if(imageCropState.ratio === '9:16'){
-        box.style.aspectRatio = '9 / 16';
-        box.style.maxHeight = '370px';
-        box.style.maxWidth = '225px';
-        box.style.margin = '0 auto';
-        box.style.width = '100%';
-      } else if(imageCropState.ratio === '1:1'){
-        box.style.aspectRatio = '1 / 1';
-        box.style.maxHeight = '310px';
-        box.style.maxWidth = '310px';
-        box.style.margin = '0 auto';
-        box.style.width = '100%';
-      } else if(imageCropState.ratio === '4:5'){
-        box.style.aspectRatio = '4 / 5';
-        box.style.maxHeight = '350px';
-        box.style.maxWidth = '280px';
-        box.style.margin = '0 auto';
-        box.style.width = '100%';
-      } else if(imageCropState.ratio === '16:9'){
-        box.style.aspectRatio = '16 / 9';
-        box.style.maxHeight = '270px';
-        box.style.maxWidth = '100%';
-        box.style.margin = '0 auto';
-        box.style.width = '100%';
-      } else if(imageCropState.ratio === '3:4'){
-        box.style.aspectRatio = '3 / 4';
-        box.style.maxHeight = '340px';
-        box.style.maxWidth = '255px';
-        box.style.margin = '0 auto';
-        box.style.width = '100%';
-      } else {
-        box.style.aspectRatio = `${natW} / ${natH}`;
-        box.style.maxHeight = '330px';
-        box.style.maxWidth = '100%';
-        box.style.margin = '0 auto';
-        box.style.width = 'auto';
-      }
-
-      // Apply image positioning and filters
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'cover';
-      img.style.objectPosition = `${imageCropState.panX}% ${imageCropState.panY}%`;
-      img.style.transform = `scale(${imageCropState.zoom}) rotate(${imageCropState.rotation}deg)`;
+      // Apply image filters and rotation
       const fCss = getCombinedFilterCss();
       img.style.filter = fCss === 'none' ? 'none' : fCss;
+      img.style.transform = imageCropState.rotation ? `rotate(${imageCropState.rotation}deg)` : '';
+
+      // Update interactive selection box positioning
+      if(cropSelection){
+        cropSelection.style.left = (imageCropBox.x * 100) + '%';
+        cropSelection.style.top = (imageCropBox.y * 100) + '%';
+        cropSelection.style.width = (imageCropBox.w * 100) + '%';
+        cropSelection.style.height = (imageCropBox.h * 100) + '%';
+      }
+
+      // Calculate pixel dimensions of the current crop selection
+      const curCropW = Math.round(Math.max(16, Math.min(natW, imageCropBox.w * natW)));
+      const curCropH = Math.round(Math.max(16, Math.min(natH, imageCropBox.h * natH)));
+
+      if($('cropBoxDims')) $('cropBoxDims').textContent = `${curCropW} × ${curCropH} px`;
+
+      // Calculate target export resolution
+      let maxDim;
+      if(imageResolution === '4k') maxDim = 3840;
+      else if(imageResolution === '1080p') maxDim = 1920;
+      else if(imageResolution === '720p') maxDim = 1280;
+      else if(imageResolution === '480p') maxDim = 854;
+      else maxDim = Math.max(curCropW, curCropH);
+
+      let targetW, targetH;
+      if(imageResolution === 'original'){
+        targetW = curCropW;
+        targetH = curCropH;
+      } else {
+        if(curCropW >= curCropH){
+          targetW = Math.min(curCropW, maxDim);
+          targetH = Math.round(targetW * (curCropH / curCropW));
+        } else {
+          targetH = Math.min(curCropH, maxDim);
+          targetW = Math.round(targetH * (curCropW / curCropH));
+        }
+      }
+      targetW = Math.max(16, Math.round(targetW / 2) * 2);
+      targetH = Math.max(16, Math.round(targetH / 2) * 2);
 
       // Update badges
       const ratioLabels = {
+        'free': 'Freeform',
         'original': 'Original Aspect',
         '9:16': '9:16 Reel',
         '1:1': '1:1 Square',
@@ -4880,7 +4937,7 @@ init();
         '16:9': '16:9 Landscape',
         '3:4': '3:4 Photo'
       };
-      if($('previewRatioText')) $('previewRatioText').textContent = ratioLabels[imageCropState.ratio] || imageCropState.ratio;
+      if($('previewRatioText')) $('previewRatioText').textContent = ratioLabels[imageCropState.ratio] || 'Custom Crop';
       if($('previewResBadge')) $('previewResBadge').textContent = `${targetW} × ${targetH}`;
       if($('targetResDimensions')) $('targetResDimensions').textContent = `${targetW} × ${targetH} px`;
       if($('targetResAspect')) $('targetResAspect').textContent = `(${imageCropState.ratio === 'original' ? 'Native' : imageCropState.ratio})`;
@@ -4918,10 +4975,20 @@ init();
         b.classList.toggle('active', b.dataset.imgRes === imageResolution);
       });
 
-      // Sliders readouts
-      if($('valPanX')) $('valPanX').textContent = Math.round(imageCropState.panX) + '%';
-      if($('valPanY')) $('valPanY').textContent = Math.round(imageCropState.panY) + '%';
-      if($('valZoom')) $('valZoom').textContent = imageCropState.zoom.toFixed(1) + 'x';
+      // Sliders synchronization
+      const availX = Math.max(0.001, 1 - imageCropBox.w);
+      const availY = Math.max(0.001, 1 - imageCropBox.h);
+      const panXPct = Math.round((imageCropBox.x / availX) * 100);
+      const panYPct = Math.round((imageCropBox.y / availY) * 100);
+      const zoomEst = 1 / Math.max(0.1, Math.max(imageCropBox.w, imageCropBox.h));
+
+      if($('valPanX')) $('valPanX').textContent = Math.min(100, Math.max(0, panXPct)) + '%';
+      if($('valPanY')) $('valPanY').textContent = Math.min(100, Math.max(0, panYPct)) + '%';
+      if($('valZoom')) $('valZoom').textContent = zoomEst.toFixed(1) + 'x';
+      if($('imgPanX') && document.activeElement !== $('imgPanX')) $('imgPanX').value = Math.min(100, Math.max(0, panXPct));
+      if($('imgPanY') && document.activeElement !== $('imgPanY')) $('imgPanY').value = Math.min(100, Math.max(0, panYPct));
+      if($('imgZoom') && document.activeElement !== $('imgZoom')) $('imgZoom').value = Math.round(Math.min(25, Math.max(10, zoomEst * 10)));
+
       if($('valBright')) $('valBright').textContent = imageFilters.brightness + '%';
       if($('valContrast')) $('valContrast').textContent = imageFilters.contrast + '%';
       if($('valSat')) $('valSat').textContent = imageFilters.saturation + '%';
@@ -4937,20 +5004,43 @@ init();
       const url = URL.createObjectURL(file);
 
       area.innerHTML = `
-        <!-- Live Viewport & Framing Box -->
-        <div class="crop-viewport-box" id="cropViewportBox">
-          <img id="editorImg" class="transition-all duration-75 select-none pointer-events-none" src="${url}">
-          
-          <div id="cropGridOverlay" class="crop-grid-3x3">
-            <div></div><div></div><div></div>
-            <div></div><div></div><div></div>
-            <div></div><div></div><div></div>
+        <!-- Live Viewport & Interactive Cropping Area -->
+        <div class="crop-viewport-box flex items-center justify-center p-2 relative" id="cropViewportBox">
+          <div id="cropStage" class="crop-stage-container">
+            <img id="editorImg" class="block select-none pointer-events-none" style="max-height: 380px; max-width: 100%; width: auto; height: auto; display: block;" src="${url}">
+            
+            <!-- Interactive Selection Box -->
+            <div id="cropSelectionBox" class="crop-selection-box" title="Drag inside to reposition crop">
+              <!-- 3x3 Rule-of-Thirds Grid -->
+              <div id="cropGridOverlay" class="crop-grid-3x3">
+                <div></div><div></div><div></div>
+                <div></div><div></div><div></div>
+                <div></div><div></div><div></div>
+              </div>
+
+              <!-- Center Move Anchor -->
+              <div class="crop-move-handle" title="Drag to reposition crop">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"></polyline><polyline points="9 5 12 2 15 5"></polyline><polyline points="15 19 12 22 9 19"></polyline><polyline points="19 9 22 12 19 15"></polyline><line x1="2" y1="12" x2="22" y2="12"></line><line x1="12" y1="2" x2="12" y2="22"></line></svg>
+              </div>
+
+              <!-- Live Pixel Dimensions Badge -->
+              <div id="cropBoxBadge" class="crop-box-badge">
+                <span id="cropBoxDims">1080 × 1080 px</span>
+              </div>
+
+              <!-- 4 Corner Resize Handles -->
+              <div class="crop-handle crop-handle-tl" data-handle="tl" title="Resize Top-Left"></div>
+              <div class="crop-handle crop-handle-tr" data-handle="tr" title="Resize Top-Right"></div>
+              <div class="crop-handle crop-handle-bl" data-handle="bl" title="Resize Bottom-Left"></div>
+              <div class="crop-handle crop-handle-br" data-handle="br" title="Resize Bottom-Right"></div>
+
+              <!-- 4 Edge Resize Handles -->
+              <div class="crop-handle crop-handle-t" data-handle="t" title="Resize Top"></div>
+              <div class="crop-handle crop-handle-b" data-handle="b" title="Resize Bottom"></div>
+              <div class="crop-handle crop-handle-l" data-handle="l" title="Resize Left"></div>
+              <div class="crop-handle crop-handle-r" data-handle="r" title="Resize Right"></div>
+            </div>
           </div>
-          
-          <div class="crop-corner crop-corner-tl"></div>
-          <div class="crop-corner crop-corner-tr"></div>
-          <div class="crop-corner crop-corner-bl"></div>
-          <div class="crop-corner crop-corner-br"></div>
 
           <div id="previewRatioBadge" class="absolute top-2.5 left-2.5 bg-black/85 backdrop-blur-sm border border-gold/40 text-gold text-[10px] font-bold px-2.5 py-0.5 rounded-full z-20 flex items-center gap-1 shadow">
             <span>📐</span><span id="previewRatioText">Original Aspect</span>
@@ -4965,7 +5055,7 @@ init();
 
         <!-- Editor Navigation Tabs -->
         <div class="flex items-center gap-1.5 p-1 bg-[#141414] border border-[#272727] rounded-xl mt-3 overflow-x-auto">
-          <button type="button" class="sf-editor-tab active" data-img-tab="crop">✂️ Crop & Framing</button>
+          <button type="button" class="sf-editor-tab active" data-img-tab="crop">✂️ Interactive Crop</button>
           <button type="button" class="sf-editor-tab" data-img-tab="res">📐 Resolution</button>
           <button type="button" class="sf-editor-tab" data-img-tab="filters">🎨 Photo Filters</button>
           <button type="button" class="sf-editor-tab" data-img-tab="tune">🎚️ Fine-Tune</button>
@@ -4974,20 +5064,28 @@ init();
         <!-- TAB 1: CROP & FRAMING -->
         <div id="imgTab_crop" class="mt-3 space-y-3">
           <div class="flex items-center justify-between text-xs">
-            <span class="font-bold text-zinc-200">Choose Aspect Ratio</span>
-            <div class="flex items-center gap-2">
+            <span class="font-bold text-zinc-200">Crop Selection & Framing</span>
+            <div class="flex items-center gap-1.5">
               <button type="button" id="btnToggleGrid" class="text-[11px] px-2 py-1 rounded-lg bg-[#202020] border border-[#333] hover:border-zinc-500 text-gold font-semibold transition" title="Toggle 3x3 Rule-of-Thirds Grid">▦ Grid</button>
-              <button type="button" id="btnResetCrop" class="text-[11px] px-2 py-1 rounded-lg bg-[#202020] border border-[#333] hover:border-zinc-500 text-zinc-300 font-semibold transition">↺ Reset</button>
+              <button type="button" id="btnCenterCrop" class="text-[11px] px-2 py-1 rounded-lg bg-[#202020] border border-[#333] hover:border-zinc-500 text-zinc-300 font-semibold transition" title="Center the crop box">🎯 Center</button>
+              <button type="button" id="btnFitCrop" class="text-[11px] px-2 py-1 rounded-lg bg-[#202020] border border-[#333] hover:border-zinc-500 text-zinc-300 font-semibold transition" title="Fit crop to maximum area">⛶ Fit</button>
+              <button type="button" id="btnResetCrop" class="text-[11px] px-2 py-1 rounded-lg bg-[#202020] border border-[#333] hover:border-zinc-500 text-zinc-300 font-semibold transition" title="Reset crop to full image">↺ Reset</button>
             </div>
           </div>
 
           <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
+            <button type="button" class="ratio-chip" data-img-ratio="free">✂️ Freeform</button>
             <button type="button" class="ratio-chip active" data-img-ratio="original">📐 Original</button>
             <button type="button" class="ratio-chip" data-img-ratio="9:16">📱 9:16 (For You Reel)</button>
             <button type="button" class="ratio-chip" data-img-ratio="1:1">⏹️ 1:1 (Square)</button>
             <button type="button" class="ratio-chip" data-img-ratio="4:5">🖼️ 4:5 (Portrait)</button>
             <button type="button" class="ratio-chip" data-img-ratio="16:9">🖥️ 16:9 (Landscape)</button>
             <button type="button" class="ratio-chip" data-img-ratio="3:4">📸 3:4 (Photo)</button>
+          </div>
+
+          <div class="p-2.5 bg-[#141414] border border-[#262626] rounded-xl text-[11px] text-zinc-400 flex items-center gap-2">
+            <span class="text-gold text-xs">💡</span>
+            <span>Drag inside the box to reposition. Drag corner or edge handles to resize the crop selection.</span>
           </div>
 
           <!-- Framing & Pan Controls -->
@@ -5148,6 +5246,7 @@ init();
       document.querySelectorAll('[data-img-ratio]').forEach(btn => {
         btn.onclick = () => {
           imageCropState.ratio = btn.dataset.imgRatio;
+          initCropBoxForRatio(imageCropState.ratio);
           updateImageEditorUI();
         };
       });
@@ -5160,27 +5259,261 @@ init();
         };
       });
 
-      // Pan & Zoom
+      // Interactive Pointer Gestures (Dragging & Resizing the Crop Selection Box)
+      const stage = $('cropStage');
+      const cropBoxEl = $('cropSelectionBox');
+      if(stage && cropBoxEl){
+        let dragMode = null; // 'move' | 'resize'
+        let activeHandle = null;
+        let startPointer = { x: 0, y: 0 };
+        let startBox = { x: 0, y: 0, w: 1, h: 1 };
+
+        function onPointerDown(e){
+          const handleEl = e.target.closest('.crop-handle');
+          const isInsideBox = e.target.closest('#cropSelectionBox');
+          const stageRect = stage.getBoundingClientRect();
+          if(!stageRect.width || !stageRect.height) return;
+
+          startPointer = { x: e.clientX, y: e.clientY };
+          startBox = { ...imageCropBox };
+
+          if(handleEl){
+            dragMode = 'resize';
+            activeHandle = handleEl.dataset.handle;
+            cropBoxEl.classList.add('is-resizing');
+          } else if(isInsideBox){
+            dragMode = 'move';
+            cropBoxEl.classList.add('is-dragging');
+          } else {
+            // Click outside box: center selection box at clicked coordinates
+            dragMode = 'move';
+            const clickNormX = (e.clientX - stageRect.left) / stageRect.width;
+            const clickNormY = (e.clientY - stageRect.top) / stageRect.height;
+            imageCropBox.x = Math.max(0, Math.min(1 - imageCropBox.w, clickNormX - imageCropBox.w / 2));
+            imageCropBox.y = Math.max(0, Math.min(1 - imageCropBox.h, clickNormY - imageCropBox.h / 2));
+            startBox = { ...imageCropBox };
+            cropBoxEl.classList.add('is-dragging');
+            updateImageEditorUI();
+          }
+
+          try { stage.setPointerCapture(e.pointerId); } catch(_){}
+          e.preventDefault();
+          e.stopPropagation();
+        }
+
+        function onPointerMove(e){
+          if(!dragMode) return;
+          const stageRect = stage.getBoundingClientRect();
+          const dispW = stageRect.width;
+          const dispH = stageRect.height;
+          if(!dispW || !dispH) return;
+
+          const deltaX = (e.clientX - startPointer.x) / dispW;
+          const deltaY = (e.clientY - startPointer.y) / dispH;
+
+          if(dragMode === 'move'){
+            const maxRight = Math.max(0, 1 - startBox.w);
+            const maxBottom = Math.max(0, 1 - startBox.h);
+            imageCropBox.x = Math.max(0, Math.min(maxRight, startBox.x + deltaX));
+            imageCropBox.y = Math.max(0, Math.min(maxBottom, startBox.y + deltaY));
+            updateImageEditorUI();
+          } else if(dragMode === 'resize' && activeHandle){
+            const natW = imgNaturalW || 1080;
+            const natH = imgNaturalH || 1920;
+            const natAspect = natW / natH;
+            const minNormW = Math.max(0.04, 28 / dispW);
+            const minNormH = Math.max(0.04, 28 / dispH);
+
+            const isLocked = imageCropState.ratio !== 'free';
+            let targetRatioVal = null;
+            if(isLocked){
+              if(imageCropState.ratio === '1:1') targetRatioVal = 1;
+              else if(imageCropState.ratio === '9:16') targetRatioVal = 9 / 16;
+              else if(imageCropState.ratio === '4:5') targetRatioVal = 4 / 5;
+              else if(imageCropState.ratio === '16:9') targetRatioVal = 16 / 9;
+              else if(imageCropState.ratio === '3:4') targetRatioVal = 3 / 4;
+              else if(imageCropState.ratio === 'original') targetRatioVal = natAspect;
+            }
+
+            if(!isLocked){
+              // Freeform rectangular resizing
+              let x = startBox.x, y = startBox.y, w = startBox.w, h = startBox.h;
+              if(activeHandle.includes('r')){
+                w = Math.max(minNormW, Math.min(1 - startBox.x, startBox.w + deltaX));
+              }
+              if(activeHandle.includes('l')){
+                const newX = Math.max(0, Math.min(startBox.x + startBox.w - minNormW, startBox.x + deltaX));
+                w = startBox.w + (startBox.x - newX);
+                x = newX;
+              }
+              if(activeHandle.includes('b')){
+                h = Math.max(minNormH, Math.min(1 - startBox.y, startBox.h + deltaY));
+              }
+              if(activeHandle.includes('t')){
+                const newY = Math.max(0, Math.min(startBox.y + startBox.h - minNormH, startBox.y + deltaY));
+                h = startBox.h + (startBox.y - newY);
+                y = newY;
+              }
+              imageCropBox = { x, y, w, h };
+            } else {
+              // Proportional resizing maintaining aspect ratio: w = h * k where k = targetRatioVal / natAspect
+              const k = targetRatioVal / natAspect;
+              let x = startBox.x, y = startBox.y, w = startBox.w, h = startBox.h;
+
+              if(activeHandle === 'br'){
+                let propW = startBox.w + deltaX;
+                let propH = propW / k;
+                if(Math.abs(deltaY) > Math.abs(deltaX)){
+                  propH = startBox.h + deltaY;
+                  propW = propH * k;
+                }
+                if(x + propW > 1){ propW = 1 - x; propH = propW / k; }
+                if(y + propH > 1){ propH = 1 - y; propW = propH * k; }
+                w = Math.max(minNormW, Math.min(1 - x, propW));
+                h = Math.max(minNormH, Math.min(1 - y, propH));
+              } else if(activeHandle === 'bl'){
+                const rightEdge = startBox.x + startBox.w;
+                let propW = startBox.w - deltaX;
+                let propH = propW / k;
+                if(Math.abs(deltaY) > Math.abs(deltaX)){
+                  propH = startBox.h + deltaY;
+                  propW = propH * k;
+                }
+                if(rightEdge - propW < 0){ propW = rightEdge; propH = propW / k; }
+                if(y + propH > 1){ propH = 1 - y; propW = propH * k; }
+                w = Math.max(minNormW, Math.min(rightEdge, propW));
+                h = Math.max(minNormH, Math.min(1 - y, propH));
+                x = rightEdge - w;
+              } else if(activeHandle === 'tr'){
+                const bottomEdge = startBox.y + startBox.h;
+                let propW = startBox.w + deltaX;
+                let propH = propW / k;
+                if(Math.abs(deltaY) > Math.abs(deltaX)){
+                  propH = startBox.h - deltaY;
+                  propW = propH * k;
+                }
+                if(x + propW > 1){ propW = 1 - x; propH = propW / k; }
+                if(bottomEdge - propH < 0){ propH = bottomEdge; propW = propH * k; }
+                w = Math.max(minNormW, Math.min(1 - x, propW));
+                h = Math.max(minNormH, Math.min(bottomEdge, propH));
+                y = bottomEdge - h;
+              } else if(activeHandle === 'tl'){
+                const rightEdge = startBox.x + startBox.w;
+                const bottomEdge = startBox.y + startBox.h;
+                let propW = startBox.w - deltaX;
+                let propH = propW / k;
+                if(Math.abs(deltaY) > Math.abs(deltaX)){
+                  propH = startBox.h - deltaY;
+                  propW = propH * k;
+                }
+                if(rightEdge - propW < 0){ propW = rightEdge; propH = propW / k; }
+                if(bottomEdge - propH < 0){ propH = bottomEdge; propW = propH * k; }
+                w = Math.max(minNormW, Math.min(rightEdge, propW));
+                h = Math.max(minNormH, Math.min(bottomEdge, propH));
+                x = rightEdge - w;
+                y = bottomEdge - h;
+              } else if(activeHandle === 't' || activeHandle === 'b'){
+                const sign = activeHandle === 't' ? -1 : 1;
+                let propH = startBox.h + (sign * deltaY);
+                let propW = propH * k;
+                if(propW > 1){ propW = 1; propH = propW / k; }
+                propH = Math.max(minNormH, Math.min(1, propH));
+                propW = propH * k;
+                const centerX = startBox.x + startBox.w / 2;
+                x = Math.max(0, Math.min(1 - propW, centerX - propW / 2));
+                if(activeHandle === 't'){
+                  const bottomEdge = startBox.y + startBox.h;
+                  y = Math.max(0, bottomEdge - propH);
+                  h = bottomEdge - y;
+                } else {
+                  h = Math.max(minNormH, Math.min(1 - startBox.y, propH));
+                }
+                w = propW;
+              } else if(activeHandle === 'l' || activeHandle === 'r'){
+                const sign = activeHandle === 'l' ? -1 : 1;
+                let propW = startBox.w + (sign * deltaX);
+                let propH = propW / k;
+                if(propH > 1){ propH = 1; propW = propH * k; }
+                propW = Math.max(minNormW, Math.min(1, propW));
+                propH = propW / k;
+                const centerY = startBox.y + startBox.h / 2;
+                y = Math.max(0, Math.min(1 - propH, centerY - propH / 2));
+                if(activeHandle === 'l'){
+                  const rightEdge = startBox.x + startBox.w;
+                  x = Math.max(0, rightEdge - propW);
+                  w = rightEdge - x;
+                } else {
+                  w = Math.max(minNormW, Math.min(1 - startBox.x, propW));
+                }
+                h = propH;
+              }
+              imageCropBox = { x, y, w, h };
+            }
+            updateImageEditorUI();
+          }
+          e.preventDefault();
+        }
+
+        function onPointerUp(e){
+          if(!dragMode) return;
+          dragMode = null;
+          activeHandle = null;
+          cropBoxEl.classList.remove('is-dragging', 'is-resizing');
+          try { stage.releasePointerCapture(e.pointerId); } catch(_){}
+          updateImageEditorUI();
+        }
+
+        stage.addEventListener('pointerdown', onPointerDown);
+        stage.addEventListener('pointermove', onPointerMove);
+        stage.addEventListener('pointerup', onPointerUp);
+        stage.addEventListener('pointercancel', onPointerUp);
+      }
+
+      // Pan & Zoom Sliders
       if($('imgPanX')) $('imgPanX').oninput = () => {
-        imageCropState.panX = Number($('imgPanX').value);
+        const availX = Math.max(0.001, 1 - imageCropBox.w);
+        imageCropBox.x = (Number($('imgPanX').value) / 100) * availX;
         updateImageEditorUI();
       };
       if($('imgPanY')) $('imgPanY').oninput = () => {
-        imageCropState.panY = Number($('imgPanY').value);
+        const availY = Math.max(0.001, 1 - imageCropBox.h);
+        imageCropBox.y = (Number($('imgPanY').value) / 100) * availY;
         updateImageEditorUI();
       };
       if($('imgZoom')) $('imgZoom').oninput = () => {
-        imageCropState.zoom = Number($('imgZoom').value) / 10;
+        const desiredZoom = Number($('imgZoom').value) / 10;
+        const targetMaxDim = Math.max(0.05, Math.min(1, 1 / desiredZoom));
+        const currentMaxDim = Math.max(imageCropBox.w, imageCropBox.h);
+        const scale = targetMaxDim / Math.max(0.01, currentMaxDim);
+        const cx = imageCropBox.x + imageCropBox.w / 2;
+        const cy = imageCropBox.y + imageCropBox.h / 2;
+        const newW = Math.max(0.04, Math.min(1, imageCropBox.w * scale));
+        const newH = Math.max(0.04, Math.min(1, imageCropBox.h * scale));
+        imageCropBox.w = newW;
+        imageCropBox.h = newH;
+        imageCropBox.x = Math.max(0, Math.min(1 - newW, cx - newW / 2));
+        imageCropBox.y = Math.max(0, Math.min(1 - newH, cy - newH / 2));
         updateImageEditorUI();
       };
 
       // Quick alignment buttons
-      if($('quickPanLeft')) $('quickPanLeft').onclick = () => { imageCropState.panX = 0; if($('imgPanX')) $('imgPanX').value = 0; updateImageEditorUI(); };
-      if($('quickPanCenter')) $('quickPanCenter').onclick = () => { imageCropState.panX = 50; if($('imgPanX')) $('imgPanX').value = 50; updateImageEditorUI(); };
-      if($('quickPanRight')) $('quickPanRight').onclick = () => { imageCropState.panX = 100; if($('imgPanX')) $('imgPanX').value = 100; updateImageEditorUI(); };
-      if($('quickPanTop')) $('quickPanTop').onclick = () => { imageCropState.panY = 0; if($('imgPanY')) $('imgPanY').value = 0; updateImageEditorUI(); };
-      if($('quickPanMiddle')) $('quickPanMiddle').onclick = () => { imageCropState.panY = 50; if($('imgPanY')) $('imgPanY').value = 50; updateImageEditorUI(); };
-      if($('quickPanBottom')) $('quickPanBottom').onclick = () => { imageCropState.panY = 100; if($('imgPanY')) $('imgPanY').value = 100; updateImageEditorUI(); };
+      if($('quickPanLeft')) $('quickPanLeft').onclick = () => { imageCropBox.x = 0; updateImageEditorUI(); };
+      if($('quickPanCenter')) $('quickPanCenter').onclick = () => { imageCropBox.x = (1 - imageCropBox.w) / 2; updateImageEditorUI(); };
+      if($('quickPanRight')) $('quickPanRight').onclick = () => { imageCropBox.x = 1 - imageCropBox.w; updateImageEditorUI(); };
+      if($('quickPanTop')) $('quickPanTop').onclick = () => { imageCropBox.y = 0; updateImageEditorUI(); };
+      if($('quickPanMiddle')) $('quickPanMiddle').onclick = () => { imageCropBox.y = (1 - imageCropBox.h) / 2; updateImageEditorUI(); };
+      if($('quickPanBottom')) $('quickPanBottom').onclick = () => { imageCropBox.y = 1 - imageCropBox.h; updateImageEditorUI(); };
+
+      if($('btnCenterCrop')) $('btnCenterCrop').onclick = () => {
+        imageCropBox.x = Math.max(0, (1 - imageCropBox.w) / 2);
+        imageCropBox.y = Math.max(0, (1 - imageCropBox.h) / 2);
+        updateImageEditorUI();
+      };
+
+      if($('btnFitCrop')) $('btnFitCrop').onclick = () => {
+        initCropBoxForRatio(imageCropState.ratio);
+        updateImageEditorUI();
+      };
 
       if($('btnToggleGrid')) $('btnToggleGrid').onclick = () => {
         showCropGrid = !showCropGrid;
@@ -5193,6 +5526,7 @@ init();
         imageCropState.panY = 50;
         imageCropState.zoom = 1;
         imageCropState.rotation = 0;
+        initCropBoxForRatio('original');
         if($('imgPanX')) $('imgPanX').value = 50;
         if($('imgPanY')) $('imgPanY').value = 50;
         if($('imgZoom')) $('imgZoom').value = 10;
@@ -5245,10 +5579,12 @@ init();
       tempImg.onload = () => {
         imgNaturalW = tempImg.naturalWidth;
         imgNaturalH = tempImg.naturalHeight;
+        initCropBoxForRatio(imageCropState.ratio);
         updateImageEditorUI();
       };
       tempImg.src = url;
 
+      initCropBoxForRatio(imageCropState.ratio);
       updateImageEditorUI();
     }
 
@@ -5671,12 +6007,38 @@ init();
           
           const natW = img.naturalWidth || 1080;
           const natH = img.naturalHeight || 1920;
-          const { targetW, targetH, targetRatio } = calculateTargetDimensions(natW, natH, imageCropState.ratio, imageResolution);
+
+          const cropX = Math.round(Math.max(0, Math.min(natW - 1, imageCropBox.x * natW)));
+          const cropY = Math.round(Math.max(0, Math.min(natH - 1, imageCropBox.y * natH)));
+          const cropW = Math.round(Math.max(16, Math.min(natW - cropX, imageCropBox.w * natW)));
+          const cropH = Math.round(Math.max(16, Math.min(natH - cropY, imageCropBox.h * natH)));
+
+          let maxDim;
+          if(imageResolution === '4k') maxDim = 3840;
+          else if(imageResolution === '1080p') maxDim = 1920;
+          else if(imageResolution === '720p') maxDim = 1280;
+          else if(imageResolution === '480p') maxDim = 854;
+          else maxDim = Math.max(cropW, cropH);
+
+          let targetW, targetH;
+          if(imageResolution === 'original'){
+            targetW = cropW;
+            targetH = cropH;
+          } else {
+            if(cropW >= cropH){
+              targetW = Math.min(cropW, maxDim);
+              targetH = Math.round(targetW * (cropH / cropW));
+            } else {
+              targetH = Math.min(cropH, maxDim);
+              targetW = Math.round(targetH * (cropW / cropH));
+            }
+          }
+          targetW = Math.max(16, Math.round(targetW / 2) * 2);
+          targetH = Math.max(16, Math.round(targetH / 2) * 2);
+
           finalResolution = imageResolution;
           finalCropRatio = imageCropState.ratio;
           finalDimensions = `${targetW}×${targetH}`;
-
-          const { cropX, cropY, cropW, cropH } = getSourceCropRect(natW, natH, targetRatio, imageCropState.panX, imageCropState.panY, imageCropState.zoom);
 
           const c = document.createElement('canvas');
           c.width = targetW;
