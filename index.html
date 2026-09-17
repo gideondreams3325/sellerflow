@@ -750,10 +750,18 @@ function setNav(){
       $('headerLoginBtn')?.addEventListener('click',()=>showAuth('login'));
       $('headerRegisterBtn')?.addEventListener('click',()=>showAuth('register'));
     } else {
-      rightActions.innerHTML=`<button id="notificationBtn" class="bell-btn p-2 shrink-0" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2 shrink-0">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2 shrink-0">Logout</button>`;
-      $('notificationBtn')?.addEventListener('click',()=>{if(window.renderGroupedNotifications)return window.renderGroupedNotifications();if(window.openNotifications)return window.openNotifications();openNotifications();});
+      rightActions.innerHTML=`<button id="notificationBtn" class="bell-btn p-2 shrink-0" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2 shrink-0">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1 hide">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2 shrink-0">Logout</button>`;
+      $('notificationBtn')?.addEventListener('click',()=>{
+        if(window.markNotificationsRead && notificationCache && notificationCache.length){
+          window.markNotificationsRead(notificationCache.map(n=>n.id));
+        }
+        if(window.renderGroupedNotifications)return window.renderGroupedNotifications();
+        if(window.openNotifications)return window.openNotifications();
+        openNotifications();
+      });
       $('cartBtn')?.addEventListener('click',()=>navigate('cart'));
       $('logoutBtn')?.addEventListener('click',logoutUser);
+      if(window.updateNotifBellBadge) updateNotifBellBadge();
       updateCartBadge();
     }
   }
@@ -979,17 +987,9 @@ async function renderFeed(targetPostId, options){
       <div class="flex items-center gap-2 min-w-0">
         ${fromProfile?`<button type="button" id="feedBackProfile" class="border border-[#333] hover:border-gold px-2.5 py-1 rounded-xl text-xs font-bold mr-1 shrink-0 whitespace-nowrap">← Profile</button>`:''}
         <h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap">For You</h1>
-        <span class="text-[11px] gold bg-[#1e170c] border border-[#3f2e14] px-2.5 py-0.5 rounded-full whitespace-nowrap font-medium">Ranked feed</span>
       </div>
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-        <button type="button" id="feedPrevBtn" class="feed-nav-btn shrink-0" title="Previous Reel"><svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg></button>
-        <button type="button" id="feedNextBtn" class="feed-nav-btn shrink-0" title="Next Reel"><svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg></button>
-        ${!currentUser ? `
-          <button type="button" id="feedLoginBtn" class="border border-[#444] hover:border-gold px-3 py-1.5 rounded-xl text-xs font-bold bg-[#141414] text-white transition shrink-0 whitespace-nowrap">Sign In</button>
-          <button type="button" id="feedRegisterBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 shadow-sm transition shrink-0 whitespace-nowrap">Register</button>
-        ` : `
-          <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0 whitespace-nowrap">＋ Upload</button>
-        `}
+        <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0 whitespace-nowrap">＋ Upload</button>
       </div>
     </div>
     <div class="reel-feed flex-1 min-h-0 w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
@@ -1011,8 +1011,6 @@ async function renderFeed(targetPostId, options){
   `;
 
   $('feedBackProfile')?.addEventListener('click',()=>navigate('profile'));
-  $('feedLoginBtn')?.addEventListener('click',()=>showAuth('login'));
-  $('feedRegisterBtn')?.addEventListener('click',()=>showAuth('register'));
   $('openFeedUpload')?.addEventListener('click',()=>{
     if(!currentUser) return showAuthPrompt('upload videos or photos to For You');
     openPostModal();
@@ -4910,9 +4908,62 @@ async function requestNotificationPermission(){
   }catch(e){toast(errMsg(e),'error');return 'denied';}
 }
 
+function getLocallyReadNotifIds(){
+  try{
+    return new Set(JSON.parse(localStorage.getItem('sellerflow_read_notif_ids') || '[]'));
+  }catch(_){
+    return new Set();
+  }
+}
+
+function saveLocallyReadNotifIds(set){
+  try{
+    localStorage.setItem('sellerflow_read_notif_ids', JSON.stringify([...set].slice(-500)));
+  }catch(_){}
+}
+
+function updateNotifBellBadge(){
+  const readSet = getLocallyReadNotifIds();
+  const unread = (notificationCache || []).filter(n => !n.read && !readSet.has(n.id)).length;
+  const badge = $('notificationCount');
+  if (badge) {
+    badge.textContent = unread > 99 ? '99+' : String(unread);
+    badge.classList.toggle('hide', unread === 0);
+  }
+}
+window.updateNotifBellBadge = updateNotifBellBadge;
+
+function markNotificationsRead(idOrList){
+  const list = Array.isArray(idOrList) ? idOrList : [idOrList];
+  if(!list.length) return;
+  const readSet = getLocallyReadNotifIds();
+
+  list.forEach(item => {
+    const id = typeof item === 'string' ? item : item?.id;
+    if(!id) return;
+    readSet.add(id);
+    const n = (notificationCache || []).find(x => x.id === id);
+    if(n) n.read = true;
+    if(!id.startsWith('sample_') && db){
+      updateDoc(doc(db, 'notifications', id), { read: true }).catch(() => {});
+    }
+  });
+
+  saveLocallyReadNotifIds(readSet);
+  updateNotifBellBadge();
+}
+window.markNotificationsRead = markNotificationsRead;
+
 function handleNotificationsSnapshot(snap, isInitial=false){
   const docs = snap?.docs || (Array.isArray(snap) ? snap : []);
   const incoming = docs.map(d => ({ id: d.id, ...(typeof d.data === 'function' ? d.data() : d) })).sort((a,b) => ts(b.createdAt) - ts(a.createdAt));
+
+  const readSet = getLocallyReadNotifIds();
+  incoming.forEach(n => {
+    if (readSet.has(n.id)) {
+      n.read = true;
+    }
+  });
 
   if (!isInitial && knownNotificationIds.size > 0) {
     const fresh = incoming.filter(n => !knownNotificationIds.has(n.id));
@@ -4954,12 +5005,7 @@ function handleNotificationsSnapshot(snap, isInitial=false){
   knownNotificationIds = new Set(saveIds);
   localStorage.setItem('sellerflow_seen_notifications', JSON.stringify(saveIds));
 
-  const unread = notificationCache.filter(n => !n.read).length;
-  const badge = $('notificationCount');
-  if (badge) {
-    badge.textContent = unread > 99 ? '99+' : String(unread);
-    badge.classList.toggle('hide', unread === 0);
-  }
+  updateNotifBellBadge();
 }
 
 async function loadNotifications(announce=false){
@@ -5178,19 +5224,10 @@ window.initServiceWorker=initServiceWorker;
 async function openNotifications(){if(window.renderGroupedNotifications){return window.renderGroupedNotifications()}if(window.openNotifications&&window.openNotifications!==openNotifications){return window.openNotifications()}}
 async function markAllNotifications(){
   try{
-    const unreadList=notificationCache.filter(x=>!x.read);
+    const unreadList=(notificationCache||[]).filter(x=>!x.read);
     if(!unreadList.length)return;
-    unreadList.forEach(n=>{n.read=true});
-    const badge=$('notificationCount');
-    if(badge){badge.textContent='0';badge.classList.add('hide');}
+    markNotificationsRead(unreadList.map(n=>n.id));
     if(window.renderGroupedNotifications)window.renderGroupedNotifications();
-    const promises=unreadList.map(n=>{
-      if(!n.id.startsWith('sample_')){
-        return updateDoc(doc(db,'notifications',n.id),{read:true,readAt:serverTimestamp()}).catch(()=>{});
-      }
-      return Promise.resolve();
-    });
-    await Promise.allSettled(promises);
     toast('All notifications marked as read','success');
   }catch(e){toast(errMsg(e),'error')}
 }
@@ -6252,25 +6289,15 @@ init();
       <div class="flex items-center gap-2 min-w-0">
         ${fromProfile?`<button type="button" id="feedBackProfile" class="border border-[#333] hover:border-gold px-2.5 py-1 rounded-xl text-xs font-bold mr-1 shrink-0 whitespace-nowrap">← Profile</button>`:''}
         <h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap">For You</h1>
-        <span class="text-[11px] gold bg-[#1e170c] border border-[#3f2e14] px-2.5 py-0.5 rounded-full whitespace-nowrap font-medium">Ranked feed</span>
       </div>
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-        <button type="button" id="feedPrevBtn" class="feed-nav-btn shrink-0" title="Previous Reel"><svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg></button>
-        <button type="button" id="feedNextBtn" class="feed-nav-btn shrink-0" title="Next Reel"><svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg></button>
-        ${!currentUser ? `
-          <button type="button" id="feedLoginBtn" class="border border-[#444] hover:border-gold px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-[#141414] text-white transition shrink-0 whitespace-nowrap">Sign In</button>
-          <button type="button" id="feedRegisterBtn" class="hidden sm:inline-flex bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 shadow-sm transition shrink-0 whitespace-nowrap">Register</button>
-        ` : `
-          <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0 whitespace-nowrap">＋ Upload</button>
-        `}
+        <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0 whitespace-nowrap">＋ Upload</button>
       </div>
     </div>
     <div class="reel-feed flex-1 min-h-0 w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
       ${feedPosts.length?feedPosts.map(postCard).join(''):`<div class="h-full flex items-center justify-center p-6"><div class="card p-8 text-center max-w-md"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2 text-sm">Share a safe photo or video to start building your audience.</p><button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button></div></div>`}
     </div>`;
     $('feedBackProfile')?.addEventListener('click',()=>navigate('profile'));
-    $('feedLoginBtn')?.addEventListener('click',()=>showAuth('login'));
-    $('feedRegisterBtn')?.addEventListener('click',()=>showAuth('register'));
     $('openFeedUpload')?.addEventListener('click',()=>currentUser?openPostModal():showAuthPrompt('upload videos or photos to For You'));
     $('openFeedUploadEmpty')?.addEventListener('click',()=>currentUser?openPostModal():showAuthPrompt('upload videos or photos to For You'));
     document.querySelectorAll('[data-post-action]').forEach(b=>b.onclick=postAction);
@@ -8528,15 +8555,6 @@ init();
     return formatNotifTime(v);
   }
 
-  function updateNotifBellBadge(){
-    const unread = notificationCache.filter(n => !n.read).length;
-    const badge = $('notificationCount');
-    if(badge){
-      badge.textContent = unread > 99 ? '99+' : String(unread);
-      badge.classList.toggle('hide', unread === 0);
-    }
-  }
-
   window._sfNotifTab = window._sfNotifTab || 'all';
 
   window.renderGroupedNotifications = window.openNotifications = openNotifications = async function(initialTab){
@@ -8544,7 +8562,7 @@ init();
     if(initialTab) window._sfNotifTab = initialTab;
     const currentTab = window._sfNotifTab || 'all';
 
-    const unreadCount = notificationCache.filter(n => !n.read).length;
+    const unreadCount = (notificationCache || []).filter(n => !n.read).length;
 
     // Categorization
     const followNotifs = notificationCache.filter(n => n.type === 'follow');
@@ -8875,18 +8893,10 @@ init();
     // Mark all notifications handler with parallel batching and optimistic update
     $('markAllNotifications')?.addEventListener('click', async () => {
       try {
-        const unreadList = notificationCache.filter(n => !n.read);
+        const unreadList = (notificationCache || []).filter(n => !n.read);
         if(!unreadList.length) return;
-        unreadList.forEach(n => { n.read = true; });
-        updateNotifBellBadge();
+        markNotificationsRead(unreadList.map(n => n.id));
         window.renderGroupedNotifications();
-        const promises = unreadList.map(n => {
-          if(!n.id.startsWith('sample_')){
-            return updateDoc(doc(db, 'notifications', n.id), { read: true, readAt: serverTimestamp() }).catch(() => {});
-          }
-          return Promise.resolve();
-        });
-        await Promise.allSettled(promises);
         toast('All notifications marked as read', 'success');
       } catch(e) {
         toast(errMsg(e), 'error');
@@ -8896,13 +8906,7 @@ init();
     // Follow group click -> open list of followers with profile links & follow back
     $('openFollowGroupBtn')?.addEventListener('click', () => {
       // Mark follow notifications as read
-      followNotifs.forEach(fn => {
-        fn.read = true;
-        if(!fn.id.startsWith('sample_')){
-          updateDoc(doc(db, 'notifications', fn.id), { read: true, readAt: serverTimestamp() }).catch(() => {});
-        }
-      });
-      updateNotifBellBadge();
+      markNotificationsRead(followNotifs.map(fn => fn.id));
 
       modal(`<div>
         <div class="flex items-center justify-between pb-3.5 mb-4 border-b border-[#242424]">
@@ -8976,13 +8980,7 @@ init();
         const list = engagementGroups[key] || [];
 
         // Mark as read immediately
-        list.forEach(n => {
-          n.read = true;
-          if(!n.id.startsWith('sample_')){
-            updateDoc(doc(db, 'notifications', n.id), { read: true, readAt: serverTimestamp() }).catch(() => {});
-          }
-        });
-        updateNotifBellBadge();
+        markNotificationsRead(list.map(n => n.id));
         closeModal();
 
         if(pid && pid !== 'general'){
@@ -8999,11 +8997,7 @@ init();
         const nid = card.dataset.openPlatformUpdate;
         const n = notificationCache.find(x => x.id === nid);
         if(!n) return;
-        n.read = true;
-        if(!nid.startsWith('sample_')){
-          updateDoc(doc(db, 'notifications', nid), { read: true, readAt: serverTimestamp() }).catch(() => {});
-        }
-        updateNotifBellBadge();
+        markNotificationsRead(nid);
         closeModal();
         navigate('update', nid, { updateData: n });
       };
@@ -9014,12 +9008,7 @@ init();
       card.onclick = async () => {
         const nid = card.dataset.openChatNotif;
         const actorId = card.dataset.actorId;
-        const n = notificationCache.find(x => x.id === nid);
-        if(n) n.read = true;
-        if(nid && !nid.startsWith('sample_')){
-          updateDoc(doc(db, 'notifications', nid), { read: true, readAt: serverTimestamp() }).catch(() => {});
-        }
-        updateNotifBellBadge();
+        markNotificationsRead(nid);
         closeModal();
         if(actorId && window.startSellerFlowChat){
           window.startSellerFlowChat(actorId);
@@ -9033,12 +9022,7 @@ init();
     document.querySelectorAll('[data-open-order-notif]').forEach(card => {
       card.onclick = async () => {
         const nid = card.dataset.openOrderNotif;
-        const n = notificationCache.find(x => x.id === nid);
-        if(n) n.read = true;
-        if(nid && !nid.startsWith('sample_')){
-          updateDoc(doc(db, 'notifications', nid), { read: true, readAt: serverTimestamp() }).catch(() => {});
-        }
-        updateNotifBellBadge();
+        markNotificationsRead(nid);
         closeModal();
         navigate('orders');
       };
@@ -9050,11 +9034,7 @@ init();
         const nid = card.dataset.otherNotif;
         const n = notificationCache.find(x => x.id === nid);
         if(!n) return;
-        n.read = true;
-        if(!nid.startsWith('sample_')){
-          updateDoc(doc(db, 'notifications', nid), { read: true, readAt: serverTimestamp() }).catch(() => {});
-        }
-        updateNotifBellBadge();
+        markNotificationsRead(nid);
         if(n.postId){
           closeModal();
           window.openFeedWithPost(n.postId);

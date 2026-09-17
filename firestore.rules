@@ -236,7 +236,7 @@ service cloud.firestore {
         isAdmin() ||
         (
           (resource.data.recipientId == request.auth.uid || resource.data.userId == request.auth.uid) &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt'])
         )
       );
       allow delete: if isAdmin() || (
