@@ -8,6 +8,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SellerFlow">
 <meta name="theme-color" content="#080808">
+<meta name="application-name" content="SellerFlow">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="alternate icon" type="image/png" href="/pwa-192x192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="format-detection" content="telephone=no">
 <meta name="msapplication-TileColor" content="#080808">
 <meta name="msapplication-tap-highlight" content="no">
@@ -200,21 +205,31 @@ button,a,input,textarea,select{position:relative;z-index:1}
 #brandBtn:active{transform:scale(.97)}
 
 #mobileMenu,#pageSelectorBtn{width:36px;height:36px;min-width:36px;border-radius:11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#e4e4e7;display:inline-flex;align-items:center;justify-content:center;font-size:14px;padding:0;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:all .16s ease}
+@media(max-width:480px){
+  #mobileMenu,#pageSelectorBtn{width:32px;height:32px;min-width:32px;font-size:13px;border-radius:9px}
+  #brandBtn{font-size:1.15rem!important}
+}
 #mobileMenu:hover,#pageSelectorBtn:hover{background:rgba(255,255,255,.1);border-color:rgba(245,185,66,.4);color:#f5b942}
 #mobileMenu:active,#pageSelectorBtn:active{transform:scale(.94)}
 
 .sf-search-btn{height:36px;min-height:36px;padding:0 12px;border-radius:11px;background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.1)!important;color:#d4d4d8!important;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:all .16s ease}
-@media(max-width:640px){.sf-search-btn{width:36px;min-width:36px;padding:0}}
+@media(max-width:640px){.sf-search-btn{width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important;padding:0!important;border-radius:9px!important}}
 .sf-search-btn:hover{background:rgba(255,255,255,.1)!important;border-color:rgba(245,185,66,.4)!important;color:#f5b942!important}
 .sf-search-btn:active{transform:scale(.94)}
 
-#headerLoginBtn,#feedLoginBtn{background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.14)!important;color:#f4f4f5!important;font-family:inherit!important;font-weight:650!important;font-size:12px!important;padding:6px 13px!important;border-radius:11px!important;letter-spacing:-.01em!important;transition:all .16s cubic-bezier(0.16,1,0.3,1)!important;box-shadow:0 1px 3px rgba(0,0,0,.2)!important;flex-shrink:0!important}
+#headerLoginBtn,#feedLoginBtn{background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.14)!important;color:#f4f4f5!important;font-family:inherit!important;font-weight:650!important;font-size:12px!important;padding:6px 13px!important;border-radius:11px!important;letter-spacing:-.01em!important;transition:all .16s cubic-bezier(0.16,1,0.3,1)!important;box-shadow:0 1px 3px rgba(0,0,0,.2)!important;flex-shrink:0!important;white-space:nowrap!important}
 #headerLoginBtn:hover,#feedLoginBtn:hover{background:rgba(255,255,255,.12)!important;border-color:rgba(245,185,66,.45)!important;color:#f5b942!important;transform:translateY(-.5px)}
 #headerLoginBtn:active,#feedLoginBtn:active{transform:scale(.95)}
 
-#headerRegisterBtn,#feedRegisterBtn{background:linear-gradient(135deg,#f7c554 0%,#f5b942 52%,#e5a428 100%)!important;border:1px solid rgba(255,255,255,.28)!important;color:#080808!important;font-family:inherit!important;font-weight:750!important;font-size:12px!important;padding:6px 14px!important;border-radius:11px!important;letter-spacing:-.01em!important;box-shadow:0 2px 10px rgba(245,185,66,.28),inset 0 1px 0 rgba(255,255,255,.45)!important;transition:all .16s cubic-bezier(0.16,1,0.3,1)!important;flex-shrink:0!important}
+#headerRegisterBtn,#feedRegisterBtn{background:linear-gradient(135deg,#f7c554 0%,#f5b942 52%,#e5a428 100%)!important;border:1px solid rgba(255,255,255,.28)!important;color:#080808!important;font-family:inherit!important;font-weight:750!important;font-size:12px!important;padding:6px 14px!important;border-radius:11px!important;letter-spacing:-.01em!important;box-shadow:0 2px 10px rgba(245,185,66,.28),inset 0 1px 0 rgba(255,255,255,.45)!important;transition:all .16s cubic-bezier(0.16,1,0.3,1)!important;flex-shrink:0!important;white-space:nowrap!important}
 #headerRegisterBtn:hover,#feedRegisterBtn:hover{filter:brightness(1.08)!important;box-shadow:0 4px 16px rgba(245,185,66,.45),inset 0 1px 0 rgba(255,255,255,.55)!important;transform:translateY(-.5px)}
 #headerRegisterBtn:active,#feedRegisterBtn:active{transform:scale(.95);filter:brightness(.96)!important}
+
+@media(max-width:480px){
+  #headerRegisterBtn{display:none!important}
+  #headerLoginBtn{padding:5px 12px!important;font-size:12px!important;border-radius:9px!important}
+  #headerRightActions{gap:4px!important}
+}
 
 #feedPrevBtn,#feedNextBtn,.feed-nav-btn{width:32px!important;height:32px!important;min-width:32px!important;padding:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;border-radius:10px!important;background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.11)!important;color:#d4d4d8!important;font-size:11px!important;box-shadow:0 1px 3px rgba(0,0,0,.25)!important;transition:all .15s ease!important;flex-shrink:0!important}
 #feedPrevBtn:hover,#feedNextBtn:hover,.feed-nav-btn:hover{background:rgba(255,255,255,.12)!important;border-color:rgba(245,185,66,.4)!important;color:#f5b942!important}
@@ -251,7 +266,7 @@ button,a,input,textarea,select{position:relative;z-index:1}
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center"><div class="text-center"><div class="spin mx-auto mb-4"></div><div class="gold font-bold text-xl">SellerFlow</div><div id="loadingText" class="muted text-sm mt-2">Starting secure app…</div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
 <div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 SellerFlow™ · All rights reserved.</div></div></div>
-<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-3 sm:px-4 h-16 flex items-center gap-2 sm:gap-3"><button id="mobileMenu" class="md:hidden" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold shrink-0 whitespace-nowrap">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0"><button id="notificationBtn" class="bell-btn p-2" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2">Logout</button></div></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-2 grid grid-cols-3 gap-1"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center gap-1.5 sm:gap-3 overflow-hidden"><button id="mobileMenu" class="md:hidden" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold shrink-0 whitespace-nowrap">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0"><button type="button" id="headerLoginBtn" class="border border-[#444] hover:border-gold px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-[#181818] text-white transition shrink-0 whitespace-nowrap">Sign In</button><button type="button" id="headerRegisterBtn" class="hidden sm:inline-flex bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Register</button></div></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-2 grid grid-cols-3 gap-1"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="modalRoot"></div><div id="toast" class="toast"></div>
 <script>
 (function(){
@@ -511,7 +526,7 @@ function setNav(){
   const rightActions=$('headerRightActions')||$('logoutBtn')?.parentElement||document.querySelector('header .ml-auto');
   if(rightActions){
     if(!currentUser){
-      rightActions.innerHTML=`<button type="button" id="headerLoginBtn" class="border border-[#444] hover:border-gold px-3 py-1.5 rounded-xl text-xs font-bold bg-[#181818] text-white transition shrink-0 whitespace-nowrap">Sign In</button><button type="button" id="headerRegisterBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Register</button>`;
+      rightActions.innerHTML=`<button type="button" id="headerLoginBtn" class="border border-[#444] hover:border-gold px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-[#181818] text-white transition shrink-0 whitespace-nowrap">Sign In</button><button type="button" id="headerRegisterBtn" class="hidden sm:inline-flex bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Register</button>`;
       $('headerLoginBtn')?.addEventListener('click',()=>showAuth('login'));
       $('headerRegisterBtn')?.addEventListener('click',()=>showAuth('register'));
     } else {
@@ -523,7 +538,7 @@ function setNav(){
     }
   }
 
-  const navPages=isAdmin?['feed','dashboard','marketplace','products','orders','store','profile','settings']:(currentProfile?.verified?['feed','dashboard','marketplace','products','orders','store','profile','settings']:['feed','marketplace','orders','profile','settings']);
+  const navPages=isAdmin?['feed','dashboard','marketplace','products','orders','store','profile','settings']:(currentProfile?.verified?['feed','dashboard','marketplace','products','orders','store','profile','settings']:(!currentUser?['feed','marketplace']:['feed','marketplace','orders','profile','settings']));
   $('mobileNav').innerHTML=navPages.map(p=>`<button type="button" class="p-3 rounded-xl relative flex items-center justify-center gap-1.5 ${p===currentPage?'bg-[#202020] gold':''}" data-mobile-page="${p}"><span>${p==='feed'?'For You':p[0].toUpperCase()+p.slice(1)}</span>${p==='orders'?`<span id="mobileOrdersBadge" class="orders-nav-badge ${pendingOrdersCount>0?'':'hide'}">${pendingOrdersCount>99?'99+':pendingOrdersCount}</span>`:''}</button>`).join('')+(isAdmin?`<button class="p-3 rounded-xl ${currentPage==='admin'?'bg-[#202020] gold':''}" data-mobile-page="admin">Admin</button>`:'')+(!currentUser?`<button class="p-3 rounded-xl text-gold font-bold" id="mobileAuthBtn">Sign In / Register</button>`:`<button id="mobileLogout" class="p-3 rounded-xl text-red-400" data-mobile-logout="1">Logout</button>`);
   $('mobileLogout')?.addEventListener('click',logoutUser);
   $('mobileAuthBtn')?.addEventListener('click',()=>{hide($('mobileNav'));showAuth('login')});
@@ -547,8 +562,16 @@ function pauseAllForYouVideos(destroyFeed=false){
 window.pauseAllForYouVideos=pauseAllForYouVideos;
 
 async function navigate(page, targetPostId, options){
-  if(!currentUser && page !== 'feed' && page !== 'marketplace' && page !== 'store' && page !== 'update'){
-    showAuthPrompt('access ' + page);
+  if(!currentUser && page !== 'feed' && page !== 'marketplace' && page !== 'update'){
+    const promptMsg = page === 'store' ? 'view verified stores and seller catalogues'
+      : (page === 'orders' ? 'make orders and track deliveries'
+      : (page === 'cart' ? 'view your cart and make an order'
+      : (page === 'dashboard' ? 'access your seller dashboard'
+      : (page === 'products' ? 'manage product catalogue'
+      : (page === 'profile' ? 'view and edit your profile'
+      : (page === 'chats' ? 'chat with sellers and buyers'
+      : 'access ' + page))))));
+    showAuthPrompt(promptMsg);
     return;
   }
   pauseAllForYouVideos(page !== 'feed');
@@ -568,7 +591,7 @@ async function navigate(page, targetPostId, options){
     } else if(currentPage==='update'){
       await renderSellerFlowUpdatePage(targetPostId, options);
     } else {
-      await renderPage();
+      await renderPage(targetPostId, options);
     }
   }catch(e){
     console.error(e);
@@ -698,7 +721,7 @@ ${esc(update.message || '')}
 }
 window.renderSellerFlowUpdatePage = renderSellerFlowUpdatePage;
 
-async function renderPage(){
+async function renderPage(targetPostId, options){
   if(!currentUser && currentPage !== 'feed' && currentPage !== 'marketplace' && currentPage !== 'update'){
     showAuthPrompt('access this page');
     navigate('feed');
@@ -710,7 +733,7 @@ async function renderPage(){
   $('appMainScroll')?.classList.toggle('is-feed-scroll',isFeed);
   setNav();
   const map={feed:renderFeed,dashboard:renderDashboard,marketplace:renderMarketplace,products:renderProducts,orders:renderOrders,store:renderStore,profile:renderProfile,cart:renderCart,settings:renderSettings,admin:renderAdmin,update:renderSellerFlowUpdatePage,chats:window.renderChats||renderChats};
-  await (map[currentPage]||renderFeed)();
+  await (map[currentPage]||renderFeed)(targetPostId, options);
   updateCartBadge();
 }
 
@@ -801,7 +824,7 @@ function postCard(p){
     if(p.mediaType?.startsWith('video')){
       media=`<video class="reel-media reel-video" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" data-post-id="${p.id}" playsinline webkit-playsinline loop preload="metadata" poster="${esc(p.thumbnailUrl||'')}"></video><button type="button" class="reel-play-toggle" data-video-toggle="${p.id}">▶</button><div class="reel-sound-label">🔊 Sound</div>`;
     }else{
-      media=`<img loading="lazy" class="reel-media" src="${esc(p.mediaUrl)}" alt="SellerFlow post" data-media-path="${esc(p.mediaPath||'')}" onerror="window.__sfMediaFallback?window.__sfMediaFallback(this):null">`;
+      media=`<img loading="lazy" class="reel-media ${p.photoFilter ? `sf-filter-${esc(p.photoFilter)}` : ''}" style="${p.photoFilterCss ? `filter:${esc(p.photoFilterCss)};` : ''}" src="${esc(p.mediaUrl)}" alt="SellerFlow post" data-media-path="${esc(p.mediaPath||'')}" onerror="window.__sfMediaFallback?window.__sfMediaFallback(this):null">`;
     }
   }else{
     media=`<div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"><div class="text-6xl mb-3">🛍️</div><div class="text-lg font-bold max-w-md">${esc(p.text||'SellerFlow post')}</div></div>`;
@@ -1435,6 +1458,21 @@ async function renderMarketplace(){
   let activeFilter='all';
   
   $('page').innerHTML=pageTitle('Marketplace','Discover verified Ghanaian sellers, local boutiques, and shops.')+`
+    ${!currentUser ? `
+      <div class="mb-5 p-4 rounded-2xl bg-gradient-to-r from-[#1c180e] via-[#141414] to-[#121212] border border-gold/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-gold/5">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-gold/15 border border-gold/40 flex items-center justify-center text-xl shrink-0">🏪</div>
+          <div>
+            <div class="font-bold text-sm text-white">Browse verified Ghanaian stores freely</div>
+            <div class="text-xs text-zinc-400 mt-0.5">Explore authentic sellers and local shops across Ghana. An account is required to visit store catalogues or make an order.</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+          <button type="button" id="marketGuestLogin" class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold border border-[#444] hover:border-gold text-white bg-[#1a1a1a] transition">Sign In</button>
+          <button type="button" id="marketGuestRegister" class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold bg-gold text-black hover:brightness-110 shadow-sm transition">Register</button>
+        </div>
+      </div>
+    ` : ''}
     <div class="card p-4 md:p-5 mb-5 space-y-3">
       <div class="relative">
         <input id="marketSearch" class="w-full p-3.5 pl-10 rounded-xl bg-[#151515] border border-[#333] focus:border-gold text-sm" placeholder="Search stores by name, products, or location…">
@@ -1455,6 +1493,9 @@ async function renderMarketplace(){
     </div>
     <div id="storeGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${valid.length?valid.map(storeCard).join(''):'<div class="card p-8 muted text-center">No verified stores are available yet.</div>'}</div>
   `;
+
+  $('marketGuestLogin')?.addEventListener('click',()=>showAuth('login'));
+  $('marketGuestRegister')?.addEventListener('click',()=>showAuth('register'));
 
   const filter=()=>{
     const q=($('marketSearch')?.value||'').toLowerCase().trim();
@@ -1489,9 +1530,36 @@ async function renderMarketplace(){
   $('marketSearch').oninput=filter;
   bindStoreCards();
 }
-function storeCard(s){const p=sellerProfile(s.ownerId);return `<div class="card p-5"><div class="flex items-center gap-3">${avatar(p)}<div><b>${esc(s.name)}</b><div class="text-xs mt-1 flex items-center gap-1"><span class="verified-badge">✓</span><span class="muted">Verified</span></div></div></div><p class="muted text-sm mt-4 line-clamp-3">${esc(s.description||'')}</p><button data-open-store="${s.ownerId}" class="mt-4 w-full border border-[#444] rounded-xl p-2">Visit store</button></div>`}
+function storeCard(s){
+  const p=sellerProfile(s.ownerId);
+  return `
+    <div class="card p-5 flex flex-col justify-between" id="market-store-${esc(s.ownerId)}">
+      <div>
+        <div class="flex items-center gap-3">
+          ${avatar(p)}
+          <div class="min-w-0">
+            <b class="truncate block">${esc(s.name)}</b>
+            <div class="text-xs mt-1 flex items-center gap-1">
+              <span class="verified-badge">✓</span>
+              <span class="muted">Verified Seller</span>
+            </div>
+          </div>
+        </div>
+        <p class="muted text-sm mt-4 line-clamp-3">${esc(s.description||'')}</p>
+        ${s.location||s.address?`<div class="text-xs text-zinc-400 mt-2 truncate">📍 ${esc(s.location||s.address)}</div>`:''}
+      </div>
+      <button type="button" data-open-store="${s.ownerId}" class="mt-4 w-full border ${currentUser?'border-[#444] hover:border-gold text-white':'border-gold/40 bg-gold/10 text-gold hover:bg-gold hover:text-black'} rounded-xl p-2.5 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2">
+        <span>${currentUser ? 'Visit store →' : '🔒 Visit store · Sign in required'}</span>
+      </button>
+    </div>
+  `;
+}
 function bindStoreCards(){document.querySelectorAll('[data-open-store]').forEach(b=>b.onclick=()=>openStore(b.dataset.openStore))}
 async function openStore(uid){
+  if(!currentUser){
+    showAuthPrompt('view this verified store and browse the seller catalogue');
+    return;
+  }
   pauseAllForYouVideos(true);
   const previousPage = currentPage;
   if(currentPage==='feed'){
@@ -1537,7 +1605,7 @@ async function openStore(uid){
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-bold">Products</h2>
       </div>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         ${products.length?products.map(productCard).join(''):'<div class="card p-6 muted">No products listed yet.</div>'}
       </div>
       <div class="card p-5 mt-5">
@@ -1582,32 +1650,729 @@ async function openStore(uid){
     ready();
   }
 }
-function productCard(p){return `<div class="card p-3"><img class="product-img" src="${esc(p.imageUrl||'')}" onerror="this.style.display='none'" alt=""><div class="font-bold mt-3">${esc(p.name)}</div><div class="gold font-black mt-1">${money(p.price)}</div><div class="muted text-sm mt-1 line-clamp-2">${esc(p.description||'')}</div><button data-add-cart="${p.id}" class="w-full mt-3 bg-gold text-black rounded-xl py-2">Add to cart</button></div>`}
+function productCard(p){
+  return `
+    <div class="card p-4 sm:p-3 flex flex-col justify-between" id="store-product-${esc(p.id)}">
+      <div>
+        <div class="relative w-full aspect-[4/3] sm:aspect-square rounded-xl overflow-hidden bg-[#161616] border border-[#262626]">
+          <img class="w-full h-full object-cover" src="${esc(p.imageUrl||'')}" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 fill=%22none%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%231a1a1a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2228%22%3E📦%3C/text%3E%3C/svg%3E'" alt="${esc(p.name||'Product')}">
+          ${Number(p.stock) <= 0 ? `<span class="absolute top-2.5 right-2.5 bg-red-950/90 text-red-300 text-xs px-2.5 py-1 rounded-lg font-bold border border-red-700/60 shadow">Out of Stock</span>` : ''}
+        </div>
+        <div class="flex items-baseline justify-between gap-3 mt-3.5">
+          <h3 class="font-bold text-base sm:text-sm text-white truncate">${esc(p.name)}</h3>
+          <div class="gold font-black text-lg sm:text-base shrink-0">${money(p.price)}</div>
+        </div>
+        ${p.description ? `<p class="muted text-xs sm:text-sm mt-1.5 line-clamp-2 leading-relaxed">${esc(p.description)}</p>` : ''}
+        <div class="text-xs text-zinc-400 mt-2 flex items-center justify-between">
+          <span>${Number(p.stock) > 0 ? `<span class="text-green-400 font-medium">${Number(p.stock)} in stock</span>` : `<span class="text-red-400">Sold out</span>`}</span>
+        </div>
+      </div>
+      <button type="button" data-add-cart="${p.id}" ${Number(p.stock) <= 0 ? 'disabled' : ''} class="w-full mt-3.5 ${Number(p.stock) <= 0 ? 'bg-[#222] text-zinc-500 cursor-not-allowed' : 'bg-gold text-black font-bold hover:brightness-110 shadow-sm'} rounded-xl py-2.5 text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
+        <span>🛒</span>
+        <span>${Number(p.stock) <= 0 ? 'Out of stock' : 'Add to cart'}</span>
+      </button>
+    </div>
+  `;
+}
 async function renderReviews(uid){const s=await getDocs(query(collection(db,'reviews'),where('sellerId','==',uid),limit(50)));$('reviews').innerHTML=s.docs.map(d=>{const r=d.data();return `<div class="border-b border-[#292929] py-3"><b>${esc(r.reviewerName)}</b><span class="gold ml-2">${'★'.repeat(Math.max(1,Math.min(5,r.rating)))}</span><p class="muted text-sm mt-1">${esc(r.text)}</p></div>`}).join('')||'<span class="muted">No reviews yet.</span>'}
 function openReviewModal(uid){modal(`<h2 class="text-xl font-bold">Review seller</h2><select id="reviewRating" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]"><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — Average</option><option value="2">2 — Poor</option><option value="1">1 — Very poor</option></select><textarea id="reviewText" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Tell other buyers about your experience…"></textarea><div class="flex justify-end gap-2 mt-4"><button data-close-modal>Cancel</button>${button('Submit','submitReview')}</div>`);$('submitReview').onclick=async()=>{try{const existing=await getDocs(query(collection(db,'reviews'),where('sellerId','==',uid),where('reviewerId','==',currentUser.uid),limit(1)));if(!existing.empty)throw Error('You already reviewed this seller.');const delivered=await getDocs(query(collection(db,'orders'),where('buyerId','==',currentUser.uid),where('sellerIds','array-contains',uid),where('status','==','delivered'),limit(1)));if(delivered.empty)throw Error('You can review a seller after a delivered order.');await addDoc(collection(db,'reviews'),{sellerId:uid,reviewerId:currentUser.uid,reviewerName:currentProfile.name,rating:Number($('reviewRating').value),text:$('reviewText').value.trim(),createdAt:serverTimestamp()});closeModal();toast('Review submitted','success');await openStore(uid)}catch(e){toast(errMsg(e),'error')}}}
 
-async function renderProducts(){if(!currentProfile.verified){$('page').innerHTML=pageTitle('Products','Manage your catalogue.')+`<div class="card p-7"><h2 class="text-xl font-bold">Verification required</h2><p class="muted mt-2">Only verified sellers can publish products.</p>${button('Open Settings','productVerify','mt-4')}</div>`;$('productVerify').onclick=()=>navigate('settings');return}const s=await getDocs(query(collection(db,'products'),where('sellerId','==',currentUser.uid)));const products=s.docs.map(d=>({id:d.id,...d.data()}));$('page').innerHTML=pageTitle('Products','Add, edit and remove what you sell.')+`<div class="flex justify-end mb-5">${button('+ Add product','addProduct')}</div><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">${products.length?products.map(p=>`<div class="card p-3"><img class="product-img" src="${esc(p.imageUrl||'')}" alt=""><b class="block mt-3">${esc(p.name)}</b><div class="gold font-black">${money(p.price)}</div><div class="muted text-sm mt-1">Stock: ${Number(p.stock)||0}</div><div class="flex gap-2 mt-3"><button data-edit-product="${p.id}" class="flex-1 border border-[#444] rounded-xl py-2">Edit</button><button data-delete-product="${p.id}" class="border border-red-700 text-red-400 rounded-xl px-3">Delete</button></div></div>`).join(''):'<div class="card p-7 muted">No products yet.</div>'}</div>`;$('addProduct').onclick=()=>openProductModal();document.querySelectorAll('[data-edit-product]').forEach(b=>b.onclick=()=>openProductModal(products.find(p=>p.id===b.dataset.editProduct)));document.querySelectorAll('[data-delete-product]').forEach(b=>b.onclick=()=>deleteProduct(b.dataset.deleteProduct))}
+async function renderProducts(){
+  if(!currentProfile.verified){
+    $('page').innerHTML=pageTitle('Products','Manage your catalogue.')+`<div class="card p-7"><h2 class="text-xl font-bold">Verification required</h2><p class="muted mt-2">Only verified sellers can publish products.</p>${button('Open Settings','productVerify','mt-4')}</div>`;
+    $('productVerify').onclick=()=>navigate('settings');
+    return;
+  }
+  const s=await getDocs(query(collection(db,'products'),where('sellerId','==',currentUser.uid)));
+  const products=s.docs.map(d=>({id:d.id,...d.data()}));
+  $('page').innerHTML=pageTitle('Products','Add, edit and remove what you sell.')+`
+    <div class="flex justify-between items-center mb-5">
+      <div class="text-xs sm:text-sm muted">${products.length} product${products.length===1?'':'s'} in catalogue</div>
+      ${button('+ Add product','addProduct')}
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      ${products.length?products.map(p=>`
+        <div class="card p-4 sm:p-4 flex flex-col justify-between" id="product-card-${esc(p.id)}">
+          <div>
+            <div class="relative w-full aspect-[4/3] sm:aspect-square rounded-xl overflow-hidden bg-[#161616] border border-[#262626]">
+              <img class="w-full h-full object-cover" src="${esc(p.imageUrl||'')}" alt="${esc(p.name||'Product')}" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 fill=%22none%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%231a1a1a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2228%22%3E📦%3C/text%3E%3C/svg%3E'">
+              ${Number(p.stock) <= 0 ? `<span class="absolute top-2.5 right-2.5 bg-red-950/90 text-red-300 text-xs px-2.5 py-1 rounded-lg font-bold border border-red-700/60 shadow">Out of Stock</span>` : `<span class="absolute top-2.5 right-2.5 bg-black/70 backdrop-blur-sm text-zinc-300 text-xs px-2.5 py-1 rounded-lg border border-white/10 font-mono">${Number(p.stock)||0} in stock</span>`}
+            </div>
+            <div class="flex items-baseline justify-between gap-3 mt-3.5">
+              <b class="text-base sm:text-sm font-bold text-white leading-snug truncate">${esc(p.name)}</b>
+              <div class="gold font-black text-lg sm:text-base shrink-0">${money(p.price)}</div>
+            </div>
+            ${p.description ? `<p class="muted text-xs sm:text-sm mt-1.5 line-clamp-2 leading-relaxed">${esc(p.description)}</p>` : ''}
+            <div class="flex items-center gap-2 mt-2.5 text-xs text-zinc-400">
+              <span class="inline-flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full ${Number(p.stock)>0?'bg-green-500':'bg-red-500'}"></span>
+                <span class="${Number(p.stock)>0?'text-zinc-300 font-medium':'text-red-400 font-semibold'}">${Number(p.stock)>0?`${Number(p.stock)} units available`:'Out of stock'}</span>
+              </span>
+            </div>
+          </div>
+          <div class="flex gap-2 mt-4 pt-3 border-t border-[#262626]">
+            <button type="button" data-edit-product="${p.id}" class="flex-1 border border-[#444] hover:border-gold rounded-xl py-2.5 text-xs sm:text-sm font-semibold text-zinc-200 transition flex items-center justify-center gap-1.5">
+              <span>✏️</span>
+              <span>Edit</span>
+            </button>
+            <button type="button" data-delete-product="${p.id}" class="border border-red-700/70 hover:bg-red-950/30 text-red-400 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5">
+              <span>🗑️</span>
+              <span>Delete</span>
+            </button>
+          </div>
+        </div>
+      `).join(''):'<div class="card p-7 muted">No products yet.</div>'}
+    </div>
+  `;
+  $('addProduct').onclick=()=>openProductModal();
+  document.querySelectorAll('[data-edit-product]').forEach(b=>b.onclick=()=>openProductModal(products.find(p=>p.id===b.dataset.editProduct)));
+  document.querySelectorAll('[data-delete-product]').forEach(b=>b.onclick=()=>deleteProduct(b.dataset.deleteProduct));
+}
 function openProductModal(p=null){modal(`<h2 class="text-xl font-bold">${p?'Edit product':'Add product'}</h2><input id="prodName" value="${esc(p?.name||'')}" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Product name"><input id="prodPrice" type="number" min="0" step="0.01" value="${p?.price??''}" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Price in GHS"><input id="prodStock" type="number" min="0" step="1" value="${p?.stock??0}" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Stock"><textarea id="prodDesc" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Description">${esc(p?.description||'')}</textarea><input id="prodFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-3"><p class="muted text-xs mt-2">Product image: maximum 10MB.</p><div class="flex justify-end gap-2 mt-4"><button data-close-modal>Cancel</button>${button(p?'Save changes':'Add product','saveProduct')}</div>`);$('saveProduct').onclick=async()=>{try{const name=$('prodName').value.trim(),price=Number($('prodPrice').value),stock=Number($('prodStock').value),description=$('prodDesc').value.trim(),file=$('prodFile').files[0];if(!name||!Number.isFinite(price)||price<0||!Number.isInteger(stock)||stock<0)throw Error('Enter a valid name, price and stock.');let imageUrl=p?.imageUrl||'',imagePath=p?.imagePath||'';if(file){validFile(file,['image/jpeg','image/png','image/webp'],10);const x=await uploadPublic(file,'products');imageUrl=x.url;imagePath=x.path}if(!imageUrl)throw Error('Choose a product image.');const data={sellerId:currentUser.uid,name,price,stock,description,imageUrl,imagePath,updatedAt:serverTimestamp()};if(p)await updateDoc(doc(db,'products',p.id),data);else await addDoc(collection(db,'products'),{...data,createdAt:serverTimestamp()});closeModal();toast(p?'Product updated':'Product added','success');navigate('products')}catch(e){toast(errMsg(e),'error')}}}
 async function deleteProduct(id){if(!confirm('Delete this product?'))return;try{const s=await getDoc(doc(db,'products',id));if(!snapshotExists(s)||s.data().sellerId!==currentUser.uid)throw Error('You cannot delete this product.');await deleteDoc(doc(db,'products',id));toast('Product deleted','success');navigate('products')}catch(e){toast(errMsg(e),'error')}}
 
-async function renderOrders(){if(typeof refreshOrdersBadge==='function')refreshOrdersBadge();const buyer=getDocs(query(collection(db,'orders'),where('buyerId','==',currentUser.uid),limit(100)));const seller=getDocs(query(collection(db,'orders'),where('sellerId','==',currentUser.uid),limit(100)));const [bs,ss]=await Promise.all([buyer,seller]);const mine=bs.docs.map(d=>({id:d.id,...d.data(),view:'buyer'}));const sales=ss.docs.map(d=>({id:d.id,...d.data(),view:'seller'}));$('page').innerHTML=pageTitle('Orders','Buyer purchases and seller orders.')+`<div class="grid lg:grid-cols-2 gap-5"><div><h2 class="font-bold text-xl mb-3">My purchases</h2><div class="space-y-3">${mine.length?mine.map(orderCard).join(''):'<div class="card p-5 muted">No purchases yet.</div>'}</div></div><div><h2 class="font-bold text-xl mb-3">Customer orders</h2><div class="space-y-3">${sales.length?sales.map(orderCard).join(''):'<div class="card p-5 muted">No customer orders yet.</div>'}</div></div></div>`;document.querySelectorAll('[data-order-status]').forEach(b=>b.onclick=()=>updateOrderStatus(b.dataset.orderStatus,b.dataset.orderId))}
-function orderCard(o){const items=(o.items||[]).map(i=>`${esc(i.name)} × ${i.quantity}`).join(', ');const canUpdate=o.view==='seller'&&!['delivered','cancelled'].includes(o.status);return `<div class="card p-5"><div class="flex justify-between gap-3"><b>Order #${esc(o.id.slice(0,8).toUpperCase())}</b><span class="gold">${esc(o.status||'pending')}</span></div><p class="muted text-sm mt-2">${items}</p><div class="font-black mt-3">${money(o.total)}</div><p class="text-sm mt-2">${esc(o.buyerName||'Buyer')} · ${esc(o.phone||'')}</p>${o.deliveryAddress?`<p class="muted text-sm">${esc(o.deliveryAddress)}</p>`:''}${canUpdate?`<div class="flex flex-wrap gap-2 mt-4"><button data-order-status="confirmed" data-order-id="${o.id}" class="border border-[#444] rounded-xl px-3 py-2">Confirm</button><button data-order-status="processing" data-order-id="${o.id}" class="border border-[#444] rounded-xl px-3 py-2">Processing</button><button data-order-status="shipped" data-order-id="${o.id}" class="border border-[#444] rounded-xl px-3 py-2">Shipped</button><button data-order-status="delivered" data-order-id="${o.id}" class="bg-gold text-black rounded-xl px-3 py-2">Delivered</button><button data-order-status="cancelled" data-order-id="${o.id}" class="border border-red-700 text-red-400 rounded-xl px-3 py-2">Cancel</button></div>`:''}</div>`}
-async function updateOrderStatus(id,status){try{const r=doc(db,'orders',id),s=await getDoc(r);if(!snapshotExists(s)||s.data().sellerId!==currentUser.uid)throw Error('You cannot update this order.');await updateDoc(r,{status,updatedAt:serverTimestamp()});toast('Order updated','success');if(typeof refreshOrdersBadge==='function')refreshOrdersBadge();navigate('orders')}catch(e){toast(errMsg(e),'error')}}
+let currentOrdersFilter = 'all';
 
-async function renderStore(){const s=await getDoc(doc(db,'stores',currentUser.uid));const store=snapshotExists(s)?s.data():{};$('page').innerHTML=pageTitle('Store','Your public storefront settings.')+(!currentProfile.verified?`<div class="card p-5 mb-5 border-yellow-700"><b>Verification required.</b><p class="muted mt-1">Your store becomes public after seller verification.</p></div>`:'')+`<div class="card p-6 max-w-2xl"><label class="muted text-sm">Store name</label><input id="storeName" value="${esc(store.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><label class="muted text-sm block mt-4">Description</label><textarea id="storeDesc" rows="5" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]">${esc(store.description||'')}</textarea><label class="muted text-sm block mt-4">Location / Area</label><input id="storeLocation" value="${esc(store.location||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="East Legon, Accra"><label class="muted text-sm block mt-4">Business address</label><input id="storeAddress" value="${esc(store.address||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Street / landmark"><label class="muted text-sm block mt-4">Opening hours</label><input id="storeHours" value="${esc(store.hours||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Mon–Sat · 8:00 AM – 7:00 PM"><label class="muted text-sm block mt-4">WhatsApp number</label><input id="storeWhatsApp" value="${esc(store.whatsapp||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="233XXXXXXXXX"><button id="saveStore" class="mt-5 bg-gold text-black px-5 py-3 rounded-xl font-bold">Save store</button></div>`;$('saveStore').onclick=async()=>{try{if(!currentProfile.verified)throw Error('Verify your seller account first.');const name=$('storeName').value.trim();if(name.length<2)throw Error('Enter a store name.');const wa=$('storeWhatsApp').value.replace(/\D/g,'');if(wa&&wa.length<10)throw Error('Enter a valid WhatsApp number.');await setDoc(doc(db,'stores',currentUser.uid),{ownerId:currentUser.uid,name,description:$('storeDesc').value.trim(),location:$('storeLocation').value.trim(),address:$('storeAddress').value.trim(),hours:$('storeHours').value.trim(),whatsapp:wa,updatedAt:serverTimestamp()},{merge:true});toast('Store saved','success')}catch(e){toast(errMsg(e),'error')}}}
+function formatOrderDate(val){
+  const t = typeof val === 'number' ? val : (val?.toMillis ? val.toMillis() : (val?.seconds ? val.seconds * 1000 : null));
+  if(!t) return '';
+  try {
+    const d = new Date(t);
+    return d.toLocaleDateString('en-GH', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch(_) {
+    return new Date(t).toLocaleString();
+  }
+}
+
+function getOrderStatusBadge(status){
+  const s = String(status||'pending').toLowerCase();
+  if(s === 'delivered' || s === 'completed'){
+    return `<span class="order-status-badge bg-green-950/80 text-green-300 border border-green-700/60">✓ Completed</span>`;
+  }
+  if(s === 'shipped'){
+    return `<span class="order-status-badge bg-blue-950/80 text-blue-300 border border-blue-700/60">🚚 In Transit</span>`;
+  }
+  if(s === 'processing'){
+    return `<span class="order-status-badge bg-amber-950/80 text-amber-300 border border-amber-700/60">⚙️ Processing</span>`;
+  }
+  if(s === 'confirmed'){
+    return `<span class="order-status-badge bg-yellow-950/80 text-yellow-300 border border-yellow-700/60">✓ Confirmed</span>`;
+  }
+  if(s === 'cancelled'){
+    return `<span class="order-status-badge bg-red-950/80 text-red-300 border border-red-700/60">✕ Cancelled</span>`;
+  }
+  return `<span class="order-status-badge bg-zinc-900 text-gold border border-gold/40">⏳ Pending</span>`;
+}
+
+function getOrderTimeline(order){
+  const MILESTONES = [
+    { key: 'pending', label: 'Order Placed', defaultNote: 'Order submitted by buyer and sent to vendor.' },
+    { key: 'confirmed', label: 'Order Confirmed', defaultNote: 'Vendor accepted and confirmed the order items.' },
+    { key: 'processing', label: 'Processing & Packed', defaultNote: 'Items packaged, labeled, and prepared for dispatch.' },
+    { key: 'shipped', label: 'Dispatched / In Transit', defaultNote: 'Courier has picked up package and is en route.' },
+    { key: 'delivered', label: 'Delivered & Completed', defaultNote: 'Package delivered to recipient and order completed.' }
+  ];
+
+  const explicit = Array.isArray(order.statusHistory) && order.statusHistory.length ? order.statusHistory : [];
+  const createdTime = ts(order.createdAt) || (typeof order.createdAt === 'number' ? order.createdAt : Date.now());
+  const updatedTime = ts(order.updatedAt) || (typeof order.updatedAt === 'number' ? order.updatedAt : createdTime);
+  const curStatus = String(order.status || 'pending').toLowerCase();
+
+  if(curStatus === 'cancelled'){
+    const pEntry = explicit.find(h=>h.status==='pending');
+    const cEntry = explicit.find(h=>h.status==='cancelled');
+    return [
+      {
+        key: 'pending',
+        label: pEntry?.label || 'Order Placed',
+        note: pEntry?.note || 'Order submitted by buyer.',
+        timestamp: pEntry?.timestamp || createdTime,
+        state: 'done'
+      },
+      {
+        key: 'cancelled',
+        label: cEntry?.label || 'Order Cancelled',
+        note: cEntry?.note || 'Order was cancelled.',
+        timestamp: cEntry?.timestamp || updatedTime,
+        state: 'cancelled'
+      }
+    ];
+  }
+
+  const steps = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
+  const curIdx = Math.max(0, steps.indexOf(curStatus === 'completed' ? 'delivered' : curStatus));
+
+  return MILESTONES.map((m, idx)=>{
+    const entry = explicit.find(h=>h.status === m.key);
+    let state = 'pending';
+    if(idx < curIdx){
+      state = 'done';
+    } else if(idx === curIdx){
+      state = curIdx === 4 ? 'done' : 'current';
+    }
+
+    let timestamp = entry?.timestamp;
+    if(!timestamp){
+      if(idx === 0) timestamp = createdTime;
+      else if(idx <= curIdx && curIdx > 0){
+        timestamp = createdTime + Math.round((updatedTime - createdTime) * (idx / curIdx));
+      }
+    }
+
+    return {
+      key: m.key,
+      label: entry?.label || m.label,
+      note: entry?.note || m.defaultNote,
+      timestamp,
+      state
+    };
+  });
+}
+
+window.openOrderDetailModal = async function(orderOrId){
+  let order = typeof orderOrId === 'object' && orderOrId ? orderOrId : (window._ordersMap?.get(orderOrId) || null);
+  if(!order && typeof orderOrId === 'string'){
+    try {
+      loading('Loading order details…');
+      const snap = await getDoc(doc(db, 'orders', orderOrId));
+      if(snapshotExists(snap)){
+        order = { id: snap.id, ...snap.data() };
+      }
+    } catch(e) {
+      toast(errMsg(e), 'error');
+      return;
+    } finally {
+      ready();
+    }
+  }
+
+  if(!order){
+    toast('Order not found', 'error');
+    return;
+  }
+
+  const isCompleted = ['delivered', 'completed'].includes(String(order.status||'').toLowerCase());
+  const isCancelled = order.status === 'cancelled';
+  const timeline = getOrderTimeline(order);
+  const items = Array.isArray(order.items) ? order.items : [];
+  const itemsSubtotal = items.reduce((sum, item)=>sum + (Number(item.price)||0) * (Number(item.quantity)||1), 0);
+  const isSeller = (order.sellerId === currentUser?.uid || order.view === 'seller');
+  const canUpdate = isSeller && !['delivered', 'cancelled', 'completed'].includes(order.status);
+
+  const timelineHtml = `
+    <div class="timeline-stepper mt-3">
+      ${timeline.map(t => {
+        let markerClass = 'pending';
+        let markerIcon = '•';
+        if(t.state === 'done') { markerClass = 'done'; markerIcon = '✓'; }
+        else if(t.state === 'current') { markerClass = 'current'; markerIcon = '⏳'; }
+        else if(t.state === 'cancelled') { markerClass = 'cancelled'; markerIcon = '✕'; }
+
+        const dateStr = t.timestamp ? formatOrderDate(t.timestamp) : '';
+        return `
+          <div class="timeline-item">
+            <div class="timeline-marker ${markerClass}">${markerIcon}</div>
+            <div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
+              <span class="font-bold text-sm ${t.state === 'done' ? 'text-green-400' : t.state === 'current' ? 'text-gold' : t.state === 'cancelled' ? 'text-red-400' : 'text-zinc-300'}">
+                ${esc(t.label)}
+              </span>
+              ${dateStr ? `<span class="text-xs text-zinc-400 font-mono">${esc(dateStr)}</span>` : ''}
+            </div>
+            <p class="text-xs text-zinc-400 mt-1 leading-relaxed">${esc(t.note)}</p>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+
+  const deliveryAddressHtml = `
+    <div class="card p-4 sm:p-5 bg-[#141414] border border-[#2a2a2a] rounded-2xl">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-base">📍</span>
+        <h3 class="font-bold text-sm text-zinc-200">Delivery Address & Recipient</h3>
+      </div>
+      <div class="space-y-2.5 text-xs sm:text-sm">
+        <div class="flex justify-between items-start gap-4">
+          <span class="text-zinc-400 shrink-0">Recipient:</span>
+          <span class="font-bold text-right text-zinc-200">${esc(order.buyerName || 'Valued Customer')}</span>
+        </div>
+        <div class="flex justify-between items-center gap-4">
+          <span class="text-zinc-400 shrink-0">Phone:</span>
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-zinc-200">${esc(order.phone || 'N/A')}</span>
+            ${order.phone ? `<a href="tel:${esc(order.phone)}" class="text-xs text-gold border border-gold/40 hover:bg-gold/10 px-2 py-0.5 rounded-md transition">Call</a>` : ''}
+          </div>
+        </div>
+        <div class="pt-2 border-t border-[#262626]">
+          <span class="text-zinc-400 block mb-1">Address:</span>
+          <div class="p-2.5 rounded-xl bg-[#0e0e0e] border border-[#222] text-zinc-200 font-medium leading-relaxed">
+            ${esc(order.deliveryAddress || 'No delivery address provided')}
+          </div>
+        </div>
+        <div class="flex justify-between items-center gap-4 pt-1 text-xs">
+          <span class="text-zinc-400">Payment:</span>
+          <span class="text-zinc-300 font-medium bg-[#1e1e1e] px-2 py-0.5 rounded-md border border-[#333]">
+            ${esc(order.paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery (MoMo / Cash)' : (order.paymentMethod || 'Cash on Delivery'))}
+          </span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const itemsListHtml = `
+    <div class="card p-4 sm:p-5 bg-[#141414] border border-[#2a2a2a] rounded-2xl">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-base">📦</span>
+          <h3 class="font-bold text-sm text-zinc-200">Purchased Items (${items.length})</h3>
+        </div>
+        <span class="text-xs text-zinc-400">Item breakdown</span>
+      </div>
+      <div class="divide-y divide-[#242424]">
+        ${items.length ? items.map(item => `
+          <div class="py-3 flex items-center gap-3 first:pt-0 last:pb-0">
+            ${item.imageUrl ? `
+              <img src="${esc(item.imageUrl)}" class="w-14 h-14 rounded-xl object-cover border border-[#2a2a2a] bg-[#1a1a1a] shrink-0" alt="${esc(item.name||'Product')}" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 fill=%22none%22%3E%3Crect width=%2240%22 height=%2240%22 fill=%22%23222%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2216%22%3E📦%3C/text%3E%3C/svg%3E'">
+            ` : `
+              <div class="w-14 h-14 rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] flex items-center justify-center text-xl shrink-0">📦</div>
+            `}
+            <div class="flex-1 min-w-0">
+              <h4 class="font-bold text-xs sm:text-sm text-zinc-200 truncate">${esc(item.name || 'Product')}</h4>
+              <div class="text-xs text-zinc-400 mt-0.5 flex items-center gap-2">
+                <span>Unit: ${money(item.price)}</span>
+                <span class="bg-[#242424] text-zinc-300 px-2 py-0.5 rounded-full font-bold">× ${esc(item.quantity || 1)}</span>
+              </div>
+            </div>
+            <div class="font-bold text-xs sm:text-sm text-gold text-right shrink-0">
+              ${money((Number(item.price)||0) * (Number(item.quantity)||1))}
+            </div>
+          </div>
+        `).join('') : '<div class="text-xs text-zinc-400 py-3">No items listed in order.</div>'}
+      </div>
+      <div class="mt-4 pt-3 border-t border-[#262626] space-y-1.5 text-xs">
+        <div class="flex justify-between text-zinc-400">
+          <span>Items Subtotal</span>
+          <span class="font-mono text-zinc-200">${money(itemsSubtotal || order.total)}</span>
+        </div>
+        <div class="flex justify-between text-zinc-400">
+          <span>Delivery / Fulfillment</span>
+          <span class="text-green-400 font-medium">Included</span>
+        </div>
+        <div class="flex justify-between text-sm sm:text-base font-black text-white pt-2 border-t border-[#262626]">
+          <span>Grand Total</span>
+          <span class="gold text-base sm:text-lg">${money(order.total)}</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const completionBannerHtml = isCompleted ? `
+    <div class="p-4 rounded-2xl bg-gradient-to-r from-green-950/60 via-green-900/30 to-transparent border border-green-700/60 flex items-center gap-3.5 mb-5 shadow-inner">
+      <div class="w-10 h-10 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center text-lg shrink-0">
+        ✅
+      </div>
+      <div class="min-w-0">
+        <div class="font-black text-green-300 text-sm flex items-center gap-2">
+          <span>Completed Order</span>
+          <span class="bg-green-800/60 text-green-200 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full">Fulfilled</span>
+        </div>
+        <p class="text-xs text-green-200/80 mt-0.5 leading-relaxed">
+          This order was successfully delivered and marked complete. Status history and delivery details are recorded below.
+        </p>
+      </div>
+    </div>
+  ` : isCancelled ? `
+    <div class="p-4 rounded-2xl bg-red-950/50 border border-red-700/60 flex items-center gap-3.5 mb-5">
+      <div class="w-10 h-10 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center text-lg shrink-0">
+        ✕
+      </div>
+      <div>
+        <div class="font-black text-red-300 text-sm">Order Cancelled</div>
+        <p class="text-xs text-red-200/80 mt-0.5">This order was cancelled and is no longer active.</p>
+      </div>
+    </div>
+  ` : '';
+
+  const sellerActionsHtml = canUpdate ? `
+    <div class="card p-4 bg-[#181818] border border-[#333] rounded-2xl mt-4">
+      <h4 class="font-bold text-xs text-zinc-300 uppercase tracking-wider mb-2.5">Update Order Status</h4>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" data-modal-status="confirmed" data-order-id="${order.id}" class="border border-[#444] hover:border-gold rounded-xl px-3 py-1.5 text-xs font-semibold text-zinc-200 transition">Confirm</button>
+        <button type="button" data-modal-status="processing" data-order-id="${order.id}" class="border border-[#444] hover:border-gold rounded-xl px-3 py-1.5 text-xs font-semibold text-zinc-200 transition">Processing</button>
+        <button type="button" data-modal-status="shipped" data-order-id="${order.id}" class="border border-[#444] hover:border-gold rounded-xl px-3 py-1.5 text-xs font-semibold text-zinc-200 transition">Shipped</button>
+        <button type="button" data-modal-status="delivered" data-order-id="${order.id}" class="bg-gold text-black rounded-xl px-3.5 py-1.5 text-xs font-bold hover:brightness-110 transition shadow-sm">Delivered (Complete)</button>
+        <button type="button" data-modal-status="cancelled" data-order-id="${order.id}" class="border border-red-700/70 text-red-400 hover:bg-red-950/30 rounded-xl px-3 py-1.5 text-xs font-semibold transition ml-auto">Cancel</button>
+      </div>
+    </div>
+  ` : '';
+
+  const modalContent = `
+    <div class="space-y-5" id="orderDetailModalContent">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#242424]">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2 class="text-xl font-black text-white">Order #${esc(order.id.slice(0, 8).toUpperCase())}</h2>
+            ${getOrderStatusBadge(order.status)}
+          </div>
+          <div class="text-xs text-zinc-400 mt-1 flex items-center gap-2">
+            <span>Placed: ${formatOrderDate(order.createdAt) || 'Recent'}</span>
+            <span>•</span>
+            <span class="font-mono text-[11px] text-zinc-400">${esc(order.id)}</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button type="button" id="printReceiptBtn" class="border border-[#383838] hover:border-zinc-400 text-zinc-300 hover:text-white px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition">
+            <span>🖨️</span>
+            <span>Print Receipt</span>
+          </button>
+        </div>
+      </div>
+
+      ${completionBannerHtml}
+
+      <div class="grid md:grid-cols-[1.1fr_0.9fr] gap-4">
+        <!-- Left column: Items List and Delivery Address -->
+        <div class="space-y-4">
+          ${itemsListHtml}
+          ${deliveryAddressHtml}
+        </div>
+
+        <!-- Right column: Status History Timeline -->
+        <div class="space-y-4">
+          <div class="card p-4 sm:p-5 bg-[#141414] border border-[#2a2a2a] rounded-2xl h-full flex flex-col">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-base">⏱️</span>
+                <h3 class="font-bold text-sm text-zinc-200">Status History</h3>
+              </div>
+              <span class="text-xs text-zinc-400">Order progress</span>
+            </div>
+            <div class="flex-1">
+              ${timelineHtml}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      ${sellerActionsHtml}
+
+      <div class="flex items-center justify-between pt-2 border-t border-[#242424]">
+        <button type="button" data-close-modal class="border border-[#383838] hover:border-zinc-400 px-4 py-2 rounded-xl text-xs font-semibold text-zinc-300">Close</button>
+        ${isCompleted && !isSeller ? `
+          <button type="button" id="orderReviewSellerBtn" class="bg-gold text-black px-4 py-2 rounded-xl text-xs font-bold hover:brightness-110 shadow-sm transition flex items-center gap-1.5">
+            <span>⭐</span>
+            <span>Review Seller</span>
+          </button>
+        ` : ''}
+      </div>
+    </div>
+  `;
+
+  modal(modalContent);
+
+  $('printReceiptBtn')?.addEventListener('click', ()=>{
+    window.print();
+  });
+
+  $('orderReviewSellerBtn')?.addEventListener('click', ()=>{
+    closeModal();
+    if(typeof openReviewModal === 'function' && order.sellerId){
+      openReviewModal(order.sellerId);
+    }
+  });
+
+  document.querySelectorAll('[data-modal-status]').forEach(btn => {
+    btn.onclick = async () => {
+      closeModal();
+      await updateOrderStatus(btn.dataset.orderId, btn.dataset.modalStatus);
+    };
+  });
+};
+
+function orderCard(o){
+  const items = (o.items || []).map(i => `${esc(i.name)} × ${i.quantity}`).join(', ');
+  const isCompleted = ['delivered', 'completed'].includes(String(o.status||'').toLowerCase());
+  const canUpdate = o.view === 'seller' && !['delivered', 'cancelled', 'completed'].includes(o.status);
+  const cardClass = isCompleted ? 'card p-5 order-card-completed' : 'card p-5';
+  
+  return `
+    <div class="${cardClass}" id="order-card-${esc(o.id)}">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-2">
+          <b class="text-sm sm:text-base">Order #${esc(o.id.slice(0,8).toUpperCase())}</b>
+          ${isCompleted ? `<span class="text-[11px] bg-green-950/90 text-green-300 border border-green-700/60 px-2 py-0.5 rounded-full font-bold">✅ Completed</span>` : ''}
+        </div>
+        <div>${getOrderStatusBadge(o.status)}</div>
+      </div>
+      <p class="muted text-sm mt-2 line-clamp-2">${items || 'Order items'}</p>
+      <div class="flex items-baseline justify-between mt-3">
+        <div class="font-black text-lg text-white">${money(o.total)}</div>
+        <div class="text-xs text-zinc-400 font-mono">${formatOrderDate(o.createdAt)}</div>
+      </div>
+      <div class="mt-2 pt-2 border-t border-[#242424] text-xs text-zinc-300 flex items-center justify-between gap-2">
+        <span class="truncate">👤 ${esc(o.buyerName||'Buyer')} · 📞 ${esc(o.phone||'N/A')}</span>
+      </div>
+      ${o.deliveryAddress ? `<p class="muted text-xs mt-1 truncate">📍 ${esc(o.deliveryAddress)}</p>` : ''}
+      
+      <!-- Primary Detail View Action Button -->
+      <button type="button" data-order-detail="${esc(o.id)}" class="w-full mt-3.5 ${isCompleted ? 'bg-gold text-black font-bold hover:brightness-110 shadow-sm' : 'bg-[#1a1a1a] hover:bg-[#222] border border-[#383838] text-zinc-200 font-semibold'} py-2.5 px-3 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+        <span>${isCompleted ? '📜 View Order History & Details' : '📋 View Details & Status History'}</span>
+        <span class="text-xs">→</span>
+      </button>
+
+      ${canUpdate ? `
+        <div class="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-[#242424]">
+          <button type="button" data-order-status="confirmed" data-order-id="${esc(o.id)}" class="border border-[#444] hover:border-gold rounded-lg px-2.5 py-1 text-xs text-zinc-300">Confirm</button>
+          <button type="button" data-order-status="processing" data-order-id="${esc(o.id)}" class="border border-[#444] hover:border-gold rounded-lg px-2.5 py-1 text-xs text-zinc-300">Processing</button>
+          <button type="button" data-order-status="shipped" data-order-id="${esc(o.id)}" class="border border-[#444] hover:border-gold rounded-lg px-2.5 py-1 text-xs text-zinc-300">Shipped</button>
+          <button type="button" data-order-status="delivered" data-order-id="${esc(o.id)}" class="bg-gold text-black rounded-lg px-2.5 py-1 text-xs font-bold">Delivered</button>
+          <button type="button" data-order-status="cancelled" data-order-id="${esc(o.id)}" class="border border-red-700/70 text-red-400 rounded-lg px-2.5 py-1 text-xs ml-auto">Cancel</button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+async function updateOrderStatus(idOrStatus, statusOrId){
+  try{
+    let id, status;
+    const knownStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'completed'];
+    if(knownStatuses.includes(idOrStatus)){
+      status = idOrStatus;
+      id = statusOrId;
+    } else {
+      id = idOrStatus;
+      status = statusOrId;
+    }
+
+    const r = doc(db, 'orders', id), s = await getDoc(r);
+    if(!snapshotExists(s) || s.data().sellerId !== currentUser.uid) throw Error('You cannot update this order.');
+    const oData = s.data();
+    const history = Array.isArray(oData.statusHistory) ? [...oData.statusHistory] : [];
+    const notesMap = {
+      confirmed: 'Order accepted and confirmed by seller',
+      processing: 'Order packaged and prepared for courier dispatch',
+      shipped: 'Package handed over to dispatch courier for delivery',
+      delivered: 'Package successfully delivered to recipient address',
+      cancelled: 'Order was cancelled by seller'
+    };
+    const labelsMap = {
+      confirmed: 'Confirmed',
+      processing: 'Processing & Packed',
+      shipped: 'Dispatched / In Transit',
+      delivered: 'Delivered & Completed',
+      cancelled: 'Cancelled'
+    };
+    history.push({
+      status,
+      label: labelsMap[status] || status,
+      note: notesMap[status] || `Order status changed to ${status}`,
+      updatedBy: currentUser.uid,
+      updatedByName: currentProfile?.name || 'Seller',
+      timestamp: Date.now()
+    });
+    await updateDoc(r, {
+      status,
+      statusHistory: history,
+      updatedAt: serverTimestamp()
+    });
+    if (oData.buyerId) {
+      try {
+        await addDoc(collection(db, 'notifications'), {
+          recipientId: oData.buyerId,
+          actorId: currentUser.uid,
+          senderName: currentProfile?.name || 'Seller',
+          title: `📦 Order #${id.slice(-6).toUpperCase()} ${labelsMap[status] || status}`,
+          message: notesMap[status] || `Your order is now ${labelsMap[status] || status}. Tap to track.`,
+          type: 'order_update',
+          orderId: id,
+          status,
+          read: false,
+          createdAt: serverTimestamp()
+        });
+      } catch (err) {
+        console.warn('Buyer notification write notice:', err);
+      }
+    }
+    toast(`Order updated: ${labelsMap[status]||status}`, 'success');
+    if(typeof refreshOrdersBadge === 'function') refreshOrdersBadge();
+    navigate('orders');
+  }catch(e){
+    toast(errMsg(e), 'error');
+  }
+}
+
+async function renderOrders(targetOrderId){
+  if(!currentUser){
+    showAuthPrompt('view your orders and track deliveries');
+    return;
+  }
+  if(typeof refreshOrdersBadge === 'function') refreshOrdersBadge();
+  const buyer = getDocs(query(collection(db,'orders'), where('buyerId','==',currentUser.uid), limit(100)));
+  const seller = getDocs(query(collection(db,'orders'), where('sellerId','==',currentUser.uid), limit(100)));
+  const [bs, ss] = await Promise.all([buyer, seller]);
+  
+  const mine = bs.docs.map(d=>({id:d.id, ...d.data(), view:'buyer'})).sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
+  const sales = ss.docs.map(d=>({id:d.id, ...d.data(), view:'seller'})).sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
+  
+  window._ordersMap = new Map();
+  mine.forEach(o => window._ordersMap.set(o.id, o));
+  sales.forEach(o => window._ordersMap.set(o.id, o));
+
+  const allCount = mine.length + sales.length;
+  const completedCount = [...mine, ...sales].filter(o => ['delivered','completed'].includes(String(o.status||'').toLowerCase())).length;
+  const activeCount = allCount - completedCount - [...mine, ...sales].filter(o => o.status === 'cancelled').length;
+
+  function filterList(list){
+    if(currentOrdersFilter === 'completed'){
+      return list.filter(o => ['delivered', 'completed'].includes(String(o.status||'').toLowerCase()));
+    }
+    if(currentOrdersFilter === 'active'){
+      return list.filter(o => !['delivered', 'completed', 'cancelled'].includes(String(o.status||'').toLowerCase()));
+    }
+    return list;
+  }
+
+  const filteredMine = filterList(mine);
+  const filteredSales = filterList(sales);
+
+  $('page').innerHTML = pageTitle('Orders', 'Buyer purchases, customer orders, and delivery status history.') + `
+    <!-- Orders Filter Tabs -->
+    <div class="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+      <button type="button" data-filter-orders="all" class="order-filter-pill px-3.5 py-1.5 rounded-full text-xs font-semibold border ${currentOrdersFilter==='all'?'active':'border-[#383838] bg-[#141414] text-zinc-300'}">
+        All Orders (${allCount})
+      </button>
+      <button type="button" data-filter-orders="active" class="order-filter-pill px-3.5 py-1.5 rounded-full text-xs font-semibold border ${currentOrdersFilter==='active'?'active':'border-[#383838] bg-[#141414] text-zinc-300'}">
+        ⏳ Active (${activeCount})
+      </button>
+      <button type="button" data-filter-orders="completed" class="order-filter-pill px-3.5 py-1.5 rounded-full text-xs font-semibold border ${currentOrdersFilter==='completed'?'active':'border-green-800/80 bg-green-950/40 text-green-300'}">
+        ✅ Completed (${completedCount})
+      </button>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-5">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-bold text-xl">My purchases</h2>
+          <span class="text-xs text-zinc-400">${filteredMine.length} order${filteredMine.length===1?'':'s'}</span>
+        </div>
+        <div class="space-y-3">
+          ${filteredMine.length ? filteredMine.map(orderCard).join('') : `
+            <div class="card p-6 text-center muted">
+              ${currentOrdersFilter === 'completed' ? 'No completed purchases yet.' : 'No purchases found.'}
+            </div>
+          `}
+        </div>
+      </div>
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-bold text-xl">Customer orders</h2>
+          <span class="text-xs text-zinc-400">${filteredSales.length} order${filteredSales.length===1?'':'s'}</span>
+        </div>
+        <div class="space-y-3">
+          ${filteredSales.length ? filteredSales.map(orderCard).join('') : `
+            <div class="card p-6 text-center muted">
+              ${currentOrdersFilter === 'completed' ? 'No completed customer orders yet.' : 'No customer orders found.'}
+            </div>
+          `}
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.querySelectorAll('[data-filter-orders]').forEach(b => {
+    b.onclick = () => {
+      currentOrdersFilter = b.dataset.filterOrders;
+      renderOrders();
+    };
+  });
+
+  document.querySelectorAll('[data-order-detail]').forEach(b => {
+    b.onclick = () => {
+      openOrderDetailModal(b.dataset.orderDetail);
+    };
+  });
+
+  document.querySelectorAll('[data-order-status]').forEach(b => {
+    b.onclick = () => updateOrderStatus(b.dataset.orderId, b.dataset.orderStatus);
+  });
+
+  if(targetOrderId){
+    openOrderDetailModal(targetOrderId);
+  }
+}
+
+async function renderStore(){
+  if(!currentUser){
+    showAuthPrompt('view or manage your store');
+    return;
+  }
+  const s=await getDoc(doc(db,'stores',currentUser.uid));const store=snapshotExists(s)?s.data():{};$('page').innerHTML=pageTitle('Store','Your public storefront settings.')+(!currentProfile.verified?`<div class="card p-5 mb-5 border-yellow-700"><b>Verification required.</b><p class="muted mt-1">Your store becomes public after seller verification.</p></div>`:'')+`<div class="card p-6 max-w-2xl"><label class="muted text-sm">Store name</label><input id="storeName" value="${esc(store.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><label class="muted text-sm block mt-4">Description</label><textarea id="storeDesc" rows="5" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]">${esc(store.description||'')}</textarea><label class="muted text-sm block mt-4">Location / Area</label><input id="storeLocation" value="${esc(store.location||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="East Legon, Accra"><label class="muted text-sm block mt-4">Business address</label><input id="storeAddress" value="${esc(store.address||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Street / landmark"><label class="muted text-sm block mt-4">Opening hours</label><input id="storeHours" value="${esc(store.hours||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Mon–Sat · 8:00 AM – 7:00 PM"><label class="muted text-sm block mt-4">WhatsApp number</label><input id="storeWhatsApp" value="${esc(store.whatsapp||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="233XXXXXXXXX"><button id="saveStore" class="mt-5 bg-gold text-black px-5 py-3 rounded-xl font-bold">Save store</button></div>`;$('saveStore').onclick=async()=>{try{if(!currentProfile.verified)throw Error('Verify your seller account first.');const name=$('storeName').value.trim();if(name.length<2)throw Error('Enter a store name.');const wa=$('storeWhatsApp').value.replace(/\D/g,'');if(wa&&wa.length<10)throw Error('Enter a valid WhatsApp number.');await setDoc(doc(db,'stores',currentUser.uid),{ownerId:currentUser.uid,name,description:$('storeDesc').value.trim(),location:$('storeLocation').value.trim(),address:$('storeAddress').value.trim(),hours:$('storeHours').value.trim(),whatsapp:wa,updatedAt:serverTimestamp()},{merge:true});toast('Store saved','success')}catch(e){toast(errMsg(e),'error')}}}
 
 async function renderProfile(){const p=currentProfile;const privateDoc=await getDoc(doc(db,'users',currentUser.uid));const verification=privateDoc.data()||{};$('page').innerHTML=pageTitle('Profile','Manage your account details and profile picture.')+`<div class="grid lg:grid-cols-[1fr_1.3fr] gap-5"><div class="card p-6"><div class="flex items-center gap-4">${avatar(p,'w-20 h-20 rounded-full object-cover bg-[#222]')}<div><h2 class="text-xl font-bold">${esc(p.name)}</h2><div class="muted">@${esc(p.username)}</div>${p.verified?'<div class="text-sm font-bold mt-1 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':''}</div></div><input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-5"><button id="uploadAvatar" class="mt-3 border border-[#444] rounded-xl px-4 py-2">Update profile picture</button><label class="muted text-sm block mt-5">Full name</label><input id="profileName" value="${esc(p.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><label class="muted text-sm block mt-4">Username</label><input id="profileUsername" value="${esc(p.username||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><button id="saveProfile" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Save profile</button><div class="muted text-sm mt-4">${esc(currentUser.email)} · ${currentUser.emailVerified?'Email verified':'Email not verified'}</div>${!currentUser.emailVerified?`<button id="verifyEmail" class="mt-2 text-sm gold">Send verification email</button>`:''}</div><div class="card p-6"><h2 class="text-xl font-bold">Seller identity</h2><p class="muted mt-2">Verification is managed from Settings. Approved sellers receive the modern blue SellerFlow verification badge.</p><button id="openSettingsVerification" class="mt-4 bg-gold text-black px-5 py-3 rounded-xl font-bold">Open Settings</button></div></div>`;$('uploadAvatar').onclick=async()=>{try{const f=$('avatarFile').files[0];if(!f)return toast('Choose a picture first','error');const x=await uploadPublic(f,'profiles');await updateDoc(doc(db,'users',currentUser.uid),{avatarUrl:x.url});await updateDoc(doc(db,'publicProfiles',currentUser.uid),{avatarUrl:x.url});currentProfile.avatarUrl=x.url;toast('Profile picture updated','success');navigate('profile')}catch(e){toast(errMsg(e),'error')}};$('saveProfile').onclick=saveProfile;$('verifyEmail')?.addEventListener('click',async()=>{await sendEmailVerification(currentUser);toast('Verification email sent','success')});$('openSettingsVerification')?.addEventListener('click',openVerificationModal)}
 async function saveProfile(){try{const name=$('profileName').value.trim(),username=usernameClean($('profileUsername').value);if(name.length<2||username.length<3)throw Error('Enter a valid name and username.');if(username!==currentProfile.username){if(!(await uniqueUsername(username,currentUser.uid)))throw Error('That username is already taken.');}await updateDoc(doc(db,'users',currentUser.uid),{name,username,usernameLower:username.toLowerCase(),nameLastChanged:serverTimestamp(),usernameLastChanged:serverTimestamp()});try{await setDoc(doc(db,'publicProfiles',currentUser.uid),{uid:currentUser.uid,name,username,usernameLower:username.toLowerCase(),avatarUrl:currentProfile.avatarUrl||'',verified:!!currentProfile.verified,followers:currentProfile.followers||[],following:currentProfile.following||[],role:currentProfile.role||'seller'},{merge:true})}catch(e){console.warn('Public profile sync skipped:',e)}await refreshProfile();toast('Profile saved','success');navigate('profile')}catch(e){toast(errMsg(e),'error')}}
 async function submitVerification(){try{const n=$('ghanaCard').value.trim(),front=$('cardFront').files[0],back=$('cardBack').files[0];if(!n||!front||!back)throw Error('Enter the Ghana Card number and upload both sides.');validFile(front,['image/jpeg','image/png','image/webp','application/pdf'],10);validFile(back,['image/jpeg','image/png','image/webp','application/pdf'],10);loading('Securely submitting your identity for review…');const [fp,bp]=await Promise.all([uploadPrivate(front,'front'),uploadPrivate(back,'back')]);await updateDoc(doc(db,'users',currentUser.uid),{ghanaCardMasked:n,ghanaCardFrontPath:fp,ghanaCardBackPath:bp,verificationStatus:'pending',verificationSubmittedAt:serverTimestamp()});toast('Verification submitted for admin review','success');await refreshProfile();navigate('profile')}catch(e){toast(errMsg(e),'error')}finally{ready()}}
 
-function addToCart(p){if(!p)return;const existing=cart.find(i=>i.productId===p.id&&i.sellerId===p.sellerId);if(existing)existing.quantity=Math.min(existing.quantity+1,Number(p.stock)||99);else cart.push({productId:p.id,sellerId:p.sellerId,name:p.name,price:Number(p.price),imageUrl:p.imageUrl,quantity:1,maxStock:Number(p.stock)||99});saveCart();toast('Added to cart','success')}
+function addToCart(p){
+  if(!currentUser)return showAuthPrompt('make an order and add items to your cart');
+  if(!p)return;
+  const existing=cart.find(i=>i.productId===p.id&&i.sellerId===p.sellerId);
+  if(existing)existing.quantity=Math.min(existing.quantity+1,Number(p.stock)||99);
+  else cart.push({productId:p.id,sellerId:p.sellerId,name:p.name,price:Number(p.price),imageUrl:p.imageUrl,quantity:1,maxStock:Number(p.stock)||99});
+  saveCart();
+  toast('Added to cart','success');
+}
 function saveCart(){localStorage.setItem('sellerflow_cart',JSON.stringify(cart));updateCartBadge()}
 function loadCart(){try{cart=JSON.parse(localStorage.getItem('sellerflow_cart')||'[]')||[]}catch{cart=[]}}
 function updateCartBadge(){$('cartCount').textContent=cart.reduce((n,i)=>n+i.quantity,0)}
-function renderCart(){const total=cart.reduce((n,i)=>n+i.price*i.quantity,0);$('page').innerHTML=pageTitle('Cart','Review your items before checkout.')+(cart.length?`<div class="card divide-y divide-[#292929]">${cart.map((i,n)=>`<div class="p-4 flex gap-3 items-center"><img src="${esc(i.imageUrl||'')}" class="w-16 h-16 rounded-xl object-cover"><div class="flex-1"><b>${esc(i.name)}</b><div class="gold">${money(i.price)}</div></div><div class="flex items-center gap-2"><button data-cart-minus="${n}" class="w-8 h-8 rounded-lg border border-[#444]">−</button><span>${i.quantity}</span><button data-cart-plus="${n}" class="w-8 h-8 rounded-lg border border-[#444]">+</button></div><button data-cart-remove="${n}" class="text-red-400 ml-2">✕</button></div>`).join('')}</div><div class="card p-5 mt-4 flex justify-between items-center"><div><div class="muted">Total</div><div class="text-2xl font-black">${money(total)}</div></div>${button('Checkout','checkoutBtn')}</div>`:'<div class="card p-8 text-center muted">Your cart is empty.</div>');document.querySelectorAll('[data-cart-minus]').forEach(b=>b.onclick=()=>changeCart(+b.dataset.cartMinus,-1));document.querySelectorAll('[data-cart-plus]').forEach(b=>b.onclick=()=>changeCart(+b.dataset.cartPlus,1));document.querySelectorAll('[data-cart-remove]').forEach(b=>b.onclick=()=>{cart.splice(+b.dataset.cartRemove,1);saveCart();renderCart()});$('checkoutBtn')?.addEventListener('click',openCheckout)}
+function renderCart(){
+  if(!currentUser)return showAuthPrompt('view cart and make an order');
+  const total=cart.reduce((n,i)=>n+i.price*i.quantity,0);
+  $('page').innerHTML=pageTitle('Cart','Review your items before checkout.')+(cart.length?`<div class="card divide-y divide-[#292929]">${cart.map((i,n)=>`<div class="p-4 flex gap-3 items-center"><img src="${esc(i.imageUrl||'')}" class="w-16 h-16 rounded-xl object-cover"><div class="flex-1"><b>${esc(i.name)}</b><div class="gold">${money(i.price)}</div></div><div class="flex items-center gap-2"><button data-cart-minus="${n}" class="w-8 h-8 rounded-lg border border-[#444]">−</button><span>${i.quantity}</span><button data-cart-plus="${n}" class="w-8 h-8 rounded-lg border border-[#444]">+</button></div><button data-cart-remove="${n}" class="text-red-400 ml-2">✕</button></div>`).join('')}</div><div class="card p-5 mt-4 flex justify-between items-center"><div><div class="muted">Total</div><div class="text-2xl font-black">${money(total)}</div></div>${button('Checkout','checkoutBtn')}</div>`:'<div class="card p-8 text-center muted">Your cart is empty.</div>');
+  document.querySelectorAll('[data-cart-minus]').forEach(b=>b.onclick=()=>changeCart(+b.dataset.cartMinus,-1));
+  document.querySelectorAll('[data-cart-plus]').forEach(b=>b.onclick=()=>changeCart(+b.dataset.cartPlus,1));
+  document.querySelectorAll('[data-cart-remove]').forEach(b=>b.onclick=()=>{cart.splice(+b.dataset.cartRemove,1);saveCart();renderCart()});
+  $('checkoutBtn')?.addEventListener('click',openCheckout);
+}
 function changeCart(i,d){cart[i].quantity=Math.max(1,Math.min(cart[i].maxStock||99,cart[i].quantity+d));saveCart();renderCart()}
-function openCheckout(){if(!currentUser)return showAuthPrompt('checkout and place orders');modal(`<h2 class="text-xl font-bold">Checkout</h2><p class="muted mt-1">This version records the order. Mobile Money payment can be connected through a secure Ghana payment backend later.</p><input id="checkName" value="${esc(currentProfile?.name||'')}" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Full name"><input id="checkPhone" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Phone number"><textarea id="checkAddress" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Delivery address"></textarea><div class="flex justify-end gap-2 mt-4"><button data-close-modal>Cancel</button>${button('Place order','placeOrder')}</div>`);$('placeOrder').onclick=placeOrder}
-async function placeOrder(){try{const name=$('checkName').value.trim(),phone=$('checkPhone').value.trim(),address=$('checkAddress').value.trim();if(!name||!phone||!address)throw Error('Complete all delivery details.');const bySeller=new Map();cart.forEach(i=>{if(!bySeller.has(i.sellerId))bySeller.set(i.sellerId,[]);bySeller.get(i.sellerId).push(i)});loading('Placing orders…');for(const [sellerId,items] of bySeller){const total=items.reduce((n,i)=>n+i.price*i.quantity,0);await addDoc(collection(db,'orders'),{buyerId:currentUser.uid,buyerName:name,phone,deliveryAddress:address,sellerId,sellerIds:[sellerId],items,total,status:'pending',paymentMethod:'cash_on_delivery',createdAt:serverTimestamp(),updatedAt:serverTimestamp()})}cart=[];saveCart();closeModal();toast('Order placed successfully','success');if(typeof refreshOrdersBadge==='function')refreshOrdersBadge();navigate('orders')}catch(e){toast(errMsg(e),'error')}finally{ready()}}
+function openCheckout(){
+  if(!currentUser)return showAuthPrompt('make an order and complete checkout');
+  modal(`<h2 class="text-xl font-bold">Checkout</h2><p class="muted mt-1">This version records the order. Mobile Money payment can be connected through a secure Ghana payment backend later.</p><input id="checkName" value="${esc(currentProfile?.name||'')}" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Full name"><input id="checkPhone" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Phone number"><textarea id="checkAddress" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Delivery address"></textarea><div class="flex justify-end gap-2 mt-4"><button data-close-modal>Cancel</button>${button('Place order','placeOrder')}</div>`);
+  $('placeOrder').onclick=placeOrder;
+}
+async function placeOrder(){
+  if(!currentUser)return showAuthPrompt('make an order');
+  try{
+    const name=$('checkName').value.trim(),phone=$('checkPhone').value.trim(),address=$('checkAddress').value.trim();
+    if(!name||!phone||!address)throw Error('Complete all delivery details.');
+    const bySeller=new Map();
+    cart.forEach(i=>{if(!bySeller.has(i.sellerId))bySeller.set(i.sellerId,[]);bySeller.get(i.sellerId).push(i)});
+    loading('Placing orders…');
+    for(const [sellerId,items] of bySeller){
+      const total=items.reduce((n,i)=>n+i.price*i.quantity,0);
+      const orderRef=await addDoc(collection(db,'orders'),{buyerId:currentUser.uid,buyerName:name,phone,deliveryAddress:address,sellerId,sellerIds:[sellerId],items,total,status:'pending',statusHistory:[{status:'pending',label:'Order Placed',note:'Order submitted by buyer and received by seller',timestamp:Date.now(),updatedBy:currentUser.uid,updatedByName:name}],paymentMethod:'cash_on_delivery',createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+      try{
+        await addDoc(collection(db,'notifications'),{recipientId:sellerId,actorId:currentUser.uid,senderName:name,title:'🛒 New Order Received',message:`${name} placed order #${orderRef.id.slice(-6).toUpperCase()} for ${money(total)} (${items.length} item${items.length===1?'':'s'}).`,type:'order_new',orderId:orderRef.id,read:false,createdAt:serverTimestamp()});
+      }catch(_){}
+    }
+    cart=[];
+    saveCart();
+    closeModal();
+    toast('Order placed successfully','success');
+    if(typeof refreshOrdersBadge==='function')refreshOrdersBadge();
+    navigate('orders');
+  }catch(e){
+    toast(errMsg(e),'error');
+  }finally{
+    ready();
+  }
+}
 
 const DEFAULT_TERMS=`SellerFlow Terms & Conditions
 
@@ -1656,32 +2421,411 @@ async function acceptCurrentTerms(){if(!currentUser)return;await updateDoc(doc(d
 async function enforceTermsAcceptance(){await ensureTerms();if(!currentUser||isAdmin)return true;if(currentProfile?.termsAccepted&&currentProfile?.termsVersion===appTermsVersion)return true;showTermsModal(true);return false}
 async function renderSettings(){
   const t=await ensureTerms();const p=currentProfile||{};
-  $('page').innerHTML=pageTitle('Settings','Manage your account, notifications, verification and SellerFlow policies.')+`<div class="grid lg:grid-cols-2 gap-5"><section class="card overflow-hidden"><div class="p-5 border-b border-[#292929]"><h2 class="text-xl font-bold">Account & notifications</h2><p class="muted text-sm mt-1">Control how SellerFlow communicates with you.</p></div><div class="settings-item"><div class="text-2xl">🔔</div><div class="flex-1"><b>App notifications</b><p class="muted text-sm">Receive messages about orders, verification and account activity.</p></div>${button('Enable browser alerts','enableNotifications','border border-[#444] bg-transparent text-white')}</div><div class="settings-item"><div class="text-2xl">📜</div><div class="flex-1"><b>Terms & Conditions</b><p class="muted text-sm">Version ${esc(t.version||appTermsVersion)}</p></div>${button('Read terms','readTerms','border border-[#444] bg-transparent text-white')}</div></section><section class="card p-6"><div class="policy-hero p-6"><div class="policy-icon">✓</div><h2 class="text-2xl font-black mt-5">Seller identity verification</h2><p class="muted mt-2">A safer way to build trust on SellerFlow.</p><p class="text-sm leading-7 mt-4">When you apply, SellerFlow securely reviews the identity information you provide to help protect buyers and sellers from impersonation and fraud. Your Ghana Card details are for identity review only and are not displayed publicly on your profile, products or For You posts.</p><div class="grid sm:grid-cols-3 gap-2 mt-5"><div class="bg-black/30 rounded-xl p-3 text-sm">🔒 Private review</div><div class="bg-black/30 rounded-xl p-3 text-sm">🛡️ Fraud protection</div><div class="bg-black/30 rounded-xl p-3 text-sm">✓ Trust badge</div></div></div>${p.verified?`<div class="mt-5 bg-[#10251a] border border-green-800 p-4 rounded-xl">You are verified <span class="verified-badge ml-1">✓</span><div class="muted text-sm mt-1">Your blue SellerFlow badge may appear beside your seller name.</div></div>`:`<div class="mt-5"><p class="muted text-sm">${p.verificationStatus==='pending'?'Your verification is under review.':'Verification is optional for browsing, but required for seller publishing and helps customers trust your account.'}</p>${p.verificationStatus!=='pending'?button('Start Ghana Card verification','startVerification','mt-4 bg-gold text-black'):''}</div>`}</section></div>`;
-  $('readTerms').onclick=()=>showTermsModal(false);$('enableNotifications').onclick=requestNotificationPermission;$('startVerification')?.addEventListener('click',openVerificationModal);
+  const perm = ('Notification' in window) ? Notification.permission : 'unsupported';
+  const permBadge = perm === 'granted' 
+    ? '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-green-950 text-green-400 border border-green-800">🟢 Alerts Active</span>'
+    : (perm === 'denied' 
+        ? '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-950 text-red-400 border border-red-800">🔴 Blocked</span>'
+        : '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-950 text-amber-300 border border-amber-800">🟡 Setup Required</span>');
+  const swBadge = ('serviceWorker' in navigator && (swRegistration || navigator.serviceWorker.controller))
+    ? '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-sky-950 text-sky-300 border border-sky-800">⚡ Service Worker Ready</span>'
+    : '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-zinc-900 text-zinc-400 border border-zinc-700">Service Worker Standby</span>';
+
+  $('page').innerHTML=pageTitle('Settings','Manage your account, notifications, verification and SellerFlow policies.')+`<div class="grid lg:grid-cols-2 gap-5">
+    <section class="card overflow-hidden">
+      <div class="p-5 border-b border-[#292929] flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold">Account & notifications</h2>
+          <p class="muted text-sm mt-1">Background alerts for customer messages and order updates.</p>
+        </div>
+        <div class="flex flex-col items-end gap-1">
+          ${permBadge}
+        </div>
+      </div>
+      <div class="p-5 space-y-4 border-b border-[#292929]">
+        <div class="flex items-start gap-3">
+          <div class="text-3xl">🔔</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <b class="text-base">Background Browser Notifications</b>
+              ${swBadge}
+            </div>
+            <p class="muted text-xs leading-5 mt-1">
+              Alerts you immediately when a customer sends a new message or when an order changes status (even if your phone screen is locked or the browser tab is in the background).
+            </p>
+            <div class="flex flex-wrap gap-2 mt-3">
+              ${perm !== 'granted' ? button('Enable Background Alerts','enableNotifications','bg-gold text-black font-bold') : button('Alerts Enabled ✓','enableNotifications','border border-green-800 bg-green-950/40 text-green-300 pointer-events-none')}
+              ${button('Test Message Alert','testMessageAlert','border border-[#444] bg-[#1a1a1a] text-xs py-2 px-3')}
+              ${button('Test Order Alert','testOrderAlert','border border-[#444] bg-[#1a1a1a] text-xs py-2 px-3')}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-item">
+        <div class="text-2xl">📜</div>
+        <div class="flex-1">
+          <b>Terms & Conditions</b>
+          <p class="muted text-sm">Version ${esc(t.version||appTermsVersion)}</p>
+        </div>
+        ${button('Read terms','readTerms','border border-[#444] bg-transparent text-white')}
+      </div>
+    </section>
+    <section class="card p-6">
+      <div class="policy-hero p-6">
+        <div class="policy-icon">✓</div>
+        <h2 class="text-2xl font-black mt-5">Seller identity verification</h2>
+        <p class="muted mt-2">A safer way to build trust on SellerFlow.</p>
+        <p class="text-sm leading-7 mt-4">When you apply, SellerFlow securely reviews the identity information you provide to help protect buyers and sellers from impersonation and fraud. Your Ghana Card details are for identity review only and are not displayed publicly on your profile, products or For You posts.</p>
+        <div class="grid sm:grid-cols-3 gap-2 mt-5">
+          <div class="bg-black/30 rounded-xl p-3 text-sm">🔒 Private review</div>
+          <div class="bg-black/30 rounded-xl p-3 text-sm">🛡️ Fraud protection</div>
+          <div class="bg-black/30 rounded-xl p-3 text-sm">✓ Trust badge</div>
+        </div>
+      </div>
+      ${p.verified?`<div class="mt-5 bg-[#10251a] border border-green-800 p-4 rounded-xl">You are verified <span class="verified-badge ml-1">✓</span><div class="muted text-sm mt-1">Your blue SellerFlow badge may appear beside your seller name.</div></div>`:`<div class="mt-5"><p class="muted text-sm">${p.verificationStatus==='pending'?'Your verification is under review.':'Verification is optional for browsing, but required for seller publishing and helps customers trust your account.'}</p>${p.verificationStatus!=='pending'?button('Start Ghana Card verification','startVerification','mt-4 bg-gold text-black'):''}</div>`}
+    </section>
+  </div>`;
+  $('readTerms').onclick=()=>showTermsModal(false);
+  $('enableNotifications').onclick=async()=>{
+    await requestNotificationPermission();
+    renderSettings();
+  };
+  $('testMessageAlert')?.addEventListener('click', () => {
+    toast('Triggering message alert in 1.5s… Switch tabs or minimize to test!', 'info');
+    setTimeout(() => {
+      dispatchNotification('💬 Kofi Mensah', {
+        body: 'Hello! Is the Kente fabric still available for delivery in Kumasi?',
+        tag: 'test-chat-msg',
+        data: { type: 'chat_message', conversationId: 'test_conv', senderId: 'kofi_mensah' }
+      });
+    }, 1500);
+  });
+  $('testOrderAlert')?.addEventListener('click', () => {
+    toast('Triggering order update alert in 1.5s… Switch tabs or minimize to test!', 'info');
+    setTimeout(() => {
+      dispatchNotification('📦 Order #SF-8921 Dispatched', {
+        body: 'Your package is on its way via VIP Express Delivery. Tap to track progress.',
+        tag: 'test-order-update',
+        data: { type: 'order_update', orderId: 'test_order' }
+      });
+    }, 1500);
+  });
+  $('startVerification')?.addEventListener('click',openVerificationModal);
 }
 function openVerificationModal(){const v=currentProfile||{};modal(`<div class="flex items-center gap-3"><div class="policy-icon">🛡️</div><div><h2 class="text-xl font-bold">Secure seller verification</h2><p class="muted text-sm">Private identity review for safer commerce.</p></div></div><p class="muted text-sm mt-4">Your Ghana Card is reviewed only to confirm identity and reduce fraud. It will not be shown to customers.</p><div class="space-y-4 mt-5"><div><label class="muted text-sm">Ghana Card number</label><input id="ghanaCard" value="${esc(v.ghanaCardMasked||'')}" placeholder="GHA-XXXXXXXXX-X" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"></div><div><label class="muted text-sm">Front image</label><input id="cardFront" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="w-full mt-1"></div><div><label class="muted text-sm">Back image</label><input id="cardBack" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="w-full mt-1"></div><div class="text-xs muted bg-[#181818] rounded-xl p-3">Please submit only your own valid Ghana Card. Maximum 10MB per file.</div><div class="flex justify-end gap-2">${button('Cancel','cancelVerification','border border-[#444] bg-transparent text-white')}${button('Submit for review','submitVerification')}</div></div>`);$('cancelVerification').onclick=closeModal;$('submitVerification').onclick=submitVerification}
-let notificationWatcherStarted=false;let knownNotificationIds=new Set(JSON.parse(localStorage.getItem('sellerflow_seen_notifications')||'[]'));
-async function requestNotificationPermission(){try{if(!('Notification' in window))throw Error('Device/browser notifications are not supported here. In-app notifications remain available.');const p=await Notification.requestPermission();toast(p==='granted'?'Device notifications enabled.':'Notifications were not enabled.','success');if(p==='granted')loadNotifications(true)}catch(e){toast(errMsg(e),'error')}}
-async function loadNotifications(announce=false){if(!currentUser)return;try{const snap=await getDocs(query(collection(db,'notifications'),where('recipientId','==',currentUser.uid),limit(100)));const incoming=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));if(announce&&knownNotificationIds.size&&'Notification' in window&&Notification.permission==='granted'){incoming.filter(n=>!knownNotificationIds.has(n.id)).slice(0,3).forEach(n=>{try{new Notification(n.title||'SellerFlow',{body:n.message||'You have a new SellerFlow notification.',tag:'sellerflow-'+n.id})}catch(_){} });}notificationCache=incoming.length?incoming:[{id:'sample_sf_update',senderName:'SellerFlow',title:'SellerFlow post review complete',message:'Your post remains live on SellerFlow after safety review.',fromAdmin:true,read:false,createdAt:Date.now()-1000*60*30},{id:'sample_repost',senderName:'Gideon Appiah',type:'post_engagement',engagementType:'repost',read:false,createdAt:Date.now()-1000*60*60*2},{id:'sample_like',senderName:'Gideon Appiah',type:'post_engagement',engagementType:'like',read:true,createdAt:Date.now()-1000*60*60*24},{id:'sample_follow',senderName:'Gideon Appiah',type:'follow',actorId:'sample_gideon',read:true,createdAt:Date.now()-1000*60*60*24}];incoming.forEach(n=>knownNotificationIds.add(n.id));const saveIds=[...knownNotificationIds].slice(-200);knownNotificationIds=new Set(saveIds);localStorage.setItem('sellerflow_seen_notifications',JSON.stringify(saveIds));const unread=notificationCache.filter(n=>!n.read).length;const badge=$('notificationCount');if(badge){badge.textContent=unread>99?'99+':String(unread);badge.classList.toggle('hide',unread===0)}}catch(e){console.warn('Notifications unavailable',e)}}
-function startNotificationWatcher(){if(notificationWatcherStarted)return;notificationWatcherStarted=true;loadNotifications(false).then(()=>setInterval(()=>{if(currentUser)loadNotifications(true)},20000))}
-let ordersWatcherUnsubscribe=null;let pendingOrdersCount=0;let knownPendingOrderIds=new Set();let ordersWatcherInitialized=false;
-function playOrderAlertSound(){
+
+let swRegistration = null;
+async function initServiceWorker(){
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      swRegistration = reg;
+      window.swRegistration = reg;
+      console.log('SellerFlow Service Worker registered:', reg.scope);
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'NOTIFICATION_NAVIGATE') {
+          handleNotificationNavigation(event.data.data);
+        }
+      });
+    } catch (e) {
+      console.warn('Service Worker registration skipped/failed:', e);
+    }
+  }
+}
+window.initServiceWorker = initServiceWorker;
+
+function isAppInBackground(){
+  return document.hidden || document.visibilityState === 'hidden' || !document.hasFocus();
+}
+
+function handleNotificationNavigation(data){
+  if(!data) return;
+  closeModal();
+  if (data.type === 'chat_message') {
+    navigate('chats');
+    if(data.conversationId && typeof openConversation === 'function'){
+      setTimeout(()=>{
+        openConversation(data.conversationId, data.senderId, data.senderId ? sellerProfile(data.senderId) : null);
+      }, 150);
+    }
+  } else if (data.type === 'order_new' || data.type === 'order_update' || data.orderId) {
+    navigate('orders');
+    if(data.orderId && typeof openOrderDetailModal === 'function'){
+      setTimeout(()=>{
+        openOrderDetailModal(data.orderId);
+      }, 150);
+    }
+  }
+}
+
+function playNotificationSound(type = 'default'){
   try{
-    const ctx=new (window.AudioContext||window.webkitAudioContext)();
-    if(ctx.state==='suspended')ctx.resume();
-    const osc=ctx.createOscillator();
-    const gain=ctx.createGain();
-    osc.type='sine';
-    osc.frequency.setValueAtTime(587.33,ctx.currentTime);
-    osc.frequency.setValueAtTime(880,ctx.currentTime+0.12);
-    gain.gain.setValueAtTime(0.2,ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.45);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime+0.46);
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if(ctx.state === 'suspended') ctx.resume();
+    const now = ctx.currentTime;
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    if (type === 'message') {
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(739.99, now);
+      osc1.frequency.setValueAtTime(880.00, now + 0.10);
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(1479.98, now);
+      osc2.frequency.setValueAtTime(1760.00, now + 0.10);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.40);
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 0.42);
+      osc2.stop(now + 0.42);
+    } else if (type === 'order') {
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(587.33, now);
+      osc1.frequency.setValueAtTime(739.99, now + 0.12);
+      osc1.frequency.setValueAtTime(880.00, now + 0.24);
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(1174.66, now);
+      osc2.frequency.setValueAtTime(1479.98, now + 0.12);
+      osc2.frequency.setValueAtTime(1760.00, now + 0.24);
+      gain.gain.setValueAtTime(0.24, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 0.68);
+      osc2.stop(now + 0.68);
+    } else {
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(587.33, now);
+      osc1.frequency.setValueAtTime(880, now + 0.12);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+      osc1.connect(gain);
+      gain.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.46);
+    }
   }catch(_){}
 }
+
+async function dispatchNotification(title, options = {}){
+  const soundType = options.data?.type === 'chat_message' ? 'message' : (options.data?.type?.startsWith('order') ? 'order' : 'default');
+  playNotificationSound(soundType);
+
+  try {
+    if ('vibrate' in navigator) navigator.vibrate(options.vibrate || [100, 50, 100]);
+  } catch (_) {}
+
+  const notificationOptions = {
+    icon: '/pwa-192x192.png',
+    badge: '/icon.svg',
+    tag: options.tag || ('sf-' + Date.now()),
+    renotify: true,
+    requireInteraction: false,
+    ...options
+  };
+
+  let deliveredViaSW = false;
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = swRegistration || (await navigator.serviceWorker.ready);
+      if (reg && typeof reg.showNotification === 'function') {
+        await reg.showNotification(title, notificationOptions);
+        deliveredViaSW = true;
+      }
+    } catch (e) {
+      console.warn('SW showNotification fallback:', e);
+    }
+  }
+
+  if (!deliveredViaSW && 'Notification' in window && Notification.permission === 'granted') {
+    try {
+      const notif = new Notification(title, notificationOptions);
+      notif.onclick = () => {
+        try { window.focus(); } catch (_) {}
+        if (options.data) handleNotificationNavigation(options.data);
+        notif.close();
+      };
+    } catch (_) {}
+  }
+
+  // In-app interactive banner if visible in active window
+  if (!document.hidden && !options.silentBanner) {
+    showNotificationBanner(title, options.body || '', options.data);
+  }
+}
+
+function showNotificationBanner(title, body, data){
+  let container = $('notificationBanners');
+  if(!container){
+    container = document.createElement('div');
+    container.id = 'notificationBanners';
+    container.className = 'fixed top-4 right-4 z-[9999] max-w-sm w-full space-y-2 pointer-events-auto px-3 sm:px-0';
+    document.body.appendChild(container);
+  }
+  const banner = document.createElement('div');
+  banner.className = 'sf-notif-banner bg-[#1a1a1a] border border-[#383838] rounded-2xl shadow-2xl p-3.5 text-left flex items-start gap-3 transition-all duration-300';
+  const icon = data?.type === 'chat_message' ? '💬' : (data?.type?.startsWith('order') ? '📦' : '🔔');
+  banner.innerHTML = `
+    <div class="text-2xl pt-0.5">${icon}</div>
+    <div class="flex-1 min-w-0">
+      <b class="text-sm block text-white font-bold leading-tight truncate">${esc(title)}</b>
+      <p class="text-xs text-zinc-300 mt-1 leading-snug line-clamp-2">${esc(body)}</p>
+    </div>
+    <div class="flex flex-col gap-1 items-end shrink-0">
+      <button type="button" class="close-banner text-xs text-zinc-500 hover:text-white px-1">✕</button>
+      ${data ? `<button type="button" class="view-banner text-xs bg-gold text-black font-bold px-2.5 py-1 rounded-lg mt-1">Open</button>` : ''}
+    </div>
+  `;
+  banner.querySelector('.close-banner')?.addEventListener('click', () => banner.remove());
+  if (data) {
+    banner.querySelector('.view-banner')?.addEventListener('click', () => {
+      banner.remove();
+      handleNotificationNavigation(data);
+    });
+  }
+  container.appendChild(banner);
+  setTimeout(() => {
+    if(banner.parentElement) {
+      banner.style.opacity = '0';
+      banner.style.transform = 'translateY(-10px)';
+      setTimeout(() => banner.remove(), 300);
+    }
+  }, 6000);
+}
+
+let notificationWatcherStarted=false;
+let notificationWatcherUnsubscribe=null;
+let knownNotificationIds=new Set(JSON.parse(localStorage.getItem('sellerflow_seen_notifications')||'[]'));
+
+async function requestNotificationPermission(){
+  try{
+    if(!('Notification' in window))throw Error('Device/browser notifications are not supported here. In-app notifications remain available.');
+    await initServiceWorker();
+    const p=await Notification.requestPermission();
+    toast(p==='granted'?'Background device notifications enabled.':'Notifications were not enabled.','success');
+    if(p==='granted')loadNotifications(true);
+    return p;
+  }catch(e){toast(errMsg(e),'error');return 'denied';}
+}
+
+function handleNotificationsSnapshot(snap, isInitial=false){
+  const docs = snap?.docs || (Array.isArray(snap) ? snap : []);
+  const incoming = docs.map(d => ({ id: d.id, ...(typeof d.data === 'function' ? d.data() : d) })).sort((a,b) => ts(b.createdAt) - ts(a.createdAt));
+
+  if (!isInitial && knownNotificationIds.size > 0) {
+    const fresh = incoming.filter(n => !knownNotificationIds.has(n.id));
+    fresh.forEach(n => {
+      if (n.type === 'chat_message') {
+        const inActiveChat = window._activeConversationId === n.conversationId && !isAppInBackground();
+        if (!inActiveChat) {
+          dispatchNotification('💬 ' + (n.senderName || 'New Chat Message'), {
+            body: n.message || 'You received a new message on SellerFlow.',
+            tag: 'sf-chat-' + (n.conversationId || n.id),
+            data: { type: 'chat_message', conversationId: n.conversationId, senderId: n.actorId }
+          });
+        }
+      } else if (n.type === 'order_update') {
+        dispatchNotification(n.title || '📦 Order Status Updated', {
+          body: n.message || 'Your order status has been updated. Tap to track.',
+          tag: 'sf-order-' + (n.orderId || n.id),
+          data: { type: 'order_update', orderId: n.orderId }
+        });
+      } else if (n.type === 'order_new') {
+        dispatchNotification(n.title || '🛒 New Order Received', {
+          body: n.message || 'You received a new order. Tap to review.',
+          tag: 'sf-order-' + (n.orderId || n.id),
+          data: { type: 'order_new', orderId: n.orderId }
+        });
+      } else {
+        dispatchNotification(n.title || 'SellerFlow Notification', {
+          body: n.message || 'You have a new update.',
+          tag: 'sf-notif-' + n.id,
+          data: n
+        });
+      }
+    });
+  }
+
+  if (incoming.length > 0) {
+    notificationCache = incoming;
+  }
+  incoming.forEach(n => knownNotificationIds.add(n.id));
+  const saveIds = [...knownNotificationIds].slice(-200);
+  knownNotificationIds = new Set(saveIds);
+  localStorage.setItem('sellerflow_seen_notifications', JSON.stringify(saveIds));
+
+  const unread = notificationCache.filter(n => !n.read).length;
+  const badge = $('notificationCount');
+  if (badge) {
+    badge.textContent = unread > 99 ? '99+' : String(unread);
+    badge.classList.toggle('hide', unread === 0);
+  }
+}
+
+async function loadNotifications(announce=false){
+  if(!currentUser)return;
+  try{
+    const snap=await getDocs(query(collection(db,'notifications'),where('recipientId','==',currentUser.uid),limit(100)));
+    handleNotificationsSnapshot(snap,!announce);
+  }catch(e){
+    console.warn('Notifications unavailable',e);
+  }
+}
+
+function startNotificationWatcher(){
+  if(!currentUser) return;
+  stopNotificationWatcher();
+  notificationWatcherStarted = true;
+  let isInitial = true;
+  try{
+    const q = query(collection(db, 'notifications'), where('recipientId', '==', currentUser.uid));
+    if(q && typeof q.onSnapshot === 'function'){
+      notificationWatcherUnsubscribe = q.onSnapshot(snap => {
+        handleNotificationsSnapshot(snap, isInitial);
+        isInitial = false;
+      }, err => {
+        console.warn('Real-time notifications listener notice:', err);
+        loadNotifications(false);
+      });
+    } else {
+      loadNotifications(false);
+    }
+  }catch(e){
+    console.warn('Notifications watcher init error:', e);
+    loadNotifications(false);
+  }
+  if(!window._notificationsPollInterval){
+    window._notificationsPollInterval = setInterval(() => {
+      if(currentUser && !notificationWatcherUnsubscribe) loadNotifications(true);
+    }, 25000);
+  }
+}
+
+function stopNotificationWatcher(){
+  if(notificationWatcherUnsubscribe){
+    try{ notificationWatcherUnsubscribe(); }catch(_){}
+    notificationWatcherUnsubscribe = null;
+  }
+  if(window._notificationsPollInterval){
+    clearInterval(window._notificationsPollInterval);
+    window._notificationsPollInterval = null;
+  }
+  notificationWatcherStarted = false;
+}
+
+let ordersWatcherUnsubscribe=null;
+let pendingOrdersCount=0;
+let knownPendingOrderIds=new Set();
+let ordersWatcherInitialized=false;
+
 function updateOrdersBadge(count){
   pendingOrdersCount=Math.max(0,Number(count)||0);
   const text=pendingOrdersCount>99?'99+':String(pendingOrdersCount);
@@ -1697,6 +2841,7 @@ function updateOrdersBadge(count){
     }
   });
 }
+
 function handleOrdersSnapshot(snap,suppressAlert=false){
   const docs=snap?.docs||(Array.isArray(snap)?snap:[]);
   const currentPending=[];
@@ -1711,18 +2856,12 @@ function handleOrdersSnapshot(snap,suppressAlert=false){
   if(!suppressAlert){
     const newOrders=currentPending.filter(o=>!knownPendingOrderIds.has(o.id));
     if(newOrders.length>0){
-      playOrderAlertSound();
       newOrders.forEach(o=>{
-        toast('New Order Received','success');
-        try{
-          if('Notification' in window&&Notification.permission==='granted'){
-            new Notification('SellerFlow: New Order Received',{
-              body:'New order received. Tap to review in Orders.',
-              tag:'sellerflow-order-'+o.id
-            });
-          }
-        }catch(_){}
-        try{if(navigator.vibrate)navigator.vibrate([100,50,100]);}catch(_){}
+        dispatchNotification('🛒 New Order Received', {
+          body: `Order #${o.id.slice(-6).toUpperCase()} received (${money(o.total || 0)}). Tap to review.`,
+          tag: 'sellerflow-order-' + o.id,
+          data: { type: 'order_new', orderId: o.id }
+        });
       });
     }
   }
@@ -1730,6 +2869,7 @@ function handleOrdersSnapshot(snap,suppressAlert=false){
   ordersWatcherInitialized=true;
   updateOrdersBadge(count);
 }
+
 function startOrdersWatcher(){
   if(!currentUser)return;
   stopOrdersWatcher();
@@ -1760,15 +2900,70 @@ function startOrdersWatcher(){
     },20000);
   }
 }
+
 function stopOrdersWatcher(){
   if(ordersWatcherUnsubscribe){
     try{ordersWatcherUnsubscribe();}catch(_){}
     ordersWatcherUnsubscribe=null;
   }
+  if(window._ordersPollInterval){
+    clearInterval(window._ordersPollInterval);
+    window._ordersPollInterval = null;
+  }
   ordersWatcherInitialized=false;
   knownPendingOrderIds.clear();
   updateOrdersBadge(0);
 }
+
+let buyerOrdersWatcherUnsubscribe = null;
+let knownBuyerOrderStatuses = new Map();
+
+function startBuyerOrdersWatcher(){
+  if(!currentUser) return;
+  stopBuyerOrdersWatcher();
+  knownBuyerOrderStatuses.clear();
+  let isInitial = true;
+  try{
+    const q = query(collection(db, 'orders'), where('buyerId', '==', currentUser.uid));
+    if(q && typeof q.onSnapshot === 'function'){
+      buyerOrdersWatcherUnsubscribe = q.onSnapshot(snap => {
+        snap.docs.forEach(doc => {
+          const d = doc.data();
+          const oldStatus = knownBuyerOrderStatuses.get(doc.id);
+          const newStatus = String(d.status || 'pending').toLowerCase();
+          if(!isInitial && oldStatus && oldStatus !== newStatus){
+            const labelsMap = {
+              confirmed: 'Confirmed',
+              processing: 'Processing & Packed',
+              shipped: 'Dispatched / In Transit',
+              delivered: 'Delivered',
+              cancelled: 'Cancelled'
+            };
+            const label = labelsMap[newStatus] || newStatus;
+            dispatchNotification(`📦 Order #${doc.id.slice(-6).toUpperCase()} ${label}`, {
+              body: `Your order status changed to ${label}. Tap to track delivery timeline.`,
+              tag: `sellerflow-order-${doc.id}`,
+              data: { type: 'order_update', orderId: doc.id }
+            });
+          }
+          knownBuyerOrderStatuses.set(doc.id, newStatus);
+        });
+        isInitial = false;
+      }, err => console.warn('Buyer orders watcher note:', err));
+    }
+  }catch(e){
+    console.warn('Buyer orders watcher init error:', e);
+  }
+}
+
+function stopBuyerOrdersWatcher(){
+  if(buyerOrdersWatcherUnsubscribe){
+    try{ buyerOrdersWatcherUnsubscribe(); }catch(_){}
+    buyerOrdersWatcherUnsubscribe = null;
+  }
+  knownBuyerOrderStatuses.clear();
+}
+
 async function refreshOrdersBadge(triggerAlert=false){
   if(!currentUser)return;
   try{
@@ -1780,9 +2975,13 @@ async function refreshOrdersBadge(triggerAlert=false){
 }
 window.startOrdersWatcher=startOrdersWatcher;
 window.stopOrdersWatcher=stopOrdersWatcher;
+window.startBuyerOrdersWatcher=startBuyerOrdersWatcher;
+window.stopBuyerOrdersWatcher=stopBuyerOrdersWatcher;
 window.refreshOrdersBadge=refreshOrdersBadge;
 window.updateOrdersBadge=updateOrdersBadge;
 window.handleOrdersSnapshot=handleOrdersSnapshot;
+window.dispatchNotification=dispatchNotification;
+window.initServiceWorker=initServiceWorker;
 async function openNotifications(){if(window.renderGroupedNotifications){return window.renderGroupedNotifications()}if(window.openNotifications&&window.openNotifications!==openNotifications){return window.openNotifications()}}
 async function markAllNotifications(){try{for(const n of notificationCache.filter(x=>!x.read)){if(!n.id.startsWith('sample_')){try{await updateDoc(doc(db,'notifications',n.id),{read:true,readAt:serverTimestamp()})}catch(_){}}else{n.read=true}}await loadNotifications();closeModal();(window.renderGroupedNotifications||window.openNotifications||openNotifications)()}catch(e){toast(errMsg(e),'error')}}
 async function sendAdminNotification(recipientId,title,message){if(!isAdmin)throw Error('Admin access required.');if(!recipientId||!title||!message)throw Error('Recipient, title and message are required.');await addDoc(collection(db,'notifications'),{recipientId,title,message,fromAdmin:true,senderName:'SellerFlow',read:false,createdAt:serverTimestamp()});const recipient=allPublicProfiles.get(recipientId);try{if(recipientId===currentUser.uid&&'Notification' in window&&Notification.permission==='granted')new Notification(title,{body:message})}catch(_){}toast('Notification sent','success')}
@@ -1865,7 +3064,14 @@ function modal(html, keepVideoPlaying=false){
   $('modalRoot').innerHTML=`<div class="modal"><div class="modal-card">${html}</div></div>`;
   document.querySelectorAll('[data-close-modal]').forEach(b=>b.onclick=closeModal);
 }
-function closeModal(){$('modalRoot').innerHTML=''}
+function closeModal(){
+  if(window._activeChatUnsub){
+    try{ window._activeChatUnsub(); }catch(_){}
+    window._activeChatUnsub = null;
+  }
+  window._activeConversationId = null;
+  $('modalRoot').innerHTML='';
+}
 
 // =======================================================
 // Cross-Device Physical & System Navigation Architecture
@@ -2107,6 +3313,8 @@ $('mobileMenu')?.addEventListener('click',()=>{
   $('mobileNav')?.classList.toggle('hide');
   setNav();
 });
+$('headerLoginBtn')?.addEventListener('click',()=>showAuth('login'));
+$('headerRegisterBtn')?.addEventListener('click',()=>showAuth('register'));
 $('landingLogin')?.addEventListener('click',()=>showAuth('login'));
 $('heroLogin')?.addEventListener('click',()=>showAuth('login'));
 $('landingRegister')?.addEventListener('click',()=>showAuth('register'));
@@ -2177,9 +3385,11 @@ async function startUser(u){
   loadCart();
   await ensureTerms();
   showApp();
+  initServiceWorker();
   loadNotifications(false);
   startNotificationWatcher();
   startOrdersWatcher();
+  startBuyerOrdersWatcher();
   ready();
   try{await navigate('feed');if(!isAdmin&&!currentProfile?.termsAccepted)showTermsModal(true)}catch(e){console.error('Feed navigation failed:',e);$('page').innerHTML='<div class="card p-6"><h2 class="font-bold text-xl">You are signed in</h2><p class="muted mt-2">SellerFlow could not load the feed yet.</p><button id="retrySignedIn" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Try again</button></div>';$('retrySignedIn')?.addEventListener('click',()=>navigate('feed'))}
   bootingUid=null;
@@ -2196,7 +3406,9 @@ async function logoutUser(){
   isAdmin=false;
   cart=[];
   localStorage.removeItem('sellerflow_cart');
+  stopNotificationWatcher();
   stopOrdersWatcher();
+  stopBuyerOrdersWatcher();
   hide($('authPage'));
   hide($('shutdown'));
   showApp();
@@ -2267,6 +3479,40 @@ init();
 .avatar-stack{display:inline-flex;align-items:center}
 .avatar-stack > *{margin-right:-8px;border:2px solid #141414}
 .ai-badge{background:linear-gradient(135deg,rgba(245,185,66,.2),rgba(245,185,66,.05));border:1px solid rgba(245,185,66,.45);color:#f5b942}
+/* Photo Filters in Post Creation */
+.filter-strip{display:flex;gap:10px;overflow-x:auto;padding:6px 4px 10px 4px;scrollbar-width:thin;scrollbar-color:#333 #121212;-webkit-overflow-scrolling:touch}
+.filter-strip::-webkit-scrollbar{height:4px}
+.filter-strip::-webkit-scrollbar-track{background:#121212;border-radius:999px}
+.filter-strip::-webkit-scrollbar-thumb{background:#333;border-radius:999px}
+.filter-strip::-webkit-scrollbar-thumb:hover{background:#f5b942}
+.photo-filter-chip{user-select:none;touch-action:manipulation;background:transparent;border:none;padding:0;outline:none;cursor:pointer}
+.photo-filter-chip:active .filter-thumb-box{transform:scale(0.95)}
+.filter-thumb-box{position:relative;background:#000;box-shadow:0 2px 6px rgba(0,0,0,0.5)}
+/* Preset CSS Filter classes */
+.sf-filter-normal{filter:none}
+.sf-filter-vintage{filter:sepia(0.55) contrast(1.18) brightness(0.92) saturate(1.25) hue-rotate(-10deg)}
+.sf-filter-sepia{filter:sepia(0.85) contrast(1.05) brightness(0.95)}
+.sf-filter-grayscale{filter:grayscale(1) contrast(1.15) brightness(1.0)}
+.sf-filter-warm{filter:sepia(0.35) saturate(1.42) brightness(1.04) contrast(1.06)}
+.sf-filter-cool{filter:hue-rotate(185deg) saturate(1.15) contrast(1.1) brightness(0.96)}
+.sf-filter-noir{filter:grayscale(1) contrast(1.68) brightness(0.88)}
+.sf-filter-vivid{filter:saturate(1.78) contrast(1.16) brightness(1.02)}
+.sf-filter-fade{filter:contrast(0.9) brightness(1.08) saturate(0.85) sepia(0.18)}
+.sf-filter-emerald{filter:hue-rotate(50deg) saturate(1.3) contrast(1.08)}
+/* Order History Detail View & Timeline */
+.order-filter-pill{transition:all .18s ease;cursor:pointer}
+.order-filter-pill.active{background:#f5b942;color:#080808;font-weight:700;border-color:#f5b942}
+.timeline-stepper{position:relative;padding-left:28px}
+.timeline-stepper::before{content:'';position:absolute;left:11px;top:14px;bottom:14px;width:2px;background:#2a2a2a}
+.timeline-item{position:relative;padding-bottom:22px}
+.timeline-item:last-child{padding-bottom:0}
+.timeline-marker{position:absolute;left:-28px;top:0;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;z-index:2}
+.timeline-marker.done{background:#15803d;color:#fff;border:2px solid #22c55e}
+.timeline-marker.current{background:#f5b942;color:#080808;border:2px solid #fde047;box-shadow:0 0 0 4px rgba(245,185,66,.2)}
+.timeline-marker.pending{background:#181818;color:#71717a;border:2px solid #3f3f46}
+.timeline-marker.cancelled{background:#991b1b;color:#fff;border:2px solid #ef4444}
+.order-status-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:700}
+.order-card-completed{border-color:rgba(34,197,94,.35)!important;background:linear-gradient(180deg,#141916 0%,#121212 100%)}
 @media(max-width:640px){.profile-stats{grid-template-columns:repeat(2,1fr)}.profile-grid{gap:2px}.editor-tools{grid-template-columns:1fr}}
 </style>
 <script>
@@ -2766,15 +4012,22 @@ init();
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
         <button type="button" id="feedPrevBtn" class="feed-nav-btn shrink-0" title="Previous Reel"><svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg></button>
         <button type="button" id="feedNextBtn" class="feed-nav-btn shrink-0" title="Next Reel"><svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg></button>
-        <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0 whitespace-nowrap">＋ Upload</button>
+        ${!currentUser ? `
+          <button type="button" id="feedLoginBtn" class="border border-[#444] hover:border-gold px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold bg-[#141414] text-white transition shrink-0 whitespace-nowrap">Sign In</button>
+          <button type="button" id="feedRegisterBtn" class="hidden sm:inline-flex bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 shadow-sm transition shrink-0 whitespace-nowrap">Register</button>
+        ` : `
+          <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0 whitespace-nowrap">＋ Upload</button>
+        `}
       </div>
     </div>
     <div class="reel-feed flex-1 min-h-0 w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
       ${feedPosts.length?feedPosts.map(postCard).join(''):`<div class="h-full flex items-center justify-center p-6"><div class="card p-8 text-center max-w-md"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2 text-sm">Share a safe photo or video to start building your audience.</p><button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button></div></div>`}
     </div>`;
     $('feedBackProfile')?.addEventListener('click',()=>navigate('profile'));
-    $('openFeedUpload')?.addEventListener('click',openPostModal);
-    $('openFeedUploadEmpty')?.addEventListener('click',openPostModal);
+    $('feedLoginBtn')?.addEventListener('click',()=>showAuth('login'));
+    $('feedRegisterBtn')?.addEventListener('click',()=>showAuth('register'));
+    $('openFeedUpload')?.addEventListener('click',()=>currentUser?openPostModal():showAuthPrompt('upload videos or photos to For You'));
+    $('openFeedUploadEmpty')?.addEventListener('click',()=>currentUser?openPostModal():showAuthPrompt('upload videos or photos to For You'));
     document.querySelectorAll('[data-post-action]').forEach(b=>b.onclick=postAction);
     setupReelPlayback(targetPostId);
   };
@@ -3226,29 +4479,197 @@ init();
       };
     });
 
-    let file=null,kind='',imageState={brightness:100,contrast:100,saturation:100,rotation:0,zoom:1};
+    const SF_PHOTO_FILTERS = [
+      { id: 'normal', name: 'Normal', filter: 'none', label: 'Normal', desc: 'Original natural tone' },
+      { id: 'vintage', name: 'Vintage', filter: 'sepia(0.55) contrast(1.18) brightness(0.92) saturate(1.25) hue-rotate(-10deg)', label: 'Vintage', desc: 'Warm nostalgic retro film' },
+      { id: 'sepia', name: 'Sepia', filter: 'sepia(0.85) contrast(1.05) brightness(0.95)', label: 'Sepia', desc: 'Antique rich sepia tone' },
+      { id: 'grayscale', name: 'Grayscale', filter: 'grayscale(1) contrast(1.15) brightness(1.0)', label: 'Grayscale', desc: 'Timeless black & white monochrome' },
+      { id: 'warm', name: 'Warm Gold', filter: 'sepia(0.35) saturate(1.42) brightness(1.04) contrast(1.06)', label: 'Warm Gold', desc: 'Golden hour sunset tone' },
+      { id: 'cool', name: 'Cool Slate', filter: 'hue-rotate(185deg) saturate(1.15) contrast(1.1) brightness(0.96)', label: 'Cool Slate', desc: 'Cinematic cyan & cool moody blues' },
+      { id: 'noir', name: 'Noir Drama', filter: 'grayscale(1) contrast(1.68) brightness(0.88)', label: 'Noir', desc: 'High-contrast shadow drama' },
+      { id: 'vivid', name: 'Vivid Pop', filter: 'saturate(1.78) contrast(1.16) brightness(1.02)', label: 'Vivid Pop', desc: 'Deep vibrant colors & saturation' },
+      { id: 'fade', name: 'Matte Fade', filter: 'contrast(0.9) brightness(1.08) saturate(0.85) sepia(0.18)', label: 'Matte Fade', desc: 'Soft muted magazine aesthetic' },
+      { id: 'emerald', name: 'Emerald', filter: 'hue-rotate(50deg) saturate(1.3) contrast(1.08)', label: 'Emerald', desc: 'Lush tropical green undertones' }
+    ];
+
+    let file=null,kind='',imageState={filter:'normal',brightness:100,contrast:100,saturation:100,rotation:0,zoom:1};
     let capturedCoverBlob=null;
+    let showFineTuneSliders=false;
     const area=$('editorArea');
+
+    function getCombinedFilterCss(){
+      const fObj = SF_PHOTO_FILTERS.find(f => f.id === imageState.filter) || SF_PHOTO_FILTERS[0];
+      const baseFilter = (!fObj.filter || fObj.filter === 'none') ? '' : fObj.filter;
+      const adj = [];
+      if(imageState.brightness !== 100) adj.push(`brightness(${imageState.brightness}%)`);
+      if(imageState.contrast !== 100) adj.push(`contrast(${imageState.contrast}%)`);
+      if(imageState.saturation !== 100) adj.push(`saturate(${imageState.saturation}%)`);
+
+      if(baseFilter && adj.length > 0){
+        return `${baseFilter} ${adj.join(' ')}`;
+      } else if(baseFilter){
+        return baseFilter;
+      } else if(adj.length > 0){
+        return adj.join(' ');
+      }
+      return 'none';
+    }
+
+    function applyImageStyles(){
+      const img=$('editorImg');
+      if(!img)return;
+      const fCss=getCombinedFilterCss();
+      img.style.filter=fCss==='none'?'none':fCss;
+      img.style.transform=`rotate(${imageState.rotation}deg) scale(${imageState.zoom})`;
+
+      const badge=$('previewFilterBadge');
+      if(badge){
+        if(imageState.filter&&imageState.filter!=='normal'){
+          const fObj=SF_PHOTO_FILTERS.find(f=>f.id===imageState.filter);
+          badge.textContent=`✨ ${fObj?fObj.name:imageState.filter}`;
+          badge.classList.remove('hide');
+        }else{
+          badge.classList.add('hide');
+        }
+      }
+
+      const activeF=SF_PHOTO_FILTERS.find(f=>f.id===imageState.filter)||SF_PHOTO_FILTERS[0];
+      if($('activeFilterName'))$('activeFilterName').textContent=activeF.name;
+      if($('activeFilterDesc'))$('activeFilterDesc').textContent=activeF.desc;
+
+      const hasCustomTune=imageState.brightness!==100||imageState.contrast!==100||imageState.saturation!==100||imageState.zoom!==1||imageState.rotation!==0;
+      if($('tuneDot'))$('tuneDot').classList.toggle('hide',!hasCustomTune);
+    }
 
     function drawImage(){
       if(!file)return;
       const url=URL.createObjectURL(file);
-      area.innerHTML=`<div class="rounded-2xl overflow-hidden bg-black border border-[#333] max-h-[380px] flex items-center justify-center"><img id="editorImg" class="editor-preview max-h-[360px] object-contain" src="${url}" style="filter:brightness(${imageState.brightness}%) contrast(${imageState.contrast}%) saturate(${imageState.saturation}%);transform:rotate(${imageState.rotation}deg) scale(${imageState.zoom})"></div><div class="editor-tools mt-3"><div class="editor-tool">Brightness <div class="range-row"><input id="edBright" type="range" min="50" max="150" value="${imageState.brightness}"></div></div><div class="editor-tool">Contrast <div class="range-row"><input id="edContrast" type="range" min="50" max="150" value="${imageState.contrast}"></div></div><div class="editor-tool">Saturation <div class="range-row"><input id="edSat" type="range" min="0" max="180" value="${imageState.saturation}"></div></div><div class="editor-tool flex items-center justify-between">Zoom <input id="edZoom" type="range" min="80" max="140" value="100"></div></div><div class="flex flex-wrap gap-2 mt-3"><button type="button" id="edRotate" class="btn btn-secondary px-3 py-2 rounded-xl text-xs">↻ Rotate 90°</button><button type="button" id="edReset" class="btn btn-secondary px-3 py-2 rounded-xl text-xs">Reset filters</button></div>`;
-      ['edBright','edContrast','edSat','edZoom'].forEach(id=>$(id).oninput=()=>{
-        imageState.brightness=+$('edBright').value;
-        imageState.contrast=+$('edContrast').value;
-        imageState.saturation=+$('edSat').value;
-        imageState.zoom=+$('edZoom').value/100;
-        const i=$('editorImg');
-        if(i)i.style.cssText=`filter:brightness(${imageState.brightness}%) contrast(${imageState.contrast}%) saturate(${imageState.saturation}%);transform:rotate(${imageState.rotation}deg) scale(${imageState.zoom})`;
+      const activeF=SF_PHOTO_FILTERS.find(f=>f.id===imageState.filter)||SF_PHOTO_FILTERS[0];
+      const hasCustomTune=imageState.brightness!==100||imageState.contrast!==100||imageState.saturation!==100||imageState.zoom!==1||imageState.rotation!==0;
+
+      area.innerHTML=`
+        <div class="relative rounded-2xl overflow-hidden bg-black border border-[#333] max-h-[380px] flex items-center justify-center">
+          <img id="editorImg" class="editor-preview max-h-[360px] object-contain transition-[filter] duration-150" src="${url}" style="filter:${getCombinedFilterCss()};transform:rotate(${imageState.rotation}deg) scale(${imageState.zoom})">
+          <div id="previewFilterBadge" class="absolute top-2.5 right-2.5 bg-black/80 backdrop-blur-sm border border-gold/40 text-gold text-[10px] font-bold px-2 py-0.5 rounded-full ${imageState.filter==='normal'?'hide':''}">
+            ✨ ${esc(activeF.name)}
+          </div>
+        </div>
+
+        <!-- Photo Filters Carousel -->
+        <div class="mt-3 p-3 bg-[#161616] border border-[#2b2b2b] rounded-2xl">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-sm">🎨</span>
+              <span class="text-xs font-bold text-zinc-200">Photo Filters</span>
+              <span class="text-[11px] text-zinc-400">· <span id="activeFilterName" class="text-gold font-bold">${esc(activeF.name)}</span></span>
+            </div>
+            <span id="activeFilterDesc" class="text-[10px] text-zinc-500 hidden sm:inline truncate max-w-[180px]">${esc(activeF.desc)}</span>
+          </div>
+
+          <div class="filter-strip" id="filterCarousel">
+            ${SF_PHOTO_FILTERS.map(f=>{
+              const isSelected=f.id===imageState.filter;
+              return `
+                <button type="button" class="photo-filter-chip flex flex-col items-center shrink-0 cursor-pointer group focus:outline-none" data-sf-filter="${f.id}" title="${esc(f.name)}: ${esc(f.desc)}">
+                  <div class="filter-thumb-box w-14 h-14 rounded-xl overflow-hidden border-2 transition-all duration-150 ${isSelected?'border-gold ring-2 ring-gold/40 shadow-md scale-105':'border-[#333] hover:border-zinc-500'}">
+                    <img src="${url}" class="w-full h-full object-cover pointer-events-none" style="filter:${f.filter}">
+                  </div>
+                  <span class="filter-thumb-label text-[10px] font-semibold mt-1 transition-colors ${isSelected?'text-gold':'text-zinc-400 group-hover:text-zinc-200'}">${f.label}</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Toolbar: Fine-tune toggle, Rotate, Reset -->
+        <div class="flex items-center justify-between mt-2.5 gap-2">
+          <button type="button" id="toggleSlidersBtn" class="flex items-center gap-1.5 text-xs text-zinc-300 hover:text-white px-2.5 py-1.5 rounded-xl border border-[#333] bg-[#191919] transition">
+            <span>🎚️</span>
+            <span>Fine-tune adjustments</span>
+            <span id="tuneDot" class="w-1.5 h-1.5 rounded-full bg-gold ${hasCustomTune?'':'hide'}"></span>
+          </button>
+          <div class="flex items-center gap-1.5">
+            <button type="button" id="edRotate" class="text-xs text-zinc-300 hover:text-white px-2.5 py-1.5 rounded-xl border border-[#333] bg-[#191919] transition" title="Rotate 90 degrees">↻ Rotate 90°</button>
+            <button type="button" id="edReset" class="text-xs text-zinc-400 hover:text-zinc-200 px-2.5 py-1.5 rounded-xl border border-[#2b2b2b] bg-transparent transition">Reset</button>
+          </div>
+        </div>
+
+        <!-- Collapsible Fine-tune sliders -->
+        <div id="slidersPanel" class="editor-tools mt-2.5 ${showFineTuneSliders?'':'hide'}">
+          <div class="editor-tool">
+            <div class="flex justify-between text-xs text-zinc-300 mb-1"><span>Brightness</span><span id="valBright" class="text-zinc-400">${imageState.brightness}%</span></div>
+            <div class="range-row"><input id="edBright" type="range" min="50" max="150" value="${imageState.brightness}"></div>
+          </div>
+          <div class="editor-tool">
+            <div class="flex justify-between text-xs text-zinc-300 mb-1"><span>Contrast</span><span id="valContrast" class="text-zinc-400">${imageState.contrast}%</span></div>
+            <div class="range-row"><input id="edContrast" type="range" min="50" max="150" value="${imageState.contrast}"></div>
+          </div>
+          <div class="editor-tool">
+            <div class="flex justify-between text-xs text-zinc-300 mb-1"><span>Saturation</span><span id="valSat" class="text-zinc-400">${imageState.saturation}%</span></div>
+            <div class="range-row"><input id="edSat" type="range" min="0" max="180" value="${imageState.saturation}"></div>
+          </div>
+          <div class="editor-tool">
+            <div class="flex justify-between text-xs text-zinc-300 mb-1"><span>Zoom</span><span id="valZoom" class="text-zinc-400">${Math.round(imageState.zoom*100)}%</span></div>
+            <div class="range-row"><input id="edZoom" type="range" min="80" max="140" value="${Math.round(imageState.zoom*100)}"></div>
+          </div>
+        </div>
+      `;
+
+      // Attach filter chip click handlers
+      document.querySelectorAll('[data-sf-filter]').forEach(btn=>{
+        btn.onclick=()=>{
+          imageState.filter=btn.dataset.sfFilter;
+          applyImageStyles();
+          document.querySelectorAll('[data-sf-filter]').forEach(b=>{
+            const isSelected=b.dataset.sfFilter===imageState.filter;
+            const thumb=b.querySelector('.filter-thumb-box');
+            const label=b.querySelector('.filter-thumb-label');
+            if(thumb){
+              thumb.className=`filter-thumb-box w-14 h-14 rounded-xl overflow-hidden border-2 transition-all duration-150 ${isSelected?'border-gold ring-2 ring-gold/40 shadow-md scale-105':'border-[#333] hover:border-zinc-500'}`;
+            }
+            if(label){
+              label.className=`filter-thumb-label text-[10px] font-semibold mt-1 transition-colors ${isSelected?'text-gold':'text-zinc-400 group-hover:text-zinc-200'}`;
+            }
+          });
+        };
       });
+
+      // Toggle sliders button
+      $('toggleSlidersBtn').onclick=()=>{
+        showFineTuneSliders=!showFineTuneSliders;
+        const panel=$('slidersPanel');
+        if(panel)panel.classList.toggle('hide',!showFineTuneSliders);
+      };
+
+      // Range sliders
+      $('edBright').oninput=()=>{
+        imageState.brightness=+$('edBright').value;
+        if($('valBright'))$('valBright').textContent=imageState.brightness+'%';
+        applyImageStyles();
+      };
+      $('edContrast').oninput=()=>{
+        imageState.contrast=+$('edContrast').value;
+        if($('valContrast'))$('valContrast').textContent=imageState.contrast+'%';
+        applyImageStyles();
+      };
+      $('edSat').oninput=()=>{
+        imageState.saturation=+$('edSat').value;
+        if($('valSat'))$('valSat').textContent=imageState.saturation+'%';
+        applyImageStyles();
+      };
+      $('edZoom').oninput=()=>{
+        imageState.zoom=+$('edZoom').value/100;
+        if($('valZoom'))$('valZoom').textContent=Math.round(imageState.zoom*100)+'%';
+        applyImageStyles();
+      };
+
       $('edRotate').onclick=()=>{
         imageState.rotation=(imageState.rotation+90)%360;
-        const i=$('editorImg');
-        if(i)i.style.cssText=`filter:brightness(${imageState.brightness}%) contrast(${imageState.contrast}%) saturate(${imageState.saturation}%);transform:rotate(${imageState.rotation}deg) scale(${imageState.zoom})`;
+        applyImageStyles();
       };
+
       $('edReset').onclick=()=>{
-        imageState={brightness:100,contrast:100,saturation:100,rotation:0,zoom:1};
+        imageState={filter:'normal',brightness:100,contrast:100,saturation:100,rotation:0,zoom:1};
         drawImage();
       };
     }
@@ -3341,7 +4762,14 @@ init();
           c.width=Math.round(img.naturalWidth*scale);
           c.height=Math.round(img.naturalHeight*scale);
           const ctx=c.getContext('2d');
-          ctx.filter=`brightness(${imageState.brightness}%) contrast(${imageState.contrast}%) saturate(${imageState.saturation}%)`;
+          const fCss=getCombinedFilterCss();
+          if(fCss&&fCss!=='none'){
+            try{
+              ctx.filter=fCss;
+            }catch(fErr){
+              console.warn('Canvas filter application fallback',fErr);
+            }
+          }
           ctx.translate(c.width/2,c.height/2);
           ctx.rotate(imageState.rotation*Math.PI/180);
           ctx.scale(imageState.zoom,imageState.zoom);
@@ -3371,6 +4799,8 @@ init();
         }
 
         const sound=active||null;
+        const activeFilterObj=SF_PHOTO_FILTERS.find(f=>f.id===imageState.filter)||SF_PHOTO_FILTERS[0];
+        const finalFilterCss=getCombinedFilterCss();
         const postData={
           sellerId:currentUser.uid,
           text,
@@ -3381,6 +4811,9 @@ init();
           thumbnailPath,
           isAiGenerated,
           privacy,
+          photoFilter:imageState.filter||'normal',
+          photoFilterName:activeFilterObj.name||'Normal',
+          photoFilterCss:finalFilterCss==='none'?'':finalFilterCss,
           likes:[],
           saves:[],
           comments:[],
@@ -3727,10 +5160,11 @@ init();
     const liked=(p.likes||[]).includes(currentUser?.uid),saved=(p.saves||[]).includes(currentUser?.uid),reposted=(p.reposts||[]).includes(currentUser?.uid);let media='';
     if(p.mediaUrl){
       if(p.mediaType?.startsWith('video'))media=`<video class="reel-media reel-video" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" data-post-id="${p.id}" playsinline webkit-playsinline loop preload="metadata" poster="${esc(p.thumbnailUrl||'')}" onerror="window.__sfMediaFallback(this)"></video><button type="button" class="reel-play-toggle" data-video-toggle="${p.id}">▶</button><div class="reel-sound-label">🔊 Sound</div>`;
-      else media=`<img loading="lazy" class="reel-media" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" alt="SellerFlow post" onerror="window.__sfMediaFallback(this)">`;
+      else media=`<img loading="lazy" class="reel-media ${p.photoFilter ? `sf-filter-${esc(p.photoFilter)}` : ''}" style="${p.photoFilterCss ? `filter:${esc(p.photoFilterCss)};` : ''}" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" alt="SellerFlow post" onerror="window.__sfMediaFallback(this)">`;
     }
     const soundText=p.soundName||'Original sound';
     const aiBadge=p.isAiGenerated?`<span class="text-[10px] gold bg-black/70 px-2 py-0.5 rounded-full border border-gold/40">✨ AI-generated</span>`:'';
+    const filterBadge=p.photoFilter && p.photoFilter !== 'normal' ? `<span class="text-[10px] text-zinc-300 bg-black/70 px-2 py-0.5 rounded-full border border-zinc-700">🎞️ ${esc(p.photoFilterName||p.photoFilter)}</span>` : '';
     const privacyBadge=p.privacy==='private'?'<span class="text-[10px] text-zinc-300 bg-black/70 px-2 py-0.5 rounded-full border border-zinc-700">🔒 Only me</span>':p.privacy==='followers'?'<span class="text-[10px] text-gold bg-black/70 px-2 py-0.5 rounded-full border border-gold/40">👥 Followers</span>':'';
 
     return `<article class="reel-card" data-reel-id="${p.id}">
@@ -3758,6 +5192,7 @@ init();
           <span class="sound-chip">🎵 ${esc(soundText)}</span>
           ${p.soundOriginName?`<span class="post-origin">Original by ${esc(p.soundOriginName)}</span>`:''}
           ${aiBadge}
+          ${filterBadge}
           ${privacyBadge}
         </div>
       </div>
@@ -3768,7 +5203,7 @@ init();
   adminPostCard=function(uid,p){
     const s=p.platformLabel==='SellerFlow'&&p.isAdminPost?{...sellerProfile(p.sellerId),name:'SellerFlow',username:'sellerflow',verified:true}:sellerProfile(p.sellerId);
     let media='';
-    if(p.mediaUrl){if(p.mediaType?.startsWith('video'))media=`<div class="mt-4"><div class="sf-media-status mb-2">🎥 Video preview · ${esc(p.reviewStatus||'under review')}</div><video class="admin-media-preview" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" controls playsinline preload="metadata" onerror="window.__sfMediaFallback(this)"></video></div>`;else media=`<div class="mt-4"><div class="sf-media-status mb-2">🖼️ Photo preview · ${esc(p.reviewStatus||'under review')}</div><img class="admin-media-preview" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" alt="SellerFlow submitted photo" onerror="window.__sfMediaFallback(this)"></div>`;}
+    if(p.mediaUrl){if(p.mediaType?.startsWith('video'))media=`<div class="mt-4"><div class="sf-media-status mb-2">🎥 Video preview · ${esc(p.reviewStatus||'under review')}</div><video class="admin-media-preview" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" controls playsinline preload="metadata" onerror="window.__sfMediaFallback(this)"></video></div>`;else media=`<div class="mt-4"><div class="sf-media-status mb-2">🖼️ Photo preview · ${esc(p.reviewStatus||'under review')}${p.photoFilterName ? ` · Filter: ${esc(p.photoFilterName)}` : ''}</div><img class="admin-media-preview ${p.photoFilter ? `sf-filter-${esc(p.photoFilter)}` : ''}" style="${p.photoFilterCss ? `filter:${esc(p.photoFilterCss)};` : ''}" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" alt="SellerFlow submitted photo" onerror="window.__sfMediaFallback(this)"></div>`;}
     let aiDiagnostic='';
     if(p.reviewStatus==='violation'||p.violationDetected){
       aiDiagnostic=`<div class="mt-2.5 p-2.5 rounded-xl bg-red-950/60 border border-red-700 text-xs text-red-200"><div class="font-bold flex items-center gap-1"><span>🚫 AI Violation:</span> <code class="text-red-300 font-mono">${esc(p.violationRule||'GHANA_POLICY_RULE')}</code></div><div class="mt-1">${esc(p.violationReason||'Content violated SellerFlow safety policy')}</div><div class="text-[11px] text-red-400 mt-1">Confidence: ${Math.round((p.violationConfidence||0.98)*100)}% · Hidden immediately from public feed</div></div>`;
@@ -3804,7 +5239,7 @@ init();
           mediaPreview=`<div class="w-full h-full flex flex-col items-center justify-center bg-[#151515] p-3 text-center"><span class="text-3xl mb-1">🎥</span><span class="sf-video-indicator">▶ Video</span></div>`;
         }
       } else if(x.mediaUrl){
-        mediaPreview=`<img src="${esc(x.mediaUrl)}" data-media-path="${esc(x.mediaPath||'')}" alt="Post photo" class="w-full h-full object-cover" onerror="window.__sfMediaFallback(this)"><span class="sf-photo-indicator">📷 Photo</span>`;
+        mediaPreview=`<img src="${esc(x.mediaUrl)}" style="${x.photoFilterCss ? `filter:${esc(x.photoFilterCss)};` : ''}" data-media-path="${esc(x.mediaPath||'')}" alt="Post photo" class="w-full h-full object-cover ${x.photoFilter ? `sf-filter-${esc(x.photoFilter)}` : ''}" onerror="window.__sfMediaFallback(this)"><span class="sf-photo-indicator">📷 Photo</span>`;
       } else {
         mediaPreview=`<div class="w-full h-full flex flex-col items-center justify-center p-4 text-center bg-[#161616]"><span class="text-3xl mb-1">🛍️</span><p class="text-xs line-clamp-3 text-zinc-300">${esc(x.text||'SellerFlow post')}</p></div>`;
       }
@@ -3921,7 +5356,7 @@ init();
 </script>
 
 <style>
-.sf-search-btn{min-width:42px}.sf-search-results{max-height:65vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}.sf-result{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #292929;border-radius:14px;background:#151515;min-width:0}.sf-result:hover{border-color:#f5b942}.chat-layout{display:grid;grid-template-columns:300px 1fr;gap:16px;min-height:480px}.chat-list{max-height:620px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}.chat-window{display:flex;flex-direction:column;min-height:360px;height:100%}.chat-messages{flex:1 1 0%;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:16px;background:#0d0d0d;border-radius:18px;border:1px solid #292929}.chat-bubble{max-width:85%;padding:10px 13px;border-radius:16px;margin:7px 0;white-space:pre-wrap;word-break:break-word}.chat-me{margin-left:auto;background:#f5b942;color:#090909;border-bottom-right-radius:5px}.chat-them{margin-right:auto;background:#1c1c1c;border-bottom-left-radius:5px}.presence-dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:2px solid #0b0b0b;flex-shrink:0}.presence-online{background:#20d46b}.presence-offline{background:#666}@media(max-width:760px){.chat-layout{grid-template-columns:1fr;min-height:0}.chat-window{min-height:360px;height:65vh}.chat-list{max-height:55vh}}
+@media(min-width:641px){.sf-search-btn{min-width:42px}}.sf-search-results{max-height:65vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}.sf-result{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #292929;border-radius:14px;background:#151515;min-width:0}.sf-result:hover{border-color:#f5b942}.chat-layout{display:grid;grid-template-columns:300px 1fr;gap:16px;min-height:480px}.chat-list{max-height:620px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}.chat-window{display:flex;flex-direction:column;min-height:360px;height:100%}.chat-messages{flex:1 1 0%;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:16px;background:#0d0d0d;border-radius:18px;border:1px solid #292929}.chat-bubble{max-width:85%;padding:10px 13px;border-radius:16px;margin:7px 0;white-space:pre-wrap;word-break:break-word}.chat-me{margin-left:auto;background:#f5b942;color:#090909;border-bottom-right-radius:5px}.chat-them{margin-right:auto;background:#1c1c1c;border-bottom-left-radius:5px}.presence-dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:2px solid #0b0b0b;flex-shrink:0}.presence-online{background:#20d46b}.presence-offline{background:#666}@media(max-width:760px){.chat-layout{grid-template-columns:1fr;min-height:0}.chat-window{min-height:360px;height:65vh}.chat-list{max-height:55vh}}
 </style>
 <script>
 (function(){
@@ -3934,10 +5369,25 @@ init();
   async function loadConversations(){if(!currentUser)return[];const snap=await getDocs(query(collection(db,'conversations'),where('participants','array-contains',currentUser.uid),limit(100)));return snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ts(b.updatedAt)-ts(a.updatedAt))}
   async function openConversation(cid,uid,other){
     const ref=doc(db,'conversations',cid);let selected=other||sellerProfile(uid);
+    window._activeConversationId = cid;
+    if(window._activeChatUnsub){
+      try{ window._activeChatUnsub(); }catch(_){}
+      window._activeChatUnsub = null;
+    }
     modal(`<div class="chat-window"><div class="flex items-center gap-3 pb-3 border-b border-[#292929]"><button type="button" data-modal-back>← Back</button>${avatar(selected,'w-11 h-11 rounded-full object-cover bg-[#222]')}<div class="flex-1"><b>${esc(selected.name||selected.username||'SellerFlow user')}</b><div class="muted text-xs">@${esc(selected.username||'user')} · ${onlineNow(selected)?'Online':'Offline'}</div></div></div><div id="chatMessages" class="chat-messages mt-3"></div><form id="chatForm" class="flex gap-2 mt-3"><input id="chatInput" class="flex-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="off" placeholder="Write a message…"><button class="bg-gold text-black px-5 rounded-xl font-bold">Send</button></form></div>`);
-    const render=async()=>{const q=query(collection(db,'conversations',cid,'messages'),orderBy('createdAt','asc'),limit(300));const snap=await getDocs(q);const box=$('chatMessages');if(!box)return;box.innerHTML=snap.docs.map(d=>{const m=d.data(),me=m.senderId===currentUser?.uid;return `<div class="chat-bubble ${me?'chat-me':'chat-them'}"><div>${esc(m.text||'')}</div><div class="text-[10px] opacity-70 mt-1">${new Date(ts(m.createdAt)||Date.now()).toLocaleString('en-GH',{hour:'2-digit',minute:'2-digit'})}</div></div>`}).join('')||'<div class="h-full flex items-center justify-center muted">Start the conversation.</div>';box.scrollTop=box.scrollHeight};
-    await render();
-    $('chatForm').onsubmit=async e=>{e.preventDefault();const input=$('chatInput'),text=input.value.trim();if(!text)return;input.disabled=true;try{await addDoc(collection(db,'conversations',cid,'messages'),{senderId:currentUser.uid,recipientId:uid,text,createdAt:serverTimestamp()});await setDoc(ref,{participants:[currentUser.uid,uid],updatedAt:serverTimestamp(),lastMessage:text,lastSenderId:currentUser.uid},{merge:true});await addDoc(collection(db,'notifications'),{recipientId:uid,actorId:currentUser.uid,senderName:currentProfile?.name||currentProfile?.username||'SellerFlow user',title:'New chat message',message:text.length>120?text.slice(0,117)+'…':text,type:'chat_message',conversationId:cid,read:false,createdAt:serverTimestamp()});input.value='';await render()}catch(e){toast(errMsg(e),'error')}finally{input.disabled=false;input.focus()}};
+    const q=query(collection(db,'conversations',cid,'messages'),orderBy('createdAt','asc'),limit(300));
+    let initialRender = true;
+    if(q && typeof q.onSnapshot === 'function'){
+      window._activeChatUnsub = q.onSnapshot(snap => {
+        const box=$('chatMessages');
+        if(!box) return;
+        const wasAtBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 60;
+        box.innerHTML=snap.docs.map(d=>{const m=d.data(),me=m.senderId===currentUser?.uid;return `<div class="chat-bubble ${me?'chat-me':'chat-them'}"><div>${esc(m.text||'')}</div><div class="text-[10px] opacity-70 mt-1">${new Date(ts(m.createdAt)||Date.now()).toLocaleString('en-GH',{hour:'2-digit',minute:'2-digit'})}</div></div>`}).join('')||'<div class="h-full flex items-center justify-center muted">Start the conversation.</div>';
+        if(initialRender || wasAtBottom) box.scrollTop=box.scrollHeight;
+        initialRender = false;
+      }, err => console.warn('Chat real-time snapshot notice:', err));
+    }
+    $('chatForm').onsubmit=async e=>{e.preventDefault();const input=$('chatInput'),text=input.value.trim();if(!text)return;input.disabled=true;try{await addDoc(collection(db,'conversations',cid,'messages'),{senderId:currentUser.uid,recipientId:uid,text,createdAt:serverTimestamp()});await setDoc(ref,{participants:[currentUser.uid,uid],updatedAt:serverTimestamp(),lastMessage:text,lastSenderId:currentUser.uid},{merge:true});await addDoc(collection(db,'notifications'),{recipientId:uid,actorId:currentUser.uid,senderName:currentProfile?.name||currentProfile?.username||'SellerFlow user',title:'New chat message',message:text.length>120?text.slice(0,117)+'…':text,type:'chat_message',conversationId:cid,read:false,createdAt:serverTimestamp()});input.value=''}catch(e){toast(errMsg(e),'error')}finally{input.disabled=false;input.focus()}};
   }
   renderChats=async function(){
     if(!currentUser){showAuthPrompt('view your chats');return;}
@@ -4132,10 +5582,13 @@ init();
   }
   const oldRenderPage=renderPage;renderPage=async function(){if(currentPage==='chats')return renderChats();return oldRenderPage()};
   const oldSetNav=setNav;setNav=function(){oldSetNav();const desktop=$('desktopNav');if(desktop&&!desktop.querySelector('[data-page="chats"]')){const b=document.createElement('button');b.className='navbtn px-3 py-2';b.dataset.page='chats';b.textContent='Chats';b.onclick=()=>navigate('chats');desktop.appendChild(b)}const mn=$('mobileNav');if(mn&&!mn.querySelector('[data-mobile-page="chats"]')){const b=document.createElement('button');b.className='p-3 rounded-xl';b.dataset.mobilePage='chats';b.textContent='Chats';b.onclick=()=>navigate('chats');mn.prepend(b)}};
-  function installSearch(){const head=document.querySelector('#app header .max-w-7xl');if(!head||$('sfGlobalSearchBtn'))return;const wrap=document.createElement('div');wrap.className='ml-auto flex items-center gap-2';wrap.innerHTML=`<button id="sfGlobalSearchBtn" class="sf-search-btn border border-[#333] rounded-xl px-3 py-2" title="Search SellerFlow">⌕ <span class="hidden sm:inline">Search</span></button>`;const old=head.querySelector('.ml-auto');if(old){old.classList.remove('ml-auto');wrap.classList.add('ml-auto');head.insertBefore(wrap,old);wrap.appendChild(old)}else head.appendChild(wrap);$('sfGlobalSearchBtn').onclick=globalSearch}
+  function installSearch(){const head=document.querySelector('#app header .max-w-7xl');if(!head||$('sfGlobalSearchBtn'))return;const wrap=document.createElement('div');wrap.className='ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0';wrap.innerHTML=`<button id="sfGlobalSearchBtn" class="sf-search-btn border border-[#333] rounded-xl px-2.5 sm:px-3 py-2 shrink-0" title="Search SellerFlow">⌕ <span class="hidden sm:inline">Search</span></button>`;const old=head.querySelector('.ml-auto');if(old){old.classList.remove('ml-auto');wrap.classList.add('ml-auto');head.insertBefore(wrap,old);wrap.appendChild(old)}else head.appendChild(wrap);$('sfGlobalSearchBtn').onclick=globalSearch}
   const oldShowApp=showApp;showApp=function(){oldShowApp();installSearch();setNav()};
   window.startSellerFlowChat=startChat;
   document.addEventListener('click',e=>{const m=e.target.closest('[data-message-user]');if(m)startChat(m.dataset.messageUser)});
+  if (typeof initServiceWorker === 'function') {
+    initServiceWorker();
+  }
 })();
 </script>
 </body></html>

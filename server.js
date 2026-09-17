@@ -370,6 +370,17 @@ app.get('/api/config', (req, res) => {
 });
 
 const distPath = path.join(__dirname, 'dist');
+
+app.get('/sw.js', (req, res) => {
+  const swPath = fs.existsSync(path.join(distPath, 'sw.js'))
+    ? path.join(distPath, 'sw.js')
+    : path.join(__dirname, 'sw.js');
+  res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  res.setHeader('Service-Worker-Allowed', '/');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.sendFile(swPath);
+});
+
 if (fs.existsSync(distPath)) {
   app.use(express.static(distPath));
 }
