@@ -398,7 +398,7 @@ async function handleCapacitorGoogleSignIn() {
     `apiKey=${encodeURIComponent(apiKey)}` +
     `&appName=${encodeURIComponent('[DEFAULT]')}` +
     `&authType=signInWithRedirect` +
-    `&redirectUrl=${encodeURIComponent(customScheme + '://oauth-callback')}` +
+    `&redirectUrl=${encodeURIComponent(customScheme + '://' + projectId + '.firebaseapp.com/oauth-callback')}` +
     `&v=10.8.0` +
     `&providerId=google.com`;
     
