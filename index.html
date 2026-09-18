@@ -28,6 +28,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js" crossorigin="anonymous"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js" crossorigin="anonymous"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js" crossorigin="anonymous"></script>
+<script src="capacitor.js"></script>
 <script>tailwind.config={theme:{extend:{colors:{gold:'#f5b942'}}}}</script>
 <style>
 *{box-sizing:border-box}
@@ -35,6 +36,7 @@ html,body{width:100%;max-width:100%;height:100%;height:100dvh;margin:0;padding:0
 body{position:fixed;inset:0;background:#080808;color:#f5f5f5;font-family:'Plus Jakarta Sans',system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
 h1,h2,h3,h4,.brand-font,#brandBtn{font-family:'Outfit','Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em}
 #landing,#authPage{position:fixed;inset:0;width:100%;height:100%;height:100dvh;max-height:100dvh;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
+#authPage.keyboard-active{align-items:flex-start!important;justify-content:flex-start!important;padding-top:32px!important;padding-bottom:340px!important}
 img,video,iframe,canvas,svg{max-width:100%}video,img{box-sizing:border-box}button,input,textarea,select{font:inherit;max-width:100%}button:disabled{opacity:.5;cursor:not-allowed}
 body,input,textarea,select,.card,.reel-content,.chat-bubble,.sf-stat-card,.sf-user-row{overflow-wrap:anywhere;word-break:break-word}
 button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-nav-badge,#brandBtn,#headerLoginBtn,#headerRegisterBtn,#feedLoginBtn,#feedRegisterBtn,#openFeedUpload,#feedPrevBtn,#feedNextBtn,.sf-search-btn{white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important}
@@ -386,6 +388,102 @@ const createUserWithEmailAndPassword=(auth,email,password)=>auth.createUserWithE
 const signInWithEmailAndPassword=(auth,email,password)=>auth.signInWithEmailAndPassword(email,password);
 const GoogleAuthProvider=firebase.auth.GoogleAuthProvider;
 const signInWithPopup=(auth,provider)=>auth.signInWithPopup(provider);
+
+async function handleCapacitorGoogleSignIn() {
+  const apiKey = firebaseConfig.apiKey;
+  const projectId = firebaseConfig.projectId;
+  const customScheme = 'com.sellerflow.app';
+  
+  const authUrl = `https://${projectId}.firebaseapp.com/__/auth/handler?` +
+    `apiKey=${encodeURIComponent(apiKey)}` +
+    `&appName=${encodeURIComponent('[DEFAULT]')}` +
+    `&authType=signInWithRedirect` +
+    `&redirectUrl=${encodeURIComponent(customScheme + '://oauth-callback')}` +
+    `&v=10.8.0` +
+    `&providerId=google.com`;
+    
+  console.log('Launching external Firebase Auth handler:', authUrl);
+  
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+    await window.Capacitor.Plugins.Browser.open({ url: authUrl });
+  } else {
+    window.open(authUrl, '_blank');
+  }
+}
+
+async function initCapacitorHandlers() {
+  if (typeof window.Capacitor === 'undefined') {
+    console.log('Not running in Capacitor environment.');
+    return;
+  }
+  
+  console.log('SellerFlow Capacitor Environment Initialized');
+  
+  try {
+    const App = window.Capacitor.Plugins.App;
+    if (App) {
+      App.addListener('appUrlOpen', async (data) => {
+        console.log('SellerFlow App opened with URL:', data?.url);
+        const urlStr = data?.url;
+        if (!urlStr) return;
+        
+        try {
+          const Browser = window.Capacitor.Plugins.Browser;
+          if (Browser) {
+            await Browser.close().catch(()=>{});
+          }
+          
+          let idToken = null;
+          let accessToken = null;
+          
+          if (urlStr.includes('id_token=')) {
+            idToken = urlStr.split('id_token=')[1].split('&')[0];
+          }
+          if (urlStr.includes('access_token=')) {
+            accessToken = urlStr.split('access_token=')[1].split('&')[0];
+          }
+          
+          if (idToken) {
+            loading('Completing Google sign-in…');
+            const credential = firebase.auth.GoogleAuthProvider.credential(idToken, accessToken);
+            await auth.signInWithCredential(credential);
+            toast('Successfully signed in with Google!', 'success');
+          } else {
+            console.warn('Deep link URL did not contain a direct id_token:', urlStr);
+          }
+        } catch (err) {
+          console.error('Failed to complete deep-link login:', err);
+          toast('Google Sign-In failed: ' + errMsg(err), 'error');
+        } finally {
+          ready();
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('Capacitor App listener registration skipped:', err);
+  }
+}
+
+const triggerGoogleSignIn = async (onSuccess, onError) => {
+  try {
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      await handleCapacitorGoogleSignIn();
+    } else {
+      loading('Opening Google sign-in…');
+      await signInWithPopup(auth, new GoogleAuthProvider());
+      if (typeof onSuccess === 'function') await onSuccess();
+    }
+  } catch(e) {
+    if (typeof onError === 'function') {
+      onError(e);
+    } else {
+      toast(errMsg(e),'error');
+    }
+  } finally {
+    ready();
+  }
+};
+
 const signOut=(auth)=>auth.signOut();
 const sendPasswordResetEmail=(auth,email)=>auth.sendPasswordResetEmail(email);
 const sendEmailVerification=(user)=>user.sendEmailVerification();
@@ -908,14 +1006,7 @@ function showAuthPrompt(actionMessage = 'interact on SellerFlow'){
   $('authPromptLogin')?.addEventListener('click', ()=>{ closeModal(); showAuth('login'); });
   $('authPromptGoogle')?.addEventListener('click', async()=>{
     closeModal();
-    try {
-      loading('Opening Google sign-in…');
-      await signInWithPopup(auth, new GoogleAuthProvider());
-    } catch(e) {
-      toast(errMsg(e),'error');
-    } finally {
-      ready();
-    }
+    await triggerGoogleSignIn();
   });
 }
 window.showAuthPrompt=showAuthPrompt;
@@ -986,7 +1077,23 @@ async function ensureProfile(u,extra={}){
 }
 
 async function refreshProfile(){if(!currentUser){currentProfile=null;isAdmin=false;return null;}const s=await getDoc(doc(db,'users',currentUser.uid));currentProfile=snapshotExists(s)?s.data():await ensureProfile(currentUser);isAdmin=isUserAdminEmail(currentUser.email)}
-async function loadPublicProfiles(){allPublicProfiles.clear();try{const s=await getDocs(query(collection(db,'publicProfiles'),limit(300)));s.forEach(d=>allPublicProfiles.set(d.id,d.data()))}catch(e){console.warn(e)}}
+let _publicProfilesPromise = null;
+async function loadPublicProfiles(){
+  if(allPublicProfiles.size > 0) return;
+  if(_publicProfilesPromise) return _publicProfilesPromise;
+  _publicProfilesPromise = (async () => {
+    try{
+      const s=await getDocs(query(collection(db,'publicProfiles'),limit(300)));
+      allPublicProfiles.clear();
+      s.forEach(d=>allPublicProfiles.set(d.id,d.data()));
+    }catch(e){
+      console.warn('Background public profiles load warning:',e);
+    } finally {
+      _publicProfilesPromise = null;
+    }
+  })();
+  return _publicProfilesPromise;
+}
 function sellerProfile(uid){return allPublicProfiles.get(uid)||{uid,name:'Seller',username:'seller',verified:false,followers:[]}}
 
 const _sellerReviewsCache = new Map();
@@ -1351,7 +1458,7 @@ async function navigate(page, targetPostId, options){
   }
   loading('Loading…');
   try{
-    await loadPublicProfiles();
+    loadPublicProfiles().catch(()=>{});
     if(isFeed){
       await renderFeed(targetPostId, options);
     } else if(currentPage==='update'){
@@ -7402,7 +7509,7 @@ if($('authForm')){
     }catch(e){if($('authError'))$('authError').textContent=errMsg(e);ready()}
   };
 }
-$('googleBtn')?.addEventListener('click',async()=>{try{if(authMode==='register'){if(!$('termsAccept')?.checked)throw Error('Please read and agree to the Terms & Conditions before creating your account.');await ensureTerms()}loading('Opening Google sign-in…');await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){toast(errMsg(e),'error')}finally{ready()}});
+$('googleBtn')?.addEventListener('click',async()=>{try{if(authMode==='register'){if(!$('termsAccept')?.checked)throw Error('Please read and agree to the Terms & Conditions before creating your account.');await ensureTerms()}await triggerGoogleSignIn()}catch(e){toast(errMsg(e),'error')}finally{ready()}});
 $('resetBtn')?.addEventListener('click',async()=>{const email=$('authEmail')?.value.trim();if(!email)return toast('Enter your email first','error');try{await sendPasswordResetEmail(auth,email);toast('Password reset email sent','success')}catch(e){toast(errMsg(e),'error')}});
 let bootingUid=null;
 async function startUser(u){
@@ -7440,13 +7547,21 @@ async function startUser(u){
   startBuyerOrdersWatcher();
   ready();
   try{
-    await navigate('feed');
+    if(currentPage!=='feed'){
+      await navigate('feed');
+    }
     if(!isAdmin&&!currentProfile?.termsAccepted){
       showTermsModal(true);
     } else {
       setTimeout(() => { showFirstTimeTutorial(); }, 600);
     }
-  }catch(e){console.error('Feed navigation failed:',e);$('page').innerHTML='<div class="card p-6"><h2 class="font-bold text-xl">You are signed in</h2><p class="muted mt-2">SellerFlow could not load the feed yet.</p><button id="retrySignedIn" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Try again</button></div>';$('retrySignedIn')?.addEventListener('click',()=>navigate('feed'))}
+  }catch(e){
+    if(currentPage!=='feed'){
+      console.error('Feed navigation failed:',e);$('page').innerHTML='<div class="card p-6"><h2 class="font-bold text-xl">You are signed in</h2><p class="muted mt-2">SellerFlow could not load the feed yet.</p><button id="retrySignedIn" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Try again</button></div>';$('retrySignedIn')?.addEventListener('click',()=>navigate('feed'));
+    } else {
+      console.warn('Silent startUser navigation skip:', e);
+    }
+  }
   bootingUid=null;
 }
 
@@ -7481,21 +7596,66 @@ async function waitForFirebase(maxMs=6000){
   }
 }
 
+function setupAuthInputRepaintFix() {
+  const container = document.getElementById('authPage');
+  if (!container) return;
+  const inputs = container.querySelectorAll('input');
+  
+  let blurTimeout = null;
+
+  inputs.forEach(input => {
+    const forceRepaint = () => {
+      const _ = input.offsetHeight;
+      input.style.transform = 'translateZ(0)';
+    };
+    input.addEventListener('input', forceRepaint);
+    input.addEventListener('compositionupdate', forceRepaint);
+    input.addEventListener('keyup', forceRepaint);
+
+    // Dynamic keyboard-active CSS layout toggles & smooth positioning
+    input.addEventListener('focus', () => {
+      if (blurTimeout) {
+        clearTimeout(blurTimeout);
+        blurTimeout = null;
+      }
+      container.classList.add('keyboard-active');
+      
+      setTimeout(() => {
+        input.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }, 180);
+    });
+
+    input.addEventListener('blur', () => {
+      blurTimeout = setTimeout(() => {
+        if (!container.contains(document.activeElement) || document.activeElement.tagName !== 'INPUT') {
+          container.classList.remove('keyboard-active');
+        }
+      }, 150);
+    });
+  });
+}
+
 async function init(){
   try{
+    setupAuthInputRepaintFix();
     loading('Connecting securely…');
     await waitForFirebase();
-    try{
-      const cfgRes=await fetch('/api/config');
-      if(cfgRes.ok){
-        const cfg=await cfgRes.json();
-        if(cfg.firebaseApiKey)firebaseConfig.apiKey=cfg.firebaseApiKey;
-        if(cfg.supabaseUrl)supabaseUrl=cfg.supabaseUrl;
-        if(cfg.supabaseKey)supabaseKey=cfg.supabaseKey;
-        if(cfg.moderationFunctionUrl)window.SELLERFLOW_MODERATION_URL=cfg.moderationFunctionUrl;
-        if(cfg.verificationFunctionUrl)window.SELLERFLOW_VERIFICATION_URL=cfg.verificationFunctionUrl;
-      }
-    }catch(_){}
+    
+    // Asynchronous background config fetch to prevent startup blocking
+    fetch('/api/config')
+      .then(res => { if (res.ok) return res.json(); })
+      .then(cfg => {
+        if (cfg) {
+          if (cfg.firebaseApiKey) firebaseConfig.apiKey = cfg.firebaseApiKey;
+          if (cfg.supabaseUrl) supabaseUrl = cfg.supabaseUrl;
+          if (cfg.supabaseKey) supabaseKey = cfg.supabaseKey;
+          if (cfg.moderationFunctionUrl) window.SELLERFLOW_MODERATION_URL = cfg.moderationFunctionUrl;
+          if (cfg.verificationFunctionUrl) window.SELLERFLOW_VERIFICATION_URL = cfg.verificationFunctionUrl;
+          console.log('Asynchronous config successfully loaded.');
+        }
+      })
+      .catch(err => console.warn('Non-blocking config fetch skipped:', err));
+
     firebaseApp=initializeApp(firebaseConfig);
     auth=getAuth(firebaseApp);
     db=getFirestore(firebaseApp);
@@ -7509,6 +7669,13 @@ async function init(){
         db.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
       }
     }catch(_){}
+    try {
+      if (typeof initCapacitorHandlers === 'function') {
+        await initCapacitorHandlers();
+      }
+    } catch(errCap) {
+      console.warn('Capacitor handlers init issue:', errCap);
+    }
     onAuthStateChanged(auth,async u=>{
       if(!u){
         if(typeof stopOrdersWatcher==='function')stopOrdersWatcher();
@@ -7518,16 +7685,20 @@ async function init(){
         ready();
         return;
       }
+      
+      // OPTIMIZATION: Instantly display feed shell and remove spinner while booting user profile in background
+      currentUser=u;
+      isAdmin=isUserAdminEmail(u.email);
+      showApp();
+      navigate('feed');
+      ready();
+      
       try{
-        await startUser(u);
+        startUser(u).catch(e => {
+          console.error('Background authenticated startup issue:', e);
+        });
       }catch(e){
-        console.error('Authenticated startup issue:',e);
-        // Never sign out a valid Firebase session because a secondary app service failed.
-        currentUser=u;
-        isAdmin=isUserAdminEmail(u.email);
-        showApp();
-        ready();
-        toast('You are signed in. Some SellerFlow data may need another try.','error');
+        console.error('Authenticated startup trigger issue:',e);
       }
     });
   }catch(e){
