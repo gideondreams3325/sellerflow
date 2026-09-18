@@ -473,7 +473,7 @@ function snapshotExists(snap){return !!snap && (typeof snap.exists==='function' 
 
 
 const firebaseConfig={apiKey:'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk',authDomain:'sellerflow-efaab.firebaseapp.com',databaseURL:'https://sellerflow-efaab-default-rtdb.firebaseio.com',projectId:'sellerflow-efaab',storageBucket:'sellerflow-efaab.firebasestorage.app',messagingSenderId:'987175352360',appId:'1:987175352360:web:53e44304aaf11b98c61d1d'};
-const ADMIN_EMAILS=['gideonappiahfriempong@gmail.com','gideondreams99@gmail.com','gideondreams3325@gmail.com','sjssaloon@gmail.com'];
+const ADMIN_EMAILS=['gideondreams3325@gmail.com'];
 const isUserAdminEmail=(email)=>ADMIN_EMAILS.includes((email||'').toLowerCase());
 const ADMIN_EMAIL=ADMIN_EMAILS[0];
 let supabaseUrl='https://vvpwntehstjbccarqqzp.supabase.co';
@@ -6772,9 +6772,6 @@ async function openAdminSupportEditor(currentData){
 window.openAdminSupportEditor = openAdminSupportEditor;
 
 function openReportFraudModal(prefillType='seller', prefillId='', prefillName=''){
-  if(!currentUser){
-    return showAuthPrompt('report fraud to the security team');
-  }
   modal(`
     <div class="space-y-4 max-w-lg mx-auto" id="reportFraudModalContent">
       <div class="pb-3 border-b border-[#262626]">
@@ -6841,7 +6838,12 @@ function openReportFraudModal(prefillType='seller', prefillId='', prefillName=''
 
         <div>
           <label class="text-xs text-zinc-400 block mb-1 font-medium">Detailed Incident Description *</label>
-          <textarea id="reportDescription" rows="4" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold" placeholder="Describe exactly what happened, dates, products involved, and communications…"></textarea>
+          <textarea id="reportDescription" rows="3" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold" placeholder="Describe exactly what happened, dates, products involved, and communications…"></textarea>
+        </div>
+
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1 font-medium">Attach Proof / Screenshot Evidence (Optional)</label>
+          <input id="reportEvidenceFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full p-2 rounded-xl bg-[#171719] border border-[#333] text-xs text-zinc-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-amber-300">
         </div>
 
         <div>
@@ -6862,6 +6864,7 @@ function openReportFraudModal(prefillType='seller', prefillId='', prefillName=''
   `);
 
   $('submitFraudReportBtn').onclick = async () => {
+    const btn = $('submitFraudReportBtn');
     try {
       const targetType = $('reportTargetType').value;
       const targetName = $('reportTargetName').value.trim();
@@ -6871,39 +6874,64 @@ function openReportFraudModal(prefillType='seller', prefillId='', prefillName=''
       const transactionRef = $('reportTxRef').value.trim();
       const description = $('reportDescription').value.trim();
       const complainantContact = $('reportContact').value.trim();
+      const evidenceFile = $('reportEvidenceFile')?.files?.[0];
 
-      if(!targetName) throw Error('Please provide the name of the store or buyer being reported.');
-      if(description.length < 15) throw Error('Please write a detailed explanation of the fraud incident (at least 15 characters).');
+      if(!targetName) throw Error('Please provide the name of the store, seller or buyer being reported.');
+      if(description.length < 10) throw Error('Please write a detailed explanation of the fraud incident (at least 10 characters).');
       if(!complainantContact) throw Error('Please provide your contact phone or email for security follow-up.');
 
-      loading('Filing report with SellerFlow Security Desk…');
+      if(btn){
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spin w-3.5 h-3.5 border-2 border-white border-t-transparent inline-block rounded-full"></span> Submitting report…';
+      }
+
+      let evidenceUrl = '';
+      if(evidenceFile){
+        try {
+          const up = await uploadPublic(evidenceFile, 'fraud_evidence');
+          evidenceUrl = up.url || '';
+        } catch(e){
+          console.warn('Evidence upload failed:', e);
+        }
+      }
 
       await addDoc(collection(db, 'fraudReports'), {
         reporterUid: currentUser?.uid || 'guest',
         reporterEmail: currentUser?.email || '',
+        reporterName: currentProfile?.name || currentUser?.displayName || 'Guest User',
+        reporterContact: complainantContact,
         targetType,
         targetName,
         targetId,
+        storeName: targetName,
+        storeId: targetId,
         category,
         amount: amount ? Number(amount) : 0,
+        amountDefrauded: amount ? Number(amount) : 0,
         transactionRef,
         description,
+        details: description,
         complainantContact,
+        evidenceUrl,
         status: 'pending',
         createdAt: serverTimestamp()
       });
 
       closeModal();
+      toast('🛡️ Fraud report submitted to Security Desk.', 'success', 3500);
       await customAlert({
         title: 'Fraud Report Filed',
         message: 'Your fraud report has been securely submitted to the SellerFlow Security & Compliance Team.',
-        subText: 'Our team investigates all reported cases and coordinates with law enforcement where applicable.',
+        subText: 'Our Cybercrime & Security Desk investigates all cases and coordinates with law enforcement where applicable.',
         type: 'gold',
         icon: '🛡️',
         tag: 'Security Desk Logging'
       });
     } catch(err){
-      ready();
+      if(btn){
+        btn.disabled = false;
+        btn.innerHTML = '<span>🚨</span><span>Submit Fraud Report</span>';
+      }
       toast(errMsg(err), 'error');
     }
   };
