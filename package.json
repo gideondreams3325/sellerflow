@@ -24,6 +24,7 @@
     "jose": "^6.2.12"
   },
   "devDependencies": {
-    "acorn": "^8.18.0"
+    "acorn": "^8.18.0",
+    "js-yaml": "^5.4.2"
   }
 }
