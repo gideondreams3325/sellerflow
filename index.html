@@ -1173,6 +1173,14 @@ function setNav(){
         </div>
 
         <div class="p-3 border-t border-[#22222e] bg-[#0a0a0f] space-y-2 shrink-0">
+          <button type="button" id="mobileTutorialBtn" class="w-full p-2.5 rounded-xl bg-[#14141d] hover:bg-[#1a1a26] border border-gold/30 text-gold font-bold text-xs flex items-center justify-between transition shadow-sm">
+            <span class="flex items-center gap-2">
+              <span class="text-base">🎓</span>
+              <span>App Walkthrough & Tutorial</span>
+            </span>
+            <span class="text-gold text-[10px] font-extrabold">Explore →</span>
+          </button>
+
           <button type="button" id="mobileHelpSupportBtn" class="w-full p-2.5 rounded-xl bg-[#14141d] hover:bg-[#1a1a26] border border-amber-500/30 text-amber-300 font-bold text-xs flex items-center justify-between transition shadow-sm">
             <span class="flex items-center gap-2">
               <span class="text-base">🎧</span>
@@ -1209,6 +1217,7 @@ function setNav(){
     `;
 
     $('closeMobileNavBtn')?.addEventListener('click', closeMobileNav);
+    $('mobileTutorialBtn')?.addEventListener('click', () => { closeMobileNav(); if(typeof showFirstTimeTutorial==='function') showFirstTimeTutorial(true); });
     $('mobileHelpSupportBtn')?.addEventListener('click', () => { closeMobileNav(); if(typeof openHelpSupportModal==='function') openHelpSupportModal(); });
     $('mobileReportFraudBtn')?.addEventListener('click', () => { closeMobileNav(); if(typeof openReportFraudModal==='function') openReportFraudModal(); });
     $('mobileLogout')?.addEventListener('click', () => { closeMobileNav(); logoutUser(); });
@@ -5850,9 +5859,180 @@ Users may contact SellerFlow through the support/contact channels provided in th
 12. Governing law
 These Terms are intended to operate consistently with the Constitution of the Republic of Ghana and applicable Ghanaian law. If any provision is found unenforceable, the remaining provisions continue to the extent permitted by law.`;
 
+/* Automatic First-Time User Walkthrough & App Tutorial System */
+async function showFirstTimeTutorial(force = false){
+  if(!currentUser) return;
+  const uid = currentUser.uid;
+  const storageKey = `sellerflow_tutorial_seen_${uid}`;
+  
+  if(!force){
+    try {
+      if(localStorage.getItem(storageKey) === 'true') return;
+    } catch(_){}
+    if(currentProfile?.hasSeenTutorial) return;
+  }
+
+  // Mark as seen locally and in Firestore
+  try {
+    localStorage.setItem(storageKey, 'true');
+    if(currentProfile) currentProfile.hasSeenTutorial = true;
+    if(typeof db !== 'undefined' && db && uid) {
+      updateDoc(doc(db, 'users', uid), { hasSeenTutorial: true, tutorialCompletedAt: serverTimestamp() }).catch(()=>{});
+    }
+  } catch(_) {}
+
+  let currentStep = 0;
+  const steps = [
+    {
+      icon: '🎉',
+      badge: 'Welcome to SellerFlow Ghana',
+      title: 'Ghana’s #1 Social Video Marketplace',
+      desc: 'SellerFlow connects sellers and buyers across Ghana through video reels, storefronts, and instant direct messaging.',
+      highlights: [
+        { icon: '🎬', text: 'Watch & Share Video Reels' },
+        { icon: '🛍️', text: 'Shop Verified Ghanaian Stores' },
+        { icon: '💬', text: 'Direct Chat & Instant WhatsApp' },
+        { icon: '🏪', text: 'Create & Manage Your Store' }
+      ]
+    },
+    {
+      icon: '🎬',
+      badge: 'Step 1 of 4: For You Reel Feed',
+      title: 'Discover Products in Action',
+      desc: 'Swipe up and down to explore full-screen video reels published by verified Ghanaian sellers.',
+      highlights: [
+        { icon: '🔊', text: 'Tap video for sound & audio tracks' },
+        { icon: '❤️', text: 'Like, comment & repost videos' },
+        { icon: '🛒', text: 'Tap "Featured Product" to buy directly' },
+        { icon: '💬', text: 'Tap Chat icon to message seller instantly' }
+      ]
+    },
+    {
+      icon: '🛍️',
+      badge: 'Step 2 of 4: Marketplace & Orders',
+      title: 'Shop Safely Across Ghana',
+      desc: 'Browse catalogues, filter by region (Accra, Kumasi, etc.), and place cash-on-delivery or MoMo orders.',
+      highlights: [
+        { icon: '🛒', text: 'Add items to your Cart' },
+        { icon: '🧾', text: 'Track order status live in "My Orders"' },
+        { icon: '📦', text: 'Automatic split dispatch for multiple sellers' },
+        { icon: '🛡️', text: 'Buyer anti-fraud protection built in' }
+      ]
+    },
+    {
+      icon: '🏪',
+      badge: 'Step 3 of 4: Sell & Get Verified',
+      title: 'Open Your Free Storefront',
+      desc: 'List products and upload video reels to reach thousands of Ghanaian shoppers every day.',
+      highlights: [
+        { icon: '➕', text: 'Post new products with custom pricing & stock' },
+        { icon: '🛡️', text: 'Submit Ghana Card for blue ✓ Verified Badge' },
+        { icon: '🏢', text: 'Upload RGD Certificate for Business Badge' },
+        { icon: '📊', text: 'Track view counts and sales from Dashboard' }
+      ]
+    },
+    {
+      icon: '🛡️',
+      badge: 'Step 4 of 4: Safety & Support',
+      title: '24/7 Security & Help Desk',
+      desc: 'We are dedicated to keeping commerce safe for everyone in Ghana.',
+      highlights: [
+        { icon: '🚨', text: 'Report fraudulent accounts to Security Desk' },
+        { icon: '🎧', text: 'Access Customer Help Desk via Menu' },
+        { icon: '🔔', text: 'Enable background alerts for order updates' },
+        { icon: '⚙️', text: 'Replay this tutorial anytime in Settings' }
+      ]
+    }
+  ];
+
+  function renderStep(idx){
+    currentStep = idx;
+    const step = steps[idx];
+    const isFirst = idx === 0;
+    const isLast = idx === steps.length - 1;
+
+    modal(`
+      <div class="space-y-4 max-w-lg mx-auto py-1" id="tutorialModalCard">
+        <!-- Header & Step Indicator -->
+        <div class="flex items-center justify-between pb-3 border-b border-[#262626]">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-gold/15 text-gold border border-gold/30">
+            <span>✨</span>
+            <span>${esc(step.badge)}</span>
+          </div>
+          <button type="button" data-close-modal class="text-xs text-zinc-400 hover:text-white px-2 py-1 font-semibold transition">
+            Skip Walkthrough ✕
+          </button>
+        </div>
+
+        <!-- Main Card Visual -->
+        <div class="text-center py-2 space-y-2">
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-500/20 via-gold/10 to-amber-950/40 border border-gold/40 flex items-center justify-center text-3xl shadow-lg shadow-gold/10">
+            ${step.icon}
+          </div>
+          <h2 class="text-xl sm:text-2xl font-black text-white leading-tight">
+            ${esc(step.title)}
+          </h2>
+          <p class="text-xs sm:text-sm text-zinc-300 max-w-sm mx-auto leading-relaxed">
+            ${esc(step.desc)}
+          </p>
+        </div>
+
+        <!-- Highlight List Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+          ${step.highlights.map(h => `
+            <div class="p-3 rounded-xl bg-[#14141c] border border-[#262636] flex items-center gap-2.5">
+              <span class="text-lg shrink-0">${h.icon}</span>
+              <span class="text-xs font-semibold text-zinc-200 leading-snug">${esc(h.text)}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Progress Dots & Nav Buttons -->
+        <div class="pt-4 border-t border-[#262626] flex items-center justify-between gap-3">
+          <div class="flex items-center gap-1.5">
+            ${steps.map((_, i) => `
+              <div class="h-2 rounded-full transition-all duration-300 ${i === idx ? 'w-6 bg-gold' : 'w-2 bg-zinc-700'}"></div>
+            `).join('')}
+          </div>
+
+          <div class="flex items-center gap-2">
+            ${!isFirst ? `
+              <button type="button" id="tutPrevBtn" class="px-3.5 py-2 rounded-xl border border-[#383838] hover:border-gold text-zinc-300 hover:text-white text-xs font-bold bg-[#181818] transition">
+                ← Back
+              </button>
+            ` : ''}
+
+            ${!isLast ? `
+              <button type="button" id="tutNextBtn" class="px-4 py-2 rounded-xl bg-gold text-black font-extrabold text-xs hover:brightness-110 shadow-md shadow-gold/20 transition flex items-center gap-1">
+                <span>Next</span>
+                <span>→</span>
+              </button>
+            ` : `
+              <button type="button" id="tutFinishBtn" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-gold to-yellow-500 text-black font-black text-xs shadow-lg shadow-gold/30 hover:brightness-110 transition flex items-center gap-1.5">
+                <span>🚀</span>
+                <span>Explore App Now</span>
+              </button>
+            `}
+          </div>
+        </div>
+      </div>
+    `, true);
+
+    $('tutPrevBtn')?.addEventListener('click', () => renderStep(idx - 1));
+    $('tutNextBtn')?.addEventListener('click', () => renderStep(idx + 1));
+    $('tutFinishBtn')?.addEventListener('click', () => {
+      closeModal();
+      toast('🎉 You\'re all set! Enjoy SellerFlow Ghana.', 'success', 4000);
+    });
+  }
+
+  renderStep(0);
+}
+window.showFirstTimeTutorial = showFirstTimeTutorial;
+
 async function getTerms(){try{const s=await getDoc(doc(db,'settings','terms'));if(snapshotExists(s)&&s.data().text)return s.data();}catch(e){console.warn(e)}return {text:DEFAULT_TERMS,version:appTermsVersion}}
 async function ensureTerms(){const t=await getTerms();appTerms=t.text||DEFAULT_TERMS;appTermsVersion=t.version||appTermsVersion;return t}
-function showTermsModal(acceptMode=false){const text=appTerms||DEFAULT_TERMS;modal(`<div class="flex items-center gap-3"><div class="policy-icon">§</div><div><h2 class="text-2xl font-black">SellerFlow Terms & Conditions</h2><p class="muted text-sm">Please read before using SellerFlow.</p></div></div><div class="terms-box mt-5 whitespace-pre-wrap text-sm">${esc(text)}</div>${acceptMode?`<label class="flex items-start gap-2 mt-4 text-sm"><input id="termsModalAccept" type="checkbox" class="mt-1"><span>I have read and agree to these Terms & Conditions.</span></label><div class="flex justify-end gap-2 mt-4">${button('I Agree & Continue','acceptTermsBtn')}</div>`:`<div class="flex justify-end mt-4"><button data-close-modal class="px-4 py-2 rounded-xl border border-[#444]">Close</button></div>`}`);if(acceptMode)$('acceptTermsBtn').onclick=async()=>{if(!$('termsModalAccept').checked)return toast('Please confirm that you agree to the Terms & Conditions.','error');await acceptCurrentTerms();closeModal()}}
+function showTermsModal(acceptMode=false){const text=appTerms||DEFAULT_TERMS;modal(`<div class="flex items-center gap-3"><div class="policy-icon">§</div><div><h2 class="text-2xl font-black">SellerFlow Terms & Conditions</h2><p class="muted text-sm">Please read before using SellerFlow.</p></div></div><div class="terms-box mt-5 whitespace-pre-wrap text-sm">${esc(text)}</div>${acceptMode?`<label class="flex items-start gap-2 mt-4 text-sm"><input id="termsModalAccept" type="checkbox" class="mt-1"><span>I have read and agree to these Terms & Conditions.</span></label><div class="flex justify-end gap-2 mt-4">${button('I Agree & Continue','acceptTermsBtn')}</div>`:`<div class="flex justify-end mt-4"><button data-close-modal class="px-4 py-2 rounded-xl border border-[#444]">Close</button></div>`}`);if(acceptMode)$('acceptTermsBtn').onclick=async()=>{if(!$('termsModalAccept').checked)return toast('Please confirm that you agree to the Terms & Conditions.','error');await acceptCurrentTerms();closeModal();setTimeout(()=>{ showFirstTimeTutorial(); }, 400);}}
 async function acceptCurrentTerms(){if(!currentUser)return;await updateDoc(doc(db,'users',currentUser.uid),{termsAccepted:true,termsAcceptedAt:serverTimestamp(),termsVersion:appTermsVersion});currentProfile={...(currentProfile||{}),termsAccepted:true,termsVersion:appTermsVersion}}
 async function enforceTermsAcceptance(){await ensureTerms();if(!currentUser||isAdmin)return true;if(currentProfile?.termsAccepted&&currentProfile?.termsVersion===appTermsVersion)return true;showTermsModal(true);return false}
 async function renderSettings(){
@@ -5897,6 +6077,14 @@ async function renderSettings(){
           </div>
         </div>
       </div>
+      <div class="settings-item border-b border-[#292929]">
+        <div class="text-2xl">🎓</div>
+        <div class="flex-1">
+          <b>App Tutorial & Feature Guide</b>
+          <p class="muted text-sm">Replay the step-by-step onboarding walkthrough anytime.</p>
+        </div>
+        ${button('Replay Tutorial','replayTutorialBtn','border border-[#444] bg-transparent text-white')}
+      </div>
       <div class="settings-item">
         <div class="text-2xl">📜</div>
         <div class="flex-1">
@@ -5921,6 +6109,7 @@ async function renderSettings(){
       ${p.verified?`<div class="mt-5 bg-[#10251a] border border-green-800 p-4 rounded-xl">You are verified <span class="verified-badge ml-1">✓</span><div class="muted text-sm mt-1">Your blue SellerFlow badge may appear beside your seller name.</div></div>`:`<div class="mt-5"><p class="muted text-sm">${p.verificationStatus==='pending'?'Your verification is under review.':'Verification is optional for browsing, but required for seller publishing and helps customers trust your account.'}</p>${p.verificationStatus!=='pending'?button('Start Ghana Card verification','startVerification','mt-4 bg-gold text-black'):''}</div>`}
     </section>
   </div>`;
+  $('replayTutorialBtn')?.addEventListener('click', () => showFirstTimeTutorial(true));
   $('readTerms').onclick=()=>showTermsModal(false);
   $('enableNotifications').onclick=async()=>{
     await requestNotificationPermission();
@@ -6479,19 +6668,9 @@ async function sendAdminNotification(recipientId,title,message){if(!isAdmin)thro
 async function sendAdminBroadcast(title,message){if(!isAdmin)throw Error('Admin access required.');const users=await getDocs(query(collection(db,'users'),limit(300)));for(const d of users.docs)await addDoc(collection(db,'notifications'),{recipientId:d.id,title,message,fromAdmin:true,senderName:'SellerFlow',read:false,createdAt:serverTimestamp()});toast(`Notification sent to ${users.size} users`,'success')}
 
 async function renderAdmin(){
- if(!isAdmin){$('page').innerHTML=pageTitle('Access denied');return}
- const [users,posts,reports,termsSnap]=await Promise.all([getDocs(query(collection(db,'users'),limit(300))),getDocs(query(collection(db,'posts'),limit(200))),getDocs(query(collection(db,'scamReports'),limit(100))),getDoc(doc(db,'settings','terms'))]);
- const pending=users.docs.filter(d=>d.data().verificationStatus==='pending');
- const reviewPosts=posts.docs.filter(d=>{const x=d.data();return x.reviewStatus==='under_review'||(x.status==='published'&&x.reviewStatus!=='reviewed')});
- const termData=snapshotExists(termsSnap)?termsSnap.data():{text:DEFAULT_TERMS,version:appTermsVersion};
- $('page').innerHTML=pageTitle('Admin control center','Manage users, posts, notifications, policies and platform safety.')+`<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"><div class="card p-5"><div class="muted">Users</div><b class="text-3xl">${users.size}</b></div><div class="card p-5"><div class="muted">Pending verification</div><b class="text-3xl">${pending.length}</b></div><div class="card p-5"><div class="muted">Posts to review</div><b class="text-3xl">${reviewPosts.length}</b></div><div class="card p-5"><div class="muted">Reports</div><b class="text-3xl">${reports.size}</b></div></div>
- <div class="grid lg:grid-cols-2 gap-5 mt-5"><div class="card p-5"><div class="flex items-center justify-between gap-3"><div><h2 class="text-xl font-bold">Post safety review</h2><p class="muted text-sm mt-1">Posts appear immediately. Review the feed and take down anything that violates SellerFlow rules.</p></div>${button('＋ Post as SellerFlow','adminCreatePost','border border-[#444] bg-transparent text-white')}</div><div class="space-y-3 mt-4">${reviewPosts.length?reviewPosts.map(d=>adminPostCard(d.id,d.data())).join(''):'<div class="muted">No posts currently awaiting review.</div>'}</div></div>
- <div class="card p-5"><h2 class="text-xl font-bold">Seller verification</h2><p class="muted text-sm mt-1">Admin accounts do not require verification.</p><div class="space-y-3 mt-4">${pending.length?pending.map(d=>adminUserCard(d.id,d.data())).join(''):'<div class="muted">No pending applications.</div>'}</div></div></div>
- <div class="card p-5 mt-5"><h2 class="text-xl font-bold">Update & notification panel</h2><p class="muted text-sm mt-1">Send an individual SellerFlow message or an app-wide notification.</p><div class="grid md:grid-cols-3 gap-3 mt-4"><select id="notifyUser" class="p-3 rounded-xl bg-[#191919] border border-[#333]"><option value="">Select user</option>${users.docs.filter(d=>d.id!==currentUser.uid).map(d=>`<option value="${d.id}">${esc(d.data().name||d.data().email||d.id)} — ${esc(d.data().email||'')}</option>`).join('')}</select><input id="notifyTitle" class="p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Notification title"><select id="notifyType" class="p-3 rounded-xl bg-[#191919] border border-[#333]"><option>Update</option><option>Important</option><option>Order</option><option>Safety</option><option>Promotion</option></select></div><textarea id="notifyMessage" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Write the message..."></textarea><div class="flex flex-wrap gap-2 mt-3">${button('Send to selected user','sendUserNotification')}${button('Send to everyone','sendAllNotification','border border-[#444] bg-transparent text-white')}</div></div>
- <div class="card p-5 mt-5"><h2 class="text-xl font-bold">Terms & Conditions editor</h2><p class="muted text-sm mt-1">Edit the terms shown during registration and inside Settings.</p><div class="grid md:grid-cols-3 gap-3 mt-4"><input id="termsVersion" value="${esc(termData.version||appTermsVersion)}" class="p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Version"><div></div></div><textarea id="termsEditor" rows="18" class="w-full mt-3 p-4 rounded-xl bg-[#0d0d0d] border border-[#333] font-mono text-sm">${esc(termData.text||DEFAULT_TERMS)}</textarea><div class="flex justify-end mt-3">${button('Save Terms & Conditions','saveTerms')}</div></div>
- <div class="grid lg:grid-cols-2 gap-5 mt-5"><div class="card p-5"><h2 class="text-xl font-bold">App controls</h2><p class="muted mt-2">Pause or restart the marketplace.</p><div class="flex gap-2 mt-4"><button id="shutdownApp" class="border border-red-700 text-red-400 rounded-xl px-4 py-2">Pause app</button><button id="restartApp" class="bg-gold text-black rounded-xl px-4 py-2">Restart app</button></div></div><div class="card p-5"><h2 class="text-xl font-bold">Recent users</h2><div class="space-y-2 mt-4">${users.docs.slice(0,50).map(d=>{const u=d.data();return `<div class="flex items-center gap-3 border-b border-[#292929] py-3">${avatar(u)}<div class="flex-1"><b>${esc(u.name||u.email)}</b><div class="muted text-xs">@${esc(u.username||'')} · ${u.verified?'verified':'not verified'} · ${u.blocked?'BLOCKED':''}</div></div><button data-admin-notify="${d.id}" class="border border-[#444] rounded-xl px-3 py-2">🔔</button><button data-block-user="${d.id}" data-blocked="${u.blocked?'1':'0'}" class="border border-[#444] rounded-xl px-3 py-2">${u.blocked?'Unblock':'Block'}</button></div>`}).join('')}</div></div></div>`;
- $('adminCreatePost')?.addEventListener('click',openPostModal);document.querySelectorAll('[data-approve-user]').forEach(b=>b.onclick=()=>reviewVerification(b.dataset.approveUser,true));document.querySelectorAll('[data-reject-user]').forEach(b=>b.onclick=()=>reviewVerification(b.dataset.rejectUser,false));document.querySelectorAll('[data-block-user]').forEach(b=>b.onclick=()=>toggleBlock(b.dataset.blockUser,b.dataset.blocked==='1'));document.querySelectorAll('[data-view-card]').forEach(b=>b.onclick=()=>viewVerificationRecord(b.dataset.viewCard));document.querySelectorAll('[data-approve-post]').forEach(b=>b.onclick=()=>reviewPost(b.dataset.approvePost,true));document.querySelectorAll('[data-reject-post]').forEach(b=>b.onclick=()=>reviewPost(b.dataset.rejectPost,false));document.querySelectorAll('[data-admin-notify]').forEach(b=>b.onclick=()=>{navigate('admin');setTimeout(()=>{$('notifyUser').value=b.dataset.adminNotify;$('notifyTitle').focus()},50)});
- $('sendUserNotification').onclick=async()=>{try{await sendAdminNotification($('notifyUser').value,$('notifyTitle').value.trim(),$('notifyMessage').value.trim());$('notifyMessage').value=''}catch(e){toast(errMsg(e),'error')}};$('sendAllNotification').onclick=async()=>{try{await sendAdminBroadcast($('notifyTitle').value.trim(),$('notifyMessage').value.trim());$('notifyMessage').value=''}catch(e){toast(errMsg(e),'error')}};$('saveTerms').onclick=async()=>{try{const text=$('termsEditor').value.trim(),version=$('termsVersion').value.trim()||appTermsVersion;if(text.length<200)throw Error('Terms & Conditions are too short.');await setDoc(doc(db,'settings','terms'),{text,version,updatedAt:serverTimestamp(),updatedBy:currentUser.uid},{merge:true});appTerms=text;appTermsVersion=version;toast('Terms & Conditions updated','success')}catch(e){toast(errMsg(e),'error')}};$('shutdownApp').onclick=()=>setShutdown(true);$('restartApp').onclick=()=>setShutdown(false);
+  if(typeof window.renderAdminFull === 'function'){
+    return window.renderAdminFull();
+  }
 }
 function adminPostCard(uid,p){const s=p.platformLabel==='SellerFlow'&&p.isAdminPost?{...sellerProfile(p.sellerId),name:'SellerFlow',username:'sellerflow',verified:true}:sellerProfile(p.sellerId);return `<div class="bg-[#181818] rounded-xl p-4"><div class="flex gap-3 items-center">${avatar(s)}<div class="flex-1"><b>${esc(s.name||s.username)}</b><div class="muted text-xs">${esc(p.text||'No caption')}</div><div class="muted text-xs mt-1">${p.mediaType||'text'} · ${p.status||'pending'}</div></div></div><div class="flex gap-2 mt-3"><button data-approve-post="${uid}" class="bg-gold text-black rounded-xl px-3 py-2">Keep live</button><button data-reject-post="${uid}" class="border border-red-700 text-red-400 rounded-xl px-3 py-2">Take down</button></div></div>`}
 async function reviewPost(uid,approve){try{await updateDoc(doc(db,'posts',uid),{status:approve?'published':'removed',reviewStatus:approve?'reviewed':'removed',reviewedAt:serverTimestamp(),reviewedBy:currentUser.uid});const p=await getDoc(doc(db,'posts',uid));if(snapshotExists(p)){const x=p.data();await addDoc(collection(db,'notifications'),{recipientId:x.sellerId,senderName:'SellerFlow',title:approve?'SellerFlow post review complete':'SellerFlow post removed',message:approve?'Your post remains live on SellerFlow after safety review.':'Your post was removed by SellerFlow because it did not meet our community or safety requirements.',fromAdmin:true,read:false,createdAt:serverTimestamp()})}toast(approve?'Post approved':'Post rejected','success');navigate('admin')}catch(e){toast(errMsg(e),'error')}}
@@ -6631,11 +6810,11 @@ async function openHelpSupportModal(){
             <span class="text-[10px] text-emerald-400/80 font-mono">+${cleanWa}</span>
           </a>
 
-          <a href="mailto:${esc(supportData.email)}" class="p-3 rounded-xl bg-[#18181f] hover:bg-[#22222d] border border-[#2e2e38] hover:border-gold/50 flex flex-col items-center justify-center text-center gap-1 transition group">
-            <span class="text-xl group-hover:scale-110 transition">✉️</span>
-            <span class="text-xs font-bold text-white">Email Us</span>
-            <span class="text-[10px] text-zinc-400 font-mono truncate max-w-full px-1">${esc(supportData.email)}</span>
-          </a>
+          <button type="button" id="helpReplayTutorialBtn" class="p-3 rounded-xl bg-[#18181f] hover:bg-[#22222d] border border-[#2e2e38] hover:border-gold/50 flex flex-col items-center justify-center text-center gap-1 transition group">
+            <span class="text-xl group-hover:scale-110 transition">🎓</span>
+            <span class="text-xs font-bold text-white">App Tutorial</span>
+            <span class="text-[10px] text-amber-300/80">Feature Guide</span>
+          </button>
 
           <button type="button" id="helpReportFraudBtn" class="p-3 rounded-xl bg-rose-950/40 hover:bg-rose-900/50 border border-rose-800/60 hover:border-rose-600 flex flex-col items-center justify-center text-center gap-1 transition group">
             <span class="text-xl group-hover:scale-110 transition">🚨</span>
@@ -6674,6 +6853,7 @@ async function openHelpSupportModal(){
     `);
 
     ready();
+    $('helpReplayTutorialBtn')?.addEventListener('click', () => { closeModal(); showFirstTimeTutorial(true); });
     $('helpReportFraudBtn')?.addEventListener('click', () => openReportFraudModal());
     $('adminEditSupportBtnModal')?.addEventListener('click', () => openAdminSupportEditor(supportData));
 
@@ -7259,7 +7439,14 @@ async function startUser(u){
   startOrdersWatcher();
   startBuyerOrdersWatcher();
   ready();
-  try{await navigate('feed');if(!isAdmin&&!currentProfile?.termsAccepted)showTermsModal(true)}catch(e){console.error('Feed navigation failed:',e);$('page').innerHTML='<div class="card p-6"><h2 class="font-bold text-xl">You are signed in</h2><p class="muted mt-2">SellerFlow could not load the feed yet.</p><button id="retrySignedIn" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Try again</button></div>';$('retrySignedIn')?.addEventListener('click',()=>navigate('feed'))}
+  try{
+    await navigate('feed');
+    if(!isAdmin&&!currentProfile?.termsAccepted){
+      showTermsModal(true);
+    } else {
+      setTimeout(() => { showFirstTimeTutorial(); }, 600);
+    }
+  }catch(e){console.error('Feed navigation failed:',e);$('page').innerHTML='<div class="card p-6"><h2 class="font-bold text-xl">You are signed in</h2><p class="muted mt-2">SellerFlow could not load the feed yet.</p><button id="retrySignedIn" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Try again</button></div>';$('retrySignedIn')?.addEventListener('click',()=>navigate('feed'))}
   bootingUid=null;
 }
 
@@ -11473,7 +11660,7 @@ init();
       </div>
 
       <!-- Dashboard-Style Executive Cards Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 mb-6">
         <!-- Card 1: Users & Accounts -->
         <button type="button" class="sf-dash-card group" id="dashCardUsers">
           <div>
@@ -11572,7 +11759,27 @@ init();
           </div>
         </button>
 
-        <!-- Card 6: Restoration Hub -->
+        <!-- Card 6: Fraud Security Desk -->
+        <button type="button" class="sf-dash-card group ${fraudSnap.size ? 'border-rose-600/80 bg-rose-950/20 shadow-[0_0_12px_rgba(225,29,72,0.15)]' : ''}" id="dashCardFrauds">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-rose-300 uppercase tracking-wider">Fraud Hub</span>
+              <span class="text-lg p-1 rounded-lg bg-rose-950/80 border border-rose-700/60">🚨</span>
+            </div>
+            <div class="text-2xl font-black ${fraudSnap.size ? 'text-rose-400' : 'text-white'} mt-1.5 group-hover:text-gold transition">${fraudSnap.size}</div>
+            <div class="flex flex-wrap gap-1 mt-2">
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${fraudSnap.size ? 'bg-rose-950/90 text-rose-200 border border-rose-800 animate-pulse' : 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'}">
+                ${fraudSnap.size ? `${fraudSnap.size} Fraud Case${fraudSnap.size === 1 ? '' : 's'}` : '0 Clean'}
+              </span>
+            </div>
+          </div>
+          <div class="text-[10px] font-bold text-rose-300 group-hover:underline mt-3 flex items-center justify-between">
+            <span>Security Desk</span>
+            <span>→</span>
+          </div>
+        </button>
+
+        <!-- Card 7: Restoration Hub -->
         <button type="button" class="sf-dash-card group" id="dashCardRestoration">
           <div>
             <div class="flex items-center justify-between">
@@ -11646,7 +11853,7 @@ init();
       window._currentAdminTab = tabName;
       document.querySelectorAll('[data-admin-tab]').forEach(t => t.classList.toggle('active', t.dataset.adminTab === tabName));
 
-      if(tabName === 'overview') sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts);
+      if(tabName === 'overview') sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts, fraudSnap);
       else if(tabName === 'users') sfAdminUsers(users, pending, subOption);
       else if(tabName === 'posts') sfAdminPosts(posts, livePosts, reviewPosts, takenDownPosts, subOption);
       else if(tabName === 'stores') sfAdminStores(storesSnap, liveStores, pendingStores, takenDownStores, rejectedStores, subOption);
@@ -11668,12 +11875,13 @@ init();
     $('dashCardStores').onclick = () => setAdminTab('stores');
     $('dashCardProducts').onclick = () => setAdminTab('products');
     $('dashCardReports').onclick = () => setAdminTab('reports');
+    $('dashCardFrauds').onclick = () => setAdminTab('frauds');
     $('dashCardRestoration').onclick = () => setAdminTab('posts', 'restoration');
 
     setAdminTab(initialTab);
   };
 
-  function sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts){
+  function sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts, fraudSnap){
     const activeCount = users.docs.filter(d => {
       const u = d.data();
       const isSusp = !!u.suspended || (u.suspendedUntil && ts(u.suspendedUntil) > Date.now());
@@ -11858,6 +12066,51 @@ init();
               View Safety Review Queue (${reviewPosts.length}) →
             </button>
           </div>
+
+          <!-- Reported Fraud Security Hub Card -->
+          <div class="card p-5 border border-rose-900/60 bg-rose-950/20 col-span-1 lg:col-span-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <span class="text-xl p-2 rounded-xl bg-rose-950 border border-rose-800">🚨</span>
+                <div>
+                  <h3 class="text-base font-black text-rose-300">Reported Fraud Security Desk</h3>
+                  <p class="muted text-xs">Official buyer & seller fraud reports with evidence screenshots & Ghana Cybercrime law dossier.</p>
+                </div>
+              </div>
+              <span class="text-xs font-bold px-3 py-1 rounded-full ${fraudSnap?.size ? 'bg-rose-900 text-rose-100 border border-rose-700 animate-pulse' : 'bg-zinc-800 text-zinc-400'}">${fraudSnap?.size || 0} Reported Cases</span>
+            </div>
+            
+            <div class="space-y-3 mt-4">
+              ${(fraudSnap?.docs || []).slice(0, 3).map(doc => {
+                const f = doc.data();
+                const isResolved = !!f.resolved;
+                return `
+                  <div class="bg-[#121214] rounded-xl p-3.5 border border-[#27272e] flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div class="space-y-1">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs font-black text-white">${esc(f.targetName || f.storeName || 'Merchant')}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isResolved ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-rose-950 text-rose-300 border border-rose-800'}">
+                          ${isResolved ? '✓ Resolved' : '⚡ Open Fraud Case'}
+                        </span>
+                      </div>
+                      <p class="text-xs text-zinc-300 line-clamp-1">"${esc(f.details || f.description || 'No description provided.')}"</p>
+                      <div class="text-[11px] text-zinc-400">
+                        Complainant: <b class="text-zinc-200">${esc(f.reporterName || f.reporterEmail || 'Anonymous')}</b>
+                        ${f.amountDefrauded || f.amount ? ` · Claimed Loss: <b class="text-amber-400">GH₵ ${esc(f.amountDefrauded || f.amount)}</b>` : ''}
+                      </div>
+                    </div>
+                    <button type="button" class="bg-rose-950 hover:bg-rose-900 text-rose-200 border border-rose-800 hover:border-rose-600 px-3 py-2 rounded-xl text-xs font-bold transition shrink-0" data-jump-fraud-id="${doc.id}">
+                      Review Case & Evidence ↗
+                    </button>
+                  </div>
+                `;
+              }).join('') || '<div class="p-8 text-center muted text-xs bg-[#141414] rounded-xl border border-[#262626]">No active fraud complaints. Security desk is all clear!</div>'}
+            </div>
+
+            <button id="openAllFraudHub" class="mt-4 border border-rose-800/80 hover:bg-rose-900/60 rounded-xl px-4 py-2.5 text-xs font-bold w-full transition text-rose-200 bg-rose-950/40">
+              Open Full Fraud Security Control Desk (${fraudSnap?.size || 0} Reports) →
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -11870,6 +12123,10 @@ init();
     $('openAllProductModeration')?.addEventListener('click', () => setAdminTab('products'));
     $('openAllRestoration')?.addEventListener('click', () => setAdminTab('posts', 'restoration'));
     $('openAllReview')?.addEventListener('click', () => setAdminTab('posts', 'review'));
+    $('openAllFraudHub')?.addEventListener('click', () => setAdminTab('frauds'));
+    document.querySelectorAll('[data-jump-fraud-id]').forEach(b => {
+      b.onclick = () => setAdminTab('frauds');
+    });
 
     bindAdminControls();
   }
@@ -13280,10 +13537,23 @@ init();
               </div>
             ` : ''}
 
-            <!-- Details -->
-            <div class="p-3 rounded-xl bg-[#18181b] border border-[#27272e] text-xs text-zinc-300 leading-relaxed">
-              <b class="text-white block mb-1">Incident Details & Evidence:</b>
-              "${esc(f.details || 'No details provided.')}"
+            <!-- Details & Evidence -->
+            <div class="p-3.5 rounded-xl bg-[#18181b] border border-[#27272e] text-xs text-zinc-300 leading-relaxed space-y-3">
+              <div>
+                <b class="text-white block mb-1">Incident Explanation:</b>
+                "${esc(f.details || f.description || 'No details provided.')}"
+              </div>
+              ${f.evidenceUrl ? `
+                <div class="pt-2 border-t border-[#292932]">
+                  <b class="text-amber-300 block mb-2 flex items-center gap-1.5">
+                    <span>🖼️</span><span>Attached Screenshot Evidence / Transaction Receipt:</span>
+                  </b>
+                  <a href="${esc(f.evidenceUrl)}" target="_blank" rel="noopener" class="inline-block group relative">
+                    <img src="${esc(f.evidenceUrl)}" alt="Fraud Screenshot Proof" class="max-h-56 max-w-full rounded-xl border border-zinc-700 group-hover:border-gold object-contain bg-black transition shadow-lg">
+                    <span class="text-[11px] text-gold font-bold block mt-1.5 group-hover:underline">View Full-Resolution Image ↗</span>
+                  </a>
+                </div>
+              ` : ''}
             </div>
 
             <!-- Action Buttons -->
