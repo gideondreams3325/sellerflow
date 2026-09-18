@@ -279,6 +279,7 @@ button, a, .reel-action, .navbtn, input, select, textarea, .action-btn, [role="b
 #loading.hide{display:none!important}
 #loading{pointer-events:auto}
 button,a,input,textarea,select{position:relative;z-index:1}
+input, textarea, select { color: #ffffff !important; }
 
 /* Modern eye-catching professional buttons & controls */
 #brandBtn{font-family:'Outfit',sans-serif;font-weight:900;font-size:1.32rem;letter-spacing:-0.03em;background:linear-gradient(135deg,#ffe082 0%,#f5b942 50%,#e29c1b 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:inline-flex;align-items:center;line-height:1;flex-shrink:0;transition:opacity .15s}
@@ -435,7 +436,7 @@ function getAppUrl() {
   if (injectedUrl && injectedUrl.startsWith('http')) {
     return injectedUrl;
   }
-  return 'https://sellerflow-efaab.firebaseapp.com';
+  return 'https://ais-pre-itz26jgxiiweklzlfr22wi-909278422069.europe-west2.run.app';
 }
 
 async function handleCapacitorGoogleSignIn() {
