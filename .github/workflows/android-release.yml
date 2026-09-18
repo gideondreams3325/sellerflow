@@ -39,6 +39,8 @@ jobs:
 
       - name: Setup Gradle Environment
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-write-only: true
 
       - name: Decode Android Release Keystore
         if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}

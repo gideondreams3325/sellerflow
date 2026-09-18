@@ -40,6 +40,8 @@ jobs:
 
       - name: Setup Gradle Environment
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-write-only: true
 
       - name: Make Gradlew Executable
         run: chmod +x android/gradlew

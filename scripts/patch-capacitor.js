@@ -39,3 +39,15 @@ patchFile(path.resolve('android/app/build.gradle'), [
   ['JavaVersion.VERSION_17', 'JavaVersion.VERSION_21']
 ]);
 
+// 4. Patch Capacitor App plugin build.gradle
+patchFile(path.resolve('node_modules/@capacitor/app/android/build.gradle'), [
+  ['8.13.0', '8.2.2'],
+  ['36', '34']
+]);
+
+// 5. Patch Capacitor Browser plugin build.gradle
+patchFile(path.resolve('node_modules/@capacitor/browser/android/build.gradle'), [
+  ['8.13.0', '8.2.2'],
+  ['36', '34']
+]);
+
