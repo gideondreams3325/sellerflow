@@ -428,6 +428,16 @@ const signInWithEmailAndPassword=(auth,email,password)=>auth.signInWithEmailAndP
 const GoogleAuthProvider=firebase.auth.GoogleAuthProvider;
 const signInWithPopup=(auth,provider)=>auth.signInWithPopup(provider);
 
+function getOAuthCallbackUrl() {
+  const origin = window.location.origin || '';
+  if (origin.includes('sellerflow-nine.vercel.app') || origin.includes('sellerflow-fz92.vercel.app')) {
+    return origin + '/oauth-callback';
+  }
+  // sellerflow-nine.vercel.app is an authorized domain in Firebase Auth for sellerflow-efaab
+  // and hosts the active deep-link redirection back to the native Android app (com.sellerflow.app://oauth-callback)
+  return 'https://sellerflow-nine.vercel.app/oauth-callback';
+}
+
 function getAppUrl() {
   if (window.location.origin && window.location.origin.startsWith('http') && !window.location.origin.includes('localhost')) {
     return window.location.origin;
@@ -436,20 +446,19 @@ function getAppUrl() {
   if (injectedUrl && injectedUrl.startsWith('http')) {
     return injectedUrl;
   }
-  return 'https://ais-pre-itz26jgxiiweklzlfr22wi-909278422069.europe-west2.run.app';
+  return 'https://sellerflow-nine.vercel.app';
 }
 
 async function handleCapacitorGoogleSignIn() {
   const apiKey = firebaseConfig.apiKey;
   const projectId = firebaseConfig.projectId;
-  // Always use the official production domain which is whitelisted in Firebase Authorized Domains and serves the active callback routes
-  const appUrl = 'https://sellerflow.com.gh';
+  const callbackUrl = getOAuthCallbackUrl();
   
   const authUrl = `https://${projectId}.firebaseapp.com/__/auth/handler?` +
     `apiKey=${encodeURIComponent(apiKey)}` +
     `&appName=${encodeURIComponent('[DEFAULT]')}` +
     `&authType=signInWithRedirect` +
-    `&redirectUrl=${encodeURIComponent(appUrl + '/oauth-callback')}` +
+    `&redirectUrl=${encodeURIComponent(callbackUrl)}` +
     `&v=10.8.0` +
     `&providerId=google.com`;
     
@@ -489,9 +498,11 @@ async function initCapacitorHandlers() {
           
           if (urlStr.includes('id_token=')) {
             idToken = urlStr.split('id_token=')[1].split('&')[0];
+            try { idToken = decodeURIComponent(idToken); } catch(e) {}
           }
           if (urlStr.includes('access_token=')) {
             accessToken = urlStr.split('access_token=')[1].split('&')[0];
+            try { accessToken = decodeURIComponent(accessToken); } catch(e) {}
           }
           
           if (idToken) {
