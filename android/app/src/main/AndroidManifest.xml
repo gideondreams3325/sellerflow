@@ -53,7 +53,7 @@
             android:value="sellerflow_default" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@mipmap/ic_launcher" />
+            android:resource="@mipmap/ic_launcher_foreground" />
     </application>
 
     <!-- Permissions -->

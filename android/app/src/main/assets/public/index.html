@@ -804,13 +804,6 @@ async function initCapacitorHandlers() {
   } catch (err) {
     console.warn('Capacitor App listener registration skipped:', err);
   }
-
-  // Initialize Capacitor Push Notifications
-  try {
-    initCapacitorPushNotifications().catch(e => console.warn('Push init error:', e));
-  } catch (e) {
-    console.warn('initCapacitorPushNotifications call error:', e);
-  }
 }
 
 /* ==========================================================================
@@ -881,7 +874,7 @@ async function initCapacitorPushNotifications(targetUser = null) {
   }
 
   try {
-    // 1. Configure Android Notification Channel
+    // 1. Configure Android Notification Channel (defaults to system notification sound)
     if (typeof PushNotifications.createChannel === 'function') {
       await PushNotifications.createChannel({
         id: 'sellerflow_default',
@@ -889,7 +882,6 @@ async function initCapacitorPushNotifications(targetUser = null) {
         description: 'SellerFlow marketplace orders, alerts, and social updates',
         importance: 4, // IMPORTANCE_HIGH
         visibility: 1, // VISIBILITY_PUBLIC
-        sound: 'default',
         vibration: true,
         lights: true,
         lightColor: '#f5b942'
@@ -8109,10 +8101,12 @@ async function startUser(u){
   startNotificationWatcher();
   startOrdersWatcher();
   startBuyerOrdersWatcher();
-  if (typeof initCapacitorPushNotifications === 'function') {
-    initCapacitorPushNotifications(u).catch(e => console.warn('Push init error:', e));
-  }
   ready();
+  if (typeof initCapacitorPushNotifications === 'function') {
+    setTimeout(() => {
+      initCapacitorPushNotifications(u).catch(e => console.warn('Push init error:', e));
+    }, 800);
+  }
   try{
     if(currentPage!=='feed'){
       await navigate('feed');
