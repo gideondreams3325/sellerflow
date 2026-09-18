@@ -468,29 +468,25 @@ function getAppUrl() {
 }
 
 async function handleCapacitorGoogleSignIn() {
-  const apiKey = firebaseConfig.apiKey;
-  const projectId = firebaseConfig.projectId;
   const callbackUrl = getOAuthCallbackUrl();
+  const startUrl = callbackUrl + (callbackUrl.includes('?') ? '&' : '?') + 'start=google';
   
-  const authUrl = `https://${projectId}.firebaseapp.com/__/auth/handler?` +
-    `apiKey=${encodeURIComponent(apiKey)}` +
-    `&appName=${encodeURIComponent('[DEFAULT]')}` +
-    `&authType=signInWithRedirect` +
-    `&redirectUrl=${encodeURIComponent(callbackUrl)}` +
-    `&v=10.8.0` +
-    `&providerId=google.com`;
-    
-  console.log('Launching external Firebase Auth handler:', authUrl);
+  console.log('Launching external Google sign-in flow via:', startUrl);
   
   if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
     try {
       window.Capacitor.Plugins.Browser.addListener('browserFinished', () => {
         if (typeof ready === 'function') ready();
+        if (typeof auth !== 'undefined' && auth.currentUser) {
+          hide($('authPage'));
+          showApp();
+          if (typeof navigate === 'function') navigate('feed');
+        }
       }).catch(() => {});
     } catch (_) {}
-    await window.Capacitor.Plugins.Browser.open({ url: authUrl });
+    await window.Capacitor.Plugins.Browser.open({ url: startUrl });
   } else {
-    window.open(authUrl, '_blank');
+    window.open(startUrl, '_blank');
   }
 }
 
@@ -501,7 +497,6 @@ async function handleOAuthCallbackPage() {
   const updateStatus = (t) => { if (statusMsg) statusMsg.textContent = t; };
 
   try {
-    updateStatus('Verifying Google sign-in…');
     if (typeof waitForFirebase === 'function') {
       await waitForFirebase();
     }
@@ -510,29 +505,44 @@ async function handleOAuthCallbackPage() {
     }
     const authInst = firebase.auth();
 
+    const searchParams = new URLSearchParams(window.location.search || '');
+    const isStart = searchParams.get('start') === 'google';
+
+    if (isStart) {
+      updateStatus('Connecting to Google…');
+      const provider = new firebase.auth.GoogleAuthProvider();
+      provider.addScope('profile');
+      provider.addScope('email');
+      provider.setCustomParameters({ prompt: 'select_account' });
+      await authInst.signInWithRedirect(provider);
+      return;
+    }
+
+    updateStatus('Verifying sign-in credentials…');
+
     // 1. Check if tokens are already in hash or query
     const rawHash = (window.location.hash || '').replace(/^#/, '');
     const hashParams = new URLSearchParams(rawHash);
-    let idToken = hashParams.get('id_token') || '';
-    let accessToken = hashParams.get('access_token') || '';
-    let firebaseToken = hashParams.get('firebase_token') || '';
+    const queryParams = new URLSearchParams(window.location.search || '');
+
+    let idToken = hashParams.get('id_token') || queryParams.get('id_token') || hashParams.get('idToken') || queryParams.get('idToken') || '';
+    let accessToken = hashParams.get('access_token') || queryParams.get('access_token') || hashParams.get('accessToken') || queryParams.get('accessToken') || '';
+    let firebaseToken = hashParams.get('firebase_token') || queryParams.get('firebase_token') || '';
     let user = null;
 
     // 2. Consume redirect result from Firebase Auth
-    if (!idToken) {
-      try {
-        const redirectRes = await authInst.getRedirectResult();
-        console.log('OAuth redirectResult:', redirectRes);
-        if (redirectRes && redirectRes.credential) {
-          idToken = redirectRes.credential.idToken || '';
-          accessToken = redirectRes.credential.accessToken || '';
-        }
-        if (redirectRes && redirectRes.user) {
-          user = redirectRes.user;
-        }
-      } catch (rErr) {
-        console.warn('getRedirectResult warning:', rErr);
+    try {
+      const redirectRes = await authInst.getRedirectResult();
+      console.log('OAuth redirectResult:', redirectRes);
+      if (redirectRes && redirectRes.credential) {
+        if (!idToken && redirectRes.credential.idToken) idToken = redirectRes.credential.idToken;
+        if (!accessToken && redirectRes.credential.accessToken) accessToken = redirectRes.credential.accessToken;
       }
+      if (redirectRes && redirectRes.user) {
+        user = redirectRes.user;
+      }
+    } catch (rErr) {
+      console.warn('getRedirectResult warning:', rErr);
     }
 
     // 3. Fallback: retrieve current authenticated user
@@ -544,7 +554,7 @@ async function handleOAuthCallbackPage() {
         const unsub = authInst.onAuthStateChanged((u) => {
           if (u) { unsub(); resolve(u); }
         });
-        setTimeout(() => { unsub(); resolve(null); }, 3500);
+        setTimeout(() => { unsub(); resolve(null); }, 3000);
       });
     }
 
@@ -568,13 +578,16 @@ async function handleOAuthCallbackPage() {
     for (const [k, v] of hashParams.entries()) {
       if (!params.has(k)) params.set(k, v);
     }
+    for (const [k, v] of queryParams.entries()) {
+      if (!params.has(k) && k !== 'start') params.set(k, v);
+    }
 
     const payload = params.toString();
     const customSchemeUri = 'com.sellerflow.app://oauth-callback#' + payload;
     const intentUri = 'intent://oauth-callback#' + payload + '#Intent;scheme=com.sellerflow.app;package=com.sellerflow.app;end';
 
     console.log('Redirecting to Android app:', customSchemeUri);
-    updateStatus('Sign-in verified! Returning you to the SellerFlow app…');
+    updateStatus('Sign-in verified! Returning you to SellerFlow…');
 
     if (openBtn) {
       openBtn.href = customSchemeUri;
@@ -595,7 +608,7 @@ async function handleOAuthCallbackPage() {
 
   } catch (err) {
     console.error('Error handling OAuth callback page:', err);
-    updateStatus('Could not complete redirection: ' + (err.message || err));
+    updateStatus('Sign-in notice: ' + (err.message || err) + '. Tap Open SellerFlow App above to continue.');
   }
 }
 
@@ -610,6 +623,17 @@ async function initCapacitorHandlers() {
   try {
     const App = window.Capacitor.Plugins.App;
     if (App) {
+      // Resume listener: if user returns to app and is already authenticated, transition immediately
+      App.addListener('appStateChange', async (state) => {
+        if (state.isActive) {
+          if (typeof auth !== 'undefined' && auth.currentUser) {
+            hide($('authPage'));
+            showApp();
+            if (typeof navigate === 'function') navigate('feed');
+          }
+        }
+      });
+
       App.addListener('appUrlOpen', async (data) => {
         console.log('SellerFlow App opened with URL:', data?.url);
         const urlStr = data?.url;
@@ -631,11 +655,11 @@ async function initCapacitorHandlers() {
           }
           
           const params = new URLSearchParams(raw);
-          let idToken = params.get('id_token') || '';
-          let accessToken = params.get('access_token') || '';
-          let firebaseToken = params.get('firebase_token') || '';
+          let idToken = params.get('id_token') || params.get('idToken') || '';
+          let accessToken = params.get('access_token') || params.get('accessToken') || '';
+          let firebaseToken = params.get('firebase_token') || params.get('firebaseToken') || '';
           
-          // Substring fallback
+          // Substring fallbacks
           if (!idToken && urlStr.includes('id_token=')) {
             idToken = urlStr.split('id_token=')[1].split('&')[0].split('#')[0];
             try { idToken = decodeURIComponent(idToken); } catch(e) {}
@@ -656,8 +680,10 @@ async function initCapacitorHandlers() {
           if (idToken) {
             try {
               const credential = firebase.auth.GoogleAuthProvider.credential(idToken, accessToken || undefined);
-              await auth.signInWithCredential(credential);
-              signedIn = true;
+              const userCred = await auth.signInWithCredential(credential);
+              if (userCred && userCred.user) {
+                signedIn = true;
+              }
             } catch (credErr) {
               console.warn('signInWithCredential with idToken error:', credErr);
             }
@@ -667,43 +693,43 @@ async function initCapacitorHandlers() {
           if (!signedIn && accessToken) {
             try {
               const credential = firebase.auth.GoogleAuthProvider.credential(null, accessToken);
-              await auth.signInWithCredential(credential);
-              signedIn = true;
+              const userCred = await auth.signInWithCredential(credential);
+              if (userCred && userCred.user) {
+                signedIn = true;
+              }
             } catch (accErr) {
               console.warn('signInWithCredential with accessToken error:', accErr);
             }
           }
-          
-          // Method 3: Custom token fallback via server endpoint
-          if (!signedIn && firebaseToken) {
-            try {
-              const appUrl = getAppUrl();
-              const res = await fetch(`${appUrl}/api/auth/custom-token`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${firebaseToken}`
-                }
-              });
-              if (res.ok) {
-                const ctData = await res.json();
-                if (ctData && ctData.customToken) {
-                  await auth.signInWithCustomToken(ctData.customToken);
-                  signedIn = true;
-                }
-              }
-            } catch (ctErr) {
-              console.warn('Custom token fallback issue:', ctErr);
-            }
+
+          // Method 3: Check if auth already resolved user
+          if (!signedIn && auth.currentUser) {
+            signedIn = true;
           }
           
-          if (signedIn) {
-            toast('Successfully signed in with Google!', 'success');
+          // CRITICAL: Guaranteed transition out of authPage and into the app feed
+          if (signedIn || auth.currentUser) {
+            hide($('authPage'));
+            showApp();
+            if (typeof navigate === 'function') {
+              await navigate('feed');
+            }
+            if (auth.currentUser && typeof startUser === 'function') {
+              await startUser(auth.currentUser).catch(uErr => console.warn('startUser error:', uErr));
+            }
+            toast('Welcome back to SellerFlow!', 'success');
           } else {
             console.warn('Could not authenticate with deep link payload:', urlStr);
+            if ($('authError')) {
+              $('authError').textContent = 'Google sign-in could not be verified. Please try again.';
+            }
+            toast('Could not verify sign-in. Please try again.', 'error');
           }
         } catch (err) {
           console.error('Failed to complete deep-link login:', err);
+          if ($('authError')) {
+            $('authError').textContent = 'Sign-in error: ' + errMsg(err);
+          }
           toast('Google Sign-In failed: ' + errMsg(err), 'error');
         } finally {
           ready();
@@ -1269,6 +1295,11 @@ function showLanding(){
   ready();
 }
 function showAuth(mode='register'){
+  if ((typeof currentUser !== 'undefined' && currentUser) || (typeof auth !== 'undefined' && auth.currentUser)) {
+    showApp();
+    if (typeof navigate === 'function') navigate('feed');
+    return;
+  }
   if(typeof pauseAllForYouVideos === 'function') pauseAllForYouVideos(false);
   authMode=mode;
   hide($('app'));
