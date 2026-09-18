@@ -279,8 +279,10 @@ button,a,input,textarea,select{position:relative;z-index:1}
 #openFeedUpload:hover,#openFeedUploadEmpty:hover{filter:brightness(1.08)!important;box-shadow:0 4px 16px rgba(245,185,66,.45),inset 0 1px 0 rgba(255,255,255,.55)!important;transform:translateY(-.5px)}
 #openFeedUpload:active,#openFeedUploadEmpty:active{transform:scale(.95)}
 
-.sf-drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);z-index:40;transition:opacity .2s ease}
-.sf-drawer-backdrop.hide{display:none!important}
+.sf-drawer-backdrop{position:fixed!important;inset:0!important;background:rgba(0,0,0,0.75)!important;backdrop-filter:blur(8px)!important;-webkit-backdrop-filter:blur(8px)!important;z-index:998!important;opacity:1!important;visibility:visible!important;transition:opacity .28s cubic-bezier(0.16,1,0.3,1),visibility .28s cubic-bezier(0.16,1,0.3,1)!important}
+.sf-drawer-backdrop.hide{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+#mobileNav{position:fixed!important;top:0!important;left:0!important;bottom:0!important;width:310px!important;max-width:86vw!important;height:100vh!important;height:100dvh!important;background:#0d0d14!important;border-right:1px solid rgba(255,255,255,0.12)!important;box-shadow:15px 0 50px rgba(0,0,0,0.85)!important;z-index:999!important;display:flex!important;flex-direction:column!important;justify-content:space-between!important;overflow-y:auto!important;overflow-x:hidden!important;padding:0!important;transform:translateX(0)!important;transition:transform .32s cubic-bezier(0.16,1,0.3,1),opacity .2s ease!important;opacity:1!important}
+#mobileNav.hide{transform:translateX(-100%)!important;opacity:0!important;pointer-events:none!important}
 
 .btn{font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:650;letter-spacing:-.01em;border-radius:12px;transition:all .16s cubic-bezier(0.16,1,0.3,1);cursor:pointer;user-select:none}
 .btn:active{transform:scale(.97)}
@@ -347,7 +349,7 @@ button,a,input,textarea,select{position:relative;z-index:1}
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center"><div class="text-center"><div class="spin mx-auto mb-4"></div><div class="gold font-bold text-xl">SellerFlow</div><div id="loadingText" class="muted text-sm mt-2">Starting secure app…</div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
 <div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 SellerFlow™ · All rights reserved.</div></div></div>
-<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center gap-1.5 sm:gap-3 overflow-hidden"><button id="mobileMenu" class="md:hidden" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold shrink-0 whitespace-nowrap">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0"><button type="button" id="headerLoginBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Sign In</button></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-3 bg-[#0d0d11]/98 backdrop-blur-md shadow-2xl relative z-50"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center gap-1.5 sm:gap-3 overflow-hidden"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="pageSelectorBtn" class="md:hidden" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold shrink-0 whitespace-nowrap">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0"><button type="button" id="headerLoginBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Sign Up</button></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="pullRefreshIndicator" class="pull-refresh-indicator"><div class="pull-refresh-content"><span class="pull-refresh-icon">↻</span><span class="pull-refresh-text">Pull to refresh</span></div></div>
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
@@ -1052,8 +1054,8 @@ function setNav(){
   const rightActions=$('headerRightActions')||$('logoutBtn')?.parentElement||document.querySelector('header .ml-auto');
   if(rightActions){
     if(!currentUser){
-      rightActions.innerHTML=`<button type="button" id="headerLoginBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Sign In</button>`;
-      $('headerLoginBtn')?.addEventListener('click',()=>showAuth('login'));
+      rightActions.innerHTML=`<button type="button" id="headerLoginBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Sign Up</button>`;
+      $('headerLoginBtn')?.addEventListener('click',()=>showAuth('register'));
     } else {
       rightActions.innerHTML=`<button id="notificationBtn" class="bell-btn p-2 shrink-0" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2 shrink-0">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1 hide">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2 shrink-0">Logout</button>`;
       $('notificationBtn')?.addEventListener('click',()=>{
@@ -1072,43 +1074,137 @@ function setNav(){
   }
 
   const pCount = typeof pendingOrdersCount !== 'undefined' ? pendingOrdersCount : 0;
-  const navPages = isAdmin ? ['feed','dashboard','marketplace','products','orders','store','profile','settings'] : (currentProfile?.verified ? ['feed','dashboard','marketplace','products','orders','store','profile','settings'] : (!currentUser ? ['feed','marketplace'] : ['feed','marketplace','orders','profile','settings']));
-  
+
   if($('mobileNav')){
-    $('mobileNav').innerHTML = `
-      <div class="flex items-center justify-between pb-2 mb-2 border-b border-[#24242c] px-1">
-        <div class="flex items-center gap-2">
-          <span class="text-gold font-black text-xs sm:text-sm">SellerFlow Navigation</span>
-          <span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-2 py-0.5 rounded-full border border-zinc-700">Ghana Marketplace</span>
+    const userHeaderHtml = currentUser ? `
+      <div class="p-3 rounded-2xl bg-[#181822] border border-[#2a2a3c] flex items-center gap-3 shadow-sm">
+        ${avatar(currentProfile || currentUser, 'w-10 h-10 rounded-full object-cover shrink-0 border border-gold/40 shadow-sm bg-[#222]')}
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-xs font-black text-white truncate block">${esc(currentProfile?.name || currentUser.displayName || 'SellerFlow User')}</span>
+            ${currentProfile?.verified ? '<span class="verified-badge text-[10px]">✓</span>' : ''}
+          </div>
+          <div class="text-[11px] text-zinc-400 truncate">@${esc(currentProfile?.username || 'user')}</div>
+          ${(currentProfile?.hasBusinessCert || currentProfile?.businessCertUrl) ? '<div class="text-[10px] text-amber-300 font-bold mt-0.5 flex items-center gap-1"><span>🏢</span><span>Business Verified</span></div>' : ''}
         </div>
-        <button type="button" id="closeMobileNavBtn" class="text-xs text-zinc-400 hover:text-white px-2 py-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50 flex items-center gap-1 font-bold transition">
-          <span>✕</span><span>Close</span>
-        </button>
       </div>
-
-      <div class="grid grid-cols-3 gap-1.5">
-        ${navPages.map(p => `<button type="button" class="p-2.5 rounded-xl relative flex items-center justify-center gap-1.5 text-xs font-bold transition ${p===currentPage ? 'bg-[#202020] gold border border-gold/30 shadow-sm' : 'bg-[#141418] text-zinc-300 hover:bg-[#1f1f26]'}" data-mobile-page="${p}"><span>${p==='feed'?'For You':p[0].toUpperCase()+p.slice(1)}</span>${p==='orders'?`<span id="mobileOrdersBadge" class="orders-nav-badge ${pCount>0?'':'hide'}">${pCount>99?'99+':pCount}</span>`:''}</button>`).join('')}
-        ${isAdmin ? `<button type="button" class="p-2.5 rounded-xl text-xs font-bold ${currentPage==='admin'?'bg-[#202020] gold border border-gold/30':'bg-[#141418] text-zinc-300'}" data-mobile-page="admin">Admin</button>` : ''}
+    ` : `
+      <div class="p-3 rounded-2xl bg-gradient-to-r from-amber-950/40 via-[#181824] to-amber-950/40 border border-gold/30 text-xs">
+        <p class="font-extrabold text-amber-200 text-xs">Welcome to SellerFlow Ghana</p>
+        <p class="text-[11px] text-zinc-400 mt-0.5">Sign in to publish products, share reels, track orders & chat live.</p>
       </div>
+    `;
 
-      <div class="mt-3 pt-2.5 border-t border-[#24242c] flex flex-col gap-1.5">
-        <button type="button" id="mobileHelpSupportBtn" class="w-full p-2.5 rounded-xl bg-gradient-to-r from-amber-950/40 via-gold/10 to-amber-950/40 border border-gold/30 hover:border-gold text-amber-300 font-extrabold text-xs flex items-center justify-between shadow-sm transition">
-          <span class="flex items-center gap-2">
-            <span class="text-base">🎧</span>
-            <span>Help & Customer Service</span>
-          </span>
-          <span class="text-gold text-[11px] font-bold">Contact Support →</span>
-        </button>
+    const discoverPages = [
+      { key: 'feed', label: 'For You', icon: '🎬', desc: 'Reels & Video Showcase' },
+      { key: 'marketplace', label: 'Marketplace', icon: '🛍️', desc: 'Stores & Products Catalog' }
+    ];
 
-        <button type="button" id="mobileReportFraudBtn" class="w-full p-2.5 rounded-xl bg-rose-950/30 hover:bg-rose-950/50 border border-rose-800/40 text-rose-300 font-bold text-xs flex items-center justify-between transition">
-          <span class="flex items-center gap-2">
-            <span class="text-base">🚨</span>
-            <span>Report Fraud to Security Team</span>
-          </span>
-          <span class="text-rose-400 text-[11px] font-bold">Security Desk →</span>
-        </button>
+    let commercePages = [];
+    if(currentUser) {
+      commercePages.push({ key: 'orders', label: 'My Orders', icon: '📦', desc: 'Tracking & Fulfillment', badge: pCount > 0 ? (pCount > 99 ? '99+' : pCount) : null });
+      commercePages.push({ key: 'chats', label: 'Direct Chats', icon: '💬', desc: 'Instant Messages' });
+    }
 
-        ${!currentUser ? `<button type="button" class="w-full p-2.5 rounded-xl bg-gold text-black font-extrabold text-xs mt-1 shadow-sm" id="mobileAuthBtn">Sign In / Register Account</button>` : `<button type="button" id="mobileLogout" class="w-full p-2.5 rounded-xl text-rose-400 bg-rose-950/20 border border-rose-900/30 font-bold text-xs mt-1" data-mobile-logout="1">Logout Account</button>`}
+    if(isAdmin || currentProfile?.verified || currentProfile?.role === 'seller') {
+      commercePages.push({ key: 'dashboard', label: 'Seller Dashboard', icon: '📊', desc: 'Analytics & Sales' });
+      commercePages.push({ key: 'products', label: 'Product Manager', icon: '🛒', desc: 'Listings & Stock' });
+      commercePages.push({ key: 'store', label: 'My Storefront', icon: '🏪', desc: 'Store Customization' });
+    }
+
+    let accountPages = [];
+    if(currentUser) {
+      accountPages.push({ key: 'profile', label: 'My Profile & KYC', icon: '👤', desc: 'Identity & Verification' });
+      accountPages.push({ key: 'settings', label: 'Settings', icon: '⚙️', desc: 'Preferences & Legal' });
+    }
+    if(isAdmin) {
+      accountPages.push({ key: 'admin', label: 'Admin Desk', icon: '🛡️', desc: 'Platform Moderation' });
+    }
+
+    function renderNavGroup(title, items) {
+      if(!items || !items.length) return '';
+      return `
+        <div class="mb-3.5">
+          <div class="px-2 text-[10px] font-black uppercase tracking-wider text-amber-400/90 mb-1.5 flex items-center justify-between">
+            <span>${title}</span>
+          </div>
+          <div class="space-y-1">
+            ${items.map(item => {
+              const isActive = currentPage === item.key;
+              return `
+                <button type="button" data-mobile-page="${item.key}" class="w-full px-3 py-2 rounded-xl flex items-center justify-between text-xs font-semibold transition ${isActive ? 'bg-amber-500/15 text-amber-300 font-extrabold border-l-4 border-gold shadow-sm' : 'text-zinc-300 hover:bg-[#1a1a26] hover:text-white'}">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="text-base shrink-0">${item.icon}</span>
+                    <div class="text-left min-w-0">
+                      <div class="truncate font-bold leading-tight">${item.label}</div>
+                      <div class="text-[10px] text-zinc-500 truncate font-normal">${item.desc}</div>
+                    </div>
+                  </div>
+                  ${item.badge ? `<span id="mobileOrdersBadge" class="orders-nav-badge shrink-0">${item.badge}</span>` : '<span class="text-zinc-600 text-xs shrink-0">›</span>'}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    $('mobileNav').innerHTML = `
+      <div class="flex flex-col h-full w-full">
+        <div class="p-3.5 border-b border-[#22222e] bg-[#12121a]/95 backdrop-blur sticky top-0 z-10 space-y-2.5 shrink-0">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-lg font-black gold tracking-tight">SellerFlow</span>
+              <span class="text-[10px] font-extrabold text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-800/60 shadow-sm">
+                Ghana
+              </span>
+            </div>
+            <button type="button" id="closeMobileNavBtn" class="w-8 h-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white flex items-center justify-center text-xs font-bold transition border border-zinc-700/60 shadow-sm" title="Close menu">
+              ✕
+            </button>
+          </div>
+          ${userHeaderHtml}
+        </div>
+
+        <div class="px-3 py-3 flex-1 overflow-y-auto">
+          ${renderNavGroup('Discover & Shop', discoverPages)}
+          ${renderNavGroup('Commerce & Messages', commercePages)}
+          ${renderNavGroup('Account & System', accountPages)}
+        </div>
+
+        <div class="p-3 border-t border-[#22222e] bg-[#0a0a0f] space-y-2 shrink-0">
+          <button type="button" id="mobileHelpSupportBtn" class="w-full p-2.5 rounded-xl bg-[#14141d] hover:bg-[#1a1a26] border border-amber-500/30 text-amber-300 font-bold text-xs flex items-center justify-between transition shadow-sm">
+            <span class="flex items-center gap-2">
+              <span class="text-base">🎧</span>
+              <span>Help & Support Desk</span>
+            </span>
+            <span class="text-gold text-[10px] font-extrabold">Contact →</span>
+          </button>
+
+          <button type="button" id="mobileReportFraudBtn" class="w-full p-2.5 rounded-xl bg-rose-950/30 hover:bg-rose-950/50 border border-rose-800/40 text-rose-300 font-bold text-xs flex items-center justify-between transition">
+            <span class="flex items-center gap-2">
+              <span class="text-base">🚨</span>
+              <span>Report Security Fraud</span>
+            </span>
+            <span class="text-rose-400 text-[10px] font-extrabold">Report →</span>
+          </button>
+
+          ${!currentUser ? `
+            <button type="button" id="mobileAuthBtn" class="w-full p-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-gold to-yellow-500 text-black font-black text-xs shadow-md hover:brightness-110 transition mt-1 flex items-center justify-center gap-2">
+              <span>🔑</span>
+              <span>Sign In / Register Account</span>
+            </button>
+          ` : `
+            <button type="button" id="mobileLogout" class="w-full p-2 rounded-xl text-rose-400 bg-rose-950/20 hover:bg-rose-950/40 border border-rose-900/40 font-bold text-xs flex items-center justify-center gap-2 transition" data-mobile-logout="1">
+              <span>🚪</span>
+              <span>Sign Out Account</span>
+            </button>
+          `}
+
+          <div class="pt-0.5 text-center text-[10px] text-zinc-500 font-medium">
+            SellerFlow Ghana © 2026 · Social Selling Platform
+          </div>
+        </div>
       </div>
     `;
 
@@ -1116,7 +1212,7 @@ function setNav(){
     $('mobileHelpSupportBtn')?.addEventListener('click', () => { closeMobileNav(); if(typeof openHelpSupportModal==='function') openHelpSupportModal(); });
     $('mobileReportFraudBtn')?.addEventListener('click', () => { closeMobileNav(); if(typeof openReportFraudModal==='function') openReportFraudModal(); });
     $('mobileLogout')?.addEventListener('click', () => { closeMobileNav(); logoutUser(); });
-    $('mobileAuthBtn')?.addEventListener('click', () => { closeMobileNav(); showAuth('login'); });
+    $('mobileAuthBtn')?.addEventListener('click', () => { closeMobileNav(); showAuth('register'); });
 
     $('mobileNav').querySelectorAll('[data-mobile-page]').forEach(b => {
       b.addEventListener('click', () => {
@@ -1131,9 +1227,21 @@ function setNav(){
 }
 window.setNav = setNav;
 
+function _handleMobileNavTapOutside(e){
+  const nav = $('mobileNav');
+  const btn = $('mobileMenu');
+  if(!nav || nav.classList.contains('hide')) return;
+  if(e.target && nav.contains(e.target)) return;
+  if(btn && e.target && (btn === e.target || btn.contains(e.target))) return;
+  closeMobileNav();
+}
+
 function closeMobileNav(){
   $('mobileNav')?.classList.add('hide');
   $('mobileNavOverlay')?.classList.add('hide');
+  document.removeEventListener('pointerdown', _handleMobileNavTapOutside, true);
+  document.removeEventListener('click', _handleMobileNavTapOutside, true);
+  document.removeEventListener('touchstart', _handleMobileNavTapOutside, true);
 }
 
 let touchStartX = 0, touchStartY = 0;
@@ -1169,7 +1277,7 @@ function initSwipeToCloseMobileNav(){
   if(overlay && !overlay._swipeInited){
     overlay._swipeInited = true;
     overlay.addEventListener('click', closeMobileNav);
-    overlay.addEventListener('touchstart', () => {
+    overlay.addEventListener('touchstart', (e) => {
       closeMobileNav();
     }, { passive: true });
   }
@@ -1180,7 +1288,17 @@ function openMobileNav(){
   $('mobileNavOverlay')?.classList.remove('hide');
   setNav();
   initSwipeToCloseMobileNav();
+
+  setTimeout(() => {
+    document.addEventListener('pointerdown', _handleMobileNavTapOutside, true);
+    document.addEventListener('click', _handleMobileNavTapOutside, true);
+    document.addEventListener('touchstart', _handleMobileNavTapOutside, true);
+  }, 50);
 }
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeMobileNav();
+});
 window.closeMobileNav = closeMobileNav;
 window.openMobileNav = openMobileNav;
 function pauseAllForYouVideos(destroyFeed=false){
@@ -7029,10 +7147,13 @@ document.addEventListener('click',e=>{const seller=e.target.closest('[data-open-
 document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>navigate(b.dataset.page));
 $('pageSelectorBtn')?.addEventListener('click',openPageSelector);
 $('mobileMenu')?.addEventListener('click',()=>{
-  $('mobileNav')?.classList.toggle('hide');
-  setNav();
+  if($('mobileNav')?.classList.contains('hide')){
+    openMobileNav();
+  } else {
+    closeMobileNav();
+  }
 });
-$('headerLoginBtn')?.addEventListener('click',()=>showAuth('login'));
+$('headerLoginBtn')?.addEventListener('click',()=>showAuth('register'));
 $('headerRegisterBtn')?.addEventListener('click',()=>showAuth('register'));
 $('landingLogin')?.addEventListener('click',()=>showAuth('login'));
 $('heroLogin')?.addEventListener('click',()=>showAuth('login'));
@@ -14278,7 +14399,7 @@ STATUS: ${f.status || 'Active Investigation'}
   }
 
   const oldRenderPage=renderPage;renderPage=async function(){if(currentPage==='chats')return renderChats();return oldRenderPage()};
-  const oldSetNav=setNav;setNav=function(){oldSetNav();const desktop=$('desktopNav');if(desktop&&!desktop.querySelector('[data-page="chats"]')){const b=document.createElement('button');b.className='navbtn px-3 py-2';b.dataset.page='chats';b.textContent='Chats';b.onclick=()=>navigate('chats');desktop.appendChild(b)}const mn=$('mobileNav');if(mn&&!mn.querySelector('[data-mobile-page="chats"]')){const b=document.createElement('button');b.className='p-3 rounded-xl';b.dataset.mobilePage='chats';b.textContent='Chats';b.onclick=()=>navigate('chats');mn.prepend(b)}};
+  const oldSetNav=setNav;setNav=function(){oldSetNav();const desktop=$('desktopNav');if(desktop&&!desktop.querySelector('[data-page="chats"]')){const b=document.createElement('button');b.className='navbtn px-3 py-2';b.dataset.page='chats';b.textContent='Chats';b.onclick=()=>navigate('chats');desktop.appendChild(b)}};
   function installSearch(){const head=document.querySelector('#app header .max-w-7xl');if(!head||$('sfGlobalSearchBtn'))return;const wrap=document.createElement('div');wrap.className='ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0';wrap.innerHTML=`<button id="sfGlobalSearchBtn" class="sf-search-btn border border-[#333] rounded-xl px-2.5 sm:px-3 py-2 shrink-0" title="Search SellerFlow">⌕ <span class="hidden sm:inline">Search</span></button>`;const old=head.querySelector('.ml-auto');if(old){old.classList.remove('ml-auto');wrap.classList.add('ml-auto');head.insertBefore(wrap,old);wrap.appendChild(old)}else head.appendChild(wrap);$('sfGlobalSearchBtn').onclick=globalSearch}
   const oldShowApp=showApp;showApp=function(){oldShowApp();installSearch();setNav()};
   window.startSellerFlowChat=startChat;
