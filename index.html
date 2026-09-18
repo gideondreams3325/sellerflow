@@ -505,22 +505,36 @@ async function handleOAuthCallbackPage() {
     }
     const authInst = firebase.auth();
 
+    updateStatus('Verifying sign-in credentials…');
+
+    // 1. Consume redirect result from Firebase Auth FIRST
+    let redirectRes = null;
+    try {
+      redirectRes = await authInst.getRedirectResult();
+      console.log('OAuth redirectResult:', redirectRes);
+    } catch (rErr) {
+      console.warn('getRedirectResult warning:', rErr);
+    }
+
+    // 2. Only initiate redirect if explicitly starting flow and NOT returning from a redirect
     const searchParams = new URLSearchParams(window.location.search || '');
     const isStart = searchParams.get('start') === 'google';
 
-    if (isStart) {
+    if (isStart && !redirectRes && !authInst.currentUser) {
       updateStatus('Connecting to Google…');
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (_) {}
       const provider = new firebase.auth.GoogleAuthProvider();
       provider.addScope('profile');
       provider.addScope('email');
+      provider.addScope('openid');
       provider.setCustomParameters({ prompt: 'select_account' });
       await authInst.signInWithRedirect(provider);
       return;
     }
 
-    updateStatus('Verifying sign-in credentials…');
-
-    // 1. Check if tokens are already in hash or query
+    // 3. Extract tokens from all available surfaces
     const rawHash = (window.location.hash || '').replace(/^#/, '');
     const hashParams = new URLSearchParams(rawHash);
     const queryParams = new URLSearchParams(window.location.search || '');
@@ -530,22 +544,38 @@ async function handleOAuthCallbackPage() {
     let firebaseToken = hashParams.get('firebase_token') || queryParams.get('firebase_token') || '';
     let user = null;
 
-    // 2. Consume redirect result from Firebase Auth
-    try {
-      const redirectRes = await authInst.getRedirectResult();
-      console.log('OAuth redirectResult:', redirectRes);
-      if (redirectRes && redirectRes.credential) {
+    if (redirectRes) {
+      if (redirectRes.user) {
+        user = redirectRes.user;
+      }
+      // Method A: credentialFromResult
+      try {
+        if (firebase.auth.GoogleAuthProvider && typeof firebase.auth.GoogleAuthProvider.credentialFromResult === 'function') {
+          const cred = firebase.auth.GoogleAuthProvider.credentialFromResult(redirectRes);
+          if (cred) {
+            if (!idToken && cred.idToken) idToken = cred.idToken;
+            if (!accessToken && cred.accessToken) accessToken = cred.accessToken;
+          }
+        }
+      } catch (cErr) {
+        console.warn('credentialFromResult warning:', cErr);
+      }
+      // Method B: direct credential
+      if (redirectRes.credential) {
         if (!idToken && redirectRes.credential.idToken) idToken = redirectRes.credential.idToken;
         if (!accessToken && redirectRes.credential.accessToken) accessToken = redirectRes.credential.accessToken;
       }
-      if (redirectRes && redirectRes.user) {
-        user = redirectRes.user;
+      // Method C: _tokenResponse on redirect result or user delegate
+      const tr = redirectRes._tokenResponse || (redirectRes.user && redirectRes.user._delegate && redirectRes.user._delegate._tokenResponse);
+      if (tr) {
+        if (!idToken && tr.oauthIdToken) idToken = tr.oauthIdToken;
+        if (!idToken && tr.idToken) idToken = tr.idToken;
+        if (!accessToken && tr.oauthAccessToken) accessToken = tr.oauthAccessToken;
+        if (!accessToken && tr.accessToken) accessToken = tr.accessToken;
       }
-    } catch (rErr) {
-      console.warn('getRedirectResult warning:', rErr);
     }
 
-    // 3. Fallback: retrieve current authenticated user
+    // Fallback: active currentUser
     if (!user) {
       user = authInst.currentUser;
     }
@@ -554,17 +584,43 @@ async function handleOAuthCallbackPage() {
         const unsub = authInst.onAuthStateChanged((u) => {
           if (u) { unsub(); resolve(u); }
         });
-        setTimeout(() => { unsub(); resolve(null); }, 3000);
+        setTimeout(() => { unsub(); resolve(null); }, 2500);
       });
     }
 
-    if (user && !firebaseToken) {
+    if (user) {
       try {
-        firebaseToken = await user.getIdToken();
+        if (!firebaseToken) firebaseToken = await user.getIdToken();
+      } catch (_) {}
+      const tr = user._delegate && user._delegate._tokenResponse;
+      if (tr) {
+        if (!idToken && tr.oauthIdToken) idToken = tr.oauthIdToken;
+        if (!idToken && tr.idToken) idToken = tr.idToken;
+        if (!accessToken && tr.oauthAccessToken) accessToken = tr.oauthAccessToken;
+        if (!accessToken && tr.accessToken) accessToken = tr.accessToken;
+      }
+    }
+
+    // Fallback: localStorage cached credentials
+    if (!idToken && !accessToken) {
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.includes('firebase:authUser')) {
+            const parsed = JSON.parse(localStorage.getItem(key) || '{}');
+            const tr = parsed.stsTokenManager || parsed;
+            if (!idToken && (parsed.oauthIdToken || tr.oauthIdToken)) idToken = parsed.oauthIdToken || tr.oauthIdToken;
+            if (!accessToken && (parsed.oauthAccessToken || tr.oauthAccessToken)) accessToken = parsed.oauthAccessToken || tr.oauthAccessToken;
+            if (!firebaseToken && (tr.accessToken || parsed.accessToken)) firebaseToken = tr.accessToken || parsed.accessToken;
+            if (!user && parsed.uid) {
+              user = { uid: parsed.uid, email: parsed.email, displayName: parsed.displayName, photoURL: parsed.photoURL };
+            }
+          }
+        }
       } catch (_) {}
     }
 
-    // 4. Construct the deep link payload for Android
+    // 4. Construct deep link payload for Android
     const params = new URLSearchParams();
     if (idToken) params.set('id_token', idToken);
     if (accessToken) params.set('access_token', accessToken);
@@ -674,31 +730,38 @@ async function initCapacitorHandlers() {
           }
           
           let signedIn = false;
+          let lastAuthError = '';
           loading('Completing Google sign-in…');
           
           // Method 1: Google Auth Credential with idToken and accessToken
           if (idToken) {
             try {
+              console.log('Attempting signInWithCredential with idToken...');
               const credential = firebase.auth.GoogleAuthProvider.credential(idToken, accessToken || undefined);
               const userCred = await auth.signInWithCredential(credential);
               if (userCred && userCred.user) {
                 signedIn = true;
+                console.log('signInWithCredential succeeded for user:', userCred.user.uid);
               }
             } catch (credErr) {
               console.warn('signInWithCredential with idToken error:', credErr);
+              lastAuthError = credErr.message || String(credErr);
             }
           }
           
           // Method 2: Google Auth Credential with accessToken only
           if (!signedIn && accessToken) {
             try {
+              console.log('Attempting signInWithCredential with accessToken...');
               const credential = firebase.auth.GoogleAuthProvider.credential(null, accessToken);
               const userCred = await auth.signInWithCredential(credential);
               if (userCred && userCred.user) {
                 signedIn = true;
+                console.log('signInWithCredential with accessToken succeeded for user:', userCred.user.uid);
               }
             } catch (accErr) {
               console.warn('signInWithCredential with accessToken error:', accErr);
+              if (!lastAuthError) lastAuthError = accErr.message || String(accErr);
             }
           }
 
@@ -709,21 +772,23 @@ async function initCapacitorHandlers() {
           
           // CRITICAL: Guaranteed transition out of authPage and into the app feed
           if (signedIn || auth.currentUser) {
+            currentUser = auth.currentUser;
+            isAdmin = isUserAdminEmail(currentUser?.email);
             hide($('authPage'));
             showApp();
             if (typeof navigate === 'function') {
               await navigate('feed');
             }
-            if (auth.currentUser && typeof startUser === 'function') {
-              await startUser(auth.currentUser).catch(uErr => console.warn('startUser error:', uErr));
+            if (currentUser && typeof startUser === 'function') {
+              await startUser(currentUser).catch(uErr => console.warn('startUser error:', uErr));
             }
             toast('Welcome back to SellerFlow!', 'success');
           } else {
             console.warn('Could not authenticate with deep link payload:', urlStr);
             if ($('authError')) {
-              $('authError').textContent = 'Google sign-in could not be verified. Please try again.';
+              $('authError').textContent = lastAuthError ? ('Sign-in issue: ' + lastAuthError) : 'Google sign-in could not be verified. Please try again.';
             }
-            toast('Could not verify sign-in. Please try again.', 'error');
+            toast(lastAuthError ? ('Sign-in issue: ' + lastAuthError) : 'Could not verify sign-in. Please try again.', 'error');
           }
         } catch (err) {
           console.error('Failed to complete deep-link login:', err);
@@ -739,7 +804,224 @@ async function initCapacitorHandlers() {
   } catch (err) {
     console.warn('Capacitor App listener registration skipped:', err);
   }
+
+  // Initialize Capacitor Push Notifications
+  try {
+    initCapacitorPushNotifications().catch(e => console.warn('Push init error:', e));
+  } catch (e) {
+    console.warn('initCapacitorPushNotifications call error:', e);
+  }
 }
+
+/* ==========================================================================
+   SELLERFLOW NATIVE ANDROID PUSH NOTIFICATIONS (CAPACITOR + FCM)
+   ========================================================================== */
+let currentPushToken = null;
+let pushListenersRegistered = false;
+
+function getPushTokenDocId(token) {
+  if (!token) return 'default_token';
+  let hash = 0;
+  for (let i = 0; i < token.length; i++) {
+    hash = ((hash << 5) - hash) + token.charCodeAt(i);
+    hash |= 0;
+  }
+  return 'tok_' + Math.abs(hash) + '_' + token.slice(-8);
+}
+
+async function saveUserPushToken(token, targetUser = null) {
+  const u = targetUser || currentUser || (typeof auth !== 'undefined' ? auth?.currentUser : null);
+  if (!token || !u || !u.uid || typeof db === 'undefined' || !db) return;
+  try {
+    const tokenId = getPushTokenDocId(token);
+    const tokenDocRef = doc(db, 'users', u.uid, 'pushTokens', tokenId);
+    
+    await setDoc(tokenDocRef, {
+      token: token,
+      platform: 'android',
+      appVersion: '1.0.0',
+      active: true,
+      deviceId: tokenId,
+      updatedAt: serverTimestamp(),
+      createdAt: serverTimestamp()
+    }, { merge: true });
+
+    localStorage.setItem('sf_current_push_token', token);
+    localStorage.setItem('sf_current_push_token_id', tokenId);
+    console.log('[FCM] Saved push token to Firestore for uid:', u.uid, 'docId:', tokenId);
+  } catch (err) {
+    console.warn('[FCM] saveUserPushToken error:', err);
+  }
+}
+
+async function removeCurrentDevicePushToken() {
+  const token = currentPushToken || localStorage.getItem('sf_current_push_token');
+  const tokenId = localStorage.getItem('sf_current_push_token_id') || (token ? getPushTokenDocId(token) : null);
+  const uid = currentUser?.uid || (typeof auth !== 'undefined' ? auth?.currentUser?.uid : null);
+  if (uid && tokenId && typeof db !== 'undefined' && db) {
+    try {
+      await deleteDoc(doc(db, 'users', uid, 'pushTokens', tokenId)).catch(() => {});
+      console.log('[FCM] Removed current device push token from Firestore:', tokenId);
+    } catch (err) {
+      console.warn('[FCM] removeCurrentDevicePushToken notice:', err);
+    }
+  }
+  localStorage.removeItem('sf_current_push_token');
+  localStorage.removeItem('sf_current_push_token_id');
+}
+
+async function initCapacitorPushNotifications(targetUser = null) {
+  if (typeof window.Capacitor === 'undefined' || !window.Capacitor.isNativePlatform()) {
+    return;
+  }
+  const PushNotifications = window.Capacitor.Plugins?.PushNotifications;
+  if (!PushNotifications) {
+    console.log('[FCM] Capacitor PushNotifications plugin not available in runtime.');
+    return;
+  }
+
+  try {
+    // 1. Configure Android Notification Channel
+    if (typeof PushNotifications.createChannel === 'function') {
+      await PushNotifications.createChannel({
+        id: 'sellerflow_default',
+        name: 'SellerFlow Notifications',
+        description: 'SellerFlow marketplace orders, alerts, and social updates',
+        importance: 4, // IMPORTANCE_HIGH
+        visibility: 1, // VISIBILITY_PUBLIC
+        sound: 'default',
+        vibration: true,
+        lights: true,
+        lightColor: '#f5b942'
+      }).catch(err => console.warn('[FCM] createChannel warning:', err));
+    }
+
+    // 2. Register native listeners once
+    if (!pushListenersRegistered) {
+      pushListenersRegistered = true;
+
+      PushNotifications.addListener('registration', async (tokenObj) => {
+        const token = tokenObj?.value || tokenObj;
+        console.log('[FCM] Registration Success. Token:', token);
+        if (token && typeof token === 'string') {
+          currentPushToken = token;
+          await saveUserPushToken(token, targetUser || currentUser);
+        }
+      });
+
+      PushNotifications.addListener('registrationError', (error) => {
+        console.warn('[FCM] Registration Error:', error);
+      });
+
+      // Step 5: Foreground notifications
+      PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        console.log('[FCM] Foreground Notification Received:', notification);
+        const title = notification.title || 'SellerFlow';
+        const body = notification.body || '';
+        
+        if (typeof toast === 'function') {
+          toast(title + (body ? ': ' + body : ''), 'info');
+        }
+
+        const notifBadge = $('notificationCount');
+        if (notifBadge) {
+          const count = parseInt(notifBadge.textContent || '0', 10) || 0;
+          notifBadge.textContent = String(count + 1);
+          notifBadge.classList.remove('hide');
+        }
+
+        if (typeof loadNotifications === 'function') {
+          loadNotifications(false).catch(() => {});
+        }
+      });
+
+      // Step 8: Notification tap routing
+      PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        console.log('[FCM] Notification Action Performed (Tapped):', action);
+        const data = action.notification?.data || {};
+        const type = data.type || '';
+        const route = data.route || '';
+        const orderId = data.orderId || '';
+        const conversationId = data.conversationId || '';
+
+        if (typeof navigate === 'function') {
+          if (route === 'orders' || type === 'order' || orderId) {
+            navigate('orders');
+          } else if (route === 'chats' || type === 'chat_message' || conversationId) {
+            if (typeof openChatConversation === 'function' && conversationId) {
+              openChatConversation(conversationId);
+            } else {
+              navigate('chats');
+            }
+          } else if (route === 'profile' || type === 'follow' || type === 'verification') {
+            navigate('profile');
+          } else if (route === 'marketplace' || type === 'product') {
+            navigate('marketplace');
+          } else if (route === 'notifications') {
+            if (typeof openNotifications === 'function') {
+              openNotifications();
+            } else {
+              navigate('feed');
+            }
+          } else {
+            navigate('feed');
+          }
+        }
+      });
+    }
+
+    // 3. Permission check & register without blocking startup
+    let perm = await PushNotifications.checkPermissions().catch(() => null);
+    if (perm?.receive !== 'granted') {
+      const alreadyPrompted = sessionStorage.getItem('sf_push_perm_prompted');
+      if (!alreadyPrompted) {
+        sessionStorage.setItem('sf_push_perm_prompted', 'true');
+        perm = await PushNotifications.requestPermissions().catch(() => null);
+      }
+    }
+
+    if (perm?.receive === 'granted') {
+      await PushNotifications.register().catch(err => console.warn('[FCM] Push register error:', err));
+    }
+
+    if (currentPushToken) {
+      await saveUserPushToken(currentPushToken, targetUser || currentUser);
+    }
+  } catch (err) {
+    console.warn('[FCM] initCapacitorPushNotifications skipped or error:', err);
+  }
+}
+
+// Window helper for self-testing push notifications
+window.sendTestPushNotification = async function() {
+  if (typeof auth === 'undefined' || !auth?.currentUser) {
+    toast('Please sign in to send a test notification', 'warning');
+    return;
+  }
+  try {
+    loading('Sending test push notification…');
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch('/api/push/test', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + idToken
+      }
+    });
+    const data = await res.json();
+    ready();
+    if (data.success && data.result?.sent > 0) {
+      toast(`Test push notification sent! (${data.result.sent} device)`, 'success');
+    } else if (data.success && data.result?.sent === 0) {
+      toast('Test request sent, but no registered active device token yet: ' + (data.result.reason || ''), 'warning');
+    } else {
+      toast('Test push failed: ' + (data.error || 'unknown error'), 'error');
+    }
+  } catch (e) {
+    ready();
+    toast('Test push error: ' + errMsg(e), 'error');
+  }
+};
 
 const triggerGoogleSignIn = async (onSuccess, onError) => {
   try {
@@ -7827,6 +8109,9 @@ async function startUser(u){
   startNotificationWatcher();
   startOrdersWatcher();
   startBuyerOrdersWatcher();
+  if (typeof initCapacitorPushNotifications === 'function') {
+    initCapacitorPushNotifications(u).catch(e => console.warn('Push init error:', e));
+  }
   ready();
   try{
     if(currentPage!=='feed'){
@@ -7849,6 +8134,9 @@ async function startUser(u){
 
 async function logoutUser(){
   try{
+    if (typeof removeCurrentDevicePushToken === 'function') {
+      await removeCurrentDevicePushToken().catch(() => {});
+    }
     if(auth) await signOut(auth);
   }catch(e){
     console.warn('Signout notice:',e);

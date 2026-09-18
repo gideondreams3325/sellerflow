@@ -51,3 +51,10 @@ patchFile(path.resolve('node_modules/@capacitor/browser/android/build.gradle'), 
   ['36', '34']
 ]);
 
+// 6. Patch Capacitor Push Notifications plugin build.gradle
+patchFile(path.resolve('node_modules/@capacitor/push-notifications/android/build.gradle'), [
+  ['8.13.0', '8.2.2'],
+  ['36', '34']
+]);
+
+

@@ -5,7 +5,9 @@
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
+import { getMessaging } from 'firebase-admin/messaging';
 import { onRequest } from 'firebase-functions/v2/https';
+import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 
 const app = getApps().length ? getApps()[0] : initializeApp();
 const db = getFirestore(app);
@@ -288,5 +290,81 @@ export const moderatePost = onRequest({ cors: true }, async (req, res) => {
       verdict: 'REVIEW',
       error: error.message
     });
+  }
+});
+
+/**
+ * Automatically dispatch native FCM push notifications to all registered
+ * user devices whenever a new notification document is created in Firestore.
+ */
+export const sendPushOnNotificationCreated = onDocumentCreated('notifications/{notificationId}', async (event) => {
+  try {
+    const notif = event.data?.data();
+    if (!notif || !notif.recipientId) return;
+
+    const recipientId = notif.recipientId;
+    const title = notif.title || (notif.senderName ? `${notif.senderName} on SellerFlow` : 'SellerFlow');
+    const body = notif.message || '';
+    const type = notif.type || (notif.fromAdmin ? 'admin_notice' : 'notification');
+    const route = notif.postId ? 'feed' : (notif.conversationId ? 'chats' : (notif.orderId ? 'orders' : 'notifications'));
+
+    const tokensSnap = await db.collection('users').doc(recipientId).collection('pushTokens').get();
+    if (tokensSnap.empty) return;
+
+    const tokens = [];
+    const docIds = [];
+    tokensSnap.forEach(d => {
+      const val = d.data()?.token;
+      if (val && typeof val === 'string') {
+        tokens.push(val);
+        docIds.push(d.id);
+      }
+    });
+
+    if (!tokens.length) return;
+
+    const messaging = getMessaging(app);
+    const resp = await messaging.sendEachForMulticast({
+      tokens,
+      notification: { title, body },
+      data: {
+        type: String(type),
+        route: String(route),
+        notificationId: String(event.params.notificationId),
+        orderId: String(notif.orderId || ''),
+        postId: String(notif.postId || ''),
+        conversationId: String(notif.conversationId || ''),
+        title: String(title),
+        body: String(body)
+      },
+      android: {
+        priority: 'high',
+        notification: {
+          channelId: 'sellerflow_default',
+          sound: 'default',
+          defaultSound: true,
+          defaultVibrateTimings: true
+        }
+      }
+    });
+
+    console.log(`[Cloud Function FCM] Dispatched to ${recipientId}: ${resp.successCount} sent, ${resp.failureCount} failed.`);
+
+    // Cleanup stale or invalid tokens
+    if (resp.failureCount > 0) {
+      resp.responses.forEach(async (r, idx) => {
+        if (!r.success) {
+          const code = r.error?.code;
+          if (code === 'messaging/registration-token-not-registered' || code === 'messaging/invalid-registration-token') {
+            const staleId = docIds[idx];
+            if (staleId) {
+              await db.collection('users').doc(recipientId).collection('pushTokens').doc(staleId).delete().catch(() => {});
+            }
+          }
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('sendPushOnNotificationCreated trigger error:', err);
   }
 });

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
+import { getMessaging } from 'firebase-admin/messaging';
 import { GoogleGenAI } from '@google/genai';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -35,6 +36,90 @@ if (!getApps().length) {
 
 const adminAuth = getAuth(adminApp);
 const adminDb = getFirestore(adminApp);
+
+/* Lazy FCM Messaging Provider */
+let adminMessaging = null;
+function getAdminMessaging() {
+  if (!adminMessaging) {
+    adminMessaging = getMessaging(adminApp);
+  }
+  return adminMessaging;
+}
+
+/**
+ * Sends a native FCM push notification to all active devices of a user.
+ */
+async function sendPushToUser(recipientId, { title, body, data = {} }) {
+  if (!recipientId) return { sent: 0, error: 'Missing recipientId' };
+  try {
+    const tokensSnap = await adminDb.collection('users').doc(recipientId).collection('pushTokens').get();
+    if (tokensSnap.empty) {
+      return { sent: 0, reason: 'No registered devices' };
+    }
+
+    const tokens = [];
+    const docIds = [];
+    tokensSnap.forEach(d => {
+      const val = d.data()?.token;
+      if (val && typeof val === 'string') {
+        tokens.push(val);
+        docIds.push(d.id);
+      }
+    });
+
+    if (!tokens.length) {
+      return { sent: 0, reason: 'No valid token strings' };
+    }
+
+    const payload = {
+      tokens,
+      notification: {
+        title: String(title || 'SellerFlow'),
+        body: String(body || '')
+      },
+      data: {
+        ...data,
+        type: String(data.type || 'general'),
+        route: String(data.route || ''),
+        title: String(title || 'SellerFlow'),
+        body: String(body || '')
+      },
+      android: {
+        priority: 'high',
+        notification: {
+          channelId: 'sellerflow_default',
+          sound: 'default',
+          defaultSound: true,
+          defaultVibrateTimings: true
+        }
+      }
+    };
+
+    const msgr = getAdminMessaging();
+    const resp = await msgr.sendEachForMulticast(payload);
+    console.log(`[FCM Push] Sent to user ${recipientId}: ${resp.successCount} succeeded, ${resp.failureCount} failed.`);
+
+    // Automatically remove stale / invalidated device tokens
+    if (resp.failureCount > 0) {
+      resp.responses.forEach(async (r, idx) => {
+        if (!r.success) {
+          const errCode = r.error?.code;
+          if (errCode === 'messaging/registration-token-not-registered' || errCode === 'messaging/invalid-registration-token') {
+            const staleDocId = docIds[idx];
+            if (staleDocId) {
+              await adminDb.collection('users').doc(recipientId).collection('pushTokens').doc(staleDocId).delete().catch(() => {});
+            }
+          }
+        }
+      });
+    }
+
+    return { sent: resp.successCount, failed: resp.failureCount };
+  } catch (err) {
+    console.warn('sendPushToUser error:', err);
+    return { sent: 0, error: err.message };
+  }
+}
 
 /* Initialize Google GenAI with Gemini 3.8 Flash */
 let aiClient = null;
@@ -999,6 +1084,57 @@ app.post('/api/auth/custom-token', async (req, res) => {
     return res.json({ success: true, customToken });
   } catch (err) {
     console.warn('Custom token creation issue:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/* FCM Push Notification Sending Endpoint */
+app.post('/api/push/send', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+    const token = authHeader.slice(7).trim();
+    const decoded = await adminAuth.verifyIdToken(token);
+
+    const { recipientId, title, body, data } = req.body || {};
+    if (!recipientId || !title) {
+      return res.status(400).json({ success: false, error: 'recipientId and title are required' });
+    }
+
+    const result = await sendPushToUser(recipientId, {
+      title,
+      body: body || '',
+      data: { ...(data || {}), senderId: decoded.uid }
+    });
+
+    return res.json({ success: true, result });
+  } catch (err) {
+    console.error('Push send API error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/* FCM Push Notification Self-Test Endpoint */
+app.post('/api/push/test', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+    const token = authHeader.slice(7).trim();
+    const decoded = await adminAuth.verifyIdToken(token);
+
+    const result = await sendPushToUser(decoded.uid, {
+      title: 'SellerFlow Test Notification',
+      body: 'Push notifications are configured and working on this Android device! 🔔',
+      data: { type: 'test', route: 'feed' }
+    });
+
+    return res.json({ success: true, result });
+  } catch (err) {
+    console.error('Push test API error:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });
