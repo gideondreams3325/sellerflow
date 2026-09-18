@@ -64,7 +64,7 @@ jobs:
       - name: Build Unsigned Release AAB (Fallback when Keystore Secret is not yet provided)
         if: ${{ secrets.ANDROID_KEYSTORE_BASE64 == '' }}
         working-directory: ./android
-        run: ./gradlew bundleRelease --no-daemon
+        run: ./gradlew bundleRelease --no-daemon --stacktrace
 
       - name: Verify Release AAB Output
         run: |
