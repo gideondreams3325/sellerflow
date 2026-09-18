@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "node server.js",
-    "build": "node -e \"import('node:fs').then(fs=>{fs.mkdirSync('dist',{recursive:true});const files=['index.html','_redirects','sw.js','manifest.json','icon.svg','pwa-192x192.png','pwa-512x512.png','apple-touch-icon.png'];files.forEach(f=>{if(fs.existsSync(f))fs.copyFileSync(f,'dist/'+f);});console.log('Build complete: static assets and service worker ready in dist/');})\"",
+    "build": "node -e \"import('node:fs').then(fs=>{fs.mkdirSync('dist',{recursive:true});const files=['index.html','_redirects','sw.js','manifest.json','icon.svg','pwa-192x192.png','pwa-512x512.png','apple-touch-icon.png'];files.forEach(f=>{if(fs.existsSync(f)){if(f==='index.html'){let content=fs.readFileSync(f,'utf8');content=content.replace(/____SELLERFLOW_APP_URL____/g,process.env.APP_URL||'');fs.writeFileSync('dist/'+f,content,'utf8');}else{fs.copyFileSync(f,'dist/'+f);}}});console.log('Build complete: static assets and service worker ready in dist/');})\"",
     "start": "node server.js",
     "lint": "node -e \"console.log('Lint passed')\"",
     "postinstall": "node scripts/patch-capacitor.js",
