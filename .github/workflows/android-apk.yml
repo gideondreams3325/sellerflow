@@ -19,11 +19,11 @@ jobs:
       - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install NPM Dependencies
-        run: npm ci || npm install
+        run: npm install
 
       - name: Build Web Application Bundle
         run: npm run build
