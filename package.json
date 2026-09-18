@@ -15,5 +15,8 @@
     "firebase-admin": "^14.4.0",
     "firebase-functions": "^7.4.0",
     "jose": "^6.2.12"
+  },
+  "devDependencies": {
+    "acorn": "^8.18.0"
   }
 }

@@ -279,6 +279,9 @@ button,a,input,textarea,select{position:relative;z-index:1}
 #openFeedUpload:hover,#openFeedUploadEmpty:hover{filter:brightness(1.08)!important;box-shadow:0 4px 16px rgba(245,185,66,.45),inset 0 1px 0 rgba(255,255,255,.55)!important;transform:translateY(-.5px)}
 #openFeedUpload:active,#openFeedUploadEmpty:active{transform:scale(.95)}
 
+.sf-drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);z-index:40;transition:opacity .2s ease}
+.sf-drawer-backdrop.hide{display:none!important}
+
 .btn{font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:650;letter-spacing:-.01em;border-radius:12px;transition:all .16s cubic-bezier(0.16,1,0.3,1);cursor:pointer;user-select:none}
 .btn:active{transform:scale(.97)}
 .btn-primary,.bg-gold.font-bold{background:linear-gradient(135deg,#f7c554 0%,#f5b942 55%,#e5a428 100%);color:#080808;font-weight:750;border:1px solid rgba(255,255,255,.25);box-shadow:0 3px 12px rgba(245,185,66,.26),inset 0 1px 0 rgba(255,255,255,.4)}
@@ -344,7 +347,7 @@ button,a,input,textarea,select{position:relative;z-index:1}
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center"><div class="text-center"><div class="spin mx-auto mb-4"></div><div class="gold font-bold text-xl">SellerFlow</div><div id="loadingText" class="muted text-sm mt-2">Starting secure app…</div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
 <div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 SellerFlow™ · All rights reserved.</div></div></div>
-<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center gap-1.5 sm:gap-3 overflow-hidden"><button id="mobileMenu" class="md:hidden" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold shrink-0 whitespace-nowrap">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0"><button type="button" id="headerLoginBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Sign In</button></div></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-2 grid grid-cols-3 gap-1"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center gap-1.5 sm:gap-3 overflow-hidden"><button id="mobileMenu" class="md:hidden" type="button" title="Select page">☰</button><button id="pageSelectorBtn" class="md:hidden" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold shrink-0 whitespace-nowrap">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0"><button type="button" id="headerLoginBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Sign In</button></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden border-t border-[#242424] p-3 bg-[#0d0d11]/98 backdrop-blur-md shadow-2xl relative z-50"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="pullRefreshIndicator" class="pull-refresh-indicator"><div class="pull-refresh-content"><span class="pull-refresh-icon">↻</span><span class="pull-refresh-text">Pull to refresh</span></div></div>
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
@@ -1059,7 +1062,7 @@ function setNav(){
         }
         if(window.renderGroupedNotifications)return window.renderGroupedNotifications();
         if(window.openNotifications)return window.openNotifications();
-        openNotifications();
+        if(typeof openNotifications === 'function') openNotifications();
       });
       $('cartBtn')?.addEventListener('click',()=>navigate('cart'));
       $('logoutBtn')?.addEventListener('click',logoutUser);
@@ -1068,12 +1071,118 @@ function setNav(){
     }
   }
 
-  const navPages=isAdmin?['feed','dashboard','marketplace','products','orders','store','profile','settings']:(currentProfile?.verified?['feed','dashboard','marketplace','products','orders','store','profile','settings']:(!currentUser?['feed','marketplace']:['feed','marketplace','orders','profile','settings']));
-  $('mobileNav').innerHTML=navPages.map(p=>`<button type="button" class="p-3 rounded-xl relative flex items-center justify-center gap-1.5 ${p===currentPage?'bg-[#202020] gold':''}" data-mobile-page="${p}"><span>${p==='feed'?'For You':p[0].toUpperCase()+p.slice(1)}</span>${p==='orders'?`<span id="mobileOrdersBadge" class="orders-nav-badge ${pendingOrdersCount>0?'':'hide'}">${pendingOrdersCount>99?'99+':pendingOrdersCount}</span>`:''}</button>`).join('')+(isAdmin?`<button class="p-3 rounded-xl ${currentPage==='admin'?'bg-[#202020] gold':''}" data-mobile-page="admin">Admin</button>`:'')+(!currentUser?`<button class="p-3 rounded-xl text-gold font-bold" id="mobileAuthBtn">Sign In / Register</button>`:`<button id="mobileLogout" class="p-3 rounded-xl text-red-400" data-mobile-logout="1">Logout</button>`);
-  $('mobileLogout')?.addEventListener('click',logoutUser);
-  $('mobileAuthBtn')?.addEventListener('click',()=>{hide($('mobileNav'));showAuth('login')});
-  if(typeof updateOrdersBadge==='function')updateOrdersBadge(pendingOrdersCount);
+  const pCount = typeof pendingOrdersCount !== 'undefined' ? pendingOrdersCount : 0;
+  const navPages = isAdmin ? ['feed','dashboard','marketplace','products','orders','store','profile','settings'] : (currentProfile?.verified ? ['feed','dashboard','marketplace','products','orders','store','profile','settings'] : (!currentUser ? ['feed','marketplace'] : ['feed','marketplace','orders','profile','settings']));
+  
+  if($('mobileNav')){
+    $('mobileNav').innerHTML = `
+      <div class="flex items-center justify-between pb-2 mb-2 border-b border-[#24242c] px-1">
+        <div class="flex items-center gap-2">
+          <span class="text-gold font-black text-xs sm:text-sm">SellerFlow Navigation</span>
+          <span class="text-[10px] text-zinc-400 bg-zinc-800/80 px-2 py-0.5 rounded-full border border-zinc-700">Ghana Marketplace</span>
+        </div>
+        <button type="button" id="closeMobileNavBtn" class="text-xs text-zinc-400 hover:text-white px-2 py-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50 flex items-center gap-1 font-bold transition">
+          <span>✕</span><span>Close</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-3 gap-1.5">
+        ${navPages.map(p => `<button type="button" class="p-2.5 rounded-xl relative flex items-center justify-center gap-1.5 text-xs font-bold transition ${p===currentPage ? 'bg-[#202020] gold border border-gold/30 shadow-sm' : 'bg-[#141418] text-zinc-300 hover:bg-[#1f1f26]'}" data-mobile-page="${p}"><span>${p==='feed'?'For You':p[0].toUpperCase()+p.slice(1)}</span>${p==='orders'?`<span id="mobileOrdersBadge" class="orders-nav-badge ${pCount>0?'':'hide'}">${pCount>99?'99+':pCount}</span>`:''}</button>`).join('')}
+        ${isAdmin ? `<button type="button" class="p-2.5 rounded-xl text-xs font-bold ${currentPage==='admin'?'bg-[#202020] gold border border-gold/30':'bg-[#141418] text-zinc-300'}" data-mobile-page="admin">Admin</button>` : ''}
+      </div>
+
+      <div class="mt-3 pt-2.5 border-t border-[#24242c] flex flex-col gap-1.5">
+        <button type="button" id="mobileHelpSupportBtn" class="w-full p-2.5 rounded-xl bg-gradient-to-r from-amber-950/40 via-gold/10 to-amber-950/40 border border-gold/30 hover:border-gold text-amber-300 font-extrabold text-xs flex items-center justify-between shadow-sm transition">
+          <span class="flex items-center gap-2">
+            <span class="text-base">🎧</span>
+            <span>Help & Customer Service</span>
+          </span>
+          <span class="text-gold text-[11px] font-bold">Contact Support →</span>
+        </button>
+
+        <button type="button" id="mobileReportFraudBtn" class="w-full p-2.5 rounded-xl bg-rose-950/30 hover:bg-rose-950/50 border border-rose-800/40 text-rose-300 font-bold text-xs flex items-center justify-between transition">
+          <span class="flex items-center gap-2">
+            <span class="text-base">🚨</span>
+            <span>Report Fraud to Security Team</span>
+          </span>
+          <span class="text-rose-400 text-[11px] font-bold">Security Desk →</span>
+        </button>
+
+        ${!currentUser ? `<button type="button" class="w-full p-2.5 rounded-xl bg-gold text-black font-extrabold text-xs mt-1 shadow-sm" id="mobileAuthBtn">Sign In / Register Account</button>` : `<button type="button" id="mobileLogout" class="w-full p-2.5 rounded-xl text-rose-400 bg-rose-950/20 border border-rose-900/30 font-bold text-xs mt-1" data-mobile-logout="1">Logout Account</button>`}
+      </div>
+    `;
+
+    $('closeMobileNavBtn')?.addEventListener('click', closeMobileNav);
+    $('mobileHelpSupportBtn')?.addEventListener('click', () => { closeMobileNav(); if(typeof openHelpSupportModal==='function') openHelpSupportModal(); });
+    $('mobileReportFraudBtn')?.addEventListener('click', () => { closeMobileNav(); if(typeof openReportFraudModal==='function') openReportFraudModal(); });
+    $('mobileLogout')?.addEventListener('click', () => { closeMobileNav(); logoutUser(); });
+    $('mobileAuthBtn')?.addEventListener('click', () => { closeMobileNav(); showAuth('login'); });
+
+    $('mobileNav').querySelectorAll('[data-mobile-page]').forEach(b => {
+      b.addEventListener('click', () => {
+        closeMobileNav();
+        const pg = b.dataset.mobilePage;
+        if(pg) navigate(pg);
+      });
+    });
+  }
+
+  if(typeof updateOrdersBadge==='function') updateOrdersBadge(pCount);
 }
+window.setNav = setNav;
+
+function closeMobileNav(){
+  $('mobileNav')?.classList.add('hide');
+  $('mobileNavOverlay')?.classList.add('hide');
+}
+
+let touchStartX = 0, touchStartY = 0;
+
+function initSwipeToCloseMobileNav(){
+  const nav = $('mobileNav');
+  const overlay = $('mobileNavOverlay');
+
+  if(nav && !nav._swipeInited){
+    nav._swipeInited = true;
+
+    nav.addEventListener('touchstart', (e) => {
+      if(e.changedTouches?.[0]){
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+      }
+    }, { passive: true });
+
+    nav.addEventListener('touchend', (e) => {
+      if(!e.changedTouches?.[0]) return;
+      const touchEndX = e.changedTouches[0].screenX;
+      const touchEndY = e.changedTouches[0].screenY;
+      const dx = touchEndX - touchStartX;
+      const dy = touchEndY - touchStartY;
+
+      // Swiped left
+      if (dx < -30 && Math.abs(dx) > Math.abs(dy)) {
+        closeMobileNav();
+      }
+    }, { passive: true });
+  }
+
+  if(overlay && !overlay._swipeInited){
+    overlay._swipeInited = true;
+    overlay.addEventListener('click', closeMobileNav);
+    overlay.addEventListener('touchstart', () => {
+      closeMobileNav();
+    }, { passive: true });
+  }
+}
+
+function openMobileNav(){
+  $('mobileNav')?.classList.remove('hide');
+  $('mobileNavOverlay')?.classList.remove('hide');
+  setNav();
+  initSwipeToCloseMobileNav();
+}
+window.closeMobileNav = closeMobileNav;
+window.openMobileNav = openMobileNav;
 function pauseAllForYouVideos(destroyFeed=false){
   try{
     if(window._sfFeedCleanup)window._sfFeedCleanup(destroyFeed);
@@ -1329,6 +1438,14 @@ async function renderFeed(targetPostId, options){
   setupReelPlayback(targetPostId);
 }
 function verifyBadge(s){return s?.verified?` <span class="verified-badge" title="SellerFlow verified">✓</span>`:''}
+function businessCertBadge(s, mode='full'){
+  const hasCert = s?.hasBusinessCert || s?.businessCertUrl || s?.businessCertUploaded;
+  if(!hasCert) return '';
+  if(mode === 'compact'){
+    return ` <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0 whitespace-nowrap" title="Registered Business Certificate Verified">🏢 Business Verified</span>`;
+  }
+  return ` <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-300 border border-amber-500/40 shadow-sm shrink-0 whitespace-nowrap" title="Registered Business with Official Registration Certificate"><span>🏢</span><span>Registered Business</span></span>`;
+}
 function postCard(p){
   const s=p.platformLabel==='SellerFlow'&&p.isAdminPost?{...sellerProfile(p.sellerId),name:'SellerFlow',username:'sellerflow',verified:true}:sellerProfile(p.sellerId);
   const liked=(p.likes||[]).includes(currentUser?.uid);
@@ -1421,6 +1538,7 @@ function postCard(p){
           <button type="button" data-open-seller="${p.sellerId}" class="flex items-center gap-1.5 text-white font-black text-sm md:text-base hover:text-gold transition">
             <span>@${esc(s.username||'seller')}</span>
             ${verifyBadge(s)}
+            ${businessCertBadge(s, 'compact')}
           </button>
           ${!isMine && !isFollowing ? `
             <button type="button" class="reel-follow-pill" data-reel-follow="${p.sellerId}">
@@ -2397,9 +2515,10 @@ function storeCard(s){
             ` : avatar(p, 'w-12 h-12 rounded-2xl object-cover shrink-0 border border-[#333]')}
             <div class="min-w-0">
               <b class="truncate block text-white font-bold text-sm sm:text-base group-hover:text-gold transition">${esc(s.name)}</b>
-              <div class="text-xs mt-0.5 flex items-center gap-1 text-zinc-400">
+              <div class="text-xs mt-0.5 flex flex-wrap items-center gap-1.5 text-zinc-400">
                 <span class="verified-badge text-[10px]">✓</span>
                 <span>Verified Seller</span>
+                ${businessCertBadge(s, 'compact')}
               </div>
             </div>
           </div>
@@ -2495,9 +2614,10 @@ async function openStorePreviewModal(storeId){
         <div class="flex items-center gap-3 min-w-0">
           ${avatar(profile, 'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover shrink-0 border border-[#333]')}
           <div class="min-w-0">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <h3 class="text-base sm:text-lg font-black text-white truncate">${esc(storeName)}</h3>
               <span class="verified-badge text-xs">✓</span>
+              ${businessCertBadge(cachedStore || profile, 'compact')}
             </div>
             <div class="text-xs text-zinc-400 mt-0.5 flex flex-wrap items-center gap-2">
               <span class="text-amber-400 font-semibold">Verified Merchant</span>
@@ -2554,6 +2674,11 @@ function renderStorePreviewContent(storeId, store, p, products){
         <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed line-clamp-2">${esc(storeDesc)}</p>
         <div class="flex flex-wrap items-center gap-2 mt-2 text-[11px] font-semibold text-zinc-400">
           <span class="px-2.5 py-0.5 rounded-lg bg-[#1f1f23] text-gold border border-gold/20">🛍️ ${products.length} product${products.length===1?'':'s'} available</span>
+          ${(store.hasBusinessCert || store.businessCertUrl || p.hasBusinessCert) ? `
+            <span class="px-2.5 py-0.5 rounded-lg bg-amber-950/40 text-amber-300 border border-amber-500/40 font-bold flex items-center gap-1">
+              <span>🏢</span><span>Business Verified</span>
+            </span>
+          ` : ''}
           <span class="px-2.5 py-0.5 rounded-lg bg-[#1f1f23] text-zinc-300 border border-[#333]">🇬🇭 Mobile Money Accepted</span>
           <span class="px-2.5 py-0.5 rounded-lg bg-[#1f1f23] text-emerald-400 border border-emerald-900/40">🛡️ Buyer Protection</span>
         </div>
@@ -2784,6 +2909,7 @@ async function openStore(uid){
             <h1 class="text-2xl font-black text-white flex items-center gap-1.5 flex-wrap">
               <span>${esc(store?.name||p.name)}</span>
               ${p.verified?' <span class="verified-badge">✓</span>':''}
+              ${businessCertBadge(store || p)}
             </h1>
             <div class="muted text-xs sm:text-sm">@${esc(p.username)} · ${(p.followers||[]).length} followers</div>
           </div>
@@ -2818,6 +2944,22 @@ async function openStore(uid){
           <div class="bg-[#111] rounded-xl p-3"><div class="muted text-xs">🏢 Address</div><b>${esc(store?.address||'Address not added')}</b></div>
           <div class="bg-[#111] rounded-xl p-3"><div class="muted text-xs">🕒 Hours</div><b>${esc(store?.hours||'Hours not added')}</b></div>
         </div>
+        ${(store?.hasBusinessCert || store?.businessCertUrl || p?.hasBusinessCert) ? `
+          <div class="p-3.5 rounded-xl bg-amber-950/25 border border-amber-500/30 flex items-center justify-between gap-3 mb-4">
+            <div class="flex items-center gap-2.5">
+              <span class="text-2xl">🏢</span>
+              <div>
+                <b class="text-amber-300 text-xs sm:text-sm block">Registered Business Verified</b>
+                <span class="text-[11px] text-zinc-400">Official Business Registration Certificate on file with SellerFlow Compliance</span>
+              </div>
+            </div>
+            ${(store?.businessCertUrl || p?.businessCertUrl) ? `
+              <a href="${esc(store?.businessCertUrl || p?.businessCertUrl)}" target="_blank" rel="noopener" class="text-xs text-gold underline font-bold px-3 py-1.5 rounded-lg bg-black/40 border border-gold/30 hover:border-gold transition shrink-0">
+                View Certificate ↗
+              </a>
+            ` : ''}
+          </div>
+        ` : ''}
         <p>${esc(store?.description||'')}</p>
         <div class="flex flex-wrap gap-2 mt-4">
           ${store?.location||store?.address?`<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((store?.address||'')+' '+(store?.location||''))}" class="px-4 py-2 rounded-xl border border-[#444]">📍 Open location</a>`:''}
@@ -3041,6 +3183,7 @@ async function openProductDetailModal(p){
               <div class="flex items-center gap-1.5 flex-wrap">
                 <span class="font-black text-sm text-white">${esc(s.name || 'Verified Seller')}</span>
                 ${s.verified ? '<span class="verified-badge">✓</span>' : ''}
+                ${businessCertBadge(s, 'compact')}
               </div>
               <div class="text-xs text-zinc-400 flex items-center gap-2 mt-0.5">
                 <button type="button" id="modalVisitSellerProfile" class="text-gold font-semibold hover:underline cursor-pointer">
@@ -4703,6 +4846,89 @@ async function renderStore(){
               </div>
             </div>
 
+            <!-- Business Registration Certificate (Optional) -->
+            <div class="p-4 rounded-2xl bg-[#121216] border border-amber-500/30 space-y-3 mt-4">
+              <div class="flex items-center justify-between border-b border-[#242430] pb-2">
+                <div class="flex items-center gap-2 font-black text-amber-300 text-xs sm:text-sm">
+                  <span>🏢</span>
+                  <span>Business Registration Certificate (Optional)</span>
+                </div>
+                <span class="text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-700/60 px-2.5 py-0.5 rounded-full">
+                  ${store.hasBusinessCert || store.businessCertUrl ? '🏢 BUSINESS VERIFIED' : 'GET VERIFIED BADGE'}
+                </span>
+              </div>
+
+              <p class="text-xs text-zinc-300 leading-relaxed">
+                If your business is registered with the Registrar General's Dept (RGD / ORC Ghana), upload your Business Registration Certificate or Form 3. Providing a business registration document unlocks the <b class="text-amber-300">🏢 Business Verified</b> badge on your store!
+              </p>
+
+              ${store.businessCertUrl ? `
+                <div class="p-3 rounded-xl bg-emerald-950/30 border border-emerald-800/60 flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-emerald-400 font-bold text-xs">✓ Certificate Uploaded</span>
+                    <a href="${esc(store.businessCertUrl)}" target="_blank" rel="noopener" class="text-gold text-xs font-bold hover:underline flex items-center gap-1 shrink-0">
+                      <span>View Document</span><span>↗</span>
+                    </a>
+                  </div>
+                  <button type="button" id="removeBusinessCertBtn" class="text-xs text-rose-400 hover:underline font-semibold shrink-0">
+                    Remove
+                  </button>
+                </div>
+              ` : ''}
+
+              <div>
+                <label class="text-xs font-semibold text-zinc-300 block mb-1">
+                  ${store.businessCertUrl ? 'Replace Business Registration Certificate' : 'Upload Business Registration Certificate'}
+                </label>
+                <input id="storeBusinessCertFile" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="text-xs text-zinc-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer w-full">
+                <p class="muted text-[11px] mt-1">Accepts JPG, PNG, WebP or PDF · max 15MB · Optional</p>
+              </div>
+            </div>
+
+            <!-- Mandatory Government-Issued ID & Fraud Legal Terms (Law of Ghana) -->
+            <div class="p-4 rounded-2xl bg-[#121216] border border-amber-500/40 space-y-3 mt-4">
+              <div class="flex items-center justify-between border-b border-[#242430] pb-2">
+                <div class="flex items-center gap-2 font-black text-amber-300 text-xs sm:text-sm">
+                  <span>🪪</span>
+                  <span>Mandatory Government ID Registration (Ghana Card)</span>
+                </div>
+                <span class="text-[10px] font-bold bg-amber-950 text-amber-400 border border-amber-800 px-2 py-0.5 rounded-full">LAW OF GHANA</span>
+              </div>
+              
+              <p class="text-xs text-zinc-300 leading-relaxed">
+                Ghanaian marketplace regulations mandate all store owners to register their valid government-issued Ghana Card details prior to store publishing.
+              </p>
+
+              <div class="grid sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="muted text-xs block mb-1">Full Legal Name as on Ghana Card *</label>
+                  <input id="storeGhanaCardName" value="${esc(store.ghanaCardName || currentProfile.ghanaCardName || currentProfile.name || '')}" class="w-full p-2.5 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-xs text-white uppercase" placeholder="e.g. KWAME OFORI ADDO">
+                </div>
+                <div>
+                  <label class="muted text-xs block mb-1">Date of Birth on Ghana Card *</label>
+                  <input id="storeGhanaCardDob" type="date" value="${esc(store.ghanaCardDob || currentProfile.ghanaCardDob || '')}" class="w-full p-2.5 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-xs text-white">
+                </div>
+              </div>
+
+              <div>
+                <label class="muted text-xs block mb-1">Ghana Card ID Number (e.g. GHA-XXXXXXXXX-X) *</label>
+                <input id="storeGhanaCardNum" value="${esc(store.ghanaCardNum || currentProfile.ghanaCardNum || '')}" class="w-full p-2.5 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-xs font-mono text-gold uppercase" placeholder="GHA-712839401-2">
+              </div>
+
+              <div class="p-3 rounded-xl bg-rose-950/25 border border-rose-900/60 text-xs text-rose-200/90 leading-relaxed space-y-2 mt-2">
+                <div class="font-bold text-rose-300 flex items-center gap-1.5">
+                  <span>⚖️</span><span>Seller Anti-Fraud Terms (Law of Ghana Compliance)</span>
+                </div>
+                <p class="text-[11px] text-zinc-300 leading-relaxed">
+                  Store creation and merchant operations on SellerFlow are strictly bound by the Electronic Transactions Act (Act 772) and Criminal Offences Act (Act 29) of the Republic of Ghana. Operating a store to defraud buyers, collecting advance payments without dispatching products, or listing counterfeit goods will result in immediate store shutdown, permanent account blacklisting, and prosecution in front of the Law of Ghana (Ghana Police Service Cybercrime Unit).
+                </p>
+                <label class="flex items-start gap-2 pt-1 cursor-pointer text-xs font-semibold text-white">
+                  <input id="storeFraudTerms" type="checkbox" ${store.ghanaTermsAccepted ? 'checked' : ''} class="mt-0.5 accent-gold shrink-0">
+                  <span>I confirm my Ghana Card details are accurate and agree that any fraudulent activity on my store will be prosecuted under the Laws of Ghana. *</span>
+                </label>
+              </div>
+            </div>
+
             <div class="pt-4 border-t border-[#262626] flex flex-wrap items-center justify-between gap-3">
               <div class="flex items-center gap-2">
                 <button id="saveStore" class="bg-gold text-black px-6 py-3 rounded-xl font-black text-sm hover:brightness-110 shadow-md flex items-center gap-2 transition">
@@ -4846,6 +5072,44 @@ async function renderStore(){
       }
     });
 
+    $('removeBusinessCertBtn')?.addEventListener('click', async () => {
+      const ok = await customConfirm({
+        title: 'Remove Business Registration Certificate?',
+        message: 'Remove your uploaded business registration certificate and relinquish the Registered Business badge?',
+        confirmText: 'Remove Certificate',
+        cancelText: 'Keep Certificate',
+        type: 'warning',
+        icon: '🏢',
+        tag: 'Business Verification'
+      });
+      if(!ok) return;
+      try {
+        loading('Removing business certificate…');
+        await updateDoc(doc(db, 'stores', currentUser.uid), {
+          businessCertUrl: '',
+          businessCertPath: '',
+          hasBusinessCert: false,
+          updatedAt: serverTimestamp()
+        });
+        await updateDoc(doc(db, 'publicProfiles', currentUser.uid), {
+          hasBusinessCert: false,
+          businessCertUrl: ''
+        }).catch(()=>{});
+        await updateDoc(doc(db, 'users', currentUser.uid), {
+          hasBusinessCert: false,
+          businessCertUrl: ''
+        }).catch(()=>{});
+        currentProfile.hasBusinessCert = false;
+        currentProfile.businessCertUrl = '';
+        toast('Business registration certificate removed', 'info');
+        renderStore();
+      } catch(e) {
+        toast(errMsg(e), 'error');
+      } finally {
+        ready();
+      }
+    });
+
     $('previewStoreBtnTop')?.addEventListener('click', () => openStore(currentUser.uid));
     $('previewStorefrontBtn')?.addEventListener('click', () => openStore(currentUser.uid));
     $('addNewProductStoreBtn')?.addEventListener('click', () => openProductModal());
@@ -4879,11 +5143,27 @@ async function renderStore(){
         const wa = $('storeWhatsApp').value.replace(/\D/g, '');
         if(wa && wa.length < 10) throw Error('Enter a valid WhatsApp number (at least 10 digits).');
 
+        const ghanaCardName = $('storeGhanaCardName')?.value.trim();
+        if(!ghanaCardName || ghanaCardName.length < 3) throw Error('Please enter your full legal name as printed on your Ghana Card.');
+
+        const ghanaCardDob = $('storeGhanaCardDob')?.value.trim();
+        if(!ghanaCardDob) throw Error('Please select your Date of Birth as printed on your Ghana Card.');
+
+        const ghanaCardNum = $('storeGhanaCardNum')?.value.trim();
+        if(!ghanaCardNum || ghanaCardNum.length < 8) throw Error('Please enter a valid Ghana Card ID number (e.g. GHA-123456789-0).');
+
+        if(!$('storeFraudTerms')?.checked){
+          throw Error('You must agree to the Seller Anti-Fraud Terms and comply with the Laws of Ghana before opening/saving your store.');
+        }
+
         const bannerFile = $('storeBannerFile')?.files[0];
         const logoFile = $('storeLogoFile')?.files[0];
+        const certFile = $('storeBusinessCertFile')?.files[0];
 
         let bannerUrl = store.bannerUrl || '', bannerPath = store.bannerPath || '';
         let logoUrl = store.logoUrl || '', logoPath = store.logoPath || '';
+        let businessCertUrl = store.businessCertUrl || '', businessCertPath = store.businessCertPath || '';
+        let hasBusinessCert = !!(store.hasBusinessCert || store.businessCertUrl);
 
         if(bannerFile){
           validFile(bannerFile, ['image/jpeg','image/png','image/webp'], 10);
@@ -4901,6 +5181,15 @@ async function renderStore(){
           logoPath = up.path;
         }
 
+        if(certFile){
+          validFile(certFile, ['image/jpeg','image/png','image/webp','application/pdf'], 15);
+          loading('Uploading Business Registration Certificate…');
+          const upCert = await uploadPublic(certFile, 'business_certs');
+          businessCertUrl = upCert.url;
+          businessCertPath = upCert.path;
+          hasBusinessCert = true;
+        }
+
         loading('Saving store…');
         const storeStatus = isAdmin ? 'approved' : 'pending_review';
         const reviewStatus = isAdmin ? 'approved' : 'pending';
@@ -4913,10 +5202,18 @@ async function renderStore(){
           address: $('storeAddress').value.trim(),
           hours: $('storeHours').value.trim(),
           whatsapp: wa,
+          ghanaCardName,
+          ghanaCardDob,
+          ghanaCardNum,
+          ghanaTermsAccepted: true,
+          ghanaTermsAcceptedAt: serverTimestamp(),
           bannerUrl,
           bannerPath,
           logoUrl,
           logoPath,
+          businessCertUrl,
+          businessCertPath,
+          hasBusinessCert,
           status: storeStatus,
           reviewStatus: reviewStatus,
           rejectionReason: '',
@@ -4925,6 +5222,22 @@ async function renderStore(){
         };
 
         await setDoc(doc(db, 'stores', currentUser.uid), storeData, { merge: true });
+        await updateDoc(doc(db, 'publicProfiles', currentUser.uid), {
+          hasBusinessCert,
+          businessCertUrl
+        }).catch(()=>{});
+        await updateDoc(doc(db, 'users', currentUser.uid), {
+          ghanaCardName,
+          ghanaCardDob,
+          ghanaCardNum,
+          sellerTermsAccepted: true,
+          sellerTermsAcceptedAt: serverTimestamp(),
+          hasBusinessCert,
+          businessCertUrl
+        }).catch(()=>{});
+
+        currentProfile.hasBusinessCert = hasBusinessCert;
+        currentProfile.businessCertUrl = businessCertUrl;
 
         if(isAdmin){
           toast('Store settings saved and published.', 'success');
@@ -4945,7 +5258,7 @@ async function renderStore(){
   }
 }
 
-async function renderProfile(){const p=currentProfile;const privateDoc=await getDoc(doc(db,'users',currentUser.uid));const verification=privateDoc.data()||{};$('page').innerHTML=pageTitle('Profile','Manage your account details and profile picture.')+`<div class="grid lg:grid-cols-[1fr_1.3fr] gap-5"><div class="card p-6"><div class="flex items-center gap-4">${avatar(p,'w-20 h-20 rounded-full object-cover bg-[#222]')}<div><h2 class="text-xl font-bold">${esc(p.name)}</h2><div class="muted">@${esc(p.username)}</div>${p.verified?'<div class="text-sm font-bold mt-1 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':''}</div></div><input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-5"><button id="uploadAvatar" class="mt-3 border border-[#444] rounded-xl px-4 py-2">Update profile picture</button><label class="muted text-sm block mt-5">Full name</label><input id="profileName" value="${esc(p.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><label class="muted text-sm block mt-4">Username</label><input id="profileUsername" value="${esc(p.username||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><button id="saveProfile" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Save profile</button><div class="muted text-sm mt-4">${esc(currentUser.email)} · ${currentUser.emailVerified?'Email verified':'Email not verified'}</div>${!currentUser.emailVerified?`<button id="verifyEmail" class="mt-2 text-sm gold">Send verification email</button>`:''}</div><div class="card p-6"><h2 class="text-xl font-bold">Seller identity</h2><p class="muted mt-2">Verification is managed from Settings. Approved sellers receive the modern blue SellerFlow verification badge.</p><button id="openSettingsVerification" class="mt-4 bg-gold text-black px-5 py-3 rounded-xl font-bold">Open Settings</button></div></div>`;$('uploadAvatar').onclick=async()=>{try{const f=$('avatarFile').files[0];if(!f)return toast('Choose a picture first','error');const x=await uploadPublic(f,'profiles');await updateDoc(doc(db,'users',currentUser.uid),{avatarUrl:x.url});await updateDoc(doc(db,'publicProfiles',currentUser.uid),{avatarUrl:x.url});currentProfile.avatarUrl=x.url;toast('Profile picture updated','success');navigate('profile')}catch(e){toast(errMsg(e),'error')}};$('saveProfile').onclick=saveProfile;$('verifyEmail')?.addEventListener('click',async()=>{await sendEmailVerification(currentUser);toast('Verification email sent','success')});$('openSettingsVerification')?.addEventListener('click',openVerificationModal)}
+async function renderProfile(){const p=currentProfile;const privateDoc=await getDoc(doc(db,'users',currentUser.uid));const verification=privateDoc.data()||{};$('page').innerHTML=pageTitle('Profile','Manage your account details and profile picture.')+`<div class="grid lg:grid-cols-[1fr_1.3fr] gap-5"><div class="card p-6"><div class="flex items-center gap-4">${avatar(p,'w-20 h-20 rounded-full object-cover bg-[#222]')}<div><h2 class="text-xl font-bold">${esc(p.name)}</h2><div class="muted">@${esc(p.username)}</div>${p.verified?'<div class="text-sm font-bold mt-1 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':''}${(p.hasBusinessCert || p.businessCertUrl || verification.hasBusinessCert)?'<div class="text-xs font-bold mt-1.5 flex items-center gap-2 text-amber-300 bg-amber-950/30 border border-amber-800/50 p-2 rounded-xl"><span>🏢</span><span>Registered Business Certificate Verified</span></div>':''}</div></div><input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-5"><button id="uploadAvatar" class="mt-3 border border-[#444] rounded-xl px-4 py-2">Update profile picture</button><label class="muted text-sm block mt-5">Full name</label><input id="profileName" value="${esc(p.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><label class="muted text-sm block mt-4">Username</label><input id="profileUsername" value="${esc(p.username||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><button id="saveProfile" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Save profile</button><div class="muted text-sm mt-4">${esc(currentUser.email)} · ${currentUser.emailVerified?'Email verified':'Email not verified'}</div>${!currentUser.emailVerified?`<button id="verifyEmail" class="mt-2 text-sm gold">Send verification email</button>`:''}</div><div class="card p-6"><h2 class="text-xl font-bold">Seller identity</h2><p class="muted mt-2">Verification is managed from Settings. Approved sellers receive the modern blue SellerFlow verification badge.</p><button id="openSettingsVerification" class="mt-4 bg-gold text-black px-5 py-3 rounded-xl font-bold">Open Settings</button></div></div>`;$('uploadAvatar').onclick=async()=>{try{const f=$('avatarFile').files[0];if(!f)return toast('Choose a picture first','error');const x=await uploadPublic(f,'profiles');await updateDoc(doc(db,'users',currentUser.uid),{avatarUrl:x.url});await updateDoc(doc(db,'publicProfiles',currentUser.uid),{avatarUrl:x.url});currentProfile.avatarUrl=x.url;toast('Profile picture updated','success');navigate('profile')}catch(e){toast(errMsg(e),'error')}};$('saveProfile').onclick=saveProfile;$('verifyEmail')?.addEventListener('click',async()=>{await sendEmailVerification(currentUser);toast('Verification email sent','success')});$('openSettingsVerification')?.addEventListener('click',openVerificationModal)}
 async function saveProfile(){try{const name=$('profileName').value.trim(),username=usernameClean($('profileUsername').value);if(name.length<2||username.length<3)throw Error('Enter a valid name and username.');if(username!==currentProfile.username){if(!(await uniqueUsername(username,currentUser.uid)))throw Error('That username is already taken.');}await updateDoc(doc(db,'users',currentUser.uid),{name,username,usernameLower:username.toLowerCase(),nameLastChanged:serverTimestamp(),usernameLastChanged:serverTimestamp()});try{await setDoc(doc(db,'publicProfiles',currentUser.uid),{uid:currentUser.uid,name,username,usernameLower:username.toLowerCase(),avatarUrl:currentProfile.avatarUrl||'',verified:!!currentProfile.verified,followers:currentProfile.followers||[],following:currentProfile.following||[],role:currentProfile.role||'seller'},{merge:true})}catch(e){console.warn('Public profile sync skipped:',e)}await refreshProfile();toast('Profile saved','success');navigate('profile')}catch(e){toast(errMsg(e),'error')}}
 async function submitVerification(){
   try{
@@ -5241,6 +5554,20 @@ function openCheckout(){
         </div>
       </div>
 
+      <!-- Buyer Anti-Fraud Terms (Law of Ghana Compliance) -->
+      <div class="p-3.5 rounded-xl bg-rose-950/20 border border-rose-900/50 text-xs text-rose-200/90 leading-relaxed space-y-1.5">
+        <div class="font-bold text-rose-300 flex items-center gap-1.5">
+          <span>⚖️</span><span>Buyer Anti-Fraud Terms (Law of Ghana Compliance)</span>
+        </div>
+        <p class="text-[11px] text-zinc-300">
+          By placing an order on SellerFlow, you agree that providing fake contact details, attempting fraudulent Mobile Money chargebacks, submitting false payment screenshots, or placing malicious refusal orders will be reported immediately to our Security Desk and prosecuted under the Laws of Ghana (Electronic Transactions Act Act 772 & Criminal Offences Act Act 29).
+        </p>
+        <label class="flex items-start gap-2 pt-1 cursor-pointer text-xs font-semibold text-white">
+          <input id="checkoutFraudTerms" type="checkbox" checked class="mt-0.5 accent-gold shrink-0">
+          <span>I agree to the Buyer Anti-Fraud Terms and comply with the Laws of Ghana. *</span>
+        </label>
+      </div>
+
       <!-- Total & Action Buttons -->
       <div class="pt-3 border-t border-[#262626] flex items-center justify-between gap-3">
         <div>
@@ -5266,6 +5593,9 @@ async function placeOrder(){
   try{
     const name=$('checkName')?.value.trim(),phone=$('checkPhone')?.value.trim(),address=$('checkAddress')?.value.trim();
     if(!name||!phone||!address)throw Error('Please complete all delivery details (Name, Phone number, and Address).');
+    if(!$('checkoutFraudTerms')?.checked){
+      throw Error('You must agree to the Buyer Anti-Fraud Terms and comply with the Laws of Ghana to place an order.');
+    }
     if(!cart.length)throw Error('Your cart is empty.');
 
     const bySeller=new Map();
@@ -6125,6 +6455,342 @@ function closeModal(){
   window._activeConversationId = null;
   $('modalRoot').innerHTML='';
 }
+
+/* Customer Support & Help Desk System */
+async function openHelpSupportModal(){
+  loading('Loading Customer Support details…');
+  try {
+    let supportData = {
+      phone: '+233 24 123 4567',
+      whatsapp: '233241234567',
+      email: 'support@sellerflow.com.gh',
+      hours: 'Monday – Saturday: 8:00 AM – 8:00 PM GMT',
+      address: 'SellerFlow Ghana Hub, Ring Road West, Accra Digital Center, Accra, Ghana',
+      notice: 'Our dedicated Ghanaian Customer Support team is available to assist with order tracking, store setup, verification, merchant support, and fraud prevention.'
+    };
+    try {
+      const snap = await getDoc(doc(db, 'settings', 'support'));
+      if(snapshotExists(snap) && snap.data()){
+        supportData = { ...supportData, ...snap.data() };
+      }
+    } catch(err){ console.warn('Support details fetch notice:', err); }
+
+    const cleanWa = (supportData.whatsapp || '').replace(/\D/g, '');
+
+    modal(`
+      <div class="space-y-4 max-w-lg mx-auto" id="helpSupportModalContent">
+        <div class="pb-3 border-b border-[#262626] flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-xl bg-gold/15 border border-gold/40 flex items-center justify-center text-xl shrink-0">
+              🎧
+            </div>
+            <div>
+              <h2 class="text-lg font-black text-white">Customer Service & Help Desk</h2>
+              <p class="text-xs text-zinc-400">SellerFlow Ghana Official Support & Security</p>
+            </div>
+          </div>
+          <button type="button" data-close-modal class="text-zinc-400 hover:text-white text-sm p-1">✕</button>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-gradient-to-r from-[#18181f] to-[#121216] border border-gold/30 text-xs text-zinc-300 leading-relaxed space-y-1">
+          <div class="font-bold text-amber-300 flex items-center gap-1.5">
+            <span>🇬🇭</span><span>Ghana Marketplace Guarantee</span>
+          </div>
+          <p class="text-[11.5px] text-zinc-300">${esc(supportData.notice)}</p>
+        </div>
+
+        <!-- Direct Contact Actions Grid -->
+        <div class="grid grid-cols-2 gap-2">
+          <a href="tel:${esc(supportData.phone)}" class="p-3 rounded-xl bg-[#18181f] hover:bg-[#22222d] border border-[#2e2e38] hover:border-gold/50 flex flex-col items-center justify-center text-center gap-1 transition group">
+            <span class="text-xl group-hover:scale-110 transition">📞</span>
+            <span class="text-xs font-bold text-white">Call Support</span>
+            <span class="text-[10px] text-zinc-400 font-mono">${esc(supportData.phone)}</span>
+          </a>
+
+          <a href="https://wa.me/${cleanWa}?text=${encodeURIComponent('Hello SellerFlow Customer Support, I need assistance with...')}" target="_blank" rel="noopener" class="p-3 rounded-xl bg-[#121f17] hover:bg-[#182a1f] border border-emerald-800/60 hover:border-emerald-500 flex flex-col items-center justify-center text-center gap-1 transition group">
+            <span class="text-xl group-hover:scale-110 transition">💬</span>
+            <span class="text-xs font-bold text-emerald-300">WhatsApp Chat</span>
+            <span class="text-[10px] text-emerald-400/80 font-mono">+${cleanWa}</span>
+          </a>
+
+          <a href="mailto:${esc(supportData.email)}" class="p-3 rounded-xl bg-[#18181f] hover:bg-[#22222d] border border-[#2e2e38] hover:border-gold/50 flex flex-col items-center justify-center text-center gap-1 transition group">
+            <span class="text-xl group-hover:scale-110 transition">✉️</span>
+            <span class="text-xs font-bold text-white">Email Us</span>
+            <span class="text-[10px] text-zinc-400 font-mono truncate max-w-full px-1">${esc(supportData.email)}</span>
+          </a>
+
+          <button type="button" id="helpReportFraudBtn" class="p-3 rounded-xl bg-rose-950/40 hover:bg-rose-900/50 border border-rose-800/60 hover:border-rose-600 flex flex-col items-center justify-center text-center gap-1 transition group">
+            <span class="text-xl group-hover:scale-110 transition">🚨</span>
+            <span class="text-xs font-bold text-rose-300">Report Fraud</span>
+            <span class="text-[10px] text-rose-400/80">Security Desk</span>
+          </button>
+        </div>
+
+        <!-- Support Info List -->
+        <div class="space-y-2 text-xs bg-[#121215] p-3.5 rounded-xl border border-[#24242c]">
+          <div class="flex items-center justify-between border-b border-[#22222a] pb-2">
+            <span class="text-zinc-400">🕒 Operating Hours:</span>
+            <span class="text-white font-medium">${esc(supportData.hours)}</span>
+          </div>
+          <div class="flex items-start justify-between gap-2 pt-1">
+            <span class="text-zinc-400 shrink-0">📍 Ghana Office:</span>
+            <span class="text-white text-right font-medium">${esc(supportData.address)}</span>
+          </div>
+        </div>
+
+        <!-- Admin Edit Button if Admin -->
+        ${isAdmin ? `
+          <div class="pt-2 border-t border-[#262626]">
+            <button type="button" id="adminEditSupportBtnModal" class="w-full bg-gold text-black font-extrabold p-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md hover:brightness-110 transition">
+              <span>✏️</span><span>Edit Customer Support Details (Admin)</span>
+            </button>
+          </div>
+        ` : ''}
+
+        <div class="pt-1 text-center">
+          <button type="button" data-close-modal class="border border-[#333] text-zinc-400 hover:text-white px-5 py-2 rounded-xl text-xs font-bold">
+            Close Help Desk
+          </button>
+        </div>
+      </div>
+    `);
+
+    ready();
+    $('helpReportFraudBtn')?.addEventListener('click', () => openReportFraudModal());
+    $('adminEditSupportBtnModal')?.addEventListener('click', () => openAdminSupportEditor(supportData));
+
+  } catch(e) {
+    ready();
+    toast(errMsg(e), 'error');
+  }
+}
+window.openHelpSupportModal = openHelpSupportModal;
+
+async function openAdminSupportEditor(currentData){
+  if(!isAdmin) return toast('Admin privileges required.', 'error');
+  modal(`
+    <div class="space-y-4 max-w-lg mx-auto">
+      <div class="pb-3 border-b border-[#262626]">
+        <h2 class="text-lg font-black text-white flex items-center gap-2">
+          <span>⚙️</span><span>Edit Customer Support Details</span>
+        </h2>
+        <p class="text-xs text-zinc-400 mt-0.5">Update public customer service info shown to all users in Ghana.</p>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1">Customer Support Phone *</label>
+          <input id="editSupportPhone" value="${esc(currentData?.phone || '')}" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold" placeholder="+233 24 000 0000">
+        </div>
+
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1">WhatsApp Number (digits only, e.g. 233240000000) *</label>
+          <input id="editSupportWhatsapp" value="${esc(currentData?.whatsapp || '')}" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold" placeholder="233240000000">
+        </div>
+
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1">Support Email *</label>
+          <input id="editSupportEmail" value="${esc(currentData?.email || '')}" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold" placeholder="support@sellerflow.com.gh">
+        </div>
+
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1">Operating Hours *</label>
+          <input id="editSupportHours" value="${esc(currentData?.hours || '')}" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold" placeholder="Mon – Sat · 8:00 AM – 8:00 PM GMT">
+        </div>
+
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1">Physical Office Location *</label>
+          <input id="editSupportAddress" value="${esc(currentData?.address || '')}" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold" placeholder="Accra Digital Center, Ring Road West, Accra">
+        </div>
+
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1">Support Guarantee / Notice Message</label>
+          <textarea id="editSupportNotice" rows="3" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold">${esc(currentData?.notice || '')}</textarea>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-[#262626] flex items-center justify-end gap-2">
+        <button type="button" data-close-modal class="border border-[#444] text-zinc-300 px-4 py-2 rounded-xl text-xs font-bold">
+          Cancel
+        </button>
+        <button type="button" id="saveAdminSupportBtn" class="bg-gold text-black font-extrabold px-5 py-2 rounded-xl text-xs shadow-md hover:brightness-110">
+          Save Support Info
+        </button>
+      </div>
+    </div>
+  `);
+
+  $('saveAdminSupportBtn').onclick = async () => {
+    try {
+      const phone = $('editSupportPhone').value.trim();
+      const whatsapp = $('editSupportWhatsapp').value.replace(/\D/g, '');
+      const email = $('editSupportEmail').value.trim();
+      const hours = $('editSupportHours').value.trim();
+      const address = $('editSupportAddress').value.trim();
+      const notice = $('editSupportNotice').value.trim();
+
+      if(!phone || !whatsapp || !email) throw Error('Phone, WhatsApp, and Email are required fields.');
+
+      loading('Saving Customer Support settings…');
+      await setDoc(doc(db, 'settings', 'support'), {
+        phone,
+        whatsapp,
+        email,
+        hours,
+        address,
+        notice,
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUser.uid
+      }, { merge: true });
+
+      toast('Customer Support details updated successfully.', 'success', 3000);
+      openHelpSupportModal();
+    } catch(err){
+      ready();
+      toast(errMsg(err), 'error');
+    }
+  };
+}
+window.openAdminSupportEditor = openAdminSupportEditor;
+
+function openReportFraudModal(prefillType='seller', prefillId='', prefillName=''){
+  if(!currentUser){
+    return showAuthPrompt('report fraud to the security team');
+  }
+  modal(`
+    <div class="space-y-4 max-w-lg mx-auto" id="reportFraudModalContent">
+      <div class="pb-3 border-b border-[#262626]">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-rose-950/80 border border-rose-700/60 flex items-center justify-center text-xl shrink-0">
+            🚨
+          </div>
+          <div>
+            <h2 class="text-lg font-black text-white">Report Fraud to Security Team</h2>
+            <p class="text-xs text-zinc-400">Ghana Police Service & SellerFlow Cybercrime Desk</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-xl bg-rose-950/30 border border-rose-900/60 text-xs text-rose-200/90 leading-relaxed">
+        <p class="font-bold text-rose-300">⚠️ Anti-Fraud Investigation Notice:</p>
+        <p class="mt-0.5 text-[11px]">Submitting false reports is prohibited. All fraud investigations are conducted under the Criminal Offences Act (Act 29) & Electronic Transactions Act of Ghana.</p>
+      </div>
+
+      <div class="space-y-3">
+        <div class="grid sm:grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs text-zinc-400 block mb-1 font-medium">Reporting Target *</label>
+            <select id="reportTargetType" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold">
+              <option value="seller" ${prefillType==='seller'?'selected':''}>Seller / Storefront Fraud</option>
+              <option value="buyer" ${prefillType==='buyer'?'selected':''}>Buyer Fraud / Fake Payment</option>
+              <option value="other" ${prefillType==='other'?'selected':''}>General / Imposter Fraud</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-zinc-400 block mb-1 font-medium">Name of Store / Buyer *</label>
+            <input id="reportTargetName" value="${esc(prefillName)}" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold" placeholder="Store name or Buyer name">
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs text-zinc-400 block mb-1 font-medium">Store UID / Order Reference ID</label>
+            <input id="reportTargetId" value="${esc(prefillId)}" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold" placeholder="e.g. store ID or Order #">
+          </div>
+          <div>
+            <label class="text-xs text-zinc-400 block mb-1 font-medium">Fraud Category *</label>
+            <select id="reportCategory" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold">
+              <option value="non_delivery">Non-delivery after MoMo / Cash payment</option>
+              <option value="fake_receipt">Fake payment receipt / fake MoMo SMS</option>
+              <option value="counterfeit">Counterfeit / Defective / Misrepresented item</option>
+              <option value="identity_theft">Identity theft / Fake vendor store</option>
+              <option value="extortion">Price extortion / Advance fee scam</option>
+              <option value="other">Other fraudulent practice</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs text-zinc-400 block mb-1 font-medium">Amount Defrauded (GH₵)</label>
+            <input id="reportAmount" type="number" min="0" step="0.01" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold" placeholder="e.g. 250.00">
+          </div>
+          <div>
+            <label class="text-xs text-zinc-400 block mb-1 font-medium">MoMo Ref / Transaction ID</label>
+            <input id="reportTxRef" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold" placeholder="e.g. 19283019283">
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1 font-medium">Detailed Incident Description *</label>
+          <textarea id="reportDescription" rows="4" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold" placeholder="Describe exactly what happened, dates, products involved, and communications…"></textarea>
+        </div>
+
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1 font-medium">Your Contact Phone / Email for Follow-Up *</label>
+          <input id="reportContact" value="${esc(currentUser?.email || '')}" class="w-full p-2.5 rounded-xl bg-[#171719] border border-[#333] text-white text-xs focus:border-gold" placeholder="Your phone number or email">
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-[#262626] flex items-center justify-between gap-3">
+        <button type="button" data-close-modal class="border border-[#444] text-zinc-300 px-4 py-2 rounded-xl text-xs font-bold">
+          Cancel
+        </button>
+        <button type="button" id="submitFraudReportBtn" class="bg-rose-600 hover:bg-rose-500 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
+          <span>🚨</span><span>Submit Fraud Report</span>
+        </button>
+      </div>
+    </div>
+  `);
+
+  $('submitFraudReportBtn').onclick = async () => {
+    try {
+      const targetType = $('reportTargetType').value;
+      const targetName = $('reportTargetName').value.trim();
+      const targetId = $('reportTargetId').value.trim();
+      const category = $('reportCategory').value;
+      const amount = $('reportAmount').value;
+      const transactionRef = $('reportTxRef').value.trim();
+      const description = $('reportDescription').value.trim();
+      const complainantContact = $('reportContact').value.trim();
+
+      if(!targetName) throw Error('Please provide the name of the store or buyer being reported.');
+      if(description.length < 15) throw Error('Please write a detailed explanation of the fraud incident (at least 15 characters).');
+      if(!complainantContact) throw Error('Please provide your contact phone or email for security follow-up.');
+
+      loading('Filing report with SellerFlow Security Desk…');
+
+      await addDoc(collection(db, 'fraudReports'), {
+        reporterUid: currentUser?.uid || 'guest',
+        reporterEmail: currentUser?.email || '',
+        targetType,
+        targetName,
+        targetId,
+        category,
+        amount: amount ? Number(amount) : 0,
+        transactionRef,
+        description,
+        complainantContact,
+        status: 'pending',
+        createdAt: serverTimestamp()
+      });
+
+      closeModal();
+      await customAlert({
+        title: 'Fraud Report Filed',
+        message: 'Your fraud report has been securely submitted to the SellerFlow Security & Compliance Team.',
+        subText: 'Our team investigates all reported cases and coordinates with law enforcement where applicable.',
+        type: 'gold',
+        icon: '🛡️',
+        tag: 'Security Desk Logging'
+      });
+    } catch(err){
+      ready();
+      toast(errMsg(err), 'error');
+    }
+  };
+}
+window.openReportFraudModal = openReportFraudModal;
 
 // =======================================================
 // Cross-Device Physical & System Navigation Architecture
@@ -10582,13 +11248,14 @@ init();
   /* Admin Modern Dashboard & Control Center */
   renderAdmin = async function(){
     if(!isAdmin){ $('page').innerHTML = pageTitle('Access denied', 'You do not have permission to access the SellerFlow Admin Control Center.'); return; }
-    const [users, posts, reports, termsSnap, storesSnap, productsSnap] = await Promise.all([
+    const [users, posts, reports, termsSnap, storesSnap, productsSnap, fraudSnap] = await Promise.all([
       getDocs(query(collection(db, 'users'), limit(300))),
       getDocs(query(collection(db, 'posts'), limit(250))),
       getDocs(query(collection(db, 'scamReports'), limit(100))),
       getDoc(doc(db, 'settings', 'terms')),
       getDocs(query(collection(db, 'stores'), limit(300))),
-      getDocs(query(collection(db, 'products'), limit(300)))
+      getDocs(query(collection(db, 'products'), limit(300))),
+      getDocs(query(collection(db, 'fraudReports'), limit(200)))
     ]);
 
     const pending = users.docs.filter(d => d.data().verificationStatus === 'pending');
@@ -10802,6 +11469,10 @@ init();
           <span>🚩 Reports</span>
           <span class="admin-tab-count ${reports.size ? 'bg-rose-950 text-rose-300' : ''}">${reports.size}</span>
         </button>
+        <button class="admin-tab ${initialTab === 'frauds' ? 'active' : ''}" data-admin-tab="frauds">
+          <span>🚨 Reported Frauds</span>
+          <span class="admin-tab-count ${fraudSnap.size ? 'bg-rose-950 text-rose-300 border border-rose-800' : ''}">${fraudSnap.size}</span>
+        </button>
         <button class="admin-tab ${initialTab === 'notify' ? 'active' : ''}" data-admin-tab="notify">
           <span>🔔 Broadcasts</span>
         </button>
@@ -10832,6 +11503,7 @@ init();
       else if(tabName === 'stores') sfAdminStores(storesSnap, liveStores, pendingStores, takenDownStores, rejectedStores, subOption);
       else if(tabName === 'products') sfAdminProducts(productsSnap, liveProducts, pendingProducts, takenDownProducts, rejectedProducts, subOption);
       else if(tabName === 'reports') sfAdminReports(reports);
+      else if(tabName === 'frauds') sfAdminFraudReportsTab(fraudSnap.docs);
       else if(tabName === 'notify') sfAdminNotifyTab(users);
       else if(tabName === 'terms') sfAdminTermsTab(termData);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -11107,6 +11779,25 @@ init();
     });
     document.querySelectorAll('[data-admin-view-store]').forEach(b => {
       b.onclick = (e) => { e.stopPropagation(); openStore(b.dataset.adminViewStore); };
+    });
+    document.querySelectorAll('[data-admin-identity-store]').forEach(b => {
+      b.onclick = async (e) => {
+        e.stopPropagation();
+        const storeId = b.dataset.adminIdentityStore;
+        try {
+          loading('Fetching store record…');
+          const snap = await getDoc(doc(db, 'stores', storeId));
+          if(snapshotExists(snap)){
+            openAdminStoreIdentityModal({ id: snap.id, ...snap.data() });
+          } else {
+            toast('Store document not found.', 'error');
+          }
+        } catch(err){
+          toast(errMsg(err), 'error');
+        } finally {
+          ready();
+        }
+      };
     });
 
     // Admin Product Controls
@@ -11446,6 +12137,9 @@ init();
         </div>
 
         <div class="mt-4 pt-3 border-t border-[#242424] flex flex-wrap items-center gap-1.5">
+          <button type="button" data-admin-identity-store="${esc(s.ownerId || s.id)}" class="bg-amber-950/60 border border-amber-800/80 hover:bg-amber-900/80 text-amber-300 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1" title="View Ghana Card & Store ID Record">
+            <span>🪪</span><span>ID Record</span>
+          </button>
           <button type="button" data-admin-view-store="${esc(s.ownerId || s.id)}" class="border border-[#333] hover:border-gold hover:text-white text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1">
             <span>👁️</span><span>Visit</span>
           </button>
@@ -12236,6 +12930,332 @@ init();
     });
 
     renderReportsList();
+  }
+
+  /* Admin Store Identity Modal */
+  function openAdminStoreIdentityModal(storeData){
+    const p = sellerProfile(storeData.ownerId);
+    modal(`
+      <div class="space-y-4 max-w-lg mx-auto">
+        <div class="pb-3 border-b border-[#262626]">
+          <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-xl bg-gold/15 border border-gold/40 flex items-center justify-center text-xl shrink-0">
+              🪪
+            </div>
+            <div>
+              <h2 class="text-lg font-black text-white">Store Identity & Legal Record</h2>
+              <p class="text-xs text-zinc-400">Ghana Card Compliance & Store Owner Dossier</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ghana Card ID Box -->
+        <div class="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/40 space-y-3">
+          <div class="flex items-center justify-between border-b border-amber-900/40 pb-2">
+            <span class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+              <span>🇬🇭</span><span>Government ID (Ghana Card)</span>
+            </span>
+            <span class="text-[10px] font-bold bg-amber-900/60 text-amber-300 px-2 py-0.5 rounded border border-amber-700">LAW OF GHANA RECORD</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <span class="text-zinc-400 block text-[11px]">Full Name on Card:</span>
+              <b class="text-white font-mono uppercase">${esc(storeData.ghanaCardName || p?.ghanaCardName || p?.name || 'Not provided')}</b>
+            </div>
+            <div>
+              <span class="text-zinc-400 block text-[11px]">Ghana Card ID Number:</span>
+              <b class="text-gold font-mono">${esc(storeData.ghanaCardNum || p?.ghanaCardNum || 'Not provided')}</b>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <span class="text-zinc-400 block text-[11px]">Date of Birth on Card:</span>
+              <b class="text-white font-mono">${esc(storeData.ghanaCardDob || p?.ghanaCardDob || 'Not provided')}</b>
+            </div>
+            <div>
+              <span class="text-zinc-400 block text-[11px]">Anti-Fraud Terms Agreement:</span>
+              <b class="text-emerald-400">${storeData.ghanaTermsAccepted ? '✓ Accepted & Verified' : 'Pending'}</b>
+            </div>
+          </div>
+        </div>
+
+        <!-- Business & Contact Info -->
+        <div class="p-4 rounded-2xl bg-[#141418] border border-[#26262e] space-y-2.5 text-xs">
+          <div class="font-bold text-white border-b border-[#242430] pb-1.5 flex items-center gap-1.5">
+            <span>🏪</span><span>Storefront Business Information</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-zinc-300">
+            <div><span class="text-zinc-400">Store Name:</span> <b class="text-white">${esc(storeData.name)}</b></div>
+            <div><span class="text-zinc-400">Owner UID:</span> <code class="text-xs text-amber-300">${esc(storeData.ownerId)}</code></div>
+            <div><span class="text-zinc-400">Location:</span> <b>${esc(storeData.location || 'N/A')}</b></div>
+            <div><span class="text-zinc-400">WhatsApp:</span> <b>${esc(storeData.whatsapp || 'N/A')}</b></div>
+            <div><span class="text-zinc-400">Physical Address:</span> <b>${esc(storeData.address || 'N/A')}</b></div>
+            <div><span class="text-zinc-400">Opening Hours:</span> <b>${esc(storeData.hours || 'N/A')}</b></div>
+          </div>
+          <div class="pt-2 border-t border-[#222] text-[11px] text-zinc-400 space-y-1.5">
+            <div><b>Description:</b> ${esc(storeData.description || 'None')}</div>
+            <div class="pt-2 border-t border-[#2a2a32] flex items-center justify-between flex-wrap gap-2">
+              <span class="text-zinc-300 font-bold">Business Registration Certificate:</span>
+              ${(storeData.hasBusinessCert || storeData.businessCertUrl) ? `
+                <span class="text-amber-300 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-700/60 text-[10px]">🏢 Registered Business Verified</span>
+              ` : `<span class="text-zinc-500 text-[10px]">Not Provided (Optional)</span>`}
+            </div>
+            ${storeData.businessCertUrl ? `
+              <div>
+                <a href="${esc(storeData.businessCertUrl)}" target="_blank" rel="noopener" class="text-gold font-bold underline flex items-center gap-1 hover:brightness-110">
+                  <span>📄 View Business Registration Certificate</span><span>↗</span>
+                </a>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end">
+          <button type="button" data-close-modal class="bg-gold text-black px-5 py-2 rounded-xl text-xs font-bold">
+            Close Record
+          </button>
+        </div>
+      </div>
+    `);
+  }
+  window.openAdminStoreIdentityModal = openAdminStoreIdentityModal;
+
+  /* Admin Fraud Reports Section (Law of Ghana Compliance Archive) */
+  function sfAdminFraudReportsTab(fraudDocs){
+    const docs = fraudDocs || [];
+
+    $('adminWorkspace').innerHTML = `
+      <div class="space-y-5">
+        <!-- Section Header -->
+        <div class="card p-5 border border-[#2b2b2b] bg-[#121215]">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl">🚨</span>
+                <h2 class="text-xl font-black text-white">Reported Fraud Cases & Legal Archive</h2>
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800">${docs.length} Case File${docs.length === 1 ? '' : 's'}</span>
+              </div>
+              <p class="muted text-xs sm:text-sm mt-1">Official fraud reports filed by buyers or sellers. Bound by the Electronic Transactions Act (Act 772) & Criminal Offences Act (Act 29) of Ghana.</p>
+            </div>
+            <button id="fraudBack" class="border border-[#444] hover:border-gold rounded-xl px-4 py-2 text-xs font-bold text-white transition self-start sm:self-auto">
+              ← Back to Overview
+            </button>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="w-full sm:w-80">
+            <input id="sfAdminFraudSearch" type="text" placeholder="Search report ID, store name, complainant, order ref..." class="p-2.5 rounded-xl bg-[#191919] border border-[#333] text-xs w-full text-white">
+          </div>
+        </div>
+
+        <!-- Fraud Cases List -->
+        <div id="adminFraudList" class="space-y-4"></div>
+      </div>
+    `;
+
+    $('fraudBack').onclick = () => window.setAdminTab ? window.setAdminTab('overview') : renderAdmin();
+
+    function renderFraudList(){
+      const q = ($('sfAdminFraudSearch')?.value || '').toLowerCase().trim();
+      const listEl = $('adminFraudList');
+      if(!listEl) return;
+
+      const filtered = docs.filter(d => {
+        if(!q) return true;
+        const f = d.data ? d.data() : d;
+        const haystack = `${f.storeName || ''} ${f.accusedName || ''} ${f.reporterName || ''} ${f.reporterContact || ''} ${f.orderRef || ''} ${f.transactionRef || ''} ${f.details || ''} ${f.category || ''}`.toLowerCase();
+        return haystack.includes(q);
+      });
+
+      if(!filtered.length){
+        listEl.innerHTML = `
+          <div class="p-12 text-center muted border border-[#2b2b2b] rounded-2xl bg-[#121212]">
+            <div class="text-4xl mb-3">🛡️</div>
+            <h3 class="text-base font-bold text-white">No fraud reports recorded</h3>
+            <p class="text-xs mt-1 text-zinc-400">There are no reported fraud cases matching your criteria.</p>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(d => {
+        const docId = d.id;
+        const f = d.data ? d.data() : d;
+        const isResolved = f.status === 'resolved';
+
+        return `
+          <div class="p-5 rounded-2xl border ${isResolved ? 'border-zinc-800 bg-[#121214]' : 'border-rose-900/60 bg-[#171214]'} transition space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#292224] pb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-black ${isResolved ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-rose-950 text-rose-300 border border-rose-800'} px-3 py-1 rounded-full flex items-center gap-1.5">
+                  <span>${isResolved ? '✓' : '🚨'}</span>
+                  <span>${esc(f.category || 'Fraud Incident')}</span>
+                </span>
+                <span class="text-xs font-mono text-zinc-400">Ref: #${esc(docId.slice(0, 8))}</span>
+              </div>
+              <span class="text-xs text-zinc-400 font-mono">${new Date(ts(f.createdAt) || Date.now()).toLocaleString('en-GH', {month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-3 text-xs">
+              <!-- Complainant Box -->
+              <div class="p-3 rounded-xl bg-[#1a171a] border border-[#332a2d] space-y-1">
+                <div class="font-bold text-amber-300 text-[11px] flex items-center gap-1">
+                  <span>👤</span><span>Complainant (Reporter)</span>
+                </div>
+                <div><span class="text-zinc-400">Name:</span> <b class="text-white">${esc(f.reporterName || 'Anonymous')}</b></div>
+                <div><span class="text-zinc-400">Contact:</span> <b class="text-white">${esc(f.reporterContact || 'Not provided')}</b></div>
+                <div><span class="text-zinc-400">Reporter UID:</span> <code class="text-[11px] text-amber-200">${esc(f.reporterId || 'N/A')}</code></div>
+              </div>
+
+              <!-- Accused Box -->
+              <div class="p-3 rounded-xl bg-[#1a171a] border border-[#332a2d] space-y-1">
+                <div class="font-bold text-rose-400 text-[11px] flex items-center gap-1">
+                  <span>🏪</span><span>Accused Party / Store</span>
+                </div>
+                <div><span class="text-zinc-400">Store / Seller:</span> <b class="text-white">${esc(f.storeName || f.accusedName || 'Seller')}</b></div>
+                <div><span class="text-zinc-400">Order Ref:</span> <b class="text-gold font-mono">${esc(f.orderRef || 'N/A')}</b></div>
+                <div><span class="text-zinc-400">Tx Reference:</span> <b class="text-gold font-mono">${esc(f.transactionRef || 'N/A')}</b></div>
+                <div><span class="text-zinc-400">Accused UID:</span> <code class="text-[11px] text-rose-300">${esc(f.accusedId || f.storeId || 'N/A')}</code></div>
+              </div>
+            </div>
+
+            <!-- Amount Defrauded -->
+            ${f.amountDefrauded ? `
+              <div class="p-2.5 rounded-xl bg-rose-950/40 border border-rose-900/60 flex items-center justify-between text-xs">
+                <span class="font-bold text-rose-300">Claimed Loss Amount:</span>
+                <span class="text-sm font-black text-gold">GH₵ ${esc(f.amountDefrauded)}</span>
+              </div>
+            ` : ''}
+
+            <!-- Details -->
+            <div class="p-3 rounded-xl bg-[#18181b] border border-[#27272e] text-xs text-zinc-300 leading-relaxed">
+              <b class="text-white block mb-1">Incident Details & Evidence:</b>
+              "${esc(f.details || 'No details provided.')}"
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#2a2426]">
+              <div class="flex flex-wrap items-center gap-2">
+                ${f.storeId ? `
+                  <button type="button" class="border border-amber-800 bg-amber-950/40 text-amber-300 hover:bg-amber-900 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1" data-fraud-view-store="${esc(f.storeId)}">
+                    <span>🪪</span><span>View Store Record</span>
+                  </button>
+                  <button type="button" class="border border-rose-800 bg-rose-950/60 text-rose-300 hover:bg-rose-900 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1" data-fraud-takedown-store="${esc(f.storeId)}">
+                    <span>🚫</span><span>Takedown Store</span>
+                  </button>
+                ` : ''}
+                ${f.accusedId ? `
+                  <button type="button" class="border border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1" data-fraud-block-user="${esc(f.accusedId)}">
+                    <span>🔒</span><span>Block Accused</span>
+                  </button>
+                ` : ''}
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button type="button" class="border border-gold/40 text-gold hover:bg-gold hover:text-black px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1" data-fraud-copy-dossier="${docId}">
+                  <span>📋</span><span>Copy Legal Dossier</span>
+                </button>
+                ${!isResolved ? `
+                  <button type="button" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1" data-fraud-resolve="${docId}">
+                    <span>✓</span><span>Mark Resolved</span>
+                  </button>
+                ` : `
+                  <span class="text-xs text-emerald-400 font-bold px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-800">
+                    ✓ Case Resolved
+                  </span>
+                `}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      listEl.querySelectorAll('[data-fraud-view-store]').forEach(b => {
+        b.onclick = async () => {
+          const sId = b.dataset.fraudViewStore;
+          try {
+            loading('Loading store record…');
+            const snap = await getDoc(doc(db, 'stores', sId));
+            if(snapshotExists(snap)) openAdminStoreIdentityModal({ id: snap.id, ...snap.data() });
+            else toast('Store not found.', 'error');
+          } catch(e){ toast(errMsg(e), 'error'); }
+          finally { ready(); }
+        };
+      });
+
+      listEl.querySelectorAll('[data-fraud-takedown-store]').forEach(b => {
+        b.onclick = () => adminTakeDownStore(b.dataset.fraudTakedownStore);
+      });
+
+      listEl.querySelectorAll('[data-fraud-block-user]').forEach(b => {
+        b.onclick = () => adminToggleBlockUser(b.dataset.fraudBlockUser, false);
+      });
+
+      listEl.querySelectorAll('[data-fraud-copy-dossier]').forEach(b => {
+        b.onclick = () => {
+          const docObj = filtered.find(x => x.id === b.dataset.fraudCopyDossier);
+          if(!docObj) return;
+          const f = docObj.data ? docObj.data() : docObj;
+          const dossier = `
+=====================================================
+GHANA POLICE SERVICE CYBERCRIME UNIT - FRAUD DOSSIER
+SELLERFLOW MARKETPLACE COMPLIANCE RECORD
+=====================================================
+Case File Ref: #${docObj.id}
+Date Filed: ${new Date(ts(f.createdAt) || Date.now()).toISOString()}
+Applicable Law: Electronic Transactions Act (Act 772) / Criminal Offences Act (Act 29)
+
+COMPLAINANT DETAILS:
+- Name: ${f.reporterName || 'N/A'}
+- Contact: ${f.reporterContact || 'N/A'}
+- User ID: ${f.reporterId || 'N/A'}
+
+ACCUSED PARTY & STORE:
+- Store / Accused Name: ${f.storeName || f.accusedName || 'N/A'}
+- Store UID: ${f.storeId || f.accusedId || 'N/A'}
+- Order Reference: ${f.orderRef || 'N/A'}
+- Transaction Reference: ${f.transactionRef || 'N/A'}
+
+INCIDENT & FINANCIAL LOSS:
+- Category: ${f.category || 'Marketplace Fraud'}
+- Amount Defrauded: GH₵ ${f.amountDefrauded || 'N/A'}
+- Description: ${f.details || 'N/A'}
+
+STATUS: ${f.status || 'Active Investigation'}
+=====================================================
+          `.trim();
+
+          navigator.clipboard.writeText(dossier);
+          toast('Legal dossier copied to clipboard for law enforcement reference.', 'success', 3500);
+        };
+      });
+
+      listEl.querySelectorAll('[data-fraud-resolve]').forEach(b => {
+        b.onclick = async () => {
+          try {
+            loading('Updating fraud case status…');
+            await updateDoc(doc(db, 'fraudReports', b.dataset.fraudResolve), {
+              status: 'resolved',
+              resolvedAt: serverTimestamp(),
+              resolvedBy: currentUser?.uid || 'admin'
+            });
+            toast('Fraud report marked as resolved.', 'success', 3000);
+            renderAdmin();
+          } catch(e){
+            toast(errMsg(e), 'error');
+          } finally {
+            ready();
+          }
+        };
+      });
+    }
+
+    $('sfAdminFraudSearch')?.addEventListener('input', renderFraudList);
+    renderFraudList();
   }
 
   function sfAdminBack(){

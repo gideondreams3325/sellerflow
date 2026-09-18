@@ -254,6 +254,17 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // 9a. Anti-Fraud & Security Reports
+    // Authenticated users can log fraud reports; only admins can investigate or resolve
+    match /fraudReports/{reportId} {
+      allow create: if isSignedIn() && (
+        isAdmin() ||
+        request.resource.data.get('reporterUid', request.auth.uid) == request.auth.uid ||
+        request.resource.data.get('reporterId', request.auth.uid) == request.auth.uid
+      );
+      allow read, update, delete: if isAdmin();
+    }
+
     // 9b. AI Admin Review Records & Moderation Logs
     // ONLY trusted server processes (via Firebase Admin SDK bypass) and authorized admins can create or manage audit records
     match /adminReviews/{reviewId} {

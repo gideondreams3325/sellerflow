@@ -164,6 +164,23 @@
       },
       "required": ["targetId", "reason"]
     },
+    "FraudReport": {
+      "title": "FraudReport",
+      "description": "Anti-fraud and security reports logged against suspicious sellers or products",
+      "type": "object",
+      "properties": {
+        "reportType": { "type": "string" },
+        "reportedId": { "type": "string" },
+        "reportedName": { "type": "string" },
+        "description": { "type": "string" },
+        "evidenceUrl": { "type": "string" },
+        "reporterUid": { "type": "string" },
+        "reporterEmail": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "investigating", "resolved", "dismissed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["reportType", "description", "reporterUid"]
+    },
     "AdminReview": {
       "title": "AdminReview",
       "description": "AI safety audit record generated when a policy violation occurs",
@@ -242,6 +259,10 @@
     "/scamReports/{reportId}": {
       "schema": { "$ref": "#/entities/ScamReport" },
       "description": "Scam, abuse, and safety reports for administrative triage"
+    },
+    "/fraudReports/{reportId}": {
+      "schema": { "$ref": "#/entities/FraudReport" },
+      "description": "Anti-fraud and security reports logged by users against suspicious accounts or listings"
     },
     "/adminReviews/{reviewId}": {
       "schema": { "$ref": "#/entities/AdminReview" },
