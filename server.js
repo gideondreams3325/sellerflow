@@ -987,6 +987,22 @@ app.post('/api/admin/takedown', async (req, res) => {
   }
 });
 
+app.post('/api/auth/custom-token', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : (req.body?.idToken || req.body?.firebaseToken || '');
+    if (!token) {
+      return res.status(400).json({ success: false, error: 'Missing token' });
+    }
+    const decoded = await adminAuth.verifyIdToken(token);
+    const customToken = await adminAuth.createCustomToken(decoded.uid);
+    return res.json({ success: true, customToken });
+  } catch (err) {
+    console.warn('Custom token creation issue:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', gemini: 'gemini-3.8-flash' });
 });
