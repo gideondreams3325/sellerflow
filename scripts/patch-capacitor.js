@@ -1,20 +1,41 @@
 import fs from 'fs';
 import path from 'path';
 
-const capacitorGradle = path.resolve('node_modules/@capacitor/android/capacitor/build.gradle');
-if (fs.existsSync(capacitorGradle)) {
-  let content = fs.readFileSync(capacitorGradle, 'utf8');
-  content = content.replace(/8\.13\.0/g, '8.2.2');
-  content = content.replace(/JavaVersion\.VERSION_21/g, 'JavaVersion.VERSION_17');
-  fs.writeFileSync(capacitorGradle, content, 'utf8');
-  console.log('Successfully patched Capacitor Android template dependencies.');
+function patchFile(filePath, replacements) {
+  if (fs.existsSync(filePath)) {
+    let content = fs.readFileSync(filePath, 'utf8');
+    let modified = false;
+    for (const [from, to] of replacements) {
+      if (content.includes(from)) {
+        content = content.replaceAll(from, to);
+        modified = true;
+      }
+    }
+    if (modified) {
+      fs.writeFileSync(filePath, content, 'utf8');
+      console.log(`Successfully patched ${filePath}`);
+    }
+  }
 }
 
-const cordovaPluginsGradle = path.resolve('android/capacitor-cordova-android-plugins/build.gradle');
-if (fs.existsSync(cordovaPluginsGradle)) {
-  let content = fs.readFileSync(cordovaPluginsGradle, 'utf8');
-  content = content.replace(/8\.13\.0/g, '8.2.2');
-  content = content.replace(/JavaVersion\.VERSION_21/g, 'JavaVersion.VERSION_17');
-  fs.writeFileSync(cordovaPluginsGradle, content, 'utf8');
-  console.log('Successfully patched Capacitor Cordova plugins build.gradle.');
-}
+// 1. Patch Capacitor Android module template
+patchFile(path.resolve('node_modules/@capacitor/android/capacitor/build.gradle'), [
+  ['8.13.0', '8.2.2'],
+  ['JavaVersion.VERSION_17', 'JavaVersion.VERSION_21'],
+  ['compileSdk 36', 'compileSdk 34'],
+  ['targetSdkVersion 36', 'targetSdkVersion 34']
+]);
+
+// 2. Patch Cordova Plugins module
+patchFile(path.resolve('android/capacitor-cordova-android-plugins/build.gradle'), [
+  ['8.13.0', '8.2.2'],
+  ['JavaVersion.VERSION_17', 'JavaVersion.VERSION_21'],
+  ['compileSdk = 36', 'compileSdk = 34'],
+  ['targetSdkVersion = 36', 'targetSdkVersion = 34']
+]);
+
+// 3. Patch App module
+patchFile(path.resolve('android/app/build.gradle'), [
+  ['JavaVersion.VERSION_17', 'JavaVersion.VERSION_21']
+]);
+
