@@ -42,7 +42,7 @@ jobs:
           fi
 
       - name: Set up Java JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -55,12 +55,23 @@ jobs:
       - name: Make Gradlew Executable
         run: chmod +x android/gradlew
 
-      - name: Build Debug APK
+      - name: Process Google Services & Build Debug APK
         working-directory: ./android
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
-
-      - name: Verify Debug APK Output
         run: |
+          ./gradlew :app:processDebugGoogleServices --no-daemon --stacktrace
+          ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Verify Debug APK and Generated Firebase Resources
+        run: |
+          echo "Verifying generated Firebase values.xml..."
+          if [ -f "android/app/build/generated/res/google-services/debug/values/values.xml" ]; then
+            echo "✅ Generated values.xml verified:"
+            cat android/app/build/generated/res/google-services/debug/values/values.xml
+          else
+            find android/app/build/generated -name "values.xml" 2>/dev/null || true
+          fi
+          
+          echo "Verifying debug APK binary..."
           if [ -f "android/app/build/outputs/apk/debug/app-debug.apk" ]; then
             echo "✅ Success: app-debug.apk verified!"
             ls -lh android/app/build/outputs/apk/debug/app-debug.apk
