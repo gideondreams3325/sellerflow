@@ -620,7 +620,14 @@ async function handleOAuthCallbackPage() {
       } catch (_) {}
     }
 
-    // 4. Construct deep link payload for Android
+    // 4. Construct deep link payload for Android ONLY if valid credentials exist
+    if (!idToken && !accessToken && !firebaseToken && (!user || !user.uid)) {
+      console.warn('No valid OAuth credentials found on callback resolution.');
+      updateStatus('Sign-in was not completed. Please return to SellerFlow and try again.');
+      if (openBtn) openBtn.style.display = 'none';
+      return;
+    }
+
     const params = new URLSearchParams();
     if (idToken) params.set('id_token', idToken);
     if (accessToken) params.set('access_token', accessToken);
@@ -639,6 +646,12 @@ async function handleOAuthCallbackPage() {
     }
 
     const payload = params.toString();
+    if (!payload) {
+      console.warn('Constructed OAuth deep-link payload is empty. Aborting redirection.');
+      updateStatus('Sign-in credentials missing. Please try again.');
+      return;
+    }
+
     const customSchemeUri = 'com.sellerflow.app://oauth-callback#' + payload;
     const intentUri = 'intent://oauth-callback#' + payload + '#Intent;scheme=com.sellerflow.app;package=com.sellerflow.app;end';
 
