@@ -2036,10 +2036,11 @@ async function navigate(page, targetPostId, options){
       : (page === 'orders' ? 'make orders and track deliveries'
       : (page === 'cart' ? 'view your cart and make an order'
       : (page === 'dashboard' ? 'access your seller dashboard'
+      : (page === 'analysis' ? 'view your performance analysis'
       : (page === 'products' ? 'manage product catalogue'
       : (page === 'profile' ? 'view and edit your profile'
       : (page === 'chats' ? 'chat with sellers and buyers'
-      : 'access ' + page))))));
+      : 'access ' + page)))))));
     showAuthPrompt(promptMsg);
     return;
   }
@@ -2201,7 +2202,7 @@ async function renderPage(targetPostId, options){
   $('app')?.classList.toggle('is-feed-page',isFeed);
   $('appMainScroll')?.classList.toggle('is-feed-scroll',isFeed);
   setNav();
-  const map={feed:renderFeed,dashboard:renderDashboard,marketplace:renderMarketplace,products:renderProducts,orders:renderOrders,store:renderStore,profile:renderProfile,cart:renderCart,settings:renderSettings,admin:renderAdmin,update:renderSellerFlowUpdatePage,chats:window.renderChats||renderChats};
+  const map={feed:renderFeed,dashboard:renderDashboard,analysis:renderAnalysis,marketplace:renderMarketplace,products:renderProducts,orders:renderOrders,store:renderStore,profile:renderProfile,cart:renderCart,settings:renderSettings,admin:renderAdmin,update:renderSellerFlowUpdatePage,chats:window.renderChats||renderChats};
   await (map[currentPage]||renderFeed)(targetPostId, options);
   updateCartBadge();
 }
@@ -2916,6 +2917,557 @@ function getActiveSound(){try{return JSON.parse(localStorage.getItem('sellerflow
 function openPostModal(){if(typeof window.__openPostModal==='function')return window.__openPostModal();if(!currentUser)return showAuthPrompt('create posts on SellerFlow');toast('Media editor initializing…','info');}
 
 async function renderDashboard(){if(!currentProfile?.verified&&!isAdmin){$('page').innerHTML=pageTitle('Dashboard unavailable','Seller dashboards are available after identity verification.')+`<div class="card p-8 text-center"><div class="text-5xl">🛡️</div><h2 class="text-xl font-bold mt-3">Verify to unlock your dashboard</h2><p class="muted mt-2">You can still use For You, publish community content and shop. Your business dashboard unlocks after verification.</p>${button('Go to Settings','dashboardVerify','mt-5')}</div>`;$('dashboardVerify').onclick=()=>navigate('settings');return}const [products,orders]=await Promise.all([getDocs(query(collection(db,'products'),where('sellerId','==',currentUser.uid))),getDocs(query(collection(db,'orders'),where('sellerIds','array-contains',currentUser.uid)))]);let revenue=0,pending=0;orders.forEach(d=>{const o=d.data();if(o.sellerId===currentUser.uid&&o.status!=='cancelled')revenue+=Number(o.total)||0;if(o.sellerId===currentUser.uid&&['pending','confirmed','processing'].includes(o.status))pending++});$('page').innerHTML=pageTitle('Dashboard','Your SellerFlow business overview.')+`<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"><div class="card p-5"><div class="muted text-sm">Products</div><div class="text-3xl font-black mt-2">${products.size}</div></div><div class="card p-5"><div class="muted text-sm">Orders</div><div class="text-3xl font-black mt-2">${orders.size}</div></div><div class="card p-5"><div class="muted text-sm">Pending</div><div class="text-3xl font-black mt-2">${pending}</div></div><div class="card p-5"><div class="muted text-sm">Revenue</div><div class="text-3xl font-black mt-2">${money(revenue)}</div></div></div><div class="grid lg:grid-cols-2 gap-5 mt-5"><div class="card p-6"><h2 class="font-bold text-xl">Seller verification</h2><p class="muted mt-2">${currentProfile.verified?'Your seller account is verified.':'Submit your Ghana Card so an admin can review your identity.'}</p>${currentProfile.verified?'<div class="font-bold mt-4 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':`<div class="muted text-sm mt-4">Verification is managed in Settings.</div>`}</div><div class="card p-6"><h2 class="font-bold text-xl">Store</h2><p class="muted mt-2">${currentProfile.verified?'Create or update your public storefront.':'Verification is required before opening a store.'}</p>${button('Manage store','storeDash','mt-4 border border-[#444] bg-transparent text-white')}</div></div>`;$('storeDash')?.addEventListener('click',()=>navigate('store'))}
+
+let _sfAnalysisFilter = '30d';
+async function renderAnalysis(targetPostId, options){
+  if(!currentUser){
+    showAuthPrompt('view your performance analysis');
+    navigate('feed');
+    return;
+  }
+  showApp();
+  $('app')?.classList.remove('is-feed-page');
+  $('appMainScroll')?.classList.remove('is-feed-scroll');
+  setNav();
+
+  loading('Calculating performance analytics…');
+  try {
+    const userUid = currentUser.uid;
+    const profile = currentProfile || sellerProfile(userUid) || {};
+
+    // 1. Fetch user's content posts (scoped strictly to authenticated user)
+    const postsSnap = await getDocs(query(collection(db, 'posts'), where('sellerId', '==', userUid), limit(150)));
+    const allUserPosts = postsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.status !== 'removed' && p.status !== 'taken_down');
+
+    // 2. Fetch user's listed products (scoped strictly to authenticated user)
+    const productsSnap = await getDocs(query(collection(db, 'products'), where('sellerId', '==', userUid), limit(150)));
+    const allUserProducts = productsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.status !== 'removed');
+
+    // 3. Fetch orders received as seller (scoped strictly to authenticated user)
+    const sellerOrdersSnap = await getDocs(query(collection(db, 'orders'), where('sellerIds', 'array-contains', userUid), limit(200)));
+    const allSellerOrders = sellerOrdersSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(o => o.sellerId === userUid || (o.sellerIds && o.sellerIds.includes(userUid)));
+
+    // 4. Fetch orders made as buyer (scoped strictly to authenticated user)
+    const buyerOrdersSnap = await getDocs(query(collection(db, 'orders'), where('buyerId', '==', userUid), limit(100)));
+    const allBuyerOrders = buyerOrdersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // 5. Fetch user's public store if exists
+    let userStore = null;
+    try {
+      const storeSnap = await getDoc(doc(db, 'stores', userUid));
+      if(snapshotExists(storeSnap)) userStore = { id: storeSnap.id, ...storeSnap.data() };
+    } catch (_) {}
+
+    ready();
+
+    function computeMetrics(timeRange) {
+      const now = Date.now();
+      let cutoff = 0;
+      if(timeRange === 'today'){
+        const d = new Date();
+        d.setHours(0,0,0,0);
+        cutoff = d.getTime();
+      } else if(timeRange === '7d'){
+        cutoff = now - (7 * 86400000);
+      } else if(timeRange === '30d'){
+        cutoff = now - (30 * 86400000);
+      } else if(timeRange === '90d'){
+        cutoff = now - (90 * 86400000);
+      } else {
+        cutoff = 0; // 'all'
+      }
+
+      // Filter items within the active time cutoff
+      const filteredPosts = allUserPosts.filter(p => {
+        const itemTs = ts(p.createdAt);
+        return itemTs >= cutoff || cutoff === 0;
+      });
+
+      const filteredSellerOrders = allSellerOrders.filter(o => {
+        const itemTs = ts(o.createdAt);
+        return itemTs >= cutoff || cutoff === 0;
+      });
+
+      const filteredBuyerOrders = allBuyerOrders.filter(o => {
+        const itemTs = ts(o.createdAt);
+        return itemTs >= cutoff || cutoff === 0;
+      });
+
+      // Compute Post Metrics
+      let totalViews = 0, totalLikes = 0, totalComments = 0, totalSaves = 0, totalShares = 0;
+      let totalVideos = 0, totalPhotos = 0;
+
+      filteredPosts.forEach(p => {
+        const isVid = p.mediaType?.startsWith('video') || (p.mediaUrl && (p.mediaUrl.includes('.mp4') || p.mediaUrl.includes('.webm') || p.mediaUrl.includes('video')));
+        if(isVid) totalVideos++;
+        else if(p.mediaUrl) totalPhotos++;
+        totalViews += Number(p.views || 0);
+        totalLikes += (p.likes || []).length;
+        totalComments += (p.comments || []).length;
+        totalSaves += (p.saves || []).length;
+        totalShares += (p.reposts || []).length;
+      });
+
+      const totalEngagement = totalLikes + totalComments + totalSaves + totalShares;
+      const postCount = filteredPosts.length;
+      const avgViews = postCount > 0 ? Math.round(totalViews / postCount) : 0;
+      const avgEngagement = postCount > 0 ? (totalEngagement / postCount).toFixed(1) : '0.0';
+      const engagementRate = totalViews > 0 ? ((totalEngagement / totalViews) * 100).toFixed(1) + '%' : '0.0%';
+
+      // Compute Sales & Revenue Metrics
+      let totalRevenue = 0, completedOrders = 0, pendingOrders = 0, cancelledOrders = 0, itemsSold = 0;
+      filteredSellerOrders.forEach(o => {
+        const isCancelled = o.status === 'cancelled';
+        if(!isCancelled){
+          totalRevenue += Number(o.total || 0);
+          (o.items || []).forEach(it => { itemsSold += Number(it.quantity || it.qty || 1); });
+        }
+        if(o.status === 'delivered' || o.status === 'completed') completedOrders++;
+        else if(isCancelled) cancelledOrders++;
+        else pendingOrders++;
+      });
+
+      // Compute Buyer Metrics
+      let buyerSpent = 0, buyerCompleted = 0;
+      filteredBuyerOrders.forEach(o => {
+        if(o.status !== 'cancelled') buyerSpent += Number(o.total || 0);
+        if(o.status === 'delivered' || o.status === 'completed') buyerCompleted++;
+      });
+
+      // Top Posts
+      const sortedPosts = [...filteredPosts].sort((a, b) => {
+        const engA = (Number(a.views || 0) * 1.5) + ((a.likes || []).length * 3) + ((a.comments || []).length * 4) + ((a.saves || []).length * 3);
+        const engB = (Number(b.views || 0) * 1.5) + ((b.likes || []).length * 3) + ((b.comments || []).length * 4) + ((b.saves || []).length * 3);
+        return engB - engA;
+      }).slice(0, 6);
+
+      // Top Products by unit sales / stock
+      const productSalesMap = {};
+      filteredSellerOrders.forEach(o => {
+        if(o.status !== 'cancelled'){
+          (o.items || []).forEach(it => {
+            const pid = it.productId || it.id;
+            if(pid) productSalesMap[pid] = (productSalesMap[pid] || 0) + Number(it.quantity || it.qty || 1);
+          });
+        }
+      });
+
+      const sortedProducts = [...allUserProducts].map(prod => ({
+        ...prod,
+        salesCount: productSalesMap[prod.id] || 0
+      })).sort((a, b) => b.salesCount - a.salesCount).slice(0, 6);
+
+      // Generate visual chart points (7 time slots)
+      const chartPoints = [];
+      const numBuckets = 7;
+      const periodDuration = cutoff > 0 ? (now - cutoff) : (30 * 86400000);
+      const bucketSpan = periodDuration / numBuckets;
+      const baseStart = cutoff > 0 ? cutoff : (now - (30 * 86400000));
+
+      for(let i = 0; i < numBuckets; i++){
+        const bStart = baseStart + (i * bucketSpan);
+        const bEnd = bStart + bucketSpan;
+        const bPosts = allUserPosts.filter(p => {
+          const t = ts(p.createdAt);
+          return t >= bStart && t < bEnd;
+        });
+        const bOrders = allSellerOrders.filter(o => {
+          const t = ts(o.createdAt);
+          return t >= bStart && t < bEnd;
+        });
+        const bViews = bPosts.reduce((acc, p) => acc + Number(p.views || 0), 0);
+        const bEng = bPosts.reduce((acc, p) => acc + (p.likes || []).length + (p.comments || []).length, 0);
+        const bDate = new Date(bEnd).toLocaleDateString('en-GH', { weekday: 'short', month: 'numeric', day: 'numeric' });
+        chartPoints.push({ label: bDate, views: bViews, engagement: bEng, orders: bOrders.length });
+      }
+
+      return {
+        timeRange,
+        postCount,
+        totalVideos,
+        totalPhotos,
+        totalViews,
+        totalLikes,
+        totalComments,
+        totalSaves,
+        totalShares,
+        totalEngagement,
+        avgViews,
+        avgEngagement,
+        engagementRate,
+        followers: (profile.followers || []).length,
+        following: (profile.following || []).length,
+        totalProducts: allUserProducts.length,
+        totalSellerOrders: filteredSellerOrders.length,
+        totalRevenue,
+        completedOrders,
+        pendingOrders,
+        cancelledOrders,
+        itemsSold,
+        totalBuyerOrders: filteredBuyerOrders.length,
+        buyerSpent,
+        buyerCompleted,
+        sortedPosts,
+        sortedProducts,
+        chartPoints,
+        userStore
+      };
+    }
+
+    function renderDashboardView(filter) {
+      const data = computeMetrics(filter);
+      const isSeller = data.totalProducts > 0 || data.totalSellerOrders > 0 || profile.role === 'seller' || profile.verified;
+      const isNewUser = data.postCount === 0 && data.totalProducts === 0 && data.totalBuyerOrders === 0 && data.totalSellerOrders === 0;
+
+      // Render chart bars
+      const maxMetric = Math.max(...data.chartPoints.map(p => p.views + p.engagement + (p.orders * 5)), 8);
+      const chartBars = data.chartPoints.map(pt => {
+        const val = pt.views + pt.engagement + (pt.orders * 5);
+        const heightPct = Math.min(100, Math.max(8, Math.round((val / maxMetric) * 100)));
+        return `
+          <div class="flex-1 flex flex-col items-center gap-1.5 min-w-0 group" title="${pt.label}: ${pt.views} views, ${pt.engagement} interactions, ${pt.orders} orders">
+            <div class="w-full flex items-end justify-center h-28 bg-[#161618] rounded-lg p-1 relative overflow-hidden border border-[#262628]">
+              <div class="w-full rounded bg-gradient-to-t from-gold/30 via-gold/80 to-gold transition-all duration-300 group-hover:brightness-125" style="height: ${heightPct}%;"></div>
+            </div>
+            <span class="text-[10px] text-zinc-400 truncate max-w-full font-mono">${esc(pt.label)}</span>
+          </div>
+        `;
+      }).join('');
+
+      $('page').innerHTML = `
+        <div class="max-w-6xl mx-auto space-y-5 pb-16 pt-1">
+          <!-- Header Bar -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#262626] pb-4">
+            <div>
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl p-2 rounded-2xl bg-amber-950/30 border border-amber-800/40 text-gold shadow-sm">📈</span>
+                <div>
+                  <h1 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+                    Performance Analysis
+                    ${profile.verified ? '<span class="verified-badge text-xs" title="Verified Creator">✓</span>' : ''}
+                  </h1>
+                  <p class="muted text-xs mt-0.5">Live audience, engagement trends and commerce metrics for <b class="text-white">@${esc(profile.username || 'user')}</b></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Time Filter Selector -->
+            <div class="flex items-center gap-1 bg-[#141416] p-1 rounded-xl border border-[#2a2a2e] shrink-0 overflow-x-auto self-start sm:self-auto">
+              ${[
+                ['today', 'Today'],
+                ['7d', '7 Days'],
+                ['30d', '30 Days'],
+                ['90d', '90 Days'],
+                ['all', 'All Time']
+              ].map(([key, label]) => `
+                <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${filter === key ? 'bg-gold text-black shadow-md' : 'text-zinc-400 hover:text-white'}" data-analysis-filter="${key}">
+                  ${label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          ${isNewUser ? `
+            <!-- Empty State for New Account -->
+            <div class="card p-8 text-center rounded-3xl border border-[#2c2c30] bg-[#121215] space-y-4">
+              <div class="w-16 h-16 rounded-2xl bg-gold/10 border border-gold/30 text-3xl flex items-center justify-center mx-auto text-gold">✨</div>
+              <h2 class="text-xl font-bold text-white">Your performance analysis will appear here</h2>
+              <p class="muted text-sm max-w-md mx-auto">Start sharing reels, interacting with community posts, or listing products on SellerFlow to see live engagement trends and sales growth.</p>
+              <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <button type="button" id="analysisCreatePostBtn" class="bg-gold text-black font-bold px-5 py-2.5 rounded-xl text-xs shadow hover:brightness-110 cursor-pointer">
+                  + Create First Reel
+                </button>
+                <button type="button" id="analysisExploreBtn" class="border border-[#444] hover:border-gold px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-[#181818] cursor-pointer">
+                  🛍️ Explore Marketplace
+                </button>
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- High-Level KPI Summary Cards -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <!-- Total Views -->
+            <div class="card p-4 rounded-2xl border border-[#28282c] bg-gradient-to-b from-[#18181c] to-[#121214]">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-zinc-400">Total Views</span>
+                <span class="text-sm p-1.5 rounded-lg bg-zinc-800 text-gold">👁️</span>
+              </div>
+              <div class="text-2xl sm:text-3xl font-black text-white mt-2">${formatReelCount(data.totalViews)}</div>
+              <div class="text-[11px] text-zinc-500 mt-1 font-medium">Avg ${data.avgViews} per post</div>
+            </div>
+
+            <!-- Total Engagement -->
+            <div class="card p-4 rounded-2xl border border-[#28282c] bg-gradient-to-b from-[#18181c] to-[#121214]">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-zinc-400">Interactions</span>
+                <span class="text-sm p-1.5 rounded-lg bg-zinc-800 text-rose-400">❤️</span>
+              </div>
+              <div class="text-2xl sm:text-3xl font-black text-white mt-2">${formatReelCount(data.totalEngagement)}</div>
+              <div class="text-[11px] text-zinc-500 mt-1 font-medium">${data.engagementRate} interaction rate</div>
+            </div>
+
+            <!-- Total Followers -->
+            <div class="card p-4 rounded-2xl border border-[#28282c] bg-gradient-to-b from-[#18181c] to-[#121214]">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-zinc-400">Audience</span>
+                <span class="text-sm p-1.5 rounded-lg bg-zinc-800 text-amber-400">👥</span>
+              </div>
+              <div class="text-2xl sm:text-3xl font-black text-white mt-2">${formatReelCount(data.followers)}</div>
+              <div class="text-[11px] text-zinc-500 mt-1 font-medium">Following ${data.following} creators</div>
+            </div>
+
+            <!-- Revenue or Purchases -->
+            <div class="card p-4 rounded-2xl border border-[#28282c] bg-gradient-to-b from-[#18181c] to-[#121214]">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-zinc-400">${isSeller ? 'Sales Revenue' : 'Shopping Spend'}</span>
+                <span class="text-sm p-1.5 rounded-lg bg-zinc-800 text-emerald-400">${isSeller ? '💰' : '🛍️'}</span>
+              </div>
+              <div class="text-2xl sm:text-3xl font-black text-white mt-2">${isSeller ? money(data.totalRevenue) : money(data.buyerSpent)}</div>
+              <div class="text-[11px] text-zinc-500 mt-1 font-medium">${isSeller ? `${data.completedOrders} orders fulfilled` : `${data.totalBuyerOrders} orders placed`}</div>
+            </div>
+          </div>
+
+          <!-- Activity Trend Visualizer Chart -->
+          <div class="card p-5 rounded-2xl border border-[#28282c] bg-[#141417]">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                  <span>📊</span> Activity & Interaction Trends
+                </h3>
+                <p class="muted text-xs">Engagement and view volume across the selected timeframe</p>
+              </div>
+              <div class="flex items-center gap-2 text-xs">
+                <span class="flex items-center gap-1.5 text-zinc-300 font-medium"><span class="w-2.5 h-2.5 rounded-sm bg-gold"></span> Activity Index</span>
+              </div>
+            </div>
+            <div class="flex items-end gap-2 pt-2 pb-1">
+              ${chartBars}
+            </div>
+          </div>
+
+          <div class="grid lg:grid-cols-2 gap-5">
+            <!-- Content Breakdown Card -->
+            <div class="card p-5 rounded-2xl border border-[#28282c] bg-[#141417] space-y-4">
+              <div class="flex items-center justify-between border-b border-[#242428] pb-3">
+                <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                  <span>🎬</span> Content Breakdown
+                </h3>
+                <span class="text-xs text-zinc-400 font-mono">${data.postCount} posts in period</span>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2.5 text-center">
+                <div class="p-3 rounded-xl bg-[#19191d] border border-[#2a2a30]">
+                  <div class="text-xs muted">Videos</div>
+                  <div class="text-lg font-black text-white mt-1">${data.totalVideos}</div>
+                </div>
+                <div class="p-3 rounded-xl bg-[#19191d] border border-[#2a2a30]">
+                  <div class="text-xs muted">Photos</div>
+                  <div class="text-lg font-black text-white mt-1">${data.totalPhotos}</div>
+                </div>
+                <div class="p-3 rounded-xl bg-[#19191d] border border-[#2a2a30]">
+                  <div class="text-xs muted">Likes</div>
+                  <div class="text-lg font-black text-rose-400 mt-1">${data.totalLikes}</div>
+                </div>
+              </div>
+
+              <div class="space-y-2 pt-1 text-xs">
+                <div class="flex justify-between py-1.5 border-b border-[#222226]">
+                  <span class="text-zinc-400">Total Comments Received</span>
+                  <b class="text-white">${data.totalComments}</b>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-[#222226]">
+                  <span class="text-zinc-400">Total Bookmarks / Saves</span>
+                  <b class="text-white">${data.totalSaves}</b>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-[#222226]">
+                  <span class="text-zinc-400">Total Reposts & Shares</span>
+                  <b class="text-white">${data.totalShares}</b>
+                </div>
+                <div class="flex justify-between py-1.5">
+                  <span class="text-zinc-400">Avg Engagement Per Post</span>
+                  <b class="text-gold font-mono">${data.avgEngagement}</b>
+                </div>
+              </div>
+            </div>
+
+            <!-- E-Commerce / Store / Orders Performance -->
+            <div class="card p-5 rounded-2xl border border-[#28282c] bg-[#141417] space-y-4">
+              <div class="flex items-center justify-between border-b border-[#242428] pb-3">
+                <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                  <span>🏪</span> ${isSeller ? 'Store & Order Analytics' : 'Shopping & Order History'}
+                </h3>
+                <span class="text-xs text-zinc-400 font-mono">${isSeller ? `${data.totalSellerOrders} Orders` : `${data.totalBuyerOrders} Purchases`}</span>
+              </div>
+
+              ${isSeller ? `
+                <div class="grid grid-cols-3 gap-2.5 text-center">
+                  <div class="p-3 rounded-xl bg-[#19191d] border border-[#2a2a30]">
+                    <div class="text-xs muted">Listed Items</div>
+                    <div class="text-lg font-black text-white mt-1">${data.totalProducts}</div>
+                  </div>
+                  <div class="p-3 rounded-xl bg-[#19191d] border border-[#2a2a30]">
+                    <div class="text-xs muted">Units Sold</div>
+                    <div class="text-lg font-black text-emerald-400 mt-1">${data.itemsSold}</div>
+                  </div>
+                  <div class="p-3 rounded-xl bg-[#19191d] border border-[#2a2a30]">
+                    <div class="text-xs muted">Fulfilled</div>
+                    <div class="text-lg font-black text-white mt-1">${data.completedOrders}</div>
+                  </div>
+                </div>
+
+                <div class="space-y-2 pt-1 text-xs">
+                  <div class="flex justify-between py-1.5 border-b border-[#222226]">
+                    <span class="text-zinc-400">Pending Fulfillment</span>
+                    <b class="text-amber-400">${data.pendingOrders}</b>
+                  </div>
+                  <div class="flex justify-between py-1.5 border-b border-[#222226]">
+                    <span class="text-zinc-400">Cancelled / Refunded</span>
+                    <b class="text-zinc-500">${data.cancelledOrders}</b>
+                  </div>
+                  <div class="flex justify-between py-1.5">
+                    <span class="text-zinc-400">Total Verified Sales</span>
+                    <b class="text-emerald-400 font-mono">${money(data.totalRevenue)}</b>
+                  </div>
+                </div>
+              ` : `
+                <div class="grid grid-cols-2 gap-2.5 text-center">
+                  <div class="p-3 rounded-xl bg-[#19191d] border border-[#2a2a30]">
+                    <div class="text-xs muted">Orders Placed</div>
+                    <div class="text-lg font-black text-white mt-1">${data.totalBuyerOrders}</div>
+                  </div>
+                  <div class="p-3 rounded-xl bg-[#19191d] border border-[#2a2a30]">
+                    <div class="text-xs muted">Total Purchases</div>
+                    <div class="text-lg font-black text-emerald-400 mt-1">${money(data.buyerSpent)}</div>
+                  </div>
+                </div>
+
+                <div class="space-y-2 pt-1 text-xs">
+                  <div class="flex justify-between py-1.5 border-b border-[#222226]">
+                    <span class="text-zinc-400">Completed Deliveries</span>
+                    <b class="text-white">${data.buyerCompleted}</b>
+                  </div>
+                  <div class="flex justify-between py-1.5">
+                    <span class="text-zinc-400">Feed Sound Saves & Orders</span>
+                    <b class="text-gold font-mono">Synced</b>
+                  </div>
+                </div>
+              `}
+            </div>
+          </div>
+
+          <!-- Top Performing Content Section -->
+          ${data.sortedPosts.length > 0 ? `
+            <div class="card p-5 rounded-2xl border border-[#28282c] bg-[#141417]">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                    <span>🌟</span> Top Performing Content
+                  </h3>
+                  <p class="muted text-xs">Your most viewed and engaged community reels</p>
+                </div>
+              </div>
+
+              <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                ${data.sortedPosts.map(p => {
+                  const isVid = p.mediaType?.startsWith('video') || (p.mediaUrl && (p.mediaUrl.includes('.mp4') || p.mediaUrl.includes('.webm') || p.mediaUrl.includes('video')));
+                  return `
+                    <div class="p-3 rounded-xl bg-[#18181c] border border-[#26262a] flex items-center gap-3 hover:border-gold/50 transition cursor-pointer" data-open-analysis-post="${p.id}">
+                      <div class="w-14 h-14 rounded-lg bg-black overflow-hidden relative shrink-0 border border-[#333]">
+                        ${p.thumbnailUrl ? `<img src="${esc(p.thumbnailUrl)}" class="w-full h-full object-cover" alt="">` : (p.mediaUrl ? (isVid ? `<video src="${esc(p.mediaUrl)}#t=0.5" class="w-full h-full object-cover" muted></video>` : `<img src="${esc(p.mediaUrl)}" class="w-full h-full object-cover" alt="">`) : `<div class="w-full h-full flex items-center justify-center text-xl">🛍️</div>`)}
+                        <span class="absolute bottom-1 right-1 text-[8px] bg-black/80 px-1 rounded text-white font-bold">${isVid ? '▶' : '📷'}</span>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-xs font-bold text-white truncate">${esc(p.text || 'Untitled Post')}</p>
+                        <div class="flex items-center gap-2.5 text-[11px] text-zinc-400 mt-1 font-mono">
+                          <span>👁️ ${formatReelCount(p.views || 0)}</span>
+                          <span>❤️ ${(p.likes || []).length}</span>
+                          <span>💬 ${(p.comments || []).length}</span>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Top Listed Products Section (If Seller) -->
+          ${data.sortedProducts.length > 0 ? `
+            <div class="card p-5 rounded-2xl border border-[#28282c] bg-[#141417]">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                    <span>📦</span> Product Catalog Performance
+                  </h3>
+                  <p class="muted text-xs">Inventory stock and sales volume by listing</p>
+                </div>
+                <button type="button" id="analysisManageProductsBtn" class="text-xs text-gold hover:underline font-bold cursor-pointer">Manage Products →</button>
+              </div>
+
+              <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                ${data.sortedProducts.map(prod => `
+                  <div class="p-3 rounded-xl bg-[#18181c] border border-[#26262a] flex items-center gap-3 hover:border-gold/50 transition cursor-pointer" data-open-analysis-prod="${prod.id}">
+                    <div class="w-14 h-14 rounded-lg bg-black overflow-hidden relative shrink-0 border border-[#333]">
+                      ${prod.imageUrl ? `<img src="${esc(prod.imageUrl)}" class="w-full h-full object-cover" alt="">` : `<div class="w-full h-full flex items-center justify-center text-xl">📦</div>`}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-xs font-bold text-white truncate">${esc(prod.name || 'Product')}</p>
+                      <div class="text-[11px] text-gold font-bold font-mono mt-0.5">${money(prod.price)}</div>
+                      <div class="flex items-center gap-2 text-[10px] text-zinc-400 mt-0.5">
+                        <span>Stock: <b class="${Number(prod.stock) > 0 ? 'text-zinc-200' : 'text-rose-400'}">${prod.stock || 0}</b></span>
+                        ${prod.salesCount > 0 ? `<span>· Sold: <b class="text-emerald-400">${prod.salesCount}</b></span>` : ''}
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      // Wire Event Handlers
+      document.querySelectorAll('[data-analysis-filter]').forEach(btn => {
+        btn.onclick = () => {
+          _sfAnalysisFilter = btn.dataset.analysisFilter;
+          renderDashboardView(_sfAnalysisFilter);
+        };
+      });
+
+      document.querySelectorAll('[data-open-analysis-post]').forEach(b => {
+        b.onclick = () => {
+          window.openFeedWithPost(b.dataset.openAnalysisPost);
+        };
+      });
+
+      document.querySelectorAll('[data-open-analysis-prod]').forEach(b => {
+        b.onclick = () => {
+          navigate('products');
+        };
+      });
+
+      $('analysisCreatePostBtn')?.addEventListener('click', () => openPostModal());
+      $('analysisExploreBtn')?.addEventListener('click', () => navigate('marketplace'));
+      $('analysisManageProductsBtn')?.addEventListener('click', () => navigate('products'));
+    }
+
+    renderDashboardView(_sfAnalysisFilter);
+
+  } catch(err) {
+    console.error('Analysis error:', err);
+    $('page').innerHTML = pageTitle('Analysis', 'Could not load performance metrics.') + `
+      <div class="card p-6 text-center text-rose-400">
+        <div class="text-3xl mb-2">⚠️</div>
+        <p>${esc(errMsg(err))}</p>
+        <button id="retryAnalysisBtn" class="mt-4 bg-gold text-black font-bold px-4 py-2 rounded-xl text-xs cursor-pointer">Retry</button>
+      </div>
+    `;
+    $('retryAnalysisBtn')?.addEventListener('click', () => renderAnalysis());
+  } finally {
+    ready();
+  }
+}
+window.renderAnalysis = renderAnalysis;
 
 async function renderMarketplace(initialTab = 'products', targetPostId, options){
   const [storesSnap, productsSnap] = await Promise.all([
@@ -3962,8 +4514,8 @@ async function openProductDetailModal(p){
         </div>
         <div class="flex-1 flex flex-col justify-between">
           <div>
-            <h2 class="text-xl sm:text-2xl font-black text-white leading-tight">${esc(p.name)}</h2>
-            <div class="gold font-black text-2xl mt-1.5">${money(p.price)}</div>
+            <h2 class="text-xl sm:text-2xl font-black text-white leading-tight">${esc(p.name || 'Untitled Product')}</h2>
+            <div class="gold font-black text-2xl mt-1.5">${money(p.price || 0)}</div>
             ${p.description ? `<p class="text-xs sm:text-sm text-zinc-300 mt-2.5 leading-relaxed bg-[#141416] p-3 rounded-xl border border-[#242424] max-h-32 overflow-y-auto">${esc(p.description)}</p>` : ''}
           </div>
           
@@ -4107,7 +4659,7 @@ async function openProductDetailModal(p){
     if(isNaN(q) || q < 1) q = 1;
     if(q > maxStock) q = maxStock;
     if(qtyInput) qtyInput.value = q;
-    if(qtySubtotal) qtySubtotal.textContent = money(p.price * q);
+    if(qtySubtotal) qtySubtotal.textContent = money((Number(p.price) || 0) * q);
     const addText = $('modalAddToCartText');
     if(addText) addText.textContent = `Add (${q}) to Cart`;
   };
@@ -7546,6 +8098,7 @@ function openPageSelector(){
   pauseAllForYouVideos(false);
   const items=[
     ['feed','🎬','For You','Trending reels & videos'],
+    ['analysis','📈','Analysis','Performance & growth'],
     ...(isAdmin||currentProfile?.verified?[['dashboard','📊','Dashboard','Analytics & sales']]:[]),
     ['marketplace','🛍️','Marketplace','Browse catalog & stores'],
     ['products','📦','Products','Manage listings & stock'],
@@ -15623,7 +16176,7 @@ STATUS: ${f.status || 'Active Investigation'}
     draw();
   }
 
-  const oldRenderPage=renderPage;renderPage=async function(){if(currentPage==='chats')return renderChats();return oldRenderPage()};
+  const oldRenderPage=renderPage;renderPage=async function(targetPostId, options){if(currentPage==='chats')return renderChats();if(currentPage==='analysis')return renderAnalysis(targetPostId, options);return oldRenderPage(targetPostId, options)};
   const oldSetNav=setNav;setNav=function(){oldSetNav();const desktop=$('desktopNav');if(desktop&&!desktop.querySelector('[data-page="chats"]')){const b=document.createElement('button');b.className='navbtn px-3 py-2';b.dataset.page='chats';b.textContent='Chats';b.onclick=()=>navigate('chats');desktop.appendChild(b)}};
   function installSearch(){const head=document.querySelector('#app header .max-w-7xl');if(!head||$('sfGlobalSearchBtn'))return;const wrap=document.createElement('div');wrap.className='ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0';wrap.innerHTML=`<button id="sfGlobalSearchBtn" class="sf-search-btn border border-[#333] rounded-xl px-2.5 sm:px-3 py-2 shrink-0" title="Search SellerFlow">⌕ <span class="hidden sm:inline">Search</span></button>`;const old=head.querySelector('.ml-auto');if(old){old.classList.remove('ml-auto');wrap.classList.add('ml-auto');head.insertBefore(wrap,old);wrap.appendChild(old)}else head.appendChild(wrap);$('sfGlobalSearchBtn').onclick=globalSearch}
   const oldShowApp=showApp;showApp=function(){oldShowApp();installSearch();setNav()};
@@ -15640,6 +16193,8 @@ STATUS: ${f.status || 'Active Investigation'}
         await renderAdmin();
       } else if(currentPage === 'chats' && typeof renderChats === 'function'){
         await renderChats();
+      } else if(currentPage === 'analysis' && typeof renderAnalysis === 'function'){
+        await renderAnalysis();
       } else if(typeof renderPage === 'function'){
         await renderPage();
       }
