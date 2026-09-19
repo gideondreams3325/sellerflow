@@ -413,6 +413,36 @@ input, textarea, select { color: #ffffff !important; }
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
 (function(){
+  // Universal circular structure protection for JSON.stringify to prevent WebChannel/DOM/Snapshot serialization exceptions
+  var _origStringify = JSON.stringify;
+  JSON.stringify = function(value, replacer, space){
+    var seen = new WeakSet();
+    function safeReplacer(key, val){
+      if(typeof val === 'object' && val !== null){
+        if(seen.has(val)){
+          return '[Circular]';
+        }
+        seen.add(val);
+      }
+      if(typeof replacer === 'function'){
+        return replacer.call(this, key, val);
+      }
+      return val;
+    }
+    try{
+      return _origStringify(value, replacer, space);
+    }catch(err){
+      if(err && (err.name === 'TypeError' || String(err).indexOf('circular') !== -1 || String(err).indexOf('Converting circular structure') !== -1)){
+        try{
+          return _origStringify(value, safeReplacer, space);
+        }catch(_){
+          return '"{}"';
+        }
+      }
+      throw err;
+    }
+  };
+
   function $x(id){return document.getElementById(id)}
   function hideLoading(){var x=$x('loading');if(x)x.classList.add('hide')}
   function showHomeFeed(){hideLoading();var a=$x('authPage'),p=$x('app');if(a)a.classList.add('hide');if(p){p.classList.remove('hide');p.classList.add('is-feed-page');}}
@@ -420,12 +450,12 @@ input, textarea, select { color: #ffffff !important; }
     if(!e)return;
     if(e.target&&(e.target.tagName==='IMG'||e.target.tagName==='VIDEO'||e.target.tagName==='AUDIO'||e.target.tagName==='SOURCE'||e.target.tagName==='LINK'))return;
     var msg=(e.error&&e.error.message)||e.message||'';
-    if(!msg||msg==='Script error.')return;
+    if(!msg||msg==='Script error.'||msg.indexOf('Could not reach Cloud Firestore backend')!==-1)return;
     console.warn('SellerFlow runtime notice:',msg);
   },true);
   window.addEventListener('unhandledrejection',function(e){
     var reason=(e&&e.reason&&e.reason.message)||String((e&&e.reason)||'');
-    if(!reason||reason==='Script error.')return;
+    if(!reason||reason==='Script error.'||reason.indexOf('Could not reach Cloud Firestore backend')!==-1)return;
     console.warn('SellerFlow unhandled promise notice:',reason);
   });
   setTimeout(function(){var l=$x('loading');if(l&&!l.classList.contains('hide')){var t=$x('loadingText');if(t)t.textContent='SellerFlow is ready.';showHomeFeed();if(typeof navigate==='function')navigate('feed');}},6000);
@@ -4224,13 +4254,12 @@ async function openStore(uid){
     return;
   }
   pauseAllForYouVideos(true);
-  const previousPage = currentPage;
-  if(currentPage==='feed'){
-    currentPage='store';
-    $('app')?.classList.remove('is-feed-page');
-    $('appMainScroll')?.classList.remove('is-feed-scroll');
-    setNav();
-  }
+  const previousPage = currentPage || 'feed';
+  currentPage = 'store';
+  $('app')?.classList.remove('is-feed-page');
+  $('appMainScroll')?.classList.remove('is-feed-scroll');
+  setNav();
+
   loading('Opening store…');
   try{
     const [ss,ps]=await Promise.all([getDoc(doc(db,'stores',uid)),getDoc(doc(db,'publicProfiles',uid))]);
@@ -4268,24 +4297,40 @@ async function openStore(uid){
     }
 
     $('page').innerHTML=`
-      ${store?.bannerUrl ? `
-        <div class="w-full h-40 sm:h-56 rounded-2xl overflow-hidden mb-5 border border-[#2b2b2b] bg-[#111] relative">
-          <img src="${esc(store.bannerUrl)}" class="w-full h-full object-cover" alt="Store banner">
-          <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
-        </div>
-      ` : ''}
+      <div class="relative w-full h-40 sm:h-56 rounded-2xl overflow-hidden mb-5 border border-[#2b2b2b] bg-[#111] group">
+        ${store?.bannerUrl ? `
+          <img id="storefrontBannerImg" src="${esc(store.bannerUrl)}" class="w-full h-full object-cover" alt="Store banner">
+        ` : `
+          <div id="storefrontBannerImg" class="w-full h-full bg-gradient-to-r from-zinc-900 via-stone-900 to-amber-950/40 flex items-center justify-center text-zinc-600 text-xs">
+            <span>No banner uploaded</span>
+          </div>
+        `}
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
+        ${isOwner ? `
+          <label class="absolute top-3 right-3 bg-black/80 hover:bg-black text-white border border-white/20 hover:border-gold px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition flex items-center gap-1.5 shadow backdrop-blur z-10">
+            <span>📷</span><span>Change Banner</span>
+            <input type="file" id="storefrontQuickBannerInput" accept="image/jpeg,image/png,image/webp" class="hidden">
+          </label>
+        ` : ''}
+      </div>
 
       ${storeStatusNotice}
 
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div class="flex items-center gap-3">
           <button type="button" id="backMarket" class="back-page-btn border border-[#333] hover:border-gold rounded-xl px-3 py-2 text-sm font-bold bg-[#141414]">
-            ← Back to For You
+            ← Back to ${previousPage === 'marketplace' ? 'Marketplace' : 'For You'}
           </button>
-          <div>
+          <div class="relative group">
             ${store?.logoUrl ? `
-              <img src="${esc(store.logoUrl)}" class="w-16 h-16 rounded-2xl object-cover border border-[#333] bg-[#222]" alt="Store logo">
+              <img id="storefrontLogoImg" src="${esc(store.logoUrl)}" class="w-16 h-16 rounded-2xl object-cover border border-[#333] bg-[#222]" alt="Store logo">
             ` : avatar(p,'w-16 h-16 rounded-2xl object-cover bg-[#222]')}
+            ${isOwner ? `
+              <label class="absolute -bottom-1 -right-1 bg-gold text-black hover:brightness-110 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer shadow border border-black/30 transition z-10" title="Change logo">
+                <span>📷</span>
+                <input type="file" id="storefrontQuickLogoInput" accept="image/jpeg,image/png,image/webp" class="hidden">
+              </label>
+            ` : ''}
           </div>
           <div>
             <h1 class="text-2xl font-black text-white flex items-center gap-1.5 flex-wrap">
@@ -4300,7 +4345,7 @@ async function openStore(uid){
         <div class="flex flex-wrap items-center gap-2">
           ${isOwner ? `
             <button type="button" id="ownerEditStoreBtn" class="border border-[#444] hover:border-gold px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-[#141414] transition flex items-center gap-1.5">
-              <span>✏️</span><span>Edit Store</span>
+              <span>✏️</span><span>Edit Store Details</span>
             </button>
             <button type="button" id="ownerAddProductBtn" class="bg-gold text-black hover:brightness-110 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
               <span>＋</span><span>Add Product</span>
@@ -4364,9 +4409,55 @@ async function openStore(uid){
       </div>
     `;
 
-    $('ownerEditStoreBtn')?.addEventListener('click', () => navigate('store'));
+    $('ownerEditStoreBtn')?.addEventListener('click', () => renderStore(true));
     $('ownerAddProductBtn')?.addEventListener('click', () => openProductModal());
     $('ownerAddProdSubBtn')?.addEventListener('click', () => openProductModal());
+
+    $('storefrontQuickBannerInput')?.addEventListener('change', async (e) => {
+      const f = e.target.files[0];
+      if(!f) return;
+      try {
+        validFile(f, ['image/jpeg','image/png','image/webp'], 10);
+        loading('Uploading store banner…');
+        const up = await uploadPublic(f, 'stores');
+        await updateDoc(doc(db, 'stores', uid), {
+          bannerUrl: up.url,
+          bannerPath: up.path,
+          updatedAt: serverTimestamp()
+        });
+        toast('Store banner updated successfully!', 'success');
+        await openStore(uid);
+      } catch(err){
+        toast(errMsg(err), 'error');
+      } finally {
+        ready();
+      }
+    });
+
+    $('storefrontQuickLogoInput')?.addEventListener('change', async (e) => {
+      const f = e.target.files[0];
+      if(!f) return;
+      try {
+        validFile(f, ['image/jpeg','image/png','image/webp'], 10);
+        loading('Uploading store logo…');
+        const up = await uploadPublic(f, 'stores');
+        await updateDoc(doc(db, 'stores', uid), {
+          logoUrl: up.url,
+          logoPath: up.path,
+          updatedAt: serverTimestamp()
+        });
+        await updateDoc(doc(db, 'publicProfiles', uid), {
+          avatarUrl: up.url
+        }).catch(()=>{});
+        if(currentProfile) currentProfile.avatarUrl = up.url;
+        toast('Store logo updated successfully!', 'success');
+        await openStore(uid);
+      } catch(err){
+        toast(errMsg(err), 'error');
+      } finally {
+        ready();
+      }
+    });
 
     $('adminStoreTakedownBtn')?.addEventListener('click', () => {
       if(isStoreTakenDown) adminRestoreStore(uid);
@@ -4419,6 +4510,19 @@ async function openStore(uid){
         if(item) openProductDetailModal(item);
       };
     });
+    document.querySelectorAll('[data-edit-product]').forEach(b=>{
+      b.onclick=(e)=>{
+        e.stopPropagation();
+        const item=products.find(x=>x.id===b.dataset.editProduct);
+        if(item) openProductModal(item);
+      };
+    });
+    document.querySelectorAll('[data-delete-product]').forEach(b=>{
+      b.onclick=(e)=>{
+        e.stopPropagation();
+        deleteProduct(b.dataset.deleteProduct);
+      };
+    });
     document.querySelectorAll('[data-add-cart]').forEach(b=>b.onclick=(e)=>{
       e.stopPropagation();
       if(!currentUser) return showAuthPrompt('add products to cart');
@@ -4441,6 +4545,7 @@ async function openStore(uid){
 function productCard(p){
   const inStock = Number(p.stock) > 0;
   const maxStock = inStock ? Number(p.stock) : 0;
+  const isOwner = currentUser && p.sellerId === currentUser.uid;
   return `
     <div class="card p-4 sm:p-3 flex flex-col justify-between" id="store-product-${esc(p.id)}">
       <div>
@@ -4459,20 +4564,31 @@ function productCard(p){
         </div>
       </div>
       <div class="mt-3 pt-2.5 border-t border-[#262626]">
-        ${inStock ? `
-          <div class="flex items-center gap-1.5 mb-2">
-            <span class="text-[11px] text-zinc-400 font-medium">Qty:</span>
-            <div class="flex items-center rounded-lg border border-[#333] bg-[#121212] overflow-hidden">
-              <button type="button" data-store-qty-minus="${esc(p.id)}" class="w-6 h-6 text-zinc-300 hover:bg-[#222] font-bold text-xs flex items-center justify-center">−</button>
-              <input id="store-qty-${esc(p.id)}" type="number" min="1" max="${maxStock}" value="1" class="w-8 text-center bg-transparent text-xs font-bold text-white outline-none">
-              <button type="button" data-store-qty-plus="${esc(p.id)}" class="w-6 h-6 text-zinc-300 hover:bg-[#222] font-bold text-xs flex items-center justify-center">+</button>
-            </div>
+        ${isOwner ? `
+          <div class="flex items-center gap-2">
+            <button type="button" data-edit-product="${p.id}" class="flex-1 border border-[#444] hover:border-gold rounded-xl py-2 text-xs font-semibold text-zinc-200 transition flex items-center justify-center gap-1">
+              <span>✏️</span><span>Edit</span>
+            </button>
+            <button type="button" data-delete-product="${p.id}" class="border border-red-700/70 hover:bg-red-950/30 text-red-400 rounded-xl px-3 py-2 text-xs font-semibold transition flex items-center justify-center gap-1">
+              <span>🗑️</span>
+            </button>
           </div>
-        ` : ''}
-        <button type="button" data-add-cart="${p.id}" ${!inStock ? 'disabled' : ''} class="w-full ${!inStock ? 'bg-[#222] text-zinc-500 cursor-not-allowed' : 'bg-gold text-black font-bold hover:brightness-110 shadow-sm'} rounded-xl py-2.5 text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
-          <span>🛒</span>
-          <span>${!inStock ? 'Out of stock' : 'Add to cart'}</span>
-        </button>
+        ` : `
+          ${inStock ? `
+            <div class="flex items-center gap-1.5 mb-2">
+              <span class="text-[11px] text-zinc-400 font-medium">Qty:</span>
+              <div class="flex items-center rounded-lg border border-[#333] bg-[#121212] overflow-hidden">
+                <button type="button" data-store-qty-minus="${esc(p.id)}" class="w-6 h-6 text-zinc-300 hover:bg-[#222] font-bold text-xs flex items-center justify-center">−</button>
+                <input id="store-qty-${esc(p.id)}" type="number" min="1" max="${maxStock}" value="1" class="w-8 text-center bg-transparent text-xs font-bold text-white outline-none">
+                <button type="button" data-store-qty-plus="${esc(p.id)}" class="w-6 h-6 text-zinc-300 hover:bg-[#222] font-bold text-xs flex items-center justify-center">+</button>
+              </div>
+            </div>
+          ` : ''}
+          <button type="button" data-add-cart="${p.id}" ${!inStock ? 'disabled' : ''} class="w-full ${!inStock ? 'bg-[#222] text-zinc-500 cursor-not-allowed' : 'bg-gold text-black font-bold hover:brightness-110 shadow-sm'} rounded-xl py-2.5 text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
+            <span>🛒</span>
+            <span>${!inStock ? 'Out of stock' : 'Add to cart'}</span>
+          </button>
+        `}
       </div>
     </div>
   `;
@@ -6047,7 +6163,7 @@ async function renderOrders(targetOrderId){
   }
 }
 
-async function renderStore(){
+async function renderStore(forceEdit = false){
   if(!currentUser){
     showAuthPrompt('view or manage your store');
     return;
@@ -6058,6 +6174,11 @@ async function renderStore(){
       getDoc(doc(db, 'stores', currentUser.uid)),
       getDocs(query(collection(db, 'products'), where('sellerId', '==', currentUser.uid)))
     ]);
+    const hasExistingStore = snapshotExists(storeSnap) && !!(storeSnap.data().name);
+    if(!forceEdit && hasExistingStore){
+      ready();
+      return openStore(currentUser.uid);
+    }
     const store = snapshotExists(storeSnap) ? storeSnap.data() : {};
     const myProducts = prodsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
@@ -6120,9 +6241,9 @@ async function renderStore(){
           <p class="muted text-xs sm:text-sm mt-1">Manage your public Ghanaian storefront, banner, logo, and catalogue.</p>
         </div>
         <div class="flex items-center gap-2">
-          ${snapshotExists(storeSnap) ? `
-            <button type="button" id="previewStoreBtnTop" class="border border-[#444] hover:border-gold px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-[#161616] transition flex items-center gap-1.5">
-              <span>👁️</span><span>Preview Store</span>
+          ${hasExistingStore ? `
+            <button type="button" id="backToStorefrontBtn" class="border border-[#444] hover:border-gold px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-[#161616] transition flex items-center gap-1.5">
+              <span>🏪</span><span>Back to Storefront</span>
             </button>
           ` : ''}
           <button type="button" id="addNewProductStoreBtn" class="bg-gold text-black hover:brightness-110 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
@@ -6494,6 +6615,7 @@ async function renderStore(){
 
     $('previewStoreBtnTop')?.addEventListener('click', () => openStore(currentUser.uid));
     $('previewStorefrontBtn')?.addEventListener('click', () => openStore(currentUser.uid));
+    $('backToStorefrontBtn')?.addEventListener('click', () => openStore(currentUser.uid));
     $('addNewProductStoreBtn')?.addEventListener('click', () => openProductModal());
     $('sideAddProductBtn')?.addEventListener('click', () => openProductModal());
     $('emptyAddProductBtn')?.addEventListener('click', () => openProductModal());
@@ -6626,7 +6748,7 @@ async function renderStore(){
         } else {
           toast('Store submitted for admin review. Once approved, it will appear in the marketplace.', 'success', 4500);
         }
-        await renderStore();
+        await openStore(currentUser.uid);
       } catch(e) {
         toast(errMsg(e), 'error');
       } finally {
@@ -6710,7 +6832,13 @@ async function submitVerification(){
 
     closeModal();
     await refreshProfile();
-    navigate('profile');
+    if(typeof window._verificationSuccessCb === 'function'){
+      const cb = window._verificationSuccessCb;
+      window._verificationSuccessCb = null;
+      cb();
+    } else {
+      navigate('profile');
+    }
   }catch(e){
     toast(errMsg(e),'error');
   }finally{
@@ -6816,12 +6944,85 @@ function renderCart(){
   $('checkoutBtn')?.addEventListener('click',openCheckout);
 }
 function changeCart(i,d){cart[i].quantity=Math.max(1,Math.min(cart[i].maxStock||99,cart[i].quantity+d));saveCart();renderCart()}
-function openCheckout(){
+async function openCheckout(){
   if(!currentUser)return showAuthPrompt('make an order and complete checkout');
   if(!cart.length){
     toast('Your cart is empty. Add items before checking out.','error');
     return;
   }
+
+  loading('Checking identity verification status…');
+  let uData = {};
+  try {
+    const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
+    if(snapshotExists(userSnap)) uData = userSnap.data() || {};
+  } catch(e) {
+    console.warn('Error reading buyer user record:', e);
+  } finally {
+    ready();
+  }
+
+  const hasCardNumber = !!(uData.ghanaCardNumber || uData.ghanaCardMasked);
+  const hasFrontDoc = !!(uData.ghanaCardFrontPath);
+  const hasBackDoc = !!(uData.ghanaCardBackPath);
+  const isVerifiedBuyer = hasCardNumber && hasFrontDoc && hasBackDoc;
+
+  if(!isVerifiedBuyer){
+    modal(`
+      <div class="space-y-4 max-w-md mx-auto text-left">
+        <div class="flex items-center gap-3 pb-3 border-b border-[#262626]">
+          <div class="w-10 h-10 rounded-xl bg-amber-950/40 border border-amber-800 text-gold flex items-center justify-center text-xl shrink-0">
+            🛡️
+          </div>
+          <div>
+            <h2 class="text-lg font-black text-white">Ghana Card Verification Required</h2>
+            <p class="text-xs text-zinc-400">Buyer Protection & Law of Ghana Compliance</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-amber-950/20 border border-amber-500/30 text-xs text-zinc-300 space-y-2 leading-relaxed">
+          <p class="font-bold text-amber-300 text-xs">Identity verification is required before checkout.</p>
+          <p class="text-[11.5px] text-zinc-300">
+            Under SellerFlow Trust & Anti-Fraud Policy and the Laws of Ghana, all buyers must complete Ghana Card identification (PIN number, front image, and back image) before placing orders.
+          </p>
+          <div class="text-[11px] pt-1 space-y-1 font-mono">
+            <div class="flex items-center gap-2">
+              <span>${hasCardNumber ? '✓' : '❌'}</span>
+              <span class="${hasCardNumber ? 'text-emerald-400 font-semibold' : 'text-amber-300'}">Ghana Card PIN ${hasCardNumber ? 'Recorded' : 'Required'}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span>${hasFrontDoc ? '✓' : '❌'}</span>
+              <span class="${hasFrontDoc ? 'text-emerald-400 font-semibold' : 'text-amber-300'}">Front Document Image ${hasFrontDoc ? 'Uploaded' : 'Required'}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span>${hasBackDoc ? '✓' : '❌'}</span>
+              <span class="${hasBackDoc ? 'text-emerald-400 font-semibold' : 'text-amber-300'}">Back Document Image ${hasBackDoc ? 'Uploaded' : 'Required'}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-[#121215] border border-[#26262a] text-xs text-zinc-400">
+          🔒 <i>Your identity documents are encrypted and kept strictly private. Ghana Card data is never shared with sellers or other users.</i>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#262626]">
+          <button type="button" data-close-modal class="border border-[#444] hover:border-zinc-400 text-zinc-300 px-4 py-2.5 rounded-xl text-xs font-semibold">
+            Cancel
+          </button>
+          <button type="button" id="startBuyerVerificationCheckoutBtn" class="bg-gold text-black font-extrabold px-5 py-2.5 rounded-xl text-xs hover:brightness-110 shadow-sm flex items-center gap-1.5">
+            <span>Verify Ghana Card Now</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+    `);
+
+    $('startBuyerVerificationCheckoutBtn')?.addEventListener('click', () => {
+      openVerificationModal({ purpose: 'buyer', onSuccess: () => openCheckout() });
+    });
+    return;
+  }
+
   const total=cart.reduce((n,i)=>n+i.price*i.quantity,0);
 
   // Group by seller for transparent split preview
@@ -6979,6 +7180,13 @@ async function placeOrder(){
       throw Error('You must agree to the Buyer Anti-Fraud Terms and comply with the Laws of Ghana to place an order.');
     }
     if(!cart.length)throw Error('Your cart is empty.');
+
+    // Defensive check: Verify buyer Ghana Card information before writing order
+    const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
+    const uData = snapshotExists(userSnap) ? userSnap.data() : {};
+    if(!uData.ghanaCardFrontPath || !uData.ghanaCardBackPath || (!uData.ghanaCardNumber && !uData.ghanaCardMasked)){
+      throw Error('Ghana Card verification incomplete. Please provide your Ghana Card details, front image, and back image before completing checkout.');
+    }
 
     const bySeller=new Map();
     cart.forEach(i=>{
@@ -7392,7 +7600,48 @@ async function renderSettings(){
   });
   $('startVerification')?.addEventListener('click',openVerificationModal);
 }
-function openVerificationModal(){const v=currentProfile||{};modal(`<div class="flex items-center gap-3"><div class="policy-icon">🛡️</div><div><h2 class="text-xl font-bold">Secure seller verification</h2><p class="muted text-sm">Private identity review for safer commerce.</p></div></div><p class="muted text-sm mt-4">Your Ghana Card is reviewed only to confirm identity and reduce fraud. It will not be shown to customers.</p><div class="space-y-4 mt-5"><div><label class="muted text-sm">Ghana Card number</label><input id="ghanaCard" value="${esc(v.ghanaCardMasked||'')}" placeholder="GHA-XXXXXXXXX-X" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"></div><div><label class="muted text-sm">Front image</label><input id="cardFront" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="w-full mt-1"></div><div><label class="muted text-sm">Back image</label><input id="cardBack" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="w-full mt-1"></div><div class="text-xs muted bg-[#181818] rounded-xl p-3">Please submit only your own valid Ghana Card. Maximum 10MB per file.</div><div class="flex justify-end gap-2">${button('Cancel','cancelVerification','border border-[#444] bg-transparent text-white')}${button('Submit for review','submitVerification')}</div></div>`);$('cancelVerification').onclick=closeModal;$('submitVerification').onclick=submitVerification}
+function openVerificationModal(options = {}){
+  const opts = typeof options === 'string' ? { purpose: options } : (options || {});
+  window._verificationSuccessCb = opts.onSuccess || null;
+  const v = currentProfile || {};
+  const isBuyer = opts.purpose === 'buyer';
+
+  modal(`
+    <div class="flex items-center gap-3 pb-3 border-b border-[#262626]">
+      <div class="policy-icon text-xl">🛡️</div>
+      <div>
+        <h2 class="text-lg sm:text-xl font-bold text-white">${isBuyer ? 'Buyer Identity Verification (Ghana Card)' : 'Secure Seller Verification'}</h2>
+        <p class="muted text-xs">${isBuyer ? 'Required under Laws of Ghana & SellerFlow Anti-Fraud Policy before checkout.' : 'Private identity review for verified seller badge and storefront authorization.'}</p>
+      </div>
+    </div>
+    <p class="muted text-xs mt-3 leading-relaxed">
+      Your Ghana Card number, front image, and back image are reviewed privately for fraud prevention. Identity documents are strictly encrypted and never exposed to other users or sellers.
+    </p>
+    <div class="space-y-4 mt-4">
+      <div>
+        <label class="muted text-xs block mb-1">Ghana Card PIN / Number *</label>
+        <input id="ghanaCard" value="${esc(v.ghanaCardMasked||'')}" placeholder="GHA-XXXXXXXXX-X" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white focus:border-gold outline-none">
+      </div>
+      <div>
+        <label class="muted text-xs block mb-1">Front Image of Ghana Card *</label>
+        <input id="cardFront" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="w-full text-xs text-zinc-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white">
+      </div>
+      <div>
+        <label class="muted text-xs block mb-1">Back Image of Ghana Card *</label>
+        <input id="cardBack" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="w-full text-xs text-zinc-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white">
+      </div>
+      <div class="text-xs muted bg-[#181818] rounded-xl p-3 border border-[#2a2a2a]">
+        Please submit only your own valid Ghana Card. Maximum 10MB per file.
+      </div>
+      <div class="flex justify-end gap-2 pt-2 border-t border-[#262626]">
+        ${button('Cancel','cancelVerification','border border-[#444] bg-transparent text-white')}
+        ${button('Submit Verification','submitVerification')}
+      </div>
+    </div>
+  `);
+  $('cancelVerification').onclick = closeModal;
+  $('submitVerification').onclick = submitVerification;
+}
 
 let swRegistration = null;
 async function initServiceWorker(){
@@ -13702,6 +13951,44 @@ init();
     document.querySelectorAll('[data-admin-delete-product]').forEach(b => {
       b.onclick = (e) => { e.stopPropagation(); deleteProduct(b.dataset.adminDeleteProduct); };
     });
+    document.querySelectorAll('[data-admin-view-product]').forEach(b => {
+      b.onclick = async (e) => {
+        e.stopPropagation();
+        const pId = b.dataset.adminViewProduct;
+        try {
+          loading('Loading product details…');
+          const snap = await getDoc(doc(db, 'products', pId));
+          if(snapshotExists(snap)){
+            openProductDetailModal({ id: snap.id, ...snap.data() });
+          } else {
+            toast('Product listing not found.', 'error');
+          }
+        } catch(err){
+          toast(errMsg(err), 'error');
+        } finally {
+          ready();
+        }
+      };
+    });
+    document.querySelectorAll('[data-edit-product]').forEach(b => {
+      b.onclick = async (e) => {
+        e.stopPropagation();
+        const pId = b.dataset.editProduct;
+        try {
+          loading('Loading product…');
+          const snap = await getDoc(doc(db, 'products', pId));
+          if(snapshotExists(snap)){
+            openProductModal({ id: snap.id, ...snap.data() });
+          } else {
+            toast('Product listing not found.', 'error');
+          }
+        } catch(err){
+          toast(errMsg(err), 'error');
+        } finally {
+          ready();
+        }
+      };
+    });
   }
 
   /* Dedicated Post Restoration & Moderation Cards */
@@ -14156,14 +14443,14 @@ init();
     return `
       <div class="card p-4 border border-[#2b2b2b] hover:border-gold/40 transition flex flex-col justify-between" id="admin-prod-card-${esc(p.id)}">
         <div>
-          <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-3 bg-[#141414] border border-[#252525]">
+          <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-3 bg-[#141414] border border-[#252525] cursor-pointer" data-admin-view-product="${esc(p.id)}">
             <img src="${esc(p.imageUrl || '')}" class="w-full h-full object-cover" alt="" onerror="this.src=''; this.parentElement.innerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center text-zinc-600\\'>🛍️<span class=\\'text-[10px] mt-1\\'>No image</span></div>'">
             <div class="absolute top-2 right-2">${statusPill}</div>
             <div class="absolute bottom-2 left-2 bg-black/80 backdrop-blur px-2.5 py-1 rounded-lg font-black text-gold text-xs">${money(p.price)}</div>
           </div>
 
           <div class="flex items-start justify-between gap-2">
-            <h3 class="font-bold text-sm text-white truncate flex-1">${esc(p.name)}</h3>
+            <h3 class="font-bold text-sm text-white truncate flex-1 cursor-pointer hover:text-gold transition" data-admin-view-product="${esc(p.id)}">${esc(p.name)}</h3>
             <span class="text-[10px] text-zinc-400 border border-[#333] px-1.5 py-0.5 rounded">${Number(p.stock) || 0} in stock</span>
           </div>
           <div class="text-[11px] text-zinc-400 mt-0.5 truncate">Seller: @${esc(s?.username || p.sellerId?.slice(0, 8))}</div>
