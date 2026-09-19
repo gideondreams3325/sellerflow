@@ -505,22 +505,11 @@ async function handleOAuthCallbackPage() {
     }
     const authInst = firebase.auth();
 
-    updateStatus('Verifying sign-in credentials…');
-
-    // 1. Consume redirect result from Firebase Auth FIRST
-    let redirectRes = null;
-    try {
-      redirectRes = await authInst.getRedirectResult();
-      console.log('OAuth redirectResult:', redirectRes);
-    } catch (rErr) {
-      console.warn('getRedirectResult warning:', rErr);
-    }
-
-    // 2. Only initiate redirect if explicitly starting flow and NOT returning from a redirect
+    // 1. If explicitly starting the flow (?start=google), start Google OAuth redirect immediately and halt execution
     const searchParams = new URLSearchParams(window.location.search || '');
     const isStart = searchParams.get('start') === 'google';
 
-    if (isStart && !redirectRes && !authInst.currentUser) {
+    if (isStart) {
       updateStatus('Connecting to Google…');
       try {
         window.history.replaceState({}, document.title, window.location.pathname);
@@ -532,6 +521,17 @@ async function handleOAuthCallbackPage() {
       provider.setCustomParameters({ prompt: 'select_account' });
       await authInst.signInWithRedirect(provider);
       return;
+    }
+
+    updateStatus('Verifying sign-in credentials…');
+
+    // 2. Consume redirect result from Firebase Auth when returning from Google OAuth
+    let redirectRes = null;
+    try {
+      redirectRes = await authInst.getRedirectResult();
+      console.log('OAuth redirectResult:', redirectRes);
+    } catch (rErr) {
+      console.warn('getRedirectResult warning:', rErr);
     }
 
     // 3. Extract tokens from all available surfaces
