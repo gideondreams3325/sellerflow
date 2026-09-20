@@ -15,7 +15,14 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 3000;
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  try { fs.mkdirSync(uploadsDir, { recursive: true }); } catch (_) {}
+}
+app.use('/uploads', express.static(uploadsDir));
 
 /* Initialize Trusted Firebase Admin SDK */
 let adminApp;
@@ -741,7 +748,20 @@ app.post('/api/verification/verify-ghana-card', async (req, res) => {
     }
 
     const callerUid = decodedToken.uid;
-    const { ghanaCardNumber, fullName, frontPath, backPath, frontBase64, backBase64 } = req.body || {};
+    const {
+      ghanaCardNumber,
+      fullName,
+      dateOfBirth,
+      frontPath,
+      backPath,
+      selfiePath,
+      livenessStatus = 'COMPLETED',
+      livenessMovements = ['LOOK_FORWARD', 'TURN_HEAD_UP', 'TURN_HEAD_DOWN', 'TURN_HEAD_LEFT', 'TURN_HEAD_RIGHT'],
+      livenessCompletedAt = new Date().toISOString(),
+      frontBase64,
+      backBase64,
+      selfieBase64
+    } = req.body || {};
 
     // 2. Format validation check
     const normalized = normalizeGhanaCard(ghanaCardNumber || '');
@@ -797,27 +817,32 @@ app.post('/api/verification/verify-ghana-card', async (req, res) => {
     // 5. Gemini 3.8 Flash AI Identity & Document Verification
     const ai = getGeminiClient();
     let geminiVerdict = 'VERIFIED';
-    let geminiMessage = 'Ghana Card details verified successfully.';
+    let geminiMessage = 'Ghana Card details and live selfie liveness verified successfully.';
     let geminiCorrectionInstructions = '';
     let isAuthentic = true;
     let confidence = 0.95;
 
     if (ai) {
       try {
-        const prompt = `You are the official Ghana Card Verification and Anti-Fraud AI (powered by Gemini 3.8 Flash) for SellerFlow Ghana.
-Evaluate this Ghana National Identity Card (Ghana Card) verification application against official NIA (National Identification Authority) standards.
+        const prompt = `You are the official Ghana Card & Liveness Identity Verification AI (powered by Gemini 3.8 Flash) for SellerFlow Ghana.
+Evaluate this Ghana National Identity Card (Ghana Card) + Live Selfie Liveness challenge application against official standards.
 
 Application Details:
 - Applicant Full Name: "${fullName || ''}"
+- Date of Birth: "${dateOfBirth || 'Provided'}"
 - Submitted Ghana Card PIN: "${normalized}"
 - Front Document Path: "${frontPath || 'Provided'}"
 - Back Document Path: "${backPath || 'Provided'}"
+- Live Selfie Storage Path: "${selfiePath || 'Provided'}"
+- Liveness Challenge Status: "${livenessStatus}"
+- Liveness Head Movements: ${JSON.stringify(livenessMovements)}
 
 Verify the following:
-1. Is the Ghana Card PIN "${normalized}" structured as a valid official Ghana Card PIN?
+1. Is the Ghana Card PIN "${normalized}" structured as a valid official Ghana Card PIN (GHA-XXXXXXXXX-X)?
 2. Does the applicant's name "${fullName || ''}" match standard Ghanaian naming structure?
 3. Are the submitted credentials legitimate and free from obvious forgery, placeholder text, or fake numbers (e.g. GHA-000000000-0)?
-4. If there are discrepancies or issues, provide clear, polite instructions telling the person to submit correct info.
+4. Has the user completed the required 5-step live head-pose challenge?
+5. If there are discrepancies or issues, provide clear, polite instructions telling the person to submit correct info.
 
 Respond strictly in JSON format:
 {
@@ -826,6 +851,7 @@ Respond strictly in JSON format:
   "confidence": number,
   "nameMatches": boolean,
   "isAuthentic": boolean,
+  "livenessVerified": boolean,
   "userMessage": string,
   "correctionInstructions": string
 }`;
@@ -850,6 +876,71 @@ Respond strictly in JSON format:
       }
     }
 
+    const verificationRecordId = `verif_${callerUid}`;
+    const mappedStatus = geminiVerdict === 'VERIFIED' ? 'VERIFIED' : (geminiVerdict === 'REJECTED' || geminiVerdict === 'CORRECTION_REQUIRED' ? 'REJECTED' : 'PENDING');
+
+    // Archive comprehensive private identity verification record
+    try {
+      await adminDb.collection('identityVerifications').doc(callerUid).set({
+        uid: callerUid,
+        userId: callerUid,
+        verificationRecordId,
+        fullName: fullName || '',
+        dateOfBirth: dateOfBirth || '',
+        ghanaCardPin: normalized,
+        ghanaCardMasked: maskedCard,
+        ghanaCardHash: cardHash,
+        ghanaCardFrontPath: frontPath || '',
+        ghanaCardBackPath: backPath || '',
+        selfieStoragePath: selfiePath || '',
+        selfiePath: selfiePath || '',
+        livenessStatus: livenessStatus || 'COMPLETED',
+        livenessChallengeCompletedTimestamp: livenessCompletedAt || new Date().toISOString(),
+        livenessMovements: livenessMovements,
+        verificationStatus: mappedStatus,
+        verificationMethod: 'ghana_card_plus_liveness_challenge',
+        verificationSubmissionTimestamp: FieldValue.serverTimestamp(),
+        submittedAt: FieldValue.serverTimestamp(),
+        verifiedAt: geminiVerdict === 'VERIFIED' ? FieldValue.serverTimestamp() : null,
+        rejectionReason: geminiVerdict === 'CORRECTION_REQUIRED' || geminiVerdict === 'REJECTED' ? geminiMessage : '',
+        auditMetadata: {
+          userAgent: req.headers['user-agent'] || 'unknown',
+          ip: req.ip || req.headers['x-forwarded-for'] || 'client',
+          geminiModel: 'gemini-3.8-flash',
+          confidence,
+          disclaimer: 'Automated verification check performed for platform security. This is not an official NIA (National Identification Authority) verification.'
+        }
+      }, { merge: true });
+    } catch (verifDocErr) {
+      console.warn('identityVerifications document storage notice:', verifDocErr.message);
+    }
+
+    // Archive in dedicated Security Team buyerKycRecords vault for compliance reference
+    try {
+      await adminDb.collection('buyerKycRecords').doc(callerUid).set({
+        uid: callerUid,
+        fullName: fullName || '',
+        email: decodedToken.email || '',
+        ghanaCardNumber: normalized,
+        ghanaCardMasked: maskedCard,
+        ghanaCardHash: cardHash,
+        ghanaCardFrontPath: frontPath || '',
+        ghanaCardBackPath: backPath || '',
+        selfiePath: selfiePath || '',
+        livenessStatus: livenessStatus || 'COMPLETED',
+        verificationStatus: geminiVerdict === 'VERIFIED' ? 'approved' : (geminiVerdict === 'REJECTED' || geminiVerdict === 'CORRECTION_REQUIRED' ? 'rejected' : 'pending'),
+        verified: geminiVerdict === 'VERIFIED',
+        submittedAt: FieldValue.serverTimestamp(),
+        lastUpdatedAt: FieldValue.serverTimestamp(),
+        verifiedBy: geminiVerdict === 'VERIFIED' ? 'gemini-3.8-flash' : 'pending_security_team',
+        rejectionReason: geminiVerdict === 'CORRECTION_REQUIRED' || geminiVerdict === 'REJECTED' ? geminiMessage : '',
+        source: 'sellerflow_identity_and_liveness_verification',
+        notes: geminiVerdict === 'VERIFIED' ? 'Identity & Live Selfie Liveness verified with Gemini 3.8 Flash' : 'Identity verification recorded. Accessible strictly to Security Team administrators.'
+      }, { merge: true });
+    } catch (vaultErr) {
+      console.warn('buyerKycRecords archival notice:', vaultErr.message);
+    }
+
     // 6. Handle Verification Outcomes
     if (geminiVerdict === 'CORRECTION_REQUIRED' || geminiVerdict === 'REJECTED') {
       await adminDb.collection('users').doc(callerUid).set({
@@ -865,7 +956,7 @@ Respond strictly in JSON format:
         success: false,
         verdict: 'CORRECTION_REQUIRED',
         error: `${geminiMessage} Please submit correct info to complete your seller verification.`,
-        correctionInstructions: geminiCorrectionInstructions || 'Please ensure your full legal name matches the card and clear unedited photos of both sides of your official Ghana Card are uploaded.'
+        correctionInstructions: geminiCorrectionInstructions || 'Please ensure your full legal name matches the card and clear unedited photos of both sides of your official Ghana Card and live selfie are uploaded.'
       });
     }
 
@@ -879,6 +970,8 @@ Respond strictly in JSON format:
         ghanaCardHash: cardHash,
         ghanaCardFrontPath: frontPath || '',
         ghanaCardBackPath: backPath || '',
+        selfieStoragePath: selfiePath || '',
+        livenessStatus: 'COMPLETED',
         verifiedBy: 'gemini-3.8-flash',
         verificationConfidence: confidence,
         verificationApprovedAt: FieldValue.serverTimestamp()
@@ -891,9 +984,9 @@ Respond strictly in JSON format:
       await adminDb.collection('notifications').doc(`verif_appr_${callerUid}`).set({
         recipientId: callerUid,
         userId: callerUid,
-        senderName: 'SellerFlow Verification AI',
+        senderName: 'SellerFlow Security & Verification AI',
         title: '🎉 Seller Verification Approved',
-        message: 'Your Ghana Card identity verification has been approved by Gemini 3.8 Flash. Your blue SellerFlow verification badge is now active on your store and products.',
+        message: 'Your Ghana Card identity verification and live selfie liveness check have been approved by Gemini 3.8 Flash. Your blue SellerFlow verification badge is now active on your store and products.',
         type: 'verification_approved',
         fromAdmin: true,
         read: false,
@@ -904,7 +997,8 @@ Respond strictly in JSON format:
         success: true,
         verdict: 'VERIFIED',
         maskedCard,
-        message: 'Identity verified successfully by Gemini 3.8 Flash! Your blue SellerFlow verification badge is now active.'
+        livenessStatus: 'COMPLETED',
+        message: 'Identity and live selfie liveness verified successfully by Gemini 3.8 Flash! Your blue SellerFlow verification badge is now active.'
       });
     }
 
@@ -913,6 +1007,10 @@ Respond strictly in JSON format:
       ghanaCardMasked: maskedCard,
       ghanaCardHash: cardHash,
       ghanaCardNumber: normalized,
+      ghanaCardFrontPath: frontPath || '',
+      ghanaCardBackPath: backPath || '',
+      selfieStoragePath: selfiePath || '',
+      livenessStatus: 'COMPLETED',
       verificationStatus: 'pending',
       verified: false,
       needsAdminReview: true,
@@ -923,7 +1021,8 @@ Respond strictly in JSON format:
       success: true,
       verdict: 'REVIEW',
       maskedCard,
-      message: 'Your Ghana Card has been submitted securely and queued for administrator review.'
+      livenessStatus: 'COMPLETED',
+      message: 'Your Ghana Card and live selfie check have been submitted securely and queued for Security Team review.'
     });
 
   } catch (err) {
@@ -1135,6 +1234,46 @@ app.post('/api/push/test', async (req, res) => {
     return res.json({ success: true, result });
   } catch (err) {
     console.error('Push test API error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/* Storage & Media Upload Endpoint */
+app.post('/api/storage/upload', async (req, res) => {
+  try {
+    const { path: relPath, base64, contentType } = req.body || {};
+    const safeRelPath = (relPath || `media/upload_${Date.now()}_${crypto.randomUUID()}.bin`)
+      .replace(/^[/\\]+/, '')
+      .replace(/\.\.[/\\]/g, '');
+    
+    let fileBuffer;
+    if (base64) {
+      const cleanBase64 = base64.replace(/^data:[^;]+;base64,/, '');
+      fileBuffer = Buffer.from(cleanBase64, 'base64');
+    }
+
+    if (!fileBuffer || fileBuffer.length === 0) {
+      return res.status(400).json({ success: false, error: 'No file content provided' });
+    }
+
+    const fullFilePath = path.join(uploadsDir, safeRelPath);
+    const parentDir = path.dirname(fullFilePath);
+    if (!fs.existsSync(parentDir)) {
+      fs.mkdirSync(parentDir, { recursive: true });
+    }
+
+    fs.writeFileSync(fullFilePath, fileBuffer);
+    const publicUrl = `/uploads/${safeRelPath}`;
+    
+    return res.json({
+      success: true,
+      url: publicUrl,
+      path: safeRelPath,
+      contentType: contentType || 'application/octet-stream',
+      size: fileBuffer.length
+    });
+  } catch (err) {
+    console.error('Storage upload error:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });

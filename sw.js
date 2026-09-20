@@ -30,18 +30,61 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+const MEDIA_CACHE_NAME = 'sellerflow-media-v1';
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Skip non-GET, Firebase Firestore, Auth, and third-party APIs
+  // Skip non-GET requests
   if (req.method !== 'GET') return;
+
+  // Strictly exclude sensitive verification/KYC files from caching
+  const isPrivateKyc = (
+    url.pathname.includes('/verification') ||
+    url.pathname.includes('/kyc') ||
+    url.pathname.includes('buyerKycRecords') ||
+    url.pathname.includes('identityVerifications') ||
+    url.pathname.includes('ghanaCard')
+  );
+  if (isPrivateKyc) return;
+
+  // Skip Firebase, Firestore, Auth, and app APIs
   if (
     url.hostname.includes('googleapis.com') ||
     url.hostname.includes('firebase') ||
-    url.hostname.includes('supabase') ||
     url.pathname.startsWith('/api/')
   ) {
+    return;
+  }
+
+  // Handle public CDN / storage images (Cloudinary, Unsplash, Supabase public product/post/profile/store images)
+  const isPublicImage = (
+    (url.hostname.includes('cloudinary.com') ||
+     url.hostname.includes('images.unsplash.com') ||
+     (url.hostname.includes('supabase') && url.pathname.includes('/storage/v1/object/public/'))) &&
+    (req.destination === 'image' || /\.(jpe?g|png|webp|gif|svg)(\?.*)?$/i.test(url.pathname))
+  );
+
+  if (isPublicImage) {
+    event.respondWith(
+      caches.open(MEDIA_CACHE_NAME).then((cache) => {
+        return cache.match(req).then((cached) => {
+          const fetchPromise = fetch(req).then((networkRes) => {
+            if (networkRes && networkRes.status === 200) {
+              cache.put(req, networkRes.clone()).catch(() => {});
+            }
+            return networkRes;
+          }).catch(() => cached);
+          return cached || fetchPromise;
+        });
+      })
+    );
+    return;
+  }
+
+  // If request is to Supabase (and not an image above), let native browser handle it
+  if (url.hostname.includes('supabase')) {
     return;
   }
 

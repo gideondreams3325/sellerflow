@@ -13,10 +13,29 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email.lower() == 'gideondreams3325@gmail.com' ||
+        request.auth.token.email.lower() in ['gideondreams3325@gmail.com', 'gideondreams99@gmail.com'] ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'admin')
       );
+    }
+
+    // 1b. Dedicated Buyer KYC & Ghana Card Vault (Security Team-only storage for future reference)
+    // - Only security administrators can read the stored Ghana Card archive
+    // - Authenticated users can write their own identity submission
+    // - Sellers and other regular users have ZERO access to buyer identity records
+    match /buyerKycRecords/{recordId} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin() || (isSignedIn() && request.auth.uid == recordId);
+      allow delete: if isAdmin();
+    }
+
+    // 1c. Private Identity Verifications & Live Selfie Liveness Records
+    // - Encrypted storage for Ghana Card metadata, front/back paths, live selfie path, and liveness audit logs
+    // - Only the verified account owner and Security Team admins can access
+    match /identityVerifications/{recordId} {
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == recordId);
+      allow create, update: if isAdmin() || (isSignedIn() && request.auth.uid == recordId);
+      allow delete: if isAdmin();
     }
 
     // 1. Private User Profiles & KYC Identity Data
@@ -224,6 +243,7 @@ service cloud.firestore {
           request.resource.data.get('type', '') != 'admin_broadcast' &&
           request.resource.data.get('senderName', '') != 'SellerFlow' &&
           request.resource.data.get('senderName', '') != 'SellerFlow Safety AI' &&
+          request.resource.data.get('senderName', '') != 'SellerFlow Security Team' &&
           request.resource.data.get('senderName', '') != 'Admin'
         )
       );

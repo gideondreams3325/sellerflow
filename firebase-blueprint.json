@@ -221,9 +221,62 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["senderId", "text"]
+    },
+    "IdentityVerification": {
+      "title": "IdentityVerification",
+      "description": "Private Ghana Card and live selfie liveness identity verification audit record",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "fullName": { "type": "string" },
+        "dateOfBirth": { "type": "string" },
+        "ghanaCardPin": { "type": "string" },
+        "ghanaCardMasked": { "type": "string" },
+        "ghanaCardHash": { "type": "string" },
+        "ghanaCardFrontPath": { "type": "string" },
+        "ghanaCardBackPath": { "type": "string" },
+        "selfieStoragePath": { "type": "string" },
+        "livenessStatus": { "type": "string", "enum": ["COMPLETED", "FAILED", "PENDING"] },
+        "livenessCompletedAt": { "type": "string", "format": "date-time" },
+        "livenessMovements": { "type": "array" },
+        "verificationStatus": { "type": "string", "enum": ["VERIFIED", "REVIEW", "REJECTED", "PENDING"] },
+        "verificationMethod": { "type": "string" },
+        "submittedAt": { "type": "string", "format": "date-time" },
+        "verifiedAt": { "type": "string", "format": "date-time" },
+        "rejectionReason": { "type": "string" },
+        "verificationRecordId": { "type": "string" },
+        "auditMetadata": { "type": "object" }
+      },
+      "required": ["uid", "verificationStatus"]
+    },
+    "BuyerKycRecord": {
+      "title": "BuyerKycRecord",
+      "description": "Security team vault record for Ghana Card and identity compliance",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "ghanaCardNumber": { "type": "string" },
+        "ghanaCardMasked": { "type": "string" },
+        "ghanaCardFrontPath": { "type": "string" },
+        "ghanaCardBackPath": { "type": "string" },
+        "selfiePath": { "type": "string" },
+        "verificationStatus": { "type": "string" },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid"]
     }
   },
   "firestore": {
+    "/identityVerifications/{recordId}": {
+      "schema": { "$ref": "#/entities/IdentityVerification" },
+      "description": "Private Ghana Card and live selfie liveness verification records"
+    },
+    "/buyerKycRecords/{recordId}": {
+      "schema": { "$ref": "#/entities/BuyerKycRecord" },
+      "description": "Security Team compliance archive of Ghana Card documents"
+    },
     "/users/{userId}": {
       "schema": { "$ref": "#/entities/User" },
       "description": "Private user and seller accounts with KYC identity data"

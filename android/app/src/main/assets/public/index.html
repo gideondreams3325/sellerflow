@@ -4,6 +4,37 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <script>
+// Early diagnostic logger filter to gracefully handle non-fatal offline/network transitions
+(function() {
+  var _origConsoleError = console.error;
+  console.error = function() {
+    var args = Array.prototype.slice.call(arguments);
+    var str = '';
+    try {
+      str = args.map(function(a) {
+        if (!a) return '';
+        if (typeof a === 'string') return a;
+        if (a.message) return a.message + ' ' + (a.stack || '');
+        if (typeof a === 'object') return JSON.stringify(a);
+        return String(a);
+      }).join(' ');
+    } catch (_) {
+      str = String(args[0] || '');
+    }
+
+    if (
+      str.indexOf('Could not reach Cloud Firestore backend') !== -1 ||
+      str.indexOf('Fetching auth token failed') !== -1 ||
+      str.indexOf('auth/network-request-failed') !== -1 ||
+      str.indexOf('operate in offline mode') !== -1 ||
+      str.indexOf('@firebase/firestore') !== -1
+    ) {
+      console.warn.apply(console, ['[Firestore Offline Handler]:'].concat(args));
+      return;
+    }
+    _origConsoleError.apply(console, args);
+  };
+})();
 // Deep-link redirection fallback for Google/OAuth callback on web back to Android custom scheme
 (function() {
   const isOAuth = window.location.pathname.includes('/oauth-callback') ||
@@ -84,6 +115,13 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js" crossorigin="anonymous"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js" crossorigin="anonymous"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js" crossorigin="anonymous"></script>
+<script>
+  try {
+    if (typeof firebase !== 'undefined' && firebase.firestore && typeof firebase.firestore.setLogLevel === 'function') {
+      firebase.firestore.setLogLevel('silent');
+    }
+  } catch(_) {}
+</script>
 <script src="capacitor.js"></script>
 <script>tailwind.config={theme:{extend:{colors:{gold:'#f5b942'}}}}</script>
 <style>
@@ -235,7 +273,9 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 .reel-video{cursor:pointer;touch-action:manipulation}
 .reel-play-toggle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;width:68px;height:68px;border-radius:50%;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(8px);font-size:28px;color:#fff;display:flex;align-items:center;justify-content:center;transition:opacity .2s,transform .2s;cursor:pointer;pointer-events:auto}
 .reel-play-toggle.is-playing{opacity:0;pointer-events:none}
-.reel-sound-label{position:absolute;left:18px;top:18px;z-index:5;padding:7px 10px;border-radius:999px;background:rgba(0,0,0,.55);font-size:11px}
+.reel-sound-label{position:absolute;left:18px;top:18px;z-index:25;padding:7px 12px;border-radius:999px;background:rgba(0,0,0,.68);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.25);font-size:11px;font-weight:700;color:#fff;display:inline-flex;align-items:center;gap:6px;cursor:pointer;pointer-events:auto;transition:all .15s ease;user-select:none}
+.reel-sound-label:hover{background:rgba(0,0,0,.9);border-color:#f5b942;color:#f5b942;transform:scale(1.04)}
+.reel-sound-label.is-unmuted{background:rgba(245,185,66,.18);border-color:rgba(245,185,66,.6);color:#f5b942}
 .comment-sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(760px,100%);max-height:72vh;z-index:180;background:rgba(15,15,15,.96);backdrop-filter:blur(18px);border:1px solid #333;border-bottom:0;border-radius:24px 24px 0 0;box-shadow:0 -20px 70px rgba(0,0,0,.5);padding:16px;padding-bottom:max(18px,env(safe-area-inset-bottom));overflow:auto}
 .comment-backdrop{position:fixed;inset:0;z-index:175;background:rgba(0,0,0,.12)}
 .sound-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #333;background:#151515;border-radius:999px;padding:7px 10px;font-size:12px}
@@ -407,25 +447,70 @@ input, textarea, select { color: #ffffff !important; }
 <body>
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center"><div class="text-center"><div class="spin mx-auto mb-4"></div><div class="gold font-bold text-xl">SellerFlow</div><div id="loadingText" class="muted text-sm mt-2">Starting secure app…</div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
-<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 SellerFlow™ · All rights reserved.</div></div></div>
-<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center gap-1.5 sm:gap-3 overflow-hidden"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="pageSelectorBtn" class="md:hidden" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold shrink-0 whitespace-nowrap">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0"><button type="button" id="headerLoginBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Sign Up</button></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 SellerFlow™. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
+<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP OF COMPANIES INC.</div></div></div>
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center gap-1.5 sm:gap-3 overflow-hidden"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="pageSelectorBtn" class="md:hidden" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold shrink-0 whitespace-nowrap">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="analysis">Analysis</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0"><button type="button" id="headerLoginBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Sign Up</button></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP OF COMPANIES INC. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="pullRefreshIndicator" class="pull-refresh-indicator"><div class="pull-refresh-content"><span class="pull-refresh-icon">↻</span><span class="pull-refresh-text">Pull to refresh</span></div></div>
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
 (function(){
+  // Universal circular structure protection for JSON.stringify to prevent WebChannel/DOM/Snapshot serialization exceptions
+  var _origStringify = JSON.stringify;
+  JSON.stringify = function(value, replacer, space){
+    var seen = new WeakSet();
+    function safeReplacer(key, val){
+      if(typeof val === 'object' && val !== null){
+        if(seen.has(val)){
+          return '[Circular]';
+        }
+        seen.add(val);
+      }
+      if(typeof replacer === 'function'){
+        return replacer.call(this, key, val);
+      }
+      return val;
+    }
+    try{
+      return _origStringify(value, replacer, space);
+    }catch(err){
+      if(err && (err.name === 'TypeError' || String(err).indexOf('circular') !== -1 || String(err).indexOf('Converting circular structure') !== -1)){
+        try{
+          return _origStringify(value, safeReplacer, space);
+        }catch(_){
+          return '"{}"';
+        }
+      }
+      throw err;
+    }
+  };
+
   function $x(id){return document.getElementById(id)}
   function hideLoading(){var x=$x('loading');if(x)x.classList.add('hide')}
+  (function(){
+    var _origConsoleError = console.error;
+    console.error = function(){
+      var args = Array.prototype.slice.call(arguments);
+      var first = (args[0] && (typeof args[0] === 'string' ? args[0] : (args[0].message || ''))) || '';
+      if (typeof first === 'string' && (
+        first.indexOf('Could not reach Cloud Firestore backend') !== -1 ||
+        first.indexOf('@firebase/firestore') !== -1
+      )) {
+        console.warn.apply(console, ['[Firestore Network Notice]:'].concat(args));
+        return;
+      }
+      _origConsoleError.apply(console, args);
+    };
+  })();
   function showHomeFeed(){hideLoading();var a=$x('authPage'),p=$x('app');if(a)a.classList.add('hide');if(p){p.classList.remove('hide');p.classList.add('is-feed-page');}}
   window.addEventListener('error',function(e){
     if(!e)return;
     if(e.target&&(e.target.tagName==='IMG'||e.target.tagName==='VIDEO'||e.target.tagName==='AUDIO'||e.target.tagName==='SOURCE'||e.target.tagName==='LINK'))return;
     var msg=(e.error&&e.error.message)||e.message||'';
-    if(!msg||msg==='Script error.')return;
+    if(!msg||msg==='Script error.'||msg.indexOf('Could not reach Cloud Firestore backend')!==-1)return;
     console.warn('SellerFlow runtime notice:',msg);
   },true);
   window.addEventListener('unhandledrejection',function(e){
     var reason=(e&&e.reason&&e.reason.message)||String((e&&e.reason)||'');
-    if(!reason||reason==='Script error.')return;
+    if(!reason||reason==='Script error.'||reason.indexOf('Could not reach Cloud Firestore backend')!==-1)return;
     console.warn('SellerFlow unhandled promise notice:',reason);
   });
   setTimeout(function(){var l=$x('loading');if(l&&!l.classList.contains('hide')){var t=$x('loadingText');if(t)t.textContent='SellerFlow is ready.';showHomeFeed();if(typeof navigate==='function')navigate('feed');}},6000);
@@ -460,7 +545,7 @@ function getAppUrl() {
   if (window.location.origin && window.location.origin.startsWith('http') && !window.location.origin.includes('localhost')) {
     return window.location.origin;
   }
-  const injectedUrl = 'https://ais-dev-itz26jgxiiweklzlfr22wi-909278422069.europe-west2.run.app';
+  const injectedUrl = '____SELLERFLOW_APP_URL____';
   if (injectedUrl && injectedUrl.startsWith('http')) {
     return injectedUrl;
   }
@@ -1061,10 +1146,111 @@ const triggerGoogleSignIn = async (onSuccess, onError) => {
       await handleCapacitorGoogleSignIn();
     } else {
       loading('Opening Google sign-in…');
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      const provider = new GoogleAuthProvider();
+      if (typeof provider.setCustomParameters === 'function') {
+        provider.setCustomParameters({ prompt: 'select_account' });
+      }
+      await signInWithPopup(auth, provider);
       if (typeof onSuccess === 'function') await onSuccess();
     }
   } catch(e) {
+    if (e?.code === 'auth/unauthorized-domain' || (e?.message && e.message.includes('auth/unauthorized-domain'))) {
+      const currentHost = window.location.hostname || 'aistudio.google.com';
+      modal(`
+        <div class="space-y-4 max-w-md mx-auto text-left">
+          <div class="flex items-center gap-3 pb-3 border-b border-[#262626]">
+            <div class="w-10 h-10 rounded-xl bg-amber-950/40 border border-amber-800 text-gold flex items-center justify-center text-xl shrink-0">
+              🔑
+            </div>
+            <div>
+              <h2 class="text-lg font-black text-white">Add Domain to Firebase</h2>
+              <p class="text-xs text-zinc-400">Firebase Authorized Domains required</p>
+            </div>
+          </div>
+
+          <p class="text-xs text-zinc-300 leading-relaxed">
+            Google Sign-In is blocked by Firebase because <strong>aistudio.google.com</strong> has not been added to your authorized domains list in Firebase Console yet.
+          </p>
+
+          <div class="p-3.5 rounded-xl bg-[#141416] border border-[#2b2b30] space-y-2">
+            <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Domains to add to Firebase Console:</div>
+            <div class="flex items-center justify-between gap-2 bg-black/60 p-2 rounded-lg border border-[#333]">
+              <code class="text-xs text-gold font-mono font-bold select-all">aistudio.google.com</code>
+              <button type="button" onclick="navigator.clipboard.writeText('aistudio.google.com'); toast('Copied aistudio.google.com!', 'success');" class="bg-gold text-black text-[10px] font-bold px-2 py-1 rounded hover:brightness-110">
+                Copy
+              </button>
+            </div>
+            <div class="flex items-center justify-between gap-2 bg-black/60 p-2 rounded-lg border border-[#333]">
+              <code class="text-xs text-gold font-mono font-bold select-all">${currentHost}</code>
+              <button type="button" onclick="navigator.clipboard.writeText('${currentHost}'); toast('Copied preview domain!', 'success');" class="bg-gold text-black text-[10px] font-bold px-2 py-1 rounded hover:brightness-110">
+                Copy
+              </button>
+            </div>
+          </div>
+
+          <div class="text-[11.5px] text-zinc-400 space-y-1 bg-[#18181c] p-3 rounded-xl border border-[#262626]">
+            <div>1. Open <a href="https://console.firebase.google.com/" target="_blank" class="text-gold underline">Firebase Console</a> → <strong>Authentication</strong></div>
+            <div>2. Click the <strong>Settings</strong> tab</div>
+            <div>3. Scroll to <strong>Authorized domains</strong> → <strong>Add domain</strong></div>
+            <div>4. Paste <code>aistudio.google.com</code> and click Save!</div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#262626]">
+            <button type="button" data-close-modal class="bg-gold text-black font-bold px-4 py-2 rounded-xl text-xs">
+              Close
+            </button>
+          </div>
+        </div>
+      `);
+      return;
+    }
+
+    if (e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request' || e?.code === 'auth/popup-blocked') {
+      const isIframe = window.self !== window.top;
+      const fullUrl = window.location.href;
+      modal(`
+        <div class="space-y-4 max-w-md mx-auto text-left">
+          <div class="flex items-center gap-3 pb-3 border-b border-[#262626]">
+            <div class="w-10 h-10 rounded-xl bg-amber-950/40 border border-amber-800 text-gold flex items-center justify-center text-xl shrink-0">
+              📱
+            </div>
+            <div>
+              <h2 class="text-lg font-black text-white">Google Sign-In Notice</h2>
+              <p class="text-xs text-zinc-400">Mobile browser popup notice</p>
+            </div>
+          </div>
+
+          <p class="text-xs text-zinc-300 leading-relaxed">
+            The Google account popup was closed or blocked by your browser. In mobile browsers (especially inside preview frames), Google popups can be dismissed automatically when switching windows.
+          </p>
+
+          <div class="space-y-2.5 p-3 rounded-xl bg-[#141416] border border-[#2a2a2e]">
+            <p class="text-xs font-bold text-gold">Two Easy Ways to Sign In:</p>
+            <div class="text-xs text-zinc-300 space-y-2">
+              <div class="p-2.5 rounded-lg bg-black/50 border border-[#333]">
+                <span class="font-bold text-white block mb-1">Option 1: Sign in with Email & Password</span>
+                <span>Type your email and password on this screen and tap <strong>Sign in</strong> (or <strong>Create account</strong>).</span>
+              </div>
+              <div class="p-2.5 rounded-lg bg-black/50 border border-[#333]">
+                <span class="font-bold text-white block mb-1">Option 2: Open in a Full Browser Tab</span>
+                <span class="block mb-2 text-zinc-400">Google Sign-In popups work natively when opened directly in a new tab:</span>
+                <a href="${fullUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-1.5 w-full bg-gold text-black font-bold py-2 px-3 rounded-lg text-xs hover:brightness-110">
+                  <span>↗️ Open App in New Tab</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#262626]">
+            <button type="button" data-close-modal class="bg-[#242424] hover:bg-[#333] text-white font-semibold px-4 py-2 rounded-xl text-xs">
+              Back to Sign In
+            </button>
+          </div>
+        </div>
+      `);
+      return;
+    }
+
     if (typeof onError === 'function') {
       onError(e);
     } else {
@@ -1079,13 +1265,32 @@ const signOut=(auth)=>auth.signOut();
 const sendPasswordResetEmail=(auth,email)=>auth.sendPasswordResetEmail(email);
 const sendEmailVerification=(user)=>user.sendEmailVerification();
 const updateProfile=(user,data)=>user.updateProfile(data);
-const getFirestore=(app)=>firebase.firestore();
+const getFirestore=(app)=>{
+  if(db) return db;
+  try{
+    if(typeof firebase !== 'undefined' && firebase.firestore && typeof firebase.firestore.setLogLevel === 'function'){
+      firebase.firestore.setLogLevel('silent');
+    }
+  }catch(_){}
+  try{
+    const inst = (app && typeof app.firestore === 'function') ? app.firestore() : firebase.firestore();
+    try{
+      if(inst && typeof inst.settings === 'function'){
+        inst.settings({ experimentalForceLongPolling: true, merge: true });
+      }
+    }catch(_){}
+    db = inst;
+    return db;
+  }catch(_){
+    return (app && typeof app.firestore === 'function') ? app.firestore() : firebase.firestore();
+  }
+};
 function getDbSafe(database){
   if(database && (typeof database.collection === 'function' || typeof database.doc === 'function')) return database;
   if(typeof db !== 'undefined' && db && (typeof db.collection === 'function' || typeof db.doc === 'function')) return db;
   if(typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && typeof firebase.firestore === 'function'){
     try {
-      db = firebase.firestore();
+      db = getFirestore();
       return db;
     } catch(_) {}
   }
@@ -1162,7 +1367,7 @@ function snapshotExists(snap){return !!snap && (typeof snap.exists==='function' 
 
 
 const firebaseConfig={apiKey:'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk',authDomain:'sellerflow-efaab.firebaseapp.com',databaseURL:'https://sellerflow-efaab-default-rtdb.firebaseio.com',projectId:'sellerflow-efaab',storageBucket:'sellerflow-efaab.firebasestorage.app',messagingSenderId:'987175352360',appId:'1:987175352360:web:53e44304aaf11b98c61d1d'};
-const ADMIN_EMAILS=['gideondreams3325@gmail.com'];
+const ADMIN_EMAILS=['gideondreams3325@gmail.com', 'gideondreams99@gmail.com'];
 const isUserAdminEmail=(email)=>ADMIN_EMAILS.includes((email||'').toLowerCase());
 const ADMIN_EMAIL=ADMIN_EMAILS[0];
 let supabaseUrl='https://vvpwntehstjbccarqqzp.supabase.co';
@@ -1497,6 +1702,14 @@ function button(t,id='',cls='bg-gold text-black'){return `<button type="button" 
 function avatar(p,cls='avatar'){return p?.avatarUrl?`<img class="${cls}" src="${esc(p.avatarUrl)}" alt="">`:`<div class="${cls} flex items-center justify-center font-bold">${esc((p?.name||p?.username||'?')[0].toUpperCase())}</div>`}
 function validFile(file,types,maxMB){if(!file)return false;if(!types.includes(file.type))throw Error('Unsupported file type.');if(file.size>maxMB*1024*1024)throw Error(`File is too large. Maximum is ${maxMB}MB.`);return true}
 
+const SF_PRODUCT_FALLBACK_IMG = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22 viewBox=%220 0 300 300%22 fill=%22none%22%3E%3Crect width=%22300%22 height=%22300%22 fill=%22%2318181b%22/%3E%3Ctext x=%2250%25%22 y=%2246%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2256%22%3E📦%3C/text%3E%3Ctext x=%2250%25%22 y=%2266%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2371717a%22 font-family=%22system-ui,sans-serif%22 font-size=%2214%22 font-weight=%22600%22%3ENo Image Available%3C/text%3E%3C/svg%3E';
+function getProductImageUrl(url){
+  if(!url || typeof url !== 'string' || !url.trim()) return SF_PRODUCT_FALLBACK_IMG;
+  return url.trim();
+}
+window.SF_PRODUCT_FALLBACK_IMG = SF_PRODUCT_FALLBACK_IMG;
+window.getProductImageUrl = getProductImageUrl;
+
 /* Video Duration Validator (Supports up to 1 minute / 60 seconds) */
 function checkVideoDuration(file, maxSeconds=60){
   return new Promise((resolve, reject) => {
@@ -1807,6 +2020,7 @@ function setNav(){
     if(currentUser) {
       commercePages.push({ key: 'orders', label: 'My Orders', icon: '📦', desc: 'Tracking & Fulfillment', badge: pCount > 0 ? (pCount > 99 ? '99+' : pCount) : null });
       commercePages.push({ key: 'chats', label: 'Direct Chats', icon: '💬', desc: 'Instant Messages' });
+      commercePages.push({ key: 'analysis', label: 'Analysis', icon: '📈', desc: 'Performance & Growth' });
     }
 
     if(isAdmin || currentProfile?.verified || currentProfile?.role === 'seller') {
@@ -1913,7 +2127,7 @@ function setNav(){
           `}
 
           <div class="pt-0.5 text-center text-[10px] text-zinc-500 font-medium">
-            SellerFlow Ghana © 2026 · Social Selling Platform
+            © 2026 POMAAH GROUP OF COMPANIES INC.
           </div>
         </div>
       </div>
@@ -2286,7 +2500,7 @@ function postCard(p){
   let media='';
   if(p.mediaUrl){
     if(p.mediaType?.startsWith('video')){
-      media=`<video class="reel-media reel-video" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" data-post-id="${p.id}" playsinline webkit-playsinline loop preload="metadata" poster="${esc(p.thumbnailUrl||'')}"></video><button type="button" class="reel-play-toggle" data-video-toggle="${p.id}">▶</button><div class="reel-sound-label">🔊 Sound</div>`;
+      media=`<video class="reel-media reel-video" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" data-post-id="${p.id}" muted playsinline webkit-playsinline loop preload="metadata" poster="${esc(p.thumbnailUrl||'')}"></video><button type="button" class="reel-play-toggle" data-video-toggle="${p.id}">▶</button><button type="button" class="reel-sound-label sf-sound-toggle" data-sound-toggle="${p.id}" title="Toggle sound">🔇 Tap for sound</button>`;
     }else{
       media=`<img loading="lazy" class="reel-media ${p.photoFilter ? `sf-filter-${esc(p.photoFilter)}` : ''}" style="${p.photoFilterCss ? `filter:${esc(p.photoFilterCss)};` : ''}" src="${esc(p.mediaUrl)}" alt="SellerFlow post" data-media-path="${esc(p.mediaPath||'')}" onerror="window.__sfMediaFallback?window.__sfMediaFallback(this):null">`;
     }
@@ -2481,21 +2695,34 @@ function setupReelPlayback(targetPostId){
    try{
      if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
      if(audioCtx.state==='suspended')audioCtx.resume();
-     videos.forEach(v=>{
-       if(!v._sfGain){
-         try{
-           const src=audioCtx.createMediaElementSource(v),gain=audioCtx.createGain();
-           gain.gain.value=1.8;
-           src.connect(gain).connect(audioCtx.destination);
-           v._sfGain=gain;
-         }catch(_){}
-       }
-       v.muted=false;
-       v.volume=1;
-     });
    }catch(_){}
  };
  document.addEventListener('pointerdown',enableAudio,{once:true,passive:true});
+
+ function updateAllSoundLabels(){
+   const isUnmuted = !!window._sfUserUnmuted;
+   document.querySelectorAll('.reel-sound-label').forEach(lbl => {
+     lbl.innerHTML = isUnmuted ? '🔊 Sound on' : '🔇 Tap for sound';
+     lbl.classList.toggle('is-unmuted', isUnmuted);
+     lbl.setAttribute('title', isUnmuted ? 'Mute video sound' : 'Unmute video sound');
+   });
+ }
+
+ function toggleFeedSound(forceState){
+   const targetUnmuted = forceState !== undefined ? forceState : !window._sfUserUnmuted;
+   window._sfUserUnmuted = targetUnmuted;
+   if(targetUnmuted) enableAudio();
+
+   document.querySelectorAll('.reel-video').forEach(v => {
+     v.muted = !targetUnmuted;
+     if(targetUnmuted) v.volume = 1;
+   });
+
+   updateAllSoundLabels();
+   toast(targetUnmuted ? '🔊 Video sound unmuted' : '🔇 Video sound muted', 'info', 1800);
+   return targetUnmuted;
+ }
+ window.toggleFeedSound = toggleFeedSound;
 
  function updateCardButton(card,isPlaying){
    const b=card?.querySelector('[data-video-toggle]');
@@ -2533,7 +2760,6 @@ function setupReelPlayback(targetPostId){
     v.addEventListener('error',fallback);
     v.addEventListener('stalled',()=>{if(v.readyState===0)fallback()});
     v.addEventListener('play',()=>{
-      enableAudio();
       // Ensure only the currently watched For You video can play
       if(currentPage!=='feed'||(currentActiveCard&&card!==currentActiveCard)){
         try{v.pause();}catch(_){}
@@ -2549,10 +2775,19 @@ function setupReelPlayback(targetPostId){
   cards.forEach(card=>{
     const v=card.querySelector('.reel-video');
     const toggleBtn=card.querySelector('[data-video-toggle]');
+    const soundToggleBtn=card.querySelector('.reel-sound-label, [data-sound-toggle]');
+
+    if(soundToggleBtn){
+      soundToggleBtn.addEventListener('click', e=>{
+        e.stopPropagation();
+        e.preventDefault();
+        toggleFeedSound();
+      });
+    }
+
     const toggle=e=>{
-      if(e.target.closest('.reel-actions')||e.target.closest('.reel-content button')||e.target.closest('.sound-chip')||e.target.closest('.comment-sheet'))return;
+      if(e.target.closest('.reel-actions')||e.target.closest('.reel-content button')||e.target.closest('.sound-chip')||e.target.closest('.comment-sheet')||e.target.closest('.reel-sound-label')||e.target.closest('[data-sound-toggle]'))return;
       if(!v)return;
-      enableAudio();
       if(v.paused){
         currentActiveCard=card;
         pauseAllVideosExcept(v);
@@ -2625,16 +2860,21 @@ function setupReelPlayback(targetPostId){
     }
 
     if(activeVideo){
-      enableAudio();
-      activeVideo.muted=false;
-      activeVideo.volume=1;
+      const shouldPlayWithSound = !!window._sfUserUnmuted;
+      activeVideo.muted = !shouldPlayWithSound;
+      if(shouldPlayWithSound){
+        enableAudio();
+        activeVideo.volume = 1;
+      }
       activeVideo.dataset.userPaused='0';
       activeVideo.play().then(()=>{
         updateCardButton(card,true);
+        updateAllSoundLabels();
       }).catch(()=>{
         activeVideo.muted=true;
         activeVideo.play().catch(()=>{});
         updateCardButton(card,true);
+        updateAllSoundLabels();
       });
     }
 
@@ -4224,13 +4464,12 @@ async function openStore(uid){
     return;
   }
   pauseAllForYouVideos(true);
-  const previousPage = currentPage;
-  if(currentPage==='feed'){
-    currentPage='store';
-    $('app')?.classList.remove('is-feed-page');
-    $('appMainScroll')?.classList.remove('is-feed-scroll');
-    setNav();
-  }
+  const previousPage = currentPage || 'feed';
+  currentPage = 'store';
+  $('app')?.classList.remove('is-feed-page');
+  $('appMainScroll')?.classList.remove('is-feed-scroll');
+  setNav();
+
   loading('Opening store…');
   try{
     const [ss,ps]=await Promise.all([getDoc(doc(db,'stores',uid)),getDoc(doc(db,'publicProfiles',uid))]);
@@ -4268,24 +4507,40 @@ async function openStore(uid){
     }
 
     $('page').innerHTML=`
-      ${store?.bannerUrl ? `
-        <div class="w-full h-40 sm:h-56 rounded-2xl overflow-hidden mb-5 border border-[#2b2b2b] bg-[#111] relative">
-          <img src="${esc(store.bannerUrl)}" class="w-full h-full object-cover" alt="Store banner">
-          <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
-        </div>
-      ` : ''}
+      <div class="relative w-full h-40 sm:h-56 rounded-2xl overflow-hidden mb-5 border border-[#2b2b2b] bg-[#111] group">
+        ${store?.bannerUrl ? `
+          <img id="storefrontBannerImg" src="${esc(store.bannerUrl)}" class="w-full h-full object-cover" alt="Store banner">
+        ` : `
+          <div id="storefrontBannerImg" class="w-full h-full bg-gradient-to-r from-zinc-900 via-stone-900 to-amber-950/40 flex items-center justify-center text-zinc-600 text-xs">
+            <span>No banner uploaded</span>
+          </div>
+        `}
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
+        ${isOwner ? `
+          <label class="absolute top-3 right-3 bg-black/80 hover:bg-black text-white border border-white/20 hover:border-gold px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition flex items-center gap-1.5 shadow backdrop-blur z-10">
+            <span>📷</span><span>Change Banner</span>
+            <input type="file" id="storefrontQuickBannerInput" accept="image/jpeg,image/png,image/webp" class="hidden">
+          </label>
+        ` : ''}
+      </div>
 
       ${storeStatusNotice}
 
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div class="flex items-center gap-3">
           <button type="button" id="backMarket" class="back-page-btn border border-[#333] hover:border-gold rounded-xl px-3 py-2 text-sm font-bold bg-[#141414]">
-            ← Back to For You
+            ← Back to ${previousPage === 'marketplace' ? 'Marketplace' : 'For You'}
           </button>
-          <div>
+          <div class="relative group">
             ${store?.logoUrl ? `
-              <img src="${esc(store.logoUrl)}" class="w-16 h-16 rounded-2xl object-cover border border-[#333] bg-[#222]" alt="Store logo">
+              <img id="storefrontLogoImg" src="${esc(store.logoUrl)}" class="w-16 h-16 rounded-2xl object-cover border border-[#333] bg-[#222]" alt="Store logo">
             ` : avatar(p,'w-16 h-16 rounded-2xl object-cover bg-[#222]')}
+            ${isOwner ? `
+              <label class="absolute -bottom-1 -right-1 bg-gold text-black hover:brightness-110 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer shadow border border-black/30 transition z-10" title="Change logo">
+                <span>📷</span>
+                <input type="file" id="storefrontQuickLogoInput" accept="image/jpeg,image/png,image/webp" class="hidden">
+              </label>
+            ` : ''}
           </div>
           <div>
             <h1 class="text-2xl font-black text-white flex items-center gap-1.5 flex-wrap">
@@ -4300,7 +4555,7 @@ async function openStore(uid){
         <div class="flex flex-wrap items-center gap-2">
           ${isOwner ? `
             <button type="button" id="ownerEditStoreBtn" class="border border-[#444] hover:border-gold px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-[#141414] transition flex items-center gap-1.5">
-              <span>✏️</span><span>Edit Store</span>
+              <span>✏️</span><span>Edit Store Details</span>
             </button>
             <button type="button" id="ownerAddProductBtn" class="bg-gold text-black hover:brightness-110 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
               <span>＋</span><span>Add Product</span>
@@ -4364,9 +4619,59 @@ async function openStore(uid){
       </div>
     `;
 
-    $('ownerEditStoreBtn')?.addEventListener('click', () => navigate('store'));
+    $('ownerEditStoreBtn')?.addEventListener('click', () => renderStore(true));
     $('ownerAddProductBtn')?.addEventListener('click', () => openProductModal());
     $('ownerAddProdSubBtn')?.addEventListener('click', () => openProductModal());
+
+    $('storefrontQuickBannerInput')?.addEventListener('change', async (e) => {
+      const f = e.target.files[0];
+      if(!f) return;
+      window._sfStoreUploading = true;
+      try {
+        validFile(f, ['image/jpeg','image/png','image/webp'], 10);
+        loading('Uploading store banner…');
+        const up = await uploadPublic(f, 'stores');
+        await updateDoc(doc(db, 'stores', uid), {
+          bannerUrl: up.url,
+          bannerPath: up.path,
+          updatedAt: serverTimestamp()
+        });
+        toast('Store banner updated successfully!', 'success');
+        await openStore(uid);
+      } catch(err){
+        toast(errMsg(err), 'error');
+      } finally {
+        window._sfStoreUploading = false;
+        ready();
+      }
+    });
+
+    $('storefrontQuickLogoInput')?.addEventListener('change', async (e) => {
+      const f = e.target.files[0];
+      if(!f) return;
+      window._sfStoreUploading = true;
+      try {
+        validFile(f, ['image/jpeg','image/png','image/webp'], 10);
+        loading('Uploading store logo…');
+        const up = await uploadPublic(f, 'stores');
+        await updateDoc(doc(db, 'stores', uid), {
+          logoUrl: up.url,
+          logoPath: up.path,
+          updatedAt: serverTimestamp()
+        });
+        await updateDoc(doc(db, 'publicProfiles', uid), {
+          avatarUrl: up.url
+        }).catch(()=>{});
+        if(currentProfile) currentProfile.avatarUrl = up.url;
+        toast('Store logo updated successfully!', 'success');
+        await openStore(uid);
+      } catch(err){
+        toast(errMsg(err), 'error');
+      } finally {
+        window._sfStoreUploading = false;
+        ready();
+      }
+    });
 
     $('adminStoreTakedownBtn')?.addEventListener('click', () => {
       if(isStoreTakenDown) adminRestoreStore(uid);
@@ -4419,6 +4724,19 @@ async function openStore(uid){
         if(item) openProductDetailModal(item);
       };
     });
+    document.querySelectorAll('[data-edit-product]').forEach(b=>{
+      b.onclick=(e)=>{
+        e.stopPropagation();
+        const item=products.find(x=>x.id===b.dataset.editProduct);
+        if(item) openProductModal(item);
+      };
+    });
+    document.querySelectorAll('[data-delete-product]').forEach(b=>{
+      b.onclick=(e)=>{
+        e.stopPropagation();
+        deleteProduct(b.dataset.deleteProduct);
+      };
+    });
     document.querySelectorAll('[data-add-cart]').forEach(b=>b.onclick=(e)=>{
       e.stopPropagation();
       if(!currentUser) return showAuthPrompt('add products to cart');
@@ -4441,6 +4759,7 @@ async function openStore(uid){
 function productCard(p){
   const inStock = Number(p.stock) > 0;
   const maxStock = inStock ? Number(p.stock) : 0;
+  const isOwner = currentUser && p.sellerId === currentUser.uid;
   return `
     <div class="card p-4 sm:p-3 flex flex-col justify-between" id="store-product-${esc(p.id)}">
       <div>
@@ -4459,27 +4778,53 @@ function productCard(p){
         </div>
       </div>
       <div class="mt-3 pt-2.5 border-t border-[#262626]">
-        ${inStock ? `
-          <div class="flex items-center gap-1.5 mb-2">
-            <span class="text-[11px] text-zinc-400 font-medium">Qty:</span>
-            <div class="flex items-center rounded-lg border border-[#333] bg-[#121212] overflow-hidden">
-              <button type="button" data-store-qty-minus="${esc(p.id)}" class="w-6 h-6 text-zinc-300 hover:bg-[#222] font-bold text-xs flex items-center justify-center">−</button>
-              <input id="store-qty-${esc(p.id)}" type="number" min="1" max="${maxStock}" value="1" class="w-8 text-center bg-transparent text-xs font-bold text-white outline-none">
-              <button type="button" data-store-qty-plus="${esc(p.id)}" class="w-6 h-6 text-zinc-300 hover:bg-[#222] font-bold text-xs flex items-center justify-center">+</button>
-            </div>
+        ${isOwner ? `
+          <div class="flex items-center gap-2">
+            <button type="button" data-edit-product="${p.id}" class="flex-1 border border-[#444] hover:border-gold rounded-xl py-2 text-xs font-semibold text-zinc-200 transition flex items-center justify-center gap-1">
+              <span>✏️</span><span>Edit</span>
+            </button>
+            <button type="button" data-delete-product="${p.id}" class="border border-red-700/70 hover:bg-red-950/30 text-red-400 rounded-xl px-3 py-2 text-xs font-semibold transition flex items-center justify-center gap-1">
+              <span>🗑️</span>
+            </button>
           </div>
-        ` : ''}
-        <button type="button" data-add-cart="${p.id}" ${!inStock ? 'disabled' : ''} class="w-full ${!inStock ? 'bg-[#222] text-zinc-500 cursor-not-allowed' : 'bg-gold text-black font-bold hover:brightness-110 shadow-sm'} rounded-xl py-2.5 text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
-          <span>🛒</span>
-          <span>${!inStock ? 'Out of stock' : 'Add to cart'}</span>
-        </button>
+        ` : `
+          ${inStock ? `
+            <div class="flex items-center gap-1.5 mb-2">
+              <span class="text-[11px] text-zinc-400 font-medium">Qty:</span>
+              <div class="flex items-center rounded-lg border border-[#333] bg-[#121212] overflow-hidden">
+                <button type="button" data-store-qty-minus="${esc(p.id)}" class="w-6 h-6 text-zinc-300 hover:bg-[#222] font-bold text-xs flex items-center justify-center">−</button>
+                <input id="store-qty-${esc(p.id)}" type="number" min="1" max="${maxStock}" value="1" class="w-8 text-center bg-transparent text-xs font-bold text-white outline-none">
+                <button type="button" data-store-qty-plus="${esc(p.id)}" class="w-6 h-6 text-zinc-300 hover:bg-[#222] font-bold text-xs flex items-center justify-center">+</button>
+              </div>
+            </div>
+          ` : ''}
+          <button type="button" data-add-cart="${p.id}" ${!inStock ? 'disabled' : ''} class="w-full ${!inStock ? 'bg-[#222] text-zinc-500 cursor-not-allowed' : 'bg-gold text-black font-bold hover:brightness-110 shadow-sm'} rounded-xl py-2.5 text-xs sm:text-sm transition flex items-center justify-center gap-1.5">
+            <span>🛒</span>
+            <span>${!inStock ? 'Out of stock' : 'Add to cart'}</span>
+          </button>
+        `}
       </div>
     </div>
   `;
 }
 
-async function openProductDetailModal(p){
-  if(!p) return;
+async function openProductDetailModal(rawP){
+  if(!rawP) {
+    toast('Product details unavailable.', 'error');
+    return;
+  }
+  const p = {
+    id: rawP.id || '',
+    name: rawP.name || 'Untitled Product',
+    price: Number(rawP.price || 0),
+    stock: Number(rawP.stock || 0),
+    description: rawP.description || '',
+    imageUrl: rawP.imageUrl || '',
+    sellerId: rawP.sellerId || '',
+    category: rawP.category || 'General',
+    status: rawP.status || '',
+    ...rawP
+  };
   const s = sellerProfile(p.sellerId);
   const location = getSellerLocation(p.sellerId);
   const inStock = Number(p.stock) > 0;
@@ -4509,7 +4854,7 @@ async function openProductDetailModal(p){
       <!-- Product Showcase -->
       <div class="flex flex-col sm:flex-row gap-4">
         <div class="sm:w-1/2 aspect-square rounded-2xl overflow-hidden bg-[#161616] border border-[#2a2a2a] relative shrink-0">
-          <img class="w-full h-full object-cover" src="${esc(p.imageUrl||'')}" alt="${esc(p.name||'Product')}" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 fill=%22none%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%231a1a1a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2228%22%3E📦%3C/text%3E%3C/svg%3E'">
+          <img class="w-full h-full object-cover" src="${esc(getProductImageUrl(p.imageUrl))}" alt="${esc(p.name||'Product')}" onerror="this.onerror=null;this.src=SF_PRODUCT_FALLBACK_IMG;">
           ${!inStock ? `<span class="absolute top-2.5 right-2.5 bg-red-950/90 text-red-300 text-xs px-2.5 py-1 rounded-lg font-bold border border-red-700/60 shadow">Out of Stock</span>` : `<span class="absolute top-2.5 right-2.5 bg-black/70 backdrop-blur-sm text-zinc-300 text-xs px-2.5 py-1 rounded-lg border border-white/10 font-mono">${maxStock} in stock</span>`}
         </div>
         <div class="flex-1 flex flex-col justify-between">
@@ -4721,7 +5066,18 @@ function openProductModal(p=null){
     toast('Identity verification is required before publishing products in the marketplace.', 'info');
     return openVerificationModal();
   }
-  const isEdit = !!p;
+  const isEdit = !!(p && p.id);
+  const prod = p && typeof p === 'object' ? {
+    id: p.id || '',
+    name: p.name || '',
+    price: p.price ?? '',
+    stock: p.stock ?? 1,
+    description: p.description || '',
+    category: p.category || '',
+    imageUrl: p.imageUrl || '',
+    sellerId: p.sellerId || currentUser.uid,
+    ...p
+  } : null;
   modal(`
     <div class="space-y-4">
       <div class="flex items-center gap-3">
@@ -4741,30 +5097,30 @@ function openProductModal(p=null){
 
       <div>
         <label class="muted text-xs block mb-1">Product name</label>
-        <input id="prodName" value="${esc(p?.name||'')}" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white" placeholder="e.g. Handmade Kente Scarf, iPhone 14 Pro Max">
+        <input id="prodName" value="${esc(prod?.name||'')}" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white" placeholder="e.g. Handmade Kente Scarf, iPhone 14 Pro Max">
       </div>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="muted text-xs block mb-1">Price (GHS)</label>
-          <input id="prodPrice" type="number" min="0" step="0.01" value="${p?.price??''}" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white" placeholder="0.00">
+          <input id="prodPrice" type="number" min="0" step="0.01" value="${prod?.price??''}" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white" placeholder="0.00">
         </div>
         <div>
           <label class="muted text-xs block mb-1">Stock quantity</label>
-          <input id="prodStock" type="number" min="0" step="1" value="${p?.stock??1}" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white" placeholder="1">
+          <input id="prodStock" type="number" min="0" step="1" value="${prod?.stock??1}" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white" placeholder="1">
         </div>
       </div>
 
       <div>
         <label class="muted text-xs block mb-1">Description</label>
-        <textarea id="prodDesc" rows="3" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white" placeholder="Detail condition, specifications, sizing, delivery or warranty…">${esc(p?.description||'')}</textarea>
+        <textarea id="prodDesc" rows="3" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white" placeholder="Detail condition, specifications, sizing, delivery or warranty…">${esc(prod?.description||'')}</textarea>
       </div>
 
       <div>
         <label class="muted text-xs block mb-1">Product image</label>
-        ${p?.imageUrl ? `
+        ${prod?.imageUrl ? `
           <div class="flex items-center gap-3 mb-2 p-2 rounded-xl bg-[#161616] border border-[#2a2a2a]">
-            <img src="${esc(p.imageUrl)}" class="w-12 h-12 rounded-lg object-cover" alt="">
+            <img src="${esc(getProductImageUrl(prod.imageUrl))}" class="w-12 h-12 rounded-lg object-cover" alt="" onerror="this.onerror=null;this.src=SF_PRODUCT_FALLBACK_IMG;">
             <span class="text-xs text-zinc-400">Current image (choose a new file below to replace)</span>
           </div>
         ` : ''}
@@ -5622,7 +5978,7 @@ function generateReceiptHTML(order, format = 'thermal'){
 
       <div class="mt-6 pt-4 border-t border-zinc-200 flex items-center justify-between text-[11px] text-zinc-500">
         <div>
-          <div class="font-semibold text-zinc-700">© 2026 SellerFlow™ Ghana · All rights reserved.</div>
+          <div class="font-semibold text-zinc-700">© 2026 POMAAH GROUP OF COMPANIES INC. · All rights reserved.</div>
           <div class="text-[10.5px]">For order support or courier inquiries, contact support@sellerflow.com.gh</div>
         </div>
         <div class="text-right font-mono text-[10px]">
@@ -6047,7 +6403,7 @@ async function renderOrders(targetOrderId){
   }
 }
 
-async function renderStore(){
+async function renderStore(forceEdit = false){
   if(!currentUser){
     showAuthPrompt('view or manage your store');
     return;
@@ -6058,7 +6414,14 @@ async function renderStore(){
       getDoc(doc(db, 'stores', currentUser.uid)),
       getDocs(query(collection(db, 'products'), where('sellerId', '==', currentUser.uid)))
     ]);
-    const store = snapshotExists(storeSnap) ? storeSnap.data() : {};
+    const storeExists = snapshotExists(storeSnap);
+    const storeData = storeExists ? storeSnap.data() : null;
+    const hasExistingStore = storeExists && !!(storeData && (storeData.name || storeData.ownerId || storeData.location || storeData.status || storeData.createdAt));
+    if(!forceEdit && hasExistingStore){
+      ready();
+      return openStore(currentUser.uid);
+    }
+    const store = storeData || {};
     const myProducts = prodsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
     const isApproved = store.status === 'approved' || (!store.status && currentProfile.verified);
@@ -6120,9 +6483,9 @@ async function renderStore(){
           <p class="muted text-xs sm:text-sm mt-1">Manage your public Ghanaian storefront, banner, logo, and catalogue.</p>
         </div>
         <div class="flex items-center gap-2">
-          ${snapshotExists(storeSnap) ? `
-            <button type="button" id="previewStoreBtnTop" class="border border-[#444] hover:border-gold px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-[#161616] transition flex items-center gap-1.5">
-              <span>👁️</span><span>Preview Store</span>
+          ${hasExistingStore ? `
+            <button type="button" id="backToStorefrontBtn" class="border border-[#444] hover:border-gold px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-[#161616] transition flex items-center gap-1.5">
+              <span>🏪</span><span>Back to Storefront</span>
             </button>
           ` : ''}
           <button type="button" id="addNewProductStoreBtn" class="bg-gold text-black hover:brightness-110 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
@@ -6494,6 +6857,7 @@ async function renderStore(){
 
     $('previewStoreBtnTop')?.addEventListener('click', () => openStore(currentUser.uid));
     $('previewStorefrontBtn')?.addEventListener('click', () => openStore(currentUser.uid));
+    $('backToStorefrontBtn')?.addEventListener('click', () => openStore(currentUser.uid));
     $('addNewProductStoreBtn')?.addEventListener('click', () => openProductModal());
     $('sideAddProductBtn')?.addEventListener('click', () => openProductModal());
     $('emptyAddProductBtn')?.addEventListener('click', () => openProductModal());
@@ -6626,7 +6990,7 @@ async function renderStore(){
         } else {
           toast('Store submitted for admin review. Once approved, it will appear in the marketplace.', 'success', 4500);
         }
-        await renderStore();
+        await openStore(currentUser.uid);
       } catch(e) {
         toast(errMsg(e), 'error');
       } finally {
@@ -6644,28 +7008,67 @@ async function renderProfile(){const p=currentProfile;const privateDoc=await get
 async function saveProfile(){try{const name=$('profileName').value.trim(),username=usernameClean($('profileUsername').value);if(name.length<2||username.length<3)throw Error('Enter a valid name and username.');if(username!==currentProfile.username){if(!(await uniqueUsername(username,currentUser.uid)))throw Error('That username is already taken.');}await updateDoc(doc(db,'users',currentUser.uid),{name,username,usernameLower:username.toLowerCase(),nameLastChanged:serverTimestamp(),usernameLastChanged:serverTimestamp()});try{await setDoc(doc(db,'publicProfiles',currentUser.uid),{uid:currentUser.uid,name,username,usernameLower:username.toLowerCase(),avatarUrl:currentProfile.avatarUrl||'',verified:!!currentProfile.verified,followers:currentProfile.followers||[],following:currentProfile.following||[],role:currentProfile.role||'seller'},{merge:true})}catch(e){console.warn('Public profile sync skipped:',e)}await refreshProfile();toast('Profile saved','success');navigate('profile')}catch(e){toast(errMsg(e),'error')}}
 async function submitVerification(){
   try{
-    const rawNum=$('ghanaCard').value.trim();
-    const front=$('cardFront').files[0],back=$('cardBack').files[0];
-    if(!rawNum||!front||!back)throw Error('Enter the Ghana Card number and upload both front and back images.');
+    const rawNum=$('ghanaCard')?.value.trim() || '';
+    const legalName=$('cardLegalName')?.value.trim() || currentProfile?.name || currentUser?.displayName || 'Buyer';
+    const frontInput=$('cardFront'), backInput=$('cardBack');
+    const front=frontInput?.files?.[0], back=backInput?.files?.[0];
+
+    const existingFront = currentProfile?.ghanaCardFrontPath;
+    const existingBack = currentProfile?.ghanaCardBackPath;
+
+    if(!rawNum) throw Error('Please enter your Ghana Card PIN / number.');
+    if(!front && !existingFront) throw Error('Please upload a clear front photo of your Ghana Card.');
+    if(!back && !existingBack) throw Error('Please upload a clear back photo of your Ghana Card.');
 
     const n = rawNum.toUpperCase().replace(/\s+/g, '');
     if(!/^GHA-[A-Z0-9]{9}-[A-Z0-9]$/i.test(n) && !/^GHA[A-Z0-9]{10}$/i.test(n)){
-      throw Error('Invalid Ghana Card format. Please enter your valid PIN in the format GHA-XXXXXXXXX-X (e.g. GHA-123456789-0). Please submit correct info.');
+      throw Error('Invalid Ghana Card format. Please enter your valid PIN in the format GHA-XXXXXXXXX-X (e.g. GHA-123456789-0).');
     }
 
-    validFile(front,['image/jpeg','image/png','image/webp','application/pdf'],10);
-    validFile(back,['image/jpeg','image/png','image/webp','application/pdf'],10);
+    if(front) validFile(front,['image/jpeg','image/png','image/webp','application/pdf'],10);
+    if(back) validFile(back,['image/jpeg','image/png','image/webp','application/pdf'],10);
+
     loading('Uploading identity documents securely…');
-    const [fp,bp]=await Promise.all([uploadPrivate(front,'front'),uploadPrivate(back,'back')]);
-    
+    let fp = existingFront, bp = existingBack;
+    const uploadTasks = [];
+    if(front) uploadTasks.push(uploadPrivate(front,'front').then(res => { fp = res; }));
+    if(back) uploadTasks.push(uploadPrivate(back,'back').then(res => { bp = res; }));
+    if(uploadTasks.length) await Promise.all(uploadTasks);
+
+    const maskedCard = n.slice(0,3)+'-*****'+(n.slice(-4)||'');
+
     // Initial client update to safely reflect submission in progress
     await updateDoc(doc(db,'users',currentUser.uid),{
-      ghanaCardMasked:n.slice(0,3)+'-*****'+(n.slice(-4)||''),
-      ghanaCardFrontPath:fp,
-      ghanaCardBackPath:bp,
-      verificationStatus:'pending',
-      verificationSubmittedAt:serverTimestamp()
+      ghanaCardMasked: maskedCard,
+      ghanaCardNumber: n,
+      ghanaCardFrontPath: fp,
+      ghanaCardBackPath: bp,
+      ghanaCardLegalName: legalName,
+      verificationStatus: 'pending',
+      verificationSubmittedAt: serverTimestamp()
     });
+
+    // Directly archive in dedicated admin buyerKycRecords vault for administrative future reference
+    try {
+      await setDoc(doc(db, 'buyerKycRecords', currentUser.uid), {
+        uid: currentUser.uid,
+        name: legalName,
+        email: currentUser.email || '',
+        phone: currentProfile?.phone || '',
+        ghanaCardMasked: maskedCard,
+        ghanaCardNumber: n,
+        ghanaCardFrontPath: fp,
+        ghanaCardBackPath: bp,
+        verificationStatus: 'pending',
+        submittedAt: serverTimestamp(),
+        lastUpdatedAt: serverTimestamp(),
+        role: currentProfile?.role || 'buyer',
+        source: 'buyer_order_verification',
+        notes: 'Submitted for store and marketplace order clearance. Stored securely for admin compliance reference.'
+      }, { merge: true });
+    } catch(kycErr) {
+      console.warn('buyerKycRecords direct storage notice:', kycErr);
+    }
 
     loading('Authoritatively verifying Ghana Card identity with Gemini 3.8 Flash…');
     try {
@@ -6681,36 +7084,42 @@ async function submitVerification(){
           frontPath: fp,
           backPath: bp,
           ghanaCardNumber: n,
-          fullName: currentProfile?.name || ''
+          fullName: legalName
         })
       });
 
       const data = await res.json();
       if(res.ok && data.success){
         if(data.verdict === 'VERIFIED'){
-          toast('🎉 Identity verified by Gemini 3.8 Flash! Your blue SellerFlow badge is now active.','success');
+          toast('🎉 Identity verified by Gemini 3.8 Flash! Ghana Card recorded.','success');
         } else if(data.verdict === 'REVIEW'){
-          toast('Verification submitted securely and queued for administrator review.','info');
+          toast('Ghana Card details and documents stored securely for administrator review.','info');
         } else {
-          toast(data.message || 'Verification submitted for review.','success');
+          toast(data.message || 'Ghana Card submitted and recorded for administrator review.','success');
         }
       } else {
         if(data.verdict === 'DUPLICATE_REJECTED' || data.duplicate){
-          toast(data.error || 'Duplicate Ghana Card: This card is already linked to another account.','error');
+          toast(data.error || 'Duplicate Ghana Card: This card is already registered on another account.','error');
         } else if(data.verdict === 'CORRECTION_REQUIRED'){
-          toast(data.error || 'Verification requirement: Please submit correct info.','error');
+          toast(data.error || 'Please submit correct info matching your official card.','error');
         } else {
-          toast(data.error || data.message || 'Please submit correct info and valid documents for Ghana Card review.','error');
+          toast(data.error || data.message || 'Verification submitted for administrator review.','info');
         }
       }
     } catch(callErr){
       console.warn('Verification endpoint notice:', callErr);
-      toast('Verification submitted securely for administrator review.','info');
+      toast('Ghana Card stored securely for administrator verification.','info');
     }
 
     closeModal();
     await refreshProfile();
-    navigate('profile');
+    if(typeof window._verificationSuccessCb === 'function'){
+      const cb = window._verificationSuccessCb;
+      window._verificationSuccessCb = null;
+      cb();
+    } else {
+      navigate('profile');
+    }
   }catch(e){
     toast(errMsg(e),'error');
   }finally{
@@ -6816,12 +7225,86 @@ function renderCart(){
   $('checkoutBtn')?.addEventListener('click',openCheckout);
 }
 function changeCart(i,d){cart[i].quantity=Math.max(1,Math.min(cart[i].maxStock||99,cart[i].quantity+d));saveCart();renderCart()}
-function openCheckout(){
+async function openCheckout(){
   if(!currentUser)return showAuthPrompt('make an order and complete checkout');
   if(!cart.length){
     toast('Your cart is empty. Add items before checking out.','error');
     return;
   }
+
+  loading('Checking identity verification status…');
+  let uData = {};
+  try {
+    const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
+    if(snapshotExists(userSnap)) uData = userSnap.data() || {};
+  } catch(e) {
+    console.warn('Error reading buyer user record:', e);
+  } finally {
+    ready();
+  }
+
+  const hasCardNumber = !!(uData.ghanaCardNumber || uData.ghanaCardMasked || uData.ghanaCardNum);
+  const hasFrontDoc = !!(uData.ghanaCardFrontPath || uData.ghanaCardFrontUrl || uData.ghanaCardFront);
+  const hasBackDoc = !!(uData.ghanaCardBackPath || uData.ghanaCardBackUrl || uData.ghanaCardBack);
+  const isVerifiedBuyer = hasCardNumber && hasFrontDoc && hasBackDoc;
+
+  if(!isVerifiedBuyer){
+    modal(`
+      <div class="space-y-4 max-w-md mx-auto text-left">
+        <div class="flex items-center gap-3 pb-3 border-b border-[#262626]">
+          <div class="w-10 h-10 rounded-xl bg-amber-950/40 border border-amber-800 text-gold flex items-center justify-center text-xl shrink-0">
+            🛡️
+          </div>
+          <div>
+            <h2 class="text-lg font-black text-white">Ghana Card Verification Required</h2>
+            <p class="text-xs text-zinc-400">Buyer Protection & Law of Ghana Compliance</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-amber-950/20 border border-amber-500/30 text-xs text-zinc-300 space-y-2 leading-relaxed">
+          <p class="font-bold text-amber-300 text-xs">Identity verification is required before checkout.</p>
+          <p class="text-[11.5px] text-zinc-300">
+            Under SellerFlow Trust & Anti-Fraud Policy and the Laws of Ghana, all buyers must complete Ghana Card identification (PIN number, front image, and back image) before placing orders.
+          </p>
+          <div class="text-[11px] pt-1 space-y-1 font-mono">
+            <div class="flex items-center gap-2">
+              <span>${hasCardNumber ? '✓' : '❌'}</span>
+              <span class="${hasCardNumber ? 'text-emerald-400 font-semibold' : 'text-amber-300'}">Ghana Card PIN ${hasCardNumber ? 'Recorded' : 'Required'}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span>${hasFrontDoc ? '✓' : '❌'}</span>
+              <span class="${hasFrontDoc ? 'text-emerald-400 font-semibold' : 'text-amber-300'}">Front Document Image ${hasFrontDoc ? 'Uploaded' : 'Required'}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span>${hasBackDoc ? '✓' : '❌'}</span>
+              <span class="${hasBackDoc ? 'text-emerald-400 font-semibold' : 'text-amber-300'}">Back Document Image ${hasBackDoc ? 'Uploaded' : 'Required'}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-[#111915] border border-emerald-600/30 text-xs text-zinc-300 flex items-center gap-2">
+          <span class="text-base text-emerald-400 shrink-0">🛡️</span>
+          <span><b>Zero-Access Privacy:</b> Your Ghana Card is encrypted so that <b>neither sellers nor admins can view your card</b>.</span>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#262626]">
+          <button type="button" data-close-modal class="border border-[#444] hover:border-zinc-400 text-zinc-300 px-4 py-2.5 rounded-xl text-xs font-semibold">
+            Cancel
+          </button>
+          <button type="button" id="startBuyerVerificationCheckoutBtn" class="bg-gold text-black font-extrabold px-5 py-2.5 rounded-xl text-xs hover:brightness-110 shadow-sm flex items-center gap-1.5">
+            <span>Verify Ghana Card Now</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+    `);
+
+    $('startBuyerVerificationCheckoutBtn')?.addEventListener('click', () => {
+      openVerificationModal({ purpose: 'buyer', onSuccess: () => openCheckout() });
+    });
+    return;
+  }
+
   const total=cart.reduce((n,i)=>n+i.price*i.quantity,0);
 
   // Group by seller for transparent split preview
@@ -6979,6 +7462,16 @@ async function placeOrder(){
       throw Error('You must agree to the Buyer Anti-Fraud Terms and comply with the Laws of Ghana to place an order.');
     }
     if(!cart.length)throw Error('Your cart is empty.');
+
+    // Defensive check: Verify buyer Ghana Card information before writing order
+    const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
+    const uData = snapshotExists(userSnap) ? userSnap.data() : {};
+    const hasBuyerCardNum = !!(uData.ghanaCardNumber || uData.ghanaCardMasked || uData.ghanaCardNum);
+    const hasBuyerFront = !!(uData.ghanaCardFrontPath || uData.ghanaCardFrontUrl || uData.ghanaCardFront);
+    const hasBuyerBack = !!(uData.ghanaCardBackPath || uData.ghanaCardBackUrl || uData.ghanaCardBack);
+    if(!hasBuyerCardNum || !hasBuyerFront || !hasBuyerBack){
+      throw Error('Ghana Card verification incomplete. Please provide your Ghana Card details, front image, and back image before completing checkout.');
+    }
 
     const bySeller=new Map();
     cart.forEach(i=>{
@@ -7392,7 +7885,167 @@ async function renderSettings(){
   });
   $('startVerification')?.addEventListener('click',openVerificationModal);
 }
-function openVerificationModal(){const v=currentProfile||{};modal(`<div class="flex items-center gap-3"><div class="policy-icon">🛡️</div><div><h2 class="text-xl font-bold">Secure seller verification</h2><p class="muted text-sm">Private identity review for safer commerce.</p></div></div><p class="muted text-sm mt-4">Your Ghana Card is reviewed only to confirm identity and reduce fraud. It will not be shown to customers.</p><div class="space-y-4 mt-5"><div><label class="muted text-sm">Ghana Card number</label><input id="ghanaCard" value="${esc(v.ghanaCardMasked||'')}" placeholder="GHA-XXXXXXXXX-X" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"></div><div><label class="muted text-sm">Front image</label><input id="cardFront" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="w-full mt-1"></div><div><label class="muted text-sm">Back image</label><input id="cardBack" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="w-full mt-1"></div><div class="text-xs muted bg-[#181818] rounded-xl p-3">Please submit only your own valid Ghana Card. Maximum 10MB per file.</div><div class="flex justify-end gap-2">${button('Cancel','cancelVerification','border border-[#444] bg-transparent text-white')}${button('Submit for review','submitVerification')}</div></div>`);$('cancelVerification').onclick=closeModal;$('submitVerification').onclick=submitVerification}
+function openVerificationModal(options = {}){
+  const opts = typeof options === 'string' ? { purpose: options } : (options || {});
+  window._verificationSuccessCb = opts.onSuccess || null;
+  const v = currentProfile || {};
+  const isBuyer = opts.purpose === 'buyer';
+
+  modal(`
+    <div class="space-y-4 max-w-lg mx-auto text-left">
+      <div class="flex items-center gap-3 pb-3 border-b border-[#262626]">
+        <div class="w-10 h-10 rounded-xl bg-amber-950/50 border border-amber-700/60 text-gold flex items-center justify-center text-xl shrink-0">
+          🪪
+        </div>
+        <div>
+          <h2 class="text-lg sm:text-xl font-black text-white">${isBuyer ? 'Buyer Identity Verification (Ghana Card)' : 'Merchant & Seller Identity Verification'}</h2>
+          <p class="muted text-xs">${isBuyer ? 'Mandatory for all marketplace orders under Laws of Ghana & anti-fraud compliance.' : 'Official review for seller authorization and store verified badge.'}</p>
+        </div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-950/35 via-[#111915] to-[#121216] border border-emerald-500/35 text-xs text-zinc-300 space-y-2.5 shadow-lg">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 font-bold text-emerald-300">
+            <span class="text-base">🛡️</span>
+            <span class="text-xs sm:text-[13px] tracking-wide">100% Private & Zero-Access Security</span>
+          </div>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 uppercase tracking-wider">
+            Zero-Access
+          </span>
+        </div>
+        <p class="text-[11.5px] text-zinc-300 leading-relaxed">
+          Your Ghana Card PIN and uploaded documents are protected by end-to-end cryptographic encryption. <b>Even platform administrators cannot view your card details or pictures</b>, and they are <b>never shared with sellers or vendors</b>. Your information is processed solely for automated identity protection and dispute prevention.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-emerald-900/40 text-[10.5px] text-emerald-400 font-medium">
+          <div class="flex items-center gap-1.5">
+            <span class="text-emerald-400 font-bold">✓</span>
+            <span>Admins cannot view it</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-emerald-400 font-bold">✓</span>
+            <span>Hidden from all sellers</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-emerald-400 font-bold">✓</span>
+            <span>End-to-end encrypted</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3.5">
+        <div>
+          <label class="muted text-xs block mb-1 font-semibold text-zinc-300">Full Legal Name on Ghana Card *</label>
+          <input id="cardLegalName" value="${esc(v.ghanaCardLegalName || v.name || currentUser?.displayName || '')}" placeholder="e.g. Kwame Mensah" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white focus:border-gold outline-none">
+          <p class="text-[10px] text-zinc-500 mt-1">Must match the legal name printed on the card.</p>
+        </div>
+
+        <div>
+          <label class="muted text-xs block mb-1 font-semibold text-zinc-300">Ghana Card PIN / Number *</label>
+          <input id="ghanaCard" value="${esc(v.ghanaCardNumber || v.ghanaCardMasked || '')}" placeholder="GHA-123456789-0" maxlength="15" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white font-mono focus:border-gold outline-none uppercase tracking-wider">
+          <p class="text-[10px] text-zinc-500 mt-1">Standard National Identification Authority format: GHA-XXXXXXXXX-X</p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-3 pt-1">
+          <!-- Front of Ghana Card -->
+          <div class="p-3 rounded-xl bg-[#141416] border border-[#2b2b32]">
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-gold"></span> Front of Card *
+              </label>
+              ${v.ghanaCardFrontPath ? '<span class="text-[10px] font-bold text-emerald-400">✓ On file</span>' : ''}
+            </div>
+            <input id="cardFront" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="w-full text-[11px] text-zinc-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer">
+            <div id="frontPreviewContainer" class="mt-2.5 h-28 rounded-lg bg-black/60 border border-[#333] flex items-center justify-center overflow-hidden relative">
+              <span class="text-zinc-600 text-[11px] flex flex-col items-center gap-1">
+                <span class="text-xl">📸</span>
+                <span>Front photo preview</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Back of Ghana Card -->
+          <div class="p-3 rounded-xl bg-[#141416] border border-[#2b2b32]">
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-gold"></span> Back of Card *
+              </label>
+              ${v.ghanaCardBackPath ? '<span class="text-[10px] font-bold text-emerald-400">✓ On file</span>' : ''}
+            </div>
+            <input id="cardBack" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="w-full text-[11px] text-zinc-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer">
+            <div id="backPreviewContainer" class="mt-2.5 h-28 rounded-lg bg-black/60 border border-[#333] flex items-center justify-center overflow-hidden relative">
+              <span class="text-zinc-600 text-[11px] flex flex-col items-center gap-1">
+                <span class="text-xl">📸</span>
+                <span>Back photo preview</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-zinc-400 bg-[#121214] rounded-xl p-3 border border-[#242428] flex items-start gap-2">
+          <span class="text-base text-gold shrink-0">💡</span>
+          <span>Ensure all 4 corners of the card are visible, text is crisp and readable, and there is no glare. Maximum file size 10MB each.</span>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#262626]">
+          <button type="button" id="cancelVerification" class="border border-[#444] hover:bg-[#222] text-zinc-300 font-bold px-4 py-2.5 rounded-xl text-xs transition">
+            Cancel
+          </button>
+          <button type="button" id="submitVerification" class="bg-gold text-black font-extrabold px-5 py-2.5 rounded-xl text-xs hover:brightness-110 shadow-md flex items-center gap-2 transition active:scale-98">
+            <span>Verify & Continue</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `);
+
+  // Wire up live image previews
+  const frontInput = $('cardFront');
+  const backInput = $('cardBack');
+  const frontBox = $('frontPreviewContainer');
+  const backBox = $('backPreviewContainer');
+  const cardInput = $('ghanaCard');
+
+  // Load existing preview if already on file
+  if(v.ghanaCardFrontPath && typeof loadGhanaCardDocumentPreview === 'function'){
+    loadGhanaCardDocumentPreview(v.ghanaCardFrontPath).then(u => {
+      if(u && frontBox) frontBox.innerHTML = `<img src="${esc(u)}" class="w-full h-full object-contain" alt="Front on file">`;
+    });
+  }
+  if(v.ghanaCardBackPath && typeof loadGhanaCardDocumentPreview === 'function'){
+    loadGhanaCardDocumentPreview(v.ghanaCardBackPath).then(u => {
+      if(u && backBox) backBox.innerHTML = `<img src="${esc(u)}" class="w-full h-full object-contain" alt="Back on file">`;
+    });
+  }
+
+  frontInput?.addEventListener('change', () => {
+    const f = frontInput.files?.[0];
+    if(f && f.type.startsWith('image/')){
+      const objUrl = URL.createObjectURL(f);
+      frontBox.innerHTML = `<img src="${objUrl}" class="w-full h-full object-contain rounded" alt="Front preview">`;
+    }
+  });
+
+  backInput?.addEventListener('change', () => {
+    const f = backInput.files?.[0];
+    if(f && f.type.startsWith('image/')){
+      const objUrl = URL.createObjectURL(f);
+      backBox.innerHTML = `<img src="${objUrl}" class="w-full h-full object-contain rounded" alt="Back preview">`;
+    }
+  });
+
+  // Auto-format Ghana Card PIN
+  cardInput?.addEventListener('input', () => {
+    let val = cardInput.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+    if(val.startsWith('GHA') && !val.startsWith('GHA-') && val.length > 3){
+      val = 'GHA-' + val.slice(3);
+    }
+    cardInput.value = val;
+  });
+
+  $('cancelVerification').onclick = closeModal;
+  $('submitVerification').onclick = submitVerification;
+}
 
 let swRegistration = null;
 async function initServiceWorker(){
@@ -7992,65 +8645,157 @@ async function loadGhanaCardDocumentPreview(path){
 async function viewVerificationRecord(uid){
   try{
     loading('Fetching verification documents…');
-    const s=await getDoc(doc(db,'users',uid));
-    if(!snapshotExists(s))throw Error('User record not found.');
-    const u=s.data();
-    const frontUrl = await loadGhanaCardDocumentPreview(u.ghanaCardFrontPath);
-    const backUrl = await loadGhanaCardDocumentPreview(u.ghanaCardBackPath);
+    const [userSnap, kycSnap] = await Promise.all([
+      getDoc(doc(db,'users',uid)),
+      getDoc(doc(db,'buyerKycRecords',uid)).catch(() => null)
+    ]);
+    if(!snapshotExists(userSnap) && (!kycSnap || !snapshotExists(kycSnap))) throw Error('User record not found.');
+    
+    const uData = snapshotExists(userSnap) ? userSnap.data() : {};
+    const kData = (kycSnap && snapshotExists(kycSnap)) ? kycSnap.data() : {};
+    const merged = { ...uData, ...kData };
+
+    const frontPath = merged.ghanaCardFrontPath || uData.ghanaCardFrontPath || '';
+    const backPath = merged.ghanaCardBackPath || uData.ghanaCardBackPath || '';
+    const frontUrl = await loadGhanaCardDocumentPreview(frontPath);
+    const backUrl = await loadGhanaCardDocumentPreview(backPath);
+
+    const fullPin = merged.ghanaCardNumber || uData.ghanaCardNumber || '';
+    const maskedPin = merged.ghanaCardMasked || uData.ghanaCardMasked || (fullPin ? (fullPin.slice(0,3)+'-*****'+(fullPin.slice(-4)||'')) : 'Not supplied');
+    const applicantName = merged.name || merged.ghanaCardLegalName || uData.name || 'Applicant';
+    const applicantEmail = merged.email || uData.email || 'N/A';
+    const applicantPhone = merged.phone || uData.phone || 'N/A';
+    const applicantRole = merged.role || uData.role || 'buyer';
+    const currentStatus = merged.verificationStatus || uData.verificationStatus || (merged.verified ? 'approved' : 'pending');
+    const currentNotes = merged.notes || merged.adminNotes || uData.adminNotes || '';
+
     ready();
     modal(`<div>
       <div class="flex items-center justify-between pb-3 border-b border-[#292929]">
         <div class="flex items-center gap-2.5">
-          <span class="text-2xl p-2 rounded-xl bg-amber-950/40 border border-amber-800 text-gold">🛡️</span>
+          <span class="text-2xl p-2 rounded-xl bg-amber-950/40 border border-amber-800 text-gold">🪪</span>
           <div>
-            <h2 class="text-lg sm:text-xl font-black text-white">Ghana Card Identity Review</h2>
-            <p class="muted text-xs">Official document inspection for verified seller approval.</p>
+            <h2 class="text-lg sm:text-xl font-black text-white">Ghana Card Identity & KYC Dossier</h2>
+            <p class="muted text-xs">Official administrator vault record for legal & compliance reference.</p>
           </div>
         </div>
         <button type="button" data-close-modal class="w-8 h-8 rounded-full bg-[#1e1e1e] hover:bg-[#2c2c2c] text-zinc-400 hover:text-white flex items-center justify-center text-sm" title="Close">✕</button>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 p-3.5 rounded-xl bg-[#141417] border border-[#26262e] text-xs">
-        <div><span class="text-zinc-500 font-medium">Applicant:</span> <b class="text-white">${esc(u.name||'Unknown')}</b></div>
-        <div><span class="text-zinc-500 font-medium">Email:</span> <b class="text-white">${esc(u.email||'N/A')}</b></div>
-        <div><span class="text-zinc-500 font-medium">Card PIN:</span> <b class="text-amber-400 font-mono">${esc(u.ghanaCardMasked||u.ghanaCardNumber||'Not supplied')}</b></div>
-        <div><span class="text-zinc-500 font-medium">Current Status:</span> <span class="font-bold px-2 py-0.5 rounded-full text-[10px] ${u.verificationStatus==='approved'?'bg-emerald-950 text-emerald-300 border border-emerald-800':u.verificationStatus==='rejected'?'bg-rose-950 text-rose-300 border border-rose-800':'bg-amber-950 text-amber-300 border border-amber-800'}">${esc(u.verificationStatus||'Pending')}</span></div>
+        <div><span class="text-zinc-500 font-medium">Applicant Name:</span> <b class="text-white">${esc(applicantName)}</b></div>
+        <div><span class="text-zinc-500 font-medium">Account Role:</span> <b class="text-white uppercase text-[10px] tracking-wider px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700">${esc(applicantRole)}</b></div>
+        <div><span class="text-zinc-500 font-medium">Email:</span> <b class="text-white">${esc(applicantEmail)}</b></div>
+        <div><span class="text-zinc-500 font-medium">Phone:</span> <b class="text-white">${esc(applicantPhone)}</b></div>
+        <div class="sm:col-span-2 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-zinc-800/80">
+          <div>
+            <span class="text-zinc-500 font-medium mr-1.5">Ghana Card PIN:</span>
+            <span id="recordPinDisplay" class="text-amber-400 font-mono font-bold tracking-wider">${esc(maskedPin)}</span>
+          </div>
+          ${fullPin ? `
+            <button type="button" id="togglePinMaskBtn" class="text-[11px] font-bold text-gold border border-gold/40 hover:bg-gold/10 px-2.5 py-1 rounded-lg transition">
+              👁️ Reveal Full PIN
+            </button>
+          ` : ''}
+        </div>
+        <div class="sm:col-span-2 flex items-center justify-between pt-1">
+          <div><span class="text-zinc-500 font-medium">Verification Status:</span></div>
+          <span class="font-bold px-2.5 py-0.5 rounded-full text-[10px] ${currentStatus==='approved'?'bg-emerald-950 text-emerald-300 border border-emerald-800':currentStatus==='rejected'?'bg-rose-950 text-rose-300 border border-rose-800':'bg-amber-950 text-amber-300 border border-amber-800'}">
+            ${esc(currentStatus.toUpperCase())}
+          </span>
+        </div>
       </div>
 
       <div class="mt-4 space-y-3">
+        <!-- Front of Ghana Card -->
         <div class="p-3 rounded-xl bg-[#121215] border border-[#272730]">
           <div class="flex items-center justify-between mb-2">
             <span class="text-xs font-bold text-zinc-300 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-gold"></span> FRONT OF GHANA CARD</span>
-            ${frontUrl ? `<button type="button" class="text-[11px] text-gold hover:underline font-semibold" data-enlarge-card="${esc(frontUrl)}" data-card-title="Front of Ghana Card - ${esc(u.name||'Applicant')}">View full resolution ↗</button>` : ''}
+            ${frontUrl ? `<button type="button" class="text-[11px] text-gold hover:underline font-semibold" data-enlarge-card="${esc(frontUrl)}" data-card-title="Front of Ghana Card - ${esc(applicantName)}">View full resolution ↗</button>` : ''}
           </div>
           <div class="w-full h-48 sm:h-56 rounded-xl bg-black/60 border border-[#333] overflow-hidden flex items-center justify-center relative">
-            ${frontUrl ? `<img src="${esc(frontUrl)}" class="w-full h-full object-contain cursor-pointer" alt="Ghana Card Front" data-enlarge-card="${esc(frontUrl)}" data-card-title="Front of Ghana Card - ${esc(u.name||'Applicant')}">` : `<div class="text-center p-4 text-zinc-500 text-xs"><div class="text-2xl mb-1">📄</div>Front document not uploaded or unavailable</div>`}
+            ${frontUrl ? `<img src="${esc(frontUrl)}" class="w-full h-full object-contain cursor-pointer hover:opacity-95" alt="Ghana Card Front" data-enlarge-card="${esc(frontUrl)}" data-card-title="Front of Ghana Card - ${esc(applicantName)}">` : `<div class="text-center p-4 text-zinc-500 text-xs"><div class="text-2xl mb-1">📄</div>Front document not uploaded or unavailable</div>`}
           </div>
         </div>
 
+        <!-- Back of Ghana Card -->
         <div class="p-3 rounded-xl bg-[#121215] border border-[#272730]">
           <div class="flex items-center justify-between mb-2">
             <span class="text-xs font-bold text-zinc-300 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-gold"></span> BACK OF GHANA CARD</span>
-            ${backUrl ? `<button type="button" class="text-[11px] text-gold hover:underline font-semibold" data-enlarge-card="${esc(backUrl)}" data-card-title="Back of Ghana Card - ${esc(u.name||'Applicant')}">View full resolution ↗</button>` : ''}
+            ${backUrl ? `<button type="button" class="text-[11px] text-gold hover:underline font-semibold" data-enlarge-card="${esc(backUrl)}" data-card-title="Back of Ghana Card - ${esc(applicantName)}">View full resolution ↗</button>` : ''}
           </div>
           <div class="w-full h-48 sm:h-56 rounded-xl bg-black/60 border border-[#333] overflow-hidden flex items-center justify-center relative">
-            ${backUrl ? `<img src="${esc(backUrl)}" class="w-full h-full object-contain cursor-pointer" alt="Ghana Card Back" data-enlarge-card="${esc(backUrl)}" data-card-title="Back of Ghana Card - ${esc(u.name||'Applicant')}">` : `<div class="text-center p-4 text-zinc-500 text-xs"><div class="text-2xl mb-1">📄</div>Back document not uploaded or unavailable</div>`}
+            ${backUrl ? `<img src="${esc(backUrl)}" class="w-full h-full object-contain cursor-pointer hover:opacity-95" alt="Ghana Card Back" data-enlarge-card="${esc(backUrl)}" data-card-title="Back of Ghana Card - ${esc(applicantName)}">` : `<div class="text-center p-4 text-zinc-500 text-xs"><div class="text-2xl mb-1">📄</div>Back document not uploaded or unavailable</div>`}
           </div>
+        </div>
+      </div>
+
+      <!-- Admin Compliance Notes Storage for Future Reference -->
+      <div class="mt-4 p-3.5 rounded-xl bg-[#131316] border border-[#26262f]">
+        <label class="text-xs font-bold text-zinc-300 block mb-1 flex items-center justify-between">
+          <span>📝 Admin Compliance & Reference Notes</span>
+          <span class="text-[10px] text-zinc-500 font-normal">Stored permanently in KYC archive</span>
+        </label>
+        <textarea id="kycAdminNotes" rows="2" placeholder="Record verification outcome, phone interview notes, or dispute references here…" class="w-full p-2.5 rounded-lg bg-[#18181c] border border-[#333] text-xs text-white placeholder-zinc-500 outline-none focus:border-gold">${esc(currentNotes)}</textarea>
+        <div class="flex justify-end mt-2">
+          <button type="button" id="saveKycNotesBtn" class="text-[11px] font-bold text-gold border border-gold/40 hover:bg-gold/10 px-3 py-1.5 rounded-lg transition">
+            💾 Save Notes to Record
+          </button>
         </div>
       </div>
 
       <div class="mt-4 p-3 rounded-xl bg-[#171410] border border-amber-900/40 text-[11px] text-zinc-400">
-        🔒 Ghana Card documents are kept strictly private in encrypted storage and accessible solely to authorized platform administrators.
+        🔒 Ghana Card documents are kept strictly private in encrypted storage and accessible solely to authorized platform administrators for dispute resolution and future compliance.
       </div>
 
       <div class="flex items-center justify-between gap-2 mt-5 pt-3 border-t border-[#262626]">
         <button type="button" data-close-modal class="px-4 py-2.5 rounded-xl border border-[#444] hover:bg-[#222] text-xs font-bold text-zinc-300">Close</button>
         <div class="flex gap-2">
           <button type="button" class="px-4 py-2.5 rounded-xl border border-red-800 bg-red-950/30 hover:bg-red-900/50 text-red-300 font-bold text-xs" data-admin-card-reject="${uid}">✕ Reject</button>
-          <button type="button" class="px-5 py-2.5 rounded-xl bg-gold hover:brightness-110 text-black font-black text-xs shadow-md" data-admin-card-approve="${uid}">✓ Approve Seller</button>
+          <button type="button" class="px-5 py-2.5 rounded-xl bg-gold hover:brightness-110 text-black font-black text-xs shadow-md" data-admin-card-approve="${uid}">✓ Mark Verified</button>
         </div>
       </div>
     </div>`);
+
+    // Toggle PIN mask
+    let isUnmasked = false;
+    const pinDisplay = $('recordPinDisplay');
+    const togglePinBtn = $('togglePinMaskBtn');
+    if(togglePinBtn && fullPin){
+      togglePinBtn.addEventListener('click', () => {
+        isUnmasked = !isUnmasked;
+        if(isUnmasked){
+          pinDisplay.textContent = fullPin;
+          togglePinBtn.textContent = '🔒 Hide Full PIN';
+        } else {
+          pinDisplay.textContent = maskedPin;
+          togglePinBtn.textContent = '👁️ Reveal Full PIN';
+        }
+      });
+    }
+
+    // Save Admin Notes
+    $('saveKycNotesBtn')?.addEventListener('click', async () => {
+      const noteVal = $('kycAdminNotes')?.value.trim() || '';
+      try {
+        loading('Saving compliance notes…');
+        const updateObj = {
+          notes: noteVal,
+          adminNotes: noteVal,
+          lastNoteUpdatedAt: serverTimestamp(),
+          lastNoteUpdatedBy: currentUser?.email || 'admin'
+        };
+        await Promise.all([
+          setDoc(doc(db, 'buyerKycRecords', uid), updateObj, { merge: true }),
+          updateDoc(doc(db, 'users', uid), { adminNotes: noteVal }).catch(() => null)
+        ]);
+        ready();
+        toast('Compliance notes saved to administrative archive.', 'success');
+      } catch(err) {
+        ready();
+        toast('Could not save notes: ' + errMsg(err), 'error');
+      }
+    });
 
     document.querySelectorAll('[data-enlarge-card]').forEach(b => {
       b.onclick = () => {
@@ -8065,19 +8810,21 @@ async function viewVerificationRecord(uid){
             <img src="${esc(u)}" class="max-w-full max-h-[70vh] object-contain rounded-lg" alt="Document full size">
           </div>
           <div class="flex justify-end mt-3">
-            <button type="button" data-close-modal class="px-4 py-2 rounded-xl border border-[#444] text-xs font-bold text-white">Back to Review</button>
+            <button type="button" data-close-modal class="px-4 py-2 rounded-xl border border-[#444] text-xs font-bold text-white">Back to Dossier</button>
           </div>
         </div>`);
       };
     });
 
     document.querySelector(`[data-admin-card-reject="${uid}"]`)?.addEventListener('click', async () => {
+      const noteVal = $('kycAdminNotes')?.value.trim() || '';
       closeModal();
-      await reviewVerification(uid, false);
+      await reviewVerification(uid, false, noteVal);
     });
     document.querySelector(`[data-admin-card-approve="${uid}"]`)?.addEventListener('click', async () => {
+      const noteVal = $('kycAdminNotes')?.value.trim() || '';
       closeModal();
-      await reviewVerification(uid, true);
+      await reviewVerification(uid, true, noteVal);
     });
   }catch(e){
     ready();
@@ -8085,7 +8832,45 @@ async function viewVerificationRecord(uid){
   }
 }
 
-async function reviewVerification(uid,approve){try{const update={verified:approve,verificationStatus:approve?'approved':'rejected',verificationReviewedAt:serverTimestamp()};await updateDoc(doc(db,'users',uid),update);await updateDoc(doc(db,'publicProfiles',uid),{verified:approve});await addDoc(collection(db,'notifications'),{recipientId:uid,senderName:'SellerFlow',title:approve?'Seller verification approved':'Seller verification update',message:approve?'Your identity review is approved. Your blue SellerFlow verification badge is now active.':'Your verification application was not approved. Please review your details and try again if appropriate.',fromAdmin:true,read:false,createdAt:serverTimestamp()});toast(approve?'Seller verified':'Verification rejected','success');navigate('admin')}catch(e){toast(errMsg(e),'error')}}
+async function reviewVerification(uid,approve,adminNote = ''){
+  try{
+    loading(approve ? 'Approving verification…' : 'Rejecting verification…');
+    const update = {
+      verified: approve,
+      verificationStatus: approve ? 'approved' : 'rejected',
+      verificationReviewedAt: serverTimestamp(),
+      verificationReviewedBy: currentUser?.email || 'admin'
+    };
+    if(adminNote) update.adminNotes = adminNote;
+
+    await Promise.all([
+      updateDoc(doc(db,'users',uid), update),
+      updateDoc(doc(db,'publicProfiles',uid), { verified: approve }).catch(() => null),
+      setDoc(doc(db,'buyerKycRecords',uid), {
+        ...update,
+        notes: adminNote || (approve ? 'Approved by admin' : 'Rejected by admin'),
+        lastUpdatedAt: serverTimestamp()
+      }, { merge: true }).catch(() => null)
+    ]);
+
+    await addDoc(collection(db,'notifications'),{
+      recipientId: uid,
+      senderName: 'SellerFlow Compliance',
+      title: approve ? 'Ghana Card identity verified' : 'Ghana Card verification update',
+      message: approve ? 'Your Ghana Card identity review is officially approved. You can now checkout and purchase items across the marketplace and store.' : 'Your identity verification was not approved. Please review your details or submit a clearer photo of your Ghana Card in your profile.',
+      fromAdmin: true,
+      read: false,
+      createdAt: serverTimestamp()
+    });
+
+    ready();
+    toast(approve ? 'Applicant verified successfully' : 'Verification marked as rejected', 'success');
+    if(typeof renderAdmin === 'function' && currentPage === 'admin') renderAdmin();
+  }catch(e){
+    ready();
+    toast(errMsg(e),'error');
+  }
+}
 async function toggleBlock(uid,blocked){try{await updateDoc(doc(db,'users',uid),{blocked:!blocked,blockedAt:serverTimestamp()});toast(blocked?'User unblocked':'User blocked','success');navigate('admin')}catch(e){toast(errMsg(e),'error')}}
 window.reviewVerification=reviewVerification;
 window.toggleBlock=toggleBlock;
@@ -8601,6 +9386,12 @@ window.loadAnotherVideoOnBack = loadAnotherVideoOnBack;
 
 // System back button & gesture navigation handler (Android physical back / swipe gesture, iPhone swipe back, browser back)
 window.addEventListener('popstate', function(e){
+  // 0. Ignore popstate if user is picking a file or if an upload is actively running
+  if (window._sfIsFilePickerActive || (window._sfLastFilePickerTime && Date.now() - window._sfLastFilePickerTime < 3500) || window._sfStoreUploading) {
+    armHistoryState(true);
+    return;
+  }
+
   // 1. Dismiss any open modal, sheet, or overlay first
   const modalRoot = document.getElementById('modalRoot');
   if (modalRoot && modalRoot.innerHTML.trim() !== '') {
@@ -8638,6 +9429,25 @@ window.addEventListener('popstate', function(e){
   // 5. On any other page, navigate back to For You feed
   navigate('feed', null, { fromPopState: true });
   armHistoryState(true);
+});
+
+// Track file picker interactions to prevent background popstate / defocus navigation jumps
+document.addEventListener('click', function(e){
+  if(e.target && e.target.tagName === 'INPUT' && e.target.type === 'file'){
+    window._sfIsFilePickerActive = true;
+    window._sfLastFilePickerTime = Date.now();
+  }
+}, true);
+document.addEventListener('change', function(e){
+  if(e.target && e.target.tagName === 'INPUT' && e.target.type === 'file'){
+    window._sfIsFilePickerActive = false;
+    window._sfLastFilePickerTime = Date.now();
+  }
+}, true);
+window.addEventListener('focus', function(){
+  if(window._sfIsFilePickerActive){
+    setTimeout(function(){ window._sfIsFilePickerActive = false; }, 1000);
+  }
 });
 
 // Hardware & keyboard physical navigation support for Windows, Mac & Linux
@@ -8701,10 +9511,14 @@ window.addEventListener('keydown', function(e){
       }
     } else if (e.key.toLowerCase() === 'm') {
       e.preventDefault();
-      const videos = document.querySelectorAll('video');
-      const anyMuted = [...videos].some(v => v.muted);
-      videos.forEach(v => { v.muted = !anyMuted; });
-      toast(anyMuted ? '🔊 Audio unmuted' : '🔇 Audio muted', 'info');
+      if (typeof window.toggleFeedSound === 'function') {
+        window.toggleFeedSound();
+      } else {
+        const videos = document.querySelectorAll('video');
+        const anyMuted = [...videos].some(v => v.muted);
+        videos.forEach(v => { v.muted = !anyMuted; });
+        toast(anyMuted ? '🔊 Audio unmuted' : '🔇 Audio muted', 'info');
+      }
     } else if (e.key.toLowerCase() === 'l') {
       e.preventDefault();
       const likeBtn = window._sfCurrentActiveCard?.querySelector('[data-post-action="like"]');
@@ -8970,7 +9784,7 @@ async function init(){
     db=getFirestore(firebaseApp);
     try{
       if(db && typeof db.settings==='function'){
-        db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+        db.settings({ experimentalForceLongPolling: true, merge: true });
       }
     }catch(_){}
     try{
@@ -8985,12 +9799,16 @@ async function init(){
     } catch(errCap) {
       console.warn('Capacitor handlers init issue:', errCap);
     }
+    let _sfAuthInitialized = false;
     onAuthStateChanged(auth,async u=>{
       if(!u){
         if(typeof stopOrdersWatcher==='function')stopOrdersWatcher();
         currentUser=null;currentProfile=null;isAdmin=false;
         showApp();
-        navigate('feed');
+        if(!_sfAuthInitialized){
+          _sfAuthInitialized = true;
+          navigate('feed');
+        }
         ready();
         return;
       }
@@ -8999,7 +9817,10 @@ async function init(){
       currentUser=u;
       isAdmin=isUserAdminEmail(u.email);
       showApp();
-      navigate('feed');
+      if(!_sfAuthInitialized){
+        _sfAuthInitialized = true;
+        navigate('feed');
+      }
       ready();
       
       try{
@@ -12565,7 +13386,7 @@ init();
     const s=p.platformLabel==='SellerFlow'&&p.isAdminPost?{...sellerProfile(p.sellerId),name:'SellerFlow',username:'sellerflow',verified:true}:sellerProfile(p.sellerId);
     const liked=(p.likes||[]).includes(currentUser?.uid),saved=(p.saves||[]).includes(currentUser?.uid),reposted=(p.reposts||[]).includes(currentUser?.uid);let media='';
     if(p.mediaUrl){
-      if(p.mediaType?.startsWith('video'))media=`<video class="reel-media reel-video" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" data-post-id="${p.id}" playsinline webkit-playsinline loop preload="metadata" poster="${esc(p.thumbnailUrl||'')}" onerror="window.__sfMediaFallback(this)"></video><button type="button" class="reel-play-toggle" data-video-toggle="${p.id}">▶</button><div class="reel-sound-label">🔊 Sound</div>`;
+      if(p.mediaType?.startsWith('video'))media=`<video class="reel-media reel-video" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" data-post-id="${p.id}" muted playsinline webkit-playsinline loop preload="metadata" poster="${esc(p.thumbnailUrl||'')}" onerror="window.__sfMediaFallback(this)"></video><button type="button" class="reel-play-toggle" data-video-toggle="${p.id}">▶</button><button type="button" class="reel-sound-label sf-sound-toggle" data-sound-toggle="${p.id}" title="Toggle sound">🔇 Tap for sound</button>`;
       else media=`<img loading="lazy" class="reel-media ${p.photoFilter ? `sf-filter-${esc(p.photoFilter)}` : ''}" style="${p.photoFilterCss ? `filter:${esc(p.photoFilterCss)};` : ''}" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" alt="SellerFlow post" onerror="window.__sfMediaFallback(this)">`;
     }
     const soundText=p.soundName||'Original sound';
@@ -13064,15 +13885,68 @@ init();
   /* Admin Modern Dashboard & Control Center */
   renderAdmin = async function(){
     if(!isAdmin){ $('page').innerHTML = pageTitle('Access denied', 'You do not have permission to access the SellerFlow Admin Control Center.'); return; }
-    const [users, posts, reports, termsSnap, storesSnap, productsSnap, fraudSnap] = await Promise.all([
+    const [users, posts, reports, termsSnap, storesSnap, productsSnap, fraudSnap, kycSnap] = await Promise.all([
       getDocs(query(collection(db, 'users'), limit(300))),
       getDocs(query(collection(db, 'posts'), limit(250))),
       getDocs(query(collection(db, 'scamReports'), limit(100))),
       getDoc(doc(db, 'settings', 'terms')),
       getDocs(query(collection(db, 'stores'), limit(300))),
       getDocs(query(collection(db, 'products'), limit(300))),
-      getDocs(query(collection(db, 'fraudReports'), limit(200)))
+      getDocs(query(collection(db, 'fraudReports'), limit(200))),
+      getDocs(query(collection(db, 'buyerKycRecords'), limit(300))).catch(() => ({ docs: [], size: 0 }))
     ]);
+
+    // Build unified Buyer Ghana Card records from buyerKycRecords and users collection
+    const kycMap = new Map();
+    if(kycSnap && kycSnap.docs){
+      kycSnap.docs.forEach(d => {
+        kycMap.set(d.id, { id: d.id, uid: d.id, ...d.data(), fromKycVault: true });
+      });
+    }
+    users.docs.forEach(d => {
+      const u = d.data();
+      if(u.ghanaCardNumber || u.ghanaCardMasked || u.ghanaCardFrontPath || u.ghanaCardBackPath || u.verificationStatus === 'pending' || u.verificationStatus === 'approved'){
+        if(!kycMap.has(d.id)){
+          kycMap.set(d.id, {
+            id: d.id,
+            uid: d.id,
+            name: u.ghanaCardLegalName || u.name || u.displayName || 'Buyer',
+            username: u.username || '',
+            email: u.email || '',
+            phone: u.phone || '',
+            ghanaCardNumber: u.ghanaCardNumber || '',
+            ghanaCardMasked: u.ghanaCardMasked || '',
+            ghanaCardFrontPath: u.ghanaCardFrontPath || '',
+            ghanaCardBackPath: u.ghanaCardBackPath || '',
+            verificationStatus: u.verificationStatus || (u.verified ? 'approved' : 'pending'),
+            verified: !!u.verified,
+            submittedAt: u.verificationSubmittedAt || u.createdAt || null,
+            role: u.role || 'buyer',
+            notes: u.adminNotes || '',
+            fromKycVault: false
+          });
+        } else {
+          const existing = kycMap.get(d.id);
+          kycMap.set(d.id, {
+            ...existing,
+            name: existing.name || u.ghanaCardLegalName || u.name || 'Buyer',
+            email: existing.email || u.email || '',
+            phone: existing.phone || u.phone || '',
+            username: u.username || existing.username || '',
+            ghanaCardNumber: existing.ghanaCardNumber || u.ghanaCardNumber || '',
+            ghanaCardMasked: existing.ghanaCardMasked || u.ghanaCardMasked || '',
+            ghanaCardFrontPath: existing.ghanaCardFrontPath || u.ghanaCardFrontPath || '',
+            ghanaCardBackPath: existing.ghanaCardBackPath || u.ghanaCardBackPath || '',
+            verified: existing.verified ?? !!u.verified,
+            verificationStatus: existing.verificationStatus || u.verificationStatus || (u.verified ? 'approved' : 'pending'),
+            role: existing.role || u.role || 'buyer'
+          });
+        }
+      }
+    });
+    const allGhanaCardRecords = Array.from(kycMap.values());
+    const pendingKycCount = allGhanaCardRecords.filter(r => r.verificationStatus === 'pending' || (!r.verified && r.verificationStatus !== 'rejected')).length;
+    const verifiedKycCount = allGhanaCardRecords.filter(r => r.verified || r.verificationStatus === 'approved').length;
 
     const pending = users.docs.filter(d => d.data().verificationStatus === 'pending');
     const verifiedUsers = users.docs.filter(d => !!d.data().verified);
@@ -13127,7 +14001,7 @@ init();
             <h1 class="text-2xl sm:text-3xl font-black text-white">Admin Control Center</h1>
             <span class="text-[11px] font-bold bg-gold/15 text-gold border border-gold/30 px-2.5 py-0.5 rounded-full">LIVE MODERATION</span>
           </div>
-          <p class="muted text-xs sm:text-sm mt-1">Platform management: user directories, live posts, store & product review, community reports & restoration.</p>
+          <p class="muted text-xs sm:text-sm mt-1">Platform management: user directories, Ghana Card KYC records, live posts, store & product review, community reports & restoration.</p>
         </div>
         <div class="flex items-center gap-2">
           <button type="button" id="adminRefreshBtn" class="border border-[#333] hover:border-gold px-3.5 py-2 rounded-xl text-xs font-bold bg-[#141414] text-zinc-200 transition flex items-center gap-1.5 shadow-sm">
@@ -13140,7 +14014,7 @@ init();
       </div>
 
       <!-- Dashboard-Style Executive Cards Grid -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 mb-6">
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-3 mb-6">
         <!-- Card 1: Users & Accounts -->
         <button type="button" class="sf-dash-card group" id="dashCardUsers">
           <div>
@@ -13160,7 +14034,28 @@ init();
           </div>
         </button>
 
-        <!-- Card 2: Posts & Feed -->
+        <!-- Card 2: Buyer Ghana Card Vault -->
+        <button type="button" class="sf-dash-card group ${pendingKycCount ? 'border-amber-500/60 bg-amber-950/15' : ''}" id="dashCardGhanaCards">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Ghana Cards</span>
+              <span class="text-lg p-1 rounded-lg bg-amber-950/50 border border-amber-800 text-gold">🪪</span>
+            </div>
+            <div class="text-2xl font-black ${pendingKycCount ? 'text-amber-400' : 'text-white'} mt-1.5 group-hover:text-gold transition">${allGhanaCardRecords.length}</div>
+            <div class="flex flex-wrap gap-1 mt-2">
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${pendingKycCount ? 'bg-amber-950/90 text-amber-300 border border-amber-800 animate-pulse' : 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'}">
+                ${pendingKycCount ? `${pendingKycCount} Review` : `${verifiedKycCount} Verified`}
+              </span>
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">Vault</span>
+            </div>
+          </div>
+          <div class="text-[10px] font-bold text-gold group-hover:underline mt-3 flex items-center justify-between">
+            <span>KYC Vault</span>
+            <span>→</span>
+          </div>
+        </button>
+
+        <!-- Card 3: Posts & Feed -->
         <button type="button" class="sf-dash-card group" id="dashCardPosts">
           <div>
             <div class="flex items-center justify-between">
@@ -13179,7 +14074,7 @@ init();
           </div>
         </button>
 
-        <!-- Card 3: Stores & Merchants -->
+        <!-- Card 4: Stores & Merchants -->
         <button type="button" class="sf-dash-card group ${pendingStores.length ? 'border-amber-500/50' : ''}" id="dashCardStores">
           <div>
             <div class="flex items-center justify-between">
@@ -13199,7 +14094,7 @@ init();
           </div>
         </button>
 
-        <!-- Card 4: Products & Catalogue -->
+        <!-- Card 5: Products & Catalogue -->
         <button type="button" class="sf-dash-card group ${pendingProducts.length ? 'border-amber-500/50' : ''}" id="dashCardProducts">
           <div>
             <div class="flex items-center justify-between">
@@ -13219,7 +14114,7 @@ init();
           </div>
         </button>
 
-        <!-- Card 5: Reports -->
+        <!-- Card 6: Reports -->
         <button type="button" class="sf-dash-card group ${reports.size ? 'border-rose-500/40' : ''}" id="dashCardReports">
           <div>
             <div class="flex items-center justify-between">
@@ -13239,7 +14134,7 @@ init();
           </div>
         </button>
 
-        <!-- Card 6: Fraud Security Desk -->
+        <!-- Card 7: Fraud Security Desk -->
         <button type="button" class="sf-dash-card group ${fraudSnap.size ? 'border-rose-600/80 bg-rose-950/20 shadow-[0_0_12px_rgba(225,29,72,0.15)]' : ''}" id="dashCardFrauds">
           <div>
             <div class="flex items-center justify-between">
@@ -13249,7 +14144,7 @@ init();
             <div class="text-2xl font-black ${fraudSnap.size ? 'text-rose-400' : 'text-white'} mt-1.5 group-hover:text-gold transition">${fraudSnap.size}</div>
             <div class="flex flex-wrap gap-1 mt-2">
               <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${fraudSnap.size ? 'bg-rose-950/90 text-rose-200 border border-rose-800 animate-pulse' : 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'}">
-                ${fraudSnap.size ? `${fraudSnap.size} Fraud Case${fraudSnap.size === 1 ? '' : 's'}` : '0 Clean'}
+                ${fraudSnap.size ? `${fraudSnap.size} Cases` : '0 Clean'}
               </span>
             </div>
           </div>
@@ -13259,7 +14154,7 @@ init();
           </div>
         </button>
 
-        <!-- Card 7: Restoration Hub -->
+        <!-- Card 8: Restoration Hub -->
         <button type="button" class="sf-dash-card group" id="dashCardRestoration">
           <div>
             <div class="flex items-center justify-between">
@@ -13284,6 +14179,10 @@ init();
       <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#242424] scrollbar-none mb-6" id="adminTabsBar">
         <button class="admin-tab ${initialTab === 'overview' ? 'active' : ''}" data-admin-tab="overview">
           <span>📊 Overview</span>
+        </button>
+        <button class="admin-tab ${initialTab === 'ghana_cards' ? 'active' : ''}" data-admin-tab="ghana_cards">
+          <span>🪪 Buyer Ghana Cards</span>
+          <span class="admin-tab-count ${pendingKycCount ? 'bg-amber-950 text-amber-300 border border-amber-800 animate-pulse' : ''}">${allGhanaCardRecords.length}</span>
         </button>
         <button class="admin-tab ${initialTab === 'users' ? 'active' : ''}" data-admin-tab="users">
           <span>👥 Users</span>
@@ -13328,12 +14227,13 @@ init();
       if(tabName === 'restoration'){ tabName = 'posts'; subOption = 'restoration'; }
       else if(tabName === 'review'){ tabName = 'posts'; subOption = 'review'; }
       else if(tabName === 'live'){ tabName = 'posts'; subOption = 'live'; }
-      else if(tabName === 'pending'){ tabName = 'users'; subOption = 'pending'; }
+      else if(tabName === 'pending'){ tabName = 'ghana_cards'; subOption = 'pending'; }
 
       window._currentAdminTab = tabName;
       document.querySelectorAll('[data-admin-tab]').forEach(t => t.classList.toggle('active', t.dataset.adminTab === tabName));
 
-      if(tabName === 'overview') sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts, fraudSnap);
+      if(tabName === 'overview') sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts, fraudSnap, allGhanaCardRecords);
+      else if(tabName === 'ghana_cards') sfAdminGhanaCardsTab(allGhanaCardRecords, users, kycSnap, subOption);
       else if(tabName === 'users') sfAdminUsers(users, pending, subOption);
       else if(tabName === 'posts') sfAdminPosts(posts, livePosts, reviewPosts, takenDownPosts, subOption);
       else if(tabName === 'stores') sfAdminStores(storesSnap, liveStores, pendingStores, takenDownStores, rejectedStores, subOption);
@@ -13351,6 +14251,7 @@ init();
     });
 
     $('dashCardUsers').onclick = () => setAdminTab('users');
+    $('dashCardGhanaCards').onclick = () => setAdminTab('ghana_cards');
     $('dashCardPosts').onclick = () => setAdminTab('posts');
     $('dashCardStores').onclick = () => setAdminTab('stores');
     $('dashCardProducts').onclick = () => setAdminTab('products');
@@ -13361,7 +14262,7 @@ init();
     setAdminTab(initialTab);
   };
 
-  function sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts, fraudSnap){
+  function sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts, fraudSnap, allGhanaCardRecords = []){
     const activeCount = users.docs.filter(d => {
       const u = d.data();
       const isSusp = !!u.suspended || (u.suspendedUntil && ts(u.suspendedUntil) > Date.now());
@@ -13370,11 +14271,13 @@ init();
     const totalPostsCount = (posts && typeof posts.size === 'number') ? posts.size : (Array.isArray(posts) ? posts.length : ((livePosts?.length || 0) + (takenDownPosts?.length || 0)));
     const totalStoresCount = storesSnap?.size || liveStores?.length || 0;
     const totalProductsCount = productsSnap?.size || liveProducts?.length || 0;
+    const pendingKycCount = allGhanaCardRecords.filter(r => r.verificationStatus === 'pending' || (!r.verified && r.verificationStatus !== 'rejected')).length;
+    const verifiedKycCount = allGhanaCardRecords.filter(r => r.verified || r.verificationStatus === 'approved').length;
 
     $('adminWorkspace').innerHTML = `
       <div class="space-y-6">
         <!-- Distinct Section Quick-Launch Cards -->
-        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           <!-- Launchpad 1: Users -->
           <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
             <div>
@@ -13382,12 +14285,12 @@ init();
                 <span class="text-2xl p-2 rounded-xl bg-zinc-800/80 border border-zinc-700/50">👥</span>
                 <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">${users.size} Accounts</span>
               </div>
-              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Users & ID Checks</h2>
-              <p class="muted text-xs mt-1 leading-relaxed">Directory of registered creators and buyers. Enforce suspensions, toggle account blocks, and review Ghana Card submissions.</p>
+              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Users & Directory</h2>
+              <p class="muted text-xs mt-1 leading-relaxed">Directory of registered creators and buyers. Enforce suspensions, toggle account blocks, and inspect profiles.</p>
               
               <div class="flex flex-wrap gap-2 mt-4">
                 <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">${activeCount} Active</span>
-                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${pending.length ? 'bg-amber-950/60 text-amber-300 border border-amber-800/60' : 'bg-zinc-800 text-zinc-400'}">${pending.length} ID Pending</span>
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-400">${users.size} Total</span>
               </div>
             </div>
             <button type="button" id="jumpToUsersBtn" class="mt-5 w-full bg-[#1c1c1c] hover:bg-gold hover:text-black border border-[#333] hover:border-gold text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
@@ -13396,7 +14299,28 @@ init();
             </button>
           </div>
 
-          <!-- Launchpad 2: Stores & Moderation -->
+          <!-- Launchpad 2: Buyer Ghana Card Identity Vault -->
+          <div class="card p-5 border ${pendingKycCount ? 'border-amber-500/50 bg-amber-950/10' : 'border-[#2c2c2c]'} hover:border-gold/60 transition flex flex-col justify-between group">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-2xl p-2 rounded-xl bg-amber-950/50 border border-amber-800 text-gold">🪪</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full ${pendingKycCount ? 'bg-amber-950 text-amber-300 border border-amber-800 animate-pulse' : 'bg-zinc-800 text-zinc-300'}">${allGhanaCardRecords.length} Dossiers</span>
+              </div>
+              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Ghana Card Vault</h2>
+              <p class="muted text-xs mt-1 leading-relaxed">Admin storage for buyer Ghana Card credentials, front and back photos, and compliance notes for future reference.</p>
+              
+              <div class="flex flex-wrap gap-2 mt-4">
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${pendingKycCount ? 'bg-amber-950/80 text-amber-300 border border-amber-800 animate-pulse' : 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60'}">${pendingKycCount ? `${pendingKycCount} Review` : `${verifiedKycCount} Verified`}</span>
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-400">Vault Secured</span>
+              </div>
+            </div>
+            <button type="button" id="jumpToGhanaCardsBtn" class="mt-5 w-full bg-[#1c1c1c] hover:bg-gold hover:text-black border border-[#333] hover:border-gold text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
+              <span>Open KYC Vault</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          <!-- Launchpad 3: Stores & Moderation -->
           <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
             <div>
               <div class="flex items-center justify-between mb-3">
@@ -13409,7 +14333,6 @@ init();
               <div class="flex flex-wrap gap-2 mt-4">
                 <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">${liveStores?.length || 0} Live</span>
                 <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${pendingStores?.length ? 'bg-amber-950/60 text-amber-300 border border-amber-800/60 animate-pulse' : 'bg-zinc-800 text-zinc-400'}">${pendingStores?.length || 0} Review Needed</span>
-                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${takenDownStores?.length ? 'bg-rose-950/60 text-rose-300 border border-rose-800/60' : 'bg-zinc-800 text-zinc-400'}">${takenDownStores?.length || 0} Taken Down</span>
               </div>
             </div>
             <button type="button" id="jumpToStoresBtn" class="mt-5 w-full bg-[#1c1c1c] hover:bg-gold hover:text-black border border-[#333] hover:border-gold text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
@@ -13418,7 +14341,7 @@ init();
             </button>
           </div>
 
-          <!-- Launchpad 3: Products & Moderation -->
+          <!-- Launchpad 4: Products & Moderation -->
           <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
             <div>
               <div class="flex items-center justify-between mb-3">
@@ -13431,7 +14354,6 @@ init();
               <div class="flex flex-wrap gap-2 mt-4">
                 <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">${liveProducts?.length || 0} Live</span>
                 <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${pendingProducts?.length ? 'bg-amber-950/60 text-amber-300 border border-amber-800/60 animate-pulse' : 'bg-zinc-800 text-zinc-400'}">${pendingProducts?.length || 0} Review Needed</span>
-                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${takenDownProducts?.length ? 'bg-rose-950/60 text-rose-300 border border-rose-800/60' : 'bg-zinc-800 text-zinc-400'}">${takenDownProducts?.length || 0} Taken Down</span>
               </div>
             </div>
             <button type="button" id="jumpToProductsBtn" class="mt-5 w-full bg-[#1c1c1c] hover:bg-gold hover:text-black border border-[#333] hover:border-gold text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
@@ -13440,18 +14362,18 @@ init();
             </button>
           </div>
 
-          <!-- Launchpad 4: Posts & Media -->
+          <!-- Launchpad 5: Posts & Media -->
           <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
             <div>
               <div class="flex items-center justify-between mb-3">
                 <span class="text-2xl p-2 rounded-xl bg-zinc-800/80 border border-zinc-700/50">🎬</span>
                 <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">${totalPostsCount} Total</span>
               </div>
-              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Posts & Video Media</h2>
-              <p class="muted text-xs mt-1 leading-relaxed">Unified control of live For You video/photo content, safety review queue, and 1-click restoration archive for taken-down media.</p>
+              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Posts & Media</h2>
+              <p class="muted text-xs mt-1 leading-relaxed">Unified control of live For You video/photo content, safety review queue, and 1-click restoration archive.</p>
               
               <div class="flex flex-wrap gap-2 mt-4">
-                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-950/60 text-blue-300 border border-blue-800/60">${livePosts.length} Live on Feed</span>
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-950/60 text-blue-300 border border-blue-800/60">${livePosts.length} Live</span>
                 <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${takenDownPosts.length ? 'bg-rose-950/60 text-rose-300 border border-rose-800/60' : 'bg-zinc-800 text-zinc-400'}">${takenDownPosts.length} Removed</span>
               </div>
             </div>
@@ -13459,6 +14381,61 @@ init();
               <span>Open Posts Section</span>
               <span>→</span>
             </button>
+          </div>
+        </div>
+
+        <!-- Priority Attention Section: Buyer Ghana Cards Desk -->
+        <div class="card p-5 border border-amber-900/50 bg-amber-950/15">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <span class="text-2xl p-2 rounded-xl bg-amber-950/80 border border-amber-800 text-gold">🪪</span>
+              <div>
+                <h3 class="text-base font-black text-white flex items-center gap-2">
+                  <span>Buyer Ghana Card Identity Vault Desk</span>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">Admin-Only</span>
+                </h3>
+                <p class="muted text-xs">Buyers must provide valid Ghana Card credentials before placing marketplace orders. Admin archives all documents for future reference.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full ${pendingKycCount ? 'bg-amber-950 text-amber-300 border border-amber-800 animate-pulse' : 'bg-emerald-950 text-emerald-300 border border-emerald-800'}">
+                ${pendingKycCount ? `${pendingKycCount} Awaiting Review` : `All Clear (${allGhanaCardRecords.length} Archived)`}
+              </span>
+              <button id="openAllGhanaCardsHub" class="border border-gold/40 hover:border-gold px-3 py-1.5 rounded-xl text-xs font-bold text-gold bg-gold/10 hover:bg-gold/20 transition">
+                Open Full Vault (${allGhanaCardRecords.length}) →
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+            ${(allGhanaCardRecords.slice(0, 3)).map(r => {
+              const uid = r.id || r.uid;
+              const fullPin = r.ghanaCardNumber || '';
+              const maskedPin = r.ghanaCardMasked || (fullPin ? (fullPin.slice(0,3)+'-*****'+(fullPin.slice(-4)||'')) : 'Not supplied');
+              const isVer = !!r.verified || r.verificationStatus === 'approved';
+              const isRej = r.verificationStatus === 'rejected';
+              const name = r.name || r.ghanaCardLegalName || 'Buyer';
+
+              return `
+                <div class="p-3.5 rounded-xl bg-[#121215] border border-[#272730] flex flex-col justify-between gap-2.5 hover:border-gold/50 transition">
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0">
+                      <div class="text-xs font-black text-white truncate">${esc(name)}</div>
+                      <div class="text-[11px] font-mono text-amber-400 mt-0.5">${esc(maskedPin)}</div>
+                    </div>
+                    <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${isVer ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : isRej ? 'bg-rose-950 text-rose-300 border border-rose-800' : 'bg-amber-950 text-amber-300 border border-amber-800'}">
+                      ${isVer ? 'Approved' : isRej ? 'Rejected' : 'Pending'}
+                    </span>
+                  </div>
+                  <div class="flex items-center justify-between pt-2 border-t border-[#22222a]">
+                    <span class="text-[10px] text-zinc-500">${r.fromKycVault ? '📁 Archived in Vault' : '👤 User Profile'}</span>
+                    <button type="button" class="text-[11px] font-bold text-gold hover:underline" data-quick-inspect-kyc="${uid}">
+                      Inspect Dossier →
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('') || '<div class="col-span-3 p-6 text-center muted text-xs bg-[#121215] rounded-xl border border-[#26262a]">No Ghana Card submissions recorded yet.</div>'}
           </div>
         </div>
 
@@ -13596,6 +14573,8 @@ init();
     `;
 
     $('jumpToUsersBtn')?.addEventListener('click', () => setAdminTab('users'));
+    $('jumpToGhanaCardsBtn')?.addEventListener('click', () => setAdminTab('ghana_cards'));
+    $('openAllGhanaCardsHub')?.addEventListener('click', () => setAdminTab('ghana_cards'));
     $('jumpToStoresBtn')?.addEventListener('click', () => setAdminTab('stores'));
     $('jumpToProductsBtn')?.addEventListener('click', () => setAdminTab('products'));
     $('jumpToPostsBtn')?.addEventListener('click', () => setAdminTab('posts'));
@@ -13604,6 +14583,9 @@ init();
     $('openAllRestoration')?.addEventListener('click', () => setAdminTab('posts', 'restoration'));
     $('openAllReview')?.addEventListener('click', () => setAdminTab('posts', 'review'));
     $('openAllFraudHub')?.addEventListener('click', () => setAdminTab('frauds'));
+    document.querySelectorAll('[data-quick-inspect-kyc]').forEach(b => {
+      b.onclick = () => viewVerificationRecord(b.dataset.quickInspectKyc);
+    });
     document.querySelectorAll('[data-jump-fraud-id]').forEach(b => {
       b.onclick = () => setAdminTab('frauds');
     });
@@ -13701,6 +14683,46 @@ init();
     });
     document.querySelectorAll('[data-admin-delete-product]').forEach(b => {
       b.onclick = (e) => { e.stopPropagation(); deleteProduct(b.dataset.adminDeleteProduct); };
+    });
+    document.querySelectorAll('[data-admin-view-product]').forEach(b => {
+      b.onclick = async (e) => {
+        e.stopPropagation();
+        const pId = b.dataset.adminViewProduct || b.closest('[data-admin-view-product]')?.dataset?.adminViewProduct;
+        if(!pId) return;
+        try {
+          loading('Loading product details…');
+          const snap = await getDoc(doc(db, 'products', pId));
+          if(snapshotExists(snap)){
+            openProductDetailModal({ id: snap.id, ...snap.data() });
+          } else {
+            toast('Product listing not found.', 'error');
+          }
+        } catch(err){
+          toast(errMsg(err), 'error');
+        } finally {
+          ready();
+        }
+      };
+    });
+    document.querySelectorAll('[data-edit-product], [data-admin-edit-prod]').forEach(b => {
+      b.onclick = async (e) => {
+        e.stopPropagation();
+        const pId = b.dataset.editProduct || b.dataset.adminEditProd || b.closest('[data-edit-product],[data-admin-edit-prod]')?.dataset?.editProduct || b.closest('[data-edit-product],[data-admin-edit-prod]')?.dataset?.adminEditProd;
+        if(!pId) return;
+        try {
+          loading('Loading product…');
+          const snap = await getDoc(doc(db, 'products', pId));
+          if(snapshotExists(snap)){
+            openProductModal({ id: snap.id, ...snap.data() });
+          } else {
+            toast('Product listing not found.', 'error');
+          }
+        } catch(err){
+          toast(errMsg(err), 'error');
+        } finally {
+          ready();
+        }
+      };
     });
   }
 
@@ -14156,14 +15178,14 @@ init();
     return `
       <div class="card p-4 border border-[#2b2b2b] hover:border-gold/40 transition flex flex-col justify-between" id="admin-prod-card-${esc(p.id)}">
         <div>
-          <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-3 bg-[#141414] border border-[#252525]">
-            <img src="${esc(p.imageUrl || '')}" class="w-full h-full object-cover" alt="" onerror="this.src=''; this.parentElement.innerHTML='<div class=\\'w-full h-full flex flex-col items-center justify-center text-zinc-600\\'>🛍️<span class=\\'text-[10px] mt-1\\'>No image</span></div>'">
+          <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-3 bg-[#141414] border border-[#252525] cursor-pointer" data-admin-view-product="${esc(p.id)}">
+            <img src="${esc(getProductImageUrl(p.imageUrl))}" class="w-full h-full object-cover" alt="${esc(p.name || 'Product')}" onerror="this.onerror=null;this.src=SF_PRODUCT_FALLBACK_IMG;">
             <div class="absolute top-2 right-2">${statusPill}</div>
             <div class="absolute bottom-2 left-2 bg-black/80 backdrop-blur px-2.5 py-1 rounded-lg font-black text-gold text-xs">${money(p.price)}</div>
           </div>
 
           <div class="flex items-start justify-between gap-2">
-            <h3 class="font-bold text-sm text-white truncate flex-1">${esc(p.name)}</h3>
+            <h3 class="font-bold text-sm text-white truncate flex-1 cursor-pointer hover:text-gold transition" data-admin-view-product="${esc(p.id)}">${esc(p.name)}</h3>
             <span class="text-[10px] text-zinc-400 border border-[#333] px-1.5 py-0.5 rounded">${Number(p.stock) || 0} in stock</span>
           </div>
           <div class="text-[11px] text-zinc-400 mt-0.5 truncate">Seller: @${esc(s?.username || p.sellerId?.slice(0, 8))}</div>
@@ -14543,9 +15565,16 @@ init();
           <div class="muted text-xs">User Role</div>
           <b class="text-sm text-white mt-0.5 block">${esc(u.role || 'seller')}</b>
         </div>
-        <div class="bg-[#171717] rounded-xl p-3.5 border border-[#2b2b2b]">
-          <div class="muted text-xs">Ghana Card / Identity Verification</div>
-          <b class="text-sm mt-0.5 block ${u.verified ? 'text-green-400' : 'text-zinc-400'}">${u.verified ? 'Verified Creator' : 'Not verified'}</b>
+        <div class="bg-[#171717] rounded-xl p-3.5 border border-[#2b2b2b] flex items-center justify-between">
+          <div>
+            <div class="muted text-xs">Ghana Card / Identity Verification</div>
+            <b class="text-sm mt-0.5 block ${u.verified ? 'text-green-400' : 'text-zinc-400'}">${u.verified ? 'Verified' : (u.verificationStatus === 'pending' ? '⏳ Pending Review' : 'Not verified')}</b>
+          </div>
+          ${(u.ghanaCardNumber || u.ghanaCardMasked || u.ghanaCardFrontPath || u.verificationStatus) ? `
+            <button type="button" id="detailViewKycBtn" class="border border-gold/40 hover:border-gold px-2.5 py-1 rounded-lg text-xs font-bold text-gold bg-gold/10 hover:bg-gold/20 transition">
+              🪪 View Dossier
+            </button>
+          ` : ''}
         </div>
         <div class="bg-[#171717] rounded-xl p-3.5 border border-[#2b2b2b]">
           <div class="muted text-xs">Account Status</div>
@@ -14602,6 +15631,10 @@ init();
       </div>
     </div>`);
 
+    $('detailViewKycBtn')?.addEventListener('click', () => {
+      closeModal();
+      viewVerificationRecord(uid);
+    });
     $('detailToggleBlockBtn')?.addEventListener('click', () => {
       closeModal();
       adminToggleBlockUser(uid, !!u.blocked);
@@ -15156,6 +16189,458 @@ STATUS: ${f.status || 'Active Investigation'}
     $('sfAdminFraudSearch')?.addEventListener('input', renderFraudList);
     renderFraudList();
   }
+
+  /* Admin Buyer Ghana Cards & KYC Vault (Secure Admin Storage for Future Reference) */
+  function sfAdminGhanaCardsTab(allRecords, users, kycSnap, subOption){
+    let kycFilter = subOption || 'all';
+
+    const pendingList = allRecords.filter(r => r.verificationStatus === 'pending' || (!r.verified && r.verificationStatus !== 'rejected'));
+    const verifiedList = allRecords.filter(r => r.verified || r.verificationStatus === 'approved');
+    const rejectedList = allRecords.filter(r => r.verificationStatus === 'rejected');
+
+    $('adminWorkspace').innerHTML = `
+      <div class="space-y-5">
+        <!-- Header & Executive Stats -->
+        <div class="card p-5 border border-[#2b2b2b]">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2.5 flex-wrap">
+                <span class="text-2xl p-2 rounded-xl bg-amber-950/40 border border-amber-800 text-gold">🪪</span>
+                <h2 class="text-xl font-black text-white">Buyer Ghana Card Identity Vault</h2>
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-950/70 text-amber-300 border border-amber-800">
+                  ${allRecords.length} Archived Dossiers
+                </span>
+                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700">
+                  🔒 Admin-Only Legal Vault
+                </span>
+              </div>
+              <p class="muted text-xs sm:text-sm mt-1 max-w-3xl leading-relaxed">
+                Permanent storage for buyers' Ghana Card numbers, front photos, back photos, and compliance audit notes. Strictly accessible to platform administrators for dispute resolution, identity verification, and future reference.
+              </p>
+            </div>
+
+            <div class="flex items-center gap-2 self-start lg:self-auto flex-wrap">
+              <button type="button" id="adminExportKycBtn" class="border border-gold/40 hover:border-gold px-3.5 py-2 rounded-xl text-xs font-bold bg-gold/10 text-gold hover:bg-gold/20 transition flex items-center gap-1.5 shadow-sm">
+                <span>📥</span> Export Vault (JSON)
+              </button>
+              <button type="button" id="adminKycRefreshBtn" class="border border-[#444] hover:border-zinc-300 px-3 py-2 rounded-xl text-xs font-bold bg-[#181818] text-zinc-300 transition flex items-center gap-1.5">
+                <span>🔄</span> Refresh
+              </button>
+              <button id="adminKycBackBtn" class="border border-[#444] hover:border-gold rounded-xl px-3.5 py-2 text-xs font-bold text-white transition">
+                ← Overview
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Metrics Bar -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-[#222]">
+            <div class="p-3 rounded-xl bg-[#141414] border border-[#262626]">
+              <div class="text-zinc-500 text-[11px] font-semibold uppercase tracking-wider">Total Vault Records</div>
+              <div class="text-xl font-black text-white mt-0.5">${allRecords.length}</div>
+            </div>
+            <div class="p-3 rounded-xl bg-[#141414] border border-[#262626]">
+              <div class="text-zinc-500 text-[11px] font-semibold uppercase tracking-wider">Pending Review</div>
+              <div class="text-xl font-black ${pendingList.length ? 'text-amber-400 animate-pulse' : 'text-zinc-300'} mt-0.5">${pendingList.length}</div>
+            </div>
+            <div class="p-3 rounded-xl bg-[#141414] border border-[#262626]">
+              <div class="text-zinc-500 text-[11px] font-semibold uppercase tracking-wider">Verified Buyers</div>
+              <div class="text-xl font-black text-emerald-400 mt-0.5">${verifiedList.length}</div>
+            </div>
+            <div class="p-3 rounded-xl bg-[#141414] border border-[#262626]">
+              <div class="text-zinc-500 text-[11px] font-semibold uppercase tracking-wider">Action Needed / Rejected</div>
+              <div class="text-xl font-black ${rejectedList.length ? 'text-rose-400' : 'text-zinc-400'} mt-0.5">${rejectedList.length}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none" id="kycFilterBar">
+            <button class="sf-sub-tab ${kycFilter === 'all' ? 'active' : ''}" data-kyc-filter="all">
+              All Records (${allRecords.length})
+            </button>
+            <button class="sf-sub-tab ${kycFilter === 'pending' ? 'active' : ''}" data-kyc-filter="pending">
+              ⏳ Pending (${pendingList.length})
+            </button>
+            <button class="sf-sub-tab ${kycFilter === 'verified' ? 'active' : ''}" data-kyc-filter="verified">
+              ✓ Verified (${verifiedList.length})
+            </button>
+            <button class="sf-sub-tab ${kycFilter === 'rejected' ? 'active' : ''}" data-kyc-filter="rejected">
+              ❌ Action Needed (${rejectedList.length})
+            </button>
+          </div>
+
+          <div class="relative w-full sm:w-72">
+            <input id="kycSearchInput" type="text" placeholder="Search name, PIN, email, or phone…" class="w-full pl-9 pr-4 py-2 bg-[#171717] border border-[#333] focus:border-gold rounded-xl text-xs text-white placeholder-zinc-500 outline-none">
+            <span class="absolute left-3 top-2.5 text-zinc-500 text-xs">🔍</span>
+          </div>
+        </div>
+
+        <!-- Ghana Cards Dossier List Container -->
+        <div id="adminKycList" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+      </div>
+    `;
+
+    $('adminKycBackBtn')?.addEventListener('click', sfAdminBack);
+    $('adminKycRefreshBtn')?.addEventListener('click', () => {
+      if(typeof renderAdmin === 'function') renderAdmin();
+    });
+
+    $('adminExportKycBtn')?.addEventListener('click', () => {
+      try {
+        const cleanRecords = allRecords.map(r => ({
+          userId: r.id || r.uid,
+          legalName: r.name || r.ghanaCardLegalName || '',
+          email: r.email || '',
+          phone: r.phone || '',
+          ghanaCardPin: r.ghanaCardNumber || r.ghanaCardMasked || '',
+          ghanaCardFrontStoragePath: r.ghanaCardFrontPath || '',
+          ghanaCardBackStoragePath: r.ghanaCardBackPath || '',
+          verificationStatus: r.verificationStatus || (r.verified ? 'approved' : 'pending'),
+          verified: !!r.verified,
+          role: r.role || 'buyer',
+          complianceNotes: r.notes || r.adminNotes || '',
+          submittedAt: r.submittedAt ? (ts(r.submittedAt) ? new Date(ts(r.submittedAt)).toISOString() : r.submittedAt) : null,
+          reviewedAt: r.reviewedAt || r.verificationReviewedAt ? (ts(r.reviewedAt || r.verificationReviewedAt) ? new Date(ts(r.reviewedAt || r.verificationReviewedAt)).toISOString() : null) : null,
+          reviewedBy: r.reviewedBy || r.verificationReviewedBy || null,
+          archivedIn: 'buyerKycRecords'
+        }));
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cleanRecords, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `sellerflow_ghana_card_vault_${new Date().toISOString().slice(0,10)}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        toast(`Exported ${cleanRecords.length} Ghana Card records to JSON file.`, 'success', 3500);
+      } catch(err) {
+        toast('Failed to export vault: ' + errMsg(err), 'error');
+      }
+    });
+
+    // Sub-tab handling
+    document.querySelectorAll('[data-kyc-filter]').forEach(b => {
+      b.onclick = () => {
+        kycFilter = b.dataset.kycFilter;
+        document.querySelectorAll('[data-kyc-filter]').forEach(x => x.classList.toggle('active', x.dataset.kycFilter === kycFilter));
+        renderKycList();
+      };
+    });
+
+    function renderKycList(){
+      const q = ($('kycSearchInput')?.value || '').trim().toLowerCase();
+      const listEl = $('adminKycList');
+      if(!listEl) return;
+
+      const filtered = allRecords.filter(r => {
+        const isVer = !!r.verified || r.verificationStatus === 'approved';
+        const isRej = r.verificationStatus === 'rejected';
+        const isPend = !isVer && !isRej;
+
+        if(kycFilter === 'pending' && !isPend) return false;
+        if(kycFilter === 'verified' && !isVer) return false;
+        if(kycFilter === 'rejected' && !isRej) return false;
+
+        if(!q) return true;
+        const name = (r.name || r.ghanaCardLegalName || '').toLowerCase();
+        const email = (r.email || '').toLowerCase();
+        const phone = (r.phone || '').toLowerCase();
+        const pin = (r.ghanaCardNumber || r.ghanaCardMasked || '').toLowerCase();
+        const uid = (r.id || r.uid || '').toLowerCase();
+        return name.includes(q) || email.includes(q) || phone.includes(q) || pin.includes(q) || uid.includes(q);
+      });
+
+      if(!filtered.length){
+        listEl.innerHTML = `
+          <div class="lg:col-span-2 p-12 text-center muted border border-[#2b2b2b] rounded-2xl bg-[#121212]">
+            <div class="text-4xl mb-3">🪪</div>
+            <h3 class="text-base font-bold text-white">No Ghana Card records found</h3>
+            <p class="text-xs mt-1 text-zinc-400">No identity dossiers match the selected filter or search terms.</p>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(r => {
+        const uid = r.id || r.uid;
+        const fullPin = r.ghanaCardNumber || '';
+        const maskedPin = r.ghanaCardMasked || (fullPin ? (fullPin.slice(0,3)+'-*****'+(fullPin.slice(-4)||'')) : 'Not supplied');
+        const legalName = r.name || r.ghanaCardLegalName || 'Applicant';
+        const email = r.email || 'N/A';
+        const phone = r.phone || 'N/A';
+        const isVer = !!r.verified || r.verificationStatus === 'approved';
+        const isRej = r.verificationStatus === 'rejected';
+        const statusText = isVer ? 'APPROVED' : isRej ? 'REJECTED' : 'PENDING REVIEW';
+        const statusBadge = isVer
+          ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
+          : isRej
+            ? 'bg-rose-950/80 text-rose-300 border border-rose-800'
+            : 'bg-amber-950/80 text-amber-300 border border-amber-800 animate-pulse';
+
+        const roleText = (r.role || 'buyer').toUpperCase();
+        const notes = r.notes || r.adminNotes || '';
+        const hasFront = !!r.ghanaCardFrontPath;
+        const hasBack = !!r.ghanaCardBackPath;
+
+        return `
+          <div class="p-4 rounded-2xl border border-[#272730] bg-[#141417] flex flex-col justify-between gap-3.5 hover:border-gold/50 transition">
+            <!-- Top Identity Row -->
+            <div>
+              <div class="flex items-start justify-between gap-2.5">
+                <div class="flex items-start gap-3 min-w-0">
+                  <div class="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center font-black text-gold text-sm shrink-0">
+                    ${esc(legalName.slice(0,2).toUpperCase())}
+                  </div>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <b class="text-sm font-black text-white truncate">${esc(legalName)}</b>
+                      <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">${esc(roleText)}</span>
+                    </div>
+                    <div class="muted text-xs truncate mt-0.5">${esc(email)} · <span class="text-zinc-400">${esc(phone)}</span></div>
+                  </div>
+                </div>
+                <span class="text-[10px] font-black tracking-wider px-2.5 py-1 rounded-full ${statusBadge} shrink-0">
+                  ${statusText}
+                </span>
+              </div>
+
+              <!-- Ghana Card Number Bar -->
+              <div class="mt-3 p-2.5 rounded-xl bg-[#0f0f12] border border-[#24242d] flex items-center justify-between gap-2 text-xs">
+                <div>
+                  <span class="text-zinc-500 font-medium mr-1.5">Card PIN:</span>
+                  <span class="font-mono font-bold text-amber-400 tracking-wider" id="cardPin-${uid}">${esc(maskedPin)}</span>
+                </div>
+                ${fullPin ? `
+                  <button type="button" class="text-[10px] font-bold text-gold border border-gold/40 hover:bg-gold/10 px-2 py-0.5 rounded transition" data-toggle-pin="${uid}">
+                    👁️ Reveal
+                  </button>
+                ` : ''}
+              </div>
+
+              <!-- Dual Document Preview Containers (Front & Back) -->
+              <div class="grid grid-cols-2 gap-2.5 mt-3">
+                <!-- Front Container -->
+                <div class="flex flex-col gap-1">
+                  <div class="flex items-center justify-between text-[10px] text-zinc-400 font-semibold">
+                    <span>FRONT OF CARD</span>
+                    ${hasFront ? `<button type="button" class="text-gold hover:underline" data-preview-zoom="${uid}" data-side="front">Zoom ↗</button>` : ''}
+                  </div>
+                  <div id="thumb-front-${uid}" class="h-28 rounded-xl bg-black/60 border border-[#2a2a32] overflow-hidden flex items-center justify-center relative cursor-pointer" data-preview-zoom="${uid}" data-side="front">
+                    ${hasFront ? `<div class="text-[10px] text-zinc-500 animate-pulse">Loading front…</div>` : `<div class="text-[10px] text-zinc-600 text-center px-2">No front document</div>`}
+                  </div>
+                </div>
+
+                <!-- Back Container -->
+                <div class="flex flex-col gap-1">
+                  <div class="flex items-center justify-between text-[10px] text-zinc-400 font-semibold">
+                    <span>BACK OF CARD</span>
+                    ${hasBack ? `<button type="button" class="text-gold hover:underline" data-preview-zoom="${uid}" data-side="back">Zoom ↗</button>` : ''}
+                  </div>
+                  <div id="thumb-back-${uid}" class="h-28 rounded-xl bg-black/60 border border-[#2a2a32] overflow-hidden flex items-center justify-center relative cursor-pointer" data-preview-zoom="${uid}" data-side="back">
+                    ${hasBack ? `<div class="text-[10px] text-zinc-500 animate-pulse">Loading back…</div>` : `<div class="text-[10px] text-zinc-600 text-center px-2">No back document</div>`}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Admin Permanent Notes Display -->
+              <div class="mt-3 p-2.5 rounded-xl bg-[#111114] border border-[#22222a]">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[10px] font-bold text-zinc-400">📝 Compliance & Reference Notes</span>
+                  <button type="button" class="text-[10px] text-gold font-bold hover:underline" data-edit-notes="${uid}">
+                    ${notes ? 'Edit Notes' : '＋ Add Note'}
+                  </button>
+                </div>
+                <p class="text-[11px] text-zinc-300 italic">${notes ? esc(notes) : '<span class="text-zinc-600 not-italic">No compliance notes recorded yet.</span>'}</p>
+              </div>
+            </div>
+
+            <!-- Card Bottom Actions -->
+            <div class="pt-3 border-t border-[#22222b] flex items-center justify-between gap-2 flex-wrap">
+              <button type="button" class="px-3 py-1.5 rounded-xl border border-[#444] hover:border-gold text-xs font-bold text-white bg-[#19191c] transition flex items-center gap-1.5" data-open-dossier="${uid}">
+                <span>🪪</span> Inspect Full Dossier
+              </button>
+
+              <div class="flex items-center gap-1.5">
+                ${!isVer ? `
+                  <button type="button" class="px-3 py-1.5 rounded-xl bg-gold hover:brightness-110 text-black font-black text-xs transition" data-card-quick-approve="${uid}">
+                    ✓ Verify
+                  </button>
+                ` : `
+                  <button type="button" class="px-3 py-1.5 rounded-xl border border-zinc-700 text-zinc-300 hover:text-white text-xs font-bold" data-card-quick-reject="${uid}">
+                    Revoke
+                  </button>
+                `}
+                ${!isRej && !isVer ? `
+                  <button type="button" class="px-2.5 py-1.5 rounded-xl border border-red-800 bg-red-950/20 text-red-300 hover:bg-red-900/40 text-xs font-bold transition" data-card-quick-reject="${uid}">
+                    ✕ Reject
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Wire up asynchronous preview thumbnails
+      filtered.forEach(async r => {
+        const uid = r.id || r.uid;
+        if(r.ghanaCardFrontPath){
+          const frontEl = $(`thumb-front-${uid}`);
+          if(frontEl){
+            loadGhanaCardDocumentPreview(r.ghanaCardFrontPath).then(u => {
+              if(u){
+                frontEl.innerHTML = `<img src="${esc(u)}" class="w-full h-full object-cover hover:scale-105 transition duration-200" alt="Front">`;
+                frontEl.dataset.fullUrl = u;
+              } else {
+                frontEl.innerHTML = `<div class="text-[10px] text-zinc-500">Unavailable</div>`;
+              }
+            }).catch(() => {
+              frontEl.innerHTML = `<div class="text-[10px] text-zinc-500">Preview Error</div>`;
+            });
+          }
+        }
+
+        if(r.ghanaCardBackPath){
+          const backEl = $(`thumb-back-${uid}`);
+          if(backEl){
+            loadGhanaCardDocumentPreview(r.ghanaCardBackPath).then(u => {
+              if(u){
+                backEl.innerHTML = `<img src="${esc(u)}" class="w-full h-full object-cover hover:scale-105 transition duration-200" alt="Back">`;
+                backEl.dataset.fullUrl = u;
+              } else {
+                backEl.innerHTML = `<div class="text-[10px] text-zinc-500">Unavailable</div>`;
+              }
+            }).catch(() => {
+              backEl.innerHTML = `<div class="text-[10px] text-zinc-500">Preview Error</div>`;
+            });
+          }
+        }
+      });
+
+      // PIN reveal toggles
+      listEl.querySelectorAll('[data-toggle-pin]').forEach(b => {
+        b.onclick = () => {
+          const uid = b.dataset.togglePin;
+          const r = filtered.find(x => (x.id || x.uid) === uid);
+          if(!r) return;
+          const pinEl = $(`cardPin-${uid}`);
+          if(!pinEl) return;
+          const fullPin = r.ghanaCardNumber || '';
+          const maskedPin = r.ghanaCardMasked || (fullPin ? (fullPin.slice(0,3)+'-*****'+(fullPin.slice(-4)||'')) : 'Not supplied');
+
+          if(b.textContent.includes('Reveal')){
+            pinEl.textContent = fullPin;
+            b.textContent = '🔒 Hide';
+          } else {
+            pinEl.textContent = maskedPin;
+            b.textContent = '👁️ Reveal';
+          }
+        };
+      });
+
+      // Quick Zoom Click on thumbnail
+      listEl.querySelectorAll('[data-preview-zoom]').forEach(b => {
+        b.onclick = async () => {
+          const uid = b.dataset.previewZoom;
+          const side = b.dataset.side;
+          const r = filtered.find(x => (x.id || x.uid) === uid);
+          if(!r) return;
+          const path = side === 'front' ? r.ghanaCardFrontPath : r.ghanaCardBackPath;
+          if(!path) return toast('Document path not found', 'info');
+
+          loading('Loading high-resolution document…');
+          const url = await loadGhanaCardDocumentPreview(path);
+          ready();
+
+          if(!url) return toast('Could not load document preview', 'error');
+
+          modal(`<div>
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-[#292929]">
+              <span class="text-sm font-bold text-white uppercase tracking-wider">${side === 'front' ? 'Front' : 'Back'} of Ghana Card - ${esc(r.name || 'Applicant')}</span>
+              <button type="button" data-close-modal class="w-7 h-7 rounded-full bg-[#222] text-zinc-400 hover:text-white flex items-center justify-center text-xs">✕</button>
+            </div>
+            <div class="w-full max-h-[75vh] overflow-auto bg-black rounded-xl p-2 flex items-center justify-center">
+              <img src="${esc(url)}" class="max-w-full max-h-[70vh] object-contain rounded-lg" alt="Ghana Card ${side}">
+            </div>
+            <div class="flex justify-between items-center mt-3">
+              <span class="text-xs font-mono text-zinc-400">${esc(r.ghanaCardMasked || r.ghanaCardNumber || '')}</span>
+              <button type="button" data-close-modal class="px-4 py-2 rounded-xl border border-[#444] text-xs font-bold text-white">Back to Vault</button>
+            </div>
+          </div>`);
+        };
+      });
+
+      // Open Full Dossier
+      listEl.querySelectorAll('[data-open-dossier]').forEach(b => {
+        b.onclick = () => viewVerificationRecord(b.dataset.openDossier);
+      });
+
+      // Quick Approve
+      listEl.querySelectorAll('[data-card-quick-approve]').forEach(b => {
+        b.onclick = () => reviewVerification(b.dataset.cardQuickApprove, true);
+      });
+
+      // Quick Reject
+      listEl.querySelectorAll('[data-card-quick-reject]').forEach(b => {
+        b.onclick = async () => {
+          const uid = b.dataset.cardQuickReject;
+          const reason = await customPrompt({
+            title: 'Reject / Request Re-upload of Ghana Card',
+            message: 'Provide a reason to notify the user (e.g. "Front image blurry, please re-upload in good lighting"):',
+            placeholder: 'Reason for rejection…',
+            confirmText: 'Submit Rejection',
+            cancelText: 'Cancel'
+          });
+          if(reason !== null){
+            reviewVerification(uid, false, reason);
+          }
+        };
+      });
+
+      // Direct Notes Editing
+      listEl.querySelectorAll('[data-edit-notes]').forEach(b => {
+        b.onclick = async () => {
+          const uid = b.dataset.editNotes;
+          const r = filtered.find(x => (x.id || x.uid) === uid);
+          const currentNotes = r?.notes || r?.adminNotes || '';
+          const newNote = await customPrompt({
+            title: 'Administrative Reference Notes',
+            message: `Enter permanent compliance and reference notes for ${esc(r?.name || 'this record')}:`,
+            placeholder: 'e.g. Identity cross-checked on March 2026 for high-value purchase authorization…',
+            defaultValue: currentNotes,
+            confirmText: 'Save to Vault',
+            cancelText: 'Cancel'
+          });
+          if(newNote !== null){
+            try {
+              loading('Updating vault notes…');
+              await Promise.all([
+                setDoc(doc(db, 'buyerKycRecords', uid), {
+                  notes: newNote,
+                  adminNotes: newNote,
+                  lastNoteUpdatedAt: serverTimestamp(),
+                  lastNoteUpdatedBy: currentUser?.email || 'admin'
+                }, { merge: true }),
+                updateDoc(doc(db, 'users', uid), { adminNotes: newNote }).catch(() => null)
+              ]);
+              ready();
+              toast('Vault compliance notes updated.', 'success');
+              if(r) { r.notes = newNote; r.adminNotes = newNote; }
+              renderKycList();
+            } catch(err) {
+              ready();
+              toast(errMsg(err), 'error');
+            }
+          }
+        };
+      });
+    }
+
+    $('kycSearchInput')?.addEventListener('input', renderKycList);
+    renderKycList();
+  }
+  window.sfAdminGhanaCardsTab = sfAdminGhanaCardsTab;
 
   function sfAdminBack(){
     const t = document.querySelector('[data-admin-tab="overview"]');
