@@ -27,9 +27,11 @@
       str.indexOf('Fetching auth token failed') !== -1 ||
       str.indexOf('auth/network-request-failed') !== -1 ||
       str.indexOf('operate in offline mode') !== -1 ||
+      str.indexOf('INTERNAL ASSERTION FAILED') !== -1 ||
+      str.indexOf('Unexpected state') !== -1 ||
       str.indexOf('@firebase/firestore') !== -1
     ) {
-      console.warn.apply(console, ['[Firestore Offline Handler]:'].concat(args));
+      console.warn.apply(console, ['[Firestore Offline/State Handler]:'].concat(args));
       return;
     }
     _origConsoleError.apply(console, args);
@@ -112,9 +114,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
 <!-- Firebase Compat is used here for broad Android/WebView compatibility. -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js" crossorigin="anonymous"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js" crossorigin="anonymous"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js" crossorigin="anonymous"></script>
 <!-- MediaPipe FaceMesh & Camera for On-Device Liveness Head-Pose Detection -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
@@ -145,32 +147,21 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 .modal-card .chat-window{display:flex;flex-direction:column;height:100%;max-height:100%;min-height:0;flex:1 1 0%;overflow:hidden}
 .modal-card .chat-messages{flex:1 1 0%;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .modal-card #chatForm{flex-shrink:0}
-/* Modern Toast Notification System */
-.toast-container{position:fixed;top:18px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;max-width:380px;width:calc(100vw - 36px)}
-@media(max-width:640px){.toast-container{top:14px;left:50%;right:auto;transform:translateX(-50%);max-width:calc(100vw - 28px)}}
-.modern-toast{pointer-events:auto;display:flex;align-items:flex-start;gap:12px;padding:12px 15px;border-radius:16px;background:rgba(18,18,22,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 14px 34px -6px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#fff;animation:toastSlideIn .28s cubic-bezier(.16,1,.3,1) forwards;transition:opacity .22s ease,transform .22s ease;position:relative;overflow:hidden}
-.modern-toast.toast-hiding{opacity:0;transform:translateY(-8px) scale(0.96)}
-@keyframes toastSlideIn{from{opacity:0;transform:translateY(-12px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
-.toast-icon-wrap{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:1px}
-.toast-success .toast-icon-wrap{background:rgba(16,185,129,0.18);color:#34d399;border:1px solid rgba(16,185,129,0.35)}
-.toast-success{border-color:rgba(16,185,129,0.38)}
-.toast-error .toast-icon-wrap{background:rgba(239,68,68,0.18);color:#f87171;border:1px solid rgba(239,68,68,0.35)}
-.toast-error{border-color:rgba(239,68,68,0.38)}
-.toast-warning .toast-icon-wrap{background:rgba(245,158,11,0.18);color:#fbbf24;border:1px solid rgba(245,158,11,0.35)}
-.toast-warning{border-color:rgba(245,158,11,0.38)}
-.toast-info .toast-icon-wrap{background:rgba(245,185,66,0.18);color:#f5b942;border:1px solid rgba(245,185,66,0.35)}
-.toast-info{border-color:rgba(245,185,66,0.38)}
-.toast-content{flex:1;min-width:0}
-.toast-title{font-size:12.5px;font-weight:700;letter-spacing:-0.01em;margin-bottom:2px}
-.toast-success .toast-title{color:#34d399}
-.toast-error .toast-title{color:#f87171}
-.toast-warning .toast-title{color:#fbbf24}
-.toast-info .toast-title{color:#f5b942}
-.toast-message{font-size:12px;line-height:1.45;color:#d4d4d8;word-break:break-word}
-.toast-close-btn{background:transparent;border:none;color:#71717a;cursor:pointer;padding:2px 6px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;transition:color .15s}
-.toast-close-btn:hover{color:#fff}
-.toast-progress-bar{position:absolute;bottom:0;left:0;height:2px;background:currentColor;opacity:.3;width:100%;animation:toastProgress linear forwards}
-@keyframes toastProgress{from{width:100%}to{width:0%}}
+/* Unified Dynamic Island Toast Notification System */
+.toast-container{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:10000;pointer-events:none;display:flex;justify-content:center;width:auto;max-width:calc(100vw - 20px)}
+.island-toast{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:9999px;background:rgba(6,28,19,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 12px 32px -4px rgba(0,0,0,0.8),0 0 20px rgba(16,185,129,0.25),0 0 0 1px rgba(16,185,129,0.35);border:1px solid rgba(16,185,129,0.5);color:#fff;animation:islandDropIn .24s cubic-bezier(.16,1,.3,1) forwards;transition:opacity .18s ease,transform .18s ease;position:relative;max-width:min(94vw,460px)}
+.island-toast.toast-hiding{opacity:0;transform:translateY(-8px) scale(0.96)}
+@keyframes islandDropIn{from{opacity:0;transform:translateY(-10px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+.island-icon-wrap{width:22px;height:22px;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;background:rgba(16,185,129,0.22);color:#34d399;border:1px solid rgba(16,185,129,0.45)}
+.island-toast.toast-error .island-icon-wrap{background:rgba(239,68,68,0.2);color:#f87171;border-color:rgba(239,68,68,0.45)}
+.island-toast.toast-warning .island-icon-wrap{background:rgba(245,158,11,0.2);color:#fbbf24;border-color:rgba(245,158,11,0.45)}
+.island-toast.toast-info .island-icon-wrap{background:rgba(59,130,246,0.2);color:#60a5fa;border-color:rgba(59,130,246,0.45)}
+.island-toast-text{font-size:12px;font-weight:600;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(68vw,320px);line-height:1.3}
+@media(max-width:480px){.island-toast-text{max-width:min(64vw,220px);font-size:11.5px}}
+.island-action-btn{background:#10b981;color:#061c13;font-size:10.5px;font-weight:800;padding:2.5px 9px;border-radius:9999px;border:none;cursor:pointer;margin-left:2px;flex-shrink:0;transition:filter .15s}
+.island-action-btn:hover{filter:brightness(1.15)}
+.island-close-btn{background:transparent;border:none;color:#86efac;cursor:pointer;padding:0 3px;display:flex;align-items:center;justify-content:center;font-size:11.5px;line-height:1;opacity:.65;transition:opacity .15s;flex-shrink:0}
+.island-close-btn:hover{opacity:1;color:#fff}
 
 .navbtn{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:13px;color:#a1a1aa;border-radius:10px;transition:all .16s ease;letter-spacing:-.01em}
 .navbtn:hover{color:#f4f4f5;background:rgba(255,255,255,.05)}
@@ -490,6 +481,8 @@ input, textarea, select { color: #ffffff !important; }
       var first = (args[0] && (typeof args[0] === 'string' ? args[0] : (args[0].message || ''))) || '';
       if (typeof first === 'string' && (
         first.indexOf('Could not reach Cloud Firestore backend') !== -1 ||
+        first.indexOf('INTERNAL ASSERTION FAILED') !== -1 ||
+        first.indexOf('Unexpected state') !== -1 ||
         first.indexOf('@firebase/firestore') !== -1
       )) {
         console.warn.apply(console, ['[Firestore Network Notice]:'].concat(args));
@@ -503,12 +496,12 @@ input, textarea, select { color: #ffffff !important; }
     if(!e)return;
     if(e.target&&(e.target.tagName==='IMG'||e.target.tagName==='VIDEO'||e.target.tagName==='AUDIO'||e.target.tagName==='SOURCE'||e.target.tagName==='LINK'))return;
     var msg=(e.error&&e.error.message)||e.message||'';
-    if(!msg||msg==='Script error.'||msg.indexOf('Could not reach Cloud Firestore backend')!==-1)return;
+    if(!msg||msg==='Script error.'||msg.indexOf('Could not reach Cloud Firestore backend')!==-1||msg.indexOf('INTERNAL ASSERTION FAILED')!==-1)return;
     console.warn('SellerFlow runtime notice:',msg);
   },true);
   window.addEventListener('unhandledrejection',function(e){
     var reason=(e&&e.reason&&e.reason.message)||String((e&&e.reason)||'');
-    if(!reason||reason==='Script error.'||reason.indexOf('Could not reach Cloud Firestore backend')!==-1)return;
+    if(!reason||reason==='Script error.'||reason.indexOf('Could not reach Cloud Firestore backend')!==-1||reason.indexOf('INTERNAL ASSERTION FAILED')!==-1)return;
     console.warn('SellerFlow unhandled promise notice:',reason);
   });
   setTimeout(function(){var l=$x('loading');if(l&&!l.classList.contains('hide')){var t=$x('loadingText');if(t)t.textContent='SellerFlow is ready.';showHomeFeed();if(typeof navigate==='function')navigate('feed');}},6000);
@@ -1283,11 +1276,6 @@ const getFirestore=(app)=>{
   }catch(_){}
   try{
     const inst = (app && typeof app.firestore === 'function') ? app.firestore() : firebase.firestore();
-    try{
-      if(inst && typeof inst.settings === 'function'){
-        inst.settings({ experimentalForceLongPolling: true, merge: true });
-      }
-    }catch(_){}
     db = inst;
     return db;
   }catch(_){
@@ -1389,60 +1377,80 @@ function esc(v=''){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt
 function money(n){return new Intl.NumberFormat('en-GH',{style:'currency',currency:'GHS',maximumFractionDigits:2}).format(Number(n)||0)}
 function ts(v){return v?.toMillis?v.toMillis():v?.seconds?v.seconds*1000:0}
 
-/* Modern Professional Notification & Toast System */
-function toast(msg, type='info', duration=3600){
+/* Unified Dynamic Island Toast Notification Engine (Single Instance · No Double Toast) */
+let _activeIslandToast = null;
+let _activeIslandTimer = null;
+
+function toast(msg, type='success', duration=3400, options={}){
   const container = $('toast');
   if(!container){
-    console.log(`[SellerFlow Toast ${type}]:`, msg);
+    console.log(`[SellerFlow Island Toast ${type}]:`, msg);
     return;
   }
-  const t = document.createElement('div');
-  t.className = `modern-toast toast-${type}`;
-  
-  let icon = 'ℹ️';
-  let title = 'SellerFlow';
-  if(type === 'success'){
-    icon = '✓';
-    title = 'Confirmed';
-  } else if(type === 'error'){
-    icon = '✕';
-    title = 'Attention';
-  } else if(type === 'warning'){
-    icon = '⚠️';
-    title = 'Notice';
+
+  // Dismiss any existing toast immediately so there is never a double toast
+  if(_activeIslandTimer){
+    clearTimeout(_activeIslandTimer);
+    _activeIslandTimer = null;
   }
+  if(_activeIslandToast && _activeIslandToast.parentElement){
+    _activeIslandToast.remove();
+    _activeIslandToast = null;
+  }
+  container.innerHTML = '';
+
+  const t = document.createElement('div');
+  t.className = `island-toast toast-${type}`;
   
+  let icon = options.icon;
+  if(!icon){
+    if(type === 'error') icon = '✕';
+    else if(type === 'warning') icon = '⚠️';
+    else if(type === 'info') icon = 'ℹ️';
+    else if(type === 'loading') icon = '<span class="spin !w-3 !h-3 !border-2 !border-emerald-300 !border-t-transparent inline-block"></span>';
+    else icon = '✓';
+  }
+
+  const actionHtml = options.actionText ? `<button type="button" class="island-action-btn">${esc(options.actionText)}</button>` : '';
+
   t.innerHTML = `
-    <div class="toast-icon-wrap" aria-hidden="true">${icon}</div>
-    <div class="toast-content">
-      <div class="toast-title">${title}</div>
-      <div class="toast-message">${esc(msg)}</div>
-    </div>
-    <button type="button" class="toast-close-btn" aria-label="Close notification">✕</button>
-    <div class="toast-progress-bar" style="animation-duration:${duration}ms"></div>
+    <div class="island-icon-wrap" aria-hidden="true">${icon}</div>
+    <div class="island-toast-text" title="${esc(msg)}">${esc(msg)}</div>
+    ${actionHtml}
+    <button type="button" class="island-close-btn" aria-label="Close notification">✕</button>
   `;
-  
-  let timer = null;
+
   const dismiss = () => {
     if(!t.parentElement || t.classList.contains('toast-hiding')) return;
     t.classList.add('toast-hiding');
-    setTimeout(() => { if(t.parentElement) t.remove(); }, 220);
+    setTimeout(() => {
+      if(t.parentElement) t.remove();
+      if(_activeIslandToast === t) _activeIslandToast = null;
+    }, 190);
   };
-  
-  t.querySelector('.toast-close-btn').onclick = (e) => {
+
+  if(options.onAction && options.actionText){
+    t.querySelector('.island-action-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dismiss();
+      try { options.onAction(); } catch(err) { console.warn('Island action error:', err); }
+    });
+  }
+
+  t.querySelector('.island-close-btn').onclick = (e) => {
     e.stopPropagation();
-    if(timer) clearTimeout(timer);
+    if(_activeIslandTimer) clearTimeout(_activeIslandTimer);
     dismiss();
   };
-  
-  timer = setTimeout(dismiss, duration);
-  t.onmouseenter = () => { if(timer) clearTimeout(timer); };
-  t.onmouseleave = () => { timer = setTimeout(dismiss, 1600); };
-  
-  container.appendChild(t);
-  while(container.children.length > 4){
-    container.firstElementChild.remove();
+
+  if(duration > 0){
+    _activeIslandTimer = setTimeout(dismiss, duration);
+    t.onmouseenter = () => { if(_activeIslandTimer) clearTimeout(_activeIslandTimer); };
+    t.onmouseleave = () => { _activeIslandTimer = setTimeout(dismiss, 1600); };
   }
+
+  container.appendChild(t);
+  _activeIslandToast = t;
 }
 
 /* High-End Eye-Catching Confirmation & Prompt Dialog Engine */
@@ -1886,9 +1894,9 @@ async function compressImageForUpload(file, options = {}) {
   });
 }
 
-/* Video Duration Validator (Supports up to 1 minute / 60 seconds) */
-function checkVideoDuration(file, maxSeconds=60){
-  return new Promise((resolve, reject) => {
+/* Video Duration Helper & Validator (Supports duration selection up to 1 minute / 60 seconds) */
+function getVideoDuration(file){
+  return new Promise((resolve) => {
     if(!file || !file.type || !file.type.startsWith('video/')){
       return resolve(0);
     }
@@ -1911,12 +1919,7 @@ function checkVideoDuration(file, maxSeconds=60){
       settled = true;
       const dur = tempVideo.duration;
       cleanup();
-      if(Number.isFinite(dur) && dur > (maxSeconds + 0.9)){
-        const formatted = Math.round(dur);
-        reject(new Error(`Video duration is ${formatted}s. Videos on SellerFlow must be 1 minute or less (${maxSeconds}s).`));
-      } else {
-        resolve(dur);
-      }
+      resolve(Number.isFinite(dur) ? dur : 0);
     };
     tempVideo.onerror = () => {
       if(settled) return;
@@ -1931,7 +1934,20 @@ function checkVideoDuration(file, maxSeconds=60){
         cleanup();
         resolve(0);
       }
-    }, 4000);
+    }, 5000);
+  });
+}
+
+function checkVideoDuration(file, maxSeconds=60){
+  return new Promise((resolve, reject) => {
+    getVideoDuration(file).then(dur => {
+      if(dur > (maxSeconds + 0.9)){
+        const formatted = Math.round(dur);
+        reject(new Error(`Video duration is ${formatted}s. Videos on SellerFlow must be 1 minute or less (${maxSeconds}s). Please use the Duration & Trim tool to select up to 60s.`));
+      } else {
+        resolve(dur);
+      }
+    }).catch(() => resolve(0));
   });
 }
 
@@ -2912,7 +2928,10 @@ function postCard(p, idx = 0){
   if(p.mediaUrl){
     if(p.mediaType?.startsWith('video')){
       const poster = p.thumbnailUrl ? getOptimizedVideoPoster(p.thumbnailUrl) : '';
-      media=`<video class="reel-media reel-video" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" data-post-id="${p.id}" muted playsinline webkit-playsinline loop preload="${isFirst ? 'auto' : 'metadata'}" poster="${esc(poster)}"></video><button type="button" class="reel-play-toggle" data-video-toggle="${p.id}">▶</button><button type="button" class="reel-sound-label sf-sound-toggle" data-sound-toggle="${p.id}" title="Toggle sound">🔇 Tap for sound</button>`;
+      const cropStyle = p.videoCrop ? `object-position: ${p.videoCrop.panX ?? 50}% ${p.videoCrop.panY ?? 50}%; transform: scale(${p.videoCrop.zoom ?? 1});` : '';
+      const trimStart = Number(p.trimStart || 0);
+      const trimEnd = Number(p.trimEnd || 0);
+      media=`<video class="reel-media reel-video" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" data-post-id="${p.id}" data-trim-start="${trimStart}" data-trim-end="${trimEnd}" style="${cropStyle}" muted playsinline webkit-playsinline loop preload="${isFirst ? 'auto' : 'metadata'}" poster="${esc(poster)}"></video><button type="button" class="reel-play-toggle" data-video-toggle="${p.id}">▶</button><button type="button" class="reel-sound-label sf-sound-toggle" data-sound-toggle="${p.id}" title="Toggle sound">🔇 Tap for sound</button>`;
     }else{
       const optFeedImg = getOptimizedMediaUrl(p.mediaUrl, 'feed');
       media=`<img loading="${isFirst ? 'eager' : 'lazy'}" fetchpriority="${isFirst ? 'high' : 'auto'}" decoding="async" class="reel-media ${p.photoFilter ? `sf-filter-${esc(p.photoFilter)}` : ''}" style="${p.photoFilterCss ? `filter:${esc(p.photoFilterCss)};` : ''}" src="${esc(optFeedImg)}" alt="SellerFlow post" data-media-path="${esc(p.mediaPath||'')}" onerror="window.__sfMediaFallback?window.__sfMediaFallback(this):null">`;
@@ -3157,6 +3176,10 @@ function setupReelPlayback(targetPostId){
         updateCardButton(card,false);
         return;
       }
+      const trimStart = Number(v.dataset.trimStart || 0);
+      if(trimStart > 0 && v.currentTime < trimStart){
+        v.currentTime = trimStart;
+      }
       pauseAllVideosExcept(v);
       updateCardButton(card,true);
     });
@@ -3168,10 +3191,20 @@ function setupReelPlayback(targetPostId){
       updateCardButton(card,false);
     });
     v.addEventListener('ended',()=>{
+      const trimStart = Number(v.dataset.trimStart || 0);
+      if(trimStart > 0){
+        v.currentTime = trimStart;
+        v.play().catch(()=>{});
+      }
       card._sfCompleted=true;
       card._sfRewatchCount=(card._sfRewatchCount||0)+1;
     });
     v.addEventListener('timeupdate',()=>{
+      const trimEnd = Number(v.dataset.trimEnd || 0);
+      const trimStart = Number(v.dataset.trimStart || 0);
+      if(trimEnd > 0 && v.currentTime >= trimEnd){
+        v.currentTime = trimStart;
+      }
       if(v.duration && (v.currentTime/v.duration)>=0.88){
         card._sfCompleted=true;
       }
@@ -3638,20 +3671,49 @@ async function renderAnalysis(targetPostId, options){
     const profile = currentProfile || sellerProfile(userUid) || {};
 
     // 1. Fetch user's content posts (scoped strictly to authenticated user)
-    const postsSnap = await getDocs(query(collection(db, 'posts'), where('sellerId', '==', userUid), limit(150)));
-    const allUserPosts = postsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.status !== 'removed' && p.status !== 'taken_down');
+    let allUserPosts = [];
+    try {
+      const postsSnap = await getDocs(query(collection(db, 'posts'), where('sellerId', '==', userUid), limit(150)));
+      allUserPosts = postsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.status !== 'removed' && p.status !== 'taken_down');
+    } catch (e) {
+      console.warn('Analysis posts fetch fallback:', e);
+    }
 
     // 2. Fetch user's listed products (scoped strictly to authenticated user)
-    const productsSnap = await getDocs(query(collection(db, 'products'), where('sellerId', '==', userUid), limit(150)));
-    const allUserProducts = productsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.status !== 'removed');
+    let allUserProducts = [];
+    try {
+      const productsSnap = await getDocs(query(collection(db, 'products'), where('sellerId', '==', userUid), limit(150)));
+      allUserProducts = productsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.status !== 'removed');
+    } catch (e) {
+      console.warn('Analysis products fetch fallback:', e);
+    }
 
     // 3. Fetch orders received as seller (scoped strictly to authenticated user)
-    const sellerOrdersSnap = await getDocs(query(collection(db, 'orders'), where('sellerIds', 'array-contains', userUid), limit(200)));
-    const allSellerOrders = sellerOrdersSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(o => o.sellerId === userUid || (o.sellerIds && o.sellerIds.includes(userUid)));
+    const allSellerOrders = [];
+    const seenSellerOrderIds = new Set();
+    try {
+      const [sSnap1, sSnap2] = await Promise.all([
+        getDocs(query(collection(db, 'orders'), where('sellerId', '==', userUid), limit(100))).catch(() => ({ docs: [] })),
+        getDocs(query(collection(db, 'orders'), where('sellerIds', 'array-contains', userUid), limit(100))).catch(() => ({ docs: [] }))
+      ]);
+      [...sSnap1.docs, ...sSnap2.docs].forEach(d => {
+        if (!seenSellerOrderIds.has(d.id)) {
+          seenSellerOrderIds.add(d.id);
+          allSellerOrders.push({ id: d.id, ...d.data() });
+        }
+      });
+    } catch (e) {
+      console.warn('Analysis seller orders fetch fallback:', e);
+    }
 
     // 4. Fetch orders made as buyer (scoped strictly to authenticated user)
-    const buyerOrdersSnap = await getDocs(query(collection(db, 'orders'), where('buyerId', '==', userUid), limit(100)));
-    const allBuyerOrders = buyerOrdersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    let allBuyerOrders = [];
+    try {
+      const buyerOrdersSnap = await getDocs(query(collection(db, 'orders'), where('buyerId', '==', userUid), limit(100)));
+      allBuyerOrders = buyerOrdersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.warn('Analysis buyer orders fetch fallback:', e);
+    }
 
     // 5. Fetch user's public store if exists
     let userStore = null;
@@ -5856,8 +5918,12 @@ function formatOrderDate(val){
   }
 }
 
-function getOrderStatusBadge(status){
+function getOrderStatusBadge(status, reviewStatus){
   const s = String(status||'pending').toLowerCase();
+  const r = String(reviewStatus||'').toLowerCase();
+  if(s === 'pending_review' || r === 'pending' || r === 'pending_security_review'){
+    return `<span class="order-status-badge bg-amber-950/80 text-amber-300 border border-amber-600/70 animate-pulse">🛡️ Under Security Review</span>`;
+  }
   if(s === 'delivered' || s === 'completed'){
     return `<span class="order-status-badge bg-green-950/80 text-green-300 border border-green-700/60">✓ Completed</span>`;
   }
@@ -5867,19 +5933,19 @@ function getOrderStatusBadge(status){
   if(s === 'processing'){
     return `<span class="order-status-badge bg-amber-950/80 text-amber-300 border border-amber-700/60">⚙️ Processing</span>`;
   }
-  if(s === 'confirmed'){
+  if(s === 'confirmed' || r === 'approved'){
     return `<span class="order-status-badge bg-yellow-950/80 text-yellow-300 border border-yellow-700/60">✓ Confirmed</span>`;
   }
-  if(s === 'cancelled'){
-    return `<span class="order-status-badge bg-red-950/80 text-red-300 border border-red-700/60">✕ Cancelled</span>`;
+  if(s === 'cancelled' || r === 'rejected'){
+    return `<span class="order-status-badge bg-red-950/80 text-red-300 border border-red-700/60">✕ Cancelled / Flagged</span>`;
   }
   return `<span class="order-status-badge bg-zinc-900 text-gold border border-gold/40">⏳ Pending</span>`;
 }
 
 function getOrderTimeline(order){
   const MILESTONES = [
-    { key: 'pending', label: 'Order Placed', defaultNote: 'Order submitted by buyer and sent to vendor.' },
-    { key: 'confirmed', label: 'Order Confirmed', defaultNote: 'Vendor accepted and confirmed the order items.' },
+    { key: 'pending_review', label: 'Security Review', defaultNote: 'Submitted by buyer and queued for Security Team verification.' },
+    { key: 'confirmed', label: 'Security Approved & Sent to Vendor', defaultNote: 'Security Team cleared order and vendor was notified for fulfillment.' },
     { key: 'processing', label: 'Processing & Packed', defaultNote: 'Items packaged, labeled, and prepared for dispatch.' },
     { key: 'shipped', label: 'Dispatched / In Transit', defaultNote: 'Courier has picked up package and is en route.' },
     { key: 'delivered', label: 'Delivered & Completed', defaultNote: 'Package delivered to recipient and order completed.' }
@@ -6729,7 +6795,9 @@ window.printOrderReceipt = printOrderReceipt;
 function orderCard(o){
   const items = (o.items || []).map(i => `${esc(i.name)} × ${i.quantity}`).join(', ');
   const isCompleted = ['delivered', 'completed'].includes(String(o.status||'').toLowerCase());
-  const canUpdate = o.view === 'seller' && !['delivered', 'cancelled', 'completed'].includes(o.status);
+  const isUnderSecurityReview = String(o.status||'').toLowerCase() === 'pending_review' || String(o.reviewStatus||'').toLowerCase() === 'pending' || String(o.reviewStatus||'').toLowerCase() === 'pending_security_review';
+  const isRejected = String(o.status||'').toLowerCase() === 'cancelled' && String(o.reviewStatus||'').toLowerCase() === 'rejected';
+  const canUpdate = o.view === 'seller' && !isUnderSecurityReview && !['delivered', 'cancelled', 'completed'].includes(o.status);
   const cardClass = isCompleted ? 'card p-5 order-card-completed' : 'card p-5';
   
   return `
@@ -6738,8 +6806,9 @@ function orderCard(o){
         <div class="flex items-center gap-2">
           <b class="text-sm sm:text-base">Order #${esc(o.id.slice(0,8).toUpperCase())}</b>
           ${isCompleted ? `<span class="text-[11px] bg-green-950/90 text-green-300 border border-green-700/60 px-2 py-0.5 rounded-full font-bold">✅ Completed</span>` : ''}
+          ${isUnderSecurityReview ? `<span class="text-[11px] bg-amber-950/90 text-amber-300 border border-amber-600 px-2 py-0.5 rounded-full font-bold">🛡️ In Security Review</span>` : ''}
         </div>
-        <div>${getOrderStatusBadge(o.status)}</div>
+        <div>${getOrderStatusBadge(o.status, o.reviewStatus)}</div>
       </div>
       <p class="muted text-sm mt-2 line-clamp-2">${items || 'Order items'}</p>
       <div class="flex items-baseline justify-between mt-3">
@@ -6751,6 +6820,27 @@ function orderCard(o){
       </div>
       ${o.deliveryAddress ? `<p class="muted text-xs mt-1 truncate">📍 ${esc(o.deliveryAddress)}</p>` : ''}
       
+      ${isUnderSecurityReview && o.view === 'seller' ? `
+        <div class="mt-3 p-2.5 rounded-xl bg-amber-950/40 border border-amber-800/60 text-xs text-amber-300 flex items-center gap-2">
+          <span class="text-sm">🛡️</span>
+          <span><b>Security Review Active:</b> SellerFlow Security Team is reviewing this order. You will receive notification once cleared for preparation and fulfillment.</span>
+        </div>
+      ` : ''}
+
+      ${isUnderSecurityReview && o.view === 'buyer' ? `
+        <div class="mt-3 p-2.5 rounded-xl bg-amber-950/40 border border-amber-800/60 text-xs text-amber-300 flex items-center gap-2">
+          <span class="text-sm">🛡️</span>
+          <span><b>Security Review in Progress:</b> Order submitted and undergoing security verification before seller dispatch.</span>
+        </div>
+      ` : ''}
+
+      ${isRejected ? `
+        <div class="mt-3 p-2.5 rounded-xl bg-rose-950/40 border border-rose-800/60 text-xs text-rose-300 flex items-center gap-2">
+          <span class="text-sm">❌</span>
+          <span><b>Security Review Note:</b> ${esc(o.rejectionReason || 'Order was flagged or rejected by Security Team.')}</span>
+        </div>
+      ` : ''}
+
       <!-- Primary Detail View Action Button -->
       <button type="button" data-order-detail="${esc(o.id)}" class="w-full mt-3.5 ${isCompleted ? 'bg-gold text-black font-bold hover:brightness-110 shadow-sm' : 'bg-[#1a1a1a] hover:bg-[#222] border border-[#383838] text-zinc-200 font-semibold'} py-2.5 px-3 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition">
         <span>${isCompleted ? '📜 View Order History & Details' : '📋 View Details & Status History'}</span>
@@ -9017,10 +9107,10 @@ async function placeOrder(){
       bySeller.get(i.sellerId).push(i);
     });
 
-    loading('Placing orders & routing split seller notifications…');
+    loading('Submitting order for Security Team clearance…');
     const placedOrderIds = [];
 
-    // Split notification according to product owner
+    // Create order with pending_review status; seller will ONLY be notified upon security team approval
     for(const [sellerId,items] of bySeller){
       const total=items.reduce((n,i)=>n+i.price*i.quantity,0);
       const totalQty=items.reduce((n,i)=>n+i.quantity,0);
@@ -9035,11 +9125,12 @@ async function placeOrder(){
         sellerIds:[sellerId],
         items,
         total,
-        status:'pending',
+        status:'pending_review',
+        reviewStatus:'pending',
         statusHistory:[{
-          status:'pending',
-          label:'Order Placed',
-          note:'Order submitted by buyer and received by seller',
+          status:'pending_review',
+          label:'Submitted for Security Review',
+          note:'Order placed by buyer and queued for SellerFlow Security Team verification before seller dispatch.',
           timestamp:Date.now(),
           updatedBy:currentUser.uid,
           updatedByName:name
@@ -9050,30 +9141,15 @@ async function placeOrder(){
       });
       placedOrderIds.push(orderRef.id);
 
-      // Instant split notification to the specific product owner
-      try{
-        await addDoc(collection(db,'notifications'),{
-          recipientId:sellerId,
-          actorId:currentUser.uid,
-          senderName:name,
-          title:'🛒 New Order Received (Split Dispatch)',
-          message:`${name} ordered ${totalQty} item${totalQty===1?'':'s'} (${itemsListSummary}) for ${money(total)}. Delivery to: ${address}. Phone: ${phone}.`,
-          type:'order_new',
-          orderId:orderRef.id,
-          read:false,
-          createdAt:serverTimestamp()
-        });
-      }catch(_){}
-
-      // Notification to buyer confirming this split seller dispatch
+      // Notification to buyer confirming submission to Security Team
       try{
         const sData = sellerProfile(sellerId);
         await addDoc(collection(db,'notifications'),{
           recipientId:currentUser.uid,
-          actorId:sellerId,
-          senderName:sData.name || 'SellerFlow Merchant',
-          title:'🛍️ Order Dispatched to Vendor',
-          message:`Your order #${orderRef.id.slice(-6).toUpperCase()} for ${money(total)} (${itemsListSummary}) was submitted to ${sData.name || 'the seller'}. They have been notified for immediate preparation.`,
+          actorId:'security_team',
+          senderName:'SellerFlow Security Team',
+          title:'🛡️ Order Under Security Review',
+          message:`Your order #${orderRef.id.slice(-6).toUpperCase()} for ${money(total)} (${itemsListSummary}) from ${sData.name || 'vendor'} is undergoing safety review. The vendor will be notified for fulfillment once approved.`,
           type:'order_update',
           orderId:orderRef.id,
           read:false,
@@ -9085,8 +9161,8 @@ async function placeOrder(){
     // Trigger local push notification if granted
     if('Notification' in window && Notification.permission === 'granted'){
       try {
-        new Notification('SellerFlow Orders Placed', {
-          body: `Successfully dispatched orders to ${bySeller.size} verified vendor${bySeller.size===1?'':'s'}!`,
+        new Notification('Order Submitted for Review', {
+          body: `Your order was submitted to the Security Team for verification. Vendors will be notified upon approval.`,
           icon: '/pwa-192x192.png'
         });
       } catch(_) {}
@@ -9095,7 +9171,7 @@ async function placeOrder(){
     cart=[];
     saveCart();
     closeModal();
-    toast(`Order placed successfully (${bySeller.size} split seller dispatch${bySeller.size===1?'':'es'})`,'success');
+    toast(`Order submitted for Security Team review (${bySeller.size} order${bySeller.size===1?'':'s'}). Vendor will be notified upon approval.`,'success', 4500);
     if(typeof refreshOrdersBadge==='function')refreshOrdersBadge();
     navigate('orders');
   }catch(e){
@@ -9734,42 +9810,13 @@ async function dispatchNotification(title, options = {}){
 }
 
 function showNotificationBanner(title, body, data){
-  let container = $('notificationBanners');
-  if(!container){
-    container = document.createElement('div');
-    container.id = 'notificationBanners';
-    container.className = 'fixed top-4 right-4 z-[9999] max-w-sm w-full space-y-2 pointer-events-auto px-3 sm:px-0';
-    document.body.appendChild(container);
-  }
-  const banner = document.createElement('div');
-  banner.className = 'sf-notif-banner bg-[#1a1a1a] border border-[#383838] rounded-2xl shadow-2xl p-3.5 text-left flex items-start gap-3 transition-all duration-300';
+  const msg = title + (body ? ' · ' + body : '');
   const icon = data?.type === 'chat_message' ? '💬' : (data?.type?.startsWith('order') ? '📦' : '🔔');
-  banner.innerHTML = `
-    <div class="text-2xl pt-0.5">${icon}</div>
-    <div class="flex-1 min-w-0">
-      <b class="text-sm block text-white font-bold leading-tight truncate">${esc(title)}</b>
-      <p class="text-xs text-zinc-300 mt-1 leading-snug line-clamp-2">${esc(body)}</p>
-    </div>
-    <div class="flex flex-col gap-1 items-end shrink-0">
-      <button type="button" class="close-banner text-xs text-zinc-500 hover:text-white px-1">✕</button>
-      ${data ? `<button type="button" class="view-banner text-xs bg-gold text-black font-bold px-2.5 py-1 rounded-lg mt-1">Open</button>` : ''}
-    </div>
-  `;
-  banner.querySelector('.close-banner')?.addEventListener('click', () => banner.remove());
-  if (data) {
-    banner.querySelector('.view-banner')?.addEventListener('click', () => {
-      banner.remove();
-      handleNotificationNavigation(data);
-    });
-  }
-  container.appendChild(banner);
-  setTimeout(() => {
-    if(banner.parentElement) {
-      banner.style.opacity = '0';
-      banner.style.transform = 'translateY(-10px)';
-      setTimeout(() => banner.remove(), 300);
-    }
-  }, 6000);
+  toast(msg, 'info', 4500, {
+    icon,
+    actionText: data ? 'Open' : null,
+    onAction: data ? () => handleNotificationNavigation(data) : null
+  });
 }
 
 let notificationWatcherStarted=false;
@@ -9966,7 +10013,9 @@ function handleOrdersSnapshot(snap,suppressAlert=false){
   docs.forEach(d=>{
     const data=typeof d?.data==='function'?d.data():(d?.data||d||{});
     const st=String(data?.status||'pending').toLowerCase();
-    if(st==='pending'){
+    const rst=String(data?.reviewStatus||'').toLowerCase();
+    // Only count active confirmed / approved orders ready for seller fulfillment
+    if(st!=='pending_review' && rst!=='pending' && rst!=='pending_security_review' && (st==='pending'||st==='confirmed'||st==='processing')){
       currentPending.push({id:d?.id||data?.id||('ord_'+Math.random().toString(36).slice(2)),...data});
     }
   });
@@ -11377,16 +11426,6 @@ async function init(){
     firebaseApp=initializeApp(firebaseConfig);
     auth=getAuth(firebaseApp);
     db=getFirestore(firebaseApp);
-    try{
-      if(db && typeof db.settings==='function'){
-        db.settings({ experimentalForceLongPolling: true, merge: true });
-      }
-    }catch(_){}
-    try{
-      if(db && typeof db.enablePersistence==='function'){
-        db.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
-      }
-    }catch(_){}
     try {
       if (typeof initCapacitorHandlers === 'function') {
         await initCapacitorHandlers();
@@ -13045,9 +13084,10 @@ init();
     let showCropGrid = true;
 
     let videoCropState = { ratio: 'original', panX: 50, panY: 50, zoom: 1 };
+    let videoTrimState = { preset: 'full', start: 0, end: 60, totalDuration: 60, isPlayingTrim: false };
     let videoResolution = '720p'; // 'original' | '1080p' | '720p' | '480p' | '360p'
     let vidNaturalW = 0, vidNaturalH = 0;
-    let activeVideoTab = 'crop'; // 'crop' | 'res' | 'cover'
+    let activeVideoTab = 'crop'; // 'crop' | 'duration' | 'res' | 'cover'
     let capturedCoverBlob = null;
     let showVideoCropGrid = true;
 
@@ -13975,6 +14015,13 @@ init();
       if($('vidTargetResDimensions')) $('vidTargetResDimensions').textContent = `${targetW} × ${targetH} px`;
       if($('vidTargetResAspect')) $('vidTargetResAspect').textContent = `(${videoCropState.ratio === 'original' ? 'Native' : videoCropState.ratio})`;
 
+      const selDur = Math.max(0.5, (videoTrimState.end || 0) - (videoTrimState.start || 0));
+      if($('vidDurationText')) $('vidDurationText').textContent = `${selDur.toFixed(1)}s (${(videoTrimState.start||0).toFixed(1)}s–${(videoTrimState.end||selDur).toFixed(1)}s)`;
+      if($('selectedDurationBadge')) $('selectedDurationBadge').textContent = `${selDur.toFixed(1)}s`;
+      if($('trimStartVal')) $('trimStartVal').textContent = (videoTrimState.start || 0).toFixed(1) + 's';
+      if($('trimEndVal')) $('trimEndVal').textContent = (videoTrimState.end || selDur).toFixed(1) + 's';
+      if($('trimSegmentSummary')) $('trimSegmentSummary').textContent = `${selDur.toFixed(1)}s clip selected (${(videoTrimState.start || 0).toFixed(1)}s to ${(videoTrimState.end || selDur).toFixed(1)}s)`;
+
       const qLabels = { '1080p': 'Full HD', '720p': 'HD', '480p': 'SD', '360p': 'Mobile', 'original': 'Native' };
       if($('vidTargetResQualityBadge')) $('vidTargetResQualityBadge').textContent = qLabels[videoResolution] || videoResolution.toUpperCase();
 
@@ -13982,7 +14029,7 @@ init();
       document.querySelectorAll('[data-vid-tab]').forEach(b => {
         b.classList.toggle('active', b.dataset.vidTab === activeVideoTab);
       });
-      ['crop', 'res', 'cover'].forEach(tab => {
+      ['crop', 'duration', 'res', 'cover'].forEach(tab => {
         const p = $('vidTab_' + tab);
         if(p) p.classList.toggle('hide', tab !== activeVideoTab);
       });
@@ -13990,6 +14037,11 @@ init();
       // Ratio chip active
       document.querySelectorAll('[data-vid-ratio]').forEach(b => {
         b.classList.toggle('active', b.dataset.vidRatio === videoCropState.ratio);
+      });
+
+      // Duration preset active
+      document.querySelectorAll('[data-dur-preset]').forEach(b => {
+        b.classList.toggle('active', b.dataset.durPreset === videoTrimState.preset);
       });
 
       // Resolution card active
@@ -14001,6 +14053,11 @@ init();
       if($('vidValPanX')) $('vidValPanX').textContent = Math.round(videoCropState.panX) + '%';
       if($('vidValPanY')) $('vidValPanY').textContent = Math.round(videoCropState.panY) + '%';
       if($('vidValZoom')) $('vidValZoom').textContent = videoCropState.zoom.toFixed(1) + 'x';
+
+      // Sync slider controls
+      if($('vidPanX')) $('vidPanX').value = Math.round(videoCropState.panX);
+      if($('vidPanY')) $('vidPanY').value = Math.round(videoCropState.panY);
+      if($('vidZoom')) $('vidZoom').value = Math.round(videoCropState.zoom * 10);
 
       // Grid toggle
       const grid = $('cropGridOverlay');
@@ -14015,40 +14072,48 @@ init();
       const url = URL.createObjectURL(file);
 
       area.innerHTML = `
-        <!-- Live Video Viewport & Crop Framing Box -->
-        <div class="crop-viewport-box" id="cropViewportBox">
-          <video id="editorVideo" class="transition-all duration-75 select-none" src="${url}" controls playsinline preload="auto"></video>
+        <!-- Live Video Viewport & Crop Framing Box with Direct Drag-to-Crop -->
+        <div class="crop-viewport-box relative overflow-hidden select-none cursor-grab active:cursor-grabbing rounded-2xl bg-black border-2 border-gold/40 shadow-xl" id="cropViewportBox" title="Drag directly on the video to crop and adjust framing">
+          <video id="editorVideo" class="transition-none pointer-events-none select-none w-full h-full object-cover" src="${url}" playsinline preload="auto"></video>
           
-          <div id="cropGridOverlay" class="crop-grid-3x3">
+          <!-- Direct Drag-to-Crop Touch & Pointer Overlay -->
+          <div id="videoDragOverlay" class="absolute inset-0 z-10 cursor-grab active:cursor-grabbing touch-none flex items-center justify-center">
+            <div id="videoDragHint" class="bg-black/75 backdrop-blur-sm border border-gold/40 text-gold text-[10px] font-bold px-3 py-1 rounded-full pointer-events-none opacity-80 hover:opacity-100 transition shadow flex items-center gap-1.5">
+              <span>✋</span><span>Drag to crop video · Scroll to zoom</span>
+            </div>
+          </div>
+
+          <div id="cropGridOverlay" class="crop-grid-3x3 pointer-events-none">
             <div></div><div></div><div></div>
             <div></div><div></div><div></div>
             <div></div><div></div><div></div>
           </div>
           
-          <div class="crop-corner crop-corner-tl"></div>
-          <div class="crop-corner crop-corner-tr"></div>
-          <div class="crop-corner crop-corner-bl"></div>
-          <div class="crop-corner crop-corner-br"></div>
+          <div class="crop-corner crop-corner-tl pointer-events-none"></div>
+          <div class="crop-corner crop-corner-tr pointer-events-none"></div>
+          <div class="crop-corner crop-corner-bl pointer-events-none"></div>
+          <div class="crop-corner crop-corner-br pointer-events-none"></div>
 
-          <div id="previewRatioBadge" class="absolute top-2.5 left-2.5 bg-black/85 backdrop-blur-sm border border-gold/40 text-gold text-[10px] font-bold px-2.5 py-0.5 rounded-full z-20 flex items-center gap-1 shadow">
+          <div id="previewRatioBadge" class="absolute top-2.5 left-2.5 bg-black/85 backdrop-blur-sm border border-gold/40 text-gold text-[10px] font-bold px-2.5 py-0.5 rounded-full z-20 flex items-center gap-1 shadow pointer-events-none">
             <span>📐</span><span id="vidRatioText">Original Aspect</span>
           </div>
-          <div id="previewResBadge" class="absolute top-2.5 right-2.5 bg-black/85 backdrop-blur-sm border border-zinc-700 text-zinc-200 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full z-20 shadow">
+          <div id="previewResBadge" class="absolute top-2.5 right-2.5 bg-black/85 backdrop-blur-sm border border-zinc-700 text-zinc-200 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full z-20 shadow pointer-events-none">
             <span id="vidResBadge">720p</span>
           </div>
-          <div id="previewDurationBadge" class="absolute bottom-2.5 left-2.5 bg-black/85 backdrop-blur-sm border border-gold/40 text-gold text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full z-20 shadow flex items-center gap-1">
+          <div id="previewDurationBadge" class="absolute bottom-2.5 left-2.5 bg-black/85 backdrop-blur-sm border border-gold/40 text-gold text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full z-20 shadow flex items-center gap-1 pointer-events-none">
             <span>⏱️</span><span id="vidDurationText">Video up to 1:00 max</span>
           </div>
         </div>
 
         <!-- Video Editor Tabs -->
         <div class="flex items-center gap-1.5 p-1 bg-[#141414] border border-[#272727] rounded-xl mt-3 overflow-x-auto">
-          <button type="button" class="sf-editor-tab active" data-vid-tab="crop">✂️ Crop & Framing</button>
+          <button type="button" class="sf-editor-tab active" data-vid-tab="crop">✂️ Drag & Crop</button>
+          <button type="button" class="sf-editor-tab" data-vid-tab="duration">⏱️ Choose Duration</button>
           <button type="button" class="sf-editor-tab" data-vid-tab="res">📐 Resolution</button>
           <button type="button" class="sf-editor-tab" data-vid-tab="cover">🖼️ Cover Frame</button>
         </div>
 
-        <!-- TAB 1: VIDEO CROP & FRAMING -->
+        <!-- TAB 1: VIDEO CROP & FRAMING (WITH DRAG TO CROP) -->
         <div id="vidTab_crop" class="mt-3 space-y-3">
           <div class="flex items-center justify-between text-xs">
             <span class="font-bold text-zinc-200">Video Aspect Ratio</span>
@@ -14067,8 +14132,12 @@ init();
             <button type="button" class="ratio-chip" data-vid-ratio="3:4">📸 3:4 (Photo)</button>
           </div>
 
-          <!-- Video Framing Sliders -->
           <div class="p-3 bg-[#171717] border border-[#2b2b2b] rounded-xl space-y-3">
+            <div class="flex items-center justify-between text-xs text-zinc-300">
+              <span class="flex items-center gap-1 font-semibold text-gold"><span>✋</span> Drag Directly on Video to Crop</span>
+              <span class="text-[11px] text-zinc-400">or use sliders below:</span>
+            </div>
+
             <div>
               <div class="flex justify-between text-xs text-zinc-300 mb-1">
                 <span>↔️ Horizontal Framing (Pan X)</span>
@@ -14105,7 +14174,53 @@ init();
           </div>
         </div>
 
-        <!-- TAB 2: VIDEO RESOLUTION -->
+        <!-- TAB 2: CHOOSE VIDEO DURATION & TRIM -->
+        <div id="vidTab_duration" class="mt-3 p-3.5 bg-[#161616] border border-[#2b2b2b] rounded-2xl space-y-3.5 hide">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold flex items-center gap-1.5 text-zinc-200">
+              <span>⏱️</span> Choose Video Duration & Trim
+            </span>
+            <span id="selectedDurationBadge" class="bg-gold text-black font-extrabold px-2.5 py-0.5 rounded-full text-[11px] shadow-sm">60.0s</span>
+          </div>
+
+          <p class="text-[11px] text-zinc-400">Choose a fast duration preset or customize the exact segment you wish to publish to the feed (max 60 seconds):</p>
+
+          <!-- Duration Presets -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button type="button" class="ratio-chip text-center font-bold text-xs py-2" data-dur-preset="15s">⚡ 15s Clip</button>
+            <button type="button" class="ratio-chip text-center font-bold text-xs py-2" data-dur-preset="30s">⏱️ 30s Short</button>
+            <button type="button" class="ratio-chip text-center font-bold text-xs py-2" data-dur-preset="60s">🎬 60s Full</button>
+            <button type="button" class="ratio-chip active text-center font-bold text-xs py-2" data-dur-preset="full">⚙️ Custom Trim</button>
+          </div>
+
+          <!-- Interactive Trim Slider Controls -->
+          <div class="p-3 bg-[#181818] border border-gold/30 rounded-xl space-y-3">
+            <div>
+              <div class="flex justify-between text-xs text-zinc-300 mb-1">
+                <span>Start Time (Trim in)</span>
+                <span id="trimStartVal" class="text-gold font-mono font-bold">0.0s</span>
+              </div>
+              <input type="range" id="trimStartRange" min="0" max="60" step="0.5" value="${videoTrimState.start}" class="w-full accent-gold cursor-pointer">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs text-zinc-300 mb-1">
+                <span>End Time (Trim out)</span>
+                <span id="trimEndVal" class="text-gold font-mono font-bold">${videoTrimState.end.toFixed(1)}s</span>
+              </div>
+              <input type="range" id="trimEndRange" min="0.5" max="60" step="0.5" value="${videoTrimState.end}" class="w-full accent-gold cursor-pointer">
+            </div>
+
+            <div class="flex items-center justify-between pt-1 text-xs">
+              <span id="trimSegmentSummary" class="text-zinc-300 text-[11px]">60.0s clip selected (0.0s to 60.0s)</span>
+              <button type="button" id="btnPreviewTrim" class="bg-gold/20 hover:bg-gold/30 text-gold border border-gold/40 px-3 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1 transition">
+                <span>▶</span> <span id="trimPlayBtnText">Preview Trimmed Loop</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: VIDEO RESOLUTION -->
         <div id="vidTab_res" class="mt-3 space-y-3 hide">
           <div class="flex items-center justify-between text-xs">
             <span class="font-bold text-zinc-200">Select Video Resolution</span>
@@ -14154,7 +14269,6 @@ init();
             </button>
           </div>
 
-          <!-- Live Target Resolution readout -->
           <div class="p-3 bg-[#181818] border border-gold/30 rounded-xl flex items-center justify-between text-xs">
             <div>
               <span class="text-zinc-400">Delivery target:</span>
@@ -14165,7 +14279,7 @@ init();
           </div>
         </div>
 
-        <!-- TAB 3: COVER FRAME PICKER -->
+        <!-- TAB 4: COVER FRAME PICKER -->
         <div id="vidTab_cover" class="mt-3 p-3.5 bg-[#161616] border border-[#2b2b2b] rounded-2xl space-y-3 hide">
           <div class="flex items-center justify-between text-xs">
             <span class="font-bold flex items-center gap-1.5 text-zinc-200">
@@ -14196,14 +14310,85 @@ init();
         vEl.onloadedmetadata = () => {
           vidNaturalW = vEl.videoWidth;
           vidNaturalH = vEl.videoHeight;
+          const totalDur = vEl.duration || 60;
+          videoTrimState.totalDuration = totalDur;
+          
+          if($('trimStartRange')) $('trimStartRange').max = totalDur;
+          if($('trimEndRange')) $('trimEndRange').max = totalDur;
+          
+          if(!videoTrimState.end || videoTrimState.end > totalDur || videoTrimState.end === 60){
+            videoTrimState.end = Math.min(totalDur, 60);
+          }
+          if($('trimStartRange')) $('trimStartRange').value = videoTrimState.start;
+          if($('trimEndRange')) $('trimEndRange').value = videoTrimState.end;
+          
           updateVideoEditorUI();
         };
         vEl.onloadeddata = () => {
-          vEl.currentTime = 0.1;
+          vEl.currentTime = videoTrimState.start || 0.1;
+        };
+        vEl.ontimeupdate = () => {
+          if(videoTrimState.isPlayingTrim){
+            if(vEl.currentTime >= videoTrimState.end){
+              vEl.currentTime = videoTrimState.start;
+              vEl.play().catch(()=>{});
+            }
+          }
         };
         vEl.onseeked = () => {
           updateVideoCoverCanvas();
           if($('coverTimeLabel')) $('coverTimeLabel').textContent = vEl.currentTime.toFixed(1) + 's';
+        };
+      }
+
+      // Drag-to-Crop Pointer & Touch Gestures directly on Video Viewport
+      const dragOverlay = $('videoDragOverlay');
+      if(dragOverlay){
+        let isDragging = false;
+        let startClientX = 0, startClientY = 0;
+        let startPanX = 50, startPanY = 50;
+
+        dragOverlay.onpointerdown = (e) => {
+          isDragging = true;
+          startClientX = e.clientX;
+          startClientY = e.clientY;
+          startPanX = videoCropState.panX;
+          startPanY = videoCropState.panY;
+          dragOverlay.setPointerCapture(e.pointerId);
+          const hint = $('videoDragHint');
+          if(hint) hint.classList.add('opacity-0');
+        };
+
+        dragOverlay.onpointermove = (e) => {
+          if(!isDragging) return;
+          const rect = dragOverlay.getBoundingClientRect();
+          if(!rect.width || !rect.height) return;
+          const deltaX = ((e.clientX - startClientX) / rect.width) * 100;
+          const deltaY = ((e.clientY - startClientY) / rect.height) * 100;
+          
+          // Drag video relative to frame
+          videoCropState.panX = Math.max(0, Math.min(100, startPanX - deltaX));
+          videoCropState.panY = Math.max(0, Math.min(100, startPanY - deltaY));
+          updateVideoEditorUI();
+        };
+
+        const stopDrag = (e) => {
+          if(isDragging){
+            isDragging = false;
+            try { dragOverlay.releasePointerCapture(e.pointerId); } catch(_){}
+            const hint = $('videoDragHint');
+            if(hint) hint.classList.remove('opacity-0');
+          }
+        };
+        dragOverlay.onpointerup = stopDrag;
+        dragOverlay.onpointercancel = stopDrag;
+
+        // Wheel Zoom on Video Viewport
+        dragOverlay.onwheel = (e) => {
+          e.preventDefault();
+          const zoomDelta = e.deltaY < 0 ? 0.1 : -0.1;
+          videoCropState.zoom = Math.max(1.0, Math.min(2.2, videoCropState.zoom + zoomDelta));
+          updateVideoEditorUI();
         };
       }
 
@@ -14222,6 +14407,80 @@ init();
           updateVideoEditorUI();
         };
       });
+
+      // Duration Presets
+      document.querySelectorAll('[data-dur-preset]').forEach(btn => {
+        btn.onclick = () => {
+          const preset = btn.dataset.durPreset;
+          videoTrimState.preset = preset;
+          const tot = videoTrimState.totalDuration || 60;
+          if(preset === '15s'){
+            videoTrimState.start = 0;
+            videoTrimState.end = Math.min(tot, 15);
+          } else if(preset === '30s'){
+            videoTrimState.start = 0;
+            videoTrimState.end = Math.min(tot, 30);
+          } else if(preset === '60s'){
+            videoTrimState.start = 0;
+            videoTrimState.end = Math.min(tot, 60);
+          } else {
+            videoTrimState.start = 0;
+            videoTrimState.end = Math.min(tot, 60);
+          }
+          if($('trimStartRange')) $('trimStartRange').value = videoTrimState.start;
+          if($('trimEndRange')) $('trimEndRange').value = videoTrimState.end;
+          if(vEl) vEl.currentTime = videoTrimState.start;
+          updateVideoEditorUI();
+        };
+      });
+
+      // Trim sliders
+      if($('trimStartRange')) $('trimStartRange').oninput = () => {
+        let val = Number($('trimStartRange').value);
+        if(val >= videoTrimState.end - 0.5){
+          val = Math.max(0, videoTrimState.end - 0.5);
+          $('trimStartRange').value = val;
+        }
+        if(videoTrimState.end - val > 60){
+          videoTrimState.end = val + 60;
+          if($('trimEndRange')) $('trimEndRange').value = videoTrimState.end;
+        }
+        videoTrimState.start = val;
+        videoTrimState.preset = 'custom';
+        if(vEl) vEl.currentTime = val;
+        updateVideoEditorUI();
+      };
+
+      if($('trimEndRange')) $('trimEndRange').oninput = () => {
+        let val = Number($('trimEndRange').value);
+        if(val <= videoTrimState.start + 0.5){
+          val = videoTrimState.start + 0.5;
+          $('trimEndRange').value = val;
+        }
+        if(val - videoTrimState.start > 60){
+          videoTrimState.start = Math.max(0, val - 60);
+          if($('trimStartRange')) $('trimStartRange').value = videoTrimState.start;
+        }
+        videoTrimState.end = val;
+        videoTrimState.preset = 'custom';
+        if(vEl) vEl.currentTime = val;
+        updateVideoEditorUI();
+      };
+
+      // Preview Trimmed Clip
+      if($('btnPreviewTrim')) $('btnPreviewTrim').onclick = () => {
+        if(!vEl) return;
+        if(videoTrimState.isPlayingTrim){
+          videoTrimState.isPlayingTrim = false;
+          vEl.pause();
+          if($('trimPlayBtnText')) $('trimPlayBtnText').textContent = 'Preview Trimmed Loop';
+        } else {
+          videoTrimState.isPlayingTrim = true;
+          vEl.currentTime = videoTrimState.start;
+          vEl.play().catch(()=>{});
+          if($('trimPlayBtnText')) $('trimPlayBtnText').textContent = '⏸ Pause Loop';
+        }
+      };
 
       // Resolution selection
       document.querySelectorAll('[data-vid-res]').forEach(btn => {
@@ -14285,17 +14544,19 @@ init();
       if(!file){ area.innerHTML = ''; capturedCoverBlob = null; return; }
       kind = file.type.startsWith('video') ? 'video' : 'image';
       if(kind === 'video'){
-        try {
-          loading('Verifying video length…');
-          const duration = await checkVideoDuration(file, 60);
-          ready();
-        } catch(durErr){
-          ready();
-          $('postFile').value = '';
-          file = null;
-          area.innerHTML = '';
-          toast(durErr.message || 'Video exceeds 1 minute limit (60s max). Please choose a shorter video.', 'error', 4500);
-          return;
+        loading('Reading video duration & format…');
+        const totalDur = await getVideoDuration(file);
+        ready();
+        videoTrimState.totalDuration = totalDur || 60;
+        if(totalDur > 60.5){
+          videoTrimState.start = 0;
+          videoTrimState.end = 60;
+          videoTrimState.preset = '60s';
+          toast(`Video is ${Math.round(totalDur)}s. Use the Duration & Trim tool to select up to 60s for your feed post.`, 'info', 5000);
+        } else {
+          videoTrimState.start = 0;
+          videoTrimState.end = totalDur || 60;
+          videoTrimState.preset = 'full';
         }
       }
       if(kind === 'image'){
@@ -14319,7 +14580,10 @@ init();
         if(!text && !file) throw Error('Add text or media to publish.');
         
         if(file && kind === 'video'){
-          await checkVideoDuration(file, 60);
+          const chosenDur = Math.max(0.5, videoTrimState.end - videoTrimState.start);
+          if(chosenDur > 60.5){
+            throw Error(`Selected video duration (${chosenDur.toFixed(1)}s) exceeds the 1 minute maximum. Please choose up to 60s.`);
+          }
         }
 
         loading('Processing & publishing your post…');
@@ -14475,6 +14739,9 @@ init();
             panY: videoCropState.panY,
             zoom: videoCropState.zoom
           } : null,
+          trimStart: kind === 'video' ? Number((videoTrimState.start || 0).toFixed(2)) : 0,
+          trimEnd: kind === 'video' ? Number((videoTrimState.end || (videoTrimState.totalDuration || 60)).toFixed(2)) : 0,
+          videoDuration: kind === 'video' ? Number(Math.max(0.5, (videoTrimState.end || 60) - (videoTrimState.start || 0)).toFixed(1)) : null,
           likes: [],
           saves: [],
           comments: [],
@@ -16046,7 +16313,7 @@ init();
   /* Admin Modern Dashboard & Control Center */
   renderAdmin = async function(){
     if(!isAdmin){ $('page').innerHTML = pageTitle('Access denied', 'You do not have permission to access the SellerFlow Security Portal.'); return; }
-    const [users, posts, reports, termsSnap, storesSnap, productsSnap, fraudSnap, kycSnap] = await Promise.all([
+    const [users, posts, reports, termsSnap, storesSnap, productsSnap, fraudSnap, kycSnap, ordersSnap] = await Promise.all([
       getDocs(query(collection(db, 'users'), limit(300))),
       getDocs(query(collection(db, 'posts'), limit(250))),
       getDocs(query(collection(db, 'scamReports'), limit(100))),
@@ -16054,7 +16321,8 @@ init();
       getDocs(query(collection(db, 'stores'), limit(300))),
       getDocs(query(collection(db, 'products'), limit(300))),
       getDocs(query(collection(db, 'fraudReports'), limit(200))),
-      getDocs(query(collection(db, 'buyerKycRecords'), limit(300))).catch(() => ({ docs: [], size: 0 }))
+      getDocs(query(collection(db, 'buyerKycRecords'), limit(300))).catch(() => ({ docs: [], size: 0 })),
+      getDocs(query(collection(db, 'orders'), limit(300))).catch(() => ({ docs: [], size: 0 }))
     ]);
 
     // Build unified Buyer Ghana Card records from buyerKycRecords and users collection
@@ -16151,6 +16419,12 @@ init();
     const takenDownProducts = allProductDocs.filter(p => p.status === 'taken_down' || p.reviewStatus === 'taken_down');
     const rejectedProducts = allProductDocs.filter(p => p.status === 'rejected' || p.reviewStatus === 'rejected');
 
+    // Orders Security metrics
+    const allOrderDocs = ordersSnap.docs ? ordersSnap.docs.map(d => ({ id: d.id, ...d.data() })) : [];
+    const pendingReviewOrders = allOrderDocs.filter(o => o.status === 'pending_review' || o.securityReviewStatus === 'pending');
+    const approvedOrders = allOrderDocs.filter(o => o.status !== 'pending_review' && o.status !== 'cancelled');
+    const cancelledOrders = allOrderDocs.filter(o => o.status === 'cancelled');
+
     const termData = snapshotExists(termsSnap) ? termsSnap.data() : { text: DEFAULT_TERMS, version: appTermsVersion };
     const initialTab = window._currentAdminTab || 'overview';
 
@@ -16162,7 +16436,7 @@ init();
             <h1 class="text-2xl sm:text-3xl font-black text-white">Security Team Portal</h1>
             <span class="text-[11px] font-bold bg-gold/15 text-gold border border-gold/30 px-2.5 py-0.5 rounded-full">SECURITY & COMPLIANCE</span>
           </div>
-          <p class="muted text-xs sm:text-sm mt-1">Platform management: user directories, Ghana Card KYC records, live posts, store & product review, community reports & restoration.</p>
+          <p class="muted text-xs sm:text-sm mt-1">Platform management: user directories, Ghana Card KYC records, order security verification, store & product review, and community safety.</p>
         </div>
         <div class="flex items-center gap-2">
           <button type="button" id="adminRefreshBtn" class="border border-[#333] hover:border-gold px-3.5 py-2 rounded-xl text-xs font-bold bg-[#141414] text-zinc-200 transition flex items-center gap-1.5 shadow-sm">
@@ -16216,7 +16490,27 @@ init();
           </div>
         </button>
 
-        <!-- Card 3: Posts & Feed -->
+        <!-- Card 3: Orders Security Review -->
+        <button type="button" class="sf-dash-card group ${pendingReviewOrders.length ? 'border-amber-500/80 bg-amber-950/20 shadow-[0_0_12px_rgba(245,158,11,0.15)]' : ''}" id="dashCardOrders">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Orders</span>
+              <span class="text-lg p-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50">📦</span>
+            </div>
+            <div class="text-2xl font-black ${pendingReviewOrders.length ? 'text-amber-400' : 'text-white'} mt-1.5 group-hover:text-gold transition">${allOrderDocs.length}</div>
+            <div class="flex flex-wrap gap-1 mt-2">
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${pendingReviewOrders.length ? 'bg-amber-950/90 text-amber-300 border border-amber-800 animate-pulse' : 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'}">
+                ${pendingReviewOrders.length ? `${pendingReviewOrders.length} Review` : '✓ All Approved'}
+              </span>
+            </div>
+          </div>
+          <div class="text-[10px] font-bold text-gold group-hover:underline mt-3 flex items-center justify-between">
+            <span>Order Security</span>
+            <span>→</span>
+          </div>
+        </button>
+
+        <!-- Card 4: Posts & Feed -->
         <button type="button" class="sf-dash-card group" id="dashCardPosts">
           <div>
             <div class="flex items-center justify-between">
@@ -16235,7 +16529,7 @@ init();
           </div>
         </button>
 
-        <!-- Card 4: Stores & Merchants -->
+        <!-- Card 5: Stores & Merchants -->
         <button type="button" class="sf-dash-card group ${pendingStores.length ? 'border-amber-500/50' : ''}" id="dashCardStores">
           <div>
             <div class="flex items-center justify-between">
@@ -16255,7 +16549,7 @@ init();
           </div>
         </button>
 
-        <!-- Card 5: Products & Catalogue -->
+        <!-- Card 6: Products & Catalogue -->
         <button type="button" class="sf-dash-card group ${pendingProducts.length ? 'border-amber-500/50' : ''}" id="dashCardProducts">
           <div>
             <div class="flex items-center justify-between">
@@ -16271,26 +16565,6 @@ init();
           </div>
           <div class="text-[10px] font-bold text-gold group-hover:underline mt-3 flex items-center justify-between">
             <span>Catalogue</span>
-            <span>→</span>
-          </div>
-        </button>
-
-        <!-- Card 6: Reports -->
-        <button type="button" class="sf-dash-card group ${reports.size ? 'border-rose-500/40' : ''}" id="dashCardReports">
-          <div>
-            <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Reports</span>
-              <span class="text-lg p-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50">🚩</span>
-            </div>
-            <div class="text-2xl font-black ${reports.size ? 'text-rose-400' : 'text-white'} mt-1.5 group-hover:text-gold transition">${reports.size}</div>
-            <div class="flex flex-wrap gap-1 mt-2">
-              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${reports.size ? 'bg-rose-950/80 text-rose-300 border border-rose-800' : 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'}">
-                ${reports.size ? '⚡ Attention' : '✓ Clean'}
-              </span>
-            </div>
-          </div>
-          <div class="text-[10px] font-bold text-gold group-hover:underline mt-3 flex items-center justify-between">
-            <span>Reports</span>
             <span>→</span>
           </div>
         </button>
@@ -16345,6 +16619,10 @@ init();
           <span>🪪 Buyer Ghana Cards</span>
           <span class="admin-tab-count ${pendingKycCount ? 'bg-amber-950 text-amber-300 border border-amber-800 animate-pulse' : ''}">${allGhanaCardRecords.length}</span>
         </button>
+        <button class="admin-tab ${initialTab === 'orders' ? 'active' : ''}" data-admin-tab="orders">
+          <span>📦 Orders Security Review</span>
+          <span class="admin-tab-count ${pendingReviewOrders.length ? 'bg-amber-950 text-amber-300 border border-amber-800 animate-pulse' : ''}">${pendingReviewOrders.length}</span>
+        </button>
         <button class="admin-tab ${initialTab === 'users' ? 'active' : ''}" data-admin-tab="users">
           <span>👥 Users</span>
           <span class="admin-tab-count">${users.size}</span>
@@ -16393,8 +16671,9 @@ init();
       window._currentAdminTab = tabName;
       document.querySelectorAll('[data-admin-tab]').forEach(t => t.classList.toggle('active', t.dataset.adminTab === tabName));
 
-      if(tabName === 'overview') sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts, fraudSnap, allGhanaCardRecords);
+      if(tabName === 'overview') sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts, fraudSnap, allGhanaCardRecords, pendingReviewOrders, allOrderDocs);
       else if(tabName === 'ghana_cards') sfAdminGhanaCardsTab(allGhanaCardRecords, users, kycSnap, subOption);
+      else if(tabName === 'orders') sfAdminOrdersReviewTab(allOrderDocs, pendingReviewOrders, approvedOrders, cancelledOrders, subOption);
       else if(tabName === 'users') sfAdminUsers(users, pending, subOption);
       else if(tabName === 'posts') sfAdminPosts(posts, livePosts, reviewPosts, takenDownPosts, subOption);
       else if(tabName === 'stores') sfAdminStores(storesSnap, liveStores, pendingStores, takenDownStores, rejectedStores, subOption);
@@ -16413,6 +16692,7 @@ init();
 
     if($('dashCardUsers')) $('dashCardUsers').onclick = () => setAdminTab('users');
     if($('dashCardGhanaCards')) $('dashCardGhanaCards').onclick = () => setAdminTab('ghana_cards');
+    if($('dashCardOrders')) $('dashCardOrders').onclick = () => setAdminTab('orders');
     if($('dashCardPosts')) $('dashCardPosts').onclick = () => setAdminTab('posts');
     if($('dashCardStores')) $('dashCardStores').onclick = () => setAdminTab('stores');
     if($('dashCardProducts')) $('dashCardProducts').onclick = () => setAdminTab('products');
@@ -16423,7 +16703,7 @@ init();
     setAdminTab(initialTab);
   };
 
-  function sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts, fraudSnap, allGhanaCardRecords = []){
+  function sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts, fraudSnap, allGhanaCardRecords = [], pendingReviewOrders = [], allOrderDocs = []){
     const activeCount = users.docs.filter(d => {
       const u = d.data();
       const isSusp = !!u.suspended || (u.suspendedUntil && ts(u.suspendedUntil) > Date.now());
@@ -16438,7 +16718,7 @@ init();
     $('adminWorkspace').innerHTML = `
       <div class="space-y-6">
         <!-- Distinct Section Quick-Launch Cards -->
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <!-- Launchpad 1: Users -->
           <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
             <div>
@@ -16481,7 +16761,27 @@ init();
             </button>
           </div>
 
-          <!-- Launchpad 3: Stores & Moderation -->
+          <!-- Launchpad 3: Orders Security Review -->
+          <div class="card p-5 border ${pendingReviewOrders.length ? 'border-amber-500/80 bg-amber-950/15 shadow-[0_0_12px_rgba(245,158,11,0.1)]' : 'border-[#2c2c2c]'} hover:border-gold/60 transition flex flex-col justify-between group">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-2xl p-2 rounded-xl bg-zinc-800/80 border border-zinc-700/50">📦</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full ${pendingReviewOrders.length ? 'bg-amber-950 text-amber-300 border border-amber-800 animate-pulse' : 'bg-zinc-800 text-zinc-300'}">${allOrderDocs.length} Orders</span>
+              </div>
+              <h2 class="text-lg font-black text-white group-hover:text-gold transition">Orders Security</h2>
+              <p class="muted text-xs mt-1 leading-relaxed">Orders must pass Security Team review before sellers receive order alerts. Approve orders to notify stores.</p>
+              
+              <div class="flex flex-wrap gap-2 mt-4">
+                <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${pendingReviewOrders.length ? 'bg-amber-950/80 text-amber-300 border border-amber-800 animate-pulse' : 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60'}">${pendingReviewOrders.length ? `${pendingReviewOrders.length} Pending Review` : '✓ All Clear'}</span>
+              </div>
+            </div>
+            <button type="button" id="jumpToOrdersBtn" class="mt-5 w-full bg-[#1c1c1c] hover:bg-gold hover:text-black border border-[#333] hover:border-gold text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
+              <span>Review Buyer Orders</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          <!-- Launchpad 4: Stores & Moderation -->
           <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
             <div>
               <div class="flex items-center justify-between mb-3">
@@ -16502,7 +16802,7 @@ init();
             </button>
           </div>
 
-          <!-- Launchpad 4: Products & Moderation -->
+          <!-- Launchpad 5: Products & Moderation -->
           <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
             <div>
               <div class="flex items-center justify-between mb-3">
@@ -16523,7 +16823,7 @@ init();
             </button>
           </div>
 
-          <!-- Launchpad 5: Posts & Media -->
+          <!-- Launchpad 6: Posts & Media -->
           <div class="card p-5 border border-[#2c2c2c] hover:border-gold/60 transition flex flex-col justify-between group">
             <div>
               <div class="flex items-center justify-between mb-3">
@@ -16544,6 +16844,29 @@ init();
             </button>
           </div>
         </div>
+
+        <!-- Priority Attention Section: Orders Security Review Queue -->
+        ${pendingReviewOrders.length ? `
+          <div class="card p-5 border border-amber-500/70 bg-amber-950/20 shadow-[0_0_15px_rgba(245,158,11,0.12)]">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl p-2 rounded-xl bg-amber-950/90 border border-amber-700 text-gold">📦</span>
+                <div>
+                  <h3 class="text-base font-black text-white flex items-center gap-2">
+                    <span>Pending Buyer Orders Security Gate</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800 animate-pulse">Action Required</span>
+                  </h3>
+                  <p class="muted text-xs">These buyer orders have been soft-locked and are awaiting Security Team verification before sellers receive dispatch alerts.</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="openAllOrdersReviewHub" class="bg-amber-500 hover:bg-amber-400 text-black font-extrabold px-4 py-2 rounded-xl text-xs transition shadow flex items-center gap-1.5">
+                  <span>Review ${pendingReviewOrders.length} Pending Orders →</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ` : ''}
 
         <!-- Priority Attention Section: Buyer Ghana Cards Desk -->
         <div class="card p-5 border border-amber-900/50 bg-amber-950/15">
@@ -16736,6 +17059,8 @@ init();
     $('jumpToUsersBtn')?.addEventListener('click', () => setAdminTab('users'));
     $('jumpToGhanaCardsBtn')?.addEventListener('click', () => setAdminTab('ghana_cards'));
     $('openAllGhanaCardsHub')?.addEventListener('click', () => setAdminTab('ghana_cards'));
+    $('jumpToOrdersBtn')?.addEventListener('click', () => setAdminTab('orders'));
+    $('openAllOrdersReviewHub')?.addEventListener('click', () => setAdminTab('orders'));
     $('jumpToStoresBtn')?.addEventListener('click', () => setAdminTab('stores'));
     $('jumpToProductsBtn')?.addEventListener('click', () => setAdminTab('products'));
     $('jumpToPostsBtn')?.addEventListener('click', () => setAdminTab('posts'));
@@ -18399,6 +18724,410 @@ STATUS: ${f.status || 'Active Investigation'}
     renderFraudList();
   }
 
+  /* Admin Order Security Review & Approval Hub */
+  async function adminApproveOrderReview(orderId){
+    try {
+      loading('Approving order & notifying seller for fulfillment…');
+      const orderRef = doc(db, 'orders', orderId);
+      const orderSnap = await getDoc(orderRef);
+      if(!snapshotExists(orderSnap)) throw Error('Order not found.');
+      const order = orderSnap.data();
+
+      await updateDoc(orderRef, {
+        status: 'confirmed',
+        securityReviewedAt: serverTimestamp(),
+        securityReviewerId: currentUser?.uid || 'security_team',
+        securityReviewStatus: 'approved'
+      });
+
+      // Dispatch real-time notification to seller
+      if(order.sellerId){
+        try {
+          await addDoc(collection(db, 'notifications'), {
+            userId: order.sellerId,
+            type: 'new_order',
+            title: 'New Order Confirmed! 🛒',
+            body: `Order #${order.orderNumber || orderId.slice(0,6).toUpperCase()} has been reviewed & approved by Security. You may now fulfill this order.`,
+            orderId: orderId,
+            createdAt: serverTimestamp(),
+            read: false
+          });
+        } catch(_){}
+      }
+
+      // Dispatch notification to buyer
+      if(order.buyerId){
+        try {
+          await addDoc(collection(db, 'notifications'), {
+            userId: order.buyerId,
+            type: 'order_approved',
+            title: 'Order Security Approved ✅',
+            body: `Your order #${order.orderNumber || orderId.slice(0,6).toUpperCase()} passed security verification and has been sent to the store.`,
+            orderId: orderId,
+            createdAt: serverTimestamp(),
+            read: false
+          });
+        } catch(_){}
+      }
+
+      toast('Order verified & approved! Seller has been notified.', 'success', 4000);
+      if(typeof renderAdmin === 'function' && currentPage === 'admin'){
+        await renderAdmin();
+        const tab = document.querySelector('[data-admin-tab="orders"]');
+        if(tab) tab.click();
+      }
+    } catch(e) {
+      toast(errMsg(e), 'error');
+    } finally {
+      ready();
+    }
+  }
+  window.adminApproveOrderReview = adminApproveOrderReview;
+
+  async function adminRejectOrderReview(orderId){
+    const reason = await customPrompt({
+      title: 'Reject Buyer Order',
+      message: 'Enter the security cancellation reason (this will be sent to the buyer):',
+      placeholder: 'e.g. Unverified shipping details / Failed fraud checks',
+      tag: 'Security Cancellation',
+      required: true
+    });
+    if(!reason) return;
+
+    try {
+      loading('Cancelling order…');
+      const orderRef = doc(db, 'orders', orderId);
+      const orderSnap = await getDoc(orderRef);
+      if(!snapshotExists(orderSnap)) throw Error('Order not found.');
+      const order = orderSnap.data();
+
+      await updateDoc(orderRef, {
+        status: 'cancelled',
+        securityReviewedAt: serverTimestamp(),
+        securityReviewerId: currentUser?.uid || 'security_team',
+        securityReviewStatus: 'rejected',
+        rejectionReason: reason
+      });
+
+      // Dispatch notification to buyer
+      if(order.buyerId){
+        try {
+          await addDoc(collection(db, 'notifications'), {
+            userId: order.buyerId,
+            type: 'order_rejected',
+            title: 'Order Cancelled by Security ❌',
+            body: `Your order #${order.orderNumber || orderId.slice(0,6).toUpperCase()} did not pass security review: ${reason}`,
+            orderId: orderId,
+            createdAt: serverTimestamp(),
+            read: false
+          });
+        } catch(_){}
+      }
+
+      toast('Order cancelled and buyer notified.', 'info', 3500);
+      if(typeof renderAdmin === 'function' && currentPage === 'admin'){
+        await renderAdmin();
+        const tab = document.querySelector('[data-admin-tab="orders"]');
+        if(tab) tab.click();
+      }
+    } catch(e) {
+      toast(errMsg(e), 'error');
+    } finally {
+      ready();
+    }
+  }
+  window.adminRejectOrderReview = adminRejectOrderReview;
+
+  function sfAdminOrdersReviewTab(allOrders, pendingOrders, approvedOrders, cancelledOrders, subOption){
+    let orderFilter = subOption || (pendingOrders.length ? 'pending' : 'all');
+
+    $('adminWorkspace').innerHTML = `
+      <div class="space-y-5">
+        <!-- Header & Executive Metrics -->
+        <div class="card p-5 border border-[#2b2b2b]">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2.5 flex-wrap">
+                <span class="text-2xl p-2 rounded-xl bg-amber-950/40 border border-amber-800 text-gold">📦</span>
+                <h2 class="text-xl font-black text-white">Order Security Review & Dispatch</h2>
+                <span class="text-xs font-bold px-3 py-1 rounded-full ${pendingOrders.length ? 'bg-amber-950 text-amber-300 border border-amber-800 animate-pulse' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
+                  ${pendingOrders.length ? `🛡️ ${pendingOrders.length} Pending Review` : '✓ All Orders Verified'}
+                </span>
+              </div>
+              <p class="muted text-xs sm:text-sm mt-1 leading-relaxed">
+                Buyer orders must pass Security Team review before sellers receive order notifications. Verify delivery destinations, buyer Ghana Card authenticity, and fraud markers.
+              </p>
+            </div>
+            <button id="ordersBack" class="border border-[#444] hover:border-gold rounded-xl px-4 py-2 text-xs font-bold text-white transition self-start lg:self-auto">
+              ← Back to Overview
+            </button>
+          </div>
+
+          <!-- Quick Metric Indicators -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-[#222]">
+            <div class="p-3 rounded-xl bg-[#161616] border border-[#2b2b2b]">
+              <div class="text-[11px] muted font-bold uppercase tracking-wider">Awaiting Review</div>
+              <div class="text-xl font-black ${pendingOrders.length ? 'text-amber-400' : 'text-white'} mt-0.5">${pendingOrders.length}</div>
+            </div>
+            <div class="p-3 rounded-xl bg-[#161616] border border-[#2b2b2b]">
+              <div class="text-[11px] muted font-bold uppercase tracking-wider">Approved & Live</div>
+              <div class="text-xl font-black text-emerald-400 mt-0.5">${approvedOrders.length}</div>
+            </div>
+            <div class="p-3 rounded-xl bg-[#161616] border border-[#2b2b2b]">
+              <div class="text-[11px] muted font-bold uppercase tracking-wider">Cancelled / Rejected</div>
+              <div class="text-xl font-black text-rose-400 mt-0.5">${cancelledOrders.length}</div>
+            </div>
+            <div class="p-3 rounded-xl bg-[#161616] border border-[#2b2b2b]">
+              <div class="text-[11px] muted font-bold uppercase tracking-wider">Total Orders</div>
+              <div class="text-xl font-black text-white mt-0.5">${allOrders.length}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Subtabs & Search Input -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-1.5 p-1 rounded-2xl bg-[#121212] border border-[#292929] w-full sm:w-auto overflow-x-auto scrollbar-none" id="orderFilterSubtabs">
+            <button class="admin-subtab ${orderFilter==='pending'?'active':''}" data-order-filter="pending">
+              <span>🛡️ Pending Security Review (${pendingOrders.length})</span>
+            </button>
+            <button class="admin-subtab ${orderFilter==='all'?'active':''}" data-order-filter="all">
+              <span>All Orders (${allOrders.length})</span>
+            </button>
+            <button class="admin-subtab ${orderFilter==='approved'?'active':''}" data-order-filter="approved">
+              <span>✅ Approved (${approvedOrders.length})</span>
+            </button>
+            <button class="admin-subtab ${orderFilter==='cancelled'?'active':''}" data-order-filter="cancelled">
+              <span>❌ Cancelled (${cancelledOrders.length})</span>
+            </button>
+          </div>
+
+          <div class="w-full sm:w-80">
+            <input id="sfAdminOrderSearch" type="text" placeholder="Search order #, buyer, phone, store, item…" class="p-2.5 rounded-xl bg-[#191919] border border-[#333] text-xs w-full">
+          </div>
+        </div>
+
+        <!-- Orders Security Review List -->
+        <div id="adminOrdersReviewList" class="space-y-4"></div>
+      </div>
+    `;
+
+    if($('ordersBack')) $('ordersBack').onclick = () => window.setAdminTab ? window.setAdminTab('overview') : renderAdmin();
+
+    function renderOrdersList(){
+      const q = ($('sfAdminOrderSearch')?.value || '').toLowerCase().trim();
+      const listEl = $('adminOrdersReviewList');
+      if(!listEl) return;
+
+      let source = allOrders;
+      if(orderFilter === 'pending') source = pendingOrders;
+      else if(orderFilter === 'approved') source = approvedOrders;
+      else if(orderFilter === 'cancelled') source = cancelledOrders;
+
+      const filtered = source.filter(o => {
+        if(!q) return true;
+        const oNum = (o.orderNumber || o.id || '').toLowerCase();
+        const bName = (o.buyerName || o.customerName || '').toLowerCase();
+        const bPhone = (o.buyerPhone || o.phone || '').toLowerCase();
+        const sName = (o.storeName || '').toLowerCase();
+        const items = (o.items || []).map(i => i.title || '').join(' ').toLowerCase();
+        const addr = (o.deliveryAddress || o.address || '').toLowerCase();
+        return oNum.includes(q) || bName.includes(q) || bPhone.includes(q) || sName.includes(q) || items.includes(q) || addr.includes(q);
+      });
+
+      if(!filtered.length){
+        listEl.innerHTML = `
+          <div class="card p-10 text-center text-zinc-400 border border-[#222]">
+            <div class="text-3xl mb-2">📦</div>
+            <b class="text-white">No orders matching the current filter</b>
+            <p class="text-xs text-zinc-500 mt-1">${q ? `No orders found matching "${esc(q)}".` : 'The selected queue is currently empty.'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(o => {
+        const orderId = o.id;
+        const isPending = o.status === 'pending_review' || o.securityReviewStatus === 'pending';
+        const isApproved = o.status !== 'pending_review' && o.status !== 'cancelled';
+        const isCancelled = o.status === 'cancelled';
+        const dateStr = new Date(ts(o.createdAt) || Date.now()).toLocaleString('en-GH', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const items = o.items || [];
+        const totalAmount = Number(o.total || o.totalPrice || 0);
+
+        return `
+          <div class="card p-5 border ${isPending ? 'border-amber-500/60 bg-[#161411] shadow-[0_0_15px_rgba(245,158,11,0.08)]' : 'border-[#292929] bg-[#121212]'} transition space-y-4">
+            <!-- Order Header -->
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#292929] pb-3">
+              <div class="flex items-center gap-2.5 flex-wrap">
+                <span class="text-sm font-black text-white font-mono">Order #${esc(o.orderNumber || orderId.slice(0, 8).toUpperCase())}</span>
+                <span class="text-xs">${getOrderStatusBadge(o.status)}</span>
+                ${isPending ? `<span class="bg-amber-950 text-amber-300 border border-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse"><span>🛡️</span> Security Review Gate</span>` : ''}
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-xs text-zinc-400 font-mono">${dateStr}</span>
+                <b class="text-base font-black text-gold">GH₵ ${totalAmount.toFixed(2)}</b>
+              </div>
+            </div>
+
+            <!-- Buyer, Store & Security Details Grid -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+              <!-- Buyer Profile Box -->
+              <div class="p-3 rounded-xl bg-[#181818] border border-[#2e2e2e] space-y-1">
+                <div class="font-bold text-zinc-300 flex items-center justify-between">
+                  <span class="flex items-center gap-1 text-gold"><span>👤</span> Buyer Details</span>
+                  <button type="button" class="text-[10px] text-zinc-400 hover:text-gold underline" data-order-view-user="${esc(o.buyerId || '')}">View Account</button>
+                </div>
+                <div><span class="text-zinc-400">Name:</span> <b class="text-white">${esc(o.buyerName || o.customerName || 'Buyer')}</b></div>
+                <div><span class="text-zinc-400">Phone:</span> <b class="text-white font-mono">${esc(o.buyerPhone || o.phone || 'N/A')}</b></div>
+                <div><span class="text-zinc-400">Address:</span> <span class="text-zinc-300">${esc(o.deliveryAddress || o.address || 'Ghana')}</span></div>
+                ${o.deliveryCity ? `<div><span class="text-zinc-400">City/Region:</span> <span class="text-zinc-300">${esc(o.deliveryCity)}</span></div>` : ''}
+              </div>
+
+              <!-- Store & Fulfillment Box -->
+              <div class="p-3 rounded-xl bg-[#181818] border border-[#2e2e2e] space-y-1">
+                <div class="font-bold text-zinc-300 flex items-center justify-between">
+                  <span class="flex items-center gap-1 text-blue-400"><span>🏪</span> Destination Store</span>
+                  ${o.storeId ? `<button type="button" class="text-[10px] text-zinc-400 hover:text-blue-300 underline" data-order-view-store="${esc(o.storeId)}">Store Dossier</button>` : ''}
+                </div>
+                <div><span class="text-zinc-400">Store Name:</span> <b class="text-white">${esc(o.storeName || 'Seller Store')}</b></div>
+                <div><span class="text-zinc-400">Seller ID:</span> <code class="text-[10px] text-zinc-400">${esc(o.sellerId ? o.sellerId.slice(0, 10) + '…' : 'N/A')}</code></div>
+                <div><span class="text-zinc-400">Payment:</span> <b class="text-gold">${esc(o.paymentMethod || 'Mobile Money / Card')}</b></div>
+              </div>
+
+              <!-- Security Status & Actions Summary -->
+              <div class="p-3 rounded-xl ${isPending ? 'bg-amber-950/20 border-amber-800/60' : (isApproved ? 'bg-emerald-950/20 border-emerald-800/60' : 'bg-rose-950/20 border-rose-800/60')} border space-y-1 md:col-span-2 lg:col-span-1">
+                <div class="font-bold flex items-center gap-1 ${isPending ? 'text-amber-300' : (isApproved ? 'text-emerald-300' : 'text-rose-300')}">
+                  <span>🛡️</span><span>Security Protocol</span>
+                </div>
+                <div class="text-[11px] leading-relaxed ${isPending ? 'text-amber-200' : (isApproved ? 'text-emerald-200' : 'text-rose-200')}">
+                  ${isPending ? 'Pending review. Seller notification is currently withheld until approved.' : (isApproved ? 'Approved by Security Team. Seller notified for order dispatch.' : `Order cancelled. Reason: ${esc(o.rejectionReason || 'Security non-compliance')}`)}
+                </div>
+                ${o.securityReviewedAt ? `<div class="text-[10px] text-zinc-400 pt-1">Reviewed: ${new Date(ts(o.securityReviewedAt)).toLocaleString('en-GH', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>` : ''}
+              </div>
+            </div>
+
+            <!-- Ordered Items List -->
+            <div class="p-3 rounded-xl bg-[#141414] border border-[#262626]">
+              <div class="text-[11px] font-bold text-zinc-400 mb-2">Ordered Items (${items.length}):</div>
+              <div class="space-y-2">
+                ${items.map(it => `
+                  <div class="flex items-center justify-between gap-3 text-xs py-1 border-b border-[#222] last:border-0">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      ${it.imageUrl ? `<img src="${esc(it.imageUrl)}" class="w-8 h-8 rounded-lg object-cover bg-black shrink-0 border border-zinc-700">` : '<div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0 text-[10px]">🛍️</div>'}
+                      <div class="min-w-0">
+                        <div class="font-bold text-white truncate">${esc(it.title || it.name || 'Product Item')}</div>
+                        <div class="text-[10px] text-zinc-400">Qty: ${it.quantity || 1} · GH₵ ${Number(it.price || 0).toFixed(2)} each</div>
+                      </div>
+                    </div>
+                    <b class="text-gold shrink-0">GH₵ ${(Number(it.price || 0) * (it.quantity || 1)).toFixed(2)}</b>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Action Buttons Footer -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <div class="flex items-center gap-2">
+                ${o.buyerId ? `<button type="button" class="border border-zinc-700 hover:border-gold px-3 py-1.5 rounded-xl text-xs font-bold text-zinc-300 transition" data-order-view-user="${esc(o.buyerId)}">🪪 Inspect Buyer KYC</button>` : ''}
+                <button type="button" class="border border-zinc-700 hover:border-gold px-3 py-1.5 rounded-xl text-xs font-bold text-zinc-300 transition" data-order-copy="${esc(orderId)}">📋 Copy Order Brief</button>
+              </div>
+
+              ${isPending ? `
+                <div class="flex items-center gap-2">
+                  <button type="button" class="bg-red-950/80 hover:bg-red-900 border border-red-700 text-red-200 px-4 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow" data-order-reject="${esc(orderId)}">
+                    <span>❌</span> Reject & Cancel
+                  </button>
+                  <button type="button" class="bg-emerald-600 hover:bg-emerald-500 text-black font-extrabold px-5 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5 shadow-md" data-order-approve="${esc(orderId)}">
+                    <span>✅</span> Approve & Notify Seller
+                  </button>
+                </div>
+              ` : `
+                <div class="flex items-center gap-2">
+                  ${isApproved ? `<span class="text-xs text-emerald-400 font-bold flex items-center gap-1"><span>✓</span> Seller Notified & Active</span>` : ''}
+                  ${isCancelled ? `<span class="text-xs text-rose-400 font-bold flex items-center gap-1"><span>❌</span> Cancelled & Buyer Notified</span>` : ''}
+                </div>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Event handlers for orders review actions
+      listEl.querySelectorAll('[data-order-approve]').forEach(b => {
+        b.onclick = () => adminApproveOrderReview(b.dataset.orderApprove);
+      });
+
+      listEl.querySelectorAll('[data-order-reject]').forEach(b => {
+        b.onclick = () => adminRejectOrderReview(b.dataset.orderReject);
+      });
+
+      listEl.querySelectorAll('[data-order-view-user]').forEach(b => {
+        b.onclick = () => {
+          const uid = b.dataset.orderViewUser;
+          if(uid) openAdminUserModal(uid);
+        };
+      });
+
+      listEl.querySelectorAll('[data-order-view-store]').forEach(b => {
+        b.onclick = async () => {
+          const sId = b.dataset.orderViewStore;
+          try {
+            loading('Loading store record…');
+            const snap = await getDoc(doc(db, 'stores', sId));
+            if(snapshotExists(snap)) openAdminStoreIdentityModal({ id: snap.id, ...snap.data() });
+            else toast('Store not found.', 'error');
+          } catch(e){ toast(errMsg(e), 'error'); }
+          finally { ready(); }
+        };
+      });
+
+      listEl.querySelectorAll('[data-order-copy]').forEach(b => {
+        b.onclick = () => {
+          const ord = filtered.find(x => x.id === b.dataset.orderCopy);
+          if(!ord) return;
+          const brief = `
+=================================================
+SELLERFLOW ORDER SECURITY COMPLIANCE RECORD
+=================================================
+Order Reference: #${ord.orderNumber || ord.id}
+Date: ${new Date(ts(ord.createdAt) || Date.now()).toISOString()}
+Status: ${ord.status}
+Security Review: ${ord.securityReviewStatus || 'pending'}
+
+BUYER:
+- Name: ${ord.buyerName || 'N/A'}
+- Phone: ${ord.buyerPhone || 'N/A'}
+- Address: ${ord.deliveryAddress || 'N/A'}, ${ord.deliveryCity || ''}
+- Buyer ID: ${ord.buyerId || 'N/A'}
+
+STORE & SELLER:
+- Store: ${ord.storeName || 'N/A'}
+- Seller ID: ${ord.sellerId || 'N/A'}
+
+FINANCIAL:
+- Total: GH₵ ${Number(ord.total || 0).toFixed(2)}
+- Payment Method: ${ord.paymentMethod || 'Mobile Money'}
+=================================================
+          `.trim();
+          navigator.clipboard.writeText(brief);
+          toast('Order dossier copied to clipboard.', 'success', 3000);
+        };
+      });
+    }
+
+    // Subtab clicks
+    document.querySelectorAll('[data-order-filter]').forEach(btn => {
+      btn.onclick = () => {
+        orderFilter = btn.dataset.orderFilter;
+        document.querySelectorAll('[data-order-filter]').forEach(b => b.classList.toggle('active', b === btn));
+        renderOrdersList();
+      };
+    });
+
+    $('sfAdminOrderSearch')?.addEventListener('input', renderOrdersList);
+    renderOrdersList();
+  }
+
   /* Admin Buyer Ghana Cards & KYC Vault (Secure Admin Storage for Future Reference) */
   function sfAdminGhanaCardsTab(allRecords, users, kycSnap, subOption){
     let kycFilter = subOption || 'all';
@@ -19904,16 +20633,124 @@ STATUS: ${f.status || 'Active Investigation'}
   window.startSellerFlowChat=startChat;
   document.addEventListener('click',e=>{const m=e.target.closest('[data-message-user]');if(m)startChat(m.dataset.messageUser)});
 
-  /* Pull-To-Refresh App Controller - Removed */
-  window.refreshApp = async function(){};
+  /* Offline & Online Auto-Refresh Controller (Dynamic Island) */
+  let _wasOffline = !navigator.onLine;
+  let _autoRefreshTimeout = null;
+  let _isRefreshingApp = false;
+
+  function renderConnectivityBanner(status, text) {
+    if (status === 'offline') {
+      toast(text || "You're offline · Auto-refresh will trigger when reconnected", 'warning', 0, {
+        icon: '<span class="w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse"></span>'
+      });
+    } else if (status === 'refreshing') {
+      toast(text || "Internet restored · Refreshing SellerFlow…", 'info', 0, {
+        icon: '<span class="spin !w-3 !h-3 !border-2 !border-emerald-300 !border-t-transparent inline-block"></span>'
+      });
+    } else if (status === 'online_ready') {
+      toast(text || "SellerFlow is back online and refreshed", 'success', 2800);
+    } else {
+      const container = $('toast');
+      if (container && _activeIslandToast) {
+        _activeIslandToast.remove();
+        _activeIslandToast = null;
+      }
+    }
+  }
+
+  async function triggerAppAutoRefresh(source = 'network_restored') {
+    if (_isRefreshingApp) return;
+    _isRefreshingApp = true;
+
+    try {
+      renderConnectivityBanner('refreshing', 'Internet restored · Auto-refreshing app…');
+
+      // Give network interfaces and WebSockets 700ms to stabilize
+      await new Promise(r => setTimeout(r, 700));
+
+      // 1. Invalidate stale in-memory caches
+      if (typeof allPublicProfiles !== 'undefined' && allPublicProfiles.clear) {
+        allPublicProfiles.clear();
+      }
+      if (typeof _sellerReviewsCache !== 'undefined' && _sellerReviewsCache.clear) {
+        _sellerReviewsCache.clear();
+      }
+      if (typeof window._cachedStores !== 'undefined') {
+        window._cachedStores = null;
+      }
+
+      // 2. Fetch fresh user profile, public profiles, and notifications
+      if (typeof refreshProfile === 'function') {
+        await refreshProfile().catch(() => {});
+      }
+      if (typeof loadPublicProfiles === 'function') {
+        await loadPublicProfiles().catch(() => {});
+      }
+      if (typeof loadNotifications === 'function') {
+        await loadNotifications().catch(() => {});
+      }
+
+      // 3. Re-render active view
+      if (typeof navigate === 'function' && typeof currentPage !== 'undefined' && currentPage) {
+        await navigate(currentPage, window._sfCurrentTargetId, window._sfCurrentPageOptions);
+      } else {
+        window.location.reload();
+      }
+
+      renderConnectivityBanner('online_ready', 'Back online · Feed & listings refreshed');
+    } catch (err) {
+      console.warn('Auto-refresh re-navigation fallback:', err);
+      try {
+        window.location.reload();
+      } catch (_) {}
+    } finally {
+      setTimeout(() => { _isRefreshingApp = false; }, 2000);
+    }
+  }
+  window.refreshApp = triggerAppAutoRefresh;
+  window.triggerAppAutoRefresh = triggerAppAutoRefresh;
   window.triggerPullRefresh = function(){};
 
   window.addEventListener('offline', () => {
-    toast('You are currently offline. Changes will sync when reconnected.', 'warning', 4500);
+    _wasOffline = true;
+    try { sessionStorage.setItem('sf_was_offline', '1'); } catch(_) {}
+    renderConnectivityBanner('offline', "You're offline · Will auto-refresh when reconnected");
   });
+
   window.addEventListener('online', () => {
-    toast('Back online. Reconnected to SellerFlow.', 'success', 3000);
+    const hadBeenOffline = _wasOffline || (function(){
+      try { return sessionStorage.getItem('sf_was_offline') === '1'; } catch(_) { return false; }
+    })();
+
+    _wasOffline = false;
+    try { sessionStorage.removeItem('sf_was_offline'); } catch(_) {}
+
+    if (hadBeenOffline) {
+      if (_autoRefreshTimeout) clearTimeout(_autoRefreshTimeout);
+      _autoRefreshTimeout = setTimeout(() => {
+        triggerAppAutoRefresh('online_event');
+      }, 400);
+    } else {
+      renderConnectivityBanner('online_ready', 'Reconnected to SellerFlow');
+    }
   });
+
+  // Periodic connectivity heartbeat check in case system missed browser offline/online event
+  let _lastOnlineStatus = navigator.onLine;
+  setInterval(() => {
+    const isNowOnline = navigator.onLine;
+    if (!_lastOnlineStatus && isNowOnline) {
+      _wasOffline = true;
+      _lastOnlineStatus = true;
+      try { sessionStorage.removeItem('sf_was_offline'); } catch(_) {}
+      triggerAppAutoRefresh('heartbeat_recovery');
+    } else if (_lastOnlineStatus && !isNowOnline) {
+      _lastOnlineStatus = false;
+      _wasOffline = true;
+      try { sessionStorage.setItem('sf_was_offline', '1'); } catch(_) {}
+      renderConnectivityBanner('offline', "You're offline · Will auto-refresh when reconnected");
+    }
+  }, 3500);
 
   if (typeof initServiceWorker === 'function') {
     initServiceWorker();

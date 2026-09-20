@@ -13,7 +13,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email.lower() in ['gideondreams3325@gmail.com', 'gideondreams99@gmail.com'] ||
+        request.auth.token.email.lower() in ['gideondreams3325@gmail.com', 'gideondreams99@gmail.com', 'gfappiah3325@gmail.com'] ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'admin')
       );
@@ -179,6 +179,7 @@ service cloud.firestore {
         resource == null ||
         resource.data.buyerId == request.auth.uid ||
         resource.data.sellerId == request.auth.uid ||
+        request.auth.uid in resource.data.get('sellerIds', []) ||
         (resource.data.sellerIds is list && request.auth.uid in resource.data.sellerIds) ||
         isAdmin()
       );
