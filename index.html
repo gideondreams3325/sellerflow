@@ -172,13 +172,6 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 .toast-progress-bar{position:absolute;bottom:0;left:0;height:2px;background:currentColor;opacity:.3;width:100%;animation:toastProgress linear forwards}
 @keyframes toastProgress{from{width:100%}to{width:0%}}
 
-/* Pull-to-Refresh Indicator */
-.pull-refresh-indicator{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-70px);z-index:9000;pointer-events:none;transition:transform .2s cubic-bezier(.2,.9,.3,1),opacity .2s ease;opacity:0}
-.pull-refresh-indicator.visible{opacity:1}
-.pull-refresh-content{display:inline-flex;align-items:center;gap:9px;padding:8px 18px;border-radius:9999px;background:rgba(22,22,26,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(245,185,66,0.4);box-shadow:0 12px 28px -6px rgba(0,0,0,0.7);color:#fff;font-size:12px;font-weight:700;letter-spacing:-.01em}
-.pull-refresh-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;color:#f5b942;font-size:14px;transition:transform .15s ease}
-.pull-refresh-icon.spinning{animation:pullSpin .7s linear infinite}
-@keyframes pullSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .navbtn{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:13px;color:#a1a1aa;border-radius:10px;transition:all .16s ease;letter-spacing:-.01em}
 .navbtn:hover{color:#f4f4f5;background:rgba(255,255,255,.05)}
 .navbtn.active{color:#f5b942;border-bottom:2px solid #f5b942;font-weight:700}
@@ -200,23 +193,22 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 #app.is-feed-page #appMainScroll,.app-main-scroll.is-feed-scroll{overflow:hidden!important;flex:1 1 0%!important;min-height:0!important;height:auto!important;max-height:100%!important;display:flex!important;flex-direction:column!important;overscroll-behavior:none!important}
 #app.is-feed-page #page,.is-feed-scroll>#page{flex:1 1 0%!important;height:100%!important;min-height:0!important;max-height:100%!important;padding:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;width:100%!important;max-width:100%!important}
 #app.is-feed-page footer,.is-feed-scroll>footer{display:none!important}
-.reel-feed{width:100%;height:auto;flex:1 1 0%;min-height:0;overflow-y:scroll;overflow-x:hidden;scroll-snap-type:y mandatory;scroll-snap-stop:always;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;scroll-behavior:smooth;padding:0;margin:0}
-.reel-card{position:relative;width:100%;height:100%;min-height:100%;max-height:100%;scroll-snap-align:start;scroll-snap-stop:always;background:#050505;border-bottom:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;align-items:center;justify-content:center;opacity:0.92;transform:scale(0.985);transition:opacity .4s cubic-bezier(0.16,1,0.3,1),transform .4s cubic-bezier(0.16,1,0.3,1);will-change:transform,opacity}
-.reel-card.is-active{opacity:1;transform:scale(1)}
+.reel-feed{width:100%;height:100%;flex:1 1 0%;min-height:0;overflow-y:scroll;overflow-x:hidden;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;touch-action:pan-y;scrollbar-width:none;-ms-overflow-style:none;padding:0;margin:0}
+.reel-feed::-webkit-scrollbar{display:none}
+.reel-card{position:relative;width:100%;height:100%;min-height:100%;max-height:100%;scroll-snap-align:start;scroll-snap-stop:normal;background:#050505;border-bottom:1px solid #1a1a1a;display:flex;flex-direction:column;overflow:hidden;align-items:center;justify-content:center}
+.reel-card.is-active{opacity:1}
 @media(min-width:641px){.reel-feed{padding:0}.reel-card{max-width:460px;margin:0 auto;border-left:1px solid #242424;border-right:1px solid #242424;border-bottom:0;box-shadow:0 0 60px rgba(0,0,0,.6);height:100%;min-height:100%}}
 @media(max-width:640px){.reel-card{border-radius:0;border-left:0;border-right:0}}
 .reel-media-wrap{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;background:#050505}
-.reel-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#050505;transition:transform .5s cubic-bezier(0.16,1,0.3,1),opacity .3s ease}
+.reel-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#050505}
 .reel-shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.88),rgba(0,0,0,.08) 50%,rgba(0,0,0,.25));pointer-events:none}
 .reel-content{position:absolute;left:0;right:68px;bottom:calc(12px + env(safe-area-inset-bottom, 0px));padding:16px;max-height:46%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;z-index:5}
 .reel-content p{max-width:100%;word-break:break-word;overflow-wrap:anywhere}
 .reel-actions{position:absolute;right:12px;bottom:calc(20px + env(safe-area-inset-bottom, 0px));display:flex;flex-direction:column;align-items:center;gap:11px;z-index:10;max-height:calc(100% - 24px - env(safe-area-inset-bottom, 0px));overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
-.reel-card.is-active .reel-content{animation:sfReelContentSlideUp .38s cubic-bezier(0.16,1,0.3,1) both}
-.reel-card.is-active .reel-actions{animation:sfReelActionsSlideIn .42s cubic-bezier(0.16,1,0.3,1) .03s both}
-.reel-card.is-active .reel-media-wrap{animation:sfReelMediaReveal .45s cubic-bezier(0.16,1,0.3,1) both}
-@keyframes sfReelContentSlideUp{0%{opacity:0;transform:translateY(22px)}100%{opacity:1;transform:translateY(0)}}
-@keyframes sfReelActionsSlideIn{0%{opacity:0;transform:translateX(18px) scale(0.92)}100%{opacity:1;transform:translateX(0) scale(1)}}
-@keyframes sfReelMediaReveal{0%{opacity:0.75;transform:scale(1.02)}100%{opacity:1;transform:scale(1)}}
+.reel-card.is-active .reel-content{animation:sfReelContentSlideUp .28s cubic-bezier(0.16,1,0.3,1) both}
+.reel-card.is-active .reel-actions{animation:sfReelActionsSlideIn .3s cubic-bezier(0.16,1,0.3,1) .02s both}
+@keyframes sfReelContentSlideUp{0%{opacity:0;transform:translateY(16px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes sfReelActionsSlideIn{0%{opacity:0;transform:translateX(14px)}100%{opacity:1;transform:translateX(0)}}
 .reel-actions::-webkit-scrollbar{display:none}
 .reel-action-group{display:flex;flex-direction:column;align-items:center;gap:3px}
 .reel-action{width:46px;height:46px;border-radius:50%;background:rgba(18,18,22,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.16);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:transform .16s cubic-bezier(0.16,1,0.3,1),background .16s ease,border-color .16s ease,box-shadow .16s ease;cursor:pointer;padding:0;line-height:1}
@@ -376,6 +368,10 @@ input, textarea, select { color: #ffffff !important; }
 #feedPrevBtn,#feedNextBtn,.feed-nav-btn{width:32px!important;height:32px!important;min-width:32px!important;padding:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;border-radius:10px!important;background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.11)!important;color:#d4d4d8!important;font-size:11px!important;box-shadow:0 1px 3px rgba(0,0,0,.25)!important;transition:all .15s ease!important;flex-shrink:0!important}
 #feedPrevBtn:hover,#feedNextBtn:hover,.feed-nav-btn:hover{background:rgba(255,255,255,.12)!important;border-color:rgba(245,185,66,.4)!important;color:#f5b942!important}
 #feedPrevBtn:active,#feedNextBtn:active,.feed-nav-btn:active{transform:scale(.92)}
+.feed-floating-btn{width:46px!important;height:46px!important;border-radius:50%!important;background:rgba(24,24,28,.85)!important;backdrop-filter:blur(14px)!important;-webkit-backdrop-filter:blur(14px)!important;border:1px solid rgba(255,255,255,.16)!important;display:flex!important;align-items:center!important;justify-content:center!important;box-shadow:0 6px 20px rgba(0,0,0,.6)!important;cursor:pointer!important;transition:transform .16s cubic-bezier(0.16,1,0.3,1),background .16s ease,border-color .16s ease,box-shadow .16s ease!important;color:#fff!important;flex-shrink:0!important}
+.feed-floating-btn:hover{background:rgba(245,185,66,.95)!important;border-color:#f5b942!important;color:#000!important;transform:scale(1.1)!important;box-shadow:0 8px 24px rgba(245,185,66,.4)!important}
+.feed-floating-btn:hover svg{color:#000!important}
+.feed-floating-btn:active{transform:scale(.92)!important}
 
 #openFeedUpload,#openFeedUploadEmpty{background:linear-gradient(135deg,#f7c554 0%,#f5b942 55%,#e5a428 100%)!important;color:#080808!important;font-family:inherit!important;font-weight:750!important;font-size:12px!important;padding:6px 14px!important;border-radius:11px!important;border:1px solid rgba(255,255,255,.28)!important;box-shadow:0 2px 10px rgba(245,185,66,.3),inset 0 1px 0 rgba(255,255,255,.45)!important;transition:all .16s cubic-bezier(0.16,1,0.3,1)!important;letter-spacing:-.01em!important;flex-shrink:0!important}
 #openFeedUpload:hover,#openFeedUploadEmpty:hover{filter:brightness(1.08)!important;box-shadow:0 4px 16px rgba(245,185,66,.45),inset 0 1px 0 rgba(255,255,255,.55)!important;transform:translateY(-.5px)}
@@ -450,9 +446,8 @@ input, textarea, select { color: #ffffff !important; }
 <body>
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center"><div class="text-center"><div class="spin mx-auto mb-4"></div><div class="gold font-bold text-xl">SellerFlow</div><div id="loadingText" class="muted text-sm mt-2">Starting secure app…</div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
-<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP OF COMPANIES INC.</div></div></div>
-<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center gap-1.5 sm:gap-3 overflow-hidden"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="pageSelectorBtn" class="md:hidden" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold shrink-0 whitespace-nowrap">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="analysis">Analysis</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0"><button type="button" id="headerLoginBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Sign Up</button></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP OF COMPANIES INC. All rights reserved.</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
-<div id="pullRefreshIndicator" class="pull-refresh-indicator"><div class="pull-refresh-content"><span class="pull-refresh-icon">↻</span><span class="pull-refresh-text">Pull to refresh</span></div></div>
+<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center gap-1.5 sm:gap-3 overflow-hidden"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="pageSelectorBtn" class="md:hidden" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold shrink-0 whitespace-nowrap">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="analysis">Analysis</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0"><button type="button" id="headerLoginBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Sign Up</button></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
 (function(){
@@ -1800,10 +1795,31 @@ function getOptimizedVideoPoster(videoUrl, thumbUrl) {
 }
 window.getOptimizedVideoPoster = getOptimizedVideoPoster;
 
+window.__sfAvatarFallback = function(img, initial, cls){
+  if(!img) return;
+  img.onerror = null;
+  const init = (initial || img.dataset?.initial || (img.alt ? img.alt[0] : '?') || '?').toUpperCase();
+  const className = cls || img.dataset?.avatarCls || img.className || 'avatar';
+  const div = document.createElement('div');
+  div.className = className + ' flex items-center justify-center font-bold bg-[#222] text-zinc-300';
+  div.textContent = init;
+  img.replaceWith(div);
+};
+
+window.__sfBannerFallback = function(img){
+  if(!img) return;
+  img.onerror = null;
+  const div = document.createElement('div');
+  if(img.id) div.id = img.id;
+  div.className = 'w-full h-full bg-gradient-to-r from-zinc-900 via-stone-900 to-amber-950/40 flex items-center justify-center text-zinc-600 text-xs';
+  div.innerHTML = '<span>No store banner uploaded yet</span>';
+  img.replaceWith(div);
+};
+
 function avatar(p,cls='avatar'){
   const url = p?.avatarUrl ? getOptimizedMediaUrl(p.avatarUrl, 'avatar') : '';
   const initial = esc((p?.name||p?.username||'?')[0].toUpperCase());
-  return url ? `<img class="${cls}" src="${esc(url)}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.outerHTML='<div class=\'${cls} flex items-center justify-center font-bold bg-[#222] text-zinc-300\'>${initial}</div>';">` : `<div class="${cls} flex items-center justify-center font-bold bg-[#222] text-zinc-300">${initial}</div>`;
+  return url ? `<img class="${cls}" src="${esc(url)}" alt="" loading="lazy" decoding="async" data-initial="${initial}" data-avatar-cls="${cls}" onerror="window.__sfAvatarFallback(this)">` : `<div class="${cls} flex items-center justify-center font-bold bg-[#222] text-zinc-300">${initial}</div>`;
 }
 function validFile(file,types,maxMB){if(!file)return false;if(!types.includes(file.type))throw Error('Unsupported file type.');if(file.size>maxMB*1024*1024)throw Error(`File is too large. Maximum is ${maxMB}MB.`);return true}
 
@@ -2485,7 +2501,7 @@ function setNav(){
           `}
 
           <div class="pt-0.5 text-center text-[10px] text-zinc-500 font-medium">
-            © 2026 POMAAH GROUP OF COMPANIES INC.
+            © 2026 POMAAH GROUP · All Rights Reserved
           </div>
         </div>
       </div>
@@ -2823,20 +2839,35 @@ async function renderFeed(targetPostId, options){
         <h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap">For You</h1>
       </div>
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div class="hidden sm:inline-flex items-center gap-1 bg-[#141416] p-0.5 rounded-xl border border-[#2a2a2e]" title="Scroll reels (or use ↑ / ↓ arrow keys)">
+          <button type="button" id="feedPrevBtn" class="feed-nav-btn feed-prev-btn" title="Previous video (↑ or K)">▲</button>
+          <button type="button" id="feedNextBtn" class="feed-nav-btn feed-next-btn" title="Next video (↓ or J)">▼</button>
+        </div>
         <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0 whitespace-nowrap">＋ Upload</button>
       </div>
     </div>
-    <div class="reel-feed flex-1 min-h-0 w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
-      ${feedPosts.length?feedPosts.map((p, idx)=>postCard(p, idx)).join(''):`
-        <div class="h-full flex items-center justify-center p-6">
-          <div class="card p-8 text-center max-w-md">
-            <div class="text-5xl mb-3">🎬</div>
-            <h2 class="text-xl font-bold">Your For You feed is ready</h2>
-            <p class="muted mt-2 text-sm">Share something and it will be published while SellerFlow reviews it for safety.</p>
-            <button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button>
+    <div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden">
+      <div class="reel-feed flex-1 min-h-0 w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
+        ${feedPosts.length?feedPosts.map((p, idx)=>postCard(p, idx)).join(''):`
+          <div class="h-full flex items-center justify-center p-6">
+            <div class="card p-8 text-center max-w-md">
+              <div class="text-5xl mb-3">🎬</div>
+              <h2 class="text-xl font-bold">Your For You feed is ready</h2>
+              <p class="muted mt-2 text-sm">Share something and it will be published while SellerFlow reviews it for safety.</p>
+              <button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button>
+            </div>
           </div>
-        </div>
-      `}
+        `}
+      </div>
+      <!-- Desktop floating smooth scroll buttons -->
+      <aside class="hidden lg:flex flex-col gap-2.5 fixed right-4 xl:right-10 top-1/2 -translate-y-1/2 z-30 pointer-events-auto" aria-label="Reel Navigation">
+        <button type="button" class="feed-floating-btn feed-prev-btn" title="Previous video (↑ or K)" aria-label="Previous video">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
+        </button>
+        <button type="button" class="feed-floating-btn feed-next-btn" title="Next video (↓ or J)" aria-label="Next video">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+      </aside>
     </div>
   `;
 
@@ -3119,6 +3150,7 @@ function setupReelPlayback(targetPostId){
     v.addEventListener('error',fallback);
     v.addEventListener('stalled',()=>{if(v.readyState===0)fallback()});
     v.addEventListener('play',()=>{
+      card._sfLastPlayStart=Date.now();
       // Ensure only the currently watched For You video can play
       if(currentPage!=='feed'||(currentActiveCard&&card!==currentActiveCard)){
         try{v.pause();}catch(_){}
@@ -3128,7 +3160,22 @@ function setupReelPlayback(targetPostId){
       pauseAllVideosExcept(v);
       updateCardButton(card,true);
     });
-    v.addEventListener('pause',()=>updateCardButton(card,false));
+    v.addEventListener('pause',()=>{
+      if(card._sfLastPlayStart){
+        card._sfPlayAccum=(card._sfPlayAccum||0)+(Date.now()-card._sfLastPlayStart)/1000;
+        card._sfLastPlayStart=null;
+      }
+      updateCardButton(card,false);
+    });
+    v.addEventListener('ended',()=>{
+      card._sfCompleted=true;
+      card._sfRewatchCount=(card._sfRewatchCount||0)+1;
+    });
+    v.addEventListener('timeupdate',()=>{
+      if(v.duration && (v.currentTime/v.duration)>=0.88){
+        card._sfCompleted=true;
+      }
+    });
   });
 
   cards.forEach(card=>{
@@ -3181,6 +3228,24 @@ function setupReelPlayback(targetPostId){
         try{if(!prevVideo.paused)prevVideo.pause();}catch(_){}
         updateCardButton(currentActiveCard,false);
       }
+      const prevId=currentActiveCard.dataset?.reelId;
+      if(prevId && currentActiveCard._sfWatchStart && window.recordFeedEvent){
+        const totalDuration=(Date.now()-currentActiveCard._sfWatchStart)/1000;
+        const playTime=currentActiveCard._sfPlayAccum||0;
+        const vidDuration=prevVideo?(prevVideo.duration||0):0;
+        const watchRatio=vidDuration>0?Math.min(3.0,playTime/vidDuration):(totalDuration>3?1.0:0.2);
+        if(totalDuration<1.5 && watchRatio<0.15){
+          window.recordFeedEvent('SWIPE_AWAY',{postId:prevId,duration:totalDuration,watchRatio});
+        }else{
+          window.recordFeedEvent('VIEW_DURATION',{postId:prevId,duration:totalDuration,watchedSeconds:playTime,watchRatio,completed:!!currentActiveCard._sfCompleted,rewatched:(currentActiveCard._sfRewatchCount||0)>1});
+          if(currentActiveCard._sfCompleted){
+            window.recordFeedEvent('VIDEO_COMPLETED',{postId:prevId});
+          }
+          if((currentActiveCard._sfRewatchCount||0)>1){
+            window.recordFeedEvent('VIDEO_REWATCH',{postId:prevId,count:currentActiveCard._sfRewatchCount});
+          }
+        }
+      }
     }
 
     // Strictly ensure only the currently watched video can play
@@ -3196,6 +3261,15 @@ function setupReelPlayback(targetPostId){
         updateCardButton(card,true);
       }
       return;
+    }
+
+    card._sfWatchStart=Date.now();
+    card._sfPlayAccum=0;
+    card._sfLastPlayStart=null;
+    card._sfCompleted=false;
+    card._sfRewatchCount=0;
+    if(window.recordFeedEvent && card.dataset?.reelId){
+      window.recordFeedEvent('VIEW_START',{postId:card.dataset.reelId});
     }
 
     currentActiveCard=card;
@@ -3252,96 +3326,77 @@ function setupReelPlayback(targetPostId){
   let io=null;
   if('IntersectionObserver'in window){
     io=new IntersectionObserver(entries=>{
+      let candidate=null;
       entries.forEach(entry=>{
-        if(!entry.isIntersecting || entry.intersectionRatio < 0.6){
-          entry.target.querySelectorAll('video').forEach(v=>{
-            try{
-              if(!v.paused)v.pause();
-            }catch(_){}
-          });
-          updateCardButton(entry.target,false);
+        if(!entry.isIntersecting || entry.intersectionRatio < 0.45){
+          const v=entry.target.querySelector('.reel-video');
+          if(v && !v.paused){
+            try{v.pause();}catch(_){}
+            updateCardButton(entry.target,false);
+          }
+        }else{
+          if(!candidate || entry.intersectionRatio > candidate.intersectionRatio){
+            candidate=entry;
+          }
         }
       });
-      let best=null;
-      entries.forEach(entry=>{
-        if(entry.isIntersecting&&(!best||entry.intersectionRatio>best.intersectionRatio)){
-          best=entry;
-        }
-      });
-      if(best&&best.intersectionRatio>=0.6){
-        activateCard(best.target);
+      if(candidate && candidate.intersectionRatio >= 0.55){
+        activateCard(candidate.target);
       }
-    },{root:feedEl,threshold:[0,0.1,0.25,0.4,0.6,0.75,0.85,1.0]});
+    },{root:feedEl,threshold:[0.2, 0.55, 0.85]});
     cards.forEach(c=>io.observe(c));
   }
 
+  let isWheelGliding=false;
+  let wheelEndTimeout=null;
   feedEl.addEventListener('wheel',e=>{
-    if(wheelLock)return;
     if(e.target.closest('.reel-content')||e.target.closest('.comment-sheet'))return;
-    if(Math.abs(e.deltaY)<20)return;
-    const idx=cards.indexOf(currentActiveCard||cards[0]);
-    if(e.deltaY>0&&idx<cards.length-1){
+    // Allow continuous trackpads to utilize 120Hz native compositor scroll-snap smoothly
+    const isSteppedWheel = e.deltaMode !== 0 || Math.abs(e.deltaY) >= 48;
+    if(!isSteppedWheel) return;
+
+    if(isWheelGliding){
       e.preventDefault();
-      wheelLock=true;
-      if(currentActiveCard){
-        const v=currentActiveCard.querySelector('.reel-video');
-        if(v){
-          try{if(!v.paused)v.pause();}catch(_){}
-          updateCardButton(currentActiveCard,false);
-        }
-      }
-      preloadSurroundingReels(cards[idx+1]);
-      cards[idx+1].scrollIntoView({behavior:'smooth',block:'start'});
-      setTimeout(()=>{wheelLock=false},350);
-    }else if(e.deltaY<0&&idx>0){
+      return;
+    }
+
+    const currentCard = currentActiveCard || cards[0];
+    const idx = cards.indexOf(currentCard);
+
+    if(e.deltaY > 0 && idx < cards.length - 1){
       e.preventDefault();
-      wheelLock=true;
-      if(currentActiveCard){
-        const v=currentActiveCard.querySelector('.reel-video');
-        if(v){
-          try{if(!v.paused)v.pause();}catch(_){}
-          updateCardButton(currentActiveCard,false);
-        }
-      }
-      preloadSurroundingReels(cards[idx-1]);
-      cards[idx-1].scrollIntoView({behavior:'smooth',block:'start'});
-      setTimeout(()=>{wheelLock=false},350);
+      isWheelGliding = true;
+      window._sfScrollToReel(cards[idx + 1]);
+      clearTimeout(wheelEndTimeout);
+      wheelEndTimeout = setTimeout(()=>{ isWheelGliding = false; }, 420);
+    } else if(e.deltaY < 0 && idx > 0){
+      e.preventDefault();
+      isWheelGliding = true;
+      window._sfScrollToReel(cards[idx - 1]);
+      clearTimeout(wheelEndTimeout);
+      wheelEndTimeout = setTimeout(()=>{ isWheelGliding = false; }, 420);
     }
   },{passive:false});
 
-  let settleTimer=null;
+  let scrollRafId=null;
   feedEl.addEventListener('scroll',()=>{
-    const top=feedEl.scrollTop;
-    const h=feedEl.clientHeight || 1;
-    if(currentActiveCard){
-      const idx=cards.indexOf(currentActiveCard);
-      if(idx>=0){
-        const offset=Math.abs(top-idx*h);
-        // Immediately pause the old video when swiping or scrolling away
-        if(offset>12){
-          const v=currentActiveCard.querySelector('.reel-video');
-          if(v){
-            try{
-              if(!v.paused)v.pause();
-            }catch(_){}
-            updateCardButton(currentActiveCard,false);
+    if(scrollRafId) return;
+    scrollRafId = requestAnimationFrame(()=>{
+      scrollRafId = null;
+      if(currentPage !== 'feed') return;
+      const top = feedEl.scrollTop;
+      const h = feedEl.clientHeight || window.innerHeight || 1;
+      if(currentActiveCard){
+        const activeTop = currentActiveCard.offsetTop;
+        if(Math.abs(top - activeTop) > h * 0.45){
+          const v = currentActiveCard.querySelector('.reel-video');
+          if(v && !v.paused){
+            try{ v.pause(); }catch(_){}
+            updateCardButton(currentActiveCard, false);
           }
-          const targetIdx=top>idx*h?Math.min(cards.length-1,idx+1):Math.max(0,idx-1);
-          if(cards[targetIdx])preloadSurroundingReels(cards[targetIdx]);
         }
       }
-    }
-    clearTimeout(settleTimer);
-    settleTimer=setTimeout(()=>{
-      if(currentPage!=='feed')return;
-      const idx=Math.round(top/(h||1));
-      if(cards[idx]){
-        if(Math.abs(top-idx*h)>6){
-          cards[idx].scrollIntoView({behavior:'smooth',block:'start'});
-        }
-        activateCard(cards[idx]);
-      }
-    },60);
+    });
   },{passive:true});
 
   const pauseBackgroundVideos=()=>{
@@ -3375,14 +3430,59 @@ function setupReelPlayback(targetPostId){
   window.addEventListener('pagehide',pauseBackgroundVideos);
   window.addEventListener('freeze',pauseBackgroundVideos);
 
+  const handleFeedKeyNav = (e) => {
+    if(currentPage !== 'feed') return;
+    if(['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+    if(document.querySelector('#modalRoot:not(:empty) .modal')) return;
+    if(e.key === 'ArrowDown' || e.key === 'j' || e.key === 'PageDown'){
+      e.preventDefault();
+      handleNextReel();
+    }else if(e.key === 'ArrowUp' || e.key === 'k' || e.key === 'PageUp'){
+      e.preventDefault();
+      handlePrevReel();
+    }else if(e.key === ' ' && currentActiveCard){
+      e.preventDefault();
+      const v = currentActiveCard.querySelector('.reel-video');
+      if(v){
+        if(v.paused){
+          v.play().catch(()=>{});
+          updateCardButton(currentActiveCard, true);
+        }else{
+          v.pause();
+          v.dataset.userPaused = '1';
+          updateCardButton(currentActiveCard, false);
+        }
+      }
+    }
+  };
+  window.addEventListener('keydown', handleFeedKeyNav);
+
   window._sfFeedCleanup=function(destroy=false){
     try{if(io)io.disconnect();}catch(_){}
-    clearTimeout(settleTimer);
+    clearTimeout(wheelEndTimeout);
+    if(scrollRafId) cancelAnimationFrame(scrollRafId);
+    window.removeEventListener('keydown', handleFeedKeyNav);
     document.removeEventListener('visibilitychange',handleDocVisibility);
     document.removeEventListener('webkitvisibilitychange',handleDocVisibility);
     window.removeEventListener('blur',pauseBackgroundVideos);
     window.removeEventListener('pagehide',pauseBackgroundVideos);
     window.removeEventListener('freeze',pauseBackgroundVideos);
+    if(currentActiveCard && currentActiveCard._sfWatchStart && window.recordFeedEvent){
+      const prevId=currentActiveCard.dataset?.reelId;
+      if(prevId){
+        const totalDuration=(Date.now()-currentActiveCard._sfWatchStart)/1000;
+        const prevVideo=currentActiveCard.querySelector('.reel-video');
+        const playTime=currentActiveCard._sfPlayAccum||0;
+        const vidDuration=prevVideo?(prevVideo.duration||0):0;
+        const watchRatio=vidDuration>0?Math.min(3.0,playTime/vidDuration):(totalDuration>3?1.0:0.2);
+        if(totalDuration<1.5 && watchRatio<0.15){
+          window.recordFeedEvent('SWIPE_AWAY',{postId:prevId,duration:totalDuration,watchRatio});
+        }else{
+          window.recordFeedEvent('VIEW_DURATION',{postId:prevId,duration:totalDuration,watchedSeconds:playTime,watchRatio,completed:!!currentActiveCard._sfCompleted});
+        }
+      }
+    }
+    if(window.flushFeedEvents) window.flushFeedEvents();
     if(destroy){
       pauseBackgroundVideos();
       currentActiveCard=null;
@@ -3393,13 +3493,16 @@ function setupReelPlayback(targetPostId){
     if(!targetCard)return;
     if(currentActiveCard && currentActiveCard!==targetCard){
       const v=currentActiveCard.querySelector('.reel-video');
-      if(v){
-        try{if(!v.paused)v.pause();}catch(_){}
+      if(v && !v.paused){
+        try{v.pause();}catch(_){}
         updateCardButton(currentActiveCard,false);
       }
     }
     preloadSurroundingReels(targetCard);
-    targetCard.scrollIntoView({behavior:'smooth',block:'start'});
+    feedEl.scrollTo({
+      top: targetCard.offsetTop,
+      behavior: 'smooth'
+    });
     activateCard(targetCard);
   };
 
@@ -4496,7 +4599,7 @@ function storeCard(s, idx = 0){
         <div class="flex items-start justify-between gap-3">
           <div class="flex items-center gap-3 min-w-0">
             ${s.logoUrl ? `
-              <img src="${esc(getOptimizedMediaUrl(s.logoUrl, 'avatar'))}" loading="lazy" decoding="async" class="w-12 h-12 rounded-2xl object-cover shrink-0 border border-[#333]" alt="Store Logo" onerror="this.onerror=null;this.outerHTML='${esc(avatar(p, 'w-12 h-12 rounded-2xl object-cover shrink-0 border border-[#333]'))}';">
+              <img src="${esc(getOptimizedMediaUrl(s.logoUrl, 'avatar'))}" loading="lazy" decoding="async" class="w-12 h-12 rounded-2xl object-cover shrink-0 border border-[#333]" alt="Store Logo" data-initial="${esc((s.name||p.name||p.username||'S')[0].toUpperCase())}" data-avatar-cls="w-12 h-12 rounded-2xl object-cover shrink-0 border border-[#333]" onerror="window.__sfAvatarFallback(this)">
             ` : avatar(p, 'w-12 h-12 rounded-2xl object-cover shrink-0 border border-[#333]')}
             <div class="min-w-0">
               <b class="truncate block text-white font-bold text-sm sm:text-base group-hover:text-gold transition">${esc(s.name)}</b>
@@ -4843,20 +4946,41 @@ async function openStore(uid){
       addDoc(collection(db,'profileVisits'),{visitorId:currentUser.uid,profileId:uid,createdAt:serverTimestamp()}).catch(()=>{});
     }
     const isOwner = currentUser && currentUser.uid === uid;
-    const isStoreTakenDown = store?.status === 'taken_down' || store?.reviewStatus === 'taken_down';
-    const isStorePending = store?.status === 'pending_review' || store?.reviewStatus === 'pending';
+    const isStoreApproved = store?.status === 'approved' || store?.reviewStatus === 'approved';
+    const isStoreTakenDown = !isStoreApproved && (store?.status === 'taken_down' || store?.reviewStatus === 'taken_down');
+    const isStorePending = !isStoreApproved && (store?.status === 'pending_review' || store?.reviewStatus === 'pending');
+    const isStoreRejected = !isStoreApproved && (store?.status === 'rejected' || store?.reviewStatus === 'rejected');
 
     const effectiveBannerUrl = store?.bannerUrl || p?.bannerUrl || (isOwner ? currentProfile?.bannerUrl : '');
     const effectiveLogoUrl = store?.logoUrl || p?.logoUrl || p?.avatarUrl || (isOwner ? currentProfile?.avatarUrl : '');
 
     let storeStatusNotice = '';
-    if(isStoreTakenDown){
+    if(isStoreApproved && isOwner){
+      storeStatusNotice = `
+        <div class="mb-4 p-3.5 rounded-2xl bg-emerald-950/30 border border-emerald-800/60 flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-2.5">
+            <span class="text-emerald-400 font-bold">✓</span>
+            <div>
+              <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 mr-1.5">Store Status: Approved</span>
+              <span class="text-emerald-300 font-bold text-xs sm:text-sm">Your store is live and visible to customers in Ghana!</span>
+            </div>
+          </div>
+          <button type="button" onclick="renderStore(true)" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-700/60 transition">
+            Edit Store Details ⚙
+          </button>
+        </div>
+      `;
+    } else if(isStoreTakenDown){
       storeStatusNotice = `
         <div class="mb-4 p-4 rounded-2xl bg-rose-950/40 border border-rose-800/80 flex items-start gap-3">
           <span class="text-2xl">🚫</span>
-          <div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40">Store Status: Not Approved (Taken Down)</span>
+            </div>
             <b class="text-rose-300 text-sm">Storefront Taken Down</b>
             <p class="text-xs text-rose-200/80 mt-1">${esc(store?.takedownReason || 'This store is currently taken down from public view by the Security Team.')}</p>
+            ${isOwner ? `<button type="button" onclick="renderStore(true)" class="mt-2 text-xs text-rose-300 underline font-semibold">Update store details in Settings →</button>` : ''}
           </div>
         </div>
       `;
@@ -4864,9 +4988,41 @@ async function openStore(uid){
       storeStatusNotice = `
         <div class="mb-4 p-4 rounded-2xl bg-amber-950/40 border border-amber-800/80 flex items-start gap-3">
           <span class="text-2xl">⏳</span>
-          <div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40">Store Status: Not Approved (Pending Review)</span>
+            </div>
             <b class="text-amber-300 text-sm">Store Under Security Team Review</b>
             <p class="text-xs text-amber-200/80 mt-1">This storefront is currently pending SellerFlow Security Team approval before public release.</p>
+            ${isOwner ? `<button type="button" onclick="renderStore(true)" class="mt-2 text-xs text-amber-300 underline font-semibold">Review store submission details →</button>` : ''}
+          </div>
+        </div>
+      `;
+    } else if(isStoreRejected && isOwner){
+      storeStatusNotice = `
+        <div class="mb-4 p-4 rounded-2xl bg-orange-950/40 border border-orange-800/80 flex items-start gap-3">
+          <span class="text-2xl">⚠️</span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/40">Store Status: Not Approved (Changes Requested)</span>
+            </div>
+            <b class="text-orange-300 text-sm">Changes Requested by Security Team</b>
+            <p class="text-xs text-orange-200/80 mt-1">${esc(store?.rejectionReason || 'Please review your store information and resubmit for approval.')}</p>
+            <button type="button" onclick="renderStore(true)" class="mt-2 text-xs text-orange-300 underline font-semibold">Update store details in Settings →</button>
+          </div>
+        </div>
+      `;
+    } else if(isOwner && !isStoreApproved){
+      storeStatusNotice = `
+        <div class="mb-4 p-4 rounded-2xl bg-[#171720] border border-[#333] flex items-start gap-3">
+          <span class="text-xl">🔒</span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">Store Status: Not Approved</span>
+              <span class="text-[10px] text-zinc-400 font-medium">(Hidden from shoppers)</span>
+            </div>
+            <p class="text-xs text-zinc-300 mt-1">Your store is not yet approved. Please submit your Ghana Card verification photos and store information.</p>
+            <button type="button" onclick="renderStore(true)" class="mt-2 text-xs text-gold underline font-semibold">Complete Store Setup in Settings →</button>
           </div>
         </div>
       `;
@@ -4875,7 +5031,7 @@ async function openStore(uid){
     $('page').innerHTML=`
       <div class="relative w-full h-40 sm:h-56 rounded-2xl overflow-hidden mb-5 border border-[#2b2b2b] bg-[#111] group">
         ${effectiveBannerUrl ? `
-          <img id="storefrontBannerImg" src="${esc(effectiveBannerUrl)}" class="w-full h-full object-cover" alt="Store banner" onerror="this.onerror=null;this.outerHTML='<div class=\'w-full h-full bg-gradient-to-r from-zinc-900 via-stone-900 to-amber-950/40 flex items-center justify-center text-zinc-600 text-xs\'><span>No store banner uploaded yet</span></div>';">
+          <img id="storefrontBannerImg" src="${esc(effectiveBannerUrl)}" class="w-full h-full object-cover" alt="Store banner" onerror="window.__sfBannerFallback(this)">
         ` : `
           <div id="storefrontBannerImg" class="w-full h-full bg-gradient-to-r from-zinc-900 via-stone-900 to-amber-950/40 flex items-center justify-center text-zinc-600 text-xs">
             <span>No store banner uploaded yet</span>
@@ -4899,7 +5055,7 @@ async function openStore(uid){
           </button>
           <div class="relative group">
             ${effectiveLogoUrl ? `
-              <img id="storefrontLogoImg" src="${esc(effectiveLogoUrl)}" class="w-16 h-16 rounded-2xl object-cover border border-[#333] bg-[#222]" alt="Store logo" onerror="this.onerror=null;this.outerHTML='${esc(avatar(p,'w-16 h-16 rounded-2xl object-cover bg-[#222]'))}';">
+              <img id="storefrontLogoImg" src="${esc(effectiveLogoUrl)}" class="w-16 h-16 rounded-2xl object-cover border border-[#333] bg-[#222]" alt="Store logo" data-initial="${esc((store?.name||p.name||p.username||'S')[0].toUpperCase())}" data-avatar-cls="w-16 h-16 rounded-2xl object-cover bg-[#222]" onerror="window.__sfAvatarFallback(this)">
             ` : avatar(p,'w-16 h-16 rounded-2xl object-cover bg-[#222]')}
             ${isOwner ? `
               <label class="absolute -bottom-1 -right-1 bg-gold text-black hover:brightness-110 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer shadow border border-black/30 transition z-10" title="Change logo">
@@ -6358,7 +6514,7 @@ function generateReceiptHTML(order, format = 'thermal'){
 
       <div class="mt-6 pt-4 border-t border-zinc-200 flex items-center justify-between text-[11px] text-zinc-500">
         <div>
-          <div class="font-semibold text-zinc-700">© 2026 POMAAH GROUP OF COMPANIES INC. · All rights reserved.</div>
+          <div class="font-semibold text-zinc-700">© 2026 POMAAH GROUP · All Rights Reserved</div>
           <div class="text-[10.5px]">For order support or courier inquiries, contact support@sellerflow.com.gh</div>
         </div>
         <div class="text-right font-mono text-[10px]">
@@ -6790,9 +6946,10 @@ async function renderStore(forceEdit = false){
   }
   loading('Loading store details…');
   try {
-    const [storeSnap, prodsSnap] = await Promise.all([
+    const [storeSnap, prodsSnap, userSnap] = await Promise.all([
       getDoc(doc(db, 'stores', currentUser.uid)),
-      getDocs(query(collection(db, 'products'), where('sellerId', '==', currentUser.uid)))
+      getDocs(query(collection(db, 'products'), where('sellerId', '==', currentUser.uid))),
+      getDoc(doc(db, 'users', currentUser.uid)).catch(() => null)
     ]);
     const storeExists = snapshotExists(storeSnap);
     const storeData = storeExists ? storeSnap.data() : null;
@@ -6802,19 +6959,43 @@ async function renderStore(forceEdit = false){
       return openStore(currentUser.uid);
     }
     const store = storeData || {};
+    const userData = (userSnap && snapshotExists(userSnap)) ? userSnap.data() : {};
     const myProducts = prodsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    const isApproved = store.status === 'approved' || (!store.status && currentProfile.verified);
-    const isPending = store.status === 'pending_review' || store.reviewStatus === 'pending';
-    const isTakenDown = store.status === 'taken_down' || store.reviewStatus === 'taken_down';
-    const isRejected = store.status === 'rejected' || store.reviewStatus === 'rejected';
+    const existingFront = store.ghanaCardFrontPath || store.ghanaCardFrontUrl || userData.ghanaCardFrontPath || userData.ghanaCardFrontUrl || currentProfile.ghanaCardFrontPath || '';
+    const existingBack = store.ghanaCardBackPath || store.ghanaCardBackUrl || userData.ghanaCardBackPath || userData.ghanaCardBackUrl || currentProfile.ghanaCardBackPath || '';
+
+    const isApproved = store.status === 'approved' || store.reviewStatus === 'approved';
+    const isPending = !isApproved && (store.status === 'pending_review' || store.reviewStatus === 'pending');
+    const isTakenDown = !isApproved && (store.status === 'taken_down' || store.reviewStatus === 'taken_down');
+    const isRejected = !isApproved && (store.status === 'rejected' || store.reviewStatus === 'rejected');
 
     let statusAlert = '';
-    if(isTakenDown){
+    if(isApproved){
       statusAlert = `
-        <div class="mb-5 p-4 rounded-2xl bg-rose-950/40 border border-rose-800/80 flex items-start gap-3">
+        <div id="storeStatusBanner" class="mb-5 p-4 rounded-2xl bg-emerald-950/30 border border-emerald-800/60 flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-3">
+            <span class="text-emerald-400 text-xl font-bold">✓</span>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">Store Status: Approved</span>
+              </div>
+              <p class="text-emerald-300 font-bold text-xs sm:text-sm mt-1">Your store is live and visible to customers in Ghana!</p>
+            </div>
+          </div>
+          <button type="button" id="previewStorefrontBtn" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-700/60 transition flex items-center gap-1.5">
+            <span>View Public Storefront</span><span>→</span>
+          </button>
+        </div>
+      `;
+    } else if(isTakenDown){
+      statusAlert = `
+        <div id="storeStatusBanner" class="mb-5 p-4 rounded-2xl bg-rose-950/40 border border-rose-800/80 flex items-start gap-3">
           <span class="text-2xl">🚫</span>
           <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40">Store Status: Not Approved (Taken Down)</span>
+            </div>
             <b class="text-rose-300 text-sm">Storefront Taken Down by Security Team</b>
             <p class="text-xs text-rose-200/80 mt-1">${esc(store.takedownReason || 'Your storefront was taken down following a safety review. You may update your store information and re-submit for review.')}</p>
           </div>
@@ -6822,34 +7003,48 @@ async function renderStore(forceEdit = false){
       `;
     } else if(isPending){
       statusAlert = `
-        <div class="mb-5 p-4 rounded-2xl bg-amber-950/40 border border-amber-800/80 flex items-start gap-3">
-          <span class="text-2xl">⏳</span>
-          <div class="flex-1 min-w-0">
-            <b class="text-amber-300 text-sm">Storefront Under Security Team Review</b>
-            <p class="text-xs text-amber-200/80 mt-1">Your store details have been submitted and are pending review by SellerFlow Security Team. Once approved, your storefront will become publicly accessible across the marketplace.</p>
+        <div id="storeStatusBanner" class="mb-5 p-4 rounded-2xl bg-amber-950/40 border border-amber-800/80 flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-start gap-3">
+            <span class="text-2xl">⏳</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40">Store Status: Not Approved (Pending Review)</span>
+              </div>
+              <b class="text-amber-300 text-sm">Storefront Under Security Team Review</b>
+              <p class="text-xs text-amber-200/80 mt-1">Your store details have been submitted and are pending review by SellerFlow Security Team. Once approved, your storefront will become publicly accessible across the marketplace.</p>
+            </div>
           </div>
+          ${hasExistingStore ? `
+            <button type="button" id="previewStorefrontBtn" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-700/60 transition flex items-center gap-1.5">
+              <span>Preview Draft</span><span>→</span>
+            </button>
+          ` : ''}
         </div>
       `;
     } else if(isRejected){
       statusAlert = `
-        <div class="mb-5 p-4 rounded-2xl bg-orange-950/40 border border-orange-800/80 flex items-start gap-3">
+        <div id="storeStatusBanner" class="mb-5 p-4 rounded-2xl bg-orange-950/40 border border-orange-800/80 flex items-start gap-3">
           <span class="text-2xl">⚠️</span>
           <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/40">Store Status: Not Approved (Changes Requested)</span>
+            </div>
             <b class="text-orange-300 text-sm">Changes Requested by Security Team</b>
             <p class="text-xs text-orange-200/80 mt-1">${esc(store.rejectionReason || 'Please review your store information and resubmit for approval.')}</p>
           </div>
         </div>
       `;
-    } else if(isApproved){
+    } else {
       statusAlert = `
-        <div class="mb-5 p-4 rounded-2xl bg-emerald-950/30 border border-emerald-800/60 flex items-center justify-between gap-3 flex-wrap">
-          <div class="flex items-center gap-2.5">
-            <span class="text-emerald-400 text-lg">✓</span>
-            <span class="text-emerald-300 font-bold text-xs sm:text-sm">Your store is live and visible to customers in Ghana!</span>
+        <div id="storeStatusBanner" class="mb-5 p-4 rounded-2xl bg-[#171720] border border-[#333] flex items-start gap-3">
+          <span class="text-xl">🔒</span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">Store Status: Not Approved</span>
+              <span class="text-[10px] text-zinc-400 font-medium">(Not yet live to shoppers)</span>
+            </div>
+            <p class="text-xs text-zinc-300 leading-relaxed mt-1">Your store is currently not approved. Complete the required store details, upload both front and back photos of your Ghana Card, and save below to submit for review.</p>
           </div>
-          <button type="button" id="previewStorefrontBtn" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-700/60 transition">
-            View Public Storefront →
-          </button>
         </div>
       `;
     }
@@ -7027,17 +7222,91 @@ async function renderStore(forceEdit = false){
               <div class="grid sm:grid-cols-2 gap-3">
                 <div>
                   <label class="muted text-xs block mb-1">Full Legal Name as on Ghana Card *</label>
-                  <input id="storeGhanaCardName" value="${esc(store.ghanaCardName || currentProfile.ghanaCardName || currentProfile.name || '')}" class="w-full p-2.5 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-xs text-white uppercase" placeholder="e.g. KWAME OFORI ADDO">
+                  <input id="storeGhanaCardName" value="${esc(store.ghanaCardName || userData.ghanaCardLegalName || userData.ghanaCardName || currentProfile.ghanaCardName || currentProfile.name || '')}" class="w-full p-2.5 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-xs text-white uppercase" placeholder="e.g. KWAME OFORI ADDO">
                 </div>
                 <div>
                   <label class="muted text-xs block mb-1">Date of Birth on Ghana Card *</label>
-                  <input id="storeGhanaCardDob" type="date" value="${esc(store.ghanaCardDob || currentProfile.ghanaCardDob || '')}" class="w-full p-2.5 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-xs text-white">
+                  <input id="storeGhanaCardDob" type="date" value="${esc(store.ghanaCardDob || userData.ghanaCardDob || currentProfile.ghanaCardDob || '')}" class="w-full p-2.5 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-xs text-white">
                 </div>
               </div>
 
               <div>
                 <label class="muted text-xs block mb-1">Ghana Card ID Number (e.g. GHA-XXXXXXXXX-X) *</label>
-                <input id="storeGhanaCardNum" value="${esc(store.ghanaCardNum || currentProfile.ghanaCardNum || '')}" class="w-full p-2.5 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-xs font-mono text-gold uppercase" placeholder="GHA-712839401-2">
+                <input id="storeGhanaCardNum" value="${esc(store.ghanaCardNum || userData.ghanaCardNumber || userData.ghanaCardPin || currentProfile.ghanaCardNum || '')}" class="w-full p-2.5 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-xs font-mono text-gold uppercase" placeholder="GHA-712839401-2">
+              </div>
+
+              <!-- Mandatory Ghana Card Photos: Front & Back Pictures Required -->
+              <div class="space-y-3 pt-3 border-t border-[#242430]">
+                <div class="flex items-center justify-between">
+                  <label class="font-bold text-xs text-amber-200 flex items-center gap-1.5">
+                    <span>📸</span><span>Ghana Card Photos (Front & Back Pictures) *</span>
+                  </label>
+                  <span class="text-[10px] font-bold bg-amber-950 text-amber-300 border border-amber-800 px-2 py-0.5 rounded-full">REQUIRED</span>
+                </div>
+                
+                <p class="text-xs text-zinc-300 leading-relaxed">
+                  Sellers must provide clear photos of both the front and back of their Ghana Card. Ensure the national ID number, full legal name, photo, and card details are clearly visible and legible.
+                </p>
+
+                <div class="grid sm:grid-cols-2 gap-3.5">
+                  <!-- Front Photo Card -->
+                  <div class="p-3.5 rounded-xl bg-[#17171e] border border-[#2b2b38] space-y-2.5">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-xs font-bold text-white">Front Picture</span>
+                        <span class="text-rose-400 font-bold">*</span>
+                      </div>
+                      <span id="storeGhanaCardFrontBadge" class="text-[10px] font-bold px-2 py-0.5 rounded ${existingFront ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}">
+                        ${existingFront ? '✓ Front on file' : 'Picture required'}
+                      </span>
+                    </div>
+
+                    <div id="storeGhanaCardFrontPreview" class="relative w-full h-32 rounded-xl overflow-hidden bg-[#0d0d12] border border-[#333] flex items-center justify-center group">
+                      <div class="flex flex-col items-center justify-center text-zinc-500 p-2 text-center">
+                        <span class="text-3xl mb-1 opacity-50">🇬🇭</span>
+                        <span class="text-xs font-semibold text-zinc-400">Front of Ghana Card</span>
+                        <span class="text-[10px] text-zinc-600 mt-0.5">Showing portrait photo & PIN</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="text-[11px] font-semibold text-zinc-300 block mb-1">
+                        ${existingFront ? 'Replace Front Picture' : 'Upload Front Picture *'}
+                      </label>
+                      <input id="storeGhanaCardFrontFile" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="text-xs text-zinc-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer w-full">
+                      <p class="text-[10px] text-zinc-500 mt-1">Accepts JPG, PNG, WebP or PDF · max 15MB</p>
+                    </div>
+                  </div>
+
+                  <!-- Back Photo Card -->
+                  <div class="p-3.5 rounded-xl bg-[#17171e] border border-[#2b2b38] space-y-2.5">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-xs font-bold text-white">Back Picture</span>
+                        <span class="text-rose-400 font-bold">*</span>
+                      </div>
+                      <span id="storeGhanaCardBackBadge" class="text-[10px] font-bold px-2 py-0.5 rounded ${existingBack ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}">
+                        ${existingBack ? '✓ Back on file' : 'Picture required'}
+                      </span>
+                    </div>
+
+                    <div id="storeGhanaCardBackPreview" class="relative w-full h-32 rounded-xl overflow-hidden bg-[#0d0d12] border border-[#333] flex items-center justify-center group">
+                      <div class="flex flex-col items-center justify-center text-zinc-500 p-2 text-center">
+                        <span class="text-3xl mb-1 opacity-50">📑</span>
+                        <span class="text-xs font-semibold text-zinc-400">Back of Ghana Card</span>
+                        <span class="text-[10px] text-zinc-600 mt-0.5">Showing barcodes & MRZ code</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="text-[11px] font-semibold text-zinc-300 block mb-1">
+                        ${existingBack ? 'Replace Back Picture' : 'Upload Back Picture *'}
+                      </label>
+                      <input id="storeGhanaCardBackFile" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="text-xs text-zinc-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer w-full">
+                      <p class="text-[10px] text-zinc-500 mt-1">Accepts JPG, PNG, WebP or PDF · max 15MB</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div class="p-3 rounded-xl bg-rose-950/25 border border-rose-900/60 text-xs text-rose-200/90 leading-relaxed space-y-2 mt-2">
@@ -7258,6 +7527,85 @@ async function renderStore(forceEdit = false){
       };
     });
 
+    // Populate existing Ghana Card document previews if available
+    if(existingFront && typeof loadGhanaCardDocumentPreview === 'function'){
+      loadGhanaCardDocumentPreview(existingFront).then(u => {
+        const box = $('storeGhanaCardFrontPreview');
+        if(box && u){
+          box.innerHTML = `
+            <img src="${esc(u)}" data-view-image="${esc(u)}" class="w-full h-full object-cover cursor-pointer" alt="Front Preview">
+            <div class="absolute bottom-1.5 left-1.5 right-1.5 bg-black/80 backdrop-blur-sm text-[10px] text-emerald-400 font-bold px-2 py-0.5 rounded flex items-center justify-between">
+              <span>✓ Front on file</span>
+              <span class="text-zinc-300 font-normal">Click to view</span>
+            </div>
+          `;
+        }
+      });
+    }
+
+    if(existingBack && typeof loadGhanaCardDocumentPreview === 'function'){
+      loadGhanaCardDocumentPreview(existingBack).then(u => {
+        const box = $('storeGhanaCardBackPreview');
+        if(box && u){
+          box.innerHTML = `
+            <img src="${esc(u)}" data-view-image="${esc(u)}" class="w-full h-full object-cover cursor-pointer" alt="Back Preview">
+            <div class="absolute bottom-1.5 left-1.5 right-1.5 bg-black/80 backdrop-blur-sm text-[10px] text-emerald-400 font-bold px-2 py-0.5 rounded flex items-center justify-between">
+              <span>✓ Back on file</span>
+              <span class="text-zinc-300 font-normal">Click to view</span>
+            </div>
+          `;
+        }
+      });
+    }
+
+    $('storeGhanaCardFrontFile')?.addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if(f){
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const box = $('storeGhanaCardFrontPreview');
+          if(box){
+            box.innerHTML = `
+              <img src="${ev.target.result}" data-view-image="${ev.target.result}" class="w-full h-full object-cover cursor-pointer" alt="Front Preview">
+              <div class="absolute bottom-1.5 left-1.5 right-1.5 bg-black/80 backdrop-blur-sm text-[10px] text-emerald-400 font-bold px-2 py-0.5 rounded truncate">
+                ✓ Ready: ${esc(f.name)}
+              </div>
+            `;
+          }
+          const badge = $('storeGhanaCardFrontBadge');
+          if(badge){
+            badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800';
+            badge.textContent = '✓ Ready to Upload';
+          }
+        };
+        reader.readAsDataURL(f);
+      }
+    });
+
+    $('storeGhanaCardBackFile')?.addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if(f){
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const box = $('storeGhanaCardBackPreview');
+          if(box){
+            box.innerHTML = `
+              <img src="${ev.target.result}" data-view-image="${ev.target.result}" class="w-full h-full object-cover cursor-pointer" alt="Back Preview">
+              <div class="absolute bottom-1.5 left-1.5 right-1.5 bg-black/80 backdrop-blur-sm text-[10px] text-emerald-400 font-bold px-2 py-0.5 rounded truncate">
+                ✓ Ready: ${esc(f.name)}
+              </div>
+            `;
+          }
+          const badge = $('storeGhanaCardBackBadge');
+          if(badge){
+            badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800';
+            badge.textContent = '✓ Ready to Upload';
+          }
+        };
+        reader.readAsDataURL(f);
+      }
+    });
+
     $('saveStore').onclick = async () => {
       try {
         const name = $('storeName').value.trim();
@@ -7277,6 +7625,16 @@ async function renderStore(forceEdit = false){
 
         const ghanaCardNum = $('storeGhanaCardNum')?.value.trim();
         if(!ghanaCardNum || ghanaCardNum.length < 8) throw Error('Please enter a valid Ghana Card ID number (e.g. GHA-123456789-0).');
+
+        const ghanaCardFrontFile = $('storeGhanaCardFrontFile')?.files[0];
+        const ghanaCardBackFile = $('storeGhanaCardBackFile')?.files[0];
+
+        if(!ghanaCardFrontFile && !existingFront){
+          throw Error('Please provide the front picture of your Ghana Card (mandatory by Ghanaian regulations).');
+        }
+        if(!ghanaCardBackFile && !existingBack){
+          throw Error('Please provide the back picture of your Ghana Card (mandatory by Ghanaian regulations).');
+        }
 
         if(!$('storeFraudTerms')?.checked){
           throw Error('You must agree to the Seller Anti-Fraud Terms and comply with the Laws of Ghana before opening/saving your store.');
@@ -7316,6 +7674,21 @@ async function renderStore(forceEdit = false){
           hasBusinessCert = true;
         }
 
+        let ghanaCardFrontPath = store.ghanaCardFrontPath || userData.ghanaCardFrontPath || currentProfile?.ghanaCardFrontPath || '';
+        let ghanaCardBackPath = store.ghanaCardBackPath || userData.ghanaCardBackPath || currentProfile?.ghanaCardBackPath || '';
+
+        if(ghanaCardFrontFile){
+          validFile(ghanaCardFrontFile, ['image/jpeg','image/png','image/webp','application/pdf'], 15);
+          loading('Uploading Ghana Card front picture…');
+          ghanaCardFrontPath = await uploadPrivate(ghanaCardFrontFile, 'ghana_card_front');
+        }
+
+        if(ghanaCardBackFile){
+          validFile(ghanaCardBackFile, ['image/jpeg','image/png','image/webp','application/pdf'], 15);
+          loading('Uploading Ghana Card back picture…');
+          ghanaCardBackPath = await uploadPrivate(ghanaCardBackFile, 'ghana_card_back');
+        }
+
         loading('Saving store…');
         const storeStatus = isAdmin ? 'approved' : 'pending_review';
         const reviewStatus = isAdmin ? 'approved' : 'pending';
@@ -7331,6 +7704,10 @@ async function renderStore(forceEdit = false){
           ghanaCardName,
           ghanaCardDob,
           ghanaCardNum,
+          ghanaCardFrontPath,
+          ghanaCardBackPath,
+          hasGhanaCardFront: !!ghanaCardFrontPath,
+          hasGhanaCardBack: !!ghanaCardBackPath,
           ghanaTermsAccepted: true,
           ghanaTermsAcceptedAt: serverTimestamp(),
           bannerUrl,
@@ -7365,11 +7742,30 @@ async function renderStore(forceEdit = false){
           ghanaCardName,
           ghanaCardDob,
           ghanaCardNum,
+          ghanaCardFrontPath,
+          ghanaCardBackPath,
+          hasGhanaCardFront: !!ghanaCardFrontPath,
+          hasGhanaCardBack: !!ghanaCardBackPath,
           sellerTermsAccepted: true,
           sellerTermsAcceptedAt: serverTimestamp(),
           hasBusinessCert,
           businessCertUrl
         }, { merge: true }).catch(()=>{});
+
+        try {
+          await setDoc(doc(db, 'identityVerifications', currentUser.uid), {
+            uid: currentUser.uid,
+            userId: currentUser.uid,
+            fullName: ghanaCardName,
+            ghanaCardPin: ghanaCardNum,
+            ghanaCardFrontPath,
+            ghanaCardBackPath,
+            source: 'store_creation_mandatory_id',
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        } catch(verifSyncErr) {
+          console.warn('Identity verifications sync notice:', verifSyncErr);
+        }
 
         if(currentProfile) {
           currentProfile.bannerUrl = bannerUrl;
@@ -7377,10 +7773,9 @@ async function renderStore(forceEdit = false){
           if(logoUrl) currentProfile.avatarUrl = logoUrl;
           currentProfile.hasBusinessCert = hasBusinessCert;
           currentProfile.businessCertUrl = businessCertUrl;
+          currentProfile.ghanaCardFrontPath = ghanaCardFrontPath;
+          currentProfile.ghanaCardBackPath = ghanaCardBackPath;
         }
-
-        currentProfile.hasBusinessCert = hasBusinessCert;
-        currentProfile.businessCertUrl = businessCertUrl;
 
         if(isAdmin){
           toast('Store settings saved and published.', 'success');
@@ -8358,12 +8753,13 @@ function renderCart(){
         </button>
       </div>
     </div>
-  `:'<div class="card p-12 text-center muted"><div class="text-4xl mb-3">🛒</div><p class="font-bold text-white text-base">Your cart is currently empty.</p><p class="text-xs text-zinc-400 mt-1">Discover trending Ghanaian products in the marketplace and add items to your cart.</p><button type="button" onclick="navigate(\'marketplace\')" class="mt-4 bg-gold text-black font-bold px-5 py-2.5 rounded-xl text-xs">Explore Marketplace</button></div>');
+  `:'<div class="card p-12 text-center muted"><div class="text-4xl mb-3">🛒</div><p class="font-bold text-white text-base">Your cart is currently empty.</p><p class="text-xs text-zinc-400 mt-1">Discover trending Ghanaian products in the marketplace and add items to your cart.</p><button type="button" id="cartEmptyExploreBtn" class="mt-4 bg-gold text-black font-bold px-5 py-2.5 rounded-xl text-xs">Explore Marketplace</button></div>');
 
   document.querySelectorAll('[data-cart-minus]').forEach(b=>b.onclick=()=>changeCart(+b.dataset.cartMinus,-1));
   document.querySelectorAll('[data-cart-plus]').forEach(b=>b.onclick=()=>changeCart(+b.dataset.cartPlus,1));
   document.querySelectorAll('[data-cart-remove]').forEach(b=>b.onclick=()=>{cart.splice(+b.dataset.cartRemove,1);saveCart();renderCart()});
   $('cartContinueShopping')?.addEventListener('click', () => navigate('marketplace'));
+  $('cartEmptyExploreBtn')?.addEventListener('click', () => navigate('marketplace'));
   $('checkoutBtn')?.addEventListener('click',openCheckout);
 }
 function changeCart(i,d){cart[i].quantity=Math.max(1,Math.min(cart[i].maxStock||99,cart[i].quantity+d));saveCart();renderCart()}
@@ -11522,7 +11918,344 @@ init();
   }
   window.executeSellerFlowAiPostPublish = executeSellerFlowAiPostPublish;
 
+  /* ==========================================================================
+     SELLERFLOW PERSONALIZED "FOR YOU" DISCOVERY & RECOMMENDATION ENGINE
+     ========================================================================== */
+
+  const FEED_WEIGHTS = {
+    interestMatch: 35,
+    sellerAffinity: 25,
+    watchTime: 18,
+    completion: 14,
+    engagement: 20,
+    freshness: 22,
+    productRelevance: 16,
+    creatorQuality: 10,
+    exploration: 12,
+    skipPenalty: -25,
+    notInterestedPenalty: -100,
+    repetitionPenalty: -45
+  };
+
+  const COMMERCE_CATEGORIES = [
+    'electronics', 'fashion', 'footwear', 'beauty', 'jewelry', 'food', 'home', 'automotive', 'services'
+  ];
+
+  const CATEGORY_KEYWORDS = {
+    electronics: ['phone', 'iphone', 'samsung', 'pixel', 'android', 'laptop', 'macbook', 'charger', 'airpods', 'headphones', 'screen', 'gadget', 'tv', 'watch', 'smartwatch', 'tablet', 'ipad', 'electronics', 'tech', 'powerbank'],
+    fashion: ['clothes', 'dress', 'shirt', 'trouser', 'suit', 'kente', 'fabric', 'lace', 'african wear', 'boutique', 'jeans', 'top', 'gown', 'outfit', 'wear', 'tailor', 'fashion', 'hoodie', 'jacket', 'tshirt'],
+    footwear: ['shoes', 'sneakers', 'heels', 'sandals', 'slippers', 'boots', 'crocs', 'nike', 'jordan', 'adidas', 'loafers', 'kicks', 'footwear', 'slides'],
+    beauty: ['beauty', 'makeup', 'wig', 'hair', 'cosmetics', 'lipstick', 'skincare', 'perfume', 'fragrance', 'lotion', 'cream', 'braids', 'frontal', 'lashes', 'nails', 'gloss'],
+    jewelry: ['jewelry', 'watch', 'ring', 'chain', 'necklace', 'gold', 'silver', 'diamond', 'bracelet', 'earrings', 'bangle', 'beads', 'rolex'],
+    food: ['food', 'jollof', 'waakye', 'snack', 'cake', 'bakes', 'meat', 'fish', 'drinks', 'juice', 'groceries', 'spices', 'restaurant', 'catering', 'recipe', 'pastries', 'bread'],
+    home: ['home', 'furniture', 'bedding', 'decor', 'kitchen', 'blender', 'microwave', 'fridge', 'curtains', 'carpet', 'appliance', 'sheets', 'interior'],
+    automotive: ['car', 'motor', 'bike', 'tyres', 'automobile', 'auto', 'parts', 'toyota', 'hyundai', 'ride', 'vehicle'],
+    services: ['delivery', 'logistics', 'design', 'graphics', 'photography', 'video', 'repair', 'lesson', 'event', 'service', 'developer']
+  };
+
+  window._sfUserFeedProfile = null;
+  window._sfSeenPostIds = window._sfSeenPostIds || new Set();
+  window._sfFeedEventBuffer = window._sfFeedEventBuffer || [];
+  let _sfFlushTimer = null;
+
+  function normalizeFeedText(str){
+    if(!str || typeof str !== 'string') return '';
+    return str.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  function extractPostCategories(post = {}){
+    const categories = new Set();
+    const weights = {};
+    if(post.category && typeof post.category === 'string'){
+      const norm = post.category.toLowerCase().trim();
+      if(COMMERCE_CATEGORIES.includes(norm)){
+        categories.add(norm);
+        weights[norm] = 1.0;
+      }
+    }
+    if(post.productCategory && typeof post.productCategory === 'string'){
+      const norm = post.productCategory.toLowerCase().trim();
+      if(COMMERCE_CATEGORIES.includes(norm)){
+        categories.add(norm);
+        weights[norm] = Math.max(weights[norm] || 0, 0.95);
+      }
+    }
+    if(Array.isArray(post.tags)){
+      for(const tag of post.tags){
+        if(!tag) continue;
+        const cleanTag = normalizeFeedText(tag);
+        for(const [cat, kws] of Object.entries(CATEGORY_KEYWORDS)){
+          if(cleanTag === cat || kws.includes(cleanTag)){
+            categories.add(cat);
+            weights[cat] = Math.max(weights[cat] || 0, 0.85);
+          }
+        }
+      }
+    }
+    const combinedText = normalizeFeedText(`${post.text || ''} ${post.title || ''} ${post.soundName || ''} ${post.productName || ''}`);
+    if(combinedText){
+      for(const [cat, kws] of Object.entries(CATEGORY_KEYWORDS)){
+        let matchCount = 0;
+        for(const kw of kws){
+          if(combinedText.includes(kw)) matchCount++;
+        }
+        if(matchCount > 0){
+          categories.add(cat);
+          weights[cat] = Math.max(weights[cat] || 0, Math.min(0.9, 0.4 + matchCount * 0.15));
+        }
+      }
+    }
+    if(categories.size === 0){
+      categories.add('general');
+      weights['general'] = 0.5;
+    }
+    return { categories: Array.from(categories), weights };
+  }
+
+  function createEmptyProfile(userId = null){
+    return {
+      userId: userId || null,
+      interests: {},
+      sellerAffinity: {},
+      categoryPenalties: {},
+      hiddenPostIds: [],
+      recentSearches: [],
+      stats: { totalViews: 0, totalCompletions: 0, totalLikes: 0, totalSaves: 0, totalPurchases: 0, totalSkips: 0 },
+      updatedAt: Date.now()
+    };
+  }
+
+  async function loadUserFeedProfile(){
+    if(window._sfUserFeedProfile) return window._sfUserFeedProfile;
+    if(!currentUser){
+      try{
+        const local = sessionStorage.getItem('sf_anon_feed_profile');
+        if(local) {
+          window._sfUserFeedProfile = JSON.parse(local);
+          return window._sfUserFeedProfile;
+        }
+      }catch(_){}
+      window._sfUserFeedProfile = createEmptyProfile(null);
+      return window._sfUserFeedProfile;
+    }
+    try{
+      const local = sessionStorage.getItem('sf_feed_profile_' + currentUser.uid);
+      if(local) {
+        window._sfUserFeedProfile = JSON.parse(local);
+      }
+      const s = await getDoc(doc(db, 'userFeedProfiles', currentUser.uid));
+      if(snapshotExists(s)){
+        window._sfUserFeedProfile = { ...createEmptyProfile(currentUser.uid), ...s.data() };
+      } else if(!window._sfUserFeedProfile){
+        window._sfUserFeedProfile = createEmptyProfile(currentUser.uid);
+      }
+      sessionStorage.setItem('sf_feed_profile_' + currentUser.uid, JSON.stringify(window._sfUserFeedProfile));
+    }catch(_){
+      if(!window._sfUserFeedProfile) window._sfUserFeedProfile = createEmptyProfile(currentUser?.uid);
+    }
+    return window._sfUserFeedProfile;
+  }
+
+  function recordFeedEvent(eventType, eventData = {}, post = null){
+    if(!eventType) return;
+    const profile = window._sfUserFeedProfile || createEmptyProfile(currentUser?.uid);
+    profile.updatedAt = Date.now();
+    profile.stats = profile.stats || {};
+    profile.interests = profile.interests || {};
+    profile.sellerAffinity = profile.sellerAffinity || {};
+    profile.categoryPenalties = profile.categoryPenalties || {};
+    profile.hiddenPostIds = profile.hiddenPostIds || [];
+
+    const extracted = post ? extractPostCategories(post) : { categories: eventData.categories || [], weights: {} };
+    const categories = extracted.categories.filter(c => c !== 'general');
+    const sellerId = post?.sellerId || eventData.sellerId;
+
+    const boostCategory = (cat, amount) => {
+      if(!cat) return;
+      const cur = profile.interests[cat] || 0;
+      profile.interests[cat] = Math.min(1.0, Math.max(0.0, cur + amount));
+      if(amount > 0 && profile.categoryPenalties[cat]){
+        profile.categoryPenalties[cat] = Math.max(0, profile.categoryPenalties[cat] - 1);
+      }
+    };
+    const boostSeller = (sId, amount) => {
+      if(!sId) return;
+      const cur = profile.sellerAffinity[sId] || 0;
+      profile.sellerAffinity[sId] = Math.min(1.0, Math.max(0.0, cur + amount));
+    };
+
+    switch(eventType){
+      case 'VIEW_START':
+        profile.stats.totalViews = (profile.stats.totalViews || 0) + 1;
+        if(eventData.postId) window._sfSeenPostIds.add(eventData.postId);
+        break;
+      case 'VIEW_DURATION': {
+        const duration = Number(eventData.duration || eventData.watchedSeconds || 0);
+        const ratio = Number(eventData.watchRatio || 0);
+        if(ratio >= 0.75 || duration >= 8){
+          categories.forEach(c => boostCategory(c, 0.08));
+          boostSeller(sellerId, 0.06);
+        } else if(ratio >= 0.35 || duration >= 3){
+          categories.forEach(c => boostCategory(c, 0.03));
+          boostSeller(sellerId, 0.02);
+        }
+        break;
+      }
+      case 'VIDEO_COMPLETED':
+        profile.stats.totalCompletions = (profile.stats.totalCompletions || 0) + 1;
+        categories.forEach(c => boostCategory(c, 0.12));
+        boostSeller(sellerId, 0.10);
+        break;
+      case 'VIDEO_REWATCH':
+        categories.forEach(c => boostCategory(c, 0.18));
+        boostSeller(sellerId, 0.15);
+        break;
+      case 'SWIPE_AWAY':
+        profile.stats.totalSkips = (profile.stats.totalSkips || 0) + 1;
+        categories.forEach(c => {
+          profile.categoryPenalties[c] = (profile.categoryPenalties[c] || 0) + 1;
+          boostCategory(c, -0.06);
+        });
+        break;
+      case 'LIKE':
+        profile.stats.totalLikes = (profile.stats.totalLikes || 0) + 1;
+        categories.forEach(c => boostCategory(c, 0.15));
+        boostSeller(sellerId, 0.20);
+        break;
+      case 'UNLIKE':
+        categories.forEach(c => boostCategory(c, -0.10));
+        boostSeller(sellerId, -0.15);
+        break;
+      case 'SAVE':
+        profile.stats.totalSaves = (profile.stats.totalSaves || 0) + 1;
+        categories.forEach(c => boostCategory(c, 0.22));
+        boostSeller(sellerId, 0.25);
+        break;
+      case 'UNSAVE':
+        categories.forEach(c => boostCategory(c, -0.15));
+        boostSeller(sellerId, -0.18);
+        break;
+      case 'COMMENT':
+        categories.forEach(c => boostCategory(c, 0.18));
+        boostSeller(sellerId, 0.20);
+        break;
+      case 'SHARE':
+        categories.forEach(c => boostCategory(c, 0.20));
+        boostSeller(sellerId, 0.22);
+        break;
+      case 'FOLLOW':
+        boostSeller(sellerId, 0.50);
+        categories.forEach(c => boostCategory(c, 0.10));
+        break;
+      case 'UNFOLLOW':
+        boostSeller(sellerId, -0.35);
+        break;
+      case 'PRODUCT_OPEN':
+        categories.forEach(c => boostCategory(c, 0.20));
+        boostSeller(sellerId, 0.20);
+        break;
+      case 'STORE_OPEN':
+        boostSeller(sellerId, 0.28);
+        break;
+      case 'ADD_TO_CART':
+        categories.forEach(c => boostCategory(c, 0.30));
+        boostSeller(sellerId, 0.30);
+        break;
+      case 'PURCHASE':
+        profile.stats.totalPurchases = (profile.stats.totalPurchases || 0) + 1;
+        categories.forEach(c => boostCategory(c, 0.50));
+        boostSeller(sellerId, 0.50);
+        break;
+      case 'SEARCH': {
+        const q = normalizeFeedText(eventData.searchTerm || eventData.query || '');
+        if(q){
+          profile.recentSearches = [q, ...(profile.recentSearches || []).filter(s => s !== q)].slice(0, 10);
+          for(const [cat, kws] of Object.entries(CATEGORY_KEYWORDS)){
+            if(q.includes(cat) || kws.some(k => q.includes(k))) boostCategory(cat, 0.25);
+          }
+        }
+        break;
+      }
+      case 'NOT_INTERESTED':
+        if(eventData.postId && !profile.hiddenPostIds.includes(eventData.postId)){
+          profile.hiddenPostIds.push(eventData.postId);
+        }
+        categories.forEach(c => {
+          profile.categoryPenalties[c] = (profile.categoryPenalties[c] || 0) + 3;
+          boostCategory(c, -0.35);
+        });
+        boostSeller(sellerId, -0.30);
+        break;
+      case 'REPORT':
+        if(eventData.postId && !profile.hiddenPostIds.includes(eventData.postId)){
+          profile.hiddenPostIds.push(eventData.postId);
+        }
+        categories.forEach(c => {
+          profile.categoryPenalties[c] = (profile.categoryPenalties[c] || 0) + 5;
+          boostCategory(c, -0.50);
+        });
+        boostSeller(sellerId, -0.60);
+        break;
+    }
+
+    window._sfUserFeedProfile = profile;
+    try{
+      if(currentUser){
+        sessionStorage.setItem('sf_feed_profile_' + currentUser.uid, JSON.stringify(profile));
+      } else {
+        sessionStorage.setItem('sf_anon_feed_profile', JSON.stringify(profile));
+      }
+    }catch(_){}
+
+    if(currentUser){
+      window._sfFeedEventBuffer.push({
+        eventType,
+        ...eventData,
+        userId: currentUser.uid,
+        timestamp: Date.now()
+      });
+      if(window._sfFeedEventBuffer.length >= 20){
+        flushFeedEvents();
+      } else if(!_sfFlushTimer){
+        _sfFlushTimer = setTimeout(flushFeedEvents, 6000);
+      }
+    }
+  }
+  window.recordFeedEvent = recordFeedEvent;
+
+  async function flushFeedEvents(){
+    if(_sfFlushTimer){
+      clearTimeout(_sfFlushTimer);
+      _sfFlushTimer = null;
+    }
+    if(!currentUser) return;
+    const eventsToFlush = window._sfFeedEventBuffer.splice(0, 25);
+    const profileToSave = window._sfUserFeedProfile;
+
+    try{
+      if(profileToSave){
+        await setDoc(doc(db, 'userFeedProfiles', currentUser.uid), profileToSave, { merge: true });
+      }
+      if(eventsToFlush.length > 0){
+        const batch = writeBatch(db);
+        eventsToFlush.forEach(ev => {
+          const ref = doc(collection(db, 'feedEvents'));
+          batch.set(ref, {
+            ...ev,
+            createdAt: serverTimestamp()
+          });
+        });
+        await batch.commit();
+      }
+    }catch(e){
+      console.warn('[FeedTelemetry] Flush failed, maintaining local profile:', e?.message);
+    }
+  }
+  window.flushFeedEvents = flushFeedEvents;
+  window.addEventListener('beforeunload', () => { try { flushFeedEvents(); } catch(_){} });
+
   function isSafePost(p){
+    if(!p) return false;
     if(p.violationDetected || p.status==='hidden' || p.reviewStatus==='violation') return false;
     const t=(p.text||'').toLowerCase();
     for(const r of GHANA_MODERATION_RULES){
@@ -11530,25 +12263,195 @@ init();
     }
     return !/(sex|sexual|porn|nude|naked|xxx|onlyfans|explicit|adult content|erotic)/i.test(t);
   }
-  function rankPost(p,creatorStats){
-    const now=Date.now(), ageH=Math.max(0,(now-ts(p.createdAt)||now)/3600000), recent=Math.max(0,1-ageH/168);
-    const likes=(p.likes||[]).length, comments=(p.comments||[]).length, saves=(p.saves||[]).length, views=Number(p.views||0);
-    const engagement=(likes*3+comments*5+saves*4+Math.min(views,5000)*.12);
-    const followers=creatorStats.followers||0, consistency=Math.min(12,(creatorStats.postCount||0)*1.2);
-    const verified=creatorStats.verified?8:0, safe=isSafePost(p)?12:-80, product=contentType(p)==='product'?6:0;
-    const mediaQuality=p.mediaUrl?8:2, caption=Math.min(6,(p.text||'').length/60), typeBoost={video:5,photo:4,product:7,education:6,comedy:5,beauty:4,story:4}[contentType(p)]||2;
-    const hour=new Date(ts(p.createdAt)||now).getHours(), timeBoost=(hour>=7&&hour<=11)||(hour>=18&&hour<=22)?5:1;
-    return engagement + Math.min(15,Math.log10(followers+1)*5) + consistency + verified + safe + product + mediaQuality + caption + typeBoost + timeBoost + recent*10;
+
+  function calculatePostScore(post, user, profile, context = {}){
+    const now = context.now || Date.now();
+    const creator = context.sellerProfiles?.[post.sellerId] || sellerProfile(post.sellerId) || {};
+    const seenPostIds = context.seenPostIds || window._sfSeenPostIds || new Set();
+    const followingSet = new Set(context.following || currentProfile?.following || []);
+
+    // 1. Social Engagement Baseline (0..1)
+    const likes = Array.isArray(post.likes) ? post.likes.length : Number(post.likeCount || 0);
+    const comments = Array.isArray(post.comments) ? post.comments.length : Number(post.commentCount || 0);
+    const saves = Array.isArray(post.saves) ? post.saves.length : Number(post.saveCount || 0);
+    const reposts = Array.isArray(post.reposts) ? post.reposts.length : 0;
+    const views = Number(post.views || 0);
+    const rawEngagement = likes * 3.0 + comments * 5.0 + saves * 4.5 + reposts * 4.0 + Math.min(views, 8000) * 0.05;
+    const engagementScore = Math.min(1.0, Math.log10(rawEngagement + 1) / 3.2);
+
+    // 2. Freshness Decay (0..1)
+    const createdAtMs = ts(post.createdAt) || now;
+    const ageHours = Math.max(0, (now - createdAtMs) / (1000 * 60 * 60));
+    const freshnessScore = Math.exp(-ageHours / 72);
+
+    // 3. User Category & Keyword Interest Match (0..1)
+    const { categories, weights } = extractPostCategories(post);
+    let interestMatchScore = 0;
+    let categoryPenaltyScore = 0;
+
+    if(profile && profile.interests){
+      let maxMatch = 0;
+      for(const cat of categories){
+        const userInterest = profile.interests[cat] || 0;
+        const weight = weights[cat] || 0.7;
+        maxMatch = Math.max(maxMatch, userInterest * weight);
+        const penaltyCount = profile.categoryPenalties?.[cat] || 0;
+        if(penaltyCount > 0){
+          categoryPenaltyScore = Math.max(categoryPenaltyScore, Math.min(1.0, penaltyCount * 0.25));
+        }
+      }
+      interestMatchScore = maxMatch;
+    }
+
+    // 4. Seller Affinity & Creator Relationship (0..1)
+    let sellerAffinityScore = 0;
+    if(profile && profile.sellerAffinity && post.sellerId){
+      sellerAffinityScore = profile.sellerAffinity[post.sellerId] || 0;
+    }
+    if(followingSet.has(post.sellerId)){
+      sellerAffinityScore = Math.min(1.0, sellerAffinityScore + 0.5);
+    }
+
+    // 5. Watch Time & Completion Quality (0..1)
+    let watchTimeScore = 0.5;
+    if(post.mediaType?.startsWith('video') || post.isVideo){
+      const historicalCompletions = Number(post.completions || 0);
+      const historicalViews = Math.max(1, Number(post.views || 1));
+      const completionRate = Math.min(1.0, historicalCompletions / historicalViews);
+      watchTimeScore = 0.4 + completionRate * 0.6;
+    }
+
+    // 6. Commerce & Product Relevance (0..1)
+    let commerceScore = 0;
+    if(post.productId || post.productPrice || post.productCategory || post.contentType === 'product'){
+      commerceScore = 0.6;
+      for(const cat of categories){
+        if((profile?.interests?.[cat] || 0) >= 0.25){
+          commerceScore = 1.0;
+          break;
+        }
+      }
+    }
+
+    // 7. Creator Quality & Trust Badge (0..1)
+    let creatorQualityScore = 0.3;
+    if(creator.verified || post.isSellerVerified) creatorQualityScore += 0.4;
+    if(creator.hasBusinessCert || creator.businessCertUrl) creatorQualityScore += 0.3;
+    creatorQualityScore = Math.min(1.0, creatorQualityScore);
+
+    // 8. Exploration / Serendipity Bonus
+    let explorationScore = 0.5;
+    if(interestMatchScore < 0.2 && engagementScore > 0.4){
+      explorationScore = 0.85;
+    }
+
+    // 9. Negative Repetition Penalty
+    let repetitionPenalty = 0;
+    if(seenPostIds.has(post.id)){
+      repetitionPenalty = 1.0;
+    }
+
+    const hasHistory = profile && (
+      Object.keys(profile.interests || {}).length > 0 ||
+      Object.keys(profile.sellerAffinity || {}).length > 0 ||
+      (profile.stats?.totalViews || 0) > 0
+    );
+    const isColdStart = !user || !profile || !hasHistory;
+
+    let totalScore = 0;
+    if(isColdStart){
+      totalScore =
+        engagementScore * 35 +
+        freshnessScore * 30 +
+        creatorQualityScore * 18 +
+        watchTimeScore * 12 +
+        commerceScore * 10 -
+        repetitionPenalty * Math.abs(FEED_WEIGHTS.repetitionPenalty);
+    } else {
+      totalScore =
+        interestMatchScore * FEED_WEIGHTS.interestMatch +
+        sellerAffinityScore * FEED_WEIGHTS.sellerAffinity +
+        engagementScore * FEED_WEIGHTS.engagement +
+        freshnessScore * FEED_WEIGHTS.freshness +
+        watchTimeScore * FEED_WEIGHTS.watchTime +
+        commerceScore * FEED_WEIGHTS.productRelevance +
+        creatorQualityScore * FEED_WEIGHTS.creatorQuality +
+        explorationScore * FEED_WEIGHTS.exploration -
+        categoryPenaltyScore * Math.abs(FEED_WEIGHTS.skipPenalty) -
+        repetitionPenalty * Math.abs(FEED_WEIGHTS.repetitionPenalty);
+    }
+
+    return { post, score: totalScore };
+  }
+
+  function applyDiversityReRanking(scoredList, options = {}){
+    if(!Array.isArray(scoredList) || scoredList.length <= 2){
+      return scoredList.map(item => item.post || item);
+    }
+    const result = [];
+    const remaining = [...scoredList];
+
+    while(remaining.length > 0){
+      const lastPost = result[result.length - 1];
+      const prevPost = result[result.length - 2];
+      let chosenIdx = -1;
+
+      for(let i = 0; i < Math.min(remaining.length, 6); i++){
+        const candidate = remaining[i].post || remaining[i];
+        if(lastPost && lastPost.sellerId === candidate.sellerId) continue;
+        if(lastPost && prevPost){
+          const catA = extractPostCategories(lastPost).categories[0];
+          const catB = extractPostCategories(prevPost).categories[0];
+          const catC = extractPostCategories(candidate).categories[0];
+          if(catA && catA === catB && catA === catC) continue;
+        }
+        chosenIdx = i;
+        break;
+      }
+      if(chosenIdx === -1) chosenIdx = 0;
+      const [selected] = remaining.splice(chosenIdx, 1);
+      result.push(selected.post || selected);
+    }
+    return result;
   }
 
   async function getRankedPosts(){
-    const snap=await getDocs(query(collection(db,'posts'),limit(200)));
-    const raw=snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>p.sellerId&&(p.status==='published'||p.status==='approved')&&p.status!=='hidden'&&p.reviewStatus!=='violation');
-    const counts={};raw.forEach(p=>{counts[p.sellerId]=(counts[p.sellerId]||0)+1});
-    return raw.map(p=>({p,score:rankPost(p,{...sellerProfile(p.sellerId),postCount:counts[p.sellerId]||1})})).sort((a,b)=>b.score-a.score).map(x=>x.p);
-  }
+    try{
+      const profile = await loadUserFeedProfile();
+      const snap = await getDocs(query(collection(db, 'posts'), limit(200)));
+      const followingList = currentProfile?.following || [];
 
-  /* Ranked For You: freshness + consistency + followers + verification + safety + content type + engagement + posting time. */
+      const raw = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => {
+        if(!p.sellerId) return false;
+        if(p.status !== 'published' && p.status !== 'approved') return false;
+        if(p.status === 'hidden' || p.reviewStatus === 'violation') return false;
+        if(!isSafePost(p)) return false;
+
+        const privacy = p.privacy || 'public';
+        if(privacy === 'private'){
+          if(!currentUser || currentUser.uid !== p.sellerId) return false;
+        } else if(privacy === 'followers'){
+          const isOwner = currentUser && currentUser.uid === p.sellerId;
+          const isFollower = currentUser && followingList.includes(p.sellerId);
+          if(!isOwner && !isFollower) return false;
+        }
+        if(profile?.hiddenPostIds?.includes(p.id)) return false;
+        return true;
+      });
+
+      const scored = raw.map(p => calculatePostScore(p, currentUser, profile, { following: followingList }));
+      scored.sort((a, b) => b.score - a.score);
+
+      return applyDiversityReRanking(scored);
+    }catch(err){
+      console.warn('[RankedPosts] Discovery fallback to baseline:', err?.message);
+      const snap = await getDocs(query(collection(db, 'posts'), limit(100)));
+      return snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.sellerId && (p.status==='published'||p.status==='approved') && p.status!=='hidden' && p.reviewStatus!=='violation');
+    }
+  }
+  window.getRankedPosts = getRankedPosts;
+
+  /* Ranked For You Discovery: multi-factor personalized discovery pipeline */
   renderFeed=async function(targetPostId, options){
     const posts=await getRankedPosts();
     let feedPosts=[...posts];
@@ -11571,16 +12474,43 @@ init();
         <h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap">For You</h1>
       </div>
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div class="hidden sm:inline-flex items-center gap-1 bg-[#141416] p-0.5 rounded-xl border border-[#2a2a2e]" title="Scroll reels (or use ↑ / ↓ arrow keys)">
+          <button type="button" id="feedPrevBtn" class="feed-nav-btn feed-prev-btn" title="Previous video (↑ or K)">▲</button>
+          <button type="button" id="feedNextBtn" class="feed-nav-btn feed-next-btn" title="Next video (↓ or J)">▼</button>
+        </div>
         <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0 whitespace-nowrap">＋ Upload</button>
       </div>
     </div>
-    <div class="reel-feed flex-1 min-h-0 w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
-      ${feedPosts.length?feedPosts.map(postCard).join(''):`<div class="h-full flex items-center justify-center p-6"><div class="card p-8 text-center max-w-md"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2 text-sm">Share a safe photo or video to start building your audience.</p><button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button></div></div>`}
+    <div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden">
+      <div class="reel-feed flex-1 min-h-0 w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
+        ${feedPosts.length?feedPosts.map((p, idx)=>postCard(p, idx)).join(''):`<div class="h-full flex items-center justify-center p-6"><div class="card p-8 text-center max-w-md"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2 text-sm">Share a safe photo or video to start building your audience.</p><button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button></div></div>`}
+      </div>
+      <!-- Desktop floating smooth scroll buttons -->
+      <aside class="hidden lg:flex flex-col gap-2.5 fixed right-4 xl:right-10 top-1/2 -translate-y-1/2 z-30 pointer-events-auto" aria-label="Reel Navigation">
+        <button type="button" class="feed-floating-btn feed-prev-btn" title="Previous video (↑ or K)" aria-label="Previous video">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
+        </button>
+        <button type="button" class="feed-floating-btn feed-next-btn" title="Next video (↓ or J)" aria-label="Next video">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+      </aside>
     </div>`;
     $('feedBackProfile')?.addEventListener('click',()=>navigate('profile'));
     $('openFeedUpload')?.addEventListener('click',()=>currentUser?openPostModal():showAuthPrompt('upload videos or photos to For You'));
     $('openFeedUploadEmpty')?.addEventListener('click',()=>currentUser?openPostModal():showAuthPrompt('upload videos or photos to For You'));
     document.querySelectorAll('[data-post-action]').forEach(b=>b.onclick=postAction);
+    document.querySelectorAll('[data-reel-follow]').forEach(b=>b.onclick=(e)=>{
+      e.stopPropagation();
+      const sId=b.dataset.reelFollow;
+      if(window.recordFeedEvent) window.recordFeedEvent('FOLLOW', { sellerId: sId });
+      toggleFollowSeller(sId);
+    });
+    document.querySelectorAll('[data-open-seller]').forEach(b=>b.onclick=(e)=>{
+      e.stopPropagation();
+      const sId=b.dataset.openSeller;
+      if(window.recordFeedEvent) window.recordFeedEvent('STORE_OPEN', { sellerId: sId });
+      openStore(sId);
+    });
     setupReelPlayback(targetPostId);
   };
 
@@ -11592,14 +12522,25 @@ init();
       return;
     }
     const r=doc(db,'posts',id),s=await getDoc(r);if(!snapshotExists(s))return;const p=s.data();
-    if(action==='like'){const active=currentUser&&(p.likes||[]).includes(currentUser.uid);await updateDoc(r,{likes:active?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});if(!active)await notifyPostOwner(id,'like');}
-    if(action==='save'){const active=currentUser&&(p.saves||[]).includes(currentUser.uid);await updateDoc(r,{saves:active?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});if(!active)await notifyPostOwner(id,'save');}
+    if(action==='like'){
+      const active=currentUser&&(p.likes||[]).includes(currentUser.uid);
+      await updateDoc(r,{likes:active?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});
+      if(!active)await notifyPostOwner(id,'like');
+      if(window.recordFeedEvent) window.recordFeedEvent(active ? 'UNLIKE' : 'LIKE', { postId: id, sellerId: p.sellerId }, p);
+    }
+    if(action==='save'){
+      const active=currentUser&&(p.saves||[]).includes(currentUser.uid);
+      await updateDoc(r,{saves:active?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});
+      if(!active)await notifyPostOwner(id,'save');
+      if(window.recordFeedEvent) window.recordFeedEvent(active ? 'UNSAVE' : 'SAVE', { postId: id, sellerId: p.sellerId }, p);
+    }
     if(action==='repost'){
       const active=currentUser&&(p.reposts||[]).includes(currentUser.uid);
       await updateDoc(r,{reposts:active?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});
       if(!active){
         await notifyPostOwner(id,'repost');
         toast('Video reposted! Your followers can now discover this video.','success');
+        if(window.recordFeedEvent) window.recordFeedEvent('SHARE', { postId: id, sellerId: p.sellerId }, p);
       }else{
         toast('Repost removed','info');
       }
@@ -11614,7 +12555,17 @@ init();
     if(action==='comment'){openCommentPanel(id,p);return}
     if(action==='sound'){await saveSoundForUser(id,p);return}
     if(action==='options'){openPostSettingsModal(id,p);return}
-    if(action==='share'){const url=location.href.split('#')[0]+'#post='+id;if(navigator.share){try{await navigator.share({title:'SellerFlow post',text:p.text||'Check this SellerFlow post',url});await notifyPostOwner(id,'share')}catch{}}else{await navigator.clipboard?.writeText(url);await notifyPostOwner(id,'share');toast('Post link copied','success')}}
+    if(action==='share'){
+      if(window.recordFeedEvent) window.recordFeedEvent('SHARE', { postId: id, sellerId: p.sellerId }, p);
+      const url=location.href.split('#')[0]+'#post='+id;
+      if(navigator.share){
+        try{await navigator.share({title:'SellerFlow post',text:p.text||'Check this SellerFlow post',url});await notifyPostOwner(id,'share')}catch{}
+      }else{
+        await navigator.clipboard?.writeText(url);
+        await notifyPostOwner(id,'share');
+        toast('Post link copied','success');
+      }
+    }
     if(action==='like'||action==='save'){
       const wrap=document.querySelector(`[data-reel-id="${id}"]`);
       const btn=wrap?.querySelector(`[data-post-action="${action}"]`);
@@ -11702,9 +12653,10 @@ init();
         <div class="text-3xl mb-2">🛡️</div>
         <div class="font-bold text-sm text-white">Community post</div>
         <p class="text-xs muted mt-1">Only the original creator (@${esc(sellerProfile(p.sellerId).username||'seller')}) can edit or delete this post.</p>
-        <div class="flex gap-2 mt-4 justify-center">
-          <button type="button" id="sharePostFromOptions" class="px-4 py-2 bg-[#222] hover:bg-[#333] rounded-xl text-xs font-bold text-white border border-[#444]">Share link</button>
-          <button type="button" id="savePostFromOptions" class="px-4 py-2 bg-gold text-black rounded-xl text-xs font-bold">Save post</button>
+        <div class="flex flex-wrap gap-2 mt-4 justify-center">
+          <button type="button" id="notInterestedFromOptions" class="px-3.5 py-2 bg-[#222] hover:bg-[#2e2e2e] rounded-xl text-xs font-bold text-zinc-300 border border-[#444] flex items-center gap-1.5"><span>👎</span> Not interested</button>
+          <button type="button" id="sharePostFromOptions" class="px-3.5 py-2 bg-[#222] hover:bg-[#333] rounded-xl text-xs font-bold text-white border border-[#444]">Share link</button>
+          <button type="button" id="savePostFromOptions" class="px-3.5 py-2 bg-gold text-black rounded-xl text-xs font-bold">Save post</button>
         </div>
       </div>
       `}
@@ -11966,6 +12918,7 @@ init();
             await notifyPostOwner(id,'comment',text);
           }
           list.push(newEntry);
+          if(window.recordFeedEvent) window.recordFeedEvent('COMMENT', { postId: id, sellerId: p.sellerId }, p);
           await updateDoc(doc(db,'posts',id),{comments:list});
           p.comments=list;
           replyingTo=null;
@@ -14506,6 +15459,8 @@ init();
   window._sfVideoCoverCache = window._sfVideoCoverCache || {};
   window.__sfExtractVideoFrame = function(imgEl, videoUrl, postId){
     if(!imgEl) return;
+    videoUrl = videoUrl || imgEl.dataset?.videoUrl;
+    postId = postId || imgEl.dataset?.postId;
     if(postId && window._sfVideoCoverCache[postId]){
       imgEl.src = window._sfVideoCoverCache[postId];
       imgEl.onerror = null;
@@ -14731,7 +15686,7 @@ init();
             if(isVid){
               typeBadge=`<span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[10px] font-bold text-white border border-white/10 flex items-center gap-1 shadow-sm">▶ Video</span>`;
               if(x.thumbnailUrl){
-                mediaPreview=`<img src="${esc(getOptimizedVideoPoster(x.thumbnailUrl))}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="" onerror="window.__sfExtractVideoFrame(this, '${esc(x.mediaUrl||'')}', '${x.id}')">`;
+                mediaPreview=`<img src="${esc(getOptimizedVideoPoster(x.thumbnailUrl))}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="" data-video-url="${esc(x.mediaUrl||'')}" data-post-id="${esc(x.id||'')}" onerror="window.__sfExtractVideoFrame(this)">`;
               } else if(x.mediaUrl){
                 mediaPreview=`<video src="${esc(x.mediaUrl)}#t=0.5" preload="metadata" muted playsinline loop autoplay class="w-full h-full object-cover pointer-events-none" data-media-path="${esc(x.mediaPath||'')}" onerror="window.__sfMediaFallback(this)"></video>`;
               } else {
@@ -16217,7 +17172,7 @@ init();
           <div class="flex items-start justify-between gap-3">
             <div class="flex items-center gap-2.5 min-w-0">
               ${s.logoUrl ? `
-                <img src="${esc(s.logoUrl)}" class="w-11 h-11 rounded-xl object-cover border border-[#333] shrink-0" alt="Logo" onerror="this.onerror=null;this.outerHTML='${esc(avatar(p, 'w-11 h-11 rounded-xl object-cover border border-[#333] shrink-0'))}';">
+                <img src="${esc(s.logoUrl)}" class="w-11 h-11 rounded-xl object-cover border border-[#333] shrink-0" alt="Logo" data-initial="${esc((storeName||'S')[0].toUpperCase())}" data-avatar-cls="w-11 h-11 rounded-xl object-cover border border-[#333] shrink-0" onerror="window.__sfAvatarFallback(this)">
               ` : avatar(p, 'w-11 h-11 rounded-xl object-cover border border-[#333] shrink-0')}
               <div class="min-w-0">
                 <div class="font-bold text-sm text-white truncate flex items-center gap-1.5">
@@ -17104,6 +18059,28 @@ init();
               <b class="text-emerald-400">${storeData.ghanaTermsAccepted ? '✓ Accepted & Verified' : 'Pending'}</b>
             </div>
           </div>
+
+          <!-- Ghana Card Front & Back Document Photos -->
+          <div class="pt-2 border-t border-amber-900/30 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-amber-200">Ghana Card Document Photos:</span>
+              <span class="text-[10px] text-zinc-400">Click photo to zoom</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="p-2 rounded-xl bg-black/40 border border-[#333] space-y-1 text-center">
+                <span class="text-[10px] text-zinc-400 font-semibold block">Front Picture</span>
+                <div id="adminCardFrontBox" class="w-full h-24 rounded-lg bg-[#111] overflow-hidden flex items-center justify-center border border-[#222]">
+                  <span class="text-[10px] text-zinc-500">Loading…</span>
+                </div>
+              </div>
+              <div class="p-2 rounded-xl bg-black/40 border border-[#333] space-y-1 text-center">
+                <span class="text-[10px] text-zinc-400 font-semibold block">Back Picture</span>
+                <div id="adminCardBackBox" class="w-full h-24 rounded-lg bg-[#111] overflow-hidden flex items-center justify-center border border-[#222]">
+                  <span class="text-[10px] text-zinc-500">Loading…</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Business & Contact Info -->
@@ -17144,6 +18121,32 @@ init();
         </div>
       </div>
     `);
+
+    const frontPath = storeData.ghanaCardFrontPath || p?.ghanaCardFrontPath || storeData.ghanaCardFrontUrl || '';
+    const backPath = storeData.ghanaCardBackPath || p?.ghanaCardBackPath || storeData.ghanaCardBackUrl || '';
+
+    const renderCardDoc = (boxId, path, title) => {
+      const box = $(boxId);
+      if(!box) return;
+      if(!path) {
+        box.innerHTML = `<span class="text-[10px] text-zinc-500">Not provided</span>`;
+        return;
+      }
+      if(typeof loadGhanaCardDocumentPreview === 'function'){
+        loadGhanaCardDocumentPreview(path).then(u => {
+          const currentBox = $(boxId);
+          if(!currentBox) return;
+          if(u){
+            currentBox.innerHTML = `<img src="${esc(u)}" data-view-image="${esc(u)}" class="w-full h-full object-cover cursor-pointer hover:opacity-85 transition" alt="${title}">`;
+          } else {
+            currentBox.innerHTML = `<span class="text-[10px] text-zinc-500">Could not load</span>`;
+          }
+        });
+      }
+    };
+
+    renderCardDoc('adminCardFrontBox', frontPath, 'Ghana Card Front');
+    renderCardDoc('adminCardBackBox', backPath, 'Ghana Card Back');
   }
   window.openAdminStoreIdentityModal = openAdminStoreIdentityModal;
 
@@ -18360,7 +19363,6 @@ STATUS: ${f.status || 'Active Investigation'}
       <div class="flex items-center justify-between gap-3 mb-4">
         <div class="flex items-center gap-2">
           <button id="newChatBtn" class="bg-gold text-black px-4 py-2 rounded-xl text-xs font-bold hover:brightness-110 active:scale-95 transition flex items-center gap-1.5 shadow-sm shadow-amber-500/10">＋ New Chat</button>
-          <button id="refreshChats" class="border border-[#383844] hover:border-gold/60 text-zinc-300 hover:text-white px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#16161d] transition">Refresh</button>
         </div>
         <div class="text-xs text-zinc-400 font-medium hidden sm:block">
           <span class="text-gold font-bold">${people.length}</span> active ${people.length === 1 ? 'chat' : 'chats'}
@@ -18450,7 +19452,6 @@ STATUS: ${f.status || 'Active Investigation'}
       b.onclick = () => openConversation(b.dataset.chatId, b.dataset.chatUser, sellerProfile(b.dataset.chatUser));
     });
 
-    if($('refreshChats')) $('refreshChats').onclick = () => navigate('chats');
     if($('newChatBtn')) $('newChatBtn').onclick = openNewChat;
     const firstChat = $('startFirstChatBtn');
     if(firstChat) firstChat.onclick = openNewChat;
@@ -18903,155 +19904,15 @@ STATUS: ${f.status || 'Active Investigation'}
   window.startSellerFlowChat=startChat;
   document.addEventListener('click',e=>{const m=e.target.closest('[data-message-user]');if(m)startChat(m.dataset.messageUser)});
 
-  /* Pull-To-Refresh App Controller */
-  async function refreshApp(){
-    try {
-      if(typeof refreshProfile === 'function' && currentUser){
-        try { await refreshProfile(); } catch(_){}
-      }
-      if(currentPage === 'admin' && typeof renderAdmin === 'function'){
-        await renderAdmin();
-      } else if(currentPage === 'chats' && typeof renderChats === 'function'){
-        await renderChats();
-      } else if(currentPage === 'analysis' && typeof renderAnalysis === 'function'){
-        await renderAnalysis();
-      } else if(typeof renderPage === 'function'){
-        await renderPage();
-      }
-    } catch(err) {
-      console.warn('App refresh notice:', err);
-    }
-  }
-  window.refreshApp = refreshApp;
-
-  function initPullToRefresh() {
-    const indicator = document.getElementById('pullRefreshIndicator');
-    if(!indicator) return;
-    const icon = indicator.querySelector('.pull-refresh-icon');
-    const text = indicator.querySelector('.pull-refresh-text');
-
-    let startY = 0;
-    let currentY = 0;
-    let isPulling = false;
-    let isRefreshing = false;
-    const threshold = 68;
-    const maxPull = 110;
-
-    function getScrollTop() {
-      if (currentPage === 'feed') {
-        const rf = document.querySelector('.reel-feed');
-        if (rf) return rf.scrollTop;
-      }
-      const appScroll = document.getElementById('appMainScroll');
-      if (appScroll && appScroll.scrollTop > 0) return appScroll.scrollTop;
-      return window.pageYOffset || document.documentElement.scrollTop || 0;
-    }
-
-    async function performRefresh() {
-      if (isRefreshing) return;
-      isRefreshing = true;
-      indicator.classList.add('visible');
-      indicator.style.transform = 'translateX(-50%) translateY(16px)';
-      if (icon) {
-        icon.classList.add('spinning');
-        icon.textContent = '↻';
-      }
-      if (text) text.textContent = 'Refreshing SellerFlow…';
-
-      try {
-        await refreshApp();
-        if (text) text.textContent = 'Refreshed ✓';
-        if (icon) icon.classList.remove('spinning');
-        toast('SellerFlow refreshed', 'info', 2200);
-      } catch(err) {
-        if (text) text.textContent = 'Refresh failed';
-      } finally {
-        setTimeout(() => {
-          indicator.style.transform = '';
-          indicator.classList.remove('visible');
-          if (icon) {
-            icon.classList.remove('spinning');
-            icon.textContent = '↻';
-            icon.style.transform = '';
-          }
-          if (text) text.textContent = 'Pull to refresh';
-          isRefreshing = false;
-        }, 450);
-      }
-    }
-
-    window.triggerPullRefresh = performRefresh;
-
-    document.addEventListener('touchstart', (e) => {
-      if (isRefreshing) return;
-      if (getScrollTop() <= 2) {
-        startY = e.touches[0].clientY;
-        currentY = startY;
-        isPulling = true;
-      } else {
-        isPulling = false;
-      }
-    }, { passive: true });
-
-    document.addEventListener('touchmove', (e) => {
-      if (!isPulling || isRefreshing) return;
-      currentY = e.touches[0].clientY;
-      const diff = currentY - startY;
-
-      if (diff > 0 && getScrollTop() <= 2) {
-        const pull = Math.min(diff * 0.45, maxPull);
-        const translateY = -70 + pull;
-        indicator.classList.add('visible');
-        indicator.style.transform = `translateX(-50%) translateY(${translateY}px)`;
-        const rotation = Math.min((pull / threshold) * 180, 180);
-        if (icon) icon.style.transform = `rotate(${rotation}deg)`;
-
-        if (pull >= threshold) {
-          if (text) text.textContent = 'Release to refresh';
-          if (icon) icon.style.color = '#34d399';
-        } else {
-          if (text) text.textContent = 'Pull to refresh';
-          if (icon) icon.style.color = '#f5b942';
-        }
-      } else {
-        indicator.style.transform = '';
-        indicator.classList.remove('visible');
-      }
-    }, { passive: true });
-
-    const endTouch = () => {
-      if (!isPulling || isRefreshing) return;
-      isPulling = false;
-      const diff = currentY - startY;
-      const pull = Math.min(diff * 0.45, maxPull);
-
-      if (pull >= threshold && getScrollTop() <= 2) {
-        performRefresh();
-      } else {
-        indicator.style.transform = '';
-        indicator.classList.remove('visible');
-        if (icon) {
-          icon.style.transform = '';
-          icon.style.color = '#f5b942';
-        }
-        if (text) text.textContent = 'Pull to refresh';
-      }
-    };
-
-    document.addEventListener('touchend', endTouch, { passive: true });
-    document.addEventListener('touchcancel', endTouch, { passive: true });
-  }
-
-  initPullToRefresh();
+  /* Pull-To-Refresh App Controller - Removed */
+  window.refreshApp = async function(){};
+  window.triggerPullRefresh = function(){};
 
   window.addEventListener('offline', () => {
     toast('You are currently offline. Changes will sync when reconnected.', 'warning', 4500);
   });
   window.addEventListener('online', () => {
     toast('Back online. Reconnected to SellerFlow.', 'success', 3000);
-    if (typeof refreshApp === 'function') {
-      refreshApp().catch(() => {});
-    }
   });
 
   if (typeof initServiceWorker === 'function') {

@@ -8,7 +8,7 @@
     "start": "node server.js",
     "lint": "node -e \"console.log('Lint passed')\"",
     "postinstall": "node scripts/patch-capacitor.js",
-    "test": "node tests/moderation-security.test.js && node tests/ghana-card-verification.test.js"
+    "test": "node tests/moderation-security.test.js && node tests/ghana-card-verification.test.js && node tests/recommendation-engine.test.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",

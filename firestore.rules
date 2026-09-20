@@ -352,5 +352,20 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    // 15. Personalized For You Discovery & User Feed Profiles
+    // - Users can read and write only their own interest profile
+    match /userFeedProfiles/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // 16. Feed Engagement Events (Batched & Debounced Telemetry)
+    // - Authenticated users can create telemetry events for their own actions
+    // - Read restricted to user themselves and administrators
+    match /feedEvents/{eventId} {
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
+    }
   }
 }
