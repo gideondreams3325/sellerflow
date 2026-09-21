@@ -131,7 +131,10 @@ service cloud.firestore {
           !('violationRule' in request.resource.data) &&
           !('violationReason' in request.resource.data) &&
           !('moderatedAt' in request.resource.data) &&
-          !('hiddenAt' in request.resource.data)
+          !('hiddenAt' in request.resource.data) &&
+          !('copyrightDetected' in request.resource.data) &&
+          !('audioMutedByCopyright' in request.resource.data) &&
+          !('copyrightMatch' in request.resource.data)
         )
       );
       allow update: if isSignedIn() && (
@@ -154,7 +157,10 @@ service cloud.firestore {
           request.resource.data.get('violationRule', '') == resource.data.get('violationRule', '') &&
           request.resource.data.get('violationReason', '') == resource.data.get('violationReason', '') &&
           request.resource.data.get('moderatedAt', null) == resource.data.get('moderatedAt', null) &&
-          request.resource.data.get('hiddenAt', null) == resource.data.get('hiddenAt', null)
+          request.resource.data.get('hiddenAt', null) == resource.data.get('hiddenAt', null) &&
+          request.resource.data.get('copyrightDetected', false) == resource.data.get('copyrightDetected', false) &&
+          request.resource.data.get('audioMutedByCopyright', false) == resource.data.get('audioMutedByCopyright', false) &&
+          request.resource.data.get('copyrightMatch', null) == resource.data.get('copyrightMatch', null)
         ) ||
         // Community interaction: other users can ONLY modify social interaction counters/arrays
         (
@@ -167,6 +173,15 @@ service cloud.firestore {
       allow delete: if isSignedIn() && (
         resource.data.sellerId == request.auth.uid || isAdmin()
       );
+    }
+
+    // Copyright disputes
+    match /copyrightDisputes/{disputeId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
     }
 
     // 4. Marketplace Products & Catalog

@@ -1,4 +1,5 @@
 import express from 'express';
+import compression from 'compression';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
@@ -10,6 +11,7 @@ import { getMessaging } from 'firebase-admin/messaging';
 import { GoogleGenAI } from '@google/genai';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import nodemailer from 'nodemailer';
+import { detectAudioVideoCopyright, matchStaticCopyrightCatalog } from './copyright-detector.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,14 +19,26 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 3000;
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(compression({
+  threshold: 1024,
+  level: 6,
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) return false;
+    return compression.filter(req, res);
+  }
+}));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   try { fs.mkdirSync(uploadsDir, { recursive: true }); } catch (_) {}
 }
-app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', express.static(uploadsDir, {
+  maxAge: '7d',
+  etag: true,
+  lastModified: true
+}));
 
 /* Initialize Trusted Firebase Admin SDK */
 let adminApp;
@@ -194,6 +208,66 @@ function getGeminiClient() {
     });
   }
   return aiClient;
+}
+
+/**
+ * Resilient Gemini API invocation:
+ * - Exponential backoff retry for transient 503 (high demand) and 429 (rate limits)
+ * - Automatic fallback model succession (gemini-3.8-flash -> gemini-flash-latest -> gemini-3.1-flash-lite)
+ * - Sanitized non-disruptive handling without emitting raw 503 JSON to error logs
+ */
+async function callGeminiWithResilience({
+  prompt,
+  primaryModel = 'gemini-3.8-flash',
+  fallbackModels = ['gemini-flash-latest', 'gemini-3.1-flash-lite'],
+  config = { responseMimeType: 'application/json', temperature: 0.1 },
+  maxRetriesPerModel = 2
+}) {
+  const ai = getGeminiClient();
+  if (!ai) return null;
+
+  const modelsToTry = [primaryModel, ...fallbackModels];
+
+  for (const model of modelsToTry) {
+    for (let attempt = 0; attempt <= maxRetriesPerModel; attempt++) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: prompt,
+          config
+        });
+
+        if (response && response.text) {
+          return {
+            text: response.text,
+            modelUsed: model
+          };
+        }
+      } catch (err) {
+        const errMsg = err?.message || String(err);
+        const isUnavailableOrThrottled =
+          errMsg.includes('503') ||
+          errMsg.includes('UNAVAILABLE') ||
+          errMsg.includes('high demand') ||
+          errMsg.includes('429') ||
+          errMsg.includes('RESOURCE_EXHAUSTED') ||
+          errMsg.includes('FetchError') ||
+          errMsg.includes('fetch failed') ||
+          errMsg.includes('ECONNRESET');
+
+        if (isUnavailableOrThrottled && attempt < maxRetriesPerModel) {
+          const delayMs = Math.pow(2, attempt) * 600 + Math.random() * 200;
+          await new Promise(r => setTimeout(r, delayMs));
+          continue;
+        }
+
+        // On high demand or exhausted attempts for this model, try next fallback model
+        break;
+      }
+    }
+  }
+
+  return null;
 }
 
 /* Ghana Card Statutory Utilities */
@@ -441,30 +515,33 @@ Note:
 - If suspicious/ambiguous claims (high-yield investment, unverified medicinal cure, questionable weapons/blades): verdict MUST be "REVIEW".
 - If benign commerce, regular everyday products, standard videos: verdict MUST be "SAFE".`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
+    const result = await callGeminiWithResilience({
+      prompt,
+      primaryModel: 'gemini-3.8-flash',
+      fallbackModels: ['gemini-flash-latest', 'gemini-3.1-flash-lite'],
       config: {
         responseMimeType: 'application/json',
         temperature: 0.1
       }
     });
 
-    const parsed = JSON.parse(response.text.trim());
-    const verdict = parsed.verdict || (parsed.isViolation ? 'VIOLATION' : 'SAFE');
+    if (result && result.text) {
+      const parsed = JSON.parse(result.text.trim());
+      const verdict = parsed.verdict || (parsed.isViolation ? 'VIOLATION' : 'SAFE');
 
-    return {
-      verdict: verdict,
-      detectedRule: parsed.detectedRule || (verdict === 'VIOLATION' ? 'GHANA_SAFETY_POLICY' : (staticCheck.detectedRule || null)),
-      reason: parsed.reason || (verdict === 'VIOLATION' ? 'Flagged for content violation by Gemini 3.8 Flash' : staticCheck.reason),
-      confidence: parsed.confidence || (verdict === 'VIOLATION' ? 0.96 : 0.95),
-      moderatedBy: 'gemini-3.8-flash',
-      timestamp: new Date().toISOString()
-    };
+      return {
+        verdict: verdict,
+        detectedRule: parsed.detectedRule || (verdict === 'VIOLATION' ? 'GHANA_SAFETY_POLICY' : (staticCheck.detectedRule || null)),
+        reason: parsed.reason || (verdict === 'VIOLATION' ? 'Flagged for content violation by Gemini AI safety review' : staticCheck.reason),
+        confidence: parsed.confidence || (verdict === 'VIOLATION' ? 0.96 : 0.95),
+        moderatedBy: result.modelUsed || 'gemini-3.8-flash',
+        timestamp: new Date().toISOString()
+      };
+    }
   } catch (geminiErr) {
-    console.warn('Gemini 3.8 Flash content moderation note:', geminiErr.message);
-    return staticCheck;
+    // Non-fatal parse issue; gracefully fall back to statutory safety rules
   }
+  return staticCheck;
 }
 
 /**
@@ -495,7 +572,7 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
     }
 
     const callerUid = decodedToken.uid;
-    const { postId, text, fileName, mediaUrl, mediaType, sellerId } = req.body || {};
+    const { postId, text, fileName, mediaUrl, mediaType, sellerId, soundName, soundArtist, soundOriginName, title } = req.body || {};
 
     if (!postId) {
       return res.status(400).json({
@@ -516,6 +593,24 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
     const evalResult = await inspectContentWithGemini38Flash({ text, fileName, mediaUrl, mediaType, type: 'post' });
     const verdict = evalResult.verdict; // 'SAFE', 'REVIEW', or 'VIOLATION'
 
+    // 2b. Global Automated Audio & Video Copyright Detection (TikTok & Facebook Content ID model)
+    let copyrightResult = { copyrightDetected: false, audioMutedByCopyright: false, policy: 'none' };
+    try {
+      copyrightResult = await detectAudioVideoCopyright(
+        { text, title, fileName, mediaUrl, mediaType, soundName, soundArtist, soundOriginName },
+        async (prompt) => {
+          return await callGeminiWithResilience({
+            prompt,
+            primaryModel: 'gemini-3.8-flash',
+            fallbackModels: ['gemini-flash-latest'],
+            config: { responseMimeType: 'application/json', temperature: 0.1 }
+          });
+        }
+      );
+    } catch (cErr) {
+      console.warn('Copyright detection note:', cErr.message);
+    }
+
     // 3. Authoritative Firestore updates via Firebase Admin SDK
     try {
       const postRef = adminDb.collection('posts').doc(postId);
@@ -534,9 +629,41 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
             success: true,
             verdict: 'VIOLATION',
             alreadyProcessed: true,
-            reason: postData.violationReason || 'Content previously flagged as violation'
+            reason: postData.violationReason || 'Content previously flagged as violation',
+            copyrightResult
           });
         }
+      }
+
+      // If copyright is detected, record copyright restriction and notify creator
+      if (copyrightResult.copyrightDetected) {
+        await postRef.set({
+          copyrightDetected: true,
+          audioMutedByCopyright: true,
+          copyrightMatch: {
+            matched: true,
+            type: copyrightResult.type || 'audio',
+            trackTitle: copyrightResult.trackTitle || 'Commercial Recording',
+            artist: copyrightResult.artist || 'Unknown Artist',
+            claimant: copyrightResult.claimant || 'Rights Holder / Record Label',
+            confidence: copyrightResult.confidence || 0.95,
+            policy: 'mute_audio',
+            reason: copyrightResult.reason || 'Audio muted due to copyright detection',
+            detectedAt: FieldValue.serverTimestamp()
+          }
+        }, { merge: true });
+
+        await adminDb.collection('notifications').doc(`copyright_${postId}`).set({
+          recipientId: callerUid,
+          userId: callerUid,
+          senderName: 'SellerFlow Copyright Protection',
+          title: '🔇 Video audio muted due to copyright detection',
+          message: `Your video audio was automatically muted because it contains copyrighted content: "${copyrightResult.trackTitle}" by ${copyrightResult.artist} (Claimed by ${copyrightResult.claimant}). Your video remains live on For You with muted audio, in accordance with global copyright standards (like TikTok and Facebook).`,
+          type: 'copyright_mute',
+          postId: postId,
+          read: false,
+          createdAt: FieldValue.serverTimestamp()
+        }, { merge: true });
       }
 
       if (verdict === 'VIOLATION') {
@@ -618,13 +745,18 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
 
       } else {
         // SAFE: Server alone transitions post to published
-        await postRef.set({
+        const safePayload = {
           status: 'published',
           reviewStatus: 'safe',
           safeContent: true,
           moderatedAt: FieldValue.serverTimestamp(),
           moderatedBy: 'gemini-3.8-flash'
-        }, { merge: true });
+        };
+        if (copyrightResult.copyrightDetected) {
+          safePayload.copyrightDetected = true;
+          safePayload.audioMutedByCopyright = true;
+        }
+        await postRef.set(safePayload, { merge: true });
       }
     } catch (dbErr) {
       console.warn('Firestore Admin SDK write notice:', dbErr.message);
@@ -640,7 +772,8 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
     return res.json({
       success: true,
       verdict,
-      evalResult
+      evalResult,
+      copyrightResult
     });
 
   } catch (err) {
@@ -652,6 +785,141 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
       error: err.message,
       reason: 'Server fault. Post remains securely hidden and under review.'
     });
+  }
+});
+
+/**
+ * Real-Time Global Audio & Video Automatic Copyright Detection Endpoint
+ * Scans content for copyrighted music, master sound recordings, or broadcast video.
+ * Automatically sets audioMutedByCopyright: true if a copyright match is detected.
+ */
+app.post('/api/copyright/detect', async (req, res) => {
+  try {
+    const { postId, text, title, fileName, mediaUrl, mediaType, soundName, soundArtist, soundOriginName } = req.body || {};
+
+    let probeText = text || '';
+    let probeFileName = fileName || '';
+    let probeMediaUrl = mediaUrl || '';
+    let probeMediaType = mediaType || '';
+    let probeSoundName = soundName || '';
+    let probeSoundArtist = soundArtist || '';
+    let probeSoundOrigin = soundOriginName || '';
+
+    if (postId) {
+      try {
+        const postSnap = await adminDb.collection('posts').doc(postId).get();
+        if (postSnap.exists) {
+          const p = postSnap.data() || {};
+          if (!probeText) probeText = p.text || '';
+          if (!probeMediaUrl) probeMediaUrl = p.mediaUrl || '';
+          if (!probeMediaType) probeMediaType = p.mediaType || '';
+          if (!probeSoundName) probeSoundName = p.soundName || '';
+          if (!probeSoundOrigin) probeSoundOrigin = p.soundOriginName || '';
+
+          if (p.copyrightDetected && p.audioMutedByCopyright) {
+            return res.json({
+              success: true,
+              copyrightDetected: true,
+              audioMutedByCopyright: true,
+              copyrightMatch: p.copyrightMatch || {
+                matched: true,
+                policy: 'mute_audio',
+                reason: 'Audio muted due to copyright detection'
+              }
+            });
+          }
+        }
+      } catch (_) {}
+    }
+
+    const copyrightResult = await detectAudioVideoCopyright(
+      {
+        text: probeText,
+        title,
+        fileName: probeFileName,
+        mediaUrl: probeMediaUrl,
+        mediaType: probeMediaType,
+        soundName: probeSoundName,
+        soundArtist: probeSoundArtist,
+        soundOriginName: probeSoundOrigin
+      },
+      async (prompt) => {
+        return await callGeminiWithResilience({
+          prompt,
+          primaryModel: 'gemini-3.8-flash',
+          fallbackModels: ['gemini-flash-latest'],
+          config: { responseMimeType: 'application/json', temperature: 0.1 }
+        });
+      }
+    );
+
+    if (postId && copyrightResult.copyrightDetected) {
+      try {
+        await adminDb.collection('posts').doc(postId).set({
+          copyrightDetected: true,
+          audioMutedByCopyright: true,
+          copyrightMatch: {
+            matched: true,
+            type: copyrightResult.type || 'audio',
+            trackTitle: copyrightResult.trackTitle || 'Commercial Recording',
+            artist: copyrightResult.artist || 'Unknown Artist',
+            claimant: copyrightResult.claimant || 'Rights Holder / Record Label',
+            confidence: copyrightResult.confidence || 0.95,
+            policy: 'mute_audio',
+            reason: copyrightResult.reason || 'Audio muted due to copyright detection',
+            detectedAt: FieldValue.serverTimestamp()
+          }
+        }, { merge: true });
+      } catch (dbErr) {
+        console.warn('Notice updating post copyright status:', dbErr.message);
+      }
+    }
+
+    return res.json({
+      success: true,
+      copyrightDetected: copyrightResult.copyrightDetected,
+      audioMutedByCopyright: copyrightResult.audioMutedByCopyright,
+      copyrightMatch: copyrightResult
+    });
+  } catch (err) {
+    console.error('Copyright detection endpoint error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * Copyright Dispute Submission Endpoint
+ * Allows creators to submit a counter-notice or license proof for muted audio.
+ */
+app.post('/api/copyright/dispute', async (req, res) => {
+  try {
+    const { postId, claimant, trackTitle, reason, licenseProof, contactEmail, creatorName } = req.body || {};
+    if (!postId) {
+      return res.status(400).json({ success: false, error: 'Missing postId' });
+    }
+
+    const disputeId = 'disp_' + crypto.randomBytes(8).toString('hex');
+    await adminDb.collection('copyrightDisputes').doc(disputeId).set({
+      disputeId,
+      postId,
+      claimant: claimant || '',
+      trackTitle: trackTitle || '',
+      reason: reason || 'Creator submitted copyright counter-notice.',
+      licenseProof: licenseProof || '',
+      contactEmail: contactEmail || '',
+      creatorName: creatorName || '',
+      status: 'submitted',
+      createdAt: FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    return res.json({
+      success: true,
+      disputeId,
+      message: 'Your copyright dispute has been submitted for administrator review.'
+    });
+  } catch (err) {
+    console.error('Copyright dispute error:', err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -903,23 +1171,26 @@ Respond strictly in JSON format:
   "correctionInstructions": string
 }`;
 
-        const geminiRes = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents: prompt,
+        const result = await callGeminiWithResilience({
+          prompt,
+          primaryModel: 'gemini-3.8-flash',
+          fallbackModels: ['gemini-flash-latest', 'gemini-3.1-flash-lite'],
           config: {
             responseMimeType: 'application/json',
             temperature: 0.1
           }
         });
 
-        const parsed = JSON.parse(geminiRes.text.trim());
-        geminiVerdict = parsed.verdict || (parsed.valid ? 'VERIFIED' : 'CORRECTION_REQUIRED');
-        geminiMessage = parsed.userMessage || 'Ghana Card verification evaluated.';
-        geminiCorrectionInstructions = parsed.correctionInstructions || '';
-        isAuthentic = parsed.isAuthentic !== false;
-        confidence = parsed.confidence || 0.92;
+        if (result && result.text) {
+          const parsed = JSON.parse(result.text.trim());
+          geminiVerdict = parsed.verdict || (parsed.valid ? 'VERIFIED' : 'CORRECTION_REQUIRED');
+          geminiMessage = parsed.userMessage || 'Ghana Card verification evaluated.';
+          geminiCorrectionInstructions = parsed.correctionInstructions || '';
+          isAuthentic = parsed.isAuthentic !== false;
+          confidence = parsed.confidence || 0.92;
+        }
       } catch (geminiErr) {
-        console.warn('Gemini 3.8 Flash verification analysis notice:', geminiErr.message);
+        // Non-fatal parse issue; gracefully fall back to statutory verification rules
       }
     }
 
@@ -2003,15 +2274,64 @@ app.get('/sw.js', (req, res) => {
   res.sendFile(swPath);
 });
 
+const staticAssetOptions = {
+  maxAge: '1d',
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    } else if (/\.(js|css|svg|png|jpg|jpeg|webp|gif|woff2|woff|ttf|ico)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+    }
+  }
+};
+
 if (isProd && fs.existsSync(distPath)) {
-  app.use(express.static(distPath));
+  app.use(express.static(distPath, staticAssetOptions));
 }
-app.use(express.static(__dirname, { dotfiles: 'ignore', index: false }));
+app.use(express.static(__dirname, { dotfiles: 'ignore', index: false, ...staticAssetOptions }));
 if (!isProd && fs.existsSync(distPath)) {
-  app.use(express.static(distPath));
+  app.use(express.static(distPath, staticAssetOptions));
+}
+
+let cachedIndexBuffer = null;
+let cachedIndexEtag = null;
+let cachedIndexPath = null;
+let cachedIndexMtime = 0;
+
+function getCachedIndexHtml() {
+  const targetPath = isProd && fs.existsSync(path.join(distPath, 'index.html'))
+    ? path.join(distPath, 'index.html')
+    : (fs.existsSync(path.join(__dirname, 'index.html')) ? path.join(__dirname, 'index.html') : path.join(distPath, 'index.html'));
+
+  try {
+    const stat = fs.statSync(targetPath);
+    if (!cachedIndexBuffer || cachedIndexPath !== targetPath || cachedIndexMtime !== stat.mtimeMs) {
+      cachedIndexBuffer = fs.readFileSync(targetPath);
+      cachedIndexMtime = stat.mtimeMs;
+      cachedIndexPath = targetPath;
+      cachedIndexEtag = `"${crypto.createHash('md5').update(cachedIndexBuffer).digest('hex')}"`;
+    }
+    return { buffer: cachedIndexBuffer, etag: cachedIndexEtag };
+  } catch (_) {
+    return null;
+  }
 }
 
 app.get('*', (req, res) => {
+  const cached = getCachedIndexHtml();
+  if (cached) {
+    if (req.headers['if-none-match'] === cached.etag) {
+      res.status(304).end();
+      return;
+    }
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('ETag', cached.etag);
+    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    res.send(cached.buffer);
+    return;
+  }
   const indexPath = isProd && fs.existsSync(path.join(distPath, 'index.html'))
     ? path.join(distPath, 'index.html')
     : (fs.existsSync(path.join(__dirname, 'index.html')) ? path.join(__dirname, 'index.html') : path.join(distPath, 'index.html'));
