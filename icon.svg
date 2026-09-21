@@ -1,29 +1,33 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  
   <defs>
-    <linearGradient id="iconBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#080808"/>
-      <stop offset="100%" stop-color="#000000"/>
+    <!-- Background Gradient -->
+    <linearGradient id="fullBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#050505"/>
+      <stop offset="50%" stop-color="#000000"/>
+      <stop offset="100%" stop-color="#050505"/>
     </linearGradient>
 
     <!-- Top ribbon surface gradient -->
     <linearGradient id="sfGoldTop" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#FFF58A"/>
-      <stop offset="25%" stop-color="#FFD61E"/>
-      <stop offset="65%" stop-color="#F5A300"/>
+      <stop offset="0%" stop-color="#FFF994"/>
+      <stop offset="22%" stop-color="#FFDD1A"/>
+      <stop offset="60%" stop-color="#F5A300"/>
       <stop offset="100%" stop-color="#FFB800"/>
     </linearGradient>
 
     <!-- 3D Under-fold shadow inside ribbon -->
-    <linearGradient id="sfFoldShadow" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="sfFoldShadow" x1="10%" y1="0%" x2="90%" y2="100%">
       <stop offset="0%" stop-color="#D97706"/>
-      <stop offset="40%" stop-color="#9A3412"/>
-      <stop offset="80%" stop-color="#5B1902"/>
-      <stop offset="100%" stop-color="#350E00"/>
+      <stop offset="30%" stop-color="#B45309"/>
+      <stop offset="65%" stop-color="#782404"/>
+      <stop offset="90%" stop-color="#451202"/>
+      <stop offset="100%" stop-color="#240700"/>
     </linearGradient>
 
     <!-- Main sweeping S and Cart Body -->
     <linearGradient id="sfGoldBody" x1="15%" y1="10%" x2="85%" y2="100%">
-      <stop offset="0%" stop-color="#FFF58A"/>
+      <stop offset="0%" stop-color="#FFF994"/>
       <stop offset="20%" stop-color="#FFD000"/>
       <stop offset="60%" stop-color="#F59E0B"/>
       <stop offset="100%" stop-color="#D97706"/>
@@ -31,78 +35,109 @@
 
     <!-- Speed bars and internal slats -->
     <linearGradient id="sfGoldBar" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#FFF275"/>
-      <stop offset="45%" stop-color="#FFC000"/>
+      <stop offset="0%" stop-color="#FFF58A"/>
+      <stop offset="40%" stop-color="#FFC000"/>
       <stop offset="100%" stop-color="#F59E0B"/>
     </linearGradient>
 
     <!-- Two Wheels Gradient (Under the cart) -->
     <linearGradient id="sfGoldWheel" x1="25%" y1="15%" x2="75%" y2="85%">
-      <stop offset="0%" stop-color="#FFF58A"/>
+      <stop offset="0%" stop-color="#FFF994"/>
       <stop offset="40%" stop-color="#FFBD00"/>
       <stop offset="85%" stop-color="#D97706"/>
       <stop offset="100%" stop-color="#9A3412"/>
     </linearGradient>
 
-    <radialGradient id="iconAmbientGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.28"/>
-      <stop offset="60%" stop-color="#F59E0B" stop-opacity="0.06"/>
+    <!-- Wordmark & Bullet Accent "Flow" Gradient -->
+    <linearGradient id="sfGoldWordmark" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFF480"/>
+      <stop offset="40%" stop-color="#FFC300"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+
+    <!-- Radiant Golden Glow Behind Emblem -->
+    <radialGradient id="sfCenterGlow" cx="50%" cy="40%" r="48%">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.32"/>
+      <stop offset="45%" stop-color="#F59E0B" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="sfAmbientAura" cx="50%" cy="48%" r="48%">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.35"/>
+      <stop offset="50%" stop-color="#F59E0B" stop-opacity="0.09"/>
       <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
-  <rect width="512" height="512" rx="112" fill="url(#iconBg)"/>
-  <circle cx="256" cy="256" r="230" fill="url(#iconAmbientGlow)"/>
 
-  <!-- Centered Emblem -->
-  <g transform="translate(100, 75) scale(1.1)">
-    <!-- 3 Speed Lines on the Left -->
-    <rect x="25" y="152" width="56" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
-    <rect x="25" y="177" width="40" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
-    <rect x="40" y="202" width="32" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
+  <rect width="512" height="512" rx="100" fill="url(#fullBg)"/>
+  <circle cx="256" cy="180" r="190" fill="url(#sfCenterGlow)"/>
 
-    <!-- Inside Cart Slats (Horizontal bars inside basket) -->
-    <rect x="110" y="177" width="64" height="13" rx="6.5" fill="url(#sfGoldBar)"/>
-    <rect x="118" y="202" width="50" height="13" rx="6.5" fill="url(#sfGoldBar)"/>
+  <!-- Emblem Scaled & Centered -->
+  <g transform="translate(116, 20) scale(0.96)">
+    
+  <!-- 3 Speed Lines on the Left -->
+  <rect x="20" y="152" width="62" height="14" rx="7" fill="url(#sfGoldBar)"/>
+  <rect x="20" y="179" width="45" height="14" rx="7" fill="url(#sfGoldBar)"/>
+  <rect x="36" y="206" width="36" height="14" rx="7" fill="url(#sfGoldBar)"/>
 
-    <!-- Top Ribbon Loop of the "S" -->
-    <path d="M 235 28 
-             L 262 28 
-             L 242 58 
-             C 242 58 142 56 122 58 
-             C 82 62 70 94 88 126 
-             L 122 142 
-             C 106 120 120 88 152 84 
-             C 178 80 216 80 235 80 
-             Z" 
-          fill="url(#sfGoldTop)"/>
+  <!-- Inside Cart Slats (Horizontal bars inside basket) -->
+  <rect x="110" y="179" width="68" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
+  <rect x="118" y="206" width="52" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
 
-    <!-- 3D Ribbon Under-fold Shadow -->
-    <path d="M 88 126 
-             C 98 144 122 160 156 164 
-             L 132 146 
-             L 88 126 
-             Z" 
-          fill="url(#sfFoldShadow)"/>
+  <!-- Top Ribbon Loop of the "S" -->
+  <path d="M 235 26 
+           L 266 26 
+           L 245 56 
+           C 245 56 140 54 118 56 
+           C 76 60 64 92 82 125 
+           L 118 142 
+           C 102 120 116 87 148 83 
+           C 174 79 216 79 235 79 
+           Z" 
+        fill="url(#sfGoldTop)"/>
 
-    <!-- Main S Body & Shopping Cart Chassis -->
-    <path d="M 122 142 
-             C 160 150 226 168 248 202 
-             C 268 238 256 265 220 275 
-             C 190 282 140 282 124 278 
-             C 114 274 108 264 104 250 
-             L 92 170 
-             C 92 160 99 152 109 152 
-             C 118 152 125 159 127 168 
-             L 135 245 
-             C 140 252 178 255 198 248 
-             C 216 240 224 218 212 196 
-             C 196 170 152 158 122 142 
-             Z" 
+  <!-- 3D Ribbon Under-fold Shadow -->
+  <path d="M 82 125 
+           C 92 144 118 162 154 166 
+           L 128 147 
+           L 82 125 
+           Z" 
+        fill="url(#sfFoldShadow)"/>
+
+  <!-- Main S Body & Shopping Cart Chassis -->
+  <path d="M 118 142 
+           C 158 150 226 168 250 204 
+           C 272 242 258 270 220 280 
+           C 188 288 138 288 122 284 
+           C 112 280 106 270 102 254 
+           L 90 170 
+           C 90 159 98 152 108 152 
+           C 117 152 124 159 126 168 
+           L 134 248 
+           C 139 256 178 260 200 252 
+           C 220 244 228 220 215 197 
+           C 198 170 152 158 118 142 
+           Z" 
         fill="url(#sfGoldBody)"/>
 
-    <!-- Two Round Wheels (Under the cart) -->
-    <circle cx="128" cy="308" r="14" fill="url(#sfGoldWheel)"/>
-    <circle cx="178" cy="308" r="14" fill="url(#sfGoldWheel)"/>
+  <!-- Two Round Wheels - Under the cart with clean vertical space -->
+  <circle cx="127" cy="316" r="14.5" fill="url(#sfGoldWheel)"/>
+  <circle cx="179" cy="316" r="14.5" fill="url(#sfGoldWheel)"/>
+
+  </g>
+
+  <!-- Wordmark: "SellerFlow" -->
+  <g transform="translate(256, 382)" text-anchor="middle" font-family="'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif">
+    <text y="0" font-size="56" font-weight="900" letter-spacing="-1.5">
+      <tspan fill="#FFFFFF">Seller</tspan><tspan fill="url(#sfGoldWordmark)">Flow</tspan>
+    </text>
+  </g>
+
+  <!-- Subtitle Tagline: "BUY  •  SELL  •  GROW" -->
+  <g transform="translate(256, 424)" text-anchor="middle" font-family="'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif">
+    <text y="0" font-size="14.5" font-weight="800" letter-spacing="5.5" fill="#FFFFFF">
+      BUY <tspan fill="url(#sfGoldWordmark)">•</tspan> SELL <tspan fill="url(#sfGoldWordmark)">•</tspan> GROW
+    </text>
   </g>
 </svg>

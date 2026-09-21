@@ -76,6 +76,13 @@ const adminDb = getFirestore(adminApp);
 
 const JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
 
+const ADMIN_EMAILS = ['gideondreams3325@gmail.com', 'gideonappiahfriempong@gmail.com'];
+function isUserAdminEmail(email) {
+  if (!email) return false;
+  const em = String(email).toLowerCase().trim();
+  return ADMIN_EMAILS.includes(em) || em.startsWith('gideonappiahfriempong@') || em.startsWith('gideondreams3325@');
+}
+
 async function verifyFirebaseToken(idToken) {
   if (!idToken) {
     throw new Error('No token provided');
@@ -86,7 +93,7 @@ async function verifyFirebaseToken(idToken) {
       audience: 'sellerflow-efaab'
     });
     const email = payload.email || '';
-    const isAdmin = email.toLowerCase() === 'gideondreams3325@gmail.com';
+    const isAdmin = isUserAdminEmail(email);
     return {
       ...payload,
       uid: payload.sub,
@@ -101,7 +108,7 @@ async function verifyFirebaseToken(idToken) {
     try {
       const { payload } = await jwtVerify(idToken, JWKS);
       const email = payload.email || '';
-      const isAdmin = email.toLowerCase() === 'gideondreams3325@gmail.com';
+      const isAdmin = isUserAdminEmail(email);
       return {
         ...payload,
         uid: payload.sub,
@@ -1619,7 +1626,6 @@ app.post('/api/auth/check-availability', async (req, res) => {
 
     if (username) {
       const usernameLower = String(username).toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 24);
-      const SELLERFLOW_RESERVED_EMAIL = 'gideondreams3325@gmail.com';
 
       // Determine requester email
       let requesterEmail = String(req.body?.userEmail || req.body?.email || '').toLowerCase().trim();
@@ -1630,8 +1636,8 @@ app.post('/api/auth/check-availability', async (req, res) => {
         } catch (_) {}
       }
 
-      // Check if username is "sellerflow" - strictly reserved for gideondreams3325@gmail.com
-      if (usernameLower === 'sellerflow' && requesterEmail !== SELLERFLOW_RESERVED_EMAIL) {
+      // Check if username is "sellerflow" - strictly reserved for admin accounts
+      if (usernameLower === 'sellerflow' && !isUserAdminEmail(requesterEmail)) {
         usernameTaken = true;
       }
 
@@ -1671,8 +1677,8 @@ app.post('/api/auth/check-availability', async (req, res) => {
           const first = nameParts[0] || '';
           const last = nameParts[nameParts.length - 1] || '';
 
-          // If someone typed 'sellerflow' and is not gideondreams3325@gmail.com, do not use 'sellerflow' as base
-          const baseForCandidates = (usernameLower === 'sellerflow' && requesterEmail !== SELLERFLOW_RESERVED_EMAIL)
+          // If someone typed 'sellerflow' and is not admin, do not use 'sellerflow' as base
+          const baseForCandidates = (usernameLower === 'sellerflow' && !isUserAdminEmail(requesterEmail))
             ? (first ? `${first}_gh` : 'seller_gh')
             : usernameLower;
 

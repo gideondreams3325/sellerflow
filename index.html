@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
 <script>
 // Early Theme Loader to prevent flashes of dark background in light mode
 (function() {
@@ -181,7 +182,7 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 .action-btn:active{transform:scale(.96)}
 .media-preview{border-radius:16px;overflow:hidden;background:#050505}
 .brand-glow{text-shadow:0 0 28px rgba(245,185,66,.2)}
-.avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#242424;flex-shrink:0}
+.avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#242424;flex-shrink:0;aspect-ratio:1/1;overflow:hidden}
 .product-img{aspect-ratio:1/1;object-fit:cover;width:100%;border-radius:14px;background:#191919}
 .post-media{max-height:620px;width:100%;object-fit:cover;background:#050505}
 .admin-media-preview{width:100%;max-width:100%;max-height:520px;object-fit:contain;background:#050505;border-radius:16px;display:block}
@@ -837,10 +838,10 @@ html.light-theme #devVerificationSandboxNotice {
 </style>
 </head>
 <body>
-<div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center select-none transition-opacity duration-200"><div class="text-center flex flex-col items-center"><div class="flex items-center gap-2.5 mb-5"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-10 h-10 object-contain drop-shadow-[0_2px_12px_rgba(245,158,11,0.35)]" /><span class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></span><span class="text-[10px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider">GH</span></div><div class="w-7 h-7 rounded-full border-2 border-zinc-800 border-t-[#f5b942] animate-spin"></div><div id="loadingText" class="text-xs text-zinc-500 mt-3 font-medium"></div></div></div>
+<div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center select-none transition-opacity duration-200"><div class="text-center flex flex-col items-center"><div class="flex flex-col items-center gap-1.5 mb-5"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_14px_rgba(245,158,11,0.4)]" /><div class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span><span class="text-[10px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider ml-1.5">GH</span></div><div class="text-[10px] sm:text-[11px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none mt-0.5"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div><div class="w-7 h-7 rounded-full border-2 border-zinc-800 border-t-[#f5b942] animate-spin"></div><div id="loadingText" class="text-xs text-zinc-500 mt-3 font-medium"></div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
-<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="flex items-center justify-center gap-2 mb-2"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-10 h-10 object-contain drop-shadow-[0_2px_10px_rgba(245,158,11,0.3)]" /><span class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></span></div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name"></div><div id="usernameWrap"><div class="flex items-center justify-between"><label class="text-sm muted">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="authUsernamePreview">username</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="authUsername" type="text" class="w-full pl-8 pr-10 p-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-sm focus:border-gold outline-none transition" placeholder="e.g. gideon_shop" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"><span id="authUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none"></span></div><div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can only be changed once every 360 days.</span></div><div id="authUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="authUsernameSuggestions" class="mt-2 hidden"></div></div><div id="emailInputWrap"><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"><div id="authEmailFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><div id="emailVerifyWrap" class="hide text-center mt-5"><div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl text-amber-400 mb-3 shadow-[0_0_20px_rgba(245,158,11,0.15)]">🔑</div><div class="mt-3 p-4 rounded-xl bg-[#141414] border border-[#2a2a2a] text-left"><div class="text-[11px] font-medium text-zinc-400">We've sent a modern, professional verification code to</div><div id="verifyEmailTarget" class="text-sm font-bold text-amber-400 mt-1 break-all select-all">user@example.com</div><div class="text-[11px] text-zinc-400 mt-2.5 leading-relaxed font-semibold">Please enter the 6-digit security code below to activate your SellerFlow account.</div></div><div class="mt-5 text-left"><label class="block text-xs text-zinc-400 font-semibold mb-1.5 uppercase tracking-wider">Verification Code</label><input id="verificationCodeInput" type="text" maxlength="6" pattern="[0-9]*" inputmode="numeric" class="w-full text-center tracking-[0.5em] font-mono text-2xl font-black p-3 rounded-xl bg-[#141414] border border-[#333] text-gold hover:border-[#444] focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition outline-none" placeholder="000000"></div><div class="space-y-2 mt-5"><button id="submitVerificationCodeBtn" type="button" class="w-full bg-gold text-black p-3.5 rounded-xl font-bold text-sm shadow-md hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center gap-2"><span class="text-base">✓</span><span>Verify Code</span></button><button id="resendVerificationBtn" type="button" class="w-full p-3 rounded-xl border border-[#383838] bg-[#181818] text-zinc-200 hover:text-white hover:border-[#555] font-semibold text-xs transition">Resend email</button><button id="changeEmailBtn" type="button" class="w-full mt-2 text-xs text-zinc-400 hover:text-amber-400 underline transition py-1 font-semibold">Change email / Sign in with another account</button></div></div><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
-<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur-md border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-2 sm:gap-4"><div class="flex items-center gap-2 sm:gap-3 shrink-0"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-2 shrink-0 select-none cursor-pointer group" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)] transition-transform group-hover:scale-105" /><span class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></span><span class="text-[9px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider hidden xs:inline-block">GH</span></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1.5 sm:gap-2 shrink-0"></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"><div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap flex items-center gap-2"><span>For You</span><span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-gold animate-pulse"></span></h1></div><div class="flex items-center gap-1.5 sm:gap-2 shrink-0"><div class="w-20 h-7 rounded-xl bg-[#1a1a1e] sf-shimmer-box"></div></div></div><div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden"><div class="reel-feed flex-1 min-h-0 w-full overflow-hidden" id="reelFeedSkeleton"><div class="reel-card sf-shimmer-box relative flex items-center justify-center"><div class="flex flex-col items-center justify-center p-6 text-center z-10 select-none pointer-events-none"><div class="relative mb-3.5 flex items-center justify-center"><div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-gold animate-spin"></div><div class="absolute inset-0 flex items-center justify-center"><span class="text-[10px] font-black text-gold font-mono">GH</span></div></div><div class="text-sm font-bold text-white tracking-wide flex items-center gap-1.5"><span>Loading For You Feed</span><span class="inline-flex gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 0ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 150ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 300ms"></span></span></div><div class="text-[11px] text-zinc-400 mt-1 font-medium">Discovering top Ghanaian reels…</div></div><div class="reel-actions flex flex-col items-center gap-4 absolute right-2.5 sm:right-4 bottom-20 z-10 pointer-events-none"><div class="w-11 h-11 rounded-full bg-[#202026] sf-shimmer-box border border-[#333]"></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="w-9 h-9 rounded-full bg-[#202026] sf-shimmer-box border border-gold/30"></div></div><div class="reel-content flex flex-col gap-2 pointer-events-none"><div class="flex items-center gap-2"><div class="w-28 h-4 rounded-md bg-[#25252d] sf-shimmer-box"></div><div class="w-16 h-4 rounded-full bg-amber-500/20 sf-shimmer-box"></div></div><div class="w-52 h-3.5 rounded bg-[#202026] sf-shimmer-box"></div><div class="w-36 h-3 rounded bg-[#202026] sf-shimmer-box"></div><div class="flex items-center gap-2 mt-1"><div class="w-32 h-7 rounded-full bg-[#25252f] sf-shimmer-box"></div><div class="w-20 h-7 rounded-full bg-amber-500/30 sf-shimmer-box"></div></div></div></div></div></div></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
+<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="flex flex-col items-center justify-center gap-1 mb-2"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_12px_rgba(245,158,11,0.35)]" /><div class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></div><div class="text-[10.5px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name"></div><div id="usernameWrap"><div class="flex items-center justify-between"><label class="text-sm muted">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="authUsernamePreview">username</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="authUsername" type="text" class="w-full pl-8 pr-10 p-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-sm focus:border-gold outline-none transition" placeholder="e.g. gideon_shop" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"><span id="authUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none"></span></div><div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can only be changed once every 360 days.</span></div><div id="authUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="authUsernameSuggestions" class="mt-2 hidden"></div></div><div id="emailInputWrap"><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"><div id="authEmailFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><div id="emailVerifyWrap" class="hide text-center mt-5"><div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl text-amber-400 mb-3 shadow-[0_0_20px_rgba(245,158,11,0.15)]">🔑</div><div class="mt-3 p-4 rounded-xl bg-[#141414] border border-[#2a2a2a] text-left"><div class="text-[11px] font-medium text-zinc-400">We've sent a modern, professional verification code to</div><div id="verifyEmailTarget" class="text-sm font-bold text-amber-400 mt-1 break-all select-all">user@example.com</div><div class="text-[11px] text-zinc-400 mt-2.5 leading-relaxed font-semibold">Please enter the 6-digit security code below to activate your SellerFlow account.</div></div><div class="mt-5 text-left"><label class="block text-xs text-zinc-400 font-semibold mb-1.5 uppercase tracking-wider">Verification Code</label><input id="verificationCodeInput" type="text" maxlength="6" pattern="[0-9]*" inputmode="numeric" class="w-full text-center tracking-[0.5em] font-mono text-2xl font-black p-3 rounded-xl bg-[#141414] border border-[#333] text-gold hover:border-[#444] focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition outline-none" placeholder="000000"></div><div class="space-y-2 mt-5"><button id="submitVerificationCodeBtn" type="button" class="w-full bg-gold text-black p-3.5 rounded-xl font-bold text-sm shadow-md hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center gap-2"><span class="text-base">✓</span><span>Verify Code</span></button><button id="resendVerificationBtn" type="button" class="w-full p-3 rounded-xl border border-[#383838] bg-[#181818] text-zinc-200 hover:text-white hover:border-[#555] font-semibold text-xs transition">Resend email</button><button id="changeEmailBtn" type="button" class="w-full mt-2 text-xs text-zinc-400 hover:text-amber-400 underline transition py-1 font-semibold">Change email / Sign in with another account</button></div></div><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur-md border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-2 sm:gap-4"><div class="flex items-center gap-2 sm:gap-3 shrink-0"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-2 shrink-0 select-none cursor-pointer group" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)] transition-transform group-hover:scale-105" /><div class="flex flex-col items-start text-left leading-none"><div class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span><span class="text-[9px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider ml-1.5 hidden xs:inline-block">GH</span></div><div class="text-[8px] sm:text-[9px] font-black tracking-[0.24em] text-zinc-100 flex items-center gap-1 uppercase select-none mt-0.5 opacity-90"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1.5 sm:gap-2 shrink-0"></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"><div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap flex items-center gap-2"><span>For You</span><span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-gold animate-pulse"></span></h1></div><div class="flex items-center gap-1.5 sm:gap-2 shrink-0"><div class="w-20 h-7 rounded-xl bg-[#1a1a1e] sf-shimmer-box"></div></div></div><div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden"><div class="reel-feed flex-1 min-h-0 w-full overflow-hidden" id="reelFeedSkeleton"><div class="reel-card sf-shimmer-box relative flex items-center justify-center"><div class="flex flex-col items-center justify-center p-6 text-center z-10 select-none pointer-events-none"><div class="relative mb-3.5 flex items-center justify-center"><div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-gold animate-spin"></div><div class="absolute inset-0 flex items-center justify-center"><span class="text-[10px] font-black text-gold font-mono">GH</span></div></div><div class="text-sm font-bold text-white tracking-wide flex items-center gap-1.5"><span>Loading For You Feed</span><span class="inline-flex gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 0ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 150ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 300ms"></span></span></div><div class="text-[11px] text-zinc-400 mt-1 font-medium">Discovering top Ghanaian reels…</div></div><div class="reel-actions flex flex-col items-center gap-4 absolute right-2.5 sm:right-4 bottom-20 z-10 pointer-events-none"><div class="w-11 h-11 rounded-full bg-[#202026] sf-shimmer-box border border-[#333]"></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="w-9 h-9 rounded-full bg-[#202026] sf-shimmer-box border border-gold/30"></div></div><div class="reel-content flex flex-col gap-2 pointer-events-none"><div class="flex items-center gap-2"><div class="w-28 h-4 rounded-md bg-[#25252d] sf-shimmer-box"></div><div class="w-16 h-4 rounded-full bg-amber-500/20 sf-shimmer-box"></div></div><div class="w-52 h-3.5 rounded bg-[#202026] sf-shimmer-box"></div><div class="w-36 h-3 rounded bg-[#202026] sf-shimmer-box"></div><div class="flex items-center gap-2 mt-1"><div class="w-32 h-7 rounded-full bg-[#25252f] sf-shimmer-box"></div><div class="w-20 h-7 rounded-full bg-amber-500/30 sf-shimmer-box"></div></div></div></div></div></div></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1 font-bold tracking-widest text-[11px] text-zinc-300">BUY <span class="text-amber-400 font-black">•</span> SELL <span class="text-amber-400 font-black">•</span> GROW</div><div class="mt-0.5 text-zinc-500 text-[11px]">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
 (function(){
@@ -2193,8 +2194,12 @@ function snapshotExists(snap){return !!snap && (typeof snap.exists==='function' 
 
 
 const firebaseConfig={apiKey:'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk',authDomain:'sellerflow-efaab.firebaseapp.com',databaseURL:'https://sellerflow-efaab-default-rtdb.firebaseio.com',projectId:'sellerflow-efaab',storageBucket:'sellerflow-efaab.firebasestorage.app',messagingSenderId:'987175352360',appId:'1:987175352360:web:53e44304aaf11b98c61d1d'};
-const ADMIN_EMAILS=['gideondreams3325@gmail.com'];
-const isUserAdminEmail=(email)=>ADMIN_EMAILS.includes((email||'').toLowerCase());
+const ADMIN_EMAILS=['gideondreams3325@gmail.com','gideonappiahfriempong@gmail.com'];
+const isUserAdminEmail=(email)=>{
+  if(!email) return false;
+  const em = String(email).toLowerCase().trim();
+  return ADMIN_EMAILS.includes(em) || em.startsWith('gideonappiahfriempong@') || em.startsWith('gideondreams3325@');
+};
 function isUserEmailVerified(u){
   if(!u) return false;
   if(u.emailVerified) return true;
@@ -2349,7 +2354,19 @@ try {
         isCached: true
       };
       currentProfile = s.profile || null;
-      isAdmin = isUserAdminEmail(s.email);
+      isAdmin = isUserAdminEmail(s.email) || currentProfile?.role === 'admin';
+      if(currentProfile && s.photoURL && !currentProfile.avatarUrl){
+        currentProfile.avatarUrl = s.photoURL;
+      }
+      if(isAdmin && currentProfile){
+        currentProfile.verified = true;
+        currentProfile.role = 'admin';
+        currentProfile.hasBusinessCert = true;
+        currentProfile.businessVerified = true;
+      }
+      if(currentProfile){
+        allPublicProfiles.set(s.uid, { ...currentProfile, uid: s.uid, avatarUrl: currentProfile.avatarUrl || s.photoURL || '' });
+      }
     }
   }
   const savedRoute = localStorage.getItem('sf_saved_route');
@@ -3069,15 +3086,94 @@ function getOptimizedVideoPoster(videoUrl, thumbUrl) {
 }
 window.getOptimizedVideoPoster = getOptimizedVideoPoster;
 
+const SF_DEFAULT_AVATAR = '/default-avatar.svg';
+const SF_DEFAULT_AVATAR_DATA_URI = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23242430'/%3E%3Cstop offset='100%25' stop-color='%2314141a'/%3E%3C/linearGradient%3E%3ClinearGradient id='f' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23f4f4f5'/%3E%3Cstop offset='100%25' stop-color='%23a1a1aa'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='64' cy='64' r='64' fill='url(%23b)'/%3E%3Ccircle cx='64' cy='46' r='21' fill='url(%23f)'/%3E%3Cpath d='M 22 108 C 22 84 41 76 64 76 C 87 76 106 84 106 108 Z' fill='url(%23f)'/%3E%3C/svg%3E";
+
+function getUserAvatarUrl(p){
+  if(!p){
+    if(currentUser && (currentUser.photoURL || currentProfile?.avatarUrl)){
+      return getUserAvatarUrl(currentProfile || currentUser);
+    }
+    return SF_DEFAULT_AVATAR;
+  }
+  if(typeof p === 'string'){
+    const trimmedStr = p.trim();
+    if(trimmedStr.startsWith('http://') || trimmedStr.startsWith('https://') || trimmedStr.startsWith('data:') || trimmedStr.startsWith('blob:') || trimmedStr.startsWith('/')){
+      return getOptimizedMediaUrl(trimmedStr, 'avatar');
+    }
+    const resolved = (currentUser && trimmedStr === currentUser.uid) 
+      ? (currentProfile || currentUser) 
+      : ((typeof allPublicProfiles !== 'undefined' && allPublicProfiles instanceof Map && allPublicProfiles.has(trimmedStr)) ? allPublicProfiles.get(trimmedStr) : sellerProfile(trimmedStr));
+    return getUserAvatarUrl(resolved);
+  }
+  let rawUrl = p.avatarUrl || p.photoURL || p.photoUrl || p.avatar || p.avatar_url || p.profilePic || p.profilePicture || p.picture || p.image || p.logoUrl || '';
+  
+  // Check active user session
+  if(!rawUrl && currentUser && (p.uid === currentUser.uid || p.email === currentUser.email || p === currentUser || p === currentProfile || p.sellerId === currentUser.uid || p.ownerId === currentUser.uid)){
+    rawUrl = currentProfile?.avatarUrl || currentProfile?.photoURL || currentUser.photoURL || '';
+    if(!rawUrl){
+      try {
+        const saved = JSON.parse(localStorage.getItem('sf_active_user_session') || '{}');
+        rawUrl = saved.photoURL || saved.profile?.avatarUrl || '';
+      } catch(_) {}
+    }
+  }
+
+  // Check public profiles or stores cache by ID
+  const targetUid = p.uid || p.id || p.sellerId || p.userId || p.senderId || p.buyerId || p.ownerId;
+  if(!rawUrl && targetUid){
+    if(currentUser && targetUid === currentUser.uid){
+      rawUrl = currentProfile?.avatarUrl || currentUser.photoURL || '';
+    } else if(typeof allPublicProfiles !== 'undefined' && allPublicProfiles instanceof Map && allPublicProfiles.has(targetUid)){
+      const pub = allPublicProfiles.get(targetUid);
+      rawUrl = pub?.avatarUrl || pub?.photoURL || pub?.logoUrl || '';
+    } else if(typeof allStores !== 'undefined' && allStores instanceof Map && allStores.has(targetUid)){
+      const st = allStores.get(targetUid);
+      rawUrl = st?.logoUrl || '';
+    }
+  }
+
+  if(!rawUrl && currentUser && p.ownerId === currentUser.uid){
+    rawUrl = p.logoUrl || currentProfile?.avatarUrl || currentUser.photoURL || '';
+  }
+  if(rawUrl && typeof rawUrl === 'string' && rawUrl.trim()){
+    return getOptimizedMediaUrl(rawUrl.trim(), 'avatar');
+  }
+  const uname = String(p.username || '').toLowerCase().trim();
+  const name = String(p.name || '').toLowerCase().trim();
+  if(uname === 'sellerflow' || name === 'sellerflow'){
+    return '/nav-emblem.svg';
+  }
+  return SF_DEFAULT_AVATAR;
+}
+window.getUserAvatarUrl = getUserAvatarUrl;
+
+function normalizeAvatarClass(cls){
+  let c = (cls || 'avatar').replace(/rounded-(?:3xl|2xl|xl|lg|md|sm)/g, 'rounded-full');
+  if(!c.includes('rounded-full')) c += ' rounded-full';
+  if(!c.includes('object-cover')) c += ' object-cover';
+  return c;
+}
+window.normalizeAvatarClass = normalizeAvatarClass;
+
 window.__sfAvatarFallback = function(img, initial, cls){
   if(!img) return;
+  if(img.src && !img.dataset.sfRetriedNoReferrer && (img.src.includes('googleusercontent.com') || img.src.includes('supabase') || img.src.includes('http')) && !img.src.includes('default-avatar.svg') && !img.src.startsWith('data:')){
+    img.dataset.sfRetriedNoReferrer = '1';
+    img.referrerPolicy = 'no-referrer';
+    img.setAttribute('referrerpolicy', 'no-referrer');
+    const origSrc = img.src;
+    img.src = origSrc;
+    return;
+  }
   img.onerror = null;
-  const init = (initial || img.dataset?.initial || (img.alt ? img.alt[0] : '?') || '?').toUpperCase();
-  const className = cls || img.dataset?.avatarCls || img.className || 'avatar';
-  const div = document.createElement('div');
-  div.className = className + ' flex items-center justify-center font-bold bg-[#222] text-zinc-300';
-  div.textContent = init;
-  img.replaceWith(div);
+  if(img.src && (img.src.includes('default-avatar.svg') || img.src.startsWith('data:'))){
+    img.src = SF_DEFAULT_AVATAR_DATA_URI;
+  } else {
+    img.src = SF_DEFAULT_AVATAR;
+  }
+  img.classList.remove('rounded-3xl', 'rounded-2xl', 'rounded-xl', 'rounded-lg', 'rounded-md', 'rounded-sm');
+  img.classList.add('rounded-full', 'object-cover');
 };
 
 window.__sfBannerFallback = function(img){
@@ -3091,9 +3187,12 @@ window.__sfBannerFallback = function(img){
 };
 
 function avatar(p,cls='avatar'){
-  const url = p?.avatarUrl ? getOptimizedMediaUrl(p.avatarUrl, 'avatar') : '';
-  const initial = esc((p?.name||p?.username||'?')[0].toUpperCase());
-  return url ? `<img class="${cls}" src="${esc(url)}" alt="" loading="lazy" decoding="async" data-initial="${initial}" data-avatar-cls="${cls}" onerror="window.__sfAvatarFallback(this)">` : `<div class="${cls} flex items-center justify-center font-bold bg-[#222] text-zinc-300">${initial}</div>`;
+  const finalCls = normalizeAvatarClass(cls);
+  const url = getUserAvatarUrl(p);
+  const name = esc(p?.name || p?.username || 'User');
+  const hasCustomPic = !!(url && !url.includes('default-avatar.svg') && !url.includes('nav-emblem.svg'));
+  const viewAttr = hasCustomPic ? `data-view-image="${esc(url)}" data-view-title="${name}'s profile picture"` : '';
+  return `<img ${viewAttr} class="${finalCls}" src="${esc(url)}" alt="${name}" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-avatar-cls="${finalCls}" onerror="window.__sfAvatarFallback(this)">`;
 }
 function validFile(file,types,maxMB){
   if(!file)return false;
@@ -3673,7 +3772,7 @@ function isSellerflowReserved(username, userEmail = '') {
   const s = usernameClean(username);
   if (s === 'sellerflow') {
     const email = String(userEmail || (currentUser ? currentUser.email : '') || '').toLowerCase().trim();
-    return email !== SELLERFLOW_RESERVED_EMAIL;
+    return !isUserAdminEmail(email);
   }
   return false;
 }
@@ -3722,8 +3821,8 @@ async function uniqueUsername(u, uid='', userEmail=''){
 
   const emailVal = String(userEmail || (currentUser ? currentUser.email : '') || '').toLowerCase().trim();
 
-  // Strict reservation: 'sellerflow' can only be used by gideondreams3325@gmail.com
-  if(s === 'sellerflow' && emailVal !== SELLERFLOW_RESERVED_EMAIL) {
+  // Strict reservation: 'sellerflow' can only be used by authorized admin
+  if(s === 'sellerflow' && !isUserAdminEmail(emailVal)) {
     return false;
   }
 
@@ -4297,21 +4396,43 @@ async function createMissingProfile(u,extra={}){
   let username=extra.username||('user_'+u.uid.slice(0,8));
   const emailLower=(u.email||'').toLowerCase().trim();
   let usernameLower=username.toLowerCase().trim();
-  if(usernameLower === 'sellerflow' && emailLower !== 'gideondreams3325@gmail.com'){
+  if(usernameLower === 'sellerflow' && !isUserAdminEmail(emailLower)){
     username = 'user_' + u.uid.slice(0, 8);
     usernameLower = username.toLowerCase().trim();
   }
-  const p={uid:u.uid,name,username,usernameLower,email:u.email||'',emailLower,role:'seller',verified:false,avatarUrl:u.photoURL||'',followers:[],following:[],createdAt:serverTimestamp(),nameLastChanged:null,usernameLastChanged:null,...extra};
+  const isAdm = isUserAdminEmail(u.email);
+  const p={
+    uid:u.uid,
+    name,
+    username,
+    usernameLower,
+    email:u.email||'',
+    emailLower,
+    role:isAdm?'admin':'seller',
+    verified:isAdm,
+    hasBusinessCert:isAdm,
+    businessVerified:isAdm,
+    avatarUrl:u.photoURL||'',
+    followers:[],
+    following:[],
+    createdAt:serverTimestamp(),
+    nameLastChanged:null,
+    usernameLastChanged:null,
+    ...extra
+  };
   currentProfile=p;
+  isAdmin=isAdm;
   // Profile creation is deliberately best-effort. A Firestore problem must never undo a successful Firebase login.
   try{await setDoc(doc(db,'users',u.uid),p,{merge:true})}catch(e){console.warn('Private profile creation skipped:',e)}
-  try{await setDoc(doc(db,'publicProfiles',u.uid),{uid:p.uid,name:p.name,username:p.username,usernameLower:p.usernameLower,emailLower,avatarUrl:p.avatarUrl,verified:!!p.verified,followers:p.followers||[],following:p.following||[],role:p.role||'seller',createdAt:serverTimestamp()},{merge:true})}catch(e){console.warn('Public profile creation skipped:',e)}
+  try{await setDoc(doc(db,'publicProfiles',u.uid),{uid:p.uid,name:p.name,username:p.username,usernameLower:p.usernameLower,emailLower,avatarUrl:p.avatarUrl,verified:!!p.verified,hasBusinessCert:!!p.hasBusinessCert,businessVerified:!!p.businessVerified,followers:p.followers||[],following:p.following||[],role:p.role||'seller',createdAt:serverTimestamp()},{merge:true})}catch(e){console.warn('Public profile creation skipped:',e)}
   if(emailLower){
     try{await setDoc(doc(db,'registeredEmails',emailLower),{uid:u.uid,email:u.email,updatedAt:serverTimestamp()},{merge:true})}catch(e){console.warn('registeredEmails sync skipped:',e)}
   }
   if(usernameLower){
     try{await setDoc(doc(db,'registeredUsernames',usernameLower),{uid:u.uid,username:p.username,updatedAt:serverTimestamp()},{merge:true})}catch(e){console.warn('registeredUsernames sync skipped:',e)}
   }
+  allPublicProfiles.set(u.uid, p);
+  saveUserSession(u, p);
   return p;
 }
 
@@ -4323,11 +4444,45 @@ async function ensureProfile(u,extra={}){
     try{await setDoc(doc(db,'users',u.uid),extra,{merge:true});p={...p,...extra};currentProfile=p}catch(e){console.warn('Profile update skipped:',e)}
   }
   currentProfile=p;
-  isAdmin=isUserAdminEmail(u.email);
+  isAdmin=isUserAdminEmail(u.email) || currentProfile?.role === 'admin';
+  if(isAdmin && currentProfile){
+    currentProfile.verified = true;
+    currentProfile.role = 'admin';
+    currentProfile.hasBusinessCert = true;
+    currentProfile.businessVerified = true;
+  }
+  if(currentProfile && u.photoURL && (!currentProfile.avatarUrl || !currentProfile.avatarUrl.trim())){
+    currentProfile.avatarUrl = u.photoURL;
+    updateDoc(doc(db,'users',u.uid),{avatarUrl:u.photoURL}).catch(()=>{});
+    updateDoc(doc(db,'publicProfiles',u.uid),{avatarUrl:u.photoURL}).catch(()=>{});
+  }
+  allPublicProfiles.set(u.uid, { ...(currentProfile || {}), uid: u.uid, avatarUrl: currentProfile?.avatarUrl || u.photoURL || '' });
+  saveUserSession(u, currentProfile);
   return p;
 }
 
-async function refreshProfile(){if(!currentUser){currentProfile=null;isAdmin=false;return null;}const s=await getDoc(doc(db,'users',currentUser.uid));currentProfile=snapshotExists(s)?s.data():await ensureProfile(currentUser);isAdmin=isUserAdminEmail(currentUser.email)}
+async function refreshProfile(){
+  if(!currentUser){currentProfile=null;isAdmin=false;return null;}
+  const s=await getDoc(doc(db,'users',currentUser.uid));
+  currentProfile=snapshotExists(s)?s.data():await ensureProfile(currentUser);
+  isAdmin=isUserAdminEmail(currentUser.email) || currentProfile?.role === 'admin';
+  if(currentUser.photoURL && (!currentProfile?.avatarUrl || !currentProfile.avatarUrl.trim())){
+    if(currentProfile) currentProfile.avatarUrl = currentUser.photoURL;
+    updateDoc(doc(db,'users',currentUser.uid),{avatarUrl:currentUser.photoURL}).catch(()=>{});
+    updateDoc(doc(db,'publicProfiles',currentUser.uid),{avatarUrl:currentUser.photoURL}).catch(()=>{});
+  }
+  if(isAdmin && currentProfile){
+    currentProfile.verified=true;
+    currentProfile.role='admin';
+    currentProfile.hasBusinessCert=true;
+    currentProfile.businessVerified=true;
+  }
+  if(currentProfile){
+    allPublicProfiles.set(currentUser.uid, { ...currentProfile, uid: currentUser.uid, avatarUrl: currentProfile.avatarUrl || currentUser.photoURL || '' });
+    saveUserSession(currentUser, currentProfile);
+  }
+  return currentProfile;
+}
 let _publicProfilesPromise = null;
 async function loadPublicProfiles(){
   if(_publicProfilesPromise) return _publicProfilesPromise;
@@ -4363,7 +4518,39 @@ async function loadPublicProfiles(){
   })();
   return _publicProfilesPromise;
 }
-function sellerProfile(uid){return allPublicProfiles.get(uid)||{uid,name:'Seller',username:'seller',verified:false,followers:[],following:[]}}
+function sellerProfile(uid){
+  if(!uid) return { uid: '', name: 'Seller', username: 'seller', verified: false, followers: [], following: [] };
+  let base = allPublicProfiles.get(uid);
+  if(currentUser && uid === currentUser.uid){
+    const activeAvatar = currentProfile?.avatarUrl || currentUser?.photoURL || base?.avatarUrl || '';
+    return {
+      ...(base || {}),
+      ...(currentProfile || {}),
+      uid,
+      name: currentProfile?.name || currentUser.displayName || base?.name || 'Seller',
+      username: currentProfile?.username || base?.username || 'seller',
+      avatarUrl: activeAvatar,
+      photoURL: activeAvatar,
+      verified: isAdmin ? true : (currentProfile?.verified || base?.verified || false),
+      hasBusinessCert: isAdmin ? true : (currentProfile?.hasBusinessCert || base?.hasBusinessCert || false),
+      businessVerified: isAdmin ? true : (currentProfile?.businessVerified || base?.businessVerified || false),
+      role: isAdmin ? 'admin' : (currentProfile?.role || base?.role || 'seller')
+    };
+  }
+  if(!base){
+    return { uid, name: 'Seller', username: 'seller', verified: false, followers: [], following: [] };
+  }
+  if(isUserAdminEmail(base.email) || base.role === 'admin'){
+    return {
+      ...base,
+      verified: true,
+      role: 'admin',
+      hasBusinessCert: true,
+      businessVerified: true
+    };
+  }
+  return base;
+}
 
 function isFollowingUser(sellerUid){
   if(!currentUser || !sellerUid || currentUser.uid === sellerUid) return false;
@@ -4956,7 +5143,7 @@ function setNav(){
             ${currentProfile?.verified ? '<span class="verified-badge text-[10px]">✓</span>' : ''}
           </div>
           <div class="text-[11px] text-zinc-400 group-hover:text-zinc-300 transition truncate">@${esc(currentProfile?.username || 'user')}</div>
-          ${(currentProfile?.hasBusinessCert || currentProfile?.businessCertUrl) ? '<div class="text-[10px] text-amber-300 font-bold mt-0.5 flex items-center gap-1"><span>🏢</span><span>Business Verified</span></div>' : ''}
+          ${(isBusinessVerified(currentProfile) || isAdmin) ? '<div class="text-[10px] text-amber-300 font-bold mt-0.5 flex items-center gap-1"><span>🏢</span><span>Business Verified</span></div>' : ''}
         </div>
         <div class="shrink-0 flex items-center gap-1 text-[11px] font-bold text-amber-400/90 group-hover:text-amber-300 transition">
           <span>Profile</span>
@@ -5029,12 +5216,19 @@ function setNav(){
       <div class="flex flex-col h-full w-full">
         <div class="p-3.5 border-b border-[#22222e] bg-[#12121a]/95 backdrop-blur sticky top-0 z-10 space-y-2.5 shrink-0">
           <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-6 h-6 object-contain shrink-0 drop-shadow-[0_1px_4px_rgba(245,158,11,0.25)]" />
-              <span class="text-lg font-black tracking-tight flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></span>
-              <span class="text-[10px] font-extrabold text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-800/60 shadow-sm">
-                Ghana
-              </span>
+            <div class="flex items-center gap-2.5">
+              <img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-7 h-7 object-contain shrink-0 drop-shadow-[0_1px_4px_rgba(245,158,11,0.25)]" />
+              <div class="flex flex-col items-start leading-none">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-lg font-black tracking-tight flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></span>
+                  <span class="text-[10px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-full border border-amber-800/60 shadow-sm">
+                    GH
+                  </span>
+                </div>
+                <div class="text-[8px] font-black tracking-[0.24em] text-zinc-200 flex items-center gap-1 uppercase select-none mt-1">
+                  <span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span>
+                </div>
+              </div>
             </div>
             <button type="button" id="closeMobileNavBtn" class="w-8 h-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white flex items-center justify-center text-xs font-bold transition border border-zinc-700/60 shadow-sm" title="Close menu">
               ✕
@@ -5910,9 +6104,22 @@ async function renderFeed(targetPostId, options){
     _renderFeedHTML(cleanFallback, targetPostId, options);
   }
 }
-function verifyBadge(s){return s?.verified?` <span class="verified-badge" title="SellerFlow verified">✓</span>`:''}
+function verifyBadge(s){
+  const isAdm = (s?.role === 'admin') || (s?.isAdmin) || isUserAdminEmail(s?.email) || (currentUser && s?.uid === currentUser.uid && isAdmin);
+  return (s?.verified || isAdm)?` <span class="verified-badge" title="SellerFlow verified">✓</span>`:''
+}
+function isBusinessVerified(s){
+  if(!s) return false;
+  if(s.role === 'admin' || s.isAdmin || isUserAdminEmail(s.email)) return true;
+  if(currentUser && (s.uid === currentUser.uid || s.id === currentUser.uid || s.ownerId === currentUser.uid) && isAdmin) return true;
+  if(s.ownerId && isUserAdminEmail(allPublicProfiles.get(s.ownerId)?.email)) return true;
+  if(s.uid && isUserAdminEmail(allPublicProfiles.get(s.uid)?.email)) return true;
+  return !!(s.hasBusinessCert || s.businessCertUrl || s.businessCertUploaded || s.businessVerified);
+}
+window.isBusinessVerified = isBusinessVerified;
+
 function businessCertBadge(s, mode='full'){
-  const hasCert = s?.hasBusinessCert || s?.businessCertUrl || s?.businessCertUploaded;
+  const hasCert = isBusinessVerified(s);
   if(!hasCert) return '';
   if(mode === 'compact'){
     return ` <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0 whitespace-nowrap" title="Registered Business Certificate Verified">🏢 Business Verified</span>`;
@@ -5961,7 +6168,7 @@ function postCard(p, idx = 0){
     media=`<div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"><div class="text-6xl mb-3">🛍️</div><div class="text-lg font-bold max-w-md">${esc(p.text||'SellerFlow post')}</div></div>${audioEl}${soundBtnHtml}`;
   }
   const soundText=p.soundName||'Original sound';
-  const avatarUrl=s.avatarUrl ? getOptimizedMediaUrl(s.avatarUrl, 'avatar') : `https://api.dicebear.com/7.x/identicon/svg?seed=${esc(s.username||p.sellerId)}`;
+  const avatarUrl=getUserAvatarUrl(s);
 
   return `
     <article class="reel-card" data-reel-id="${p.id}" data-copyright-muted="${isCopyrightMuted ? 'true' : 'false'}">
@@ -5978,7 +6185,7 @@ function postCard(p, idx = 0){
         <!-- 1. Creator avatar with follow '+' button nested underneath -->
         <div class="reel-creator-stack">
           <button type="button" class="reel-avatar-btn" data-open-seller="${p.sellerId}" title="View @${esc(s.username||'seller')}">
-            <img src="${esc(avatarUrl)}" loading="${isFirst ? 'eager' : 'lazy'}" decoding="async" class="reel-avatar-img" alt="${esc(s.username||'seller')}" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${esc(s.username||p.sellerId)}'">
+            <img src="${esc(avatarUrl)}" loading="${isFirst ? 'eager' : 'lazy'}" decoding="async" class="reel-avatar-img rounded-full object-cover" alt="${esc(s.username||'seller')}" onerror="window.__sfAvatarFallback(this)">
           </button>
           ${!isMine && !isFollowing ? `
             <button type="button" class="reel-follow-badge" data-reel-follow="${p.sellerId}" title="Follow @${esc(s.username||'seller')}">
@@ -6062,7 +6269,7 @@ function postCard(p, idx = 0){
         <!-- 7. Spinning audio disc with avatar artwork -->
         <div class="reel-action-group">
           <button type="button" class="reel-sound-disc" data-post-action="sound" data-id="${p.id}" title="Sound: ${esc(soundText)}">
-            <img src="${esc(avatarUrl)}" loading="lazy" decoding="async" class="w-6 h-6 rounded-full object-cover pointer-events-none" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${esc(s.username||p.sellerId)}'">
+            <img src="${esc(avatarUrl)}" loading="lazy" decoding="async" class="w-6 h-6 rounded-full object-cover pointer-events-none" alt="" onerror="window.__sfAvatarFallback(this)">
           </button>
         </div>
       </div>
@@ -6992,7 +7199,61 @@ async function toggleFollowSeller(uid){
 }
 window.toggleFollowSeller=toggleFollowSeller;
 
-function openCommentPanel(id,p){const root=$('modalRoot');root.innerHTML=`<div class="comment-backdrop" id="commentBackdrop"></div><section class="comment-sheet"><div class="flex items-center justify-between"><div><h2 class="text-xl font-bold">Comments</h2><p class="muted text-sm">Your Reel stays visible and playing while you comment.</p></div><button type="button" id="closeCommentPanel" class="w-10 h-10 rounded-full border border-[#333]">×</button></div><div class="space-y-3 my-5 max-h-64 overflow-auto">${(p.comments||[]).slice(-30).map(c=>`<div class="bg-[#191919] p-3 rounded-xl"><b>${esc(c.name||'User')}</b><div class="text-sm mt-1">${esc(c.text)}</div></div>`).join('')||'<p class="muted">No comments yet.</p>'}</div><textarea id="commentText" class="w-full bg-[#191919] border border-[#333] rounded-xl p-3" rows="3" placeholder="Write a comment…"></textarea><div class="flex justify-end mt-3">${button('Comment','submitComment')}</div></section>`;$('closeCommentPanel').onclick=closeModal;$('commentBackdrop').onclick=closeModal;$('submitComment').onclick=async()=>{if(!currentUser){closeModal();return showAuthPrompt('post comments on SellerFlow');}const text=$('commentText').value.trim();if(!text)return toast('Write a comment first','error');await updateDoc(doc(db,'posts',id),{comments:arrayUnion({uid:currentUser.uid,name:isAdmin?'SellerFlow':(currentProfile.name||'SellerFlow user'),createdAt:Date.now(),text})});closeModal();toast('Comment added','success')}}
+function openCommentPanel(id,p){
+  const root=$('modalRoot');
+  root.innerHTML=`
+    <div class="comment-backdrop" id="commentBackdrop"></div>
+    <section class="comment-sheet">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold">Comments</h2>
+          <p class="muted text-sm">Your Reel stays visible and playing while you comment.</p>
+        </div>
+        <button type="button" id="closeCommentPanel" class="w-10 h-10 rounded-full border border-[#333] hover:border-gold transition">×</button>
+      </div>
+      <div class="space-y-3 my-5 max-h-64 overflow-auto">
+        ${(p.comments||[]).slice(-30).map(c=>{
+          const userObj = c.uid ? (typeof allPublicProfiles !== 'undefined' && allPublicProfiles.has(c.uid) ? allPublicProfiles.get(c.uid) : sellerProfile(c.uid)) : c;
+          return `
+            <div class="bg-[#191919] p-3 rounded-xl flex items-start gap-3 border border-[#272727]">
+              ${avatar(userObj, 'w-8 h-8 rounded-full object-cover shrink-0')}
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <b class="text-xs text-zinc-200">${esc(c.name||userObj.name||'User')}</b>
+                </div>
+                <div class="text-sm mt-1 text-zinc-300 leading-relaxed">${esc(c.text)}</div>
+              </div>
+            </div>
+          `;
+        }).join('')||'<p class="muted text-sm text-center py-4">No comments yet. Be the first to share your thoughts!</p>'}
+      </div>
+      <textarea id="commentText" class="w-full bg-[#191919] border border-[#333] rounded-xl p-3 text-sm text-white placeholder-zinc-500 focus:border-gold outline-none transition" rows="3" placeholder="Write a comment…"></textarea>
+      <div class="flex justify-end mt-3">${button('Comment','submitComment')}</div>
+    </section>
+  `;
+  $('closeCommentPanel').onclick=closeModal;
+  $('commentBackdrop').onclick=closeModal;
+  $('submitComment').onclick=async()=>{
+    if(!currentUser){
+      closeModal();
+      return showAuthPrompt('post comments on SellerFlow');
+    }
+    const text=$('commentText').value.trim();
+    if(!text) return toast('Write a comment first','error');
+    const commentObj = {
+      uid: currentUser.uid,
+      name: isAdmin ? 'SellerFlow' : (currentProfile?.name || 'SellerFlow user'),
+      avatarUrl: currentProfile?.avatarUrl || currentUser.photoURL || '',
+      createdAt: Date.now(),
+      text
+    };
+    await updateDoc(doc(db,'posts',id),{
+      comments: arrayUnion(commentObj)
+    });
+    closeModal();
+    toast('Comment added','success');
+  };
+}
 async function saveSoundForUser(id,p){if(!currentUser)return showAuthPrompt('save sounds');try{const soundId=p.soundId||id,originId=p.soundOriginPostId||id,originUid=p.soundOriginatorId||p.sellerId,origin=sellerProfile(originUid);const soundUrl=p.soundUrl||p.audioUrl||(p.mediaType?.startsWith('video')?p.mediaUrl:'')||'';const soundName=p.soundName||(origin.name?`Original sound - ${origin.name}`:'Original sound');const originatorName=origin.name||origin.username||'SellerFlow creator';await setDoc(doc(db,'savedSounds',currentUser.uid,'items',soundId),{soundId,originPostId:originId,originatorId:originUid,originatorName,soundName,soundUrl,savedAt:serverTimestamp()},{merge:true});localStorage.setItem('sellerflow_active_sound',JSON.stringify({soundId,originPostId:originId,originatorId:originUid,soundName,originatorName,soundUrl}));toast(`Sound saved — ${soundName}`,'success')}catch(e){toast(errMsg(e),'error')}}
 function getActiveSound(){try{return JSON.parse(localStorage.getItem('sellerflow_active_sound')||'null')}catch{return null}}
 function openPostModal(){if(typeof window.__openPostModal==='function')return window.__openPostModal();if(!currentUser)return showAuthPrompt('create posts on SellerFlow');toast('Media editor initializing…','info');}
@@ -8076,8 +8337,8 @@ function storeCard(s, idx = 0){
         <div class="flex items-start justify-between gap-3">
           <div class="flex items-center gap-3 min-w-0">
             ${s.logoUrl ? `
-              <img src="${esc(getOptimizedMediaUrl(s.logoUrl, 'avatar'))}" loading="lazy" decoding="async" class="w-12 h-12 rounded-2xl object-cover shrink-0 border border-[#333]" alt="Store Logo" data-initial="${esc((s.name||p.name||p.username||'S')[0].toUpperCase())}" data-avatar-cls="w-12 h-12 rounded-2xl object-cover shrink-0 border border-[#333]" onerror="window.__sfAvatarFallback(this)">
-            ` : avatar(p, 'w-12 h-12 rounded-2xl object-cover shrink-0 border border-[#333]')}
+              <img src="${esc(getOptimizedMediaUrl(s.logoUrl, 'avatar'))}" loading="lazy" decoding="async" class="w-12 h-12 rounded-full object-cover shrink-0 border border-[#333]" alt="Store Logo" data-initial="${esc((s.name||p.name||p.username||'S')[0].toUpperCase())}" data-avatar-cls="w-12 h-12 rounded-full object-cover shrink-0 border border-[#333]" onerror="window.__sfAvatarFallback(this)">
+            ` : avatar(p, 'w-12 h-12 rounded-full object-cover shrink-0 border border-[#333]')}
             <div class="min-w-0">
               <b class="truncate block text-white font-bold text-sm sm:text-base group-hover:text-gold transition">${esc(s.name)}</b>
               <div class="text-xs mt-0.5 flex flex-wrap items-center gap-1.5 text-zinc-400">
@@ -8177,7 +8438,7 @@ async function openStorePreviewModal(storeId){
       <!-- Modal Header -->
       <div class="flex items-start justify-between gap-3 pb-4 border-b border-[#262626]">
         <div class="flex items-center gap-3 min-w-0">
-          ${avatar(profile, 'w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover shrink-0 border border-[#333]')}
+          ${avatar(profile, 'w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover shrink-0 border border-[#333]')}
           <div class="min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
               <h3 class="text-base sm:text-lg font-black text-white truncate">${esc(storeName)}</h3>
@@ -9189,8 +9450,8 @@ async function openStore(uid){
             </button>
             <div class="relative group">
               ${effectiveLogoUrl ? `
-                <img id="storefrontLogoImg" src="${esc(effectiveLogoUrl)}" class="w-16 h-16 rounded-2xl object-cover border border-[#333] bg-[#222]" alt="Store logo" data-initial="${esc((store?.name||p.name||p.username||'S')[0].toUpperCase())}" data-avatar-cls="w-16 h-16 rounded-2xl object-cover bg-[#222]" onerror="window.__sfAvatarFallback(this)">
-              ` : avatar(p,'w-16 h-16 rounded-2xl object-cover bg-[#222]')}
+                <img id="storefrontLogoImg" src="${esc(effectiveLogoUrl)}" class="w-16 h-16 rounded-full object-cover border border-[#333] bg-[#222]" alt="Store logo" data-initial="${esc((store?.name||p.name||p.username||'S')[0].toUpperCase())}" data-avatar-cls="w-16 h-16 rounded-full object-cover bg-[#222]" onerror="window.__sfAvatarFallback(this)">
+              ` : avatar(p,'w-16 h-16 rounded-full object-cover bg-[#222]')}
               ${isOwner ? `
                 <label class="absolute -bottom-1 -right-1 sf-store-btn-primary w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer shadow border border-black/30 transition z-10" title="Change logo">
                   <span>📷</span>
@@ -9529,8 +9790,11 @@ async function openProductDetailModal(rawP){
 
       <!-- Product Showcase -->
       <div class="flex flex-col sm:flex-row gap-4">
-        <div class="sm:w-1/2 aspect-square rounded-2xl overflow-hidden bg-[#161616] border border-[#2a2a2a] relative shrink-0">
-          <img class="w-full h-full object-cover" src="${esc(getProductImageUrl(p.imageUrl, 'detail'))}" loading="eager" fetchpriority="high" decoding="async" alt="${esc(p.name||'Product')}" onerror="this.onerror=null;this.src=SF_PRODUCT_FALLBACK_IMG;">
+        <div class="sm:w-1/2 aspect-square rounded-2xl overflow-hidden bg-[#161616] border border-[#2a2a2a] relative shrink-0 group cursor-pointer" data-view-image="${esc(getProductImageUrl(p.imageUrl, 'detail'))}" data-view-title="${esc(p.name||'Product')}">
+          <img class="w-full h-full object-cover group-hover:scale-105 transition duration-300" src="${esc(getProductImageUrl(p.imageUrl, 'detail'))}" loading="eager" fetchpriority="high" decoding="async" alt="${esc(p.name||'Product')}" onerror="this.onerror=null;this.src=SF_PRODUCT_FALLBACK_IMG;">
+          <div class="absolute bottom-2.5 left-2.5 bg-black/75 backdrop-blur-xs text-white text-[11px] font-bold px-2.5 py-1 rounded-lg border border-white/20 flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition shadow">
+            <span>🔍</span><span>Tap to zoom</span>
+          </div>
           ${!inStock ? `<span class="absolute top-2.5 right-2.5 bg-red-950/90 text-red-300 text-xs px-2.5 py-1 rounded-lg font-bold border border-red-700/60 shadow">Out of Stock</span>` : `<span class="absolute top-2.5 right-2.5 bg-black/70 backdrop-blur-sm text-zinc-300 text-xs px-2.5 py-1 rounded-lg border border-white/10 font-mono">${maxStock} in stock</span>`}
         </div>
         <div class="flex-1 flex flex-col justify-between">
@@ -9579,8 +9843,8 @@ async function openProductDetailModal(rawP){
 
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-xl overflow-hidden bg-[#222] border border-[#333] shrink-0 flex items-center justify-center text-lg font-black text-gold">
-              ${s.avatarUrl ? `<img src="${esc(s.avatarUrl)}" class="w-full h-full object-cover" alt="${esc(s.name)}">` : esc((s.name||'S')[0].toUpperCase())}
+            <div class="w-12 h-12 rounded-full overflow-hidden bg-[#222] border border-[#333] shrink-0 flex items-center justify-center">
+              <img src="${esc(getUserAvatarUrl(s))}" class="w-full h-full object-cover rounded-full" alt="${esc(s.name)}" onerror="window.__sfAvatarFallback(this)">
             </div>
             <div class="min-w-0">
               <div class="flex items-center gap-1.5 flex-wrap">
@@ -11558,16 +11822,22 @@ async function renderStore(forceEdit = false){
               <div class="flex items-center justify-between border-b border-[#242430] pb-2">
                 <div class="flex items-center gap-2 font-black text-amber-300 text-xs sm:text-sm">
                   <span>🏢</span>
-                  <span>Business Registration Certificate (Optional)</span>
+                  <span>Business Registration Certificate</span>
                 </div>
                 <span class="text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-700/60 px-2.5 py-0.5 rounded-full">
-                  ${store.hasBusinessCert || store.businessCertUrl ? '🏢 BUSINESS VERIFIED' : 'GET VERIFIED BADGE'}
+                  ${(isAdmin || isBusinessVerified(store)) ? '🏢 BUSINESS VERIFIED' : 'GET VERIFIED BADGE'}
                 </span>
               </div>
 
-              <p class="text-xs text-zinc-300 leading-relaxed">
-                If your business is registered with the Registrar General's Dept (RGD / ORC Ghana), upload your Business Registration Certificate or Form 3. Providing a business registration document unlocks the <b class="text-amber-300">🏢 Business Verified</b> badge on your store!
-              </p>
+              ${isAdmin ? `
+                <div class="p-3 rounded-xl bg-amber-950/30 border border-amber-800/60 text-xs text-amber-200/90 leading-relaxed">
+                  🛡️ <b>Admin Automatic Business Verification:</b> As an administrator, your business is <b>automatically verified</b> with the official <b class="text-amber-300">🏢 Business Verified</b> badge without needing to upload certificates.
+                </div>
+              ` : `
+                <p class="text-xs text-zinc-300 leading-relaxed">
+                  If your business is registered with the Registrar General's Dept (RGD / ORC Ghana), upload your Business Registration Certificate or Form 3. Providing a business registration document unlocks the <b class="text-amber-300">🏢 Business Verified</b> badge on your store!
+                </p>
+              `}
 
               ${store.businessCertUrl ? `
                 <div class="p-3 rounded-xl bg-emerald-950/30 border border-emerald-800/60 flex items-center justify-between gap-3">
@@ -11585,7 +11855,7 @@ async function renderStore(forceEdit = false){
 
               <div>
                 <label class="text-xs font-semibold text-zinc-300 block mb-1">
-                  ${store.businessCertUrl ? 'Replace Business Registration Certificate' : 'Upload Business Registration Certificate'}
+                  ${store.businessCertUrl ? 'Replace Business Registration Certificate' : (isAdmin ? 'Upload Business Registration Certificate (Optional for Admin)' : 'Upload Business Registration Certificate (Optional)')}
                 </label>
                 <input id="storeBusinessCertFile" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="text-xs text-zinc-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer w-full">
                 <p class="muted text-[11px] mt-1">Accepts JPG, PNG, WebP or PDF · max 15MB · Optional</p>
@@ -12128,7 +12398,7 @@ async function renderStore(forceEdit = false){
         let bannerUrl = store.bannerUrl || currentProfile?.bannerUrl || '', bannerPath = store.bannerPath || currentProfile?.bannerPath || '';
         let logoUrl = store.logoUrl || currentProfile?.avatarUrl || '', logoPath = store.logoPath || '';
         let businessCertUrl = store.businessCertUrl || '', businessCertPath = store.businessCertPath || '';
-        let hasBusinessCert = !!(store.hasBusinessCert || store.businessCertUrl);
+        let hasBusinessCert = isAdmin || !!(store.hasBusinessCert || store.businessCertUrl);
 
         if(bannerFile){
           validFile(bannerFile, ['image/jpeg','image/png','image/webp'], 10);
@@ -12268,10 +12538,22 @@ async function renderStore(forceEdit = false){
           currentProfile.logoUrl = logoUrl;
           if(logoUrl) currentProfile.avatarUrl = logoUrl;
           currentProfile.hasBusinessCert = hasBusinessCert;
+          currentProfile.businessVerified = hasBusinessCert;
           currentProfile.businessCertUrl = businessCertUrl;
           currentProfile.ghanaCardFrontPath = ghanaCardFrontPath;
           currentProfile.ghanaCardBackPath = ghanaCardBackPath;
         }
+        allPublicProfiles.set(currentUser.uid, {
+          ...(allPublicProfiles.get(currentUser.uid) || {}),
+          ...(currentProfile || {}),
+          uid: currentUser.uid,
+          avatarUrl: currentProfile?.avatarUrl || logoUrl || currentUser?.photoURL || '',
+          hasBusinessCert,
+          businessVerified: hasBusinessCert,
+          verified: isAdmin ? true : (currentProfile?.verified || false)
+        });
+        allStores.set(currentUser.uid, storeData);
+        saveUserSession(currentUser, currentProfile);
 
         if(isAdmin){
           toast('Store settings saved and published.', 'success');
@@ -12338,7 +12620,7 @@ async function saveProfile(){
         $('profileUsername')?.focus();
         throw Error(`Usernames can only be changed once every 360 days. You have ${cooldown.daysRemaining} day${cooldown.daysRemaining === 1 ? '' : 's'} remaining until ${nextDateStr}.`);
       }
-      if(newUsername === 'sellerflow' && (currentUser?.email || '').toLowerCase().trim() !== 'gideondreams3325@gmail.com'){
+      if(newUsername === 'sellerflow' && !isUserAdminEmail(currentUser?.email)){
         $('profileUsername')?.focus();
         throw Error('The username "sellerflow" is reserved. Please choose another username.');
       }
@@ -16267,7 +16549,7 @@ if($('authForm')){
         const name=$('authName').value.trim(),username=usernameClean($('authUsername').value);
         if(name.length<2)throw Error('Enter your full name.');
         if(username.length<3)throw Error('Username must be at least 3 characters.');
-        if(username === 'sellerflow' && email.toLowerCase().trim() !== 'gideondreams3325@gmail.com') {
+        if(username === 'sellerflow' && !isUserAdminEmail(email)) {
           $('authUsername')?.focus();
           throw Error('The username "sellerflow" is reserved. Please choose another username.');
         }
@@ -16392,7 +16674,36 @@ async function startUser(u){
     const snap=await getDoc(doc(db,'users',u.uid));
     if(snapshotExists(snap))currentProfile=snap.data();
   }catch(e){console.warn('Profile load skipped; authentication remains valid.',e)}
-  if(isAdmin && currentProfile) currentProfile={...currentProfile,verified:true,verificationStatus:'approved',role:'admin'};
+  if(currentProfile?.role === 'admin') isAdmin = true;
+  if(u.photoURL && currentProfile && (!currentProfile.avatarUrl || !currentProfile.avatarUrl.trim())){
+    currentProfile.avatarUrl = u.photoURL;
+    updateDoc(doc(db,'users',u.uid),{avatarUrl:u.photoURL}).catch(()=>{});
+    updateDoc(doc(db,'publicProfiles',u.uid),{avatarUrl:u.photoURL}).catch(()=>{});
+  }
+  if(isAdmin && currentProfile) {
+    currentProfile={
+      ...currentProfile,
+      verified:true,
+      verificationStatus:'approved',
+      role:'admin',
+      hasBusinessCert:true,
+      businessVerified:true,
+      businessCertificateStatus:'approved'
+    };
+    updateDoc(doc(db,'users',u.uid),{
+      verified:true,
+      role:'admin',
+      hasBusinessCert:true,
+      businessVerified:true,
+      verificationStatus:'approved'
+    }).catch(()=>{});
+    updateDoc(doc(db,'publicProfiles',u.uid),{
+      verified:true,
+      role:'admin',
+      hasBusinessCert:true,
+      businessVerified:true
+    }).catch(()=>{});
+  }
   if(!currentProfile){
     const base=(u.displayName||'SellerFlow User').trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,16)||'seller';
     let username=base+'_'+u.uid.slice(0,6).toLowerCase();
@@ -16400,8 +16711,16 @@ async function startUser(u){
       const available=await uniqueUsername(username);
       if(!available)username='seller_'+u.uid.slice(0,8).toLowerCase();
     }catch(e){console.warn('Generated username check skipped:',e)}
-    await createMissingProfile(u,{name:u.displayName||'SellerFlow User',username,usernameLower:username.toLowerCase(),role:isAdmin?'admin':'seller',verified:isAdmin});
+    await createMissingProfile(u,{name:u.displayName||'SellerFlow User',username,usernameLower:username.toLowerCase(),role:isAdmin?'admin':'seller',verified:isAdmin,hasBusinessCert:isAdmin,businessVerified:isAdmin});
   }
+  if(currentProfile){
+    allPublicProfiles.set(u.uid, {
+      ...currentProfile,
+      uid: u.uid,
+      avatarUrl: currentProfile.avatarUrl || u.photoURL || ''
+    });
+  }
+  setNav();
   if(typeof saveUserSession === 'function') {
     saveUserSession(u, currentProfile);
   }
@@ -16769,16 +17088,160 @@ init();
 </style>
 <script>
 (function(){
-  const oldAvatar=avatar;
-  avatar=function(p,cls='avatar'){
-    if(p?.avatarUrl)return `<img data-view-image="${esc(p.avatarUrl)}" class="${cls}" src="${esc(p.avatarUrl)}" alt="${esc(p.name||p.username||'Profile picture')}" onerror="this.onerror=null;this.style.display='none'">`;
-    return oldAvatar(p,cls);
+  // High-Resolution Interactive Lightbox & Picture Viewer
+  let _lightboxZoom = 1;
+  let _lightboxPanX = 0;
+  let _lightboxPanY = 0;
+  let _lightboxIsDragging = false;
+  let _lightboxStartX = 0;
+  let _lightboxStartY = 0;
+
+  window.sfCloseImageViewer = function(){
+    const el = $('sfLightboxViewer');
+    if(el) el.remove();
+    document.body.classList.remove('sf-lightbox-open');
+    document.removeEventListener('keydown', _lightboxKeyHandler);
   };
-  window.sfOpenImage=function(url,title='Image'){
-    if(!url)return;
-    modal(`<div><div class="text-sm font-bold text-zinc-300 mb-3">${esc(title)}</div><img src="${esc(url)}" class="w-full max-h-[78vh] object-contain rounded-2xl bg-black" alt="${esc(title)}"></div>`);
+
+  function _lightboxKeyHandler(e){
+    if(e.key === 'Escape') sfCloseImageViewer();
+    else if(e.key === '+' || e.key === '=') window.sfLightboxZoom(0.25);
+    else if(e.key === '-' || e.key === '_') window.sfLightboxZoom(-0.25);
+    else if(e.key === '0') window.sfLightboxResetZoom();
+  }
+
+  window.sfLightboxZoom = function(delta){
+    _lightboxZoom = Math.min(4, Math.max(0.5, _lightboxZoom + delta));
+    _updateLightboxTransform();
   };
-  document.addEventListener('click',e=>{const im=e.target.closest('[data-view-image]');if(im){e.stopPropagation();sfOpenImage(im.dataset.viewImage,im.alt||'Profile picture')}});
+
+  window.sfLightboxResetZoom = function(){
+    _lightboxZoom = 1;
+    _lightboxPanX = 0;
+    _lightboxPanY = 0;
+    _updateLightboxTransform();
+  };
+
+  function _updateLightboxTransform(){
+    const img = $('sfLightboxImg');
+    const label = $('sfLightboxZoomLevel');
+    if(img){
+      img.style.transform = `translate(${_lightboxPanX}px, ${_lightboxPanY}px) scale(${_lightboxZoom})`;
+      img.style.cursor = _lightboxZoom > 1 ? 'grab' : 'zoom-in';
+    }
+    if(label){
+      label.textContent = `${Math.round(_lightboxZoom * 100)}%`;
+    }
+  }
+
+  window.sfOpenImage = function(url, title = 'Photo'){
+    if(!url) return;
+    sfCloseImageViewer();
+
+    _lightboxZoom = 1;
+    _lightboxPanX = 0;
+    _lightboxPanY = 0;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'sfLightboxViewer';
+    overlay.className = 'fixed inset-0 z-[99999] bg-black/95 backdrop-blur-md flex flex-col items-center justify-between p-3 sm:p-5 select-none animate-fadeIn';
+    overlay.innerHTML = `
+      <!-- Top Navigation & Controls Bar -->
+      <div class="w-full max-w-5xl flex items-center justify-between gap-3 text-white z-20 py-2 border-b border-white/10">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="text-base text-amber-400">🖼️</span>
+          <span class="text-xs sm:text-sm font-bold truncate text-zinc-200">${esc(title)}</span>
+        </div>
+        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+          <button type="button" onclick="sfLightboxZoom(-0.25)" class="w-8 h-8 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/10 flex items-center justify-center text-sm font-bold transition" title="Zoom Out (-)">−</button>
+          <span id="sfLightboxZoomLevel" class="text-xs font-mono text-zinc-400 px-1.5 min-w-[42px] text-center">100%</span>
+          <button type="button" onclick="sfLightboxZoom(0.25)" class="w-8 h-8 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/10 flex items-center justify-center text-sm font-bold transition" title="Zoom In (+)">+</button>
+          <button type="button" onclick="sfLightboxResetZoom()" class="w-8 h-8 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/10 flex items-center justify-center text-xs font-bold transition" title="Reset Zoom (0)">↺</button>
+          <a href="${esc(url)}" target="_blank" rel="noopener noreferrer" download class="w-8 h-8 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 text-gold border border-gold/30 flex items-center justify-center text-xs font-bold transition" title="Open Full Size in New Tab">↗</a>
+          <button type="button" onclick="sfCloseImageViewer()" class="w-8 h-8 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-700/60 flex items-center justify-center text-sm font-black transition ml-1" title="Close (Esc)">✕</button>
+        </div>
+      </div>
+
+      <!-- Main Canvas Stage with Zoom and Pan -->
+      <div id="sfLightboxStage" class="relative flex-1 w-full flex items-center justify-center overflow-hidden my-2 cursor-zoom-in">
+        <img id="sfLightboxImg" src="${esc(url)}" referrerpolicy="no-referrer" class="max-h-[82vh] max-w-[94vw] object-contain rounded-xl shadow-2xl transition-transform duration-75 ease-out select-none" alt="${esc(title)}" onerror="this.onerror=null;this.src='/default-avatar.svg';">
+      </div>
+
+      <!-- Bottom Hint Bar -->
+      <div class="text-[11px] text-zinc-500 font-mono py-1 flex items-center gap-3">
+        <span>Double-tap or double-click to zoom</span>
+        <span>•</span>
+        <span>Esc or Tap ✕ to close</span>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    document.body.classList.add('sf-lightbox-open');
+    document.addEventListener('keydown', _lightboxKeyHandler);
+
+    // Zoom and pan interaction bindings
+    const stage = overlay.querySelector('#sfLightboxStage');
+    const img = overlay.querySelector('#sfLightboxImg');
+
+    if(stage && img){
+      stage.onclick = (e) => {
+        if(e.target === stage) sfCloseImageViewer();
+      };
+
+      img.ondblclick = (e) => {
+        e.stopPropagation();
+        if(_lightboxZoom > 1.2) {
+          window.sfLightboxResetZoom();
+        } else {
+          _lightboxZoom = 2.2;
+          _updateLightboxTransform();
+        }
+      };
+
+      // Drag / Pan handling
+      img.onmousedown = (e) => {
+        if(_lightboxZoom <= 1) return;
+        _lightboxIsDragging = true;
+        _lightboxStartX = e.clientX - _lightboxPanX;
+        _lightboxStartY = e.clientY - _lightboxPanY;
+        img.style.cursor = 'grabbing';
+      };
+
+      window.addEventListener('mousemove', (e) => {
+        if(!_lightboxIsDragging) return;
+        _lightboxPanX = e.clientX - _lightboxStartX;
+        _lightboxPanY = e.clientY - _lightboxStartY;
+        _updateLightboxTransform();
+      });
+
+      window.addEventListener('mouseup', () => {
+        if(_lightboxIsDragging){
+          _lightboxIsDragging = false;
+          if(img) img.style.cursor = _lightboxZoom > 1 ? 'grab' : 'zoom-in';
+        }
+      });
+
+      // Wheel Zoom
+      stage.onwheel = (e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.2 : -0.2;
+        window.sfLightboxZoom(delta);
+      };
+    }
+  };
+
+  document.addEventListener('click', e => {
+    const im = e.target.closest('[data-view-image]');
+    if(!im) return;
+    const actionParent = im.closest('button:not(#viewCounterpartProfileBtn):not(#modalVisitSellerProfile), a:not([data-view-image]), [data-open-seller], [data-chat-user-profile], [data-search-user], [data-search-store], #profilePhotoBtn, #sfEditPhotoPreview, .reel-user, .navbtn');
+    if(actionParent && !actionParent.hasAttribute('data-view-image') && actionParent !== im){
+      return;
+    }
+    e.stopPropagation();
+    const url = im.dataset.viewImage || im.src;
+    const title = im.dataset.viewTitle || im.alt || 'Photo';
+    sfOpenImage(url, title);
+  });
 
   /* Unified modal with a single clean back button bar — preventing double back buttons anywhere */
   const baseModal=modal;
@@ -21531,7 +21994,20 @@ init();
     let p = null;
     if(isOwner){
       const pub = (currentUser ? allPublicProfiles.get(currentUser.uid) : null) || {};
-      p = { ...(currentProfile || {}), ...pub, uid: targetUid };
+      const activeAvatar = currentProfile?.avatarUrl || pub?.avatarUrl || currentUser?.photoURL || '';
+      p = { 
+        ...(currentProfile || {}), 
+        ...pub, 
+        uid: targetUid,
+        avatarUrl: activeAvatar,
+        photoURL: activeAvatar
+      };
+      if(isAdmin){
+        p.verified = true;
+        p.role = 'admin';
+        p.hasBusinessCert = true;
+        p.businessVerified = true;
+      }
     } else {
       p = { ...sellerProfile(targetUid), uid: targetUid };
       try {
@@ -21541,6 +22017,12 @@ init();
         ]);
         if (pubDoc && snapshotExists(pubDoc)) Object.assign(p, pubDoc.data());
         if (userDoc && snapshotExists(userDoc)) Object.assign(p, userDoc.data());
+        if (isUserAdminEmail(p.email) || p.role === 'admin' || (currentUser && targetUid === currentUser.uid && isAdmin)) {
+          p.verified = true;
+          p.role = 'admin';
+          p.hasBusinessCert = true;
+          p.businessVerified = true;
+        }
       } catch(_) {}
     }
 
@@ -21619,12 +22101,12 @@ init();
           <div class="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6">
             ${isOwner ? `
               <button type="button" id="profilePhotoBtn" class="shrink-0 border-0 bg-transparent cursor-pointer relative group self-start sm:self-auto" title="Change profile picture">
-                ${p.avatarUrl?`<img class="sf-profile-avatar" src="${esc(getOptimizedMediaUrl(p.avatarUrl, 'avatar'))}" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfMediaFallback(this)">`:`<div class="sf-profile-avatar flex items-center justify-center text-4xl font-black text-gold">${esc((p.name||'?')[0].toUpperCase())}</div>`}
+                <img class="sf-profile-avatar rounded-full object-cover" src="${esc(getUserAvatarUrl(p))}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
                 <span class="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-gold text-black flex items-center justify-center text-sm shadow-md border-2 border-[#121212] group-hover:scale-110 transition">📷</span>
               </button>
             ` : `
               <div class="shrink-0 relative self-start sm:self-auto">
-                ${p.avatarUrl?`<img class="sf-profile-avatar" src="${esc(getOptimizedMediaUrl(p.avatarUrl, 'avatar'))}" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfMediaFallback(this)">`:`<div class="sf-profile-avatar flex items-center justify-center text-4xl font-black text-gold">${esc((p.name||'?')[0].toUpperCase())}</div>`}
+                <img class="sf-profile-avatar rounded-full object-cover" src="${esc(getUserAvatarUrl(p))}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
               </div>
             `}
             <div class="flex-1 min-w-0">
@@ -22128,7 +22610,7 @@ init();
       </div>
       <div class="flex items-center gap-4 mt-5">
         <button type="button" id="sfEditPhotoPreview" class="border-0 bg-transparent cursor-pointer relative group shrink-0" title="Click to choose a photo">
-          ${p.avatarUrl?`<img class="w-20 h-20 rounded-full object-cover bg-[#222] border-2 border-[#333]" src="${esc(p.avatarUrl)}" alt="Profile picture">`:`<div class="w-20 h-20 rounded-full bg-[#222] border-2 border-[#333] flex items-center justify-center text-2xl font-black text-gold">${esc((p.name||'?')[0].toUpperCase())}</div>`}
+          <img class="w-20 h-20 rounded-full object-cover bg-[#222] border-2 border-[#333]" src="${esc(getUserAvatarUrl(p))}" referrerpolicy="no-referrer" alt="Profile picture" onerror="window.__sfAvatarFallback(this)">
           <span class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs text-white font-bold transition">Change</span>
         </button>
         <div class="flex-1 min-w-0">
@@ -22240,7 +22722,7 @@ init();
             throw Error(`Usernames can only be changed once every 360 days. You have ${cooldown.daysRemaining} day${cooldown.daysRemaining === 1 ? '' : 's'} remaining until ${nextDateStr}.`);
           }
 
-          if(newUsername === 'sellerflow' && (currentUser?.email || '').toLowerCase().trim() !== 'gideondreams3325@gmail.com'){
+          if(newUsername === 'sellerflow' && !isUserAdminEmail(currentUser?.email)){
             $('sfEditUsername')?.focus();
             throw Error('The username "sellerflow" is reserved. Please choose another username.');
           }
@@ -23901,8 +24383,8 @@ init();
           <div class="flex items-start justify-between gap-3">
             <div class="flex items-center gap-2.5 min-w-0">
               ${s.logoUrl ? `
-                <img src="${esc(s.logoUrl)}" class="w-11 h-11 rounded-xl object-cover border border-[#333] shrink-0" alt="Logo" data-initial="${esc((storeName||'S')[0].toUpperCase())}" data-avatar-cls="w-11 h-11 rounded-xl object-cover border border-[#333] shrink-0" onerror="window.__sfAvatarFallback(this)">
-              ` : avatar(p, 'w-11 h-11 rounded-xl object-cover border border-[#333] shrink-0')}
+                <img src="${esc(s.logoUrl)}" class="w-11 h-11 rounded-full object-cover border border-[#333] shrink-0" alt="Logo" data-initial="${esc((storeName||'S')[0].toUpperCase())}" data-avatar-cls="w-11 h-11 rounded-full object-cover border border-[#333] shrink-0" onerror="window.__sfAvatarFallback(this)">
+              ` : avatar(p, 'w-11 h-11 rounded-full object-cover border border-[#333] shrink-0')}
               <div class="min-w-0">
                 <div class="font-bold text-sm text-white truncate flex items-center gap-1.5">
                   <span>${esc(storeName)}</span>
