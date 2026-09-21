@@ -1,5 +1,5 @@
 /* SellerFlow Progressive Web App & Notification Service Worker */
-const CACHE_NAME = 'sellerflow-cache-v1.1';
+const CACHE_NAME = 'sellerflow-cache-v1.2';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -24,7 +24,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.filter((key) => key !== CACHE_NAME && key !== MEDIA_CACHE_NAME).map((key) => caches.delete(key))
       );
     }).then(() => self.clients.claim())
   );
@@ -58,25 +58,38 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle public CDN / storage images (Cloudinary, Unsplash, Supabase public product/post/profile/store images)
-  const isPublicImage = (
-    (url.hostname.includes('cloudinary.com') ||
-     url.hostname.includes('images.unsplash.com') ||
-     (url.hostname.includes('supabase') && url.pathname.includes('/storage/v1/object/public/'))) &&
-    (req.destination === 'image' || /\.(jpe?g|png|webp|gif|svg)(\?.*)?$/i.test(url.pathname))
+  // Handle public CDN / storage images and local media uploads (Cloudinary, Unsplash, Supabase, local /uploads/)
+  const isPublicImageOrMedia = (
+    url.pathname.startsWith('/uploads/') ||
+    url.hostname.includes('cloudinary.com') ||
+    url.hostname.includes('images.unsplash.com') ||
+    (url.hostname.includes('supabase') && url.pathname.includes('/storage/v1/object/public/'))
+  ) && (
+    req.destination === 'image' ||
+    req.destination === 'video' ||
+    req.destination === 'audio' ||
+    /\.(jpe?g|png|webp|gif|svg|mp4|webm|mov|m4v|mp3|ogg|wav)(\?.*)?$/i.test(url.pathname)
   );
 
-  if (isPublicImage) {
+  if (isPublicImageOrMedia) {
     event.respondWith(
       caches.open(MEDIA_CACHE_NAME).then((cache) => {
         return cache.match(req).then((cached) => {
-          const fetchPromise = fetch(req).then((networkRes) => {
+          if (cached) {
+            // Return cached media immediately, background revalidate if needed
+            fetch(req).then((networkRes) => {
+              if (networkRes && networkRes.status === 200) {
+                cache.put(req, networkRes.clone()).catch(() => {});
+              }
+            }).catch(() => {});
+            return cached;
+          }
+          return fetch(req).then((networkRes) => {
             if (networkRes && networkRes.status === 200) {
               cache.put(req, networkRes.clone()).catch(() => {});
             }
             return networkRes;
           }).catch(() => cached);
-          return cached || fetchPromise;
         });
       })
     );

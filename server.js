@@ -36,9 +36,20 @@ if (!fs.existsSync(uploadsDir)) {
   try { fs.mkdirSync(uploadsDir, { recursive: true }); } catch (_) {}
 }
 app.use('/uploads', express.static(uploadsDir, {
-  maxAge: '7d',
+  maxAge: '30d',
+  immutable: true,
   etag: true,
-  lastModified: true
+  lastModified: true,
+  acceptRanges: true,
+  setHeaders: (res, filePath) => {
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    if (filePath.match(/\.(mp4|webm|mov|m4v|ogg|mp3|wav|mkv)$/i)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else if (filePath.match(/\.(jpg|jpeg|png|webp|avif|gif|svg)$/i)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }
 }));
 
 /* Initialize Trusted Firebase Admin SDK */
