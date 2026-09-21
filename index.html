@@ -2856,7 +2856,23 @@ function avatar(p,cls='avatar'){
   const initial = esc((p?.name||p?.username||'?')[0].toUpperCase());
   return url ? `<img class="${cls}" src="${esc(url)}" alt="" loading="lazy" decoding="async" data-initial="${initial}" data-avatar-cls="${cls}" onerror="window.__sfAvatarFallback(this)">` : `<div class="${cls} flex items-center justify-center font-bold bg-[#222] text-zinc-300">${initial}</div>`;
 }
-function validFile(file,types,maxMB){if(!file)return false;if(!types.includes(file.type))throw Error('Unsupported file type.');if(file.size>maxMB*1024*1024)throw Error(`File is too large. Maximum is ${maxMB}MB.`);return true}
+function validFile(file,types,maxMB){
+  if(!file)return false;
+  const t = (file.type || '').toLowerCase();
+  const name = file.name || '';
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  const isImageExt = ['jpg','jpeg','png','webp','gif','heic','heif','bmp'].includes(ext);
+  const isVideoExt = ['mp4','webm','mov','m4v','qt','mkv','avi','3gp'].includes(ext);
+  const typeAllowed = !types || types.length === 0 || 
+                      types.includes(t) || 
+                      t.startsWith('image/') || 
+                      t.startsWith('video/') || 
+                      (types.some(tp => tp.includes('image')) && isImageExt) ||
+                      (types.some(tp => tp.includes('video')) && isVideoExt);
+  if(!typeAllowed) throw Error('Unsupported file type. Please select a valid photo or video.');
+  if(file.size > maxMB * 1024 * 1024) throw Error(`File is too large. Maximum size is ${maxMB}MB.`);
+  return true;
+}
 
 const SF_PRODUCT_FALLBACK_IMG = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22 viewBox=%220 0 300 300%22 fill=%22none%22%3E%3Crect width=%22300%22 height=%22300%22 fill=%22%2318181b%22/%3E%3Ctext x=%2250%25%22 y=%2246%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2256%22%3E📦%3C/text%3E%3Ctext x=%2250%25%22 y=%2266%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2371717a%22 font-family=%22system-ui,sans-serif%22 font-size=%2214%22 font-weight=%22600%22%3ENo Image Available%3C/text%3E%3C/svg%3E';
 function getProductImageUrl(input, type = 'card'){
@@ -2924,7 +2940,10 @@ async function compressImageForUpload(file, options = {}) {
 /* Video Duration Helper & Validator (Supports duration selection up to 1 minute / 60 seconds) */
 function getVideoDuration(file){
   return new Promise((resolve) => {
-    if(!file || !file.type || !file.type.startsWith('video/')){
+    if(!file) return resolve(0);
+    const ext = ((file.name || '').split('.').pop() || '').toLowerCase();
+    const isVid = (file.type && file.type.startsWith('video/')) || ['mp4', 'webm', 'mov', 'm4v', 'qt', 'mkv', 'avi', '3gp'].includes(ext);
+    if(!isVid){
       return resolve(0);
     }
     const tempVideo = document.createElement('video');
@@ -3051,7 +3070,7 @@ async function fileToBase64(file) {
 }
 window.fileToBase64 = fileToBase64;
 
-async function universalStorageUpload(file, path, maxMB = 100) {
+async function universalStorageUpload(file, path, maxMB = 250) {
   if (!file) throw Error('No file selected.');
 
   // 1. Try Supabase storage if available
@@ -3079,7 +3098,27 @@ async function universalStorageUpload(file, path, maxMB = 100) {
     }
   }
 
-  // 2. Await server storage upload (/api/storage/upload) to get a compact public URL (/uploads/...)
+  // 2. Direct binary upload to server storage (/api/storage/upload)
+  try {
+    const binResp = await fetch(`/api/storage/upload?path=${encodeURIComponent(path)}`, {
+      method: 'POST',
+      headers: {
+        'x-file-path': encodeURIComponent(path),
+        'Content-Type': file.type || 'application/octet-stream'
+      },
+      body: file
+    });
+    if (binResp.ok) {
+      const binData = await binResp.json();
+      if (binData.success && binData.url) {
+        return { url: binData.url, path: binData.path || path };
+      }
+    }
+  } catch (binErr) {
+    console.warn('Direct binary upload notice, falling back to base64:', binErr);
+  }
+
+  // 3. Fallback: JSON base64 upload (/api/storage/upload) to get a compact public URL (/uploads/...)
   let base64Data = '';
   try {
     base64Data = await fileToBase64(file);
@@ -3138,9 +3177,10 @@ async function supabaseUpload(file, path, maxMB) {
 window.supabaseUpload = supabaseUpload;
 
 async function uploadPublic(file, folder) {
-  validFile(file, ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime', 'application/pdf'], 100);
+  validFile(file, ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime', 'application/pdf'], 250);
   let uploadableFile = file;
-  if (file && file.type && file.type.startsWith('image/')) {
+  const isImg = file && (file.type?.startsWith('image/') || ['jpg','jpeg','png','webp','gif','heic','heif'].includes(((file.name||'').split('.').pop()||'').toLowerCase()));
+  if (isImg) {
     try {
       const maxDim = (folder === 'profiles' || folder === 'avatars') ? 800 : (folder === 'banners' ? 1400 : 1920);
       uploadableFile = await compressImageForUpload(file, { maxDimension: maxDim, quality: 0.85 });
@@ -3152,8 +3192,8 @@ async function uploadPublic(file, folder) {
   const ext = (fileName.split('.').pop() || 'bin').replace(/[^a-z0-9]/gi, '').toLowerCase();
   const uid = currentUser?.uid || 'guest';
   const path = `media/${uid}/${folder}/${Date.now()}_${crypto.randomUUID()}.${ext}`;
-  const result = await universalStorageUpload(uploadableFile, path, 100);
-  return { url: result.url, path: result.path || path, type: uploadableFile.type };
+  const result = await universalStorageUpload(uploadableFile, path, 250);
+  return { url: result.url, path: result.path || path, type: uploadableFile.type || file.type || 'application/octet-stream' };
 }
 window.uploadPublic = uploadPublic;
 
@@ -16959,7 +16999,9 @@ init();
     if($('postFile')) $('postFile').onchange = async () => {
       file = $('postFile').files[0];
       if(!file){ area.innerHTML = ''; capturedCoverBlob = null; return; }
-      kind = file.type.startsWith('video') ? 'video' : 'image';
+      const ext = ((file.name || '').split('.').pop() || '').toLowerCase();
+      const isVid = (file.type && file.type.startsWith('video/')) || ['mp4', 'webm', 'mov', 'm4v', 'qt', 'mkv', 'avi', '3gp'].includes(ext);
+      kind = isVid ? 'video' : 'image';
       if(kind === 'video'){
         loading('Reading video duration & format…');
         const totalDur = await getVideoDuration(file);
@@ -17012,66 +17054,80 @@ init();
 
         // Precision Canvas Crop & Resolution Scaling for Images
         if(file && kind === 'image'){
-          loading('Rendering photo at selected resolution & crop…');
-          const img = new Image();
-          img.src = URL.createObjectURL(file);
-          await img.decode();
-          
-          const natW = img.naturalWidth || 1080;
-          const natH = img.naturalHeight || 1920;
-
-          const cropX = Math.round(Math.max(0, Math.min(natW - 1, imageCropBox.x * natW)));
-          const cropY = Math.round(Math.max(0, Math.min(natH - 1, imageCropBox.y * natH)));
-          const cropW = Math.round(Math.max(16, Math.min(natW - cropX, imageCropBox.w * natW)));
-          const cropH = Math.round(Math.max(16, Math.min(natH - cropY, imageCropBox.h * natH)));
-
-          let maxDim;
-          if(imageResolution === '4k') maxDim = 3840;
-          else if(imageResolution === '1080p') maxDim = 1920;
-          else if(imageResolution === '720p') maxDim = 1280;
-          else if(imageResolution === '480p') maxDim = 854;
-          else maxDim = Math.max(cropW, cropH);
-
-          let targetW, targetH;
-          if(imageResolution === 'original'){
-            targetW = cropW;
-            targetH = cropH;
-          } else {
-            if(cropW >= cropH){
-              targetW = Math.min(cropW, maxDim);
-              targetH = Math.round(targetW * (cropH / cropW));
-            } else {
-              targetH = Math.min(cropH, maxDim);
-              targetW = Math.round(targetH * (cropW / cropH));
+          try {
+            loading('Rendering photo at selected resolution & crop…');
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+            try {
+              if (img.decode) await img.decode();
+              else await new Promise(r => { img.onload = r; img.onerror = r; });
+            } catch (_) {
+              if (!img.complete) {
+                await new Promise(r => { img.onload = r; img.onerror = r; });
+              }
             }
+            
+            const natW = img.naturalWidth || 1080;
+            const natH = img.naturalHeight || 1920;
+
+            const cropX = Math.round(Math.max(0, Math.min(natW - 1, imageCropBox.x * natW)));
+            const cropY = Math.round(Math.max(0, Math.min(natH - 1, imageCropBox.y * natH)));
+            const cropW = Math.round(Math.max(16, Math.min(natW - cropX, imageCropBox.w * natW)));
+            const cropH = Math.round(Math.max(16, Math.min(natH - cropY, imageCropBox.h * natH)));
+
+            let maxDim;
+            if(imageResolution === '4k') maxDim = 3840;
+            else if(imageResolution === '1080p') maxDim = 1920;
+            else if(imageResolution === '720p') maxDim = 1280;
+            else if(imageResolution === '480p') maxDim = 854;
+            else maxDim = Math.max(cropW, cropH);
+
+            let targetW, targetH;
+            if(imageResolution === 'original'){
+              targetW = cropW;
+              targetH = cropH;
+            } else {
+              if(cropW >= cropH){
+                targetW = Math.min(cropW, maxDim);
+                targetH = Math.round(targetW * (cropH / cropW));
+              } else {
+                targetH = Math.min(cropH, maxDim);
+                targetW = Math.round(targetH * (cropW / cropH));
+              }
+            }
+            targetW = Math.max(16, Math.round(targetW / 2) * 2);
+            targetH = Math.max(16, Math.round(targetH / 2) * 2);
+
+            finalResolution = imageResolution;
+            finalCropRatio = imageCropState.ratio;
+            finalDimensions = `${targetW}×${targetH}`;
+
+            const c = document.createElement('canvas');
+            c.width = targetW;
+            c.height = targetH;
+            const ctx = c.getContext('2d');
+
+            const fCss = getCombinedFilterCss();
+            if(fCss && fCss !== 'none'){
+              try { ctx.filter = fCss; } catch(fErr){ console.warn('Canvas filter application fallback', fErr); }
+            }
+
+            if(imageCropState.rotation){
+              ctx.translate(c.width / 2, c.height / 2);
+              ctx.rotate(imageCropState.rotation * Math.PI / 180);
+              ctx.drawImage(img, cropX, cropY, cropW, cropH, -c.width / 2, -c.height / 2, c.width, c.height);
+            } else {
+              ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
+            }
+
+            const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.90));
+            if(blob){
+              uploadFile = new File([blob], `sellerflow-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+            }
+          } catch(imgErr){
+            console.warn('Photo canvas optimization notice, using source file:', imgErr);
+            uploadFile = file;
           }
-          targetW = Math.max(16, Math.round(targetW / 2) * 2);
-          targetH = Math.max(16, Math.round(targetH / 2) * 2);
-
-          finalResolution = imageResolution;
-          finalCropRatio = imageCropState.ratio;
-          finalDimensions = `${targetW}×${targetH}`;
-
-          const c = document.createElement('canvas');
-          c.width = targetW;
-          c.height = targetH;
-          const ctx = c.getContext('2d');
-
-          const fCss = getCombinedFilterCss();
-          if(fCss && fCss !== 'none'){
-            try { ctx.filter = fCss; } catch(fErr){ console.warn('Canvas filter application fallback', fErr); }
-          }
-
-          if(imageCropState.rotation){
-            ctx.translate(c.width / 2, c.height / 2);
-            ctx.rotate(imageCropState.rotation * Math.PI / 180);
-            ctx.drawImage(img, cropX, cropY, cropW, cropH, -c.width / 2, -c.height / 2, c.width, c.height);
-          } else {
-            ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
-          }
-
-          const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.90));
-          uploadFile = new File([blob], `sellerflow-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
         }
 
         // Cropped & Resolution Scaled Cover Thumbnail for Videos
@@ -17102,12 +17158,14 @@ init();
 
         let mediaUrl = '', mediaType = '', mediaPath = '';
         if(uploadFile){
-          validFile(uploadFile, ['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm','video/quicktime'], 80);
+          validFile(uploadFile, ['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm','video/quicktime'], 250);
           loading('Uploading media to SellerFlow storage…');
           const x = await uploadPublic(uploadFile, 'posts');
           mediaUrl = x.url;
           mediaPath = x.path;
-          mediaType = uploadFile.type;
+          const ext = ((uploadFile.name || file?.name || '').split('.').pop() || '').toLowerCase();
+          const isVid = kind === 'video' || (uploadFile.type && uploadFile.type.startsWith('video/')) || ['mp4', 'webm', 'mov', 'm4v', 'qt', 'mkv', 'avi', '3gp'].includes(ext);
+          mediaType = uploadFile.type || file?.type || (isVid ? 'video/mp4' : 'image/jpeg');
         }
 
         // Upload custom cropped cover thumbnail if video

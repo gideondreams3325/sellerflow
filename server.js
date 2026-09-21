@@ -27,8 +27,9 @@ app.use(compression({
     return compression.filter(req, res);
   }
 }));
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+app.use(express.json({ limit: '250mb' }));
+app.use(express.urlencoded({ extended: true, limit: '250mb' }));
+app.use(express.raw({ limit: '250mb', type: ['application/octet-stream', 'video/*', 'image/*', 'audio/*', 'application/pdf'] }));
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -1967,16 +1968,28 @@ app.post('/api/push/test', async (req, res) => {
 /* Storage & Media Upload Endpoint */
 app.post('/api/storage/upload', async (req, res) => {
   try {
-    const { path: relPath, base64, contentType } = req.body || {};
+    let relPath = req.headers['x-file-path'] || req.query.path;
+    let contentType = req.headers['content-type'];
+    let fileBuffer;
+
+    if (Buffer.isBuffer(req.body)) {
+      fileBuffer = req.body;
+      if (relPath) {
+        try { relPath = decodeURIComponent(relPath); } catch (_) {}
+      }
+    } else if (req.body && typeof req.body === 'object') {
+      const { path: bodyPath, base64, contentType: bodyContentType } = req.body;
+      if (bodyPath) relPath = bodyPath;
+      if (bodyContentType) contentType = bodyContentType;
+      if (base64) {
+        const cleanBase64 = base64.replace(/^data:[^;]+;base64,/, '');
+        fileBuffer = Buffer.from(cleanBase64, 'base64');
+      }
+    }
+
     const safeRelPath = (relPath || `media/upload_${Date.now()}_${crypto.randomUUID()}.bin`)
       .replace(/^[/\\]+/, '')
       .replace(/\.\.[/\\]/g, '');
-    
-    let fileBuffer;
-    if (base64) {
-      const cleanBase64 = base64.replace(/^data:[^;]+;base64,/, '');
-      fileBuffer = Buffer.from(cleanBase64, 'base64');
-    }
 
     if (!fileBuffer || fileBuffer.length === 0) {
       return res.status(400).json({ success: false, error: 'No file content provided' });
