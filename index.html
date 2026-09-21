@@ -246,6 +246,39 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 .sf-photo-indicator{position:absolute;top:8px;right:8px;z-index:3;background:rgba(0,0,0,.75);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;backdrop-filter:blur(4px)}
 
 /* ==========================================================================
+   SELLERFLOW SHIMMER & SKELETON LOADING SYSTEM
+   Provides instant visual feedback while pages and media load
+   ========================================================================== */
+@keyframes sfShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.sf-shimmer-box {
+  position: relative;
+  overflow: hidden;
+  background-color: #141416;
+}
+.sf-shimmer-box::after {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(245, 185, 66, 0.05) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(245, 185, 66, 0.05) 75%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: sfShimmer 1.6s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  content: '';
+  pointer-events: none;
+}
+#sfNavProgressBar {
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+}
+
+/* ==========================================================================
    SELLERFLOW STOREFRONT THEME CUSTOMIZER & CSS VARIABLES SYSTEM
    Allows Ghanaian merchants to select custom brand colors for their storefront,
    which are dynamically applied via CSS variables.
@@ -469,7 +502,7 @@ input, textarea, select { color: #ffffff !important; }
 /* Modern eye-catching professional buttons & controls */
 #brandBtn{font-family:'Outfit',sans-serif;font-weight:900;font-size:1.32rem;letter-spacing:-0.03em;display:inline-flex;align-items:center;line-height:1;flex-shrink:0;transition:transform .15s ease, opacity .15s ease}
 #brandBtn:active{transform:scale(.97)}
-.gold-gradient{background:linear-gradient(135deg,#ffe082 0%,#f5b942 50%,#e29c1b 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.gold-gradient{background:linear-gradient(135deg,#FFF066 0%,#FFC700 45%,#F59E0B 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
 #mobileMenu,#pageSelectorBtn{width:36px;height:36px;min-width:36px;border-radius:11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#e4e4e7;display:inline-flex;align-items:center;justify-content:center;font-size:14px;padding:0;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:all .16s ease}
 @media(max-width:480px){
@@ -807,7 +840,7 @@ html.light-theme #devVerificationSandboxNotice {
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center select-none transition-opacity duration-200"><div class="text-center flex flex-col items-center"><div class="flex items-center gap-2.5 mb-5"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-10 h-10 object-contain drop-shadow-[0_2px_12px_rgba(245,158,11,0.35)]" /><span class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></span><span class="text-[10px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider">GH</span></div><div class="w-7 h-7 rounded-full border-2 border-zinc-800 border-t-[#f5b942] animate-spin"></div><div id="loadingText" class="text-xs text-zinc-500 mt-3 font-medium"></div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
 <div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="flex items-center justify-center gap-2 mb-2"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-10 h-10 object-contain drop-shadow-[0_2px_10px_rgba(245,158,11,0.3)]" /><span class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></span></div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name"></div><div id="usernameWrap"><div class="flex items-center justify-between"><label class="text-sm muted">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="authUsernamePreview">username</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="authUsername" type="text" class="w-full pl-8 pr-10 p-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-sm focus:border-gold outline-none transition" placeholder="e.g. gideon_shop" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"><span id="authUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none"></span></div><div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can only be changed once every 360 days.</span></div><div id="authUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="authUsernameSuggestions" class="mt-2 hidden"></div></div><div id="emailInputWrap"><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"><div id="authEmailFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><div id="emailVerifyWrap" class="hide text-center mt-5"><div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl text-amber-400 mb-3 shadow-[0_0_20px_rgba(245,158,11,0.15)]">🔑</div><div class="mt-3 p-4 rounded-xl bg-[#141414] border border-[#2a2a2a] text-left"><div class="text-[11px] font-medium text-zinc-400">We've sent a modern, professional verification code to</div><div id="verifyEmailTarget" class="text-sm font-bold text-amber-400 mt-1 break-all select-all">user@example.com</div><div class="text-[11px] text-zinc-400 mt-2.5 leading-relaxed font-semibold">Please enter the 6-digit security code below to activate your SellerFlow account.</div></div><div class="mt-5 text-left"><label class="block text-xs text-zinc-400 font-semibold mb-1.5 uppercase tracking-wider">Verification Code</label><input id="verificationCodeInput" type="text" maxlength="6" pattern="[0-9]*" inputmode="numeric" class="w-full text-center tracking-[0.5em] font-mono text-2xl font-black p-3 rounded-xl bg-[#141414] border border-[#333] text-gold hover:border-[#444] focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition outline-none" placeholder="000000"></div><div class="space-y-2 mt-5"><button id="submitVerificationCodeBtn" type="button" class="w-full bg-gold text-black p-3.5 rounded-xl font-bold text-sm shadow-md hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center gap-2"><span class="text-base">✓</span><span>Verify Code</span></button><button id="resendVerificationBtn" type="button" class="w-full p-3 rounded-xl border border-[#383838] bg-[#181818] text-zinc-200 hover:text-white hover:border-[#555] font-semibold text-xs transition">Resend email</button><button id="changeEmailBtn" type="button" class="w-full mt-2 text-xs text-zinc-400 hover:text-amber-400 underline transition py-1 font-semibold">Change email / Sign in with another account</button></div></div><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
-<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur-md border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-2 sm:gap-4"><div class="flex items-center gap-2 sm:gap-3 shrink-0"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-2 shrink-0 select-none cursor-pointer group" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)] transition-transform group-hover:scale-105" /><span class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></span><span class="text-[9px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider hidden xs:inline-block">GH</span></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1.5 sm:gap-2 shrink-0"></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur-md border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-2 sm:gap-4"><div class="flex items-center gap-2 sm:gap-3 shrink-0"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-2 shrink-0 select-none cursor-pointer group" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)] transition-transform group-hover:scale-105" /><span class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></span><span class="text-[9px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider hidden xs:inline-block">GH</span></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1.5 sm:gap-2 shrink-0"></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"><div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap flex items-center gap-2"><span>For You</span><span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-gold animate-pulse"></span></h1></div><div class="flex items-center gap-1.5 sm:gap-2 shrink-0"><div class="w-20 h-7 rounded-xl bg-[#1a1a1e] sf-shimmer-box"></div></div></div><div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden"><div class="reel-feed flex-1 min-h-0 w-full overflow-hidden" id="reelFeedSkeleton"><div class="reel-card sf-shimmer-box relative flex items-center justify-center"><div class="flex flex-col items-center justify-center p-6 text-center z-10 select-none pointer-events-none"><div class="relative mb-3.5 flex items-center justify-center"><div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-gold animate-spin"></div><div class="absolute inset-0 flex items-center justify-center"><span class="text-[10px] font-black text-gold font-mono">GH</span></div></div><div class="text-sm font-bold text-white tracking-wide flex items-center gap-1.5"><span>Loading For You Feed</span><span class="inline-flex gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 0ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 150ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 300ms"></span></span></div><div class="text-[11px] text-zinc-400 mt-1 font-medium">Discovering top Ghanaian reels…</div></div><div class="reel-actions flex flex-col items-center gap-4 absolute right-2.5 sm:right-4 bottom-20 z-10 pointer-events-none"><div class="w-11 h-11 rounded-full bg-[#202026] sf-shimmer-box border border-[#333]"></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="w-9 h-9 rounded-full bg-[#202026] sf-shimmer-box border border-gold/30"></div></div><div class="reel-content flex flex-col gap-2 pointer-events-none"><div class="flex items-center gap-2"><div class="w-28 h-4 rounded-md bg-[#25252d] sf-shimmer-box"></div><div class="w-16 h-4 rounded-full bg-amber-500/20 sf-shimmer-box"></div></div><div class="w-52 h-3.5 rounded bg-[#202026] sf-shimmer-box"></div><div class="w-36 h-3 rounded bg-[#202026] sf-shimmer-box"></div><div class="flex items-center gap-2 mt-1"><div class="w-32 h-7 rounded-full bg-[#25252f] sf-shimmer-box"></div><div class="w-20 h-7 rounded-full bg-amber-500/30 sf-shimmer-box"></div></div></div></div></div></div></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
 (function(){
@@ -4557,15 +4590,253 @@ function prefetchPage(page){
 window.prefetchPage = prefetchPage;
 
 function startPageProgress(){
-  const pb = $('sfNavProgressBar');
-  if(pb) pb.remove();
+  let pb = $('sfNavProgressBar');
+  if(!pb){
+    pb = document.createElement('div');
+    pb.id = 'sfNavProgressBar';
+    pb.className = 'fixed top-0 left-0 h-[2.5px] bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-300 z-[9999] shadow-[0_0_12px_rgba(245,185,66,0.9)] pointer-events-none';
+    pb.style.width = '0%';
+    pb.style.opacity = '1';
+    document.body.appendChild(pb);
+    requestAnimationFrame(() => {
+      if(pb) pb.style.width = '45%';
+    });
+  } else {
+    pb.style.width = '45%';
+    pb.style.opacity = '1';
+  }
 }
 function completePageProgress(){
   const pb = $('sfNavProgressBar');
-  if(pb) pb.remove();
+  if(pb){
+    pb.style.width = '100%';
+    setTimeout(() => {
+      if(pb) {
+        pb.style.opacity = '0';
+        setTimeout(() => { if(pb && pb.parentNode) pb.parentNode.removeChild(pb); }, 280);
+      }
+    }, 160);
+  }
 }
 window.startPageProgress = startPageProgress;
 window.completePageProgress = completePageProgress;
+
+function getFeedSkeletonHTML(options = {}){
+  const fromProfile = options?.fromProfile;
+  return `
+    <div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10">
+      <div class="flex items-center gap-2 min-w-0">
+        ${fromProfile ? `<button type="button" class="border border-[#333] px-2.5 py-1 rounded-xl text-xs font-bold mr-1 opacity-50">← Profile</button>` : ''}
+        <h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap flex items-center gap-2">
+          <span>For You</span>
+          <span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-gold animate-pulse"></span>
+        </h1>
+      </div>
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div class="w-20 h-7 rounded-xl bg-[#1a1a1e] sf-shimmer-box"></div>
+      </div>
+    </div>
+    <div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden">
+      <div class="reel-feed flex-1 min-h-0 w-full overflow-hidden" id="reelFeedSkeleton">
+        <div class="reel-card sf-shimmer-box relative flex items-center justify-center">
+          <!-- Center Animated Spinner & Glow -->
+          <div class="flex flex-col items-center justify-center p-6 text-center z-10 select-none pointer-events-none">
+            <div class="relative mb-3.5 flex items-center justify-center">
+              <div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-gold animate-spin"></div>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-[10px] font-black text-gold font-mono">GH</span>
+              </div>
+            </div>
+            <div class="text-sm font-bold text-white tracking-wide flex items-center gap-1.5">
+              <span>Loading For You Feed</span>
+              <span class="inline-flex gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 0ms"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 150ms"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 300ms"></span>
+              </span>
+            </div>
+            <div class="text-[11px] text-zinc-400 mt-1 font-medium">Discovering top Ghanaian reels…</div>
+          </div>
+
+          <!-- Right Floating Action Icons Skeleton -->
+          <div class="reel-actions flex flex-col items-center gap-4 absolute right-2.5 sm:right-4 bottom-20 z-10 pointer-events-none">
+            <div class="w-11 h-11 rounded-full bg-[#202026] sf-shimmer-box border border-[#333]"></div>
+            <div class="flex flex-col items-center gap-1">
+              <div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div>
+              <div class="w-5 h-2 rounded bg-[#202026]"></div>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div>
+              <div class="w-5 h-2 rounded bg-[#202026]"></div>
+            </div>
+            <div class="flex flex-col items-center gap-1">
+              <div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div>
+              <div class="w-5 h-2 rounded bg-[#202026]"></div>
+            </div>
+            <div class="w-9 h-9 rounded-full bg-[#202026] sf-shimmer-box border border-gold/30"></div>
+          </div>
+
+          <!-- Bottom Reel Caption & Product Skeleton -->
+          <div class="reel-content flex flex-col gap-2 pointer-events-none">
+            <div class="flex items-center gap-2">
+              <div class="w-28 h-4 rounded-md bg-[#25252d] sf-shimmer-box"></div>
+              <div class="w-16 h-4 rounded-full bg-amber-500/20 sf-shimmer-box"></div>
+            </div>
+            <div class="w-52 h-3.5 rounded bg-[#202026] sf-shimmer-box"></div>
+            <div class="w-36 h-3 rounded bg-[#202026] sf-shimmer-box"></div>
+            <div class="flex items-center gap-2 mt-1">
+              <div class="w-32 h-7 rounded-full bg-[#25252f] sf-shimmer-box"></div>
+              <div class="w-20 h-7 rounded-full bg-amber-500/30 sf-shimmer-box"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderFeedSkeleton(options = {}){
+  const pageEl = document.getElementById('page');
+  if(pageEl) pageEl.innerHTML = getFeedSkeletonHTML(options);
+}
+
+function renderPageLoadingSkeleton(page, targetPostId, options = {}){
+  const pageEl = document.getElementById('page');
+  if(!pageEl) return;
+
+  if(page === 'feed'){
+    pageEl.innerHTML = getFeedSkeletonHTML(options);
+    return;
+  }
+
+  if(page === 'marketplace'){
+    pageEl.innerHTML = `
+      <div class="space-y-4 max-w-7xl mx-auto">
+        <div class="flex flex-col sm:flex-row gap-2.5">
+          <div class="flex-1 h-12 rounded-2xl bg-[#141418] sf-shimmer-box border border-[#242428]"></div>
+          <div class="w-full sm:w-44 h-12 rounded-2xl bg-[#141418] sf-shimmer-box border border-[#242428]"></div>
+        </div>
+        <div class="flex gap-2 overflow-x-auto py-1 no-scrollbar">
+          ${[1,2,3,4,5,6,7].map(() => `<div class="w-24 h-8 rounded-full bg-[#18181e] sf-shimmer-box shrink-0"></div>`).join('')}
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+          ${[1,2,3,4,5,6,7,8].map(() => `
+            <div class="card p-3 rounded-2xl bg-[#121215] border border-[#242428] space-y-2.5">
+              <div class="aspect-square w-full rounded-xl bg-[#1a1a20] sf-shimmer-box"></div>
+              <div class="w-3/4 h-3.5 rounded bg-[#22222a] sf-shimmer-box"></div>
+              <div class="w-1/2 h-3 rounded bg-[#1c1c22] sf-shimmer-box"></div>
+              <div class="flex items-center justify-between pt-1">
+                <div class="w-20 h-4 rounded bg-amber-500/20 sf-shimmer-box"></div>
+                <div class="w-8 h-8 rounded-xl bg-[#202026] sf-shimmer-box"></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if(page === 'store'){
+    pageEl.innerHTML = `
+      <div class="space-y-4 max-w-7xl mx-auto">
+        <div class="h-36 sm:h-52 rounded-2xl sm:rounded-3xl bg-[#141418] sf-shimmer-box border border-[#242428] relative overflow-hidden">
+          <div class="absolute bottom-4 left-4 flex items-end gap-3.5">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#202026] sf-shimmer-box border-2 border-[#111]"></div>
+            <div class="space-y-1.5 mb-1">
+              <div class="w-40 h-5 rounded bg-[#26262e] sf-shimmer-box"></div>
+              <div class="w-24 h-3.5 rounded bg-[#1e1e24] sf-shimmer-box"></div>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-2 border-b border-[#242428] pb-2">
+          <div class="w-24 h-8 rounded-xl bg-amber-500/20 sf-shimmer-box"></div>
+          <div class="w-24 h-8 rounded-xl bg-[#18181e] sf-shimmer-box"></div>
+          <div class="w-24 h-8 rounded-xl bg-[#18181e] sf-shimmer-box"></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+          ${[1,2,3,4,5,6].map(() => `
+            <div class="card p-3 rounded-2xl bg-[#121215] border border-[#242428] space-y-2">
+              <div class="aspect-square w-full rounded-xl bg-[#1a1a20] sf-shimmer-box"></div>
+              <div class="w-3/4 h-3.5 rounded bg-[#22222a] sf-shimmer-box"></div>
+              <div class="w-1/2 h-4 rounded bg-amber-500/20 sf-shimmer-box"></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if(page === 'profile'){
+    pageEl.innerHTML = `
+      <div class="max-w-4xl mx-auto space-y-4">
+        <div class="card p-5 sm:p-6 rounded-3xl bg-[#121215] border border-[#242428] space-y-4">
+          <div class="flex items-center gap-4">
+            <div class="w-20 h-20 rounded-full bg-[#202026] sf-shimmer-box border-2 border-[#333]"></div>
+            <div class="flex-1 space-y-2">
+              <div class="w-44 h-5 rounded bg-[#26262e] sf-shimmer-box"></div>
+              <div class="w-28 h-3 rounded bg-[#1e1e24] sf-shimmer-box"></div>
+              <div class="w-56 h-3 rounded bg-[#1a1a20] sf-shimmer-box"></div>
+            </div>
+          </div>
+          <div class="grid grid-cols-4 gap-2 pt-2 border-t border-[#222]">
+            ${[1,2,3,4].map(() => `<div class="p-3 rounded-xl bg-[#18181c] sf-shimmer-box h-14"></div>`).join('')}
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
+          ${[1,2,3,4,5,6,7,8,9].map(() => `<div class="aspect-square bg-[#151518] sf-shimmer-box rounded-lg"></div>`).join('')}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if(page === 'chats'){
+    pageEl.innerHTML = `
+      <div class="max-w-4xl mx-auto card p-4 rounded-3xl bg-[#121215] border border-[#242428] space-y-3">
+        <div class="w-full h-11 rounded-2xl bg-[#18181c] sf-shimmer-box"></div>
+        <div class="space-y-2">
+          ${[1,2,3,4,5,6].map(() => `
+            <div class="flex items-center gap-3 p-3 rounded-2xl bg-[#161619] sf-shimmer-box">
+              <div class="w-12 h-12 rounded-full bg-[#24242c] shrink-0"></div>
+              <div class="flex-1 space-y-1.5">
+                <div class="flex justify-between">
+                  <div class="w-32 h-4 rounded bg-[#282832]"></div>
+                  <div class="w-12 h-3 rounded bg-[#202028]"></div>
+                </div>
+                <div class="w-3/4 h-3 rounded bg-[#202028]"></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Dashboard / Analysis / Orders / Cart / Generic fallback skeleton
+  pageEl.innerHTML = `
+    <div class="max-w-5xl mx-auto space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-[#242428]">
+        <div class="w-44 h-7 rounded-xl bg-[#18181c] sf-shimmer-box"></div>
+        <div class="w-24 h-7 rounded-xl bg-[#18181c] sf-shimmer-box"></div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        ${[1,2,3,4,5,6].map(() => `
+          <div class="card p-4 rounded-2xl bg-[#121215] border border-[#242428] space-y-3">
+            <div class="h-28 rounded-xl bg-[#18181e] sf-shimmer-box"></div>
+            <div class="w-3/4 h-4 rounded bg-[#222228] sf-shimmer-box"></div>
+            <div class="w-1/2 h-3 rounded bg-[#1a1a20] sf-shimmer-box"></div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+window.getFeedSkeletonHTML = getFeedSkeletonHTML;
+window.renderFeedSkeleton = renderFeedSkeleton;
+window.renderPageLoadingSkeleton = renderPageLoadingSkeleton;
 
 function setNav(){
   const dNav = $('desktopNav');
@@ -5093,6 +5364,8 @@ async function navigate(page, targetPostId, options){
     armHistoryState(true);
   }
   startPageProgress();
+  // Provide instant visual feedback so the screen is never blank or plain during navigation
+  renderPageLoadingSkeleton(page, targetPostId, options);
   try{
     loadPublicProfiles().catch(()=>{});
     if(isFeed){
@@ -17503,6 +17776,10 @@ init();
 
   /* Ranked For You Discovery: multi-factor personalized discovery pipeline */
   renderFeed=async function(targetPostId, options){
+    // If not already rendered or if force refreshing, display the Feed loading skeleton immediately
+    if(!document.getElementById('reelFeed') || options?.forceRefresh){
+      renderFeedSkeleton(options);
+    }
     // Background non-blocking warm up for stores
     if(allStores.size === 0 && !window._sfStoresFetching){
       window._sfStoresFetching = true;

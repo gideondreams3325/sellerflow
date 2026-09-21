@@ -1,66 +1,103 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="150 60 225 260" width="36" height="36" class="sf-brand-logo shrink-0">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="15 15 280 315" width="100%" height="100%" class="sf-brand-logo shrink-0">
+
   <defs>
-    <linearGradient id="navGoldTop" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#ffe46b"/>
-      <stop offset="35%" stop-color="#ffd000"/>
-      <stop offset="75%" stop-color="#f5a623"/>
-      <stop offset="100%" stop-color="#ffb81c"/>
+    <!-- Top ribbon surface gradient -->
+    <linearGradient id="sfGoldTop" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFF58A"/>
+      <stop offset="25%" stop-color="#FFD61E"/>
+      <stop offset="65%" stop-color="#F5A300"/>
+      <stop offset="100%" stop-color="#FFB800"/>
     </linearGradient>
 
-    <linearGradient id="navGoldFoldUnder" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f5a623"/>
-      <stop offset="40%" stop-color="#c97200"/>
-      <stop offset="100%" stop-color="#733800"/>
+    <!-- 3D Under-fold shadow inside ribbon -->
+    <linearGradient id="sfFoldShadow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D97706"/>
+      <stop offset="40%" stop-color="#9A3412"/>
+      <stop offset="80%" stop-color="#5B1902"/>
+      <stop offset="100%" stop-color="#350E00"/>
     </linearGradient>
 
-    <linearGradient id="navGoldSwoop" x1="20%" y1="10%" x2="80%" y2="100%">
-      <stop offset="0%" stop-color="#ffe46b"/>
-      <stop offset="30%" stop-color="#ffb81c"/>
-      <stop offset="70%" stop-color="#f59e0b"/>
-      <stop offset="100%" stop-color="#d97706"/>
+    <!-- Main sweeping S and Cart Body -->
+    <linearGradient id="sfGoldBody" x1="15%" y1="10%" x2="85%" y2="100%">
+      <stop offset="0%" stop-color="#FFF58A"/>
+      <stop offset="20%" stop-color="#FFD000"/>
+      <stop offset="60%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
     </linearGradient>
 
-    <linearGradient id="navGoldBar" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#ffe46b"/>
-      <stop offset="50%" stop-color="#ffb81c"/>
-      <stop offset="100%" stop-color="#f59e0b"/>
+    <!-- Speed bars and internal slats -->
+    <linearGradient id="sfGoldBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFF275"/>
+      <stop offset="45%" stop-color="#FFC000"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
     </linearGradient>
+
+    <!-- Two Wheels Gradient (Under the cart) -->
+    <linearGradient id="sfGoldWheel" x1="25%" y1="15%" x2="75%" y2="85%">
+      <stop offset="0%" stop-color="#FFF58A"/>
+      <stop offset="40%" stop-color="#FFBD00"/>
+      <stop offset="85%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#9A3412"/>
+    </linearGradient>
+
+    <!-- Radial golden ambient aura -->
+    <radialGradient id="sfAmbientAura" cx="50%" cy="48%" r="48%">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.32"/>
+      <stop offset="50%" stop-color="#F59E0B" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
   </defs>
 
-  <!-- 3 Speed Lines -->
-  <rect x="154" y="184" width="60" height="15" rx="7.5" fill="url(#navGoldBar)"/>
-  <rect x="154" y="214" width="46" height="15" rx="7.5" fill="url(#navGoldBar)"/>
-  <rect x="172" y="244" width="36" height="15" rx="7.5" fill="url(#navGoldBar)"/>
+  <!-- Ambient Glow Behind Emblem -->
+  <circle cx="160" cy="165" r="150" fill="url(#sfAmbientAura)"/>
 
-  <!-- Inside Cart Grille Bars -->
-  <rect x="236" y="214" width="76" height="14" rx="7" fill="url(#navGoldBar)"/>
-  <rect x="244" y="242" width="60" height="14" rx="7" fill="url(#navGoldBar)"/>
+  <!-- 3 Speed Lines on the Left -->
+  <rect x="25" y="152" width="56" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
+  <rect x="25" y="177" width="40" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
+  <rect x="40" y="202" width="32" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
 
-  <!-- Cart Wheels -->
-  <circle cx="247" cy="307" r="14.5" fill="url(#navGoldBar)"/>
-  <circle cx="295" cy="307" r="14.5" fill="url(#navGoldBar)"/>
+  <!-- Inside Cart Slats (Horizontal bars inside basket) -->
+  <rect x="110" y="177" width="64" height="13" rx="6.5" fill="url(#sfGoldBar)"/>
+  <rect x="118" y="202" width="50" height="13" rx="6.5" fill="url(#sfGoldBar)"/>
 
-  <!-- Top Ribbon -->
-  <path d="M 344 95 L 366 68 C 366 68 250 66 220 68 C 178 71 164 105 182 142 L 216 160 C 202 136 218 102 248 98 C 274 95 320 95 344 95 Z" 
-        fill="url(#navGoldTop)"/>
-
-  <!-- 3D Fold Shadow -->
-  <path d="M 182 142 C 192 162 216 178 252 182 L 224 164 L 182 142 Z" 
-        fill="url(#navGoldFoldUnder)"/>
-
-  <!-- S Swoop & Cart Body -->
-  <path d="M 216 160 
-           C 256 168 322 188 344 226 
-           C 368 268 354 312 318 330 
-           C 288 344 238 342 224 336 
-           C 214 331 208 320 208 308 
-           L 204 200 
-           C 204 191 211 184 220 184 
-           C 229 184 236 191 236 200 
-           L 238 304 
-           C 246 312 284 316 306 306 
-           C 326 296 334 270 320 242 
-           C 304 212 254 198 216 182 
+  <!-- Top Ribbon Loop of the "S" -->
+  <path d="M 235 28 
+           L 262 28 
+           L 242 58 
+           C 242 58 142 56 122 58 
+           C 82 62 70 94 88 126 
+           L 122 142 
+           C 106 120 120 88 152 84 
+           C 178 80 216 80 235 80 
            Z" 
-        fill="url(#navGoldSwoop)"/>
+        fill="url(#sfGoldTop)"/>
+
+  <!-- 3D Ribbon Under-fold Shadow -->
+  <path d="M 88 126 
+           C 98 144 122 160 156 164 
+           L 132 146 
+           L 88 126 
+           Z" 
+        fill="url(#sfFoldShadow)"/>
+
+  <!-- Main S Body & Shopping Cart Chassis -->
+  <path d="M 122 142 
+           C 160 150 226 168 248 202 
+           C 268 238 256 265 220 275 
+           C 190 282 140 282 124 278 
+           C 114 274 108 264 104 250 
+           L 92 170 
+           C 92 160 99 152 109 152 
+           C 118 152 125 159 127 168 
+           L 135 245 
+           C 140 252 178 255 198 248 
+           C 216 240 224 218 212 196 
+           C 196 170 152 158 122 142 
+           Z" 
+        fill="url(#sfGoldBody)"/>
+
+  <!-- Two Round Wheels - Positioned distinctly UNDER the cart with clean separation -->
+  <circle cx="128" cy="308" r="14" fill="url(#sfGoldWheel)"/>
+  <circle cx="178" cy="308" r="14" fill="url(#sfGoldWheel)"/>
+
 </svg>

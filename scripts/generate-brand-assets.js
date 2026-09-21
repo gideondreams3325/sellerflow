@@ -1,381 +1,425 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { Resvg } from '@resvg/resvg-js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import sharp from 'sharp';
 
-// 1. Precise vector definition of the SellerFlow golden S-cart emblem
-function getEmblemSvg({ width = 512, height = 512, showBg = true, rx = 112 } = {}) {
-  const bgMarkup = showBg ? `
-    <rect width="${width}" height="${height}" rx="${rx}" fill="url(#sfBg)"/>
-    <rect width="${width - 4}" height="${height - 4}" x="2" y="2" rx="${rx - 2}" fill="none" stroke="#222" stroke-width="2"/>
-  ` : '';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="${width}" height="${height}">
+// Standalone Emblem SVG - Scaled & centered with tight viewBox
+// Coordinates:
+// Top Ribbon: y=25 to 110
+// Main S & Cart: y=95 to 275
+// Cart Bottom Base: y=265
+// Clear Space Gap: y=265 to 282
+// Wheels (Two Round Dots): cy=298 (Distinctly UNDER the cart)
+// Speed Lines: x=25 to 90
+// S curve right: x=280
+const emblemContent = `
   <defs>
-    <!-- Rich deep black background -->
-    <linearGradient id="sfBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0d0d0d"/>
-      <stop offset="100%" stop-color="#020202"/>
+    <!-- Top ribbon surface gradient -->
+    <linearGradient id="sfGoldTop" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFF58A"/>
+      <stop offset="25%" stop-color="#FFD61E"/>
+      <stop offset="65%" stop-color="#F5A300"/>
+      <stop offset="100%" stop-color="#FFB800"/>
     </linearGradient>
 
-    <!-- Metallic Gold: Top Ribbon Horizontal Face -->
-    <linearGradient id="goldTopFace" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#ffe46b"/>
-      <stop offset="35%" stop-color="#ffd000"/>
-      <stop offset="75%" stop-color="#f5a623"/>
-      <stop offset="100%" stop-color="#ffb81c"/>
+    <!-- 3D Under-fold shadow inside ribbon -->
+    <linearGradient id="sfFoldShadow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D97706"/>
+      <stop offset="40%" stop-color="#9A3412"/>
+      <stop offset="80%" stop-color="#5B1902"/>
+      <stop offset="100%" stop-color="#350E00"/>
     </linearGradient>
 
-    <!-- Metallic Gold: Top Fold 3D Shadow -->
-    <linearGradient id="goldFoldUnder" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f5a623"/>
-      <stop offset="40%" stop-color="#c97200"/>
-      <stop offset="85%" stop-color="#804100"/>
-      <stop offset="100%" stop-color="#612f00"/>
+    <!-- Main sweeping S and Cart Body -->
+    <linearGradient id="sfGoldBody" x1="15%" y1="10%" x2="85%" y2="100%">
+      <stop offset="0%" stop-color="#FFF58A"/>
+      <stop offset="20%" stop-color="#FFD000"/>
+      <stop offset="60%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
     </linearGradient>
 
-    <!-- Metallic Gold: Lower Ribbon Fold Highlight -->
-    <linearGradient id="goldFoldFront" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffec82"/>
-      <stop offset="45%" stop-color="#ffbe1a"/>
-      <stop offset="100%" stop-color="#e28c00"/>
+    <!-- Speed bars and internal slats -->
+    <linearGradient id="sfGoldBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFF275"/>
+      <stop offset="45%" stop-color="#FFC000"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
     </linearGradient>
 
-    <!-- Metallic Gold: Main S-Swoop and Cart Body -->
-    <linearGradient id="goldSwoop" x1="20%" y1="10%" x2="80%" y2="100%">
-      <stop offset="0%" stop-color="#ffe46b"/>
-      <stop offset="30%" stop-color="#ffb81c"/>
-      <stop offset="70%" stop-color="#f59e0b"/>
-      <stop offset="100%" stop-color="#d97706"/>
+    <!-- Two Wheels Gradient (Under the cart) -->
+    <linearGradient id="sfGoldWheel" x1="25%" y1="15%" x2="75%" y2="85%">
+      <stop offset="0%" stop-color="#FFF58A"/>
+      <stop offset="40%" stop-color="#FFBD00"/>
+      <stop offset="85%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#9A3412"/>
     </linearGradient>
 
-    <!-- Metallic Gold: Speed Lines and Cart Grille -->
-    <linearGradient id="goldBar" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#ffe46b"/>
-      <stop offset="50%" stop-color="#ffb81c"/>
-      <stop offset="100%" stop-color="#f59e0b"/>
-    </linearGradient>
-
-    <!-- Metallic Gold: Cart Wheels with 3D spherical shading -->
-    <linearGradient id="goldWheel" x1="30%" y1="20%" x2="80%" y2="90%">
-      <stop offset="0%" stop-color="#ffea79"/>
-      <stop offset="45%" stop-color="#ffb81c"/>
-      <stop offset="85%" stop-color="#d97706"/>
-      <stop offset="100%" stop-color="#92400e"/>
-    </linearGradient>
-
-    <!-- Soft ambient glow behind emblem -->
-    <radialGradient id="goldGlow" cx="50%" cy="45%" r="45%">
-      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.12"/>
-      <stop offset="60%" stop-color="#f59e0b" stop-opacity="0.04"/>
-      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    <!-- Radial golden ambient aura -->
+    <radialGradient id="sfAmbientAura" cx="50%" cy="48%" r="48%">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.32"/>
+      <stop offset="50%" stop-color="#F59E0B" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
-  ${bgMarkup}
+  <!-- Ambient Glow Behind Emblem -->
+  <circle cx="160" cy="165" r="150" fill="url(#sfAmbientAura)"/>
 
-  <!-- Ambient Golden Glow -->
-  <circle cx="260" cy="240" r="170" fill="url(#goldGlow)"/>
+  <!-- 3 Speed Lines on the Left -->
+  <rect x="25" y="152" width="56" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
+  <rect x="25" y="177" width="40" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
+  <rect x="40" y="202" width="32" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
 
-  <!-- Logo Mark Graphic Group -->
-  <g id="sellerFlowEmblem">
-    <!-- 3 Speed Lines on the left -->
-    <!-- Top Speed Line Lip (capsule) -->
-    <rect x="154" y="184" width="60" height="15" rx="7.5" fill="url(#goldBar)"/>
-    <!-- Middle Speed Line -->
-    <rect x="154" y="214" width="46" height="15" rx="7.5" fill="url(#goldBar)"/>
-    <!-- Bottom Speed Line -->
-    <rect x="172" y="244" width="36" height="15" rx="7.5" fill="url(#goldBar)"/>
+  <!-- Inside Cart Slats (Horizontal bars inside basket) -->
+  <rect x="110" y="177" width="64" height="13" rx="6.5" fill="url(#sfGoldBar)"/>
+  <rect x="118" y="202" width="50" height="13" rx="6.5" fill="url(#sfGoldBar)"/>
 
-    <!-- Inside Shopping Cart: 2 Horizontal Grille Bars -->
-    <rect x="236" y="214" width="76" height="14" rx="7" fill="url(#goldBar)"/>
-    <rect x="244" y="242" width="60" height="14" rx="7" fill="url(#goldBar)"/>
+  <!-- Top Ribbon Loop of the "S" -->
+  <path d="M 235 28 
+           L 262 28 
+           L 242 58 
+           C 242 58 142 56 122 58 
+           C 82 62 70 94 88 126 
+           L 122 142 
+           C 106 120 120 88 152 84 
+           C 178 80 216 80 235 80 
+           Z" 
+        fill="url(#sfGoldTop)"/>
 
-    <!-- 2 Shopping Cart Wheels -->
-    <circle cx="247" cy="307" r="14.5" fill="url(#goldWheel)"/>
-    <circle cx="295" cy="307" r="14.5" fill="url(#goldWheel)"/>
+  <!-- 3D Ribbon Under-fold Shadow -->
+  <path d="M 88 126 
+           C 98 144 122 160 156 164 
+           L 132 146 
+           L 88 126 
+           Z" 
+        fill="url(#sfFoldShadow)"/>
 
-    <!-- Top Ribbon of the S: Upper horizontal arm and angled cut -->
-    <!-- Path goes from angled cut at top right (344, 95) across to top left bend -->
-    <path d="M 344 95 L 366 68 C 366 68 250 66 220 68 C 178 71 164 105 182 142 L 216 160 C 202 136 218 102 248 98 C 274 95 320 95 344 95 Z" 
-          fill="url(#goldTopFace)"/>
+  <!-- Main S Body & Shopping Cart Chassis -->
+  <path d="M 122 142 
+           C 160 150 226 168 248 202 
+           C 268 238 256 265 220 275 
+           C 190 282 140 282 124 278 
+           C 114 274 108 264 104 250 
+           L 92 170 
+           C 92 160 99 152 109 152 
+           C 118 152 125 159 127 168 
+           L 135 245 
+           C 140 252 178 255 198 248 
+           C 216 240 224 218 212 196 
+           C 196 170 152 158 122 142 
+           Z" 
+        fill="url(#sfGoldBody)"/>
 
-    <!-- 3D Ribbon Fold (Under-twist shadow creating the folded ribbon illusion) -->
-    <path d="M 182 142 C 192 162 216 178 252 182 L 224 164 L 182 142 Z" 
-          fill="url(#goldFoldUnder)"/>
+  <!-- Two Round Wheels - Positioned distinctly UNDER the cart with clean separation -->
+  <circle cx="128" cy="308" r="14" fill="url(#sfGoldWheel)"/>
+  <circle cx="178" cy="308" r="14" fill="url(#sfGoldWheel)"/>
+`;
 
-    <!-- 3D Ribbon Fold Front Highlight Facet -->
-    <path d="M 182 142 C 168 116 182 92 218 84 L 216 106 C 196 112 188 126 196 142 Z" 
-          fill="url(#goldFoldFront)"/>
-
-    <!-- The Large S-Swoop and Shopping Cart Outer Frame -->
-    <!-- This continuous path sweeps from the top fold, diagonally down-right, arches into the cart base,
-         and loops up into the front cart rim and speed line anchor -->
-    <path d="M 216 160 
-             C 256 168 322 188 344 226 
-             C 368 268 354 312 318 330 
-             C 288 344 238 342 224 336 
-             C 214 331 208 320 208 308 
-             L 204 200 
-             C 204 191 211 184 220 184 
-             C 229 184 236 191 236 200 
-             L 238 304 
-             C 246 312 284 316 306 306 
-             C 326 296 334 270 320 242 
-             C 304 212 254 198 216 182 
-             Z" 
-          fill="url(#goldSwoop)"/>
-  </g>
+// 1. Standalone nav-emblem.svg with tight square bounding box (0 0 310 335)
+const navEmblemSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="15 15 280 315" width="100%" height="100%" class="sf-brand-logo shrink-0">
+${emblemContent}
 </svg>`;
-}
 
-// 2. Full Brand Logo: Emblem + "SellerFlow" + "BUY • SELL • GROW" (matching the user's uploaded image)
-function getFullLogoSvg({ width = 600, height = 600 } = {}) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="${width}" height="${height}">
+// 2. Full Logo with Typography (600x600)
+const logoFullSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="100%" height="100%">
   <defs>
+    <!-- Background Gradient -->
     <linearGradient id="fullBg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#050505"/>
       <stop offset="100%" stop-color="#000000"/>
     </linearGradient>
 
-    <linearGradient id="goldTopFace" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#ffe46b"/>
-      <stop offset="35%" stop-color="#ffd000"/>
-      <stop offset="75%" stop-color="#f5a623"/>
-      <stop offset="100%" stop-color="#ffb81c"/>
+    <!-- Top ribbon surface gradient -->
+    <linearGradient id="sfGoldTop" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFF58A"/>
+      <stop offset="25%" stop-color="#FFD61E"/>
+      <stop offset="65%" stop-color="#F5A300"/>
+      <stop offset="100%" stop-color="#FFB800"/>
     </linearGradient>
 
-    <linearGradient id="goldFoldUnder" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f5a623"/>
-      <stop offset="40%" stop-color="#c97200"/>
-      <stop offset="85%" stop-color="#804100"/>
-      <stop offset="100%" stop-color="#612f00"/>
+    <!-- 3D Under-fold shadow inside ribbon -->
+    <linearGradient id="sfFoldShadow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D97706"/>
+      <stop offset="40%" stop-color="#9A3412"/>
+      <stop offset="80%" stop-color="#5B1902"/>
+      <stop offset="100%" stop-color="#350E00"/>
     </linearGradient>
 
-    <linearGradient id="goldFoldFront" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffec82"/>
-      <stop offset="45%" stop-color="#ffbe1a"/>
-      <stop offset="100%" stop-color="#e28c00"/>
+    <!-- Main sweeping S and Cart Body -->
+    <linearGradient id="sfGoldBody" x1="15%" y1="10%" x2="85%" y2="100%">
+      <stop offset="0%" stop-color="#FFF58A"/>
+      <stop offset="20%" stop-color="#FFD000"/>
+      <stop offset="60%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
     </linearGradient>
 
-    <linearGradient id="goldSwoop" x1="20%" y1="10%" x2="80%" y2="100%">
-      <stop offset="0%" stop-color="#ffe46b"/>
-      <stop offset="30%" stop-color="#ffb81c"/>
-      <stop offset="70%" stop-color="#f59e0b"/>
-      <stop offset="100%" stop-color="#d97706"/>
+    <!-- Speed bars and internal slats -->
+    <linearGradient id="sfGoldBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFF275"/>
+      <stop offset="45%" stop-color="#FFC000"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
     </linearGradient>
 
-    <linearGradient id="goldBar" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#ffe46b"/>
-      <stop offset="50%" stop-color="#ffb81c"/>
-      <stop offset="100%" stop-color="#f59e0b"/>
+    <!-- Two Wheels Gradient (Under the cart) -->
+    <linearGradient id="sfGoldWheel" x1="25%" y1="15%" x2="75%" y2="85%">
+      <stop offset="0%" stop-color="#FFF58A"/>
+      <stop offset="40%" stop-color="#FFBD00"/>
+      <stop offset="85%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#9A3412"/>
     </linearGradient>
 
-    <linearGradient id="goldWheel" x1="30%" y1="20%" x2="80%" y2="90%">
-      <stop offset="0%" stop-color="#ffea79"/>
-      <stop offset="45%" stop-color="#ffb81c"/>
-      <stop offset="85%" stop-color="#d97706"/>
-      <stop offset="100%" stop-color="#92400e"/>
+    <!-- Wordmark "Flow" Gradient -->
+    <linearGradient id="sfGoldWordmark" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFF066"/>
+      <stop offset="40%" stop-color="#FFC300"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
     </linearGradient>
 
-    <linearGradient id="goldWordmark" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#ffea79"/>
-      <stop offset="50%" stop-color="#ffb81c"/>
-      <stop offset="100%" stop-color="#e58e00"/>
-    </linearGradient>
-
-    <radialGradient id="goldGlow" cx="50%" cy="40%" r="45%">
-      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.14"/>
-      <stop offset="60%" stop-color="#f59e0b" stop-opacity="0.04"/>
-      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    <!-- Ambient Golden Glow -->
+    <radialGradient id="sfCenterGlow" cx="50%" cy="40%" r="48%">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.25"/>
+      <stop offset="50%" stop-color="#F59E0B" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
-  <!-- Black Background -->
+  <!-- Deep Black Canvas -->
   <rect width="600" height="600" fill="url(#fullBg)"/>
 
-  <!-- Ambient Glow -->
-  <circle cx="300" cy="220" r="180" fill="url(#goldGlow)"/>
+  <!-- Radiant Golden Glow behind emblem -->
+  <circle cx="300" cy="210" r="220" fill="url(#sfCenterGlow)"/>
 
-  <!-- Centered Emblem (Scaled) -->
-  <g transform="translate(44, 10)">
-    <!-- 3 Speed Lines -->
-    <rect x="154" y="184" width="60" height="15" rx="7.5" fill="url(#goldBar)"/>
-    <rect x="154" y="214" width="46" height="15" rx="7.5" fill="url(#goldBar)"/>
-    <rect x="172" y="244" width="36" height="15" rx="7.5" fill="url(#goldBar)"/>
+  <!-- Centered S-Cart Emblem -->
+  <g transform="translate(145, 30) scale(1.05)">
+    <!-- 3 Speed Lines on the Left -->
+    <rect x="25" y="152" width="56" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
+    <rect x="25" y="177" width="40" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
+    <rect x="40" y="202" width="32" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
 
-    <!-- Inside Shopping Cart Grille Bars -->
-    <rect x="236" y="214" width="76" height="14" rx="7" fill="url(#goldBar)"/>
-    <rect x="244" y="242" width="60" height="14" rx="7" fill="url(#goldBar)"/>
+    <!-- Inside Cart Slats (Horizontal bars inside basket) -->
+    <rect x="110" y="177" width="64" height="13" rx="6.5" fill="url(#sfGoldBar)"/>
+    <rect x="118" y="202" width="50" height="13" rx="6.5" fill="url(#sfGoldBar)"/>
 
-    <!-- Cart Wheels -->
-    <circle cx="247" cy="307" r="14.5" fill="url(#goldWheel)"/>
-    <circle cx="295" cy="307" r="14.5" fill="url(#goldWheel)"/>
-
-    <!-- Top Ribbon -->
-    <path d="M 344 95 L 366 68 C 366 68 250 66 220 68 C 178 71 164 105 182 142 L 216 160 C 202 136 218 102 248 98 C 274 95 320 95 344 95 Z" 
-          fill="url(#goldTopFace)"/>
-
-    <!-- 3D Fold Shadow -->
-    <path d="M 182 142 C 192 162 216 178 252 182 L 224 164 L 182 142 Z" 
-          fill="url(#goldFoldUnder)"/>
-
-    <!-- Fold Front Facet -->
-    <path d="M 182 142 C 168 116 182 92 218 84 L 216 106 C 196 112 188 126 196 142 Z" 
-          fill="url(#goldFoldFront)"/>
-
-    <!-- S Swoop & Cart Body -->
-    <path d="M 216 160 
-             C 256 168 322 188 344 226 
-             C 368 268 354 312 318 330 
-             C 288 344 238 342 224 336 
-             C 214 331 208 320 208 308 
-             L 204 200 
-             C 204 191 211 184 220 184 
-             C 229 184 236 191 236 200 
-             L 238 304 
-             C 246 312 284 316 306 306 
-             C 326 296 334 270 320 242 
-             C 304 212 254 198 216 182 
+    <!-- Top Ribbon Loop of the "S" -->
+    <path d="M 235 28 
+             L 262 28 
+             L 242 58 
+             C 242 58 142 56 122 58 
+             C 82 62 70 94 88 126 
+             L 122 142 
+             C 106 120 120 88 152 84 
+             C 178 80 216 80 235 80 
              Z" 
-          fill="url(#goldSwoop)"/>
+          fill="url(#sfGoldTop)"/>
+
+    <!-- 3D Ribbon Under-fold Shadow -->
+    <path d="M 88 126 
+             C 98 144 122 160 156 164 
+             L 132 146 
+             L 88 126 
+             Z" 
+          fill="url(#sfFoldShadow)"/>
+
+    <!-- Main S Body & Shopping Cart Chassis -->
+    <path d="M 122 142 
+             C 160 150 226 168 248 202 
+             C 268 238 256 265 220 275 
+             C 190 282 140 282 124 278 
+             C 114 274 108 264 104 250 
+             L 92 170 
+             C 92 160 99 152 109 152 
+             C 118 152 125 159 127 168 
+             L 135 245 
+             C 140 252 178 255 198 248 
+             C 216 240 224 218 212 196 
+             C 196 170 152 158 122 142 
+             Z" 
+          fill="url(#sfGoldBody)"/>
+
+    <!-- Two Round Wheels (under cart) -->
+    <circle cx="128" cy="308" r="14" fill="url(#sfGoldWheel)"/>
+    <circle cx="178" cy="308" r="14" fill="url(#sfGoldWheel)"/>
   </g>
 
   <!-- Typography: "SellerFlow" -->
-  <g transform="translate(300, 435)" text-anchor="middle" font-family="'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif">
+  <g transform="translate(300, 442)" text-anchor="middle" font-family="'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif">
     <text y="0" font-size="64" font-weight="900" letter-spacing="-1.5">
-      <tspan fill="#ffffff">Seller</tspan><tspan fill="url(#goldWordmark)">Flow</tspan>
+      <tspan fill="#FFFFFF">Seller</tspan><tspan fill="url(#sfGoldWordmark)">Flow</tspan>
     </text>
   </g>
 
-  <!-- Subtitle: "BUY  •  SELL  •  GROW" -->
-  <g transform="translate(300, 480)" text-anchor="middle" font-family="'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif">
-    <text y="0" font-size="16" font-weight="700" letter-spacing="6" fill="#ffffff">
-      BUY <tspan fill="url(#goldWordmark)">•</tspan> SELL <tspan fill="url(#goldWordmark)">•</tspan> GROW
+  <!-- Subtitle Tagline: "BUY  •  SELL  •  GROW" -->
+  <g transform="translate(300, 486)" text-anchor="middle" font-family="'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif">
+    <text y="0" font-size="16" font-weight="700" letter-spacing="6" fill="#FFFFFF">
+      BUY <tspan fill="url(#sfGoldWordmark)">•</tspan> SELL <tspan fill="url(#sfGoldWordmark)">•</tspan> GROW
     </text>
   </g>
 </svg>`;
-}
 
-// 3. Compact Logo for Menu Bar (Transparent background, vector mark)
-function getNavEmblemSvg({ width = 36, height = 36 } = {}) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="150 60 225 260" width="${width}" height="${height}" class="sf-brand-logo shrink-0">
+// 3. Square App Icon (512x512)
+const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <defs>
-    <linearGradient id="navGoldTop" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#ffe46b"/>
-      <stop offset="35%" stop-color="#ffd000"/>
-      <stop offset="75%" stop-color="#f5a623"/>
-      <stop offset="100%" stop-color="#ffb81c"/>
+    <linearGradient id="iconBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080808"/>
+      <stop offset="100%" stop-color="#000000"/>
     </linearGradient>
 
-    <linearGradient id="navGoldFoldUnder" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f5a623"/>
-      <stop offset="40%" stop-color="#c97200"/>
-      <stop offset="100%" stop-color="#733800"/>
+    <!-- Top ribbon surface gradient -->
+    <linearGradient id="sfGoldTop" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFF58A"/>
+      <stop offset="25%" stop-color="#FFD61E"/>
+      <stop offset="65%" stop-color="#F5A300"/>
+      <stop offset="100%" stop-color="#FFB800"/>
     </linearGradient>
 
-    <linearGradient id="navGoldSwoop" x1="20%" y1="10%" x2="80%" y2="100%">
-      <stop offset="0%" stop-color="#ffe46b"/>
-      <stop offset="30%" stop-color="#ffb81c"/>
-      <stop offset="70%" stop-color="#f59e0b"/>
-      <stop offset="100%" stop-color="#d97706"/>
+    <!-- 3D Under-fold shadow inside ribbon -->
+    <linearGradient id="sfFoldShadow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D97706"/>
+      <stop offset="40%" stop-color="#9A3412"/>
+      <stop offset="80%" stop-color="#5B1902"/>
+      <stop offset="100%" stop-color="#350E00"/>
     </linearGradient>
 
-    <linearGradient id="navGoldBar" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#ffe46b"/>
-      <stop offset="50%" stop-color="#ffb81c"/>
-      <stop offset="100%" stop-color="#f59e0b"/>
+    <!-- Main sweeping S and Cart Body -->
+    <linearGradient id="sfGoldBody" x1="15%" y1="10%" x2="85%" y2="100%">
+      <stop offset="0%" stop-color="#FFF58A"/>
+      <stop offset="20%" stop-color="#FFD000"/>
+      <stop offset="60%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
     </linearGradient>
+
+    <!-- Speed bars and internal slats -->
+    <linearGradient id="sfGoldBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFF275"/>
+      <stop offset="45%" stop-color="#FFC000"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+
+    <!-- Two Wheels Gradient (Under the cart) -->
+    <linearGradient id="sfGoldWheel" x1="25%" y1="15%" x2="75%" y2="85%">
+      <stop offset="0%" stop-color="#FFF58A"/>
+      <stop offset="40%" stop-color="#FFBD00"/>
+      <stop offset="85%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#9A3412"/>
+    </linearGradient>
+
+    <radialGradient id="iconAmbientGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.28"/>
+      <stop offset="60%" stop-color="#F59E0B" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
   </defs>
 
-  <!-- 3 Speed Lines -->
-  <rect x="154" y="184" width="60" height="15" rx="7.5" fill="url(#navGoldBar)"/>
-  <rect x="154" y="214" width="46" height="15" rx="7.5" fill="url(#navGoldBar)"/>
-  <rect x="172" y="244" width="36" height="15" rx="7.5" fill="url(#navGoldBar)"/>
+  <rect width="512" height="512" rx="112" fill="url(#iconBg)"/>
+  <circle cx="256" cy="256" r="230" fill="url(#iconAmbientGlow)"/>
 
-  <!-- Inside Cart Grille Bars -->
-  <rect x="236" y="214" width="76" height="14" rx="7" fill="url(#navGoldBar)"/>
-  <rect x="244" y="242" width="60" height="14" rx="7" fill="url(#navGoldBar)"/>
+  <!-- Centered Emblem -->
+  <g transform="translate(100, 75) scale(1.1)">
+    <!-- 3 Speed Lines on the Left -->
+    <rect x="25" y="152" width="56" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
+    <rect x="25" y="177" width="40" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
+    <rect x="40" y="202" width="32" height="13.5" rx="6.75" fill="url(#sfGoldBar)"/>
 
-  <!-- Cart Wheels -->
-  <circle cx="247" cy="307" r="14.5" fill="url(#navGoldBar)"/>
-  <circle cx="295" cy="307" r="14.5" fill="url(#navGoldBar)"/>
+    <!-- Inside Cart Slats (Horizontal bars inside basket) -->
+    <rect x="110" y="177" width="64" height="13" rx="6.5" fill="url(#sfGoldBar)"/>
+    <rect x="118" y="202" width="50" height="13" rx="6.5" fill="url(#sfGoldBar)"/>
 
-  <!-- Top Ribbon -->
-  <path d="M 344 95 L 366 68 C 366 68 250 66 220 68 C 178 71 164 105 182 142 L 216 160 C 202 136 218 102 248 98 C 274 95 320 95 344 95 Z" 
-        fill="url(#navGoldTop)"/>
+    <!-- Top Ribbon Loop of the "S" -->
+    <path d="M 235 28 
+             L 262 28 
+             L 242 58 
+             C 242 58 142 56 122 58 
+             C 82 62 70 94 88 126 
+             L 122 142 
+             C 106 120 120 88 152 84 
+             C 178 80 216 80 235 80 
+             Z" 
+          fill="url(#sfGoldTop)"/>
 
-  <!-- 3D Fold Shadow -->
-  <path d="M 182 142 C 192 162 216 178 252 182 L 224 164 L 182 142 Z" 
-        fill="url(#navGoldFoldUnder)"/>
+    <!-- 3D Ribbon Under-fold Shadow -->
+    <path d="M 88 126 
+             C 98 144 122 160 156 164 
+             L 132 146 
+             L 88 126 
+             Z" 
+          fill="url(#sfFoldShadow)"/>
 
-  <!-- S Swoop & Cart Body -->
-  <path d="M 216 160 
-           C 256 168 322 188 344 226 
-           C 368 268 354 312 318 330 
-           C 288 344 238 342 224 336 
-           C 214 331 208 320 208 308 
-           L 204 200 
-           C 204 191 211 184 220 184 
-           C 229 184 236 191 236 200 
-           L 238 304 
-           C 246 312 284 316 306 306 
-           C 326 296 334 270 320 242 
-           C 304 212 254 198 216 182 
-           Z" 
-        fill="url(#navGoldSwoop)"/>
+    <!-- Main S Body & Shopping Cart Chassis -->
+    <path d="M 122 142 
+             C 160 150 226 168 248 202 
+             C 268 238 256 265 220 275 
+             C 190 282 140 282 124 278 
+             C 114 274 108 264 104 250 
+             L 92 170 
+             C 92 160 99 152 109 152 
+             C 118 152 125 159 127 168 
+             L 135 245 
+             C 140 252 178 255 198 248 
+             C 216 240 224 218 212 196 
+             C 196 170 152 158 122 142 
+             Z" 
+        fill="url(#sfGoldBody)"/>
+
+    <!-- Two Round Wheels (Under the cart) -->
+    <circle cx="128" cy="308" r="14" fill="url(#sfGoldWheel)"/>
+    <circle cx="178" cy="308" r="14" fill="url(#sfGoldWheel)"/>
+  </g>
 </svg>`;
-}
 
-async function run() {
-  console.log('Generating SellerFlow official brand assets...');
+async function generateAllAssets() {
+  console.log('Writing updated vector SVGs...');
 
-  const iconSvgContent = getEmblemSvg({ width: 512, height: 512, showBg: true, rx: 112 });
-  const logoFullSvgContent = getFullLogoSvg({ width: 600, height: 600 });
-  const navEmblemSvgContent = getNavEmblemSvg({ width: 36, height: 36 });
+  fs.writeFileSync(path.join(__dirname, '../nav-emblem.svg'), navEmblemSvg, 'utf8');
+  fs.writeFileSync(path.join(__dirname, '../logo-full.svg'), logoFullSvg, 'utf8');
+  fs.writeFileSync(path.join(__dirname, '../icon.svg'), iconSvg, 'utf8');
 
-  // Write SVGs
-  fs.writeFileSync('icon.svg', iconSvgContent, 'utf8');
-  fs.writeFileSync('logo-full.svg', logoFullSvgContent, 'utf8');
-  fs.writeFileSync('nav-emblem.svg', navEmblemSvgContent, 'utf8');
-
-  // Render PNGs using Resvg
-  const resvg512 = new Resvg(iconSvgContent, { fitTo: { mode: 'width', value: 512 } });
-  const png512 = resvg512.render().asPng();
-  fs.writeFileSync('pwa-512x512.png', png512);
-
-  const resvg192 = new Resvg(iconSvgContent, { fitTo: { mode: 'width', value: 192 } });
-  const png192 = resvg192.render().asPng();
-  fs.writeFileSync('pwa-192x192.png', png192);
-
-  const resvg180 = new Resvg(iconSvgContent, { fitTo: { mode: 'width', value: 180 } });
-  const png180 = resvg180.render().asPng();
-  fs.writeFileSync('apple-touch-icon.png', png180);
-
-  // Sync to dist if exists
-  if (fs.existsSync('dist')) {
-    fs.writeFileSync('dist/icon.svg', iconSvgContent, 'utf8');
-    fs.writeFileSync('dist/logo-full.svg', logoFullSvgContent, 'utf8');
-    fs.writeFileSync('dist/nav-emblem.svg', navEmblemSvgContent, 'utf8');
-    fs.writeFileSync('dist/pwa-512x512.png', png512);
-    fs.writeFileSync('dist/pwa-192x192.png', png192);
-    fs.writeFileSync('dist/apple-touch-icon.png', png180);
+  if (fs.existsSync(path.join(__dirname, '../dist'))) {
+    fs.writeFileSync(path.join(__dirname, '../dist/nav-emblem.svg'), navEmblemSvg, 'utf8');
+    fs.writeFileSync(path.join(__dirname, '../dist/logo-full.svg'), logoFullSvg, 'utf8');
+    fs.writeFileSync(path.join(__dirname, '../dist/icon.svg'), iconSvg, 'utf8');
   }
 
-  // Sync to Android assets
-  const androidPublic = path.join('android', 'app', 'src', 'main', 'assets', 'public');
-  if (fs.existsSync(androidPublic)) {
-    fs.writeFileSync(path.join(androidPublic, 'icon.svg'), iconSvgContent, 'utf8');
-    fs.writeFileSync(path.join(androidPublic, 'logo-full.svg'), logoFullSvgContent, 'utf8');
-    fs.writeFileSync(path.join(androidPublic, 'nav-emblem.svg'), navEmblemSvgContent, 'utf8');
-    fs.writeFileSync(path.join(androidPublic, 'pwa-512x512.png'), png512);
-    fs.writeFileSync(path.join(androidPublic, 'pwa-192x192.png'), png192);
-    fs.writeFileSync(path.join(androidPublic, 'apple-touch-icon.png'), png180);
+  console.log('Rendering crisp high resolution PNG icons...');
+  const iconBuffer = Buffer.from(iconSvg);
+
+  await sharp(iconBuffer)
+    .resize(512, 512)
+    .png({ quality: 100, compressionLevel: 9 })
+    .toFile(path.join(__dirname, '../pwa-512x512.png'));
+
+  await sharp(iconBuffer)
+    .resize(192, 192)
+    .png({ quality: 100, compressionLevel: 9 })
+    .toFile(path.join(__dirname, '../pwa-192x192.png'));
+
+  await sharp(iconBuffer)
+    .resize(180, 180)
+    .png({ quality: 100, compressionLevel: 9 })
+    .toFile(path.join(__dirname, '../apple-touch-icon.png'));
+
+  if (fs.existsSync(path.join(__dirname, '../dist'))) {
+    await sharp(iconBuffer)
+      .resize(512, 512)
+      .png({ quality: 100, compressionLevel: 9 })
+      .toFile(path.join(__dirname, '../dist/pwa-512x512.png'));
+
+    await sharp(iconBuffer)
+      .resize(192, 192)
+      .png({ quality: 100, compressionLevel: 9 })
+      .toFile(path.join(__dirname, '../dist/pwa-192x192.png'));
+
+    await sharp(iconBuffer)
+      .resize(180, 180)
+      .png({ quality: 100, compressionLevel: 9 })
+      .toFile(path.join(__dirname, '../dist/apple-touch-icon.png'));
   }
 
-  console.log('✓ All official SellerFlow logo icons & high-res PNGs generated and synchronized!');
+  console.log('All SellerFlow brand logo assets updated and generated successfully!');
 }
 
-run().catch(err => {
-  console.error('Error generating brand assets:', err);
+generateAllAssets().catch(err => {
+  console.error('Asset generation error:', err);
   process.exit(1);
 });
