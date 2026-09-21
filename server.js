@@ -943,7 +943,7 @@ app.post('/api/moderation/inspect-product', async (req, res) => {
     }
 
     const callerUid = decodedToken.uid;
-    const { productId, name, description, imageUrl, price, stock } = req.body || {};
+    const { productId, name, category, description, imageUrl, price, stock } = req.body || {};
 
     if (!productId) {
       return res.status(400).json({ success: false, error: 'Missing productId' });
@@ -951,7 +951,7 @@ app.post('/api/moderation/inspect-product', async (req, res) => {
 
     const evalResult = await inspectContentWithGemini38Flash({
       title: name || '',
-      text: description || '',
+      text: (category ? `[Category: ${category}] ` : '') + (description || ''),
       mediaUrl: imageUrl || '',
       type: 'product'
     });

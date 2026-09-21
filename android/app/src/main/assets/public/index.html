@@ -3741,6 +3741,29 @@ ${esc(update.message || '')}
 }
 window.renderSellerFlowUpdatePage = renderSellerFlowUpdatePage;
 
+async function startChat(uid){
+  if (typeof window._sfCoreStartChat === 'function') {
+    return window._sfCoreStartChat(uid);
+  }
+  if (!currentUser) { showAuthPrompt('chat with Ghanaian sellers'); return; }
+  await navigate('chats');
+  if (typeof window._sfCoreStartChat === 'function') {
+    return window._sfCoreStartChat(uid);
+  }
+}
+async function startSellerFlowChat(uid){
+  return startChat(uid);
+}
+window.startChat = startChat;
+window.startSellerFlowChat = startSellerFlowChat;
+
+async function renderChats(...args){
+  if (typeof window._sfCoreRenderChats === 'function') {
+    return window._sfCoreRenderChats(...args);
+  }
+}
+window.renderChats = renderChats;
+
 async function renderPage(targetPostId, options){
   if(!currentUser && currentPage !== 'feed' && currentPage !== 'marketplace' && currentPage !== 'products' && currentPage !== 'update'){
     showAuthPrompt('access this page');
@@ -3752,7 +3775,7 @@ async function renderPage(targetPostId, options){
   $('app')?.classList.toggle('is-feed-page',isFeed);
   $('appMainScroll')?.classList.toggle('is-feed-scroll',isFeed);
   setNav();
-  const map={feed:renderFeed,dashboard:renderDashboard,analysis:renderAnalysis,marketplace:renderMarketplace,products:renderProducts,orders:renderOrders,store:renderStore,profile:renderProfile,cart:renderCart,settings:renderSettings,admin:renderAdmin,update:renderSellerFlowUpdatePage,chats:window.renderChats||renderChats};
+  const map={feed:renderFeed,dashboard:renderDashboard,analysis:renderAnalysis,marketplace:renderMarketplace,products:renderProducts,orders:renderOrders,store:renderStore,profile:renderProfile,cart:renderCart,settings:renderSettings,admin:renderAdmin,update:renderSellerFlowUpdatePage,chats:renderChats};
   await (map[currentPage]||renderFeed)(targetPostId, options);
   updateCartBadge();
 }
@@ -3885,7 +3908,12 @@ function postCard(p, idx = 0){
 
   return `
     <article class="reel-card" data-reel-id="${p.id}">
-      <div class="reel-media-wrap">${media}</div>
+      <div class="reel-media-wrap" data-reel-media="${p.id}">
+        ${media}
+        <div class="reel-heart-overlay pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 z-20">
+          <span class="text-7xl transform scale-75 transition-transform duration-300 drop-shadow-2xl">❤️</span>
+        </div>
+      </div>
       <div class="reel-shade"></div>
 
       <!-- Modern grouped vertical action bar -->
@@ -3939,7 +3967,7 @@ function postCard(p, idx = 0){
               <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
             </svg>
           </button>
-          <span class="reel-action-count">Share</span>
+          <span class="reel-action-count">${formatReelCount(p.shares?.length||p.shareCount||0)}</span>
         </div>
 
         <!-- 6. Spinning audio disc with avatar artwork -->
@@ -5875,7 +5903,8 @@ function renderStorePreviewContent(storeId, store, p, products){
   $('previewChatSellerBtn')?.addEventListener('click', () => {
     closeModal();
     if(!currentUser) return showAuthPrompt('message this seller');
-    startChat(storeId);
+    const sellerUid = store.ownerId || store.sellerId || store.uid || p.uid || storeId;
+    startChat(sellerUid);
   });
 
   $('previewOpenStoreBtn')?.addEventListener('click', () => {
@@ -6652,8 +6681,36 @@ function openProductModal(p=null){
       ` : ''}
 
       <div>
-        <label class="muted text-xs block mb-1">Product name</label>
+        <label class="muted text-xs block mb-1">Product name <span class="text-gold font-bold">*</span></label>
         <input id="prodName" value="${esc(prod?.name||'')}" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white" placeholder="e.g. Handmade Kente Scarf, iPhone 14 Pro Max">
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <label class="muted text-xs font-semibold block">Product category <span class="text-gold font-black">* (Required)</span></label>
+          <span class="text-[10px] text-gold/90 font-mono">Select 1 category</span>
+        </div>
+        <select id="prodCategory" required class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white transition">
+          <option value="" disabled ${!prod?.category ? 'selected' : ''}>-- Select product category (Required) --</option>
+          <option value="fashion" ${prod?.category==='fashion'?'selected':''}>👗 Fashion & Beauty (Clothing, Shoes, Wigs, Jewelry)</option>
+          <option value="tech" ${prod?.category==='tech'?'selected':''}>📱 Tech & Electronics (Phones, Laptops, Gadgets, Audio)</option>
+          <option value="food" ${prod?.category==='food'?'selected':''}>🍲 Food & Provisions (Groceries, Meals, Spices, Drinks)</option>
+          <option value="home" ${prod?.category==='home'?'selected':''}>🏠 Home & Living (Furniture, Decor, Kitchen, Bedding)</option>
+          <option value="health" ${prod?.category==='health'?'selected':''}>🌿 Health & Wellness (Personal Care, Skincare, Herbal)</option>
+          <option value="auto" ${prod?.category==='auto'?'selected':''}>🚗 Auto & Parts (Vehicles, Accessories, Spare Parts)</option>
+          <option value="services" ${prod?.category==='services'?'selected':''}>🛠️ Services & Crafts (Artisans, Repairs, Tailoring)</option>
+          <option value="general" ${prod?.category==='general'?'selected':''}>📦 General Goods & Other</option>
+        </select>
+        <div class="flex items-center gap-1.5 flex-wrap mt-2" id="prodCatQuickChips">
+          <button type="button" data-select-cat="fashion" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='fashion'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">👗 Fashion</button>
+          <button type="button" data-select-cat="tech" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='tech'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">📱 Tech</button>
+          <button type="button" data-select-cat="food" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='food'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">🍲 Food</button>
+          <button type="button" data-select-cat="home" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='home'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">🏠 Home</button>
+          <button type="button" data-select-cat="health" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='health'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">🌿 Health</button>
+          <button type="button" data-select-cat="auto" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='auto'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">🚗 Auto</button>
+          <button type="button" data-select-cat="services" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='services'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">🛠️ Services</button>
+          <button type="button" data-select-cat="general" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='general'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">📦 General</button>
+        </div>
       </div>
 
       <div class="grid grid-cols-2 gap-3">
@@ -6693,16 +6750,61 @@ function openProductModal(p=null){
     </div>
   `);
 
+  document.querySelectorAll('#prodCatQuickChips [data-select-cat]').forEach(b => {
+    b.onclick = () => {
+      const select = $('prodCategory');
+      if(select){
+        select.value = b.dataset.selectCat;
+        select.classList.remove('border-red-500');
+        document.querySelectorAll('#prodCatQuickChips [data-select-cat]').forEach(chip => {
+          const match = chip.dataset.selectCat === b.dataset.selectCat;
+          chip.classList.toggle('border-gold', match);
+          chip.classList.toggle('text-gold', match);
+          chip.classList.toggle('font-bold', match);
+          chip.classList.toggle('bg-gold/10', match);
+          chip.classList.toggle('border-[#333]', !match);
+          chip.classList.toggle('text-zinc-300', !match);
+          chip.classList.toggle('bg-[#141416]', !match);
+        });
+      }
+    };
+  });
+
+  const catSelectEl = $('prodCategory');
+  if(catSelectEl){
+    catSelectEl.onchange = () => {
+      const val = catSelectEl.value;
+      catSelectEl.classList.remove('border-red-500');
+      document.querySelectorAll('#prodCatQuickChips [data-select-cat]').forEach(chip => {
+        const match = chip.dataset.selectCat === val;
+        chip.classList.toggle('border-gold', match);
+        chip.classList.toggle('text-gold', match);
+        chip.classList.toggle('font-bold', match);
+        chip.classList.toggle('bg-gold/10', match);
+        chip.classList.toggle('border-[#333]', !match);
+        chip.classList.toggle('text-zinc-300', !match);
+        chip.classList.toggle('bg-[#141416]', !match);
+      });
+    };
+  }
+
   $('saveProduct').onclick = async () => {
     try {
       const name = $('prodName').value.trim();
       const price = Number($('prodPrice').value);
       const stock = Number($('prodStock').value);
+      const category = $('prodCategory')?.value?.trim() || '';
       const description = $('prodDesc').value.trim();
       const file = $('prodFile').files[0];
 
       if(!name || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0) {
         throw Error('Enter a valid name, price, and stock quantity.');
+      }
+
+      if(!category) {
+        $('prodCategory')?.focus();
+        $('prodCategory')?.classList.add('border-red-500');
+        throw Error('Please select a product category before listing (e.g. Fashion, Tech, Food, Home & Living).');
       }
 
       let imageUrl = prod?.imageUrl || p?.imageUrl || p?.image || p?.photoUrl || p?.productImage || '', imagePath = prod?.imagePath || p?.imagePath || p?.path || '';
@@ -6725,6 +6827,7 @@ function openProductModal(p=null){
         name,
         price,
         stock,
+        category,
         description,
         imageUrl,
         image: imageUrl,
@@ -6759,6 +6862,7 @@ function openProductModal(p=null){
           body: JSON.stringify({
             productId: prodId,
             name,
+            category,
             description,
             imageUrl,
             price,
@@ -8190,6 +8294,24 @@ async function renderStore(forceEdit = false){
             </div>
 
             <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="muted text-xs block">Store Category *</label>
+                <span class="text-[10px] text-gold/90 font-mono">Select store type</span>
+              </div>
+              <select id="storeCategory" required class="w-full p-3 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-sm text-white transition">
+                <option value="" disabled ${!store?.category ? 'selected' : ''}>-- Select store category (Required) --</option>
+                <option value="fashion" ${store?.category==='fashion'?'selected':''}>👗 Fashion & Beauty (Clothing, Shoes, Wigs, Jewelry)</option>
+                <option value="tech" ${store?.category==='tech'?'selected':''}>📱 Tech & Electronics (Phones, Laptops, Gadgets, Audio)</option>
+                <option value="food" ${store?.category==='food'?'selected':''}>🍲 Food & Provisions (Groceries, Meals, Spices, Drinks)</option>
+                <option value="home" ${store?.category==='home'?'selected':''}>🏠 Home & Living (Furniture, Decor, Kitchen, Bedding)</option>
+                <option value="health" ${store?.category==='health'?'selected':''}>🌿 Health & Wellness (Personal Care, Skincare, Herbal)</option>
+                <option value="auto" ${store?.category==='auto'?'selected':''}>🚗 Auto & Parts (Vehicles, Accessories, Spare Parts)</option>
+                <option value="services" ${store?.category==='services'?'selected':''}>🛠️ Services & Crafts (Artisans, Repairs, Tailoring)</option>
+                <option value="general" ${store?.category==='general'?'selected':''}>🛍️ General Goods & Multi-Department</option>
+              </select>
+            </div>
+
+            <div>
               <label class="muted text-xs block mb-1">Description / Bio</label>
               <textarea id="storeDesc" rows="4" class="w-full p-3 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-sm text-white" placeholder="Tell customers what you specialize in, policies, delivery regions, and product authenticity…">${esc(store.description || '')}</textarea>
             </div>
@@ -8661,6 +8783,9 @@ async function renderStore(forceEdit = false){
         const name = $('storeName').value.trim();
         if(name.length < 2) throw Error('Enter a valid store name (at least 2 characters).');
 
+        const category = $('storeCategory')?.value;
+        if(!category) throw Error('Please select a store category.');
+
         const location = $('storeLocation').value.trim();
         if(!location) throw Error('Please provide your location or area (e.g. East Legon, Accra).');
 
@@ -8746,6 +8871,7 @@ async function renderStore(forceEdit = false){
         const storeData = {
           ownerId: currentUser.uid,
           name,
+          category,
           description: $('storeDesc').value.trim(),
           location,
           address: $('storeAddress').value.trim(),
@@ -8780,6 +8906,7 @@ async function renderStore(forceEdit = false){
           bannerPath,
           logoUrl,
           logoPath,
+          category,
           ...(logoUrl ? { avatarUrl: logoUrl } : {}),
           hasBusinessCert,
           businessCertUrl
@@ -21271,8 +21398,8 @@ FINANCIAL:
 .sf-search-tab:not(.active):hover{border-color:#3f3f4e;color:#fff;background:#1f1f2a}
 
 .chat-shell{background:#101014;border:1px solid #24242e;border-radius:20px;overflow:hidden;box-shadow:0 12px 36px rgba(0,0,0,0.45)}
-.chat-layout{display:grid;grid-template-columns:340px 1fr;min-height:560px;height:calc(100vh - 200px);max-height:760px}
-.chat-list-pane{display:flex;flex-direction:column;border-right:1px solid #23232c;background:#131318;min-width:0}
+.chat-layout{display:grid;grid-template-columns:340px 1fr;min-height:500px;height:calc(100dvh - 180px);max-height:760px}
+.chat-list-pane{display:flex;flex-direction:column;border-right:1px solid #23232c;background:#131318;min-width:0;height:100%}
 .chat-list{flex:1 1 0%;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:8px;scrollbar-width:thin;scrollbar-color:#333 transparent}
 .chat-main-pane{display:flex;flex-direction:column;min-width:0;height:100%;background:#0d0d10}
 .chat-convo-item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid transparent;border-radius:14px;background:#17171e;width:100%;text-align:left;transition:all .16s ease;position:relative}
@@ -21290,7 +21417,7 @@ FINANCIAL:
 .quick-chip{display:inline-flex;align-items:center;padding:5px 11px;border-radius:9999px;font-size:11px;font-weight:500;background:#181820;border:1px solid #2a2a35;color:#d4d4d8;cursor:pointer;white-space:nowrap;transition:all .14s ease}
 .quick-chip:hover{background:#22222d;border-color:#f5b942;color:#f5b942}
 @media(max-width:767px){
-  .chat-layout{grid-template-columns:1fr;min-height:500px;height:75vh;max-height:85dvh}
+  .chat-layout{grid-template-columns:1fr;min-height:420px;height:calc(100dvh - 130px);max-height:calc(100dvh - 130px)}
   .chat-layout.in-active-chat .chat-list-pane{display:none}
   .chat-layout:not(.in-active-chat) .chat-main-pane{display:none}
 }
@@ -21314,10 +21441,20 @@ FINANCIAL:
   function profileSearchText(p){return [p?.name,p?.username,p?.email,p?.bio,p?.role].filter(Boolean).join(' ').toLowerCase()}
   
   async function startChat(uid){
-    if(!currentUser){showAuthPrompt('chat with sellers');return;}
-    if(uid===currentUser.uid)return;
+    if(!currentUser){showAuthPrompt('chat with Ghanaian sellers');return;}
+    if(!uid || uid===currentUser.uid)return;
     try{
-      const other=sellerProfile(uid);
+      let other = sellerProfile(uid);
+      if(!other || other.name === 'Seller') {
+        try {
+          const docSnap = await getDoc(doc(db, 'publicProfiles', uid));
+          if(docSnap && snapshotExists(docSnap)) {
+            const data = docSnap.data();
+            allPublicProfiles.set(uid, data);
+            other = data;
+          }
+        } catch(_) {}
+      }
       const id=pairId(currentUser.uid,uid);
       const ref=doc(db,'conversations',id);
       const snap=await getDoc(ref);
@@ -22139,7 +22276,11 @@ FINANCIAL:
   const oldSetNav=setNav;setNav=function(){oldSetNav();const desktop=$('desktopNav');if(desktop&&!desktop.querySelector('[data-page="chats"]')){const b=document.createElement('button');b.className='navbtn px-3 py-2';b.dataset.page='chats';b.textContent='Chats';b.onclick=()=>navigate('chats');desktop.appendChild(b)}};
   function installSearch(){const head=document.querySelector('#app header .max-w-7xl');if(!head||$('sfGlobalSearchBtn'))return;const wrap=document.createElement('div');wrap.className='ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0';wrap.innerHTML=`<button id="sfGlobalSearchBtn" class="sf-search-btn border border-[#333] rounded-xl px-2.5 sm:px-3 py-2 shrink-0" title="Search SellerFlow">⌕ <span class="hidden sm:inline">Search</span></button>`;const old=head.querySelector('.ml-auto');if(old){old.classList.remove('ml-auto');wrap.classList.add('ml-auto');head.insertBefore(wrap,old);wrap.appendChild(old)}else head.appendChild(wrap);if($('sfGlobalSearchBtn')) $('sfGlobalSearchBtn').onclick=globalSearch}
   const oldShowApp=showApp;showApp=function(){oldShowApp();installSearch();setNav()};
+  window._sfCoreStartChat=startChat;
+  window._sfCoreRenderChats=renderChats;
   window.startSellerFlowChat=startChat;
+  window.startChat=startChat;
+  window.renderChats=renderChats;
   document.addEventListener('click',e=>{const m=e.target.closest('[data-message-user]');if(m)startChat(m.dataset.messageUser)});
 
   /* Offline & Online Auto-Refresh Controller (Dynamic Island) */

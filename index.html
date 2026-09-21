@@ -4052,6 +4052,11 @@ function pauseAllForYouVideos(destroyFeed=false){
       }
     }catch(_){}
   });
+  document.querySelectorAll('.reel-audio, .sf-feed-audio, audio').forEach(a=>{
+    try{
+      if(!a.paused)a.pause();
+    }catch(_){}
+  });
 }
 window.pauseAllForYouVideos=pauseAllForYouVideos;
 
@@ -4238,6 +4243,29 @@ ${esc(update.message || '')}
 }
 window.renderSellerFlowUpdatePage = renderSellerFlowUpdatePage;
 
+async function startChat(uid){
+  if (typeof window._sfCoreStartChat === 'function') {
+    return window._sfCoreStartChat(uid);
+  }
+  if (!currentUser) { showAuthPrompt('chat with Ghanaian sellers'); return; }
+  await navigate('chats');
+  if (typeof window._sfCoreStartChat === 'function') {
+    return window._sfCoreStartChat(uid);
+  }
+}
+async function startSellerFlowChat(uid){
+  return startChat(uid);
+}
+window.startChat = startChat;
+window.startSellerFlowChat = startSellerFlowChat;
+
+async function renderChats(...args){
+  if (typeof window._sfCoreRenderChats === 'function') {
+    return window._sfCoreRenderChats(...args);
+  }
+}
+window.renderChats = renderChats;
+
 async function renderPage(targetPostId, options){
   if(!currentUser && currentPage !== 'feed' && currentPage !== 'marketplace' && currentPage !== 'products' && currentPage !== 'update'){
     showAuthPrompt('access this page');
@@ -4249,7 +4277,7 @@ async function renderPage(targetPostId, options){
   $('app')?.classList.toggle('is-feed-page',isFeed);
   $('appMainScroll')?.classList.toggle('is-feed-scroll',isFeed);
   setNav();
-  const map={feed:renderFeed,dashboard:renderDashboard,analysis:renderAnalysis,marketplace:renderMarketplace,products:renderProducts,orders:renderOrders,store:renderStore,profile:renderProfile,cart:renderCart,settings:renderSettings,admin:renderAdmin,update:renderSellerFlowUpdatePage,chats:window.renderChats||renderChats};
+  const map={feed:renderFeed,dashboard:renderDashboard,analysis:renderAnalysis,marketplace:renderMarketplace,products:renderProducts,orders:renderOrders,store:renderStore,profile:renderProfile,cart:renderCart,settings:renderSettings,admin:renderAdmin,update:renderSellerFlowUpdatePage,chats:renderChats};
   await (map[currentPage]||renderFeed)(targetPostId, options);
   updateCartBadge();
 }
@@ -4610,6 +4638,9 @@ function postCard(p, idx = 0){
   const isCopyrightMuted = !!(p.audioMutedByCopyright || p.copyrightDetected);
   if(window._sfCachedPosts) window._sfCachedPosts.set(p.id, p);
 
+  // Default sound state is unmuted on app open/start until user explicitly mutes
+  const isSoundUnmuted = window._sfUserUnmuted !== false;
+
   let media='';
   const hasAudio = !!(p.soundUrl || p.audioUrl);
   if(p.mediaUrl){
@@ -4620,21 +4651,21 @@ function postCard(p, idx = 0){
       const trimEnd = Number(p.trimEnd || 0);
       const soundBtnHtml = isCopyrightMuted
         ? `<button type="button" class="reel-sound-label sf-sound-toggle is-copyright-muted" data-sound-toggle="${p.id}" data-copyright-muted="true" title="Audio muted due to copyright detection">🔇 Audio muted (Copyright)</button><button type="button" class="reel-copyright-banner" data-copyright-info="${p.id}" title="Audio muted due to copyright detection. Tap for details."><span>🔇</span><span class="truncate">Audio muted · Copyright</span><span class="text-[10px] underline ml-1 font-normal">Info</span></button>`
-        : `<button type="button" class="reel-sound-label sf-sound-toggle" data-sound-toggle="${p.id}" title="Toggle sound">🔇 Tap for sound</button>`;
-      media=`<video class="reel-media reel-video" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" data-post-id="${p.id}" data-copyright-muted="${isCopyrightMuted ? 'true' : 'false'}" data-trim-start="${trimStart}" data-trim-end="${trimEnd}" style="${cropStyle}" muted playsinline webkit-playsinline loop preload="${isFirst ? 'auto' : 'none'}" poster="${esc(poster)}"></video><button type="button" class="reel-play-toggle" data-video-toggle="${p.id}">▶</button>${soundBtnHtml}`;
+        : `<button type="button" class="reel-sound-label sf-sound-toggle ${isSoundUnmuted ? 'is-unmuted' : ''}" data-sound-toggle="${p.id}" title="${isSoundUnmuted ? 'Mute video sound' : 'Unmute video sound'}">${isSoundUnmuted ? '🔊 Sound on' : '🔇 Tap for sound'}</button>`;
+      media=`<video class="reel-media reel-video" src="${esc(p.mediaUrl)}" data-media-path="${esc(p.mediaPath||'')}" data-post-id="${p.id}" data-copyright-muted="${isCopyrightMuted ? 'true' : 'false'}" data-trim-start="${trimStart}" data-trim-end="${trimEnd}" style="${cropStyle}" ${isCopyrightMuted || !isSoundUnmuted ? 'muted' : ''} playsinline webkit-playsinline loop preload="${isFirst ? 'auto' : 'none'}" poster="${esc(poster)}"></video><button type="button" class="reel-play-toggle" data-video-toggle="${p.id}">▶</button>${soundBtnHtml}`;
     }else{
       const optFeedImg = getOptimizedMediaUrl(p.mediaUrl, 'feed');
-      const audioEl = hasAudio ? `<audio class="reel-media reel-audio sf-feed-audio" src="${esc(p.soundUrl||p.audioUrl)}" data-post-id="${p.id}" data-copyright-muted="${isCopyrightMuted ? 'true' : 'false'}" loop playsinline preload="${isFirst ? 'auto' : 'none'}"></audio>` : '';
+      const audioEl = hasAudio ? `<audio class="reel-media reel-audio sf-feed-audio" src="${esc(p.soundUrl||p.audioUrl)}" data-post-id="${p.id}" data-copyright-muted="${isCopyrightMuted ? 'true' : 'false'}" ${isCopyrightMuted || !isSoundUnmuted ? 'muted' : ''} loop playsinline preload="${isFirst ? 'auto' : 'none'}"></audio>` : '';
       const soundBtnHtml = isCopyrightMuted
         ? `<button type="button" class="reel-sound-label sf-sound-toggle is-copyright-muted" data-sound-toggle="${p.id}" data-copyright-muted="true" title="Audio muted due to copyright detection">🔇 Audio muted (Copyright)</button><button type="button" class="reel-copyright-banner" data-copyright-info="${p.id}" title="Audio muted due to copyright detection. Tap for details."><span>🔇</span><span class="truncate">Audio muted · Copyright</span><span class="text-[10px] underline ml-1 font-normal">Info</span></button>`
         : hasAudio
-          ? `<button type="button" class="reel-sound-label sf-sound-toggle" data-sound-toggle="${p.id}" title="Toggle sound">🔇 Tap for sound</button>`
+          ? `<button type="button" class="reel-sound-label sf-sound-toggle ${isSoundUnmuted ? 'is-unmuted' : ''}" data-sound-toggle="${p.id}" title="${isSoundUnmuted ? 'Mute video sound' : 'Unmute video sound'}">${isSoundUnmuted ? '🔊 Sound on' : '🔇 Tap for sound'}</button>`
           : '';
       media=`<img loading="${isFirst ? 'eager' : 'lazy'}" fetchpriority="${isFirst ? 'high' : 'auto'}" decoding="async" class="reel-media ${p.photoFilter ? `sf-filter-${esc(p.photoFilter)}` : ''}" style="${p.photoFilterCss ? `filter:${esc(p.photoFilterCss)};` : ''}" src="${esc(optFeedImg)}" alt="SellerFlow post" data-media-path="${esc(p.mediaPath||'')}" onerror="window.__sfMediaFallback?window.__sfMediaFallback(this):null">${audioEl}${soundBtnHtml}`;
     }
   }else{
-    const audioEl = hasAudio ? `<audio class="reel-media reel-audio sf-feed-audio" src="${esc(p.soundUrl||p.audioUrl)}" data-post-id="${p.id}" data-copyright-muted="${isCopyrightMuted ? 'true' : 'false'}" loop playsinline preload="${isFirst ? 'auto' : 'none'}"></audio>` : '';
-    const soundBtnHtml = hasAudio ? `<button type="button" class="reel-sound-label sf-sound-toggle" data-sound-toggle="${p.id}" title="Toggle sound">🔇 Tap for sound</button>` : '';
+    const audioEl = hasAudio ? `<audio class="reel-media reel-audio sf-feed-audio" src="${esc(p.soundUrl||p.audioUrl)}" data-post-id="${p.id}" data-copyright-muted="${isCopyrightMuted ? 'true' : 'false'}" ${isCopyrightMuted || !isSoundUnmuted ? 'muted' : ''} loop playsinline preload="${isFirst ? 'auto' : 'none'}"></audio>` : '';
+    const soundBtnHtml = hasAudio ? `<button type="button" class="reel-sound-label sf-sound-toggle ${isSoundUnmuted ? 'is-unmuted' : ''}" data-sound-toggle="${p.id}" title="${isSoundUnmuted ? 'Mute video sound' : 'Unmute video sound'}">${isSoundUnmuted ? '🔊 Sound on' : '🔇 Tap for sound'}</button>` : '';
     media=`<div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"><div class="text-6xl mb-3">🛍️</div><div class="text-lg font-bold max-w-md">${esc(p.text||'SellerFlow post')}</div></div>${audioEl}${soundBtnHtml}`;
   }
   const soundText=p.soundName||'Original sound';
@@ -4642,7 +4673,12 @@ function postCard(p, idx = 0){
 
   return `
     <article class="reel-card" data-reel-id="${p.id}" data-copyright-muted="${isCopyrightMuted ? 'true' : 'false'}">
-      <div class="reel-media-wrap">${media}</div>
+      <div class="reel-media-wrap" data-reel-media="${p.id}">
+        ${media}
+        <div class="reel-heart-overlay pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 z-20">
+          <span class="text-7xl transform scale-75 transition-transform duration-300 drop-shadow-2xl">❤️</span>
+        </div>
+      </div>
       <div class="reel-shade"></div>
 
       <!-- Modern grouped vertical action bar -->
@@ -4696,7 +4732,7 @@ function postCard(p, idx = 0){
               <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
             </svg>
           </button>
-          <span class="reel-action-count">Share</span>
+          <span class="reel-action-count">${formatReelCount(p.shares?.length||p.shareCount||0)}</span>
         </div>
 
         <!-- 6. More options & moderation button -->
@@ -4836,6 +4872,10 @@ function setupReelPlayback(targetPostId){
    });
  };
 
+ if(window._sfUserUnmuted === undefined){
+   window._sfUserUnmuted = false;
+ }
+
  const enableAudio=()=>{
    try{
      if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
@@ -4843,9 +4883,10 @@ function setupReelPlayback(targetPostId){
    }catch(_){}
  };
  document.addEventListener('pointerdown',enableAudio,{once:true,passive:true});
+ document.addEventListener('touchstart',enableAudio,{once:true,passive:true});
 
  function updateAllSoundLabels(){
-   const isUnmuted = !!window._sfUserUnmuted;
+   const isUnmuted = window._sfUserUnmuted !== false;
    document.querySelectorAll('.reel-sound-label').forEach(lbl => {
      const card = lbl.closest('.reel-card');
      const isCopyrightMuted = card?.dataset.copyrightMuted === 'true' || lbl.dataset.copyrightMuted === 'true' || lbl.classList.contains('is-copyright-muted');
@@ -4864,7 +4905,8 @@ function setupReelPlayback(targetPostId){
  }
 
   function toggleFeedSound(forceState){
-    const targetUnmuted = forceState !== undefined ? forceState : !window._sfUserUnmuted;
+    const currentUnmuted = window._sfUserUnmuted !== false;
+    const targetUnmuted = forceState !== undefined ? forceState : !currentUnmuted;
     window._sfUserUnmuted = targetUnmuted;
     if(targetUnmuted) enableAudio();
 
@@ -5039,8 +5081,16 @@ function setupReelPlayback(targetPostId){
           currentActiveCard=card;
           pauseAllVideosExcept(v);
           v.dataset.userPaused='0';
+          const isCopyrightMuted = v.dataset.copyrightMuted === 'true' || card.dataset.copyrightMuted === 'true';
+          const shouldPlayWithSound = window._sfUserUnmuted !== false && !isCopyrightMuted;
+          v.muted = !shouldPlayWithSound;
+          if(shouldPlayWithSound){
+            enableAudio();
+            v.volume = 1;
+          }
           v.play().catch(()=>{v.muted=true;v.play().catch(()=>{})});
           updateCardButton(card,true);
+          updateAllSoundLabels();
         }else{
           v.dataset.userPaused='1';
           try{v.pause();}catch(_){}
@@ -5050,11 +5100,14 @@ function setupReelPlayback(targetPostId){
         if(a.paused){
           currentActiveCard=card;
           pauseAllVideosExcept(a);
-          window._sfUserUnmuted = true;
-          enableAudio();
-          a.muted = false;
-          a.volume = 1;
-          a.play().catch(()=>{});
+          const isCopyrightMuted = a.dataset.copyrightMuted === 'true' || card.dataset.copyrightMuted === 'true';
+          const shouldPlayWithSound = window._sfUserUnmuted !== false && !isCopyrightMuted;
+          a.muted = !shouldPlayWithSound;
+          if(shouldPlayWithSound){
+            enableAudio();
+            a.volume = 1;
+            a.play().catch(()=>{});
+          }
           updateAllSoundLabels();
         } else {
           try{ a.pause(); }catch(_){}
@@ -5124,7 +5177,7 @@ function setupReelPlayback(targetPostId){
       if(activeVideo&&activeVideo.paused&&activeVideo.dataset.userPaused!=='1'){
         activeVideo.play().catch(()=>{});
         updateCardButton(card,true);
-      } else if(activeAudio&&activeAudio.paused&&window._sfUserUnmuted){
+      } else if(activeAudio&&activeAudio.paused&&(window._sfUserUnmuted!==false)){
         activeAudio.play().catch(()=>{});
       }
       return;
@@ -5165,7 +5218,7 @@ function setupReelPlayback(targetPostId){
         activeVideo.muted = true;
         activeVideo.volume = 0;
       } else {
-        const shouldPlayWithSound = !!window._sfUserUnmuted;
+        const shouldPlayWithSound = window._sfUserUnmuted !== false;
         activeVideo.muted = !shouldPlayWithSound;
         if(shouldPlayWithSound){
           enableAudio();
@@ -5177,10 +5230,50 @@ function setupReelPlayback(targetPostId){
         updateCardButton(card,true);
         updateAllSoundLabels();
       }).catch(()=>{
+        // Fallback to muted autoplay if browser policy blocked unmuted sound before user gesture
         activeVideo.muted=true;
         activeVideo.play().catch(()=>{});
         updateCardButton(card,true);
         updateAllSoundLabels();
+
+        // Listen for first interaction (tap, scroll, click, keydown) to instantly restore unmuted sound
+        if(window._sfUserUnmuted !== false && !isCopyrightMuted){
+          const autoUnmuteOnGesture = () => {
+            window.removeEventListener('pointerdown', autoUnmuteOnGesture);
+            window.removeEventListener('touchstart', autoUnmuteOnGesture);
+            window.removeEventListener('scroll', autoUnmuteOnGesture, true);
+            window.removeEventListener('keydown', autoUnmuteOnGesture);
+            if(window._sfUserUnmuted !== false){
+              enableAudio();
+              if(activeVideo && activeVideo.dataset.copyrightMuted !== 'true' && card.dataset.copyrightMuted !== 'true'){
+                activeVideo.muted = false;
+                activeVideo.volume = 1;
+              }
+              document.querySelectorAll('.reel-video').forEach(vid => {
+                const c = vid.closest('.reel-card');
+                if (c?.dataset.copyrightMuted !== 'true' && vid.dataset.copyrightMuted !== 'true') {
+                  vid.muted = false;
+                  vid.volume = 1;
+                }
+              });
+              document.querySelectorAll('.reel-audio, .sf-feed-audio').forEach(aud => {
+                const c = aud.closest('.reel-card');
+                if (c?.dataset.copyrightMuted !== 'true' && aud.dataset.copyrightMuted !== 'true') {
+                  aud.muted = false;
+                  aud.volume = 1;
+                  if (c === currentActiveCard && currentPage === 'feed') {
+                    aud.play().catch(() => {});
+                  }
+                }
+              });
+              updateAllSoundLabels();
+            }
+          };
+          window.addEventListener('pointerdown', autoUnmuteOnGesture, { once: true, passive: true });
+          window.addEventListener('touchstart', autoUnmuteOnGesture, { once: true, passive: true });
+          window.addEventListener('scroll', autoUnmuteOnGesture, { once: true, passive: true, capture: true });
+          window.addEventListener('keydown', autoUnmuteOnGesture, { once: true, passive: true });
+        }
       });
     }
 
@@ -5191,7 +5284,7 @@ function setupReelPlayback(targetPostId){
         activeAudio.volume = 0;
         try{ activeAudio.pause(); }catch(_){}
       } else {
-        const shouldPlayWithSound = !!window._sfUserUnmuted;
+        const shouldPlayWithSound = window._sfUserUnmuted !== false;
         activeAudio.muted = !shouldPlayWithSound;
         if(shouldPlayWithSound){
           enableAudio();
@@ -5307,6 +5400,14 @@ function setupReelPlayback(targetPostId){
       const oc=v.closest('.reel-card');
       if(oc)updateCardButton(oc,false);
     });
+    document.querySelectorAll('audio.reel-audio, audio.sf-feed-audio, audio').forEach(a=>{
+      try{
+        if(!a.paused){
+          a.dataset.wasPlaying='1';
+          a.pause();
+        }
+      }catch(_){}
+    });
   };
 
   const handleDocVisibility=()=>{
@@ -5317,6 +5418,10 @@ function setupReelPlayback(targetPostId){
       if(v&&v.dataset.wasPlaying==='1'&&v.dataset.userPaused!=='1'){
         v.play().catch(()=>{});
         updateCardButton(currentActiveCard,true);
+      }
+      const a=currentActiveCard.querySelector('.reel-audio, .sf-feed-audio');
+      if(a&&a.dataset.wasPlaying==='1'&&(window._sfUserUnmuted!==false)){
+        a.play().catch(()=>{});
       }
     }
   };
@@ -5337,9 +5442,13 @@ function setupReelPlayback(targetPostId){
     }else if(e.key === 'ArrowUp' || e.key === 'k' || e.key === 'PageUp'){
       e.preventDefault();
       handlePrevReel();
+    }else if(e.key === 'm' || e.key === 'M'){
+      e.preventDefault();
+      toggleFeedSound();
     }else if(e.key === ' ' && currentActiveCard){
       e.preventDefault();
       const v = currentActiveCard.querySelector('.reel-video');
+      const a = currentActiveCard.querySelector('.reel-audio, .sf-feed-audio');
       if(v){
         if(v.paused){
           v.play().catch(()=>{});
@@ -5348,6 +5457,12 @@ function setupReelPlayback(targetPostId){
           v.pause();
           v.dataset.userPaused = '1';
           updateCardButton(currentActiveCard, false);
+        }
+      }else if(a){
+        if(a.paused){
+          a.play().catch(()=>{});
+        }else{
+          a.pause();
         }
       }
     }
@@ -6296,6 +6411,9 @@ async function renderMarketplace(initialTab = 'products', targetPostId, options)
           <button class="prod-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-pcat="tech">📱 Tech & Electronics</button>
           <button class="prod-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-pcat="food">🍲 Food & Provisions</button>
           <button class="prod-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-pcat="home">🏠 Home & Living</button>
+          <button class="prod-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-pcat="health">🌿 Health & Beauty</button>
+          <button class="prod-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-pcat="auto">🚗 Auto & Parts</button>
+          <button class="prod-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-pcat="services">🛠️ Services</button>
           <button class="prod-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-pcat="instock">🟢 In stock only</button>
           ${currentUser && (isAdmin || currentProfile?.verified) ? `<button class="prod-chip px-3.5 py-1.5 rounded-full border border-[#333] hover:border-[#555] bg-[#141414] text-zinc-300 whitespace-nowrap" data-pcat="mine">👤 My catalogue (${myProductsCount})</button>` : ''}
         </div>
@@ -6375,14 +6493,21 @@ async function renderMarketplace(initialTab = 'products', targetPostId, options)
       const hay = ((p.name||'') + ' ' + (p.description||'') + ' ' + (sProf.name||'') + ' ' + (sProf.username||'')).toLowerCase();
       const matchQuery = !q || hay.includes(q);
       let matchCat = true;
+      const cat = String(p.category || '').toLowerCase().trim();
       if(activeProductFilter === 'fashion') {
-        matchCat = /fashion|dress|cloth|wear|beauty|shoe|bag|hair|wig|jewel|heel|kente/i.test(hay);
+        matchCat = cat === 'fashion' || /fashion|dress|cloth|wear|beauty|shoe|bag|hair|wig|jewel|heel|kente/i.test(hay);
       } else if(activeProductFilter === 'tech') {
-        matchCat = /tech|phone|electr|laptop|gadget|sound|audio|apple|samsung|charger|watch|case/i.test(hay);
+        matchCat = cat === 'tech' || /tech|phone|electr|laptop|gadget|sound|audio|apple|samsung|charger|watch|case/i.test(hay);
       } else if(activeProductFilter === 'food') {
-        matchCat = /food|snack|drink|grocery|provision|spice|rice|oil|shito|tea|coffee|waakye/i.test(hay);
+        matchCat = cat === 'food' || /food|snack|drink|grocery|provision|spice|rice|oil|shito|tea|coffee|waakye/i.test(hay);
       } else if(activeProductFilter === 'home') {
-        matchCat = /home|decor|living|bed|furniture|kitchen|light|lamp|art|craft/i.test(hay);
+        matchCat = cat === 'home' || /home|decor|living|bed|furniture|kitchen|light|lamp|art|craft/i.test(hay);
+      } else if(activeProductFilter === 'health') {
+        matchCat = cat === 'health' || /health|wellness|cosmetic|skincare|soap|cream|herb|lotion/i.test(hay);
+      } else if(activeProductFilter === 'auto') {
+        matchCat = cat === 'auto' || /auto|car|motor|vehicle|part|accessory|tyre|tire|brake/i.test(hay);
+      } else if(activeProductFilter === 'services') {
+        matchCat = cat === 'services' || /service|craft|repair|tailor|catering|photo|plumb|electric/i.test(hay);
       } else if(activeProductFilter === 'instock') {
         matchCat = Number(p.stock) > 0;
       } else if(activeProductFilter === 'mine') {
@@ -6525,6 +6650,24 @@ async function renderMarketplace(initialTab = 'products', targetPostId, options)
   if(marketSearchEl) marketSearchEl.oninput = filterStores;
   bindStoreCards();
 }
+function productCategoryBadge(cat){
+  const c = String(cat || '').toLowerCase().trim();
+  const map = {
+    fashion: { label: 'Fashion', emoji: '👗' },
+    tech: { label: 'Tech', emoji: '📱' },
+    food: { label: 'Food', emoji: '🍲' },
+    home: { label: 'Home', emoji: '🏠' },
+    health: { label: 'Health', emoji: '🌿' },
+    auto: { label: 'Auto', emoji: '🚗' },
+    services: { label: 'Services', emoji: '🛠️' },
+    general: { label: 'General', emoji: '📦' }
+  };
+  const item = map[c];
+  if(!item) return '';
+  return `<span class="text-[9px] sm:text-[10px] px-2 py-0.5 rounded-md bg-[#1d1d24] text-zinc-300 border border-[#333] font-medium inline-flex items-center gap-1 shrink-0">${item.emoji} ${esc(item.label)}</span>`;
+}
+window.productCategoryBadge = productCategoryBadge;
+
 function marketplaceProductCard(p, idx = 0){
   const s=sellerProfile(p.sellerId);
   const location=getSellerLocation(p.sellerId);
@@ -6569,6 +6712,7 @@ function marketplaceProductCard(p, idx = 0){
           <b class="text-xs sm:text-sm font-bold text-white leading-snug truncate cursor-pointer hover:text-gold transition" data-view-product="${esc(p.id)}" title="${esc(p.name)}">${esc(p.name)}</b>
           <div class="gold font-black text-sm sm:text-base shrink-0">${money(p.price)}</div>
         </div>
+        ${p.category ? `<div class="mt-1 flex items-center gap-1">${productCategoryBadge(p.category)}</div>` : ''}
         ${p.description ? `<p class="muted text-[11px] sm:text-xs mt-1 line-clamp-2 leading-relaxed">${esc(p.description)}</p>` : ''}
       </div>
       <div class="mt-2.5 pt-2 border-t border-[#262626]">
@@ -6898,7 +7042,8 @@ function renderStorePreviewContent(storeId, store, p, products){
   $('previewChatSellerBtn')?.addEventListener('click', () => {
     closeModal();
     if(!currentUser) return showAuthPrompt('message this seller');
-    startChat(storeId);
+    const sellerUid = store.ownerId || store.sellerId || store.uid || p.uid || storeId;
+    startChat(sellerUid);
   });
 
   $('previewOpenStoreBtn')?.addEventListener('click', () => {
@@ -7342,6 +7487,7 @@ function productCard(p, idx = 0){
           <h3 class="font-bold text-xs sm:text-sm text-white truncate cursor-pointer hover:text-gold transition" data-view-product="${esc(p.id)}" title="${esc(p.name)}">${esc(p.name)}</h3>
           <div class="gold font-black text-sm sm:text-base shrink-0">${money(p.price)}</div>
         </div>
+        ${p.category ? `<div class="mt-1 flex items-center gap-1">${productCategoryBadge(p.category)}</div>` : ''}
         ${p.description ? `<p class="muted text-[11px] sm:text-xs mt-1 line-clamp-2 leading-relaxed">${esc(p.description)}</p>` : ''}
         <div class="text-[11px] text-zinc-400 mt-1.5 flex items-center justify-between">
           <span>${inStock ? `<span class="text-green-400 font-medium">${maxStock} in stock</span>` : `<span class="text-red-400">Sold out</span>`}</span>
@@ -7668,8 +7814,36 @@ function openProductModal(p=null){
       ` : ''}
 
       <div>
-        <label class="muted text-xs block mb-1">Product name</label>
+        <label class="muted text-xs block mb-1">Product name <span class="text-gold font-bold">*</span></label>
         <input id="prodName" value="${esc(prod?.name||'')}" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white" placeholder="e.g. Handmade Kente Scarf, iPhone 14 Pro Max">
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <label class="muted text-xs font-semibold block">Product category <span class="text-gold font-black">* (Required)</span></label>
+          <span class="text-[10px] text-gold/90 font-mono">Select 1 category</span>
+        </div>
+        <select id="prodCategory" required class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] focus:border-gold text-sm text-white transition">
+          <option value="" disabled ${!prod?.category ? 'selected' : ''}>-- Select product category (Required) --</option>
+          <option value="fashion" ${prod?.category==='fashion'?'selected':''}>👗 Fashion & Beauty (Clothing, Shoes, Wigs, Jewelry)</option>
+          <option value="tech" ${prod?.category==='tech'?'selected':''}>📱 Tech & Electronics (Phones, Laptops, Gadgets, Audio)</option>
+          <option value="food" ${prod?.category==='food'?'selected':''}>🍲 Food & Provisions (Groceries, Meals, Spices, Drinks)</option>
+          <option value="home" ${prod?.category==='home'?'selected':''}>🏠 Home & Living (Furniture, Decor, Kitchen, Bedding)</option>
+          <option value="health" ${prod?.category==='health'?'selected':''}>🌿 Health & Wellness (Personal Care, Skincare, Herbal)</option>
+          <option value="auto" ${prod?.category==='auto'?'selected':''}>🚗 Auto & Parts (Vehicles, Accessories, Spare Parts)</option>
+          <option value="services" ${prod?.category==='services'?'selected':''}>🛠️ Services & Crafts (Artisans, Repairs, Tailoring)</option>
+          <option value="general" ${prod?.category==='general'?'selected':''}>📦 General Goods & Other</option>
+        </select>
+        <div class="flex items-center gap-1.5 flex-wrap mt-2" id="prodCatQuickChips">
+          <button type="button" data-select-cat="fashion" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='fashion'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">👗 Fashion</button>
+          <button type="button" data-select-cat="tech" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='tech'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">📱 Tech</button>
+          <button type="button" data-select-cat="food" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='food'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">🍲 Food</button>
+          <button type="button" data-select-cat="home" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='home'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">🏠 Home</button>
+          <button type="button" data-select-cat="health" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='health'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">🌿 Health</button>
+          <button type="button" data-select-cat="auto" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='auto'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">🚗 Auto</button>
+          <button type="button" data-select-cat="services" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='services'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">🛠️ Services</button>
+          <button type="button" data-select-cat="general" class="text-[11px] px-2.5 py-1 rounded-lg border ${prod?.category==='general'?'border-gold text-gold font-bold bg-gold/10':'border-[#333] text-zinc-300 bg-[#141416]'} hover:border-gold transition">📦 General</button>
+        </div>
       </div>
 
       <div class="grid grid-cols-2 gap-3">
@@ -7709,11 +7883,50 @@ function openProductModal(p=null){
     </div>
   `);
 
+  document.querySelectorAll('#prodCatQuickChips [data-select-cat]').forEach(b => {
+    b.onclick = () => {
+      const select = $('prodCategory');
+      if(select){
+        select.value = b.dataset.selectCat;
+        select.classList.remove('border-red-500');
+        document.querySelectorAll('#prodCatQuickChips [data-select-cat]').forEach(chip => {
+          const match = chip.dataset.selectCat === b.dataset.selectCat;
+          chip.classList.toggle('border-gold', match);
+          chip.classList.toggle('text-gold', match);
+          chip.classList.toggle('font-bold', match);
+          chip.classList.toggle('bg-gold/10', match);
+          chip.classList.toggle('border-[#333]', !match);
+          chip.classList.toggle('text-zinc-300', !match);
+          chip.classList.toggle('bg-[#141416]', !match);
+        });
+      }
+    };
+  });
+
+  const catSelectEl = $('prodCategory');
+  if(catSelectEl){
+    catSelectEl.onchange = () => {
+      const val = catSelectEl.value;
+      catSelectEl.classList.remove('border-red-500');
+      document.querySelectorAll('#prodCatQuickChips [data-select-cat]').forEach(chip => {
+        const match = chip.dataset.selectCat === val;
+        chip.classList.toggle('border-gold', match);
+        chip.classList.toggle('text-gold', match);
+        chip.classList.toggle('font-bold', match);
+        chip.classList.toggle('bg-gold/10', match);
+        chip.classList.toggle('border-[#333]', !match);
+        chip.classList.toggle('text-zinc-300', !match);
+        chip.classList.toggle('bg-[#141416]', !match);
+      });
+    };
+  }
+
   $('saveProduct').onclick = async () => {
     try {
       const name = $('prodName').value.trim();
       const price = Number($('prodPrice').value);
       const stock = Number($('prodStock').value);
+      const category = $('prodCategory')?.value?.trim() || '';
       const description = $('prodDesc').value.trim();
       const file = $('prodFile').files[0];
 
@@ -7721,7 +7934,13 @@ function openProductModal(p=null){
         throw Error('Enter a valid name, price, and stock quantity.');
       }
 
-      let imageUrl = prod?.imageUrl || p?.imageUrl || p?.image || p?.photoUrl || p?.productImage || '', imagePath = prod?.imagePath || p?.imagePath || p?.path || '';
+      if(!category) {
+        $('prodCategory')?.focus();
+        $('prodCategory')?.classList.add('border-red-500');
+        throw Error('Please select a product category before listing (e.g. Fashion, Tech, Food, Home & Living).');
+      }
+
+      let imageUrl = prod?.imageUrl || p?.imageUrl || p?.image || p?.photoUrl || p?.photo || p?.productImage || '', imagePath = prod?.imagePath || p?.imagePath || p?.path || '';
       if(file){
         validFile(file, ['image/jpeg','image/png','image/webp'], 10);
         loading('Uploading product image…');
@@ -7741,6 +7960,7 @@ function openProductModal(p=null){
         name,
         price,
         stock,
+        category,
         description,
         imageUrl,
         image: imageUrl,
@@ -7776,6 +7996,7 @@ function openProductModal(p=null){
           body: JSON.stringify({
             productId: prodId,
             name,
+            category,
             description,
             imageUrl,
             price,
@@ -9232,6 +9453,24 @@ async function renderStore(forceEdit = false){
             </div>
 
             <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="muted text-xs block">Store Category *</label>
+                <span class="text-[10px] text-gold/90 font-mono">Select store type</span>
+              </div>
+              <select id="storeCategory" required class="w-full p-3 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-sm text-white transition">
+                <option value="" disabled ${!store?.category ? 'selected' : ''}>-- Select store category (Required) --</option>
+                <option value="fashion" ${store?.category==='fashion'?'selected':''}>👗 Fashion & Beauty (Clothing, Shoes, Wigs, Jewelry)</option>
+                <option value="tech" ${store?.category==='tech'?'selected':''}>📱 Tech & Electronics (Phones, Laptops, Gadgets, Audio)</option>
+                <option value="food" ${store?.category==='food'?'selected':''}>🍲 Food & Provisions (Groceries, Meals, Spices, Drinks)</option>
+                <option value="home" ${store?.category==='home'?'selected':''}>🏠 Home & Living (Furniture, Decor, Kitchen, Bedding)</option>
+                <option value="health" ${store?.category==='health'?'selected':''}>🌿 Health & Wellness (Personal Care, Skincare, Herbal)</option>
+                <option value="auto" ${store?.category==='auto'?'selected':''}>🚗 Auto & Parts (Vehicles, Accessories, Spare Parts)</option>
+                <option value="services" ${store?.category==='services'?'selected':''}>🛠️ Services & Crafts (Artisans, Repairs, Tailoring)</option>
+                <option value="general" ${store?.category==='general'?'selected':''}>🛍️ General Goods & Multi-Department</option>
+              </select>
+            </div>
+
+            <div>
               <label class="muted text-xs block mb-1">Description / Bio</label>
               <textarea id="storeDesc" rows="4" class="w-full p-3 rounded-xl bg-[#181818] border border-[#333] focus:border-gold text-sm text-white" placeholder="Tell customers what you specialize in, policies, delivery regions, and product authenticity…">${esc(store.description || '')}</textarea>
             </div>
@@ -9703,6 +9942,9 @@ async function renderStore(forceEdit = false){
         const name = $('storeName').value.trim();
         if(name.length < 2) throw Error('Enter a valid store name (at least 2 characters).');
 
+        const category = $('storeCategory')?.value;
+        if(!category) throw Error('Please select a store category.');
+
         const location = $('storeLocation').value.trim();
         if(!location) throw Error('Please provide your location or area (e.g. East Legon, Accra).');
 
@@ -9788,6 +10030,7 @@ async function renderStore(forceEdit = false){
         const storeData = {
           ownerId: currentUser.uid,
           name,
+          category,
           description: $('storeDesc').value.trim(),
           location,
           address: $('storeAddress').value.trim(),
@@ -9822,6 +10065,7 @@ async function renderStore(forceEdit = false){
           bannerPath,
           logoUrl,
           logoPath,
+          category,
           ...(logoUrl ? { avatarUrl: logoUrl } : {}),
           hasBusinessCert,
           businessCertUrl
@@ -15194,9 +15438,41 @@ init();
     $('openFeedUpload')?.addEventListener('click',()=>currentUser?openPostModal():showAuthPrompt('upload videos or photos to For You'));
     $('openFeedUploadEmpty')?.addEventListener('click',()=>currentUser?openPostModal():showAuthPrompt('upload videos or photos to For You'));
     
+    function triggerLikeAnimation(card){
+      const overlay = card?.querySelector('.reel-heart-overlay');
+      if(!overlay) return;
+      overlay.style.opacity = '1';
+      const span = overlay.querySelector('span');
+      if(span){
+        span.style.transform = 'scale(1.35)';
+        setTimeout(()=>{ span.style.transform = 'scale(1)'; }, 160);
+      }
+      setTimeout(()=>{ overlay.style.opacity = '0'; }, 700);
+    }
+    window.triggerLikeAnimation = triggerLikeAnimation;
+
+    let lastMediaTap = 0;
     // Delegated click interactions for smooth operation on all existing and newly appended cards
     const feedEl = $('reelFeed');
     feedEl?.addEventListener('click', (e) => {
+      const mediaWrap = e.target.closest('.reel-media-wrap');
+      if(mediaWrap){
+        const now = Date.now();
+        if(now - lastMediaTap < 300 && now - lastMediaTap > 0){
+          e.stopPropagation();
+          const card = mediaWrap.closest('.reel-card');
+          if(card){
+            triggerLikeAnimation(card);
+            const likeBtn = card.querySelector('[data-post-action="like"]');
+            if(likeBtn && !likeBtn.classList.contains('is-liked')){
+              likeBtn.click();
+            } else if(likeBtn) {
+              triggerLikeAnimation(card);
+            }
+          }
+        }
+        lastMediaTap = now;
+      }
       const actBtn = e.target.closest('[data-post-action]');
       if(actBtn){
         e.stopPropagation();
@@ -15356,6 +15632,9 @@ init();
     if(action==='sound'){await saveSoundForUser(id,p);return}
     if(action==='options'){openPostSettingsModal(id,p);return}
     if(action==='share'){
+      if(currentUser) {
+        await updateDoc(r, { shares: arrayUnion(currentUser.uid) }).catch(()=>{});
+      }
       if(window.recordFeedEvent) window.recordFeedEvent('SHARE', { postId: id, sellerId: p.sellerId }, p);
       const url=location.href.split('#')[0]+'#post='+id;
       if(navigator.share){
@@ -15364,6 +15643,12 @@ init();
         await navigator.clipboard?.writeText(url);
         await notifyPostOwner(id,'share');
         toast('Post link copied','success');
+      }
+      const wrap=document.querySelector(`[data-reel-id="${id}"]`);
+      const countEl=wrap?.querySelector(`[data-post-action="share"]`)?.parentElement?.querySelector('.reel-action-count');
+      if(countEl){
+        const baseShares = (p.shares||[]).length + (currentUser && !(p.shares||[]).includes(currentUser.uid) ? 1 : 0);
+        countEl.textContent = formatReelCount(baseShares);
       }
     }
     if(action==='like'||action==='save'){
@@ -15376,6 +15661,9 @@ init();
           const heartSvg = btn.querySelector('svg');
           if(heartSvg){
             heartSvg.setAttribute('class', nowActive ? 'w-6 h-6 text-red-500 fill-red-500' : 'w-6 h-6 text-white fill-none stroke-current');
+          }
+          if(nowActive && wrap && typeof triggerLikeAnimation === 'function'){
+            triggerLikeAnimation(wrap);
           }
         } else if(action==='save'){
           btn.classList.toggle('is-saved', Boolean(nowActive));
@@ -23226,8 +23514,8 @@ FINANCIAL:
 .sf-search-tab:not(.active):hover{border-color:#3f3f4e;color:#fff;background:#1f1f2a}
 
 .chat-shell{background:#101014;border:1px solid #24242e;border-radius:20px;overflow:hidden;box-shadow:0 12px 36px rgba(0,0,0,0.45)}
-.chat-layout{display:grid;grid-template-columns:340px 1fr;min-height:560px;height:calc(100vh - 200px);max-height:760px}
-.chat-list-pane{display:flex;flex-direction:column;border-right:1px solid #23232c;background:#131318;min-width:0}
+.chat-layout{display:grid;grid-template-columns:340px 1fr;min-height:500px;height:calc(100dvh - 180px);max-height:760px}
+.chat-list-pane{display:flex;flex-direction:column;border-right:1px solid #23232c;background:#131318;min-width:0;height:100%}
 .chat-list{flex:1 1 0%;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:8px;scrollbar-width:thin;scrollbar-color:#333 transparent}
 .chat-main-pane{display:flex;flex-direction:column;min-width:0;height:100%;background:#0d0d10}
 .chat-convo-item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid transparent;border-radius:14px;background:#17171e;width:100%;text-align:left;transition:all .16s ease;position:relative}
@@ -23245,7 +23533,7 @@ FINANCIAL:
 .quick-chip{display:inline-flex;align-items:center;padding:5px 11px;border-radius:9999px;font-size:11px;font-weight:500;background:#181820;border:1px solid #2a2a35;color:#d4d4d8;cursor:pointer;white-space:nowrap;transition:all .14s ease}
 .quick-chip:hover{background:#22222d;border-color:#f5b942;color:#f5b942}
 @media(max-width:767px){
-  .chat-layout{grid-template-columns:1fr;min-height:500px;height:75vh;max-height:85dvh}
+  .chat-layout{grid-template-columns:1fr;min-height:420px;height:calc(100dvh - 130px);max-height:calc(100dvh - 130px)}
   .chat-layout.in-active-chat .chat-list-pane{display:none}
   .chat-layout:not(.in-active-chat) .chat-main-pane{display:none}
 }
@@ -23269,10 +23557,20 @@ FINANCIAL:
   function profileSearchText(p){return [p?.name,p?.username,p?.email,p?.bio,p?.role].filter(Boolean).join(' ').toLowerCase()}
   
   async function startChat(uid){
-    if(!currentUser){showAuthPrompt('chat with sellers');return;}
-    if(uid===currentUser.uid)return;
+    if(!currentUser){showAuthPrompt('chat with Ghanaian sellers');return;}
+    if(!uid || uid===currentUser.uid)return;
     try{
-      const other=sellerProfile(uid);
+      let other = sellerProfile(uid);
+      if(!other || other.name === 'Seller') {
+        try {
+          const docSnap = await getDoc(doc(db, 'publicProfiles', uid));
+          if(docSnap && snapshotExists(docSnap)) {
+            const data = docSnap.data();
+            allPublicProfiles.set(uid, data);
+            other = data;
+          }
+        } catch(_) {}
+      }
       const id=pairId(currentUser.uid,uid);
       const ref=doc(db,'conversations',id);
       const snap=await getDoc(ref);
@@ -24091,7 +24389,11 @@ FINANCIAL:
   }
 
   window.globalSearch = globalSearch;
+  window._sfCoreStartChat = startChat;
+  window._sfCoreRenderChats = renderChats;
   window.startSellerFlowChat = startChat;
+  window.startChat = startChat;
+  window.renderChats = renderChats;
   document.addEventListener('click', e => {
     const m = e.target.closest('[data-message-user]');
     if(m) startChat(m.dataset.messageUser);
