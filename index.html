@@ -346,13 +346,15 @@ button,a,input,textarea,select{position:relative;z-index:1}
 input, textarea, select { color: #ffffff !important; }
 
 /* Modern eye-catching professional buttons & controls */
-#brandBtn{font-family:'Outfit',sans-serif;font-weight:900;font-size:1.32rem;letter-spacing:-0.03em;background:linear-gradient(135deg,#ffe082 0%,#f5b942 50%,#e29c1b 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:inline-flex;align-items:center;line-height:1;flex-shrink:0;transition:opacity .15s}
+#brandBtn{font-family:'Outfit',sans-serif;font-weight:900;font-size:1.32rem;letter-spacing:-0.03em;display:inline-flex;align-items:center;line-height:1;flex-shrink:0;transition:transform .15s ease, opacity .15s ease}
 #brandBtn:active{transform:scale(.97)}
+.gold-gradient{background:linear-gradient(135deg,#ffe082 0%,#f5b942 50%,#e29c1b 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
 #mobileMenu,#pageSelectorBtn{width:36px;height:36px;min-width:36px;border-radius:11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#e4e4e7;display:inline-flex;align-items:center;justify-content:center;font-size:14px;padding:0;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:all .16s ease}
 @media(max-width:480px){
   #mobileMenu,#pageSelectorBtn{width:32px;height:32px;min-width:32px;font-size:13px;border-radius:9px}
   #brandBtn{font-size:1.15rem!important}
+  #brandBtn img{width:28px!important;height:28px!important}
 }
 #mobileMenu:hover,#pageSelectorBtn:hover{background:rgba(255,255,255,.1);border-color:rgba(245,185,66,.4);color:#f5b942}
 #mobileMenu:active,#pageSelectorBtn:active{transform:scale(.94)}
@@ -673,31 +675,18 @@ html.light-theme #devVerificationSandboxNotice {
   100% { opacity: 1; transform: translateY(0); }
 }
 #sfNavProgressBar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #f59e0b, #eab308, #fbbf24, #f59e0b);
-  background-size: 200% 100%;
-  z-index: 9999;
-  pointer-events: none;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.8);
-  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
-  animation: sfBarGlow 1.5s ease infinite;
-}
-@keyframes sfBarGlow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 </style>
 </head>
 <body>
-<div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center"><div class="text-center"><div class="spin mx-auto mb-4"></div><div class="gold font-bold text-xl">SellerFlow</div><div id="loadingText" class="muted text-sm mt-2">Starting secure app…</div></div></div>
+<div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center select-none transition-opacity duration-200"><div class="text-center flex flex-col items-center"><div class="flex items-center gap-2.5 mb-5"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-10 h-10 object-contain drop-shadow-[0_2px_12px_rgba(245,158,11,0.35)]" /><span class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></span><span class="text-[10px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider">GH</span></div><div class="w-7 h-7 rounded-full border-2 border-zinc-800 border-t-[#f5b942] animate-spin"></div><div id="loadingText" class="text-xs text-zinc-500 mt-3 font-medium"></div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
-<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name"></div><div id="usernameWrap"><div class="flex items-center justify-between"><label class="text-sm muted">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="authUsernamePreview">username</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="authUsername" type="text" class="w-full pl-8 pr-10 p-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-sm focus:border-gold outline-none transition" placeholder="e.g. gideon_shop" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"><span id="authUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none"></span></div><div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can only be changed once every 360 days.</span></div><div id="authUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="authUsernameSuggestions" class="mt-2 hidden"></div></div><div id="emailInputWrap"><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"><div id="authEmailFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><div id="emailVerifyWrap" class="hide text-center mt-5"><div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl text-amber-400 mb-3 shadow-[0_0_20px_rgba(245,158,11,0.15)]">🔑</div><div class="mt-3 p-4 rounded-xl bg-[#141414] border border-[#2a2a2a] text-left"><div class="text-[11px] font-medium text-zinc-400">We've sent a modern, professional verification code to</div><div id="verifyEmailTarget" class="text-sm font-bold text-amber-400 mt-1 break-all select-all">user@example.com</div><div class="text-[11px] text-zinc-400 mt-2.5 leading-relaxed font-semibold">Please enter the 6-digit security code below to activate your SellerFlow account.</div></div><div class="mt-5 text-left"><label class="block text-xs text-zinc-400 font-semibold mb-1.5 uppercase tracking-wider">Verification Code</label><input id="verificationCodeInput" type="text" maxlength="6" pattern="[0-9]*" inputmode="numeric" class="w-full text-center tracking-[0.5em] font-mono text-2xl font-black p-3 rounded-xl bg-[#141414] border border-[#333] text-gold hover:border-[#444] focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition outline-none" placeholder="000000"></div><div class="space-y-2 mt-5"><button id="submitVerificationCodeBtn" type="button" class="w-full bg-gold text-black p-3.5 rounded-xl font-bold text-sm shadow-md hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center gap-2"><span class="text-base">✓</span><span>Verify Code</span></button><button id="resendVerificationBtn" type="button" class="w-full p-3 rounded-xl border border-[#383838] bg-[#181818] text-zinc-200 hover:text-white hover:border-[#555] font-semibold text-xs transition">Resend email</button><button id="changeEmailBtn" type="button" class="w-full mt-2 text-xs text-zinc-400 hover:text-amber-400 underline transition py-1 font-semibold">Change email / Sign in with another account</button></div></div><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
-<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur-md border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-2 sm:gap-4"><div class="flex items-center gap-2 sm:gap-3 shrink-0"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-1.5 shrink-0 select-none cursor-pointer" type="button" title="SellerFlow Ghana"><span class="text-xl sm:text-2xl font-black gold tracking-tight">SellerFlow</span><span class="text-[9px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider hidden xs:inline-block">GH</span></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1.5 sm:gap-2 shrink-0"></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
+<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="flex items-center justify-center gap-2 mb-2"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-10 h-10 object-contain drop-shadow-[0_2px_10px_rgba(245,158,11,0.3)]" /><span class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></span></div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name"></div><div id="usernameWrap"><div class="flex items-center justify-between"><label class="text-sm muted">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="authUsernamePreview">username</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="authUsername" type="text" class="w-full pl-8 pr-10 p-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-sm focus:border-gold outline-none transition" placeholder="e.g. gideon_shop" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"><span id="authUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none"></span></div><div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can only be changed once every 360 days.</span></div><div id="authUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="authUsernameSuggestions" class="mt-2 hidden"></div></div><div id="emailInputWrap"><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"><div id="authEmailFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><div id="emailVerifyWrap" class="hide text-center mt-5"><div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl text-amber-400 mb-3 shadow-[0_0_20px_rgba(245,158,11,0.15)]">🔑</div><div class="mt-3 p-4 rounded-xl bg-[#141414] border border-[#2a2a2a] text-left"><div class="text-[11px] font-medium text-zinc-400">We've sent a modern, professional verification code to</div><div id="verifyEmailTarget" class="text-sm font-bold text-amber-400 mt-1 break-all select-all">user@example.com</div><div class="text-[11px] text-zinc-400 mt-2.5 leading-relaxed font-semibold">Please enter the 6-digit security code below to activate your SellerFlow account.</div></div><div class="mt-5 text-left"><label class="block text-xs text-zinc-400 font-semibold mb-1.5 uppercase tracking-wider">Verification Code</label><input id="verificationCodeInput" type="text" maxlength="6" pattern="[0-9]*" inputmode="numeric" class="w-full text-center tracking-[0.5em] font-mono text-2xl font-black p-3 rounded-xl bg-[#141414] border border-[#333] text-gold hover:border-[#444] focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition outline-none" placeholder="000000"></div><div class="space-y-2 mt-5"><button id="submitVerificationCodeBtn" type="button" class="w-full bg-gold text-black p-3.5 rounded-xl font-bold text-sm shadow-md hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center gap-2"><span class="text-base">✓</span><span>Verify Code</span></button><button id="resendVerificationBtn" type="button" class="w-full p-3 rounded-xl border border-[#383838] bg-[#181818] text-zinc-200 hover:text-white hover:border-[#555] font-semibold text-xs transition">Resend email</button><button id="changeEmailBtn" type="button" class="w-full mt-2 text-xs text-zinc-400 hover:text-amber-400 underline transition py-1 font-semibold">Change email / Sign in with another account</button></div></div><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur-md border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-2 sm:gap-4"><div class="flex items-center gap-2 sm:gap-3 shrink-0"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-2 shrink-0 select-none cursor-pointer group" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)] transition-transform group-hover:scale-105" /><span class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></span><span class="text-[9px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider hidden xs:inline-block">GH</span></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1.5 sm:gap-2 shrink-0"></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
 (function(){
@@ -2751,8 +2740,28 @@ function errMsg(e){
   }
   return m[c] || e?.message || 'Something went wrong.';
 }
-function loading(t='Working…'){show($('loading'));const lt=$('loadingText');if(lt)lt.textContent=t}
-function ready(){hide($('loading'))}
+function loading(t=''){
+  const el = $('loading');
+  if(!el) return;
+  const lt = $('loadingText');
+  if(lt) lt.textContent = t;
+  el.classList.remove('hide');
+  el.style.opacity = '1';
+  el.style.pointerEvents = '';
+}
+function ready(){
+  const el = $('loading');
+  if(!el || el.classList.contains('hide')) return;
+  el.style.opacity = '0';
+  el.style.pointerEvents = 'none';
+  setTimeout(() => {
+    if(el.style.opacity === '0'){
+      el.classList.add('hide');
+      el.style.opacity = '';
+      el.style.pointerEvents = '';
+    }
+  }, 220);
+}
 function pageTitle(t,sub=''){const back=currentPage&&currentPage!=='feed'?`<button type="button" class="back-page-btn" data-global-back="1">← Back</button>`:'';return `<div class="mb-6">${back}<h1 class="text-2xl md:text-3xl font-black">${esc(t)}</h1>${sub?`<p class="muted mt-1">${esc(sub)}</p>`:''}</div>`}
 function button(t,id='',cls='bg-gold text-black'){return `<button type="button" id="${id}" class="btn px-4 py-2 rounded-xl font-semibold ${cls}">${esc(t)}</button>`}
 function getOptimizedMediaUrl(url, type = 'card') {
@@ -3304,6 +3313,7 @@ function showAuth(mode='register', targetEmail=''){
   authMode=mode;
   hide($('app'));
   show($('authPage'));
+  if(typeof updateForYouWakeLock === 'function') updateForYouWakeLock();
   
   const isVerify = mode === 'verifyEmail';
   if (isVerify) {
@@ -3366,6 +3376,7 @@ function showApp(){
   $('app')?.classList.toggle('is-feed-page',isFeed);
   $('appMainScroll')?.classList.toggle('is-feed-scroll',isFeed);
   ready();
+  if(typeof updateForYouWakeLock === 'function') updateForYouWakeLock();
 }
 const SELLERFLOW_RESERVED_EMAIL = 'gideondreams3325@gmail.com';
 
@@ -4290,30 +4301,12 @@ function prefetchPage(page){
 window.prefetchPage = prefetchPage;
 
 function startPageProgress(){
-  let pb = $('sfNavProgressBar');
-  if(!pb){
-    pb = document.createElement('div');
-    pb.id = 'sfNavProgressBar';
-    pb.style.width = '0%';
-    document.body.appendChild(pb);
-  }
-  pb.style.opacity = '1';
-  pb.style.width = '35%';
-  setTimeout(() => {
-    if(pb && pb.style.opacity === '1') pb.style.width = '75%';
-  }, 100);
+  const pb = $('sfNavProgressBar');
+  if(pb) pb.remove();
 }
 function completePageProgress(){
   const pb = $('sfNavProgressBar');
-  if(pb){
-    pb.style.width = '100%';
-    setTimeout(() => {
-      if(pb){
-        pb.style.opacity = '0';
-        setTimeout(() => { if(pb) pb.style.width = '0%'; }, 200);
-      }
-    }, 120);
-  }
+  if(pb) pb.remove();
 }
 window.startPageProgress = startPageProgress;
 window.completePageProgress = completePageProgress;
@@ -4428,17 +4421,21 @@ function setNav(){
     const curLangObj = (typeof SUPPORTED_LANGUAGES !== 'undefined') ? SUPPORTED_LANGUAGES.find(l => l.code === curLangCode) : null;
 
     const userHeaderHtml = currentUser ? `
-      <div class="p-3 rounded-2xl bg-[#181822] border border-[#2a2a3c] flex items-center gap-3 shadow-sm">
-        ${avatar(currentProfile || currentUser, 'w-10 h-10 rounded-full object-cover shrink-0 border border-gold/40 shadow-sm bg-[#222]')}
+      <button type="button" id="mobileNavUserCard" data-mobile-page="profile" class="w-full text-left p-3 rounded-2xl bg-[#181822] hover:bg-[#20202e] active:scale-[0.99] border border-[#2a2a3c] hover:border-gold/50 flex items-center gap-3 shadow-sm transition group cursor-pointer" title="View your profile">
+        ${avatar(currentProfile || currentUser, 'w-10 h-10 rounded-full object-cover shrink-0 border border-gold/40 shadow-sm bg-[#222] group-hover:border-gold transition')}
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5 flex-wrap">
-            <span class="text-xs font-black text-white truncate block">${esc(currentProfile?.name || currentUser.displayName || 'SellerFlow User')}</span>
+            <span class="text-xs font-black text-white group-hover:text-amber-300 transition truncate block">${esc(currentProfile?.name || currentUser.displayName || 'SellerFlow User')}</span>
             ${currentProfile?.verified ? '<span class="verified-badge text-[10px]">✓</span>' : ''}
           </div>
-          <div class="text-[11px] text-zinc-400 truncate">@${esc(currentProfile?.username || 'user')}</div>
+          <div class="text-[11px] text-zinc-400 group-hover:text-zinc-300 transition truncate">@${esc(currentProfile?.username || 'user')}</div>
           ${(currentProfile?.hasBusinessCert || currentProfile?.businessCertUrl) ? '<div class="text-[10px] text-amber-300 font-bold mt-0.5 flex items-center gap-1"><span>🏢</span><span>Business Verified</span></div>' : ''}
         </div>
-      </div>
+        <div class="shrink-0 flex items-center gap-1 text-[11px] font-bold text-amber-400/90 group-hover:text-amber-300 transition">
+          <span>Profile</span>
+          <span class="text-xs">→</span>
+        </div>
+      </button>
     ` : `
       <div class="p-3 rounded-2xl bg-gradient-to-r from-amber-950/40 via-[#181824] to-amber-950/40 border border-gold/30 text-xs">
         <p class="font-extrabold text-amber-200 text-xs">Welcome to SellerFlow Ghana</p>
@@ -4506,7 +4503,8 @@ function setNav(){
         <div class="p-3.5 border-b border-[#22222e] bg-[#12121a]/95 backdrop-blur sticky top-0 z-10 space-y-2.5 shrink-0">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <span class="text-lg font-black gold tracking-tight">SellerFlow</span>
+              <img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-6 h-6 object-contain shrink-0 drop-shadow-[0_1px_4px_rgba(245,158,11,0.25)]" />
+              <span class="text-lg font-black tracking-tight flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></span>
               <span class="text-[10px] font-extrabold text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-800/60 shadow-sm">
                 Ghana
               </span>
@@ -4583,6 +4581,12 @@ function setNav(){
     $('mobileReportFraudBtn')?.addEventListener('click', () => { closeMobileNav(); if(typeof openReportFraudModal==='function') openReportFraudModal(); });
     $('mobileLogout')?.addEventListener('click', () => { closeMobileNav(); logoutUser(); });
     $('mobileAuthBtn')?.addEventListener('click', () => { closeMobileNav(); showAuth('register'); });
+    $('mobileNavUserCard')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeMobileNav();
+      if(typeof openUserProfile === 'function') openUserProfile(currentUser?.uid);
+      else navigate('profile');
+    });
 
     $('mobileNav').querySelectorAll('[data-mobile-page]').forEach(b => {
       b.addEventListener('click', () => {
@@ -4693,6 +4697,96 @@ function pauseAllForYouVideos(destroyFeed=false){
 }
 window.pauseAllForYouVideos=pauseAllForYouVideos;
 
+/* For You Screen Wake Lock Controller - Keeps phone screen awake while on For You feed */
+let _sfForYouWakeLockSentinel = null;
+let _sfWakeLockRequestInProgress = false;
+
+async function requestForYouWakeLock(){
+  if(typeof window === 'undefined') return;
+  const isFeed = typeof currentPage !== 'undefined' && currentPage === 'feed';
+  const appEl = typeof $ === 'function' ? $('app') : document.getElementById('app');
+  const isAppVisible = appEl && !appEl.classList.contains('hide');
+  const isDocVisible = document.visibilityState === 'visible';
+
+  if(!isFeed || !isAppVisible || !isDocVisible) return;
+  if(_sfForYouWakeLockSentinel && !_sfForYouWakeLockSentinel.released) return;
+  if(_sfWakeLockRequestInProgress) return;
+
+  if('wakeLock' in navigator && typeof navigator.wakeLock?.request === 'function'){
+    _sfWakeLockRequestInProgress = true;
+    try{
+      const sentinel = await navigator.wakeLock.request('screen');
+      _sfForYouWakeLockSentinel = sentinel;
+      sentinel.addEventListener('release', () => {
+        if(_sfForYouWakeLockSentinel === sentinel){
+          _sfForYouWakeLockSentinel = null;
+        }
+      });
+    }catch(err){
+      console.warn('[Screen WakeLock] Request status:', err?.message || err);
+    }finally{
+      _sfWakeLockRequestInProgress = false;
+    }
+  }
+
+  try{
+    if(window.Capacitor?.Plugins?.KeepAwake?.keepAwake){
+      await window.Capacitor.Plugins.KeepAwake.keepAwake();
+    }
+  }catch(_){}
+}
+
+async function releaseForYouWakeLock(){
+  if(_sfForYouWakeLockSentinel){
+    try{
+      await _sfForYouWakeLockSentinel.release();
+    }catch(_){}
+    _sfForYouWakeLockSentinel = null;
+  }
+  try{
+    if(window.Capacitor?.Plugins?.KeepAwake?.allowSleep){
+      await window.Capacitor.Plugins.KeepAwake.allowSleep();
+    }
+  }catch(_){}
+}
+
+function updateForYouWakeLock(){
+  const isFeed = typeof currentPage !== 'undefined' && currentPage === 'feed';
+  const appEl = typeof $ === 'function' ? $('app') : document.getElementById('app');
+  const isAppVisible = appEl && !appEl.classList.contains('hide');
+  const isDocVisible = document.visibilityState === 'visible';
+
+  if(isFeed && isAppVisible && isDocVisible){
+    requestForYouWakeLock();
+  }else{
+    releaseForYouWakeLock();
+  }
+}
+
+window.requestForYouWakeLock = requestForYouWakeLock;
+window.releaseForYouWakeLock = releaseForYouWakeLock;
+window.updateForYouWakeLock = updateForYouWakeLock;
+
+if(typeof document !== 'undefined'){
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible'){
+      if(typeof currentPage !== 'undefined' && currentPage === 'feed'){
+        updateForYouWakeLock();
+      }
+    }else{
+      _sfForYouWakeLockSentinel = null;
+    }
+  });
+
+  ['pointerdown', 'touchstart', 'click', 'scroll'].forEach(evt => {
+    window.addEventListener(evt, () => {
+      if(typeof currentPage !== 'undefined' && currentPage === 'feed' && (!_sfForYouWakeLockSentinel || _sfForYouWakeLockSentinel.released)){
+        requestForYouWakeLock();
+      }
+    }, { passive: true });
+  });
+}
+
 window._sfNavigationStack = window._sfNavigationStack || [];
 
 async function navigate(page, targetPostId, options){
@@ -4733,6 +4827,7 @@ async function navigate(page, targetPostId, options){
   const isFeed=currentPage==='feed';
   $('app')?.classList.toggle('is-feed-page',isFeed);
   $('appMainScroll')?.classList.toggle('is-feed-scroll',isFeed);
+  if(typeof updateForYouWakeLock === 'function') updateForYouWakeLock();
   const sc=$('appMainScroll');if(sc)sc.scrollTop=0;
   if(!options?.fromPopState && typeof armHistoryState==='function'){
     armHistoryState(true);
@@ -4920,6 +5015,17 @@ async function renderPage(targetPostId, options){
   await (map[currentPage]||renderFeed)(targetPostId, options);
   updateCartBadge();
 }
+
+function openUserProfile(uid, options = {}) {
+  const targetUid = uid || (currentUser ? currentUser.uid : null);
+  if (!targetUid) {
+    showAuthPrompt('view creator profiles and posts');
+    return;
+  }
+  if (typeof pauseAllForYouVideos === 'function') pauseAllForYouVideos(true);
+  navigate('profile', targetUid, options);
+}
+window.openUserProfile = openUserProfile;
 
 let _cachedFeedPosts = [];
 window._sfRemovedPostIds = window._sfRemovedPostIds || new Set();
@@ -5145,7 +5251,7 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
     </div>
     <div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden">
       <div class="reel-feed flex-1 min-h-0 w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
-        ${feedPosts.length ? feedPosts.map((p, idx)=>postCard(p, idx)).join('') : `
+        ${feedPosts.length ? feedPosts.map((p, idx)=>postCard(p, idx)).join('') : (window._sfFeedInitialLoadDone ? `
           <div class="h-full flex items-center justify-center p-6">
             <div class="card p-8 text-center max-w-md">
               <div class="text-5xl mb-3">🎬</div>
@@ -5154,7 +5260,12 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
               <button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button>
             </div>
           </div>
-        `}
+        ` : `
+          <div class="h-full flex flex-col items-center justify-center p-6 text-center">
+            <div class="w-8 h-8 rounded-full border-2 border-zinc-800 border-t-[#f5b942] animate-spin mb-3"></div>
+            <div class="text-xs text-zinc-400 font-medium">Discovering top Ghanaian reels…</div>
+          </div>
+        `)}
       </div>
       <!-- Desktop floating smooth scroll buttons -->
       <aside class="hidden lg:flex flex-col gap-2.5 fixed right-4 xl:right-10 top-1/2 -translate-y-1/2 z-30 pointer-events-auto" aria-label="Reel Navigation">
@@ -5184,7 +5295,7 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
   });
   document.querySelectorAll('[data-open-seller]').forEach(b=>b.onclick=(e)=>{
     e.stopPropagation();
-    openStore(b.dataset.openSeller);
+    openUserProfile(b.dataset.openSeller);
   });
   document.querySelectorAll('[data-order-store]').forEach(b=>b.onclick=(e)=>{
     e.stopPropagation();
@@ -5216,6 +5327,7 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
     ensureFeedStoresChecked(pList).catch(()=>{});
   }
   setupReelPlayback(targetPostId);
+  if(typeof updateForYouWakeLock === 'function') updateForYouWakeLock();
 }
 
 async function renderFeed(targetPostId, options){
@@ -5229,12 +5341,18 @@ async function renderFeed(targetPostId, options){
 
   // 2. Fetch fresh posts from Firestore
   try {
+    if(!db){
+      const cleanFallback = (_cachedFeedPosts || []).filter(p => !isPostRemovedBySecurity(p));
+      _renderFeedHTML(cleanFallback, targetPostId, options);
+      return;
+    }
     const snap = await getDocs(query(collection(db,'posts'),limit(100)));
     const posts = snap.docs.map(d=>({id:d.id,...d.data()}))
       .filter(p=>p.sellerId && !isPostRemovedBySecurity(p) && (p.status==='published'||p.status==='approved')&&p.status!=='hidden'&&p.reviewStatus!=='violation')
       .sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
     
     _cachedFeedPosts = posts;
+    window._sfFeedInitialLoadDone = true;
     try { localStorage.setItem('sf_cached_feed_posts', JSON.stringify(posts.slice(0, 30))); } catch(_) {}
     
     let feedPosts = [...posts];
@@ -5254,6 +5372,7 @@ async function renderFeed(targetPostId, options){
     _renderFeedHTML(feedPosts, targetPostId, options);
   } catch(e) {
     console.warn('Feed fetch fallback:', e);
+    window._sfFeedInitialLoadDone = true;
     const cleanFallback = (_cachedFeedPosts || []).filter(p => !isPostRemovedBySecurity(p));
     _renderFeedHTML(cleanFallback, targetPostId, options);
   }
@@ -5428,8 +5547,8 @@ function postCard(p, idx = 0){
             </button>
           ` : ''}
           ${hasSellerStore(p.sellerId) ? `
-            <button type="button" class="reel-order-btn" data-order-store="${p.sellerId}" title="Order from @${esc(s.username||'seller')}'s Storefront">
-              <span>🛍️</span><span>Order</span>
+            <button type="button" class="reel-order-btn" data-order-store="${p.sellerId}" title="Visit @${esc(s.username||'seller')}'s Store">
+              <span>🛍️</span><span>VISIT store</span>
             </button>
           ` : `
             <button type="button" class="reel-no-store-tag" data-scam-notice="${p.sellerId}" title="Beware of scam: Seller has no official storefront. Tap to read scam notice.">
@@ -7782,6 +7901,7 @@ async function openStore(uid){
   $('app')?.classList.remove('is-feed-page');
   $('appMainScroll')?.classList.remove('is-feed-scroll');
   setNav();
+  if(typeof updateForYouWakeLock === 'function') updateForYouWakeLock();
 
   try{
     const [ss, ps, prodsSnap] = await Promise.all([
@@ -7915,7 +8035,7 @@ async function openStore(uid){
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div class="flex items-center gap-3">
           <button type="button" id="backMarket" class="back-page-btn border border-[#333] hover:border-gold rounded-xl px-3 py-2 text-sm font-bold bg-[#141414]">
-            ← Back to ${previousPage === 'marketplace' ? 'Marketplace' : 'For You'}
+            ← Back to ${previousPage === 'marketplace' ? 'Marketplace' : (previousPage === 'profile' ? 'Profile' : 'For You')}
           </button>
           <div class="relative group">
             ${effectiveLogoUrl ? `
@@ -8073,7 +8193,11 @@ async function openStore(uid){
     });
     if($('adminStoreApproveBtn')) $('adminStoreApproveBtn').addEventListener('click', () => adminApproveStore(uid));
 
-    if($('backMarket')) $('backMarket').onclick=()=>navigate(previousPage==='marketplace'?'marketplace':'feed');
+    if($('backMarket')) $('backMarket').onclick=()=>{
+      if(previousPage === 'profile') openUserProfile(uid);
+      else if(previousPage === 'marketplace') navigate('marketplace');
+      else navigate('feed');
+    };
     $('messageSellerBtn')?.addEventListener('click',()=>{
       if(!currentUser) return showAuthPrompt('message Ghanaian sellers');
       startSellerFlowChat(uid);
@@ -14494,7 +14618,7 @@ try {
   }
 } catch(_) {}
 
-document.addEventListener('click',e=>{const seller=e.target.closest('[data-open-seller]');if(seller)openStore(seller.dataset.openSeller);const nav=e.target.closest('[data-mobile-page]');if(nav)navigate(nav.dataset.mobilePage);const back=e.target.closest('[data-global-back]');if(back)handleAppBack()});
+document.addEventListener('click',e=>{const seller=e.target.closest('[data-open-seller]');if(seller)openUserProfile(seller.dataset.openSeller);const nav=e.target.closest('[data-mobile-page]');if(nav)navigate(nav.dataset.mobilePage);const back=e.target.closest('[data-global-back]');if(back)handleAppBack()});
 document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>navigate(b.dataset.page));
 $('pageSelectorBtn')?.addEventListener('click',openPageSelector);
 $('mobileMenu')?.addEventListener('click',()=>{
@@ -14994,12 +15118,8 @@ async function init(){
       return;
     }
     setupAuthInputRepaintFix();
-    
-    // Instant initial app render with cached feed (0ms delay)
-    showApp();
-    navigate('feed');
-    ready();
 
+    // 1. Ensure Firebase SDK is available before mounting
     await waitForFirebase();
     
     // Asynchronous background config fetch to prevent startup blocking
@@ -15019,6 +15139,11 @@ async function init(){
     firebaseApp=initializeApp(firebaseConfig);
     auth=getAuth(firebaseApp);
     db=getFirestore(firebaseApp);
+
+    // 2. Smoothly mount app shell and initial feed
+    showApp();
+    await navigate('feed');
+    ready();
 
     // Handle email verification action links if opened in-app
     try {
@@ -15056,10 +15181,7 @@ async function init(){
         currentUser=null;currentProfile=null;isAdmin=false;
         showApp();
         setNav();
-        if(!_sfAuthInitialized){
-          _sfAuthInitialized = true;
-          navigate('feed');
-        }
+        _sfAuthInitialized = true;
         ready();
         return;
       }
@@ -15077,10 +15199,7 @@ async function init(){
       isAdmin=isUserAdminEmail(u.email);
       showApp();
       setNav();
-      if(!_sfAuthInitialized){
-        _sfAuthInitialized = true;
-        navigate('feed');
-      }
+      _sfAuthInitialized = true;
       ready();
       
       try{
@@ -15537,9 +15656,13 @@ init();
         postId: ref.id,
         sellerId: currentUser.uid,
         text: postData.text || '',
+        title: postData.title || '',
         fileName: uploadFile?.name || '',
         mediaUrl: postData.mediaUrl || '',
-        mediaType: postData.mediaType || ''
+        mediaType: postData.mediaType || '',
+        soundName: postData.soundName || '',
+        soundArtist: postData.soundArtist || '',
+        soundOriginName: postData.soundOriginName || ''
       };
 
       let res = await fetch('/api/moderation/inspect-post', {
@@ -15551,10 +15674,12 @@ init();
         body: JSON.stringify(moderationPayload)
       });
 
+      let copyrightResult = null;
       if(res && res.ok){
         const data = await res.json();
         verdict = data.verdict || 'REVIEW';
         evalResult = data.evalResult || data;
+        copyrightResult = data.copyrightResult || null;
       } else {
         console.warn('Moderation backend returned non-OK status; post remains hidden/under_review');
       }
@@ -15581,7 +15706,7 @@ init();
     // If the server failed or is under review, the post already defaults to hidden/under_review.
 
     if(window.invalidateRankedFeedCache) window.invalidateRankedFeedCache();
-    return { ref, verdict, evalResult };
+    return { ref, verdict, evalResult, copyrightResult };
   }
   window.executeSellerFlowAiPostPublish = executeSellerFlowAiPostPublish;
 
@@ -16302,8 +16427,8 @@ init();
       if(openBtn){
         e.stopPropagation();
         const sId = openBtn.dataset.openSeller;
-        if(window.recordFeedEvent) window.recordFeedEvent('STORE_OPEN', { sellerId: sId });
-        openStore(sId);
+        if(window.recordFeedEvent) window.recordFeedEvent('PROFILE_OPEN', { sellerId: sId });
+        openUserProfile(sId);
         return;
       }
       const orderBtn = e.target.closest('[data-order-store]');
@@ -18664,7 +18789,7 @@ init();
         };
 
         loading('Checking safety with SellerFlow AI…');
-        const { ref, verdict, evalResult } = await executeSellerFlowAiPostPublish(postData, uploadFile, $('editorVideo'));
+        const { ref, verdict, evalResult, copyrightResult } = await executeSellerFlowAiPostPublish(postData, uploadFile, $('editorVideo'));
         if(mediaType.startsWith('video') && !sound){
           await setDoc(doc(db, 'sounds', ref.id), {
             soundId: ref.id,
@@ -18687,7 +18812,11 @@ init();
         } else if(verdict === 'REVIEW'){
           toast('Post submitted. It is currently queued for SellerFlow safety review.', 'success');
         } else {
-          toast('Post published successfully to For You!', 'success');
+          if(copyrightResult && copyrightResult.copyrightDetected){
+            toast('Post published! Note: Audio was automatically muted to comply with copyright standards.', 'warning', 6000);
+          } else {
+            toast('Post published successfully to For You!', 'success');
+          }
         }
         navigate('feed');
       } catch(e){
@@ -19487,7 +19616,7 @@ init();
       document.querySelectorAll('[data-open-seller]').forEach(b => {
         b.onclick = () => {
           closeModal();
-          openStore(b.dataset.openSeller);
+          openUserProfile(b.dataset.openSeller);
         };
       });
       document.querySelectorAll('[data-notif-follow]').forEach(b => {
@@ -19880,62 +20009,143 @@ init();
   };
 
   let _profileActiveTab = 'posts';
+  let _currentProfileViewUid = null;
 
-  /* Professional creator profile with saved videos & saved sounds tabs */
-  renderProfile=async function(initialTab){
+  /* Professional creator profile with posts, VISIT store button, saved videos & saved sounds tabs */
+  renderProfile=async function(targetParam, options){
     sfStopProfileAudio();
-    if(!currentUser){showAuthPrompt('view your profile');return;}
-    if(initialTab && typeof initialTab === 'string') _profileActiveTab = initialTab;
 
-    const pub = (currentUser ? allPublicProfiles.get(currentUser.uid) : null) || {};
-    const p = { ...(currentProfile || {}), ...pub };
+    let targetUid = null;
+    let initialTab = 'posts';
 
-    let followersList = Array.isArray(p.followers) ? p.followers : (Array.isArray(currentProfile?.followers) ? currentProfile.followers : []);
-    let followingList = Array.isArray(p.following) ? p.following : (Array.isArray(currentProfile?.following) ? currentProfile.following : []);
-    try {
-      const localFollows = JSON.parse(localStorage.getItem('sf_following_' + currentUser.uid) || '[]');
-      if(Array.isArray(localFollows)){
-        localFollows.forEach(id => { if(id && !followingList.includes(id)) followingList.push(id); });
-      }
-    } catch(_) {}
+    if(targetParam && ['posts','saved','sounds','following'].includes(targetParam)){
+      initialTab = targetParam;
+      targetUid = _currentProfileViewUid || (currentUser ? currentUser.uid : null);
+    } else if(targetParam === 'edit'){
+      return sfOpenProfileEditor();
+    } else if(typeof targetParam === 'string' && targetParam.trim()){
+      targetUid = targetParam.trim();
+      _currentProfileViewUid = targetUid;
+      if(options && options.tab) initialTab = options.tab;
+    } else {
+      targetUid = currentUser ? currentUser.uid : null;
+      _currentProfileViewUid = targetUid;
+    }
+
+    if(!targetUid){
+      showAuthPrompt('view creator profiles and posts');
+      return;
+    }
+
+    const isOwner = !!(currentUser && currentUser.uid === targetUid);
+    if(isOwner && initialTab){
+      _profileActiveTab = initialTab;
+    } else if(!isOwner){
+      _profileActiveTab = 'posts';
+    }
+
+    let p = null;
+    if(isOwner){
+      const pub = (currentUser ? allPublicProfiles.get(currentUser.uid) : null) || {};
+      p = { ...(currentProfile || {}), ...pub, uid: targetUid };
+    } else {
+      p = { ...sellerProfile(targetUid), uid: targetUid };
+      try {
+        const [pubDoc, userDoc] = await Promise.all([
+          getDoc(doc(db, 'publicProfiles', targetUid)).catch(() => null),
+          getDoc(doc(db, 'users', targetUid)).catch(() => null)
+        ]);
+        if (pubDoc && snapshotExists(pubDoc)) Object.assign(p, pubDoc.data());
+        if (userDoc && snapshotExists(userDoc)) Object.assign(p, userDoc.data());
+      } catch(_) {}
+    }
+
+    let followersList = Array.isArray(p.followers) ? p.followers : [];
+    let followingList = Array.isArray(p.following) ? p.following : [];
+    if(isOwner){
+      if(Array.isArray(currentProfile?.followers) && !followersList.length) followersList = currentProfile.followers;
+      if(Array.isArray(currentProfile?.following) && !followingList.length) followingList = currentProfile.following;
+      try {
+        const localFollows = JSON.parse(localStorage.getItem('sf_following_' + currentUser.uid) || '[]');
+        if(Array.isArray(localFollows)){
+          localFollows.forEach(id => { if(id && !followingList.includes(id)) followingList.push(id); });
+        }
+      } catch(_) {}
+    }
 
     let posts=[];
     let savedPosts=[];
     let savedSounds=[];
 
-    const cached = window._cachedProfileData?.[currentUser.uid];
-    if(cached){
-      posts = cached.posts || [];
-      savedPosts = cached.savedPosts || [];
-      savedSounds = cached.savedSounds || [];
+    if(isOwner){
+      const cached = window._cachedProfileData?.[currentUser.uid];
+      if(cached){
+        posts = cached.posts || [];
+        savedPosts = cached.savedPosts || [];
+        savedSounds = cached.savedSounds || [];
+      }
+
+      try{
+        const [s, sv, ss] = await Promise.all([
+          getDocs(query(collection(db,'posts'),where('sellerId','==',currentUser.uid),limit(100))).catch(()=>({docs:[]})),
+          getDocs(query(collection(db,'posts'),where('saves','array-contains',currentUser.uid),limit(100))).catch(()=>({docs:[]})),
+          getDocs(query(collection(db,'savedSounds',currentUser.uid,'items'),limit(100))).catch(()=>({docs:[]}))
+        ]);
+        posts=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.status!=='removed' && !isPostRemovedBySecurity(x)).sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
+        savedPosts=sv.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.status!=='removed' && !isPostRemovedBySecurity(x)).sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
+        savedSounds=ss.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ts(b.savedAt)-ts(a.savedAt));
+        if(!window._cachedProfileData) window._cachedProfileData = {};
+        window._cachedProfileData[currentUser.uid] = { posts, savedPosts, savedSounds };
+      }catch(_){ }
+    } else {
+      try{
+        const s = await getDocs(query(collection(db,'posts'),where('sellerId','==',targetUid),limit(100))).catch(()=>({docs:[]}));
+        posts=s.docs.map(d=>({id:d.id,...d.data()}))
+          .filter(x=>x.status!=='removed' && x.status!=='hidden' && x.reviewStatus!=='violation' && !isPostRemovedBySecurity(x) && (x.status==='published'||x.status==='approved'||!x.status))
+          .sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
+      }catch(_){ }
     }
 
-    try{
-      const [s, sv, ss] = await Promise.all([
-        getDocs(query(collection(db,'posts'),where('sellerId','==',currentUser.uid),limit(100))).catch(()=>({docs:[]})),
-        getDocs(query(collection(db,'posts'),where('saves','array-contains',currentUser.uid),limit(100))).catch(()=>({docs:[]})),
-        getDocs(query(collection(db,'savedSounds',currentUser.uid,'items'),limit(100))).catch(()=>({docs:[]}))
-      ]);
-      posts=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.status!=='removed').sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
-      savedPosts=sv.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.status!=='removed').sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
-      savedSounds=ss.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ts(b.savedAt)-ts(a.savedAt));
-      if(!window._cachedProfileData) window._cachedProfileData = {};
-      window._cachedProfileData[currentUser.uid] = { posts, savedPosts, savedSounds };
-    }catch(_){ }
+    if(!posts.length && Array.isArray(_cachedFeedPosts)){
+      const cached = _cachedFeedPosts.filter(x=>x.sellerId===targetUid && !isPostRemovedBySecurity(x) && x.status!=='removed');
+      if(cached.length) posts = cached;
+    }
 
     const followers=followersList.length,following=followingList.length,likes=posts.reduce((n,x)=>n+(x.likes||[]).length,0),views=posts.reduce((n,x)=>n+Number(x.views||0),0);
+    const isFollowingThem = isFollowingUser(targetUid);
+    const lastNavEntry = (window._sfNavigationStack && window._sfNavigationStack.length > 0)
+      ? window._sfNavigationStack[window._sfNavigationStack.length - 1]
+      : null;
+    const prevPageKey = lastNavEntry?.page || 'feed';
+    const prevPageLabel = prevPageKey === 'marketplace' ? 'Marketplace' : (prevPageKey === 'store' ? 'Store' : 'For You');
 
     $('page').innerHTML=`
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <button type="button" id="profileBackNavBtn" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#151515] hover:bg-[#202020] text-zinc-300 hover:text-white border border-[#2d2d2d] hover:border-gold/60 font-bold text-xs sm:text-sm transition cursor-pointer shadow-sm" title="Back to previous page">
+          <span>←</span>
+          <span>Back to ${prevPageLabel}</span>
+        </button>
+        <div class="text-xs font-mono text-zinc-400 truncate max-w-[200px]">
+          @${esc(p.username || 'user')}
+        </div>
+      </div>
+
       <section class="sf-profile-cover mb-5">
         <div class="relative z-10 p-4 sm:p-6 md:p-7">
           <div class="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6">
-            <button type="button" id="profilePhotoBtn" class="shrink-0 border-0 bg-transparent cursor-pointer relative group self-start sm:self-auto" title="Change profile picture">
-              ${p.avatarUrl?`<img class="sf-profile-avatar" src="${esc(getOptimizedMediaUrl(p.avatarUrl, 'avatar'))}" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfMediaFallback(this)">`:`<div class="sf-profile-avatar flex items-center justify-center text-4xl font-black text-gold">${esc((p.name||'?')[0].toUpperCase())}</div>`}
-              <span class="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-gold text-black flex items-center justify-center text-sm shadow-md border-2 border-[#121212] group-hover:scale-110 transition">📷</span>
-            </button>
+            ${isOwner ? `
+              <button type="button" id="profilePhotoBtn" class="shrink-0 border-0 bg-transparent cursor-pointer relative group self-start sm:self-auto" title="Change profile picture">
+                ${p.avatarUrl?`<img class="sf-profile-avatar" src="${esc(getOptimizedMediaUrl(p.avatarUrl, 'avatar'))}" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfMediaFallback(this)">`:`<div class="sf-profile-avatar flex items-center justify-center text-4xl font-black text-gold">${esc((p.name||'?')[0].toUpperCase())}</div>`}
+                <span class="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-gold text-black flex items-center justify-center text-sm shadow-md border-2 border-[#121212] group-hover:scale-110 transition">📷</span>
+              </button>
+            ` : `
+              <div class="shrink-0 relative self-start sm:self-auto">
+                ${p.avatarUrl?`<img class="sf-profile-avatar" src="${esc(getOptimizedMediaUrl(p.avatarUrl, 'avatar'))}" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfMediaFallback(this)">`:`<div class="sf-profile-avatar flex items-center justify-center text-4xl font-black text-gold">${esc((p.name||'?')[0].toUpperCase())}</div>`}
+              </div>
+            `}
             <div class="flex-1 min-w-0">
               <div class="flex flex-wrap items-center gap-2">
-                <h2 class="text-xl sm:text-2xl md:text-3xl font-black text-white truncate">${esc(p.name||'SellerFlow User')}</h2>
+                <h2 class="text-xl sm:text-2xl md:text-3xl font-black text-white truncate">${esc(p.name||p.username||'SellerFlow User')}</h2>
                 ${verifyBadge(p)}
                 ${businessCertBadge(p, 'compact')}
               </div>
@@ -19947,37 +20157,63 @@ init();
                 <span class="text-xs font-sans px-2 py-0.5 rounded-full bg-zinc-800/80 text-zinc-300 border border-zinc-700/80">🇬🇭 Ghana</span>
               </div>
               <div class="mt-2.5 text-xs sm:text-sm text-zinc-200 bg-black/40 backdrop-blur-xs border border-white/5 rounded-xl p-3 max-w-2xl leading-relaxed">
-                ${esc(p.bio||'Welcome to my SellerFlow creator profile! Tap Edit profile to add your bio.')}
+                ${esc(p.bio||(isOwner ? 'Welcome to my SellerFlow creator profile! Tap Edit profile to add your bio.' : 'Welcome to my official SellerFlow profile! Check out my videos and tap VISIT store below.'))}
               </div>
-              <div class="flex flex-wrap gap-2 mt-3.5">
-                <button id="editProfileTop" class="btn btn-primary px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm">
-                  <span>✏️</span><span>Edit profile</span>
+              <div class="flex flex-wrap gap-2.5 mt-3.5 items-center">
+                <!-- User requested VISIT store button -->
+                <button type="button" id="profileVisitStoreBtn" class="bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 active:scale-95 text-black font-black px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-[0_4px_16px_rgba(245,158,11,0.3)] flex items-center gap-2 transition text-xs sm:text-sm cursor-pointer" title="Visit official store">
+                  <span class="text-base">🛍️</span>
+                  <span>VISIT store</span>
                 </button>
-                <button id="profileCreatePost" class="border border-[#444] hover:border-gold bg-[#171717] text-white px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition">
-                  <span>＋</span><span>Create post</span>
-                </button>
-                <button id="profileOpenStore" class="border border-[#444] hover:border-gold px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#141414] text-white flex items-center gap-1.5 transition">
-                  <span>🏪</span><span>Storefront</span>
-                </button>
-                <button id="profileOpenSettings" class="border border-[#444] hover:border-gold px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#141414] text-white flex items-center gap-1.5 transition">
-                  <span>⚙️</span><span>Settings</span>
-                </button>
+
+                ${isOwner ? `
+                  <button id="editProfileTop" class="btn btn-primary px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm">
+                    <span>✏️</span><span>Edit profile</span>
+                  </button>
+                  <button id="profileCreatePost" class="border border-[#444] hover:border-gold bg-[#171717] text-white px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition">
+                    <span>＋</span><span>Create post</span>
+                  </button>
+                  <button id="profileOpenSettings" class="border border-[#444] hover:border-gold px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#141414] text-white flex items-center gap-1.5 transition">
+                    <span>⚙️</span><span>Settings</span>
+                  </button>
+                ` : `
+                  <button type="button" id="profileFollowSellerBtn" class="border ${isFollowingThem ? 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'border-gold bg-gold/15 text-gold hover:bg-gold/25'} px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
+                    <span>${isFollowingThem ? '✓ Following' : '＋ Follow'}</span>
+                  </button>
+                  <button type="button" id="profileMessageSellerBtn" class="border border-[#444] hover:border-gold bg-[#171717] text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer" title="Direct message @${esc(p.username||'seller')}">
+                    <span>💬</span><span>Message</span>
+                  </button>
+                  <button type="button" id="profileShareSellerBtn" class="border border-[#444] hover:border-gold bg-[#141414] text-white p-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition active:scale-95 cursor-pointer" title="Share profile">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                  </button>
+                `}
               </div>
             </div>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-5">
-            <button class="sf-stat-card rounded-2xl p-3.5 text-left cursor-pointer hover:border-zinc-500 transition" data-profile-stat="posts" title="View my published posts">
+            <button class="sf-stat-card rounded-2xl p-3.5 text-left cursor-pointer hover:border-zinc-500 transition" data-profile-stat="posts" title="View published posts">
               <div class="text-xl sm:text-2xl font-black text-white">${posts.length}</div>
               <div class="muted text-xs mt-0.5">Posts</div>
             </button>
-            <button class="sf-stat-card rounded-2xl p-3.5 text-left cursor-pointer hover:border-amber-500 transition" data-profile-stat="saved" title="View saved videos to watch later">
-              <div class="text-xl sm:text-2xl font-black text-amber-400">${savedPosts.length}</div>
-              <div class="muted text-xs mt-0.5">Saved Videos 🔖</div>
-            </button>
-            <button class="sf-stat-card rounded-2xl p-3.5 text-left cursor-pointer hover:border-yellow-500 transition" data-profile-stat="sounds" title="View saved sounds collection">
-              <div class="text-xl sm:text-2xl font-black text-gold">${savedSounds.length}</div>
-              <div class="muted text-xs mt-0.5">Saved Sounds 🎵</div>
-            </button>
+            ${isOwner ? `
+              <button class="sf-stat-card rounded-2xl p-3.5 text-left cursor-pointer hover:border-amber-500 transition" data-profile-stat="saved" title="View saved videos to watch later">
+                <div class="text-xl sm:text-2xl font-black text-amber-400">${savedPosts.length}</div>
+                <div class="muted text-xs mt-0.5">Saved Videos 🔖</div>
+              </button>
+              <button class="sf-stat-card rounded-2xl p-3.5 text-left cursor-pointer hover:border-yellow-500 transition" data-profile-stat="sounds" title="View saved sounds collection">
+                <div class="text-xl sm:text-2xl font-black text-gold">${savedSounds.length}</div>
+                <div class="muted text-xs mt-0.5">Saved Sounds 🎵</div>
+              </button>
+            ` : `
+              <div class="sf-stat-card rounded-2xl p-3.5 text-left">
+                <div class="text-xl sm:text-2xl font-black text-amber-400">${likes}</div>
+                <div class="muted text-xs mt-0.5">Total Likes ❤️</div>
+              </div>
+              <div class="sf-stat-card rounded-2xl p-3.5 text-left">
+                <div class="text-xl sm:text-2xl font-black text-gold">${views}</div>
+                <div class="muted text-xs mt-0.5">Video Views 👁️</div>
+              </div>
+            `}
             <button class="sf-stat-card rounded-2xl p-3.5 text-left cursor-pointer hover:border-emerald-500 transition" data-profile-stat="followers" title="View followers">
               <div class="text-xl sm:text-2xl font-black text-emerald-400">${followers}</div>
               <div class="muted text-xs mt-0.5">Followers</div>
@@ -19992,15 +20228,17 @@ init();
             <button class="sf-profile-tab ${_profileActiveTab==='posts'?'active':''}" data-tab-switch="posts">
               <span>🎬 Posts</span> <span class="text-xs opacity-75 font-mono">(${posts.length})</span>
             </button>
-            <button class="sf-profile-tab ${_profileActiveTab==='saved'?'active':''}" data-tab-switch="saved">
-              <span>🔖 Saved Videos</span> <span class="text-xs opacity-75 font-mono">(${savedPosts.length})</span>
-            </button>
-            <button class="sf-profile-tab ${_profileActiveTab==='sounds'?'active':''}" data-tab-switch="sounds">
-              <span>🎵 Saved Sounds</span> <span class="text-xs opacity-75 font-mono">(${savedSounds.length})</span>
-            </button>
-            <button class="sf-profile-tab ${_profileActiveTab==='following'?'active':''}" data-tab-switch="following">
-              <span>👥 Following</span> <span class="text-xs opacity-75 font-mono">(${following})</span>
-            </button>
+            ${isOwner ? `
+              <button class="sf-profile-tab ${_profileActiveTab==='saved'?'active':''}" data-tab-switch="saved">
+                <span>🔖 Saved Videos</span> <span class="text-xs opacity-75 font-mono">(${savedPosts.length})</span>
+              </button>
+              <button class="sf-profile-tab ${_profileActiveTab==='sounds'?'active':''}" data-tab-switch="sounds">
+                <span>🎵 Saved Sounds</span> <span class="text-xs opacity-75 font-mono">(${savedSounds.length})</span>
+              </button>
+              <button class="sf-profile-tab ${_profileActiveTab==='following'?'active':''}" data-tab-switch="following">
+                <span>👥 Following</span> <span class="text-xs opacity-75 font-mono">(${following})</span>
+              </button>
+            ` : ''}
           </div>
           <div class="text-xs muted hidden md:block shrink-0 pr-2">
             ${_profileActiveTab==='saved'?'Tap any video to watch later in For You':_profileActiveTab==='sounds'?'Use saved audio to create your next video':_profileActiveTab==='following'?'Creators and shops you follow':'Tap any post to watch in For You'}
@@ -20037,11 +20275,13 @@ init();
                     ${mediaPreview}${typeBadge}${aiBadge}${privBadge}
                     <div class="sf-tile-meta flex items-center justify-between"><span>${isVid?'🎬 Video':x.mediaUrl?'📷 Photo':'💬 Post'}</span><span>❤️ ${x.likes?.length||0} · 👁️ ${x.views||0}</span></div>
                   </button>
-                  <button type="button" class="absolute top-2 left-2 z-20 p-1.5 rounded-lg bg-black/80 hover:bg-red-950 text-zinc-300 hover:text-red-400 border border-white/10 text-xs transition shadow opacity-80 group-hover:opacity-100 cursor-pointer" data-profile-delete-post="${x.id}" title="Delete this post">
-                    🗑️
-                  </button>
+                  ${isOwner ? `
+                    <button type="button" class="absolute top-2 left-2 z-20 p-1.5 rounded-lg bg-black/80 hover:bg-red-950 text-zinc-300 hover:text-red-400 border border-white/10 text-xs transition shadow opacity-80 group-hover:opacity-100 cursor-pointer" data-profile-delete-post="${x.id}" title="Delete this post">
+                      🗑️
+                    </button>
+                  ` : ''}
                 </div>`;
-            }).join(''):'<div class="col-span-2 sm:col-span-3 p-10 text-center muted"><div class="text-4xl mb-2">📸</div><h3 class="font-bold text-lg text-white">No posts published yet</h3><p class="text-sm mt-1">Tap "+ Create post" above to share your first photo or video with the SellerFlow community.</p></div>'}</div>
+            }).join(''):`<div class="col-span-2 sm:col-span-3 p-10 text-center muted"><div class="text-4xl mb-2">📸</div><h3 class="font-bold text-lg text-white">No posts published yet</h3><p class="text-sm mt-1">${isOwner ? 'Tap "+ Create post" above to share your first photo or video with the SellerFlow community.' : 'This creator has not published any posts or videos yet.'}</p></div>`}</div>
           ` : _profileActiveTab === 'saved' ? `
             <div class="space-y-3">
               <div class="flex items-center justify-between px-2 pb-2 border-b border-[#252525]">
@@ -20200,18 +20440,48 @@ init();
       </section>
     `;
 
+    $('profileBackNavBtn')?.addEventListener('click', () => {
+      handleAppBack();
+    });
+
+    $('profileVisitStoreBtn')?.addEventListener('click', () => {
+      openStore(targetUid);
+    });
+
     if($('profileCreatePost')) $('profileCreatePost').onclick=openPostModal;
     if($('editProfileTop')) $('editProfileTop').onclick=sfOpenProfileEditor;
-    $('profileOpenStore')?.addEventListener('click',()=>openStore(currentUser.uid));
     $('profileOpenSettings')?.addEventListener('click',()=>navigate('settings'));
     $('profilePhotoBtn')?.addEventListener('click',sfOpenProfileEditor);
+
+    $('profileFollowSellerBtn')?.addEventListener('click', async () => {
+      if(!currentUser) return showAuthPrompt('follow verified Ghanaian sellers');
+      await toggleFollowSeller(targetUid);
+      renderProfile(targetUid);
+    });
+
+    $('profileMessageSellerBtn')?.addEventListener('click', () => {
+      if(!currentUser) return showAuthPrompt('message Ghanaian sellers');
+      startSellerFlowChat(targetUid);
+    });
+
+    $('profileShareSellerBtn')?.addEventListener('click', async () => {
+      const url = `${location.origin}/#profile=${targetUid}`;
+      if(navigator.share){
+        try{
+          await navigator.share({ title: `${p.name || 'SellerFlow User'} on SellerFlow`, text: `Check out ${p.name || 'this creator'}'s profile and store on SellerFlow Ghana!`, url });
+        }catch(_){}
+      } else {
+        await navigator.clipboard?.writeText(url);
+        toast('Profile link copied to clipboard', 'success');
+      }
+    });
 
     $('goToFeedFromProfileSaved')?.addEventListener('click',()=>navigate('feed'));
     $('goToFeedFromProfileSounds')?.addEventListener('click',()=>navigate('feed'));
 
     // Open following seller
     document.querySelectorAll('[data-open-following-seller]').forEach(b => {
-      b.onclick = () => openStore(b.dataset.openFollowingSeller);
+      b.onclick = () => openUserProfile(b.dataset.openFollowingSeller);
     });
 
     // Unfollow from Following tab
@@ -20291,7 +20561,7 @@ init();
           document.querySelectorAll('[data-open-follower-uid]').forEach(b => {
             b.onclick = () => {
               closeModal();
-              openStore(b.dataset.openFollowerUid);
+              openUserProfile(b.dataset.openFollowerUid);
             };
           });
 
@@ -20301,7 +20571,7 @@ init();
               if(uid){
                 await toggleFollowSeller(uid);
                 closeModal();
-                renderProfile();
+                renderProfile(targetUid);
               }
             };
           });

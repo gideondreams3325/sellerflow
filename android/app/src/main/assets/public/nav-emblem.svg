@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="150 60 225 260" width="36" height="36" class="sf-brand-logo shrink-0">
+  <defs>
+    <linearGradient id="navGoldTop" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffe46b"/>
+      <stop offset="35%" stop-color="#ffd000"/>
+      <stop offset="75%" stop-color="#f5a623"/>
+      <stop offset="100%" stop-color="#ffb81c"/>
+    </linearGradient>
+
+    <linearGradient id="navGoldFoldUnder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5a623"/>
+      <stop offset="40%" stop-color="#c97200"/>
+      <stop offset="100%" stop-color="#733800"/>
+    </linearGradient>
+
+    <linearGradient id="navGoldSwoop" x1="20%" y1="10%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#ffe46b"/>
+      <stop offset="30%" stop-color="#ffb81c"/>
+      <stop offset="70%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+
+    <linearGradient id="navGoldBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffe46b"/>
+      <stop offset="50%" stop-color="#ffb81c"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 3 Speed Lines -->
+  <rect x="154" y="184" width="60" height="15" rx="7.5" fill="url(#navGoldBar)"/>
+  <rect x="154" y="214" width="46" height="15" rx="7.5" fill="url(#navGoldBar)"/>
+  <rect x="172" y="244" width="36" height="15" rx="7.5" fill="url(#navGoldBar)"/>
+
+  <!-- Inside Cart Grille Bars -->
+  <rect x="236" y="214" width="76" height="14" rx="7" fill="url(#navGoldBar)"/>
+  <rect x="244" y="242" width="60" height="14" rx="7" fill="url(#navGoldBar)"/>
+
+  <!-- Cart Wheels -->
+  <circle cx="247" cy="307" r="14.5" fill="url(#navGoldBar)"/>
+  <circle cx="295" cy="307" r="14.5" fill="url(#navGoldBar)"/>
+
+  <!-- Top Ribbon -->
+  <path d="M 344 95 L 366 68 C 366 68 250 66 220 68 C 178 71 164 105 182 142 L 216 160 C 202 136 218 102 248 98 C 274 95 320 95 344 95 Z" 
+        fill="url(#navGoldTop)"/>
+
+  <!-- 3D Fold Shadow -->
+  <path d="M 182 142 C 192 162 216 178 252 182 L 224 164 L 182 142 Z" 
+        fill="url(#navGoldFoldUnder)"/>
+
+  <!-- S Swoop & Cart Body -->
+  <path d="M 216 160 
+           C 256 168 322 188 344 226 
+           C 368 268 354 312 318 330 
+           C 288 344 238 342 224 336 
+           C 214 331 208 320 208 308 
+           L 204 200 
+           C 204 191 211 184 220 184 
+           C 229 184 236 191 236 200 
+           L 238 304 
+           C 246 312 284 316 306 306 
+           C 326 296 334 270 320 242 
+           C 304 212 254 198 216 182 
+           Z" 
+        fill="url(#navGoldSwoop)"/>
+</svg>
