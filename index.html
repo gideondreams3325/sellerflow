@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <script>
+// Early Theme Loader to prevent flashes of dark background in light mode
+(function() {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'light') {
+    document.documentElement.classList.add('light-theme');
+  } else {
+    document.documentElement.classList.remove('light-theme');
+  }
+})();
+
 // Early diagnostic logger filter to gracefully handle non-fatal offline/network transitions
 (function() {
   var _origConsoleError = console.error;
@@ -128,6 +138,7 @@
   } catch(_) {}
 </script>
 <script src="capacitor.js"></script>
+<script src="/translations.js"></script>
 <script>tailwind.config={theme:{extend:{colors:{gold:'#f5b942'}}}}</script>
 <style>
 *{box-sizing:border-box}
@@ -432,12 +443,224 @@ input, textarea, select { color: #ffffff !important; }
   #receiptPrintRoot .receipt-preview-container.is-standard{max-width:100%!important;width:100%!important;font-size:12px!important;border-radius:0!important}
   .receipt-no-print{display:none!important}
 }
+
+/* COMPREHENSIVE LIGHT THEME OVERRIDES */
+html.light-theme {
+  --bg-primary: #f9f9fa;
+  --bg-secondary: #ffffff;
+  --border-color: #e4e4e7;
+  --text-primary: #18181b;
+  --text-muted: #71717a;
+}
+html.light-theme body {
+  background: #f9f9fa !important;
+  color: #18181b !important;
+}
+html.light-theme header {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: #e4e4e7 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+}
+html.light-theme .card,
+html.light-theme .modal-card,
+html.light-theme #authPage > .card {
+  background: #ffffff !important;
+  border-color: #e4e4e7 !important;
+  color: #18181b !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 8px -1px rgba(0, 0, 0, 0.03) !important;
+}
+html.light-theme .muted,
+html.light-theme .text-zinc-500,
+html.light-theme .text-zinc-400 {
+  color: #71717a !important;
+}
+html.light-theme .text-white {
+  color: #18181b !important;
+}
+html.light-theme .bg-[#080808],
+html.light-theme .bg-[#0c0c0c],
+html.light-theme .bg-black {
+  background-color: #f9f9fa !important;
+}
+html.light-theme .bg-[#121212],
+html.light-theme .bg-[#141414],
+html.light-theme .bg-[#151515],
+html.light-theme .bg-[#191919],
+html.light-theme .bg-[#1a1a1a],
+html.light-theme .bg-zinc-900 {
+  background-color: #f4f4f5 !important;
+}
+html.light-theme .border-[#242424],
+html.light-theme .border-[#292929],
+html.light-theme .border-[#333],
+html.light-theme .border-[#343434],
+html.light-theme .border-[#383838],
+html.light-theme .border-zinc-800,
+html.light-theme .border-zinc-700 {
+  border-color: #e4e4e7 !important;
+}
+html.light-theme input,
+html.light-theme textarea,
+html.light-theme select {
+  background: #ffffff !important;
+  border-color: #d4d4d8 !important;
+  color: #18181b !important;
+}
+html.light-theme input::placeholder,
+html.light-theme textarea::placeholder {
+  color: #a1a1aa !important;
+}
+html.light-theme .navbtn {
+  color: #71717a !important;
+}
+html.light-theme .navbtn:hover {
+  color: #18181b !important;
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+html.light-theme .navbtn.active {
+  color: #d97706 !important;
+  border-bottom-color: #d97706 !important;
+}
+html.light-theme .gold {
+  color: #d97706 !important;
+}
+html.light-theme .bg-gold {
+  background: #f5b942 !important;
+  color: #080808 !important;
+}
+html.light-theme .text-gold {
+  color: #d97706 !important;
+}
+html.light-theme .svg-icon,
+html.light-theme svg path {
+  stroke: #18181b;
+}
+html.light-theme #mobileMenu svg {
+  color: #18181b !important;
+}
+html.light-theme #mobileMenu svg path {
+  stroke: #18181b !important;
+}
+html.light-theme .sf-drawer-backdrop {
+  background: rgba(0, 0, 0, 0.4) !important;
+}
+html.light-theme #mobileNav {
+  background: #ffffff !important;
+  border-right: 1px solid #e4e4e7 !important;
+}
+html.light-theme #mobileNav .navbtn {
+  color: #18181b !important;
+}
+html.light-theme #mobileNav .navbtn:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+html.light-theme #mobileNav .navbtn.active {
+  color: #d97706 !important;
+  background: rgba(217, 119, 6, 0.08) !important;
+}
+html.light-theme .policy-hero {
+  background: #fef3c7 !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+html.light-theme .policy-hero .muted {
+  color: #b45309 !important;
+}
+html.light-theme .policy-hero .bg-black\/30 {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid rgba(217, 119, 6, 0.2) !important;
+}
+html.light-theme .admin-tab {
+  background: #f4f4f5 !important;
+  border-color: #e4e4e7 !important;
+  color: #71717a !important;
+}
+html.light-theme .admin-tab.active {
+  background: #ffffff !important;
+  border-color: #d97706 !important;
+  color: #d97706 !important;
+}
+html.light-theme .market-filter {
+  background: #f4f4f5 !important;
+  border-color: #e4e4e7 !important;
+  color: #71717a !important;
+}
+html.light-theme .market-filter.active {
+  background: #f5b942 !important;
+  color: #080808 !important;
+  border-color: #f5b942 !important;
+}
+html.light-theme .bg-amber-950\/30 {
+  background: rgba(254, 243, 199, 0.8) !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+html.light-theme .text-amber-300 {
+  color: #b45309 !important;
+}
+html.light-theme .bg-[#10251a] {
+  background: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
+  color: #15803d !important;
+}
+html.light-theme .bg-green-950 {
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+  border-color: #bbf7d0 !important;
+}
+html.light-theme .bg-red-950 {
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+  border-color: #fca5a5 !important;
+}
+html.light-theme .bg-amber-950 {
+  background: #fffbeb !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+html.light-theme .text-green-400 {
+  color: #166534 !important;
+}
+html.light-theme .text-red-400 {
+  color: #991b1b !important;
+}
+html.light-theme .text-amber-300 {
+  color: #92400e !important;
+}
+html.light-theme .bg-sky-950 {
+  background: #f0f9ff !important;
+  color: #0369a1 !important;
+  border-color: #bae6fd !important;
+}
+html.light-theme .text-sky-300 {
+  color: #075985 !important;
+}
+html.light-theme .bg-zinc-900 {
+  background: #f4f4f5 !important;
+  color: #71717a !important;
+  border-color: #e4e4e7 !important;
+}
+html.light-theme .border-[#444] {
+  border-color: #d4d4d8 !important;
+}
+html.light-theme .text-zinc-200 {
+  color: #27272a !important;
+}
+html.light-theme .bg-[#141416], html.light-theme .border-[#222225], html.light-theme .bg-[#1a1a1e] {
+  background-color: #ffffff !important;
+  border-color: #e4e4e7 !important;
+}
+html.light-theme #devVerificationSandboxNotice {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
 </style>
 </head>
 <body>
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center"><div class="text-center"><div class="spin mx-auto mb-4"></div><div class="gold font-bold text-xl">SellerFlow</div><div id="loadingText" class="muted text-sm mt-2">Starting secure app…</div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
-<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" placeholder="e.g. gideon_shop"></div><div><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
+<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="gold text-3xl font-black">SellerFlow</div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name"></div><div id="usernameWrap"><label class="text-sm muted">Username</label><input id="authUsername" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" placeholder="e.g. gideon_shop"><div id="authUsernameFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div></div><div id="emailInputWrap"><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"><div id="authEmailFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><div id="emailVerifyWrap" class="hide text-center mt-5"><div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl text-amber-400 mb-3 shadow-[0_0_20px_rgba(245,158,11,0.15)]">🔑</div><div class="mt-3 p-4 rounded-xl bg-[#141414] border border-[#2a2a2a] text-left"><div class="text-[11px] font-medium text-zinc-400">We've sent a modern, professional verification code to</div><div id="verifyEmailTarget" class="text-sm font-bold text-amber-400 mt-1 break-all select-all">user@example.com</div><div class="text-[11px] text-zinc-400 mt-2.5 leading-relaxed font-semibold">Please enter the 6-digit security code below to activate your SellerFlow account.</div></div><div class="mt-5 text-left"><label class="block text-xs text-zinc-400 font-semibold mb-1.5 uppercase tracking-wider">Verification Code</label><input id="verificationCodeInput" type="text" maxlength="6" pattern="[0-9]*" inputmode="numeric" class="w-full text-center tracking-[0.5em] font-mono text-2xl font-black p-3 rounded-xl bg-[#141414] border border-[#333] text-gold hover:border-[#444] focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition outline-none" placeholder="000000"></div><div class="space-y-2 mt-5"><button id="submitVerificationCodeBtn" type="button" class="w-full bg-gold text-black p-3.5 rounded-xl font-bold text-sm shadow-md hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center gap-2"><span class="text-base">✓</span><span>Verify Code</span></button><button id="resendVerificationBtn" type="button" class="w-full p-3 rounded-xl border border-[#383838] bg-[#181818] text-zinc-200 hover:text-white hover:border-[#555] font-semibold text-xs transition">Resend email</button><button id="changeEmailBtn" type="button" class="w-full mt-2 text-xs text-zinc-400 hover:text-amber-400 underline transition py-1 font-semibold">Change email / Sign in with another account</button></div></div><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
 <div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center gap-1.5 sm:gap-3 overflow-hidden"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="pageSelectorBtn" class="md:hidden" type="button" title="Select page">▦</button><button id="brandBtn" class="text-xl font-black gold shrink-0 whitespace-nowrap">SellerFlow</button><div class="hidden md:flex items-center gap-1 ml-3" id="desktopNav"><button class="navbtn px-3 py-2" data-page="feed">For You</button><button class="navbtn px-3 py-2" data-page="dashboard">Dashboard</button><button class="navbtn px-3 py-2" data-page="marketplace">Marketplace</button><button class="navbtn px-3 py-2" data-page="products">Products</button><button class="navbtn px-3 py-2 relative inline-flex items-center gap-1.5" data-page="orders"><span>Orders</span><span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span></button><button class="navbtn px-3 py-2" data-page="store">Store</button><button class="navbtn px-3 py-2" data-page="analysis">Analysis</button><button class="navbtn px-3 py-2" data-page="profile">Profile</button><button class="navbtn px-3 py-2" data-page="settings">Settings</button></div><div id="headerRightActions" class="ml-auto flex items-center gap-1.5 sm:gap-2 shrink-0"><button type="button" id="headerLoginBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Sign Up</button></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
@@ -1142,6 +1365,382 @@ window.sendTestPushNotification = async function() {
   }
 };
 
+/* Unified Theme State Manager */
+function getCurrentTheme() {
+  return document.documentElement.classList.contains('light-theme') ? 'light' : 'dark';
+}
+function setTheme(theme, save = true) {
+  if (theme === 'light') {
+    document.documentElement.classList.add('light-theme');
+  } else {
+    document.documentElement.classList.remove('light-theme');
+  }
+  if (save) {
+    localStorage.setItem('theme', theme);
+    // Persist to user profile if logged in
+    if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
+      try {
+        updateDoc(doc(db, 'users', currentUser.uid), { theme }).catch(() => {});
+      } catch (_) {}
+    }
+  }
+  // Refresh settings screen elements if they are rendered
+  if (typeof currentPage !== 'undefined' && currentPage === 'settings') {
+    const btnText = document.getElementById('themeBtnText');
+    if (btnText) {
+      btnText.textContent = theme === 'light' ? 'Light Mode' : 'Dark Mode';
+    }
+    const icon = document.getElementById('themeToggleIcon');
+    if (icon) {
+      icon.textContent = theme === 'light' ? '☀️' : '🌙';
+    }
+    const changeThemeBtn = document.getElementById('changeThemeBtn');
+    if (changeThemeBtn) {
+      if (theme === 'light') {
+        changeThemeBtn.className = 'border border-zinc-300 bg-zinc-100 text-black px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 hover:bg-zinc-200';
+      } else {
+        changeThemeBtn.className = 'border border-[#444] bg-transparent text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 hover:brightness-110';
+      }
+    }
+  }
+  // Toggle header button visual indicator
+  const headerBtn = document.getElementById('headerThemeToggle');
+  if (headerBtn) {
+    headerBtn.innerHTML = theme === 'light' ? '☀️' : '🌙';
+    headerBtn.title = theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+  }
+}
+function toggleTheme() {
+  const current = getCurrentTheme();
+  setTheme(current === 'light' ? 'dark' : 'light');
+}
+window.getCurrentTheme = getCurrentTheme;
+window.setTheme = setTheme;
+window.toggleTheme = toggleTheme;
+
+/* Interactive Ghana Phone Number Verification Modal & Controller */
+async function openPhoneVerificationModal() {
+  let step = 1;
+  let enteredPhone = currentProfile?.phone || '';
+  let storedDevCode = '';
+
+  function renderModalContent() {
+    const isLight = getCurrentTheme() === 'light';
+    const bgClass = isLight ? 'bg-zinc-50 border-zinc-200 text-zinc-800' : 'bg-[#141416] border-[#2b2b32] text-white';
+    const inputBg = isLight ? 'bg-white border-zinc-300 text-zinc-900' : 'bg-[#191919] border-[#333] text-white';
+
+    if (step === 1) {
+      return `
+        <div class="space-y-4 max-w-md mx-auto text-left" id="phoneModalStep1">
+          <div class="flex items-center gap-3 pb-3 border-b border-[#262626]">
+            <div class="w-10 h-10 rounded-xl bg-gold/10 border border-gold/40 text-gold flex items-center justify-center text-xl shrink-0">
+              📱
+            </div>
+            <div>
+              <h2 class="text-lg font-black text-white">Ghana Phone Verification</h2>
+              <p class="muted text-xs">Verify your mobile phone number to secure your account and storefront.</p>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-amber-950/20 border border-amber-500/25 text-[11.5px] text-zinc-300 flex items-start gap-2 leading-relaxed">
+            <span class="text-sm">💡</span>
+            <span>All active social sellers in Ghana are required to verify their mobile number to prevent impersonation, foster client confidence, and support order communication.</span>
+          </div>
+
+          <div>
+            <label class="muted text-xs block mb-1.5 font-semibold text-zinc-300">Enter Ghanaian Phone Number *</label>
+            <div class="flex gap-2">
+              <span class="p-3 bg-[#111113] border border-[#333] rounded-xl text-sm text-zinc-400 select-none flex items-center font-mono">
+                +233
+              </span>
+              <input id="verificationPhoneInput" type="tel" value="${esc(enteredPhone.replace(/^\+233/, ''))}" placeholder="e.g. 24 123 4567" class="flex-1 p-3 rounded-xl ${inputBg} text-sm focus:border-gold outline-none font-mono">
+            </div>
+            <p class="text-[10px] text-zinc-500 mt-1.5">Enter without the country code. (e.g. 24XXXXXXX or 024XXXXXXX, we will format it automatically).</p>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#262626]">
+            <button type="button" data-close-modal class="border border-[#444] hover:bg-[#222] text-zinc-300 font-bold px-4 py-2.5 rounded-xl text-xs transition">
+              Cancel
+            </button>
+            <button type="button" id="sendPhoneCodeBtn" class="bg-gold text-black font-extrabold px-5 py-2.5 rounded-xl text-xs hover:brightness-110 shadow-md flex items-center gap-1.5 transition">
+              <span>Send SMS Code</span>
+              <span>→</span>
+            </button>
+          </div>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="space-y-4 max-w-md mx-auto text-left" id="phoneModalStep2">
+          <div class="flex items-center gap-3 pb-3 border-b border-[#262626]">
+            <div class="w-10 h-10 rounded-xl bg-gold/10 border border-gold/40 text-gold flex items-center justify-center text-xl shrink-0">
+              🔑
+            </div>
+            <div>
+              <h2 class="text-lg font-black text-white">Enter 6-Digit Code</h2>
+              <p class="muted text-xs">We sent a secure verification code to <span class="font-mono text-gold font-bold">${esc(enteredPhone)}</span>.</p>
+            </div>
+          </div>
+
+          ${storedDevCode ? `
+            <div class="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/25 text-[11px] text-zinc-300 space-y-1">
+              <div class="flex items-center gap-2 font-bold text-emerald-400">
+                <span>🛡️</span>
+                <span>Developer Sandbox Bypass Active</span>
+              </div>
+              <p class="text-[10.5px] leading-relaxed">
+                Your sandbox confirmation code is: <b class="text-gold font-mono tracking-wider text-sm select-all bg-black/40 px-2 py-0.5 rounded-md border border-gold/20">${storedDevCode}</b>
+              </p>
+            </div>
+          ` : ''}
+
+          <div>
+            <label class="muted text-xs block mb-1.5 font-semibold text-zinc-300">6-Digit Verification Code *</label>
+            <input id="verificationCodeInput" type="text" maxlength="6" placeholder="e.g. 123456" class="w-full p-3 rounded-xl ${inputBg} text-center text-lg font-black tracking-widest focus:border-gold outline-none font-mono">
+            <p class="text-[10px] text-zinc-500 mt-1.5 text-center">Standard processing completes within seconds. If you didn't receive the SMS, verify the number and retry.</p>
+          </div>
+
+          <div class="flex items-center justify-between gap-2 pt-3 border-t border-[#262626]">
+            <button type="button" id="backToStep1Btn" class="border border-[#444] hover:bg-[#222] text-zinc-300 font-bold px-3 py-2.5 rounded-xl text-xs transition">
+              ← Change Number
+            </button>
+            <div class="flex items-center gap-2">
+              <button type="button" data-close-modal class="border border-[#444] hover:bg-[#222] text-zinc-300 font-bold px-3 py-2.5 rounded-xl text-xs transition">
+                Cancel
+              </button>
+              <button type="button" id="confirmPhoneCodeBtn" class="bg-gold text-black font-extrabold px-4 py-2.5 rounded-xl text-xs hover:brightness-110 shadow-md flex items-center gap-1 transition">
+                <span>Verify & Confirm</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  function updateModalUI() {
+    const card = document.querySelector('#modalRoot .modal-card');
+    if (card) {
+      card.innerHTML = renderModalContent();
+      document.querySelectorAll('[data-close-modal]').forEach(b => b.onclick = closeModal);
+      bindStepEvents();
+    }
+  }
+
+  function bindStepEvents() {
+    if (step === 1) {
+      $('sendPhoneCodeBtn')?.addEventListener('click', async () => {
+        const raw = $('verificationPhoneInput')?.value.trim() || '';
+        if (!raw) {
+          return toast('Please enter your Ghanaian mobile number.', 'error');
+        }
+
+        // Clean & normalize Ghanaian phone formats (e.g. starts with 0 or +233)
+        let cleaned = raw.replace(/\s+/g, '').replace(/[-()]/g, '');
+        if (cleaned.startsWith('0')) {
+          cleaned = '+233' + cleaned.slice(1);
+        } else if (!cleaned.startsWith('+233') && !cleaned.startsWith('233')) {
+          cleaned = '+233' + cleaned;
+        } else if (cleaned.startsWith('233')) {
+          cleaned = '+' + cleaned;
+        }
+
+        if (!/^\+233[0-9]{9}$/.test(cleaned)) {
+          return toast('Invalid Ghanaian number. Enter a valid 9-digit mobile number.', 'error');
+        }
+
+        enteredPhone = cleaned;
+        loading('Transmitting secure confirmation code…');
+
+        try {
+          const token = await currentUser.getIdToken(true);
+          const res = await fetch('/api/phone/send-code', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ phone: cleaned })
+          });
+
+          const data = await res.json();
+          ready();
+
+          if (data.success) {
+            storedDevCode = data.devCode || '';
+            step = 2;
+            updateModalUI();
+            toast('Secure code sent to ' + cleaned, 'success');
+          } else {
+            toast(data.error || 'Failed to send code.', 'error');
+          }
+        } catch (e) {
+          ready();
+          toast(errMsg(e), 'error');
+        }
+      });
+    } else {
+      $('backToStep1Btn')?.addEventListener('click', () => {
+        step = 1;
+        updateModalUI();
+      });
+
+      $('confirmPhoneCodeBtn')?.addEventListener('click', async () => {
+        const code = $('verificationCodeInput')?.value.trim() || '';
+        if (!code || code.length !== 6) {
+          return toast('Enter a valid 6-digit confirmation code.', 'error');
+        }
+
+        loading('Verifying secure confirmation code…');
+
+        try {
+          const token = await currentUser.getIdToken(true);
+          const res = await fetch('/api/phone/verify-code', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ code })
+          });
+
+          const data = await res.json();
+          ready();
+
+          if (data.success) {
+            if (data.requiresClientSync) {
+              try {
+                await updateDoc(doc(db, 'users', currentUser.uid), {
+                  phone: data.phone,
+                  phoneVerified: true,
+                  phoneVerifiedAt: serverTimestamp()
+                });
+                await setDoc(doc(db, 'publicProfiles', currentUser.uid), {
+                  phone: data.phone,
+                  phoneVerified: true
+                }, { merge: true });
+              } catch (syncErr) {
+                console.warn('Client-side Firestore status sync warning:', syncErr.message);
+              }
+            }
+            toast('Mobile phone verified successfully!', 'success');
+            closeModal();
+            // Refresh local cache and UI
+            await refreshProfile();
+            if (currentPage === 'profile') {
+              renderProfile();
+            } else if (currentPage === 'settings') {
+              renderSettings();
+            }
+          } else {
+            toast(data.error || 'Incorrect confirmation code. Please try again.', 'error');
+          }
+        } catch (e) {
+          ready();
+          toast(errMsg(e), 'error');
+        }
+      });
+    }
+  }
+
+  // Open modal initial state
+  modal(renderModalContent());
+  bindStepEvents();
+}
+
+/* User Account Deletion Secure Controller */
+async function triggerAccountDeletionFlow() {
+  const ok1 = await customConfirm({
+    title: 'Delete Your Account Permanently?',
+    message: 'Are you absolutely sure you want to delete your entire SellerFlow merchant account? This will immediately closed your shop, purge your business credentials, delist all catalog listings, wipe your active orders, and permanently erase your account data from our cloud servers. This action is absolute and cannot be undone.',
+    confirmText: 'Yes, Delete Permanently',
+    cancelText: 'Cancel & Save Account',
+    type: 'error',
+    icon: '🗑️',
+    tag: 'Danger Zone'
+  });
+
+  if (!ok1) return;
+
+  const ok2 = await customConfirm({
+    title: 'Confirm Irreversible Purge',
+    message: 'This is the absolute final check. By proceeding, your active storefront, registered badges, and verified seller status will be lost forever. Are you ready to purge all data?',
+    confirmText: 'Permanently Purge My Account',
+    cancelText: 'Cancel',
+    type: 'warning',
+    icon: '⚠️',
+    tag: 'Irreversible Action'
+  });
+
+  if (!ok2) return;
+
+  loading('Permanently purging merchant profile and listings…');
+
+  // 1. Clean up products and storefronts on the client side where the user is authorized
+  try {
+    try {
+      await deleteDoc(doc(db, 'stores', currentUser.uid));
+    } catch (e) {
+      console.warn('Client-side store delete bypassed:', e.message);
+    }
+
+    try {
+      const pSnap = await getDocs(query(collection(db, 'products'), where('sellerId', '==', currentUser.uid)));
+      for (const d of pSnap.docs) {
+        await deleteDoc(doc(db, 'products', d.id));
+      }
+    } catch (e) {
+      console.warn('Client-side products delete bypassed:', e.message);
+    }
+
+    try {
+      const postSnap = await getDocs(query(collection(db, 'posts'), where('sellerId', '==', currentUser.uid)));
+      for (const d of postSnap.docs) {
+        await deleteDoc(doc(db, 'posts', d.id));
+      }
+    } catch (e) {
+      console.warn('Client-side posts delete bypassed:', e.message);
+    }
+  } catch (err) {
+    console.warn('Client-side deletion cleanup notification:', err.message);
+  }
+
+  try {
+    const token = await currentUser.getIdToken(true);
+    const res = await fetch('/api/auth/delete-account', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+    ready();
+
+    if (data.success) {
+      try {
+        await currentUser.delete();
+      } catch (authDeleteErr) {
+        console.warn('Client-side auth deletion bypassed (user may already be deleted or requires fresh credentials):', authDeleteErr.message);
+      }
+      toast('Your SellerFlow account was successfully deleted. We wish you the best.', 'info', 4000);
+      try {
+        await auth.signOut();
+      } catch (_) {}
+      navigate('feed');
+    } else {
+      toast(data.error || 'Failed to complete secure account deletion.', 'error');
+    }
+  } catch (e) {
+    ready();
+    toast(errMsg(e), 'error');
+  }
+}
+
+window.openPhoneVerificationModal = openPhoneVerificationModal;
+window.triggerAccountDeletionFlow = triggerAccountDeletionFlow;
+
 const triggerGoogleSignIn = async (onSuccess, onError) => {
   try {
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
@@ -1265,7 +1864,50 @@ const triggerGoogleSignIn = async (onSuccess, onError) => {
 
 const signOut=(auth)=>auth.signOut();
 const sendPasswordResetEmail=(auth,email)=>auth.sendPasswordResetEmail(email);
-const sendEmailVerification=(user)=>user.sendEmailVerification();
+const sendEmailVerification = async (user) => {
+  try {
+    const token = await user.getIdToken(true);
+    const resp = await fetch('/api/auth/send-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const data = await resp.json();
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to send verification code');
+    }
+
+    // Fallback to sending a real Firebase-native verification link to their real inbox if SMTP is not configured
+    if (data.method === 'console_fallback') {
+      try {
+        if (typeof user.sendEmailVerification === 'function') {
+          await user.sendEmailVerification();
+          console.log('[FIREBASE] Real verification email sent via Firebase Auth service.');
+          toast('Sent a real verification email to your inbox!', 'info', 5000);
+        }
+      } catch (fbEmailErr) {
+        console.warn('Firebase native sendEmailVerification failed:', fbEmailErr.message);
+      }
+    }
+
+    if (data.devCode) {
+      window._latestDevCode = data.devCode;
+      console.log(`[DEVELOPMENT] Sandbox verification code: ${data.devCode}`);
+      const codeInput = document.getElementById('verificationCodeInput');
+      if (codeInput) {
+        codeInput.value = data.devCode;
+      }
+    } else {
+      delete window._latestDevCode;
+    }
+    return true;
+  } catch (err) {
+    console.error('Custom sendEmailVerification error:', err);
+    throw err;
+  }
+};
 const updateProfile=(user,data)=>user.updateProfile(data);
 const getFirestore=(app)=>{
   if(db) return db;
@@ -1364,8 +2006,83 @@ function snapshotExists(snap){return !!snap && (typeof snap.exists==='function' 
 
 
 const firebaseConfig={apiKey:'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk',authDomain:'sellerflow-efaab.firebaseapp.com',databaseURL:'https://sellerflow-efaab-default-rtdb.firebaseio.com',projectId:'sellerflow-efaab',storageBucket:'sellerflow-efaab.firebasestorage.app',messagingSenderId:'987175352360',appId:'1:987175352360:web:53e44304aaf11b98c61d1d'};
-const ADMIN_EMAILS=['gideondreams3325@gmail.com', 'gideondreams99@gmail.com'];
+const ADMIN_EMAILS=['gideondreams3325@gmail.com'];
 const isUserAdminEmail=(email)=>ADMIN_EMAILS.includes((email||'').toLowerCase());
+function isUserEmailVerified(u){
+  if(!u) return false;
+  if(u.emailVerified) return true;
+  if(u.providerData && u.providerData.some(p=>p && p.providerId==='google.com')) return true;
+  if(isUserAdminEmail(u.email)) return true;
+  return false;
+}
+function maskEmail(email){
+  if(!email || typeof email !== 'string') return '';
+  const parts = email.split('@');
+  if(parts.length !== 2) return email;
+  const name = parts[0];
+  const domain = parts[1];
+  if(name.length <= 2) return `${name.charAt(0)}*@${domain}`;
+  const visible = name.slice(0, 2);
+  const hidden = '*'.repeat(Math.min(Math.max(name.length - 2, 2), 5));
+  return `${visible}${hidden}@${domain}`;
+}
+let _resendCooldownTimer = null;
+let _resendCooldownSeconds = 0;
+function startResendCooldown(seconds = 60){
+  _resendCooldownSeconds = seconds;
+  const btn = $('resendVerificationBtn');
+  if(_resendCooldownTimer) clearInterval(_resendCooldownTimer);
+  if(btn){
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
+    btn.textContent = `Resend email in ${_resendCooldownSeconds}s`;
+  }
+  _resendCooldownTimer = setInterval(()=>{
+    _resendCooldownSeconds--;
+    if(_resendCooldownSeconds <= 0){
+      clearInterval(_resendCooldownTimer);
+      _resendCooldownTimer = null;
+      if(btn){
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        btn.textContent = 'Resend email';
+      }
+    } else {
+      if(btn){
+        btn.textContent = `Resend email in ${_resendCooldownSeconds}s`;
+      }
+    }
+  }, 1000);
+}
+async function checkEmailVerificationState(showFeedback = true){
+  try{
+    const u = auth?.currentUser;
+    if(!u){
+      if(showFeedback) toast('Please sign in to check verification status.', 'warning');
+      showAuth('login');
+      return false;
+    }
+    loading('Checking email verification…');
+    await u.reload();
+    ready();
+    if(isUserEmailVerified(u)){
+      toast('Email verified successfully! Welcome to SellerFlow.', 'success', 3500);
+      showApp();
+      await startUser(u);
+      return true;
+    } else {
+      if(showFeedback){
+        toast('Email not verified yet. Please check your inbox or spam folder.', 'warning', 4000);
+      }
+      return false;
+    }
+  }catch(err){
+    ready();
+    console.warn('Check verification error:', err);
+    if(showFeedback) toast('Could not verify status: ' + errMsg(err), 'error');
+    return false;
+  }
+}
 const ADMIN_EMAIL=ADMIN_EMAILS[0];
 let supabaseUrl='https://vvpwntehstjbccarqqzp.supabase.co';
 let supabaseKey='sb_publishable_uxIZMAka2Om0ZFD4tg3xfQ__7Bl_J0V';
@@ -2211,23 +2928,55 @@ function showLanding(){
   if(typeof navigate === 'function') navigate('feed');
   ready();
 }
-function showAuth(mode='register'){
-  if ((typeof currentUser !== 'undefined' && currentUser) || (typeof auth !== 'undefined' && auth.currentUser)) {
-    showApp();
-    if (typeof navigate === 'function') navigate('feed');
-    return;
+function showAuth(mode='register', targetEmail=''){
+  if (mode !== 'verifyEmail') {
+    const isAlreadyVerified = (typeof currentUser !== 'undefined' && currentUser && isUserEmailVerified(currentUser)) ||
+                              (typeof auth !== 'undefined' && auth.currentUser && isUserEmailVerified(auth.currentUser));
+    if (isAlreadyVerified) {
+      showApp();
+      if (typeof navigate === 'function') navigate('feed');
+      return;
+    }
   }
   if(typeof pauseAllForYouVideos === 'function') pauseAllForYouVideos(false);
   authMode=mode;
   hide($('app'));
   show($('authPage'));
-  if($('authTitle'))$('authTitle').textContent=mode==='register'?'Create your account':'Welcome back';
-  if($('authSubtitle'))$('authSubtitle').textContent=mode==='register'?'Sell and shop across Ghana.':'Sign in to continue.';
-  if($('nameWrap'))$('nameWrap').style.display=mode==='register'?'block':'none';
-  if($('usernameWrap'))$('usernameWrap').style.display=mode==='register'?'block':'none';
-  if($('termsWrap'))$('termsWrap').style.display=mode==='register'?'block':'none';
-  if($('authSubmit'))$('authSubmit').textContent=mode==='register'?'Create account':'Sign in';
-  if($('authSwitch'))$('authSwitch').textContent=mode==='register'?'Already have an account? Sign in':'New here? Create an account';
+  
+  const isVerify = mode === 'verifyEmail';
+  if (isVerify) {
+    hide($('authForm'));
+    hide($('googleBtn'));
+    hide($('resetBtn'));
+    hide($('authSwitch'));
+    show($('emailVerifyWrap'));
+    if($('authTitle'))$('authTitle').textContent='Verify your email';
+    if($('authSubtitle'))$('authSubtitle').textContent='Check your inbox for a verification email.';
+    const emailToDisplay = targetEmail || auth?.currentUser?.email || currentUser?.email || '';
+    if($('verifyEmailTarget')){
+      const masked = maskEmail(emailToDisplay);
+      $('verifyEmailTarget').innerHTML = masked ? `${esc(masked)} <span class="text-xs text-zinc-500 font-normal block sm:inline">(${esc(emailToDisplay)})</span>` : esc(emailToDisplay);
+    }
+  } else {
+    show($('authForm'));
+    show($('googleBtn'));
+    show($('resetBtn'));
+    show($('authSwitch'));
+    hide($('emailVerifyWrap'));
+    if($('authTitle'))$('authTitle').textContent=mode==='register'?'Create your account':'Welcome back';
+    if($('authSubtitle'))$('authSubtitle').textContent=mode==='register'?'Sell and shop across Ghana.':'Sign in to continue.';
+    if($('nameWrap'))$('nameWrap').style.display=mode==='register'?'block':'none';
+    if($('usernameWrap'))$('usernameWrap').style.display=mode==='register'?'block':'none';
+    if($('termsWrap'))$('termsWrap').style.display=mode==='register'?'block':'none';
+    if($('authSubmit'))$('authSubmit').textContent=mode==='register'?'Create account':'Sign in';
+    if($('authSwitch'))$('authSwitch').textContent=mode==='register'?'Already have an account? Sign in':'New here? Create an account';
+    if (mode !== 'register') {
+      const f1 = document.getElementById('authUsernameFeedback');
+      const f2 = document.getElementById('authEmailFeedback');
+      if (f1) f1.style.display = 'none';
+      if (f2) f2.style.display = 'none';
+    }
+  }
   if($('authError'))$('authError').textContent='';
   ready();
 }
@@ -2255,11 +3004,19 @@ async function loadUserProfile(u){
 async function createMissingProfile(u,extra={}){
   const name=extra.name||u.displayName||'SellerFlow User';
   const username=extra.username||('user_'+u.uid.slice(0,8));
-  const p={uid:u.uid,name,username,usernameLower:username.toLowerCase(),email:u.email||'',role:'seller',verified:false,avatarUrl:u.photoURL||'',followers:[],following:[],createdAt:serverTimestamp(),nameLastChanged:null,usernameLastChanged:null,...extra};
+  const emailLower=(u.email||'').toLowerCase().trim();
+  const usernameLower=username.toLowerCase().trim();
+  const p={uid:u.uid,name,username,usernameLower,email:u.email||'',emailLower,role:'seller',verified:false,avatarUrl:u.photoURL||'',followers:[],following:[],createdAt:serverTimestamp(),nameLastChanged:null,usernameLastChanged:null,...extra};
   currentProfile=p;
   // Profile creation is deliberately best-effort. A Firestore problem must never undo a successful Firebase login.
   try{await setDoc(doc(db,'users',u.uid),p,{merge:true})}catch(e){console.warn('Private profile creation skipped:',e)}
-  try{await setDoc(doc(db,'publicProfiles',u.uid),{uid:p.uid,name:p.name,username:p.username,usernameLower:p.usernameLower,avatarUrl:p.avatarUrl,verified:!!p.verified,followers:p.followers||[],following:p.following||[],role:p.role||'seller',createdAt:serverTimestamp()},{merge:true})}catch(e){console.warn('Public profile creation skipped:',e)}
+  try{await setDoc(doc(db,'publicProfiles',u.uid),{uid:p.uid,name:p.name,username:p.username,usernameLower:p.usernameLower,emailLower,avatarUrl:p.avatarUrl,verified:!!p.verified,followers:p.followers||[],following:p.following||[],role:p.role||'seller',createdAt:serverTimestamp()},{merge:true})}catch(e){console.warn('Public profile creation skipped:',e)}
+  if(emailLower){
+    try{await setDoc(doc(db,'registeredEmails',emailLower),{uid:u.uid,email:u.email,updatedAt:serverTimestamp()},{merge:true})}catch(e){console.warn('registeredEmails sync skipped:',e)}
+  }
+  if(usernameLower){
+    try{await setDoc(doc(db,'registeredUsernames',usernameLower),{uid:u.uid,username:p.username,updatedAt:serverTimestamp()},{merge:true})}catch(e){console.warn('registeredUsernames sync skipped:',e)}
+  }
   return p;
 }
 
@@ -2341,6 +3098,20 @@ function setNav(){
     const p=b.dataset.page;
     const isAct = p===currentPage || (currentPage==='products' && p==='marketplace');
     b.classList.toggle('active', isAct);
+    if(typeof t === 'function'){
+      if(p==='feed') b.textContent=t('nav_for_you','For You');
+      else if(p==='dashboard') b.textContent=t('nav_dashboard','Dashboard');
+      else if(p==='marketplace') b.textContent=t('nav_marketplace','Marketplace');
+      else if(p==='products') b.textContent=t('nav_products','Products');
+      else if(p==='orders') {
+        const badge=b.querySelector('#desktopOrdersBadge');
+        b.innerHTML=`<span>${esc(t('nav_orders','Orders'))}</span>${badge?badge.outerHTML:'<span id="desktopOrdersBadge" class="orders-nav-badge hide">0</span>'}`;
+      }
+      else if(p==='store') b.textContent=t('nav_store','Store');
+      else if(p==='analysis') b.textContent=t('nav_analysis','Analysis');
+      else if(p==='profile') b.textContent=t('nav_profile','Profile');
+      else if(p==='settings') b.textContent=t('nav_settings','Settings');
+    }
   });
   const adminDesktop=document.getElementById('adminNav');
   if(adminDesktop)adminDesktop.remove();
@@ -2351,7 +3122,7 @@ function setNav(){
       b.id='adminNav';
       b.className='navbtn px-3 py-2';
       b.dataset.page='admin';
-      b.textContent='Security Team';
+      b.textContent=typeof t === 'function' ? t('nav_admin','Security Team') : 'Security Team';
       b.onclick=()=>navigate('admin');
       dNav.appendChild(b);
     }
@@ -2360,10 +3131,15 @@ function setNav(){
   const rightActions=$('headerRightActions')||$('logoutBtn')?.parentElement||document.querySelector('header .ml-auto');
   if(rightActions){
     if(!currentUser){
-      rightActions.innerHTML=`<button type="button" id="headerLoginBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">Sign Up</button>`;
+      rightActions.innerHTML=`<button id="headerThemeToggle" class="p-2 shrink-0 text-lg" type="button" title="Toggle Theme">🌙</button><button type="button" id="headerLoginBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 transition shadow-sm shrink-0 whitespace-nowrap">${esc(typeof t === 'function' ? t('auth_btn_signin','Sign In') : 'Sign Up')}</button>`;
       $('headerLoginBtn')?.addEventListener('click',()=>showAuth('register'));
+      $('headerThemeToggle')?.addEventListener('click', toggleTheme);
+      const themeBtn = $('headerThemeToggle');
+      if (themeBtn) {
+        themeBtn.innerHTML = getCurrentTheme() === 'light' ? '☀️' : '🌙';
+      }
     } else {
-      rightActions.innerHTML=`<button id="notificationBtn" class="bell-btn p-2 shrink-0" type="button" title="Notifications">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2 shrink-0">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1 hide">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2 shrink-0">Logout</button>`;
+      rightActions.innerHTML=`<button id="headerThemeToggle" class="p-2 shrink-0 text-lg" type="button" title="Toggle Theme">🌙</button><button id="notificationBtn" class="bell-btn p-2 shrink-0" type="button" title="${esc(typeof t === 'function' ? t('nav_notifications','Notifications') : 'Notifications')}">🔔<span id="notificationCount" class="notification-badge hide">0</span></button><button id="cartBtn" class="relative p-2 shrink-0">🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1 hide">0</span></button><button id="logoutBtn" class="hidden sm:block border border-[#333] rounded-xl px-3 py-2 shrink-0 text-xs">${esc(typeof t === 'function' ? t('nav_signout','Logout') : 'Logout')}</button>`;
       $('notificationBtn')?.addEventListener('click',()=>{
         if(window.markNotificationsRead && notificationCache && notificationCache.length){
           window.markNotificationsRead(notificationCache.map(n=>n.id));
@@ -2374,6 +3150,11 @@ function setNav(){
       });
       $('cartBtn')?.addEventListener('click',()=>navigate('cart'));
       $('logoutBtn')?.addEventListener('click',logoutUser);
+      $('headerThemeToggle')?.addEventListener('click', toggleTheme);
+      const themeBtn = $('headerThemeToggle');
+      if (themeBtn) {
+        themeBtn.innerHTML = getCurrentTheme() === 'light' ? '☀️' : '🌙';
+      }
       if(window.updateNotifBellBadge) updateNotifBellBadge();
       updateCartBadge();
     }
@@ -2382,6 +3163,9 @@ function setNav(){
   const pCount = typeof pendingOrdersCount !== 'undefined' ? pendingOrdersCount : 0;
 
   if($('mobileNav')){
+    const curLangCode = (typeof getCurrentLanguage === 'function' ? getCurrentLanguage() : (window.currentLanguage || 'en'));
+    const curLangObj = (typeof SUPPORTED_LANGUAGES !== 'undefined') ? SUPPORTED_LANGUAGES.find(l => l.code === curLangCode) : null;
+
     const userHeaderHtml = currentUser ? `
       <div class="p-3 rounded-2xl bg-[#181822] border border-[#2a2a3c] flex items-center gap-3 shadow-sm">
         ${avatar(currentProfile || currentUser, 'w-10 h-10 rounded-full object-cover shrink-0 border border-gold/40 shadow-sm bg-[#222]')}
@@ -2402,30 +3186,30 @@ function setNav(){
     `;
 
     const discoverPages = [
-      { key: 'feed', label: 'For You', icon: '🎬', desc: 'Reels & Video Showcase' },
-      { key: 'marketplace', label: 'Marketplace', icon: '🛍️', desc: 'Stores & Products Catalog' }
+      { key: 'feed', label: typeof t === 'function' ? t('nav_for_you', 'For You') : 'For You', icon: '🎬', desc: typeof t === 'function' ? t('sub_for_you', 'Reels & Video Showcase') : 'Reels & Video Showcase' },
+      { key: 'marketplace', label: typeof t === 'function' ? t('nav_marketplace', 'Marketplace') : 'Marketplace', icon: '🛍️', desc: typeof t === 'function' ? t('sub_marketplace', 'Stores & Products Catalog') : 'Stores & Products Catalog' }
     ];
 
     let commercePages = [];
     if(currentUser) {
-      commercePages.push({ key: 'orders', label: 'My Orders', icon: '📦', desc: 'Tracking & Fulfillment', badge: pCount > 0 ? (pCount > 99 ? '99+' : pCount) : null });
-      commercePages.push({ key: 'chats', label: 'Direct Chats', icon: '💬', desc: 'Instant Messages' });
-      commercePages.push({ key: 'analysis', label: 'Analysis', icon: '📈', desc: 'Performance & Growth' });
+      commercePages.push({ key: 'orders', label: typeof t === 'function' ? t('nav_orders', 'My Orders') : 'My Orders', icon: '📦', desc: typeof t === 'function' ? t('sub_orders', 'Tracking & Fulfillment') : 'Tracking & Fulfillment', badge: pCount > 0 ? (pCount > 99 ? '99+' : pCount) : null });
+      commercePages.push({ key: 'chats', label: typeof t === 'function' ? t('nav_chats', 'Direct Chats') : 'Direct Chats', icon: '💬', desc: typeof t === 'function' ? t('sub_chats', 'Instant Messages') : 'Instant Messages' });
+      commercePages.push({ key: 'analysis', label: typeof t === 'function' ? t('nav_analysis', 'Analysis') : 'Analysis', icon: '📈', desc: typeof t === 'function' ? t('sub_analysis', 'Performance & Growth') : 'Performance & Growth' });
     }
 
     if(isAdmin || currentProfile?.verified || currentProfile?.role === 'seller') {
-      commercePages.push({ key: 'dashboard', label: 'Seller Dashboard', icon: '📊', desc: 'Analytics & Sales' });
-      commercePages.push({ key: 'products', label: 'Product Manager', icon: '🛒', desc: 'Listings & Stock' });
-      commercePages.push({ key: 'store', label: 'My Storefront', icon: '🏪', desc: 'Store Customization' });
+      commercePages.push({ key: 'dashboard', label: typeof t === 'function' ? t('nav_dashboard', 'Seller Dashboard') : 'Seller Dashboard', icon: '📊', desc: typeof t === 'function' ? t('title_dashboard', 'Analytics & Sales') : 'Analytics & Sales' });
+      commercePages.push({ key: 'products', label: typeof t === 'function' ? t('nav_products', 'Product Manager') : 'Product Manager', icon: '🛒', desc: typeof t === 'function' ? t('sub_products', 'Listings & Stock') : 'Listings & Stock' });
+      commercePages.push({ key: 'store', label: typeof t === 'function' ? t('nav_store', 'My Storefront') : 'My Storefront', icon: '🏪', desc: typeof t === 'function' ? t('sub_store', 'Store Customization') : 'Store Customization' });
     }
 
     let accountPages = [];
     if(currentUser) {
-      accountPages.push({ key: 'profile', label: 'My Profile & KYC', icon: '👤', desc: 'Identity & Verification' });
-      accountPages.push({ key: 'settings', label: 'Settings', icon: '⚙️', desc: 'Preferences & Legal' });
+      accountPages.push({ key: 'profile', label: typeof t === 'function' ? t('nav_profile', 'My Profile & KYC') : 'My Profile & KYC', icon: '👤', desc: typeof t === 'function' ? t('sub_profile', 'Identity & Verification') : 'Identity & Verification' });
+      accountPages.push({ key: 'settings', label: typeof t === 'function' ? t('nav_settings', 'Settings') : 'Settings', icon: '⚙️', desc: typeof t === 'function' ? t('sub_settings', 'Preferences & Legal') : 'Preferences & Legal' });
     }
     if(isAdmin) {
-      accountPages.push({ key: 'admin', label: 'Admin Desk', icon: '🛡️', desc: 'Platform Moderation' });
+      accountPages.push({ key: 'admin', label: typeof t === 'function' ? t('nav_admin', 'Admin Desk') : 'Admin Desk', icon: '🛡️', desc: 'Platform Moderation' });
     }
 
     function renderNavGroup(title, items) {
@@ -2480,10 +3264,18 @@ function setNav(){
         </div>
 
         <div class="p-3 border-t border-[#22222e] bg-[#0a0a0f] space-y-2 shrink-0">
+          <button type="button" id="mobileLanguageBtn" class="w-full p-2.5 rounded-xl bg-[#14141d] hover:bg-[#1a1a26] border border-amber-500/30 text-amber-300 font-bold text-xs flex items-center justify-between transition shadow-sm">
+            <span class="flex items-center gap-2 min-w-0">
+              <span class="text-base shrink-0">🇬🇭</span>
+              <span class="truncate"><span>${esc(typeof t === 'function' ? t('settings_language', 'Language') : 'Language')}:</span> <b class="text-zinc-200">${esc(curLangObj ? curLangObj.native : 'English')}</b></span>
+            </span>
+            <span class="text-gold text-[10px] font-extrabold shrink-0 ml-2">${esc(typeof t === 'function' ? t('btn_change', 'Change') : 'Change')} →</span>
+          </button>
+
           <button type="button" id="mobileTutorialBtn" class="w-full p-2.5 rounded-xl bg-[#14141d] hover:bg-[#1a1a26] border border-gold/30 text-gold font-bold text-xs flex items-center justify-between transition shadow-sm">
             <span class="flex items-center gap-2">
               <span class="text-base">🎓</span>
-              <span>App Walkthrough & Tutorial</span>
+              <span>${esc(typeof t === 'function' ? t('settings_tutorial', 'App Walkthrough & Tutorial') : 'App Walkthrough & Tutorial')}</span>
             </span>
             <span class="text-gold text-[10px] font-extrabold">Explore →</span>
           </button>
@@ -2507,12 +3299,12 @@ function setNav(){
           ${!currentUser ? `
             <button type="button" id="mobileAuthBtn" class="w-full p-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-gold to-yellow-500 text-black font-black text-xs shadow-md hover:brightness-110 transition mt-1 flex items-center justify-center gap-2">
               <span>🔑</span>
-              <span>Sign In / Register Account</span>
+              <span>${esc(typeof t === 'function' ? t('nav_signin_register', 'Sign In / Register Account') : 'Sign In / Register Account')}</span>
             </button>
           ` : `
             <button type="button" id="mobileLogout" class="w-full p-2 rounded-xl text-rose-400 bg-rose-950/20 hover:bg-rose-950/40 border border-rose-900/40 font-bold text-xs flex items-center justify-center gap-2 transition" data-mobile-logout="1">
               <span>🚪</span>
-              <span>Sign Out Account</span>
+              <span>${esc(typeof t === 'function' ? t('nav_signout', 'Sign Out Account') : 'Sign Out Account')}</span>
             </button>
           `}
 
@@ -2524,6 +3316,7 @@ function setNav(){
     `;
 
     $('closeMobileNavBtn')?.addEventListener('click', closeMobileNav);
+    $('mobileLanguageBtn')?.addEventListener('click', () => { closeMobileNav(); if(typeof openLanguageSelectorModal==='function') openLanguageSelectorModal(); });
     $('mobileTutorialBtn')?.addEventListener('click', () => { closeMobileNav(); if(typeof showFirstTimeTutorial==='function') showFirstTimeTutorial(true); });
     $('mobileHelpSupportBtn')?.addEventListener('click', () => { closeMobileNav(); if(typeof openHelpSupportModal==='function') openHelpSupportModal(); });
     $('mobileReportFraudBtn')?.addEventListener('click', () => { closeMobileNav(); if(typeof openReportFraudModal==='function') openReportFraudModal(); });
@@ -7886,7 +8679,9 @@ async function renderStore(forceEdit = false){
   }
 }
 
-async function renderProfile(){const p=currentProfile;const privateDoc=await getDoc(doc(db,'users',currentUser.uid));const verification=privateDoc.data()||{};$('page').innerHTML=pageTitle('Profile','Manage your account details and profile picture.')+`<div class="grid lg:grid-cols-[1fr_1.3fr] gap-5"><div class="card p-6"><div class="flex items-center gap-4">${avatar(p,'w-20 h-20 rounded-full object-cover bg-[#222]')}<div><h2 class="text-xl font-bold">${esc(p.name)}</h2><div class="muted">@${esc(p.username)}</div>${p.verified?'<div class="text-sm font-bold mt-1 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':''}${(p.hasBusinessCert || p.businessCertUrl || verification.hasBusinessCert)?'<div class="text-xs font-bold mt-1.5 flex items-center gap-2 text-amber-300 bg-amber-950/30 border border-amber-800/50 p-2 rounded-xl"><span>🏢</span><span>Registered Business Certificate Verified</span></div>':''}</div></div><input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-5"><button id="uploadAvatar" class="mt-3 border border-[#444] rounded-xl px-4 py-2">Update profile picture</button><label class="muted text-sm block mt-5">Full name</label><input id="profileName" value="${esc(p.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><label class="muted text-sm block mt-4">Username</label><input id="profileUsername" value="${esc(p.username||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><button id="saveProfile" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Save profile</button><div class="muted text-sm mt-4">${esc(currentUser.email)} · ${currentUser.emailVerified?'Email verified':'Email not verified'}</div>${!currentUser.emailVerified?`<button id="verifyEmail" class="mt-2 text-sm gold">Send verification email</button>`:''}</div><div class="card p-6"><h2 class="text-xl font-bold">Seller identity</h2><p class="muted mt-2">Verification is managed from Settings. Approved sellers receive the modern blue SellerFlow verification badge.</p><button id="openSettingsVerification" class="mt-4 bg-gold text-black px-5 py-3 rounded-xl font-bold">Open Settings</button></div></div>`;$('uploadAvatar').onclick=async()=>{try{const f=$('avatarFile').files[0];if(!f)return toast('Choose a picture first','error');const x=await uploadPublic(f,'profiles');await updateDoc(doc(db,'users',currentUser.uid),{avatarUrl:x.url});await updateDoc(doc(db,'publicProfiles',currentUser.uid),{avatarUrl:x.url});currentProfile.avatarUrl=x.url;toast('Profile picture updated','success');navigate('profile')}catch(e){toast(errMsg(e),'error')}};$('saveProfile').onclick=saveProfile;$('verifyEmail')?.addEventListener('click',async()=>{await sendEmailVerification(currentUser);toast('Verification email sent','success')});$('openSettingsVerification')?.addEventListener('click',openVerificationModal)}
+async function renderProfile(){const p=currentProfile;const privateDoc=await getDoc(doc(db,'users',currentUser.uid));const verification=privateDoc.data()||{};$('page').innerHTML=pageTitle('Profile','Manage your account details and profile picture.')+`<div class="grid lg:grid-cols-[1fr_1.3fr] gap-5"><div class="card p-6"><div class="flex items-center gap-4">${avatar(p,'w-20 h-20 rounded-full object-cover bg-[#222]')}<div><h2 class="text-xl font-bold">${esc(p.name)}</h2><div class="muted">@${esc(p.username)}</div>${p.verified?'<div class="text-sm font-bold mt-1 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':''}${(p.hasBusinessCert || p.businessCertUrl || verification.hasBusinessCert)?'<div class="text-xs font-bold mt-1.5 flex items-center gap-2 text-amber-300 bg-amber-950/30 border border-amber-800/50 p-2 rounded-xl"><span>🏢</span><span>Registered Business Certificate Verified</span></div>':''}</div></div><input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-5"><button id="uploadAvatar" class="mt-3 border border-[#444] rounded-xl px-4 py-2">Update profile picture</button><label class="muted text-sm block mt-5">Full name</label><input id="profileName" value="${esc(p.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><label class="muted text-sm block mt-4">Username</label><input id="profileUsername" value="${esc(p.username||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333]"><button id="saveProfile" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl">Save profile</button><div class="muted text-sm mt-4">${esc(currentUser.email)} · ${currentUser.emailVerified?'Email verified':'Email not verified'}</div>${!currentUser.emailVerified?`<button id="verifyEmail" class="mt-2 text-sm gold">Send verification email</button>`:''}</div><div class="space-y-5">
+<div class="card p-6"><h2 class="text-xl font-bold">Seller identity</h2><p class="muted mt-2">Verification is managed from Settings. Approved sellers receive the modern blue SellerFlow verification badge.</p><button id="openSettingsVerification" class="mt-4 bg-gold text-black px-5 py-3 rounded-xl font-bold">Open Settings</button></div>
+</div></div>`;$('uploadAvatar').onclick=async()=>{try{const f=$('avatarFile').files[0];if(!f)return toast('Choose a picture first','error');const x=await uploadPublic(f,'profiles');await updateDoc(doc(db,'users',currentUser.uid),{avatarUrl:x.url});await updateDoc(doc(db,'publicProfiles',currentUser.uid),{avatarUrl:x.url});currentProfile.avatarUrl=x.url;toast('Profile picture updated','success');navigate('profile')}catch(e){toast(errMsg(e),'error')}};$('saveProfile').onclick=saveProfile;$('verifyEmail')?.addEventListener('click',async()=>{await sendEmailVerification(currentUser);toast('Verification email sent','success')});$('openSettingsVerification')?.addEventListener('click',openVerificationModal);}
 async function saveProfile(){try{const name=$('profileName').value.trim(),username=usernameClean($('profileUsername').value);if(name.length<2||username.length<3)throw Error('Enter a valid name and username.');if(username!==currentProfile.username){if(!(await uniqueUsername(username,currentUser.uid)))throw Error('That username is already taken.');}await updateDoc(doc(db,'users',currentUser.uid),{name,username,usernameLower:username.toLowerCase(),nameLastChanged:serverTimestamp(),usernameLastChanged:serverTimestamp()});try{await setDoc(doc(db,'publicProfiles',currentUser.uid),{uid:currentUser.uid,name,username,usernameLower:username.toLowerCase(),avatarUrl:currentProfile.avatarUrl||'',verified:!!currentProfile.verified,followers:currentProfile.followers||[],following:currentProfile.following||[],role:currentProfile.role||'seller'},{merge:true})}catch(e){console.warn('Public profile sync skipped:',e)}await refreshProfile();toast('Profile saved','success');navigate('profile')}catch(e){toast(errMsg(e),'error')}}
 async function validateGhanaCardAndStartLiveness(){
   try{
@@ -9399,63 +10194,81 @@ async function acceptCurrentTerms(){if(!currentUser)return;await updateDoc(doc(d
 async function enforceTermsAcceptance(){await ensureTerms();if(!currentUser||isAdmin)return true;if(currentProfile?.termsAccepted&&currentProfile?.termsVersion===appTermsVersion)return true;showTermsModal(true);return false}
 async function renderSettings(){
   const t=await ensureTerms();const p=currentProfile||{};
-  const perm = ('Notification' in window) ? Notification.permission : 'unsupported';
-  const permBadge = perm === 'granted' 
-    ? '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-green-950 text-green-400 border border-green-800">🟢 Alerts Active</span>'
-    : (perm === 'denied' 
-        ? '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-950 text-red-400 border border-red-800">🔴 Blocked</span>'
-        : '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-950 text-amber-300 border border-amber-800">🟡 Setup Required</span>');
-  const swBadge = ('serviceWorker' in navigator && (swRegistration || navigator.serviceWorker.controller))
-    ? '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-sky-950 text-sky-300 border border-sky-800">⚡ Service Worker Ready</span>'
-    : '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-zinc-900 text-zinc-400 border border-zinc-700">Service Worker Standby</span>';
 
-  $('page').innerHTML=pageTitle('Settings','Manage your account, notifications, verification and SellerFlow policies.')+`<div class="grid lg:grid-cols-2 gap-5">
-    <section class="card overflow-hidden">
-      <div class="p-5 border-b border-[#292929] flex items-center justify-between">
-        <div>
-          <h2 class="text-xl font-bold">Account & notifications</h2>
-          <p class="muted text-sm mt-1">Background alerts for customer messages and order updates.</p>
-        </div>
-        <div class="flex flex-col items-end gap-1">
-          ${permBadge}
-        </div>
-      </div>
-      <div class="p-5 space-y-4 border-b border-[#292929]">
-        <div class="flex items-start gap-3">
-          <div class="text-3xl">🔔</div>
-          <div class="flex-1">
-            <div class="flex items-center gap-2 flex-wrap">
-              <b class="text-base">Background Browser Notifications</b>
-              ${swBadge}
-            </div>
-            <p class="muted text-xs leading-5 mt-1">
-              Alerts you immediately when a customer sends a new message or when an order changes status (even if your phone screen is locked or the browser tab is in the background).
-            </p>
-            <div class="flex flex-wrap gap-2 mt-3">
-              ${perm !== 'granted' ? button('Enable Background Alerts','enableNotifications','bg-gold text-black font-bold') : button('Alerts Enabled ✓','enableNotifications','border border-green-800 bg-green-950/40 text-green-300 pointer-events-none')}
-              ${button('Test Message Alert','testMessageAlert','border border-[#444] bg-[#1a1a1a] text-xs py-2 px-3')}
-              ${button('Test Order Alert','testOrderAlert','border border-[#444] bg-[#1a1a1a] text-xs py-2 px-3')}
-            </div>
+  const isPasswordUser = currentUser?.providerData?.some(prov => prov.providerId === 'password');
+
+  $('page').innerHTML=pageTitle('Settings','Manage your account, verification and SellerFlow policies.')+`
+  <div class="grid lg:grid-cols-2 gap-5">
+    <div class="space-y-5">
+      <section class="card overflow-hidden">
+        <div class="p-5 border-b border-[#292929] flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold">App Settings</h2>
+            <p class="muted text-sm mt-1">Manage your language, themes, and tutorial onboarding preferences.</p>
           </div>
         </div>
-      </div>
-      <div class="settings-item border-b border-[#292929]">
-        <div class="text-2xl">🎓</div>
-        <div class="flex-1">
-          <b>App Tutorial & Feature Guide</b>
-          <p class="muted text-sm">Replay the step-by-step onboarding walkthrough anytime.</p>
+        <div class="settings-item border-b border-[#292929]">
+          <div class="text-2xl">🇬🇭</div>
+          <div class="flex-1">
+            <b>${esc(typeof t === 'function' ? t('settings_language', 'Language') : 'Language')}</b>
+            <p class="muted text-sm">${esc((typeof SUPPORTED_LANGUAGES !== 'undefined' && typeof getCurrentLanguage === 'function' ? (SUPPORTED_LANGUAGES.find(l => l.code === getCurrentLanguage())?.native + ' (' + SUPPORTED_LANGUAGES.find(l => l.code === getCurrentLanguage())?.name + ')') : 'English'))} — ${esc(typeof t === 'function' ? t('settings_language_desc', 'Choose your preferred Ghanaian language.') : 'Choose your preferred Ghanaian language.')}</p>
+          </div>
+          ${button(typeof t === 'function' ? t('settings_change_language', 'Change Language') : 'Change Language','changeLanguageBtn','border border-[#444] bg-transparent text-white')}
         </div>
-        ${button('Replay Tutorial','replayTutorialBtn','border border-[#444] bg-transparent text-white')}
-      </div>
-      <div class="settings-item">
-        <div class="text-2xl">📜</div>
-        <div class="flex-1">
-          <b>Terms & Conditions</b>
-          <p class="muted text-sm">Version ${esc(t.version||appTermsVersion)}</p>
+        <div class="settings-item border-b border-[#292929]">
+          <div class="text-2xl">🎓</div>
+          <div class="flex-1">
+            <b>App Tutorial & Feature Guide</b>
+            <p class="muted text-sm">Replay the step-by-step onboarding walkthrough anytime.</p>
+          </div>
+          ${button('Replay Tutorial','replayTutorialBtn','border border-[#444] bg-transparent text-white')}
         </div>
-        ${button('Read terms','readTerms','border border-[#444] bg-transparent text-white')}
-      </div>
-    </section>
+        <div class="settings-item border-b border-[#292929]">
+          <div id="themeToggleIcon" class="text-2xl">${getCurrentTheme() === 'light' ? '☀️' : '🌙'}</div>
+          <div class="flex-1">
+            <b>Theme Mode</b>
+            <p class="muted text-sm">Toggle between dark luxury and crisp, elegant light layouts.</p>
+          </div>
+          <button id="changeThemeBtn" class="${getCurrentTheme() === 'light' ? 'border border-zinc-300 bg-zinc-100 text-black' : 'border border-[#444] bg-transparent text-white'} px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 hover:brightness-110">
+            <span id="themeBtnText">${getCurrentTheme() === 'light' ? 'Light Mode' : 'Dark Mode'}</span>
+          </button>
+        </div>
+        <div class="settings-item">
+          <div class="text-2xl">📜</div>
+          <div class="flex-1">
+            <b>Terms & Conditions</b>
+            <p class="muted text-sm">Version ${esc(t.version||appTermsVersion)}</p>
+          </div>
+          ${button('Read terms','readTerms','border border-[#444] bg-transparent text-white')}
+        </div>
+      </section>
+
+      <section class="card overflow-hidden">
+        <div class="p-5 border-b border-[#292929]">
+          <h2 class="text-xl font-bold flex items-center gap-2">🔑 Security & Credentials</h2>
+          <p class="muted text-sm mt-1">Update your login email address and account password.</p>
+        </div>
+        
+        <div class="settings-item border-b border-[#292929]">
+          <div class="text-2xl">📧</div>
+          <div class="flex-1">
+            <b>Email Address</b>
+            <p class="muted text-sm font-mono">${esc(currentUser?.email || 'No email registered')}</p>
+          </div>
+          ${button('Change Email', 'changeEmailBtn', 'border border-[#444] bg-transparent text-white')}
+        </div>
+
+        <div class="settings-item">
+          <div class="text-2xl">🔒</div>
+          <div class="flex-1">
+            <b>Password</b>
+            <p class="muted text-sm font-mono">${isPasswordUser ? '••••••••••••' : 'Managed via Google'}</p>
+          </div>
+          ${button('Change Password', 'changePasswordBtn', isPasswordUser ? 'border border-[#444] bg-transparent text-white' : 'border border-[#333] bg-transparent text-zinc-500 pointer-events-none')}
+        </div>
+      </section>
+    </div>
+
     <section class="card p-6">
       <div class="policy-hero p-6">
         <div class="policy-icon">✓</div>
@@ -9470,35 +10283,203 @@ async function renderSettings(){
       </div>
       ${p.verified?`<div class="mt-5 bg-[#10251a] border border-green-800 p-4 rounded-xl">You are verified <span class="verified-badge ml-1">✓</span><div class="muted text-sm mt-1">Your blue SellerFlow badge may appear beside your seller name.</div></div>`:`<div class="mt-5"><p class="muted text-sm">${p.verificationStatus==='pending'?'Your verification is under review.':'Verification is optional for browsing, but required for seller publishing and helps customers trust your account.'}</p>${p.verificationStatus!=='pending'?button('Start Ghana Card verification','startVerification','mt-4 bg-gold text-black'):''}</div>`}
     </section>
-  </div>`;
+  </div>
+  
+  <section class="card p-6 mt-6 border border-red-900/30 bg-red-950/10">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h2 class="text-lg font-black text-red-500 flex items-center gap-2">⚠️ Danger Zone</h2>
+        <p class="muted text-xs sm:text-sm mt-1">Permanently delete your account. This action is completely irreversible and immediately purges all listings, storefront settings, and profile data.</p>
+      </div>
+      <button id="deleteAccountBtn" type="button" class="bg-red-700/80 hover:bg-red-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap shadow-sm">
+        Delete Account Permanently
+      </button>
+    </div>
+  </section>
+  `;
   $('replayTutorialBtn')?.addEventListener('click', () => showFirstTimeTutorial(true));
+  $('changeThemeBtn')?.addEventListener('click', () => {
+    toggleTheme();
+    toast(`Theme changed to ${getCurrentTheme() === 'light' ? 'Light' : 'Dark'} Mode`, 'info', 1500);
+  });
+  $('changeLanguageBtn')?.addEventListener('click', () => { if(typeof openLanguageSelectorModal === 'function') openLanguageSelectorModal(); });
   if($('readTerms')) $('readTerms').onclick=()=>showTermsModal(false);
-  if($('enableNotifications')) $('enableNotifications').onclick=async()=>{
-    await requestNotificationPermission();
-    renderSettings();
-  };
-  $('testMessageAlert')?.addEventListener('click', () => {
-    toast('Triggering message alert in 1.5s… Switch tabs or minimize to test!', 'info');
-    setTimeout(() => {
-      dispatchNotification('💬 Kofi Mensah', {
-        body: 'Hello! Is the Kente fabric still available for delivery in Kumasi?',
-        tag: 'test-chat-msg',
-        data: { type: 'chat_message', conversationId: 'test_conv', senderId: 'kofi_mensah' }
-      });
-    }, 1500);
-  });
-  $('testOrderAlert')?.addEventListener('click', () => {
-    toast('Triggering order update alert in 1.5s… Switch tabs or minimize to test!', 'info');
-    setTimeout(() => {
-      dispatchNotification('📦 Order #SF-8921 Dispatched', {
-        body: 'Your package is on its way via VIP Express Delivery. Tap to track progress.',
-        tag: 'test-order-update',
-        data: { type: 'order_update', orderId: 'test_order' }
-      });
-    }, 1500);
-  });
+  $('deleteAccountBtn')?.addEventListener('click', () => triggerAccountDeletionFlow());
   $('startVerification')?.addEventListener('click',openVerificationModal);
+
+  $('changeEmailBtn')?.addEventListener('click', () => openChangeEmailModal());
+  $('changePasswordBtn')?.addEventListener('click', () => openChangePasswordModal());
 }
+
+async function openChangeEmailModal() {
+  if (!currentUser) return toast('You must be signed in to change your email.', 'error');
+  const isPasswordUser = currentUser.providerData?.some(prov => prov.providerId === 'password');
+
+  let html = `
+    <div class="text-left space-y-4">
+      <div class="flex items-center gap-3 pb-3 border-b border-[#262626]">
+        <div class="text-3xl">📧</div>
+        <div>
+          <h2 class="text-xl font-bold">Change Email Address</h2>
+          <p class="muted text-xs">Update your secure login and notifications email.</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 mt-4">
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1 font-semibold">New Email Address</label>
+          <input id="newEmailInput" type="email" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white" placeholder="e.g. name@domain.com">
+        </div>
+  `;
+
+  if (isPasswordUser) {
+    html += `
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1 font-semibold">Current Password</label>
+          <input id="reauthPasswordInput" type="password" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white" placeholder="Enter current password to verify">
+        </div>
+    `;
+  } else {
+    html += `
+        <div class="p-3.5 bg-sky-950/20 border border-sky-900/40 text-sky-400 rounded-xl text-xs leading-5">
+          💡 Your account is linked to Google/Social login. Re-entering a password is not required.
+        </div>
+    `;
+  }
+
+  html += `
+      </div>
+
+      <div class="flex justify-end gap-2 pt-4 border-t border-[#262626]">
+        <button data-close-modal class="border border-[#444] px-4 py-2.5 rounded-xl text-xs font-bold text-zinc-300">Cancel</button>
+        <button id="confirmChangeEmailBtn" class="bg-gold text-black px-4 py-2.5 rounded-xl text-xs font-bold hover:brightness-110 transition">Update Email</button>
+      </div>
+    </div>
+  `;
+
+  modal(html);
+
+  $('confirmChangeEmailBtn').onclick = async () => {
+    const newEmail = $('newEmailInput').value.trim();
+    if (!newEmail || !newEmail.includes('@')) {
+      return toast('Please enter a valid email address.', 'error');
+    }
+
+    loading('Updating secure email…');
+    try {
+      if (isPasswordUser) {
+        const password = $('reauthPasswordInput').value;
+        if (!password) {
+          ready();
+          return toast('Your current password is required for security verification.', 'error');
+        }
+        const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, password);
+        await currentUser.reauthenticateWithCredential(credential);
+      }
+
+      await currentUser.updateEmail(newEmail);
+
+      // Sync updated email in users table & current profile reference
+      try {
+        await updateDoc(doc(db, 'users', currentUser.uid), {
+          email: newEmail,
+          emailLower: newEmail.toLowerCase()
+        });
+        if (currentProfile) {
+          currentProfile.email = newEmail;
+        }
+      } catch (dbErr) {
+        console.warn('Silent DB sync bypassed:', dbErr.message);
+      }
+
+      ready();
+      toast('Email updated successfully!', 'success');
+      closeModal();
+      renderSettings();
+    } catch (err) {
+      ready();
+      toast(errMsg(err), 'error');
+    }
+  };
+}
+
+async function openChangePasswordModal() {
+  if (!currentUser) return toast('You must be signed in to change your password.', 'error');
+  const isPasswordUser = currentUser.providerData?.some(prov => prov.providerId === 'password');
+
+  if (!isPasswordUser) {
+    modal(`
+      <div class="text-left space-y-4">
+        <h2 class="text-xl font-bold">🔑 Change Password</h2>
+        <p class="muted text-sm leading-6">You currently sign in using Google. No passwords exist for Google-linked profiles inside SellerFlow.</p>
+        <div class="flex justify-end pt-3">
+          <button data-close-modal class="bg-gold text-black px-4 py-2 rounded-xl text-xs font-bold">Close</button>
+        </div>
+      </div>
+    `);
+    return;
+  }
+
+  const html = `
+    <div class="text-left space-y-4">
+      <div class="flex items-center gap-3 pb-3 border-b border-[#262626]">
+        <div class="text-3xl">🔑</div>
+        <div>
+          <h2 class="text-xl font-bold">Change Password</h2>
+          <p class="muted text-xs">Verify your old password and configure a new one.</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 mt-4">
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1 font-semibold">Current Password</label>
+          <input id="currentPasswordInput" type="password" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white" placeholder="Enter current password">
+        </div>
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1 font-semibold">New Password (Min 6 Characters)</label>
+          <input id="newPasswordInput" type="password" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white" placeholder="Choose a secure password">
+        </div>
+        <div>
+          <label class="text-xs text-zinc-400 block mb-1 font-semibold">Confirm New Password</label>
+          <input id="confirmPasswordInput" type="password" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white" placeholder="Re-type new password">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-4 border-t border-[#262626]">
+        <button data-close-modal class="border border-[#444] px-4 py-2.5 rounded-xl text-xs font-bold text-zinc-300">Cancel</button>
+        <button id="confirmChangePasswordBtn" class="bg-gold text-black px-4 py-2.5 rounded-xl text-xs font-bold hover:brightness-110 transition">Update Password</button>
+      </div>
+    </div>
+  `;
+
+  modal(html);
+
+  $('confirmChangePasswordBtn').onclick = async () => {
+    const currentPassword = $('currentPasswordInput').value;
+    const newPassword = $('newPasswordInput').value;
+    const confirmPassword = $('confirmPasswordInput').value;
+
+    if (!currentPassword) return toast('Please enter your current password.', 'error');
+    if (newPassword.length < 6) return toast('New password must be at least 6 characters.', 'error');
+    if (newPassword !== confirmPassword) return toast('Confirm password does not match.', 'error');
+
+    loading('Securing new password…');
+    try {
+      const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, currentPassword);
+      await currentUser.reauthenticateWithCredential(credential);
+
+      await currentUser.updatePassword(newPassword);
+
+      ready();
+      toast('Password updated successfully!', 'success');
+      closeModal();
+    } catch (err) {
+      ready();
+      toast(errMsg(err), 'error');
+    }
+  };
+}
+
 function openVerificationModal(options = {}){
   const opts = typeof options === 'string' ? { purpose: options } : (options || {});
   window._verificationSuccessCb = opts.onSuccess || null;
@@ -11238,6 +12219,188 @@ $('notificationBtn')?.addEventListener('click',()=>{
   openNotifications();
 });
 $('logoutBtn')?.addEventListener('click',logoutUser);
+
+function debounce(func, delay) {
+  let timeoutId;
+  return function (...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func.apply(this, args);
+    }, delay);
+  };
+}
+
+let activeUsernameCheckSeq = 0;
+
+const debouncedCheckUsername = debounce(async (username) => {
+  if (authMode !== 'register') return;
+  const feedbackEl = document.getElementById('authUsernameFeedback');
+  if (!feedbackEl) return;
+  const clean = usernameClean(username);
+  if (!clean || clean.length < 3) {
+    feedbackEl.textContent = '⚠️ Username must be at least 3 alphanumeric characters.';
+    feedbackEl.className = 'text-xs mt-1 text-amber-500 font-medium';
+    feedbackEl.style.display = 'block';
+    return;
+  }
+  
+  const seq = ++activeUsernameCheckSeq;
+
+  feedbackEl.textContent = '⏳ Checking...';
+  feedbackEl.className = 'text-xs mt-1 text-zinc-400 font-medium';
+  feedbackEl.style.display = 'block';
+
+  let isTaken = false;
+
+  // 1. Direct document check on registeredUsernames collection
+  try {
+    const uSnap = await getDoc(doc(db, 'registeredUsernames', clean));
+    if (uSnap && uSnap.exists()) {
+      isTaken = true;
+    }
+  } catch (e) {
+    console.warn('registeredUsernames client check notice:', e);
+  }
+
+  // 2. Query publicProfiles collection
+  if (!isTaken) {
+    try {
+      const isUnique = await uniqueUsername(clean);
+      if (!isUnique) isTaken = true;
+    } catch (e) {
+      console.warn('uniqueUsername check notice:', e);
+    }
+  }
+
+  // 3. Backend check fallback
+  if (!isTaken) {
+    try {
+      const res = await fetch('/api/auth/check-availability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: clean })
+      });
+      const data = await res.json();
+      if (data && data.success && data.usernameTaken) {
+        isTaken = true;
+      }
+    } catch (e) {
+      console.warn('Backend username check notice:', e);
+    }
+  }
+
+  if (seq !== activeUsernameCheckSeq) return;
+
+  if (isTaken) {
+    feedbackEl.textContent = '❌ That username is already taken.';
+    feedbackEl.className = 'text-xs mt-1 text-red-400 font-medium';
+  } else {
+    feedbackEl.textContent = '✅ Username is available!';
+    feedbackEl.className = 'text-xs mt-1 text-emerald-400 font-medium';
+  }
+}, 300);
+
+let activeEmailCheckSeq = 0;
+
+const debouncedCheckEmail = debounce(async (email) => {
+  if (authMode !== 'register') return;
+  const feedbackEl = document.getElementById('authEmailFeedback');
+  if (!feedbackEl) return;
+  const emailVal = email.trim().toLowerCase();
+  
+  if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+    feedbackEl.textContent = '⚠️ Enter a valid email address.';
+    feedbackEl.className = 'text-xs mt-1 text-amber-500 font-medium';
+    feedbackEl.style.display = 'block';
+    return;
+  }
+  
+  const seq = ++activeEmailCheckSeq;
+
+  feedbackEl.textContent = '⏳ Checking availability...';
+  feedbackEl.className = 'text-xs mt-1 text-zinc-400 font-medium';
+  feedbackEl.style.display = 'block';
+
+  let isTaken = false;
+
+  // 1. Direct Identity Toolkit REST API check (authoritative for Google & Email/Password Auth accounts)
+  try {
+    const apiKey = firebaseConfig.apiKey || 'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk';
+    const restRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailVal, password: 'checkAvailPass999!#', returnSecureToken: true })
+    });
+    const restData = await restRes.json();
+    if (restData && restData.error && restData.error.message === 'EMAIL_EXISTS') {
+      isTaken = true;
+    } else if (restData && restData.idToken) {
+      // Immediately delete temporary account created for verification
+      fetch(`https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: restData.idToken })
+      }).catch(() => {});
+    }
+  } catch (e) {
+    console.warn('Identity Toolkit client email check notice:', e);
+  }
+
+  // 2. Instant client-side check on registeredEmails collection
+  if (!isTaken) {
+    try {
+      const regSnap = await getDoc(doc(db, 'registeredEmails', emailVal));
+      if (regSnap && regSnap.exists()) {
+        isTaken = true;
+      }
+    } catch (e) {
+      console.warn('registeredEmails client check notice:', e);
+    }
+  }
+
+  // 3. Query publicProfiles collection where emailLower == emailVal
+  if (!isTaken) {
+    try {
+      const pubSnap = await getDocs(query(collection(db, 'publicProfiles'), where('emailLower', '==', emailVal), limit(1)));
+      if (!pubSnap.empty) {
+        isTaken = true;
+      }
+    } catch (e) {
+      console.warn('publicProfiles client check notice:', e);
+    }
+  }
+
+  // 4. Authoritative backend check via Express server
+  if (!isTaken) {
+    try {
+      const res = await fetch('/api/auth/check-availability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailVal })
+      });
+      const data = await res.json();
+      if (data && data.success && data.emailTaken) {
+        isTaken = true;
+      }
+    } catch (e) {
+      console.warn('Backend email check notice:', e);
+    }
+  }
+
+  if (seq !== activeEmailCheckSeq) return;
+
+  if (isTaken) {
+    feedbackEl.textContent = '❌ That email is already registered (including Google accounts).';
+    feedbackEl.className = 'text-xs mt-1 text-red-400 font-medium';
+  } else {
+    feedbackEl.textContent = '✅ Email is available!';
+    feedbackEl.className = 'text-xs mt-1 text-emerald-400 font-medium';
+  }
+}, 300);
+
+$('authUsername')?.addEventListener('input', (e) => debouncedCheckUsername(e.target.value));
+$('authEmail')?.addEventListener('input', (e) => debouncedCheckEmail(e.target.value));
+
 if($('authForm')){
   $('authForm').onsubmit=async e=>{
     e.preventDefault();
@@ -11256,13 +12419,105 @@ if($('authForm')){
         const c=await createUserWithEmailAndPassword(auth,email,password);
         await updateProfile(c.user,{displayName:name});
         await createMissingProfile(c.user,{name,username,usernameLower:username,role:'seller',termsAccepted:true,termsAcceptedAt:serverTimestamp(),termsVersion:appTermsVersion});
-        sendEmailVerification(c.user).catch(e=>console.warn('Verification email skipped:',e));
+        try {
+          await sendEmailVerification(c.user);
+          toast('Verification email sent! Check your inbox.', 'success', 4500);
+        } catch(ve){
+          console.warn('Verification email error:', ve);
+          toast('Account created. Please check your inbox for verification.', 'info', 4500);
+        }
+        ready();
+        showAuth('verifyEmail', c.user.email);
+        startResendCooldown(60);
       }else{
-        await signInWithEmailAndPassword(auth,email,password);
+        const cred=await signInWithEmailAndPassword(auth,email,password);
+        const u=cred.user;
+        if(!isUserEmailVerified(u)){
+          ready();
+          showAuth('verifyEmail', u.email);
+          sendEmailVerification(u).then(()=>{
+            toast('A verification email was sent to your inbox.', 'info', 4000);
+            startResendCooldown(60);
+          }).catch(e=>console.warn('Login verification email notice:', e));
+        }
       }
     }catch(e){if($('authError'))$('authError').textContent=errMsg(e);ready()}
   };
 }
+$('submitVerificationCodeBtn')?.addEventListener('click', async () => {
+  const codeInput = document.getElementById('verificationCodeInput');
+  const code = codeInput ? codeInput.value.trim() : '';
+  if (!code) {
+    return toast('Please enter the 6-digit verification code.', 'error');
+  }
+  if (!/^\d{6}$/.test(code)) {
+    return toast('Verification code must be exactly 6 numeric digits.', 'error');
+  }
+
+  try {
+    const u = auth?.currentUser;
+    if (!u) {
+      throw new Error('Session expired. Please sign in again.');
+    }
+    loading('Verifying code…');
+    const token = await u.getIdToken(true);
+    const resp = await fetch('/api/auth/verify-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ code })
+    });
+    const data = await resp.json();
+    ready();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Verification failed');
+    }
+
+    try {
+      await setDoc(doc(db, 'users', u.uid), {
+        emailVerified: true,
+        emailVerifiedAt: serverTimestamp()
+      }, { merge: true });
+    } catch (syncErr) {
+      console.warn('Client-side Firestore email status sync notice:', syncErr.message);
+    }
+
+    toast('Email verified successfully! Welcome to SellerFlow.', 'success', 3500);
+    // Reload the user in Firebase Auth client SDK so that u.emailVerified matches the server status
+    await u.reload();
+    // Proceed to app
+    showApp();
+    await startUser(u);
+  } catch (err) {
+    ready();
+    toast(errMsg(err), 'error');
+  }
+});
+$('resendVerificationBtn')?.addEventListener('click',async()=>{
+  if(_resendCooldownSeconds>0)return;
+  try{
+    const u=auth?.currentUser;
+    if(!u)throw Error('Session expired. Please sign in again.');
+    loading('Resending verification email…');
+    await sendEmailVerification(u);
+    ready();
+    toast('Verification email resent! Please check your inbox.', 'success', 4000);
+    startResendCooldown(60);
+  }catch(err){
+    ready();
+    toast(errMsg(err), 'error');
+  }
+});
+$('changeEmailBtn')?.addEventListener('click',async()=>{
+  try{
+    if(auth)await signOut(auth).catch(()=>{});
+  }catch(_){}
+  currentUser=null;
+  showAuth('login');
+});
 $('googleBtn')?.addEventListener('click',async()=>{try{if(authMode==='register'){if(!$('termsAccept')?.checked)throw Error('Please read and agree to the Terms & Conditions before creating your account.');await ensureTerms()}await triggerGoogleSignIn()}catch(e){toast(errMsg(e),'error')}finally{ready()}});
 $('resetBtn')?.addEventListener('click',async()=>{const email=$('authEmail')?.value.trim();if(!email)return toast('Enter your email first','error');try{await sendPasswordResetEmail(auth,email);toast('Password reset email sent','success')}catch(e){toast(errMsg(e),'error')}});
 let bootingUid=null;
@@ -11286,10 +12541,24 @@ async function startUser(u){
     }catch(e){console.warn('Generated username check skipped:',e)}
     await createMissingProfile(u,{name:u.displayName||'SellerFlow User',username,usernameLower:username.toLowerCase(),role:isAdmin?'admin':'seller',verified:isAdmin});
   }
+  if(u&&u.email){
+    const emLower=u.email.toLowerCase().trim();
+    setDoc(doc(db,'registeredEmails',emLower),{uid:u.uid,email:u.email,provider:u.providerData?.[0]?.providerId||'google.com',updatedAt:serverTimestamp()},{merge:true}).catch(()=>{});
+  }
+  if(currentProfile&&currentProfile.username){
+    const unLower=currentProfile.username.toLowerCase().trim();
+    setDoc(doc(db,'registeredUsernames',unLower),{uid:u.uid,username:currentProfile.username,updatedAt:serverTimestamp()},{merge:true}).catch(()=>{});
+  }
   if(currentProfile?.blocked){
     await signOut(auth);
     bootingUid=null;
     throw Error('This account is blocked. Contact the administrator.');
+  }
+  if(currentProfile?.language && typeof setLanguage === 'function'){
+    try{ setLanguage(currentProfile.language, false); }catch(_){}
+  }
+  if(currentProfile?.theme){
+    try{ setTheme(currentProfile.theme, true); }catch(_){}
   }
   loadCart();
   await ensureTerms();
@@ -11426,6 +12695,28 @@ async function init(){
     firebaseApp=initializeApp(firebaseConfig);
     auth=getAuth(firebaseApp);
     db=getFirestore(firebaseApp);
+
+    // Handle email verification action links if opened in-app
+    try {
+      const _urlParams = new URLSearchParams(window.location.search || '');
+      const _actMode = _urlParams.get('mode');
+      const _actCode = _urlParams.get('oobCode');
+      if (_actMode === 'verifyEmail' && _actCode) {
+        if (typeof auth.applyActionCode === 'function') {
+          await auth.applyActionCode(_actCode);
+          toast('Your email has been successfully verified! Welcome to SellerFlow.', 'success', 5000);
+          if (auth.currentUser) await auth.currentUser.reload();
+          try {
+            const cleanUrl = window.location.origin + window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+          } catch (_) {}
+        }
+      }
+    } catch (actErr) {
+      console.warn('Action code handling notice:', actErr);
+      toast('Verification link may have expired or was already used.', 'warning', 5000);
+    }
+
     try {
       if (typeof initCapacitorHandlers === 'function') {
         await initCapacitorHandlers();
@@ -11447,6 +12738,15 @@ async function init(){
         return;
       }
       
+      // Verification check: email/password accounts must be email-verified before full access
+      if (!isUserEmailVerified(u)) {
+        currentUser = u;
+        isAdmin = false;
+        showAuth('verifyEmail', u.email);
+        ready();
+        return;
+      }
+
       // OPTIMIZATION: Instantly display feed shell and remove spinner while booting user profile in background
       currentUser=u;
       isAdmin=isUserAdminEmail(u.email);
