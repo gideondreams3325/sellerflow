@@ -298,21 +298,24 @@ console.log('--- Starting SellerFlow Personalized Discovery & Recommendation Tes
   console.log('  ✓ Multi-tenant scoping guarantees user profile separation');
 }
 
-// Test 16: Inactive/hidden/violation posts are strictly excluded from candidates
+// Test 16: Inactive/hidden/violation and user-deleted posts are strictly excluded from candidates
 {
-  console.log('Test 16: Exclusion of hidden, unapproved, and violation posts');
+  console.log('Test 16: Exclusion of hidden, unapproved, violation, and user-deleted posts');
   const posts = [
-    { id: 'p_ok', sellerId: 's1', status: 'published' },
+    { id: 'p_ok', sellerId: 's1', status: 'published', safeContent: false },
     { id: 'p_hidden', sellerId: 's1', status: 'hidden' },
     { id: 'p_viol', sellerId: 's1', status: 'published', reviewStatus: 'violation' },
     { id: 'p_draft', sellerId: 's1', status: 'draft' },
-    { id: 'p_unsafe', sellerId: 's1', status: 'published', text: 'Free momo money flip scam' }
+    { id: 'p_unsafe', sellerId: 's1', status: 'published', text: 'Free momo money flip scam' },
+    { id: 'p_user_deleted', sellerId: 's1', status: 'published', isDeleted: true },
+    { id: 'p_user_removed', sellerId: 's1', status: 'removed' },
+    { id: 'p_user_takedown', sellerId: 's1', status: 'published', removedAt: Date.now() }
   ];
 
   const eligible = filterCandidatePosts(posts, { uid: 'u1' }, createEmptyProfile('u1'));
   assert.strictEqual(eligible.length, 1, 'Only p_ok must pass candidate filter');
   assert.strictEqual(eligible[0].id, 'p_ok');
-  console.log('  ✓ Filter strictly blocks hidden, unapproved, violation, and unsafe posts');
+  console.log('  ✓ Filter strictly blocks hidden, unapproved, violation, and user-deleted posts');
 }
 
 // Test 17: Post privacy rules (followers-only vs private vs public) are strictly respected

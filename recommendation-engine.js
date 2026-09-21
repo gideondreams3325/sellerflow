@@ -363,6 +363,9 @@ export function applyEventToProfile(profile, event, post = null) {
 export function isSafePost(p) {
   if (!p) return false;
   if (p.violationDetected || p.status === 'hidden' || p.reviewStatus === 'violation') return false;
+  if (p.status === 'removed' || p.status === 'taken_down' || p.status === 'deleted' || p.isDeleted || p.hidden) return false;
+  if (p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down') return false;
+  if (p.removedAt || p.takenDownAt) return false;
   const t = (p.text || '').toLowerCase();
   const bannedPatterns = [
     /\b(counterfeit|fake momo|money flip|hack momo|cloned card)\b/i,
@@ -387,7 +390,9 @@ export function filterCandidatePosts(posts = [], user = null, profile = null, op
 
     // Must be published or approved
     if (p.status !== 'published' && p.status !== 'approved') return false;
-    if (p.status === 'hidden' || p.reviewStatus === 'violation') return false;
+    if (p.status === 'hidden' || p.status === 'removed' || p.status === 'taken_down' || p.status === 'deleted' || p.isDeleted || p.hidden) return false;
+    if (p.reviewStatus === 'violation' || p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down') return false;
+    if (p.removedAt || p.takenDownAt) return false;
 
     // Safety check
     if (!isSafePost(p)) return false;

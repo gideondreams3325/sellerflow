@@ -4255,9 +4255,209 @@ async function renderPage(targetPostId, options){
 }
 
 let _cachedFeedPosts = [];
+window._sfRemovedPostIds = window._sfRemovedPostIds || new Set();
+window._sfSessionDeletedPostIds = window._sfSessionDeletedPostIds || new Set();
+
+// Ensure clean recovery from stale/poisoned cache keys from previous versions
+try {
+  sessionStorage.removeItem('sf_ranked_feed_cache');
+} catch(_) {}
+
+try {
+  const savedRemoved = JSON.parse(localStorage.getItem('sf_security_removed_posts') || '[]');
+  if (Array.isArray(savedRemoved)) {
+    savedRemoved.forEach(id => { if (id) window._sfRemovedPostIds.add(id); });
+  }
+} catch(_) {}
+
+function markPostRemovedBySecurity(postId) {
+  if (!postId) return;
+  window._sfRemovedPostIds.add(postId);
+  window._sfSessionDeletedPostIds.add(postId);
+  try {
+    const list = Array.from(window._sfRemovedPostIds).slice(-1000);
+    localStorage.setItem('sf_security_removed_posts', JSON.stringify(list));
+  } catch(_) {}
+}
+window.markPostRemovedBySecurity = markPostRemovedBySecurity;
+
+function isPostRemovedBySecurity(p) {
+  if (!p) return true;
+  const id = typeof p === 'string' ? p : p.id;
+  if (id && window._sfSessionDeletedPostIds && window._sfSessionDeletedPostIds.has(id)) return true;
+  if (typeof p === 'object') {
+    if (p.status === 'removed' || p.status === 'taken_down' || p.status === 'deleted' || p.status === 'hidden' || p.isDeleted || p.hidden) return true;
+    if (p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down' || p.reviewStatus === 'violation') return true;
+    if (p.removedAt || p.takenDownAt) return true;
+    // Active published post in good standing is always safe to display
+    if ((p.status === 'published' || p.status === 'approved') && !p.isDeleted && !p.removedAt && !p.takenDownAt && p.reviewStatus !== 'violation' && p.reviewStatus !== 'removed' && p.status !== 'hidden' && !p.hidden) {
+      return false;
+    }
+  }
+  if (id && window._sfRemovedPostIds && window._sfRemovedPostIds.has(id)) return true;
+  return false;
+}
+window.isPostRemovedBySecurity = isPostRemovedBySecurity;
+
+async function deleteUserPost(postId) {
+  if (!postId) return;
+  if (!currentUser) return showAuthPrompt('delete your posts');
+
+  const ok = await customConfirm({
+    title: 'Delete Your Post?',
+    message: 'Are you sure you want to permanently delete this post? It will be immediately removed and hidden from the For You feed.',
+    warningText: 'This action cannot be undone. All views, comments, and likes on this post will be permanently deleted.',
+    confirmText: 'Delete Post',
+    cancelText: 'Cancel',
+    type: 'danger',
+    icon: '🗑️',
+    tag: 'Permanent Deletion'
+  });
+  if (!ok) return;
+
+  try {
+    loading('Deleting your post…');
+    // Instantly purge and hide from DOM, feeds, and caches
+    if (typeof purgeAndHidePostImmediately === 'function') {
+      purgeAndHidePostImmediately(postId, 'Deleted by post creator');
+    }
+    // Hard delete document from Firestore
+    await deleteDoc(doc(db, 'posts', postId)).catch(async () => {
+      await updateDoc(doc(db, 'posts', postId), {
+        status: 'removed',
+        isDeleted: true,
+        hidden: true,
+        removedAt: serverTimestamp(),
+        removedBy: currentUser.uid
+      }).catch(() => {});
+    });
+
+    // Remove from in-memory profile cache if present
+    if (window._cachedProfileData?.[currentUser.uid]?.posts) {
+      window._cachedProfileData[currentUser.uid].posts = window._cachedProfileData[currentUser.uid].posts.filter(x => x.id !== postId);
+    }
+
+    toast('Your post was deleted and removed from SellerFlow', 'success', 3500);
+    if (typeof closeModal === 'function') closeModal();
+    if (currentPage === 'feed') {
+      const reelFeed = document.getElementById('reelFeed');
+      if (!reelFeed || reelFeed.querySelectorAll('.reel-card').length === 0) {
+        if (typeof renderFeed === 'function') renderFeed();
+      }
+    } else if (currentPage === 'profile') {
+      if (typeof renderProfile === 'function') renderProfile('posts');
+    }
+  } catch (err) {
+    toast(errMsg(err), 'error');
+  } finally {
+    ready();
+  }
+}
+window.deleteUserPost = deleteUserPost;
+
+function purgeAndHidePostImmediately(postId, reason = 'Security team takedown') {
+  if (!postId) return;
+  markPostRemovedBySecurity(postId);
+
+  // 1. Instantly purge from in-memory and cached feed lists
+  if (window._lastRankedPostsCache && Array.isArray(window._lastRankedPostsCache)) {
+    window._lastRankedPostsCache = window._lastRankedPostsCache.filter(p => p.id !== postId);
+    try {
+      sessionStorage.setItem('sf_ranked_feed_cache', JSON.stringify({
+        posts: window._lastRankedPostsCache.slice(0, 30),
+        timestamp: Date.now()
+      }));
+    } catch(_) {}
+  }
+
+  if (window._cachedFeedPosts && Array.isArray(window._cachedFeedPosts)) {
+    window._cachedFeedPosts = window._cachedFeedPosts.filter(p => p.id !== postId);
+    try {
+      localStorage.setItem('sf_cached_feed_posts', JSON.stringify(window._cachedFeedPosts.slice(0, 30)));
+    } catch(_) {}
+  }
+
+  if (window._sfCachedPosts && typeof window._sfCachedPosts.delete === 'function') {
+    window._sfCachedPosts.delete(postId);
+  }
+
+  // 2. Hide and delete matching cards from the DOM across the document immediately
+  const selector = `.reel-card[data-reel-id="${postId}"], [data-post-id="${postId}"], [data-feed-post-id="${postId}"], #feedItem-${postId}`;
+  const matchingCards = document.querySelectorAll(selector);
+  matchingCards.forEach(card => {
+    // Stop playback and unload media immediately
+    const mediaEls = card.querySelectorAll('video, audio');
+    mediaEls.forEach(m => {
+      try { m.pause(); m.src = ''; m.load(); } catch(_) {}
+    });
+
+    const reelFeed = document.getElementById('reelFeed');
+    if (reelFeed && reelFeed.contains(card)) {
+      const nextCard = card.nextElementSibling;
+      const prevCard = card.previousElementSibling;
+      card.remove();
+
+      if (nextCard && typeof nextCard.scrollIntoView === 'function') {
+        nextCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (prevCard && typeof prevCard.scrollIntoView === 'function') {
+        prevCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      const remainingCards = reelFeed.querySelectorAll('.reel-card');
+      if (remainingCards.length === 0) {
+        reelFeed.innerHTML = `<div class="h-full flex items-center justify-center p-6"><div class="card p-8 text-center max-w-md"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2 text-sm">Share a safe photo or video to start building your audience.</p><button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button></div></div>`;
+        document.getElementById('openFeedUploadEmpty')?.addEventListener('click', () => currentUser ? openPostModal() : showAuthPrompt('upload videos or photos to For You'));
+      }
+    } else {
+      card.remove();
+    }
+  });
+
+  // 3. Close comments modal or detail view if open for this post
+  if (window._currentCommentsPostId === postId) {
+    if (typeof closeModal === 'function') closeModal();
+    window._currentCommentsPostId = null;
+  }
+
+  // 4. Broadcast to other open tabs and windows
+  try {
+    if (window._sfSecurityChannel) {
+      window._sfSecurityChannel.postMessage({ type: 'POST_REMOVED', postId, reason, timestamp: Date.now() });
+    }
+    localStorage.setItem('sf_post_takedown_event', JSON.stringify({ postId, reason, timestamp: Date.now() }));
+  } catch(_) {}
+}
+window.purgeAndHidePostImmediately = purgeAndHidePostImmediately;
+
+// Real-time cross-tab listener for instant security removals
+try {
+  if (typeof BroadcastChannel !== 'undefined') {
+    window._sfSecurityChannel = new BroadcastChannel('sf_security_moderation');
+    window._sfSecurityChannel.onmessage = (e) => {
+      if (e?.data?.type === 'POST_REMOVED' && e.data.postId) {
+        purgeAndHidePostImmediately(e.data.postId, e.data.reason);
+      }
+    };
+  }
+} catch(_) {}
+
+window.addEventListener('storage', (e) => {
+  if (e.key === 'sf_post_takedown_event' && e.newValue) {
+    try {
+      const data = JSON.parse(e.newValue);
+      if (data?.postId) purgeAndHidePostImmediately(data.postId, data.reason);
+    } catch(_) {}
+  }
+});
+
 try {
   const savedFeed = localStorage.getItem('sf_cached_feed_posts');
-  if(savedFeed) _cachedFeedPosts = JSON.parse(savedFeed);
+  if(savedFeed) {
+    const rawList = JSON.parse(savedFeed);
+    if(Array.isArray(rawList)) {
+      _cachedFeedPosts = rawList.filter(p => !isPostRemovedBySecurity(p));
+    }
+  }
 } catch(_) {}
 
 function _renderFeedHTML(feedPosts, targetPostId, options){
@@ -4330,6 +4530,20 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
     const sId=b.dataset.scamNotice;
     showNoStoreScamNotice(sId);
   });
+  document.querySelectorAll('[data-admin-takedown-reel]').forEach(b=>{
+    b.onclick=(e)=>{
+      e.stopPropagation();
+      const pId = b.dataset.adminTakedownReel;
+      if(pId && typeof adminTakeDown === 'function') adminTakeDown(pId);
+    };
+  });
+  document.querySelectorAll('[data-user-delete-reel]').forEach(b=>{
+    b.onclick=(e)=>{
+      e.stopPropagation();
+      const pId = b.dataset.userDeleteReel;
+      if(pId && typeof deleteUserPost === 'function') deleteUserPost(pId);
+    };
+  });
   if(typeof ensureFeedStoresChecked === 'function') {
     const pList = feedPosts || [];
     ensureFeedStoresChecked(pList).catch(()=>{});
@@ -4340,14 +4554,17 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
 async function renderFeed(targetPostId, options){
   // 1. Instant Cache-First Render (0ms):
   if(_cachedFeedPosts && _cachedFeedPosts.length > 0 && !targetPostId){
-    _renderFeedHTML(_cachedFeedPosts, targetPostId, options);
+    const cleanCached = _cachedFeedPosts.filter(p => !isPostRemovedBySecurity(p));
+    if(cleanCached.length > 0){
+      _renderFeedHTML(cleanCached, targetPostId, options);
+    }
   }
 
   // 2. Fetch fresh posts from Firestore
   try {
     const snap = await getDocs(query(collection(db,'posts'),limit(100)));
     const posts = snap.docs.map(d=>({id:d.id,...d.data()}))
-      .filter(p=>p.sellerId&&(p.status==='published'||p.status==='approved')&&p.status!=='hidden'&&p.reviewStatus!=='violation')
+      .filter(p=>p.sellerId && !isPostRemovedBySecurity(p) && (p.status==='published'||p.status==='approved')&&p.status!=='hidden'&&p.reviewStatus!=='violation')
       .sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
     
     _cachedFeedPosts = posts;
@@ -4357,7 +4574,7 @@ async function renderFeed(targetPostId, options){
     if(targetPostId && !feedPosts.some(p=>p.id===targetPostId)){
       try{
         const s = await getDoc(doc(db,'posts',targetPostId));
-        if(snapshotExists(s)&&s.data().status!=='hidden'&&s.data().reviewStatus!=='violation') feedPosts.unshift({id:s.id,...s.data()});
+        if(snapshotExists(s) && !isPostRemovedBySecurity({id: s.id, ...s.data()}) && s.data().status!=='hidden'&&s.data().reviewStatus!=='violation') feedPosts.unshift({id:s.id,...s.data()});
       }catch(_){}
     } else if(targetPostId){
       const idx = feedPosts.findIndex(p=>p.id===targetPostId);
@@ -4370,9 +4587,8 @@ async function renderFeed(targetPostId, options){
     _renderFeedHTML(feedPosts, targetPostId, options);
   } catch(e) {
     console.warn('Feed fetch fallback:', e);
-    if(!_cachedFeedPosts || !_cachedFeedPosts.length){
-      _renderFeedHTML([], targetPostId, options);
-    }
+    const cleanFallback = (_cachedFeedPosts || []).filter(p => !isPostRemovedBySecurity(p));
+    _renderFeedHTML(cleanFallback, targetPostId, options);
   }
 }
 function verifyBadge(s){return s?.verified?` <span class="verified-badge" title="SellerFlow verified">✓</span>`:''}
@@ -4483,7 +4699,39 @@ function postCard(p, idx = 0){
           <span class="reel-action-count">Share</span>
         </div>
 
-        <!-- 6. Spinning audio disc with avatar artwork -->
+        <!-- 6. More options & moderation button -->
+        <div class="reel-action-group">
+          <button type="button" class="reel-action text-white hover:text-gold transition" data-post-action="options" data-id="${p.id}" title="More options & report">
+            <svg class="w-6 h-6 text-white fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+            </svg>
+          </button>
+          <span class="reel-action-count">More</span>
+        </div>
+
+        ${((isAdmin || currentProfile?.role === 'admin' || (typeof isUserAdminEmail === 'function' && currentUser?.email && isUserAdminEmail(currentUser.email))) ? `
+        <!-- Security Team Direct Takedown -->
+        <div class="reel-action-group">
+          <button type="button" class="reel-action bg-red-950/80 border border-red-600 text-red-300 hover:bg-red-900 active:scale-95 transition" data-admin-takedown-reel="${p.id}" title="Security Team: Take down & delete post immediately from For You">
+            <span class="text-sm">🛡️</span>
+          </button>
+          <span class="reel-action-count text-[9px] text-red-400 font-bold uppercase tracking-wider">Remove</span>
+        </div>
+        ` : '')}
+
+        ${(isMine ? `
+        <!-- Creator Direct Delete Button -->
+        <div class="reel-action-group">
+          <button type="button" class="reel-action bg-red-950/80 border border-red-500/80 text-red-400 hover:bg-red-900 active:scale-95 transition" data-user-delete-reel="${p.id}" title="Delete your post">
+            <svg class="w-6 h-6 text-red-400 fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </button>
+          <span class="reel-action-count text-[9px] text-red-400 font-bold uppercase tracking-wider">Delete</span>
+        </div>
+        ` : '')}
+
+        <!-- 7. Spinning audio disc with avatar artwork -->
         <div class="reel-action-group">
           <button type="button" class="reel-sound-disc" data-post-action="sound" data-id="${p.id}" title="Sound: ${esc(soundText)}">
             <img src="${esc(avatarUrl)}" loading="lazy" decoding="async" class="w-6 h-6 rounded-full object-cover pointer-events-none" onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=${esc(s.username||p.sellerId)}'">
@@ -12133,7 +12381,35 @@ async function renderAdmin(){
   }
 }
 // adminPostCard is defined cleanly later with rich media previews and renderAdminPostItem
-async function reviewPost(uid,approve){try{await updateDoc(doc(db,'posts',uid),{status:approve?'published':'removed',reviewStatus:approve?'reviewed':'removed',reviewedAt:serverTimestamp(),reviewedBy:currentUser.uid});const p=await getDoc(doc(db,'posts',uid));if(snapshotExists(p)){const x=p.data();await addDoc(collection(db,'notifications'),{recipientId:x.sellerId,senderName:'SellerFlow',title:approve?'SellerFlow post review complete':'SellerFlow post removed',message:approve?'Your post remains live on SellerFlow after safety review.':'Your post was removed by SellerFlow because it did not meet our community or safety requirements.',fromAdmin:true,read:false,createdAt:serverTimestamp()})}toast(approve?'Post approved':'Post rejected','success');navigate('admin')}catch(e){toast(errMsg(e),'error')}}
+async function reviewPost(uid,approve){
+  try{
+    if(!approve){
+      if(typeof purgeAndHidePostImmediately==='function') purgeAndHidePostImmediately(uid, 'Rejected during safety review');
+      await deleteDoc(doc(db,'posts',uid)).catch(async()=>{
+        await updateDoc(doc(db,'posts',uid),{status:'removed',reviewStatus:'removed',safeContent:false,isDeleted:true,hidden:true,removedAt:serverTimestamp(),reviewedAt:serverTimestamp(),reviewedBy:currentUser?.uid||'admin'});
+      });
+    } else {
+      await updateDoc(doc(db,'posts',uid),{status:'published',reviewStatus:'reviewed',safeContent:true,reviewedAt:serverTimestamp(),reviewedBy:currentUser?.uid||'admin'});
+    }
+    const p=await getDoc(doc(db,'posts',uid)).catch(()=>null);
+    if(p && snapshotExists(p)){
+      const x=p.data();
+      if(x?.sellerId && (!currentUser || x.sellerId !== currentUser.uid)){
+        await addDoc(collection(db,'notifications'),{
+          recipientId:x.sellerId,
+          senderName:'SellerFlow',
+          title:approve?'SellerFlow post review complete':'SellerFlow post removed',
+          message:approve?'Your post remains live on SellerFlow after safety review.':'Your post was removed and deleted by SellerFlow safety team because it did not meet our community requirements.',
+          fromAdmin:true,
+          read:false,
+          createdAt:serverTimestamp()
+        }).catch(()=>{});
+      }
+    }
+    toast(approve?'Post approved':'Post rejected and deleted','success');
+    navigate('admin');
+  }catch(e){toast(errMsg(e),'error')}
+}
 
 async function adminTakeDown(arg1,arg2){
   let type='post',id=arg1;
@@ -12142,7 +12418,7 @@ async function adminTakeDown(arg1,arg2){
   const ok = await customConfirm({
     title: `Take Down ${type.toUpperCase()}?`,
     message: `Are you sure you want to take down this ${type} from SellerFlow?`,
-    warningText: 'The content will immediately be taken down from public view.',
+    warningText: 'The content will immediately be removed and deleted from the live discovery feed.',
     confirmText: `Take Down ${type}`,
     cancelText: 'Cancel',
     type: 'danger',
@@ -12152,17 +12428,22 @@ async function adminTakeDown(arg1,arg2){
   if(!ok) return;
   try{
     if(type==='post'){
-      const s=await getDoc(doc(db,'posts',id));
-      if(s&&snapshotExists(s)){
-        const x=s.data();
-        await updateDoc(doc(db,'posts',id),{status:'removed',reviewStatus:'removed',removedAt:serverTimestamp(),removedBy:currentUser?currentUser.uid:'admin'});
-        if(x&&x.sellerId&&(!currentUser||x.sellerId!==currentUser.uid)){
-          await addDoc(collection(db,'notifications'),{recipientId:x.sellerId,senderName:'SellerFlow',title:'Post taken down',message:'An administrator removed your SellerFlow post after a platform safety review.',fromAdmin:true,postId:id,read:false,createdAt:serverTimestamp()});
-        }
-      }else{
-        await deleteDoc(doc(db,'posts',id));
-      }
-      toast('Post taken down','success');
+      if(typeof purgeAndHidePostImmediately==='function') purgeAndHidePostImmediately(id, 'Security team takedown');
+      try {
+        const token = currentUser ? await currentUser.getIdToken() : '';
+        await fetch('/api/admin/takedown', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({ type: 'post', id, reason: 'Administrative safety takedown' })
+        });
+      } catch (_) {}
+      await deleteDoc(doc(db,'posts',id)).catch(async () => {
+        await updateDoc(doc(db,'posts',id),{status:'removed',reviewStatus:'removed',safeContent:false,isDeleted:true,hidden:true,removedAt:serverTimestamp(),removedBy:currentUser?currentUser.uid:'admin'}).catch(()=>{});
+      });
+      toast('Post taken down and deleted from For You feed','success');
     }else if(type==='product'){
       await deleteDoc(doc(db,'products',id));
       toast('Product removed','success');
@@ -14587,7 +14868,12 @@ init();
 
   function isSafePost(p){
     if(!p) return false;
+    const pid = typeof p === 'string' ? p : p.id;
+    if(pid && window._sfSessionDeletedPostIds && window._sfSessionDeletedPostIds.has(pid)) return false;
     if(p.violationDetected || p.status==='hidden' || p.reviewStatus==='violation') return false;
+    if(p.status==='removed' || p.status==='taken_down' || p.status==='deleted' || p.isDeleted || p.hidden) return false;
+    if(p.reviewStatus==='removed' || p.reviewStatus==='taken_down') return false;
+    if(p.removedAt || p.takenDownAt) return false;
     const t=(p.text||'').toLowerCase();
     for(const r of GHANA_MODERATION_RULES){
       if(r.violationRegex.test(t)) return false;
@@ -14759,6 +15045,7 @@ init();
   async function getRankedPosts(forceRefresh = false){
     // 1. Memory cache check: instant response with background refresh if stale
     if(!forceRefresh && _lastRankedPostsCache && _lastRankedPostsCache.length > 0){
+      _lastRankedPostsCache = _lastRankedPostsCache.filter(p => !isPostRemovedBySecurity(p));
       const isStale = Date.now() - _lastRankedPostsTime >= RANKED_POSTS_TTL;
       if(isStale && !_isRefreshingRankedPosts){
         _isRefreshingRankedPosts = true;
@@ -14776,7 +15063,7 @@ init();
         if(rawSaved){
           const parsed = JSON.parse(rawSaved);
           if(Array.isArray(parsed?.posts) && parsed.posts.length > 0){
-            _lastRankedPostsCache = parsed.posts;
+            _lastRankedPostsCache = parsed.posts.filter(p => !isPostRemovedBySecurity(p));
             _lastRankedPostsTime = parsed.timestamp || Date.now();
             setTimeout(() => {
               fetchAndRankPosts().catch(()=>{});
@@ -14798,6 +15085,7 @@ init();
 
       const raw = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => {
         if(!p.sellerId) return false;
+        if(isPostRemovedBySecurity(p)) return false;
         if(p.status !== 'published' && p.status !== 'approved') return false;
         if(p.status === 'hidden' || p.reviewStatus === 'violation') return false;
         if(!isSafePost(p)) return false;
@@ -14818,19 +15106,19 @@ init();
       scored.sort((a, b) => b.score - a.score);
 
       const ranked = applyDiversityReRanking(scored);
-      _lastRankedPostsCache = ranked;
+      _lastRankedPostsCache = ranked.filter(p => !isPostRemovedBySecurity(p));
       _lastRankedPostsTime = Date.now();
       try{
         sessionStorage.setItem('sf_ranked_feed_cache', JSON.stringify({
-          posts: ranked.slice(0, 30),
+          posts: _lastRankedPostsCache.slice(0, 30),
           timestamp: _lastRankedPostsTime
         }));
       }catch(_){}
-      return [...ranked];
+      return [..._lastRankedPostsCache];
     }catch(err){
       console.warn('[RankedPosts] Discovery fallback to baseline:', err?.message);
       const snap = await getDocs(query(collection(db, 'posts'), limit(60)));
-      return snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.sellerId && (p.status==='published'||p.status==='approved') && p.status!=='hidden' && p.reviewStatus!=='violation');
+      return snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.sellerId && !isPostRemovedBySecurity(p) && (p.status==='published'||p.status==='approved') && p.status!=='hidden' && p.reviewStatus!=='violation' && isSafePost(p));
     }
   }
   window.getRankedPosts = getRankedPosts;
@@ -14857,11 +15145,11 @@ init();
     }
 
     const posts = await getRankedPosts(!!options?.forceRefresh);
-    let feedPosts=[...posts];
+    let feedPosts = posts.filter(p => !isPostRemovedBySecurity(p));
     if(targetPostId && !feedPosts.some(p=>p.id===targetPostId)){
       try{
         const s=await getDoc(doc(db,'posts',targetPostId));
-        if(snapshotExists(s)&&s.data().status!=='hidden'&&s.data().reviewStatus!=='violation')feedPosts.unshift({id:s.id,...s.data()});
+        if(snapshotExists(s) && !isPostRemovedBySecurity({id: s.id, ...s.data()}) && s.data().status!=='hidden'&&s.data().reviewStatus!=='violation')feedPosts.unshift({id:s.id,...s.data()});
       }catch(_){}
     } else if(targetPostId){
       const idx=feedPosts.findIndex(p=>p.id===targetPostId);
@@ -14952,7 +15240,40 @@ init();
         showCopyrightNoticeModal(copyBtn.dataset.copyrightInfo);
         return;
       }
+      const adminReelTakedown = e.target.closest('[data-admin-takedown-reel]');
+      if(adminReelTakedown){
+        e.stopPropagation();
+        const pId = adminReelTakedown.dataset.adminTakedownReel;
+        if(pId && typeof adminTakeDown === 'function') adminTakeDown(pId);
+        return;
+      }
+      const userReelDelete = e.target.closest('[data-user-delete-reel]');
+      if(userReelDelete){
+        e.stopPropagation();
+        const pId = userReelDelete.dataset.userDeleteReel;
+        if(pId && typeof deleteUserPost === 'function') deleteUserPost(pId);
+        return;
+      }
     });
+
+    // Real-time security moderation listener: instantly delete & hide any taken down post
+    if(window._sfFeedSecurityUnsub) {
+      try { window._sfFeedSecurityUnsub(); } catch(_) {}
+      window._sfFeedSecurityUnsub = null;
+    }
+    try {
+      window._sfFeedSecurityUnsub = onSnapshot(query(collection(db, 'posts'), limit(100)), (snap) => {
+        snap.docChanges().forEach(change => {
+          const id = change.doc.id;
+          const d = change.doc.data();
+          if (change.type === 'removed' || isPostRemovedBySecurity({ id, ...d })) {
+            purgeAndHidePostImmediately(id, 'Real-time security sync');
+          }
+        });
+      }, (err) => {
+        console.warn('Real-time feed security sync:', err?.message);
+      });
+    } catch(_) {}
 
     // Progressive infinite-scroll append for subsequent batches
     let isAppending = false;
@@ -15074,8 +15395,9 @@ init();
   };
 
   function openPostSettingsModal(id,p){
-    const isMine=(currentUser&&p.sellerId===currentUser.uid)||isAdmin;
-    const isCreator=Boolean(currentUser&&p.sellerId===currentUser.uid);
+    p = p || (window._sfCachedPosts && window._sfCachedPosts.get(id)) || (_cachedFeedPosts && _cachedFeedPosts.find(x => x.id === id)) || {};
+    const isCreator=Boolean(currentUser&&(p.sellerId===currentUser.uid || p.creatorId===currentUser.uid || p.userId===currentUser.uid));
+    const isMine=isCreator||isAdmin;
     const canReport=!isCreator||isAdmin;
     const curPrivacy=p.privacy||'public';
     modal(`<div>
@@ -15139,6 +15461,19 @@ init();
         </div>
       </div>
       `}
+
+      ${(isAdmin || currentProfile?.role === 'admin' || (typeof isUserAdminEmail === 'function' && currentUser?.email && isUserAdminEmail(currentUser.email))) ? `
+      <div class="mt-4 p-4 rounded-2xl bg-[#1e1010] border border-red-600/70">
+        <div class="flex items-center gap-2">
+          <span class="text-base">🛡️</span>
+          <div class="font-bold text-sm text-red-300">Content Security Team Moderation</div>
+        </div>
+        <p class="text-xs text-zinc-300 mt-1">Take down and permanently delete this content from the For You feed immediately.</p>
+        <button type="button" id="adminTakeDownFromOptionsBtn" class="mt-3 w-full bg-red-600 hover:bg-red-500 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition shadow">
+          <span>🚫</span> Remove & Delete from For You
+        </button>
+      </div>
+      ` : ''}
 
       ${canReport ? `
       <div class="mt-4 p-4 rounded-2xl bg-[#1a1212] border border-red-900/40">
@@ -15251,24 +15586,8 @@ init();
       });
 
       $('triggerDeleteBtn')?.addEventListener('click',()=>{
-        modal(`<div>
-          <div class="text-3xl mb-2 text-red-400">⚠️</div>
-          <h2 class="text-xl font-bold text-white">Delete this post?</h2>
-          <p class="muted text-sm mt-2">Are you sure you want to permanently delete this post? This cannot be undone.</p>
-          <div class="flex gap-2 mt-5">
-            <button data-close-modal class="flex-1 border border-[#444] rounded-xl py-2.5 text-sm font-semibold">Cancel</button>
-            <button id="confirmDeleteBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl py-2.5 text-sm font-bold">Yes, delete</button>
-          </div>
-        </div>`);
-        $('confirmDeleteBtn').onclick=async()=>{
-          try{
-            await updateDoc(doc(db,'posts',id),{status:'removed',removedAt:serverTimestamp(),removedBy:currentUser?currentUser.uid:'admin'});
-            toast('Post deleted','success');
-            closeModal();
-            if(currentPage==='feed')navigate('feed');
-            else if(currentPage==='profile')renderProfile();
-          }catch(e){toast(errMsg(e),'error')}
-        };
+        closeModal();
+        deleteUserPost(id);
       });
     } else {
       $('sharePostFromOptions')?.addEventListener('click',()=>{
@@ -15286,6 +15605,13 @@ init();
         }catch(e){toast(errMsg(e),'error')}
       });
     }
+
+    $('adminTakeDownFromOptionsBtn')?.addEventListener('click', async () => {
+      closeModal();
+      if (typeof adminTakeDown === 'function') {
+        await adminTakeDown(id);
+      }
+    });
   }
 
   openCommentPanel=async function(id,initialPost){
@@ -17294,6 +17620,9 @@ init();
     if(!ok) return;
     try{
       loading('Taking down post…');
+      if(typeof purgeAndHidePostImmediately === 'function') {
+        purgeAndHidePostImmediately(uid, 'Administrative safety takedown');
+      }
       let serverSuccess = false;
       try {
         const token = currentUser ? await currentUser.getIdToken() : '';
@@ -17311,13 +17640,18 @@ init();
       const s = await getDoc(doc(db, 'posts', uid)).catch(() => null);
       if(s && snapshotExists(s)){
         const x = s.data();
-        await updateDoc(doc(db, 'posts', uid), {
-          status: 'removed',
-          reviewStatus: 'removed',
-          safeContent: false,
-          removedAt: serverTimestamp(),
-          removedBy: currentUser ? currentUser.uid : 'admin'
-        }).catch(() => {});
+        await deleteDoc(doc(db, 'posts', uid)).catch(async () => {
+          await updateDoc(doc(db, 'posts', uid), {
+            status: 'removed',
+            reviewStatus: 'removed',
+            safeContent: false,
+            isDeleted: true,
+            hidden: true,
+            removedAt: serverTimestamp(),
+            removedBy: currentUser ? currentUser.uid : 'admin'
+          }).catch(() => {});
+        });
+
         if(x && x.sellerId && (!currentUser || x.sellerId !== currentUser.uid)){
           await addDoc(collection(db, 'notifications'), {
             recipientId: x.sellerId,
@@ -17330,9 +17664,12 @@ init();
             createdAt: serverTimestamp()
           }).catch(() => {});
         }
+      } else {
+        await deleteDoc(doc(db, 'posts', uid)).catch(() => {});
       }
-      toast('Post taken down successfully', 'success');
+      toast('Post taken down and deleted from For You feed', 'success');
       if(typeof renderAdmin==='function'&&currentPage==='admin') renderAdmin();
+      else if(currentPage==='feed') renderFeed();
       else if(typeof renderPage==='function') renderPage();
     }catch(e){toast(errMsg(e),'error')}finally{ready()}
   }
@@ -18546,7 +18883,16 @@ init();
               }
               const aiBadge=x.isAiGenerated?`<span class="ai-badge">✨ AI</span>`:'';
               const privBadge=x.privacy==='private'?'<span class="absolute top-2 left-2 bg-black/80 text-[10px] px-1.5 py-0.5 rounded text-zinc-300">🔒</span>':x.privacy==='followers'?'<span class="absolute top-2 left-2 bg-black/80 text-[10px] px-1.5 py-0.5 rounded text-gold">👥</span>':'';
-              return `<button type="button" class="sf-post-tile relative overflow-hidden group cursor-pointer rounded-xl border border-[#2b2b2b]" data-profile-post="${x.id}" title="Watch post in For You feed">${mediaPreview}${typeBadge}${aiBadge}${privBadge}<div class="sf-tile-meta flex items-center justify-between"><span>${isVid?'🎬 Video':x.mediaUrl?'📷 Photo':'💬 Post'}</span><span>❤️ ${x.likes?.length||0} · 👁️ ${x.views||0}</span></div></button>`;
+              return `
+                <div class="sf-post-tile relative overflow-hidden group rounded-xl border border-[#2b2b2b] bg-[#141414]">
+                  <button type="button" class="w-full h-full text-left cursor-pointer border-0 bg-transparent p-0 block" data-profile-post="${x.id}" title="Watch post in For You feed">
+                    ${mediaPreview}${typeBadge}${aiBadge}${privBadge}
+                    <div class="sf-tile-meta flex items-center justify-between"><span>${isVid?'🎬 Video':x.mediaUrl?'📷 Photo':'💬 Post'}</span><span>❤️ ${x.likes?.length||0} · 👁️ ${x.views||0}</span></div>
+                  </button>
+                  <button type="button" class="absolute top-2 left-2 z-20 p-1.5 rounded-lg bg-black/80 hover:bg-red-950 text-zinc-300 hover:text-red-400 border border-white/10 text-xs transition shadow opacity-80 group-hover:opacity-100 cursor-pointer" data-profile-delete-post="${x.id}" title="Delete this post">
+                    🗑️
+                  </button>
+                </div>`;
             }).join(''):'<div class="col-span-2 sm:col-span-3 p-10 text-center muted"><div class="text-4xl mb-2">📸</div><h3 class="font-bold text-lg text-white">No posts published yet</h3><p class="text-sm mt-1">Tap "+ Create post" above to share your first photo or video with the SellerFlow community.</p></div>'}</div>
           ` : _profileActiveTab === 'saved' ? `
             <div class="space-y-3">
@@ -18823,6 +19169,15 @@ init();
       }
     });
 
+    // Creator delete post button from profile
+    document.querySelectorAll('[data-profile-delete-post]').forEach(b=>{
+      b.onclick = (e) => {
+        e.stopPropagation();
+        const pId = b.dataset.profileDeletePost;
+        if (pId && typeof deleteUserPost === 'function') deleteUserPost(pId);
+      };
+    });
+
     // Unsave video button
     document.querySelectorAll('[data-unsave-video]').forEach(b=>{
       b.onclick=(e)=>unsaveVideoFromProfile(b.dataset.unsaveVideo, e);
@@ -19019,6 +19374,12 @@ init();
           createdAt: serverTimestamp()
         });
       }
+      if(window._sfRemovedPostIds) {
+        window._sfRemovedPostIds.delete(postId);
+        try {
+          localStorage.setItem('sf_removed_post_ids', JSON.stringify([...window._sfRemovedPostIds]));
+        } catch(_) {}
+      }
       toast('Post restored back to live For You feed!', 'success', 3500);
       if(typeof renderAdmin === 'function' && currentPage === 'admin'){
         await renderAdmin();
@@ -19050,8 +19411,22 @@ init();
     if(!ok) return;
     try {
       loading('Deleting post permanently…');
+      if(typeof purgeAndHidePostImmediately === 'function') {
+        purgeAndHidePostImmediately(postId, 'Permanently deleted by admin');
+      }
+      try {
+        const token = currentUser ? await currentUser.getIdToken() : '';
+        await fetch('/api/admin/takedown', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({ type: 'post', id: postId, reason: 'Permanently deleted by admin' })
+        });
+      } catch (_) {}
       await deleteDoc(doc(db, 'posts', postId));
-      toast('Post permanently removed from SellerFlow.', 'info', 3500);
+      toast('Post permanently removed and deleted from SellerFlow.', 'info', 3500);
       if(typeof renderAdmin === 'function' && currentPage === 'admin'){
         await renderAdmin();
         const tab = document.querySelector('[data-admin-tab="restoration"]');
