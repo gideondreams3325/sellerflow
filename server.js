@@ -1537,9 +1537,10 @@ app.post('/api/auth/custom-token', async (req, res) => {
 /* Live Email and Username Availability Check */
 app.post('/api/auth/check-availability', async (req, res) => {
   try {
-    const { email, username } = req.body || {};
+    const { email, username, excludeUid, fullName } = req.body || {};
     let emailTaken = false;
     let usernameTaken = false;
+    let suggestions = [];
 
     if (email) {
       const emailLower = String(email).toLowerCase().trim();
@@ -1606,30 +1607,121 @@ app.post('/api/auth/check-availability', async (req, res) => {
     }
 
     if (username) {
-      const usernameLower = String(username).toLowerCase().trim();
+      const usernameLower = String(username).toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 24);
+      const SELLERFLOW_RESERVED_EMAIL = 'gideondreams3325@gmail.com';
+
+      // Determine requester email
+      let requesterEmail = String(req.body?.userEmail || req.body?.email || '').toLowerCase().trim();
+      if (!requesterEmail && req.headers.authorization?.startsWith('Bearer ')) {
+        try {
+          const decoded = await verifyFirebaseToken(req.headers.authorization.slice(7).trim());
+          if (decoded?.email) requesterEmail = String(decoded.email).toLowerCase().trim();
+        } catch (_) {}
+      }
+
+      // Check if username is "sellerflow" - strictly reserved for gideondreams3325@gmail.com
+      if (usernameLower === 'sellerflow' && requesterEmail !== SELLERFLOW_RESERVED_EMAIL) {
+        usernameTaken = true;
+      }
 
       // 1. Check registeredUsernames document registry
-      try {
-        const uRegDoc = await adminDb.collection('registeredUsernames').doc(usernameLower).get();
-        if (uRegDoc.exists) usernameTaken = true;
-      } catch (_) {}
+      if (!usernameTaken) {
+        try {
+          const uRegDoc = await adminDb.collection('registeredUsernames').doc(usernameLower).get();
+          if (uRegDoc.exists) {
+            const uRegData = uRegDoc.data() || {};
+            if (!excludeUid || uRegData.uid !== excludeUid) {
+              usernameTaken = true;
+            }
+          }
+        } catch (_) {}
+      }
 
       // 2. Check publicProfiles collection by usernameLower
       if (!usernameTaken) {
         try {
           const usernameSnap = await adminDb.collection('publicProfiles')
             .where('usernameLower', '==', usernameLower)
-            .limit(1)
+            .limit(2)
             .get();
-          if (!usernameSnap.empty) usernameTaken = true;
+          if (!usernameSnap.empty) {
+            const takenByOther = !excludeUid || usernameSnap.docs.some(d => d.id !== excludeUid && d.data()?.uid !== excludeUid);
+            if (takenByOther) usernameTaken = true;
+          }
         } catch (_) {}
+      }
+
+      // 3. If taken, generate smart verified available suggestions
+      if (usernameTaken && usernameLower) {
+        try {
+          const candidates = new Set();
+          const cleanName = String(fullName || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+          const nameParts = cleanName.split(/\s+/).filter(Boolean);
+          const first = nameParts[0] || '';
+          const last = nameParts[nameParts.length - 1] || '';
+
+          // If someone typed 'sellerflow' and is not gideondreams3325@gmail.com, do not use 'sellerflow' as base
+          const baseForCandidates = (usernameLower === 'sellerflow' && requesterEmail !== SELLERFLOW_RESERVED_EMAIL)
+            ? (first ? `${first}_gh` : 'seller_gh')
+            : usernameLower;
+
+          // Variations with commerce and Ghanaian identity
+          candidates.add(`${baseForCandidates}_gh`.slice(0, 24));
+          candidates.add(`${baseForCandidates}233`.slice(0, 24));
+          candidates.add(`${baseForCandidates}_hub`.slice(0, 24));
+          candidates.add(`${baseForCandidates}_store`.slice(0, 24));
+          candidates.add(`${baseForCandidates}_shop`.slice(0, 24));
+          candidates.add(`${baseForCandidates}_accra`.slice(0, 24));
+          candidates.add(`${baseForCandidates}1`.slice(0, 24));
+          candidates.add(`${baseForCandidates}24`.slice(0, 24));
+
+          if (first && first.length >= 2) {
+            candidates.add(`${first}_${baseForCandidates}`.slice(0, 24));
+            candidates.add(`${baseForCandidates}_${first}`.slice(0, 24));
+            if (last && last.length >= 2 && last !== first) {
+              candidates.add(`${first}_${last}`.slice(0, 24));
+              candidates.add(`${first}${last}`.slice(0, 24));
+            }
+          }
+
+          // Test candidates for availability
+          for (const cand of candidates) {
+            if (suggestions.length >= 5) break;
+            const cClean = cand.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 24);
+            if (!cClean || cClean.length < 3 || cClean === usernameLower) continue;
+            if (cClean === 'sellerflow' && requesterEmail !== SELLERFLOW_RESERVED_EMAIL) continue;
+
+            let cTaken = false;
+            try {
+              const cDoc = await adminDb.collection('registeredUsernames').doc(cClean).get();
+              if (cDoc.exists) cTaken = true;
+            } catch (_) {}
+
+            if (!cTaken) {
+              try {
+                const cSnap = await adminDb.collection('publicProfiles')
+                  .where('usernameLower', '==', cClean)
+                  .limit(1)
+                  .get();
+                if (!cSnap.empty) cTaken = true;
+              } catch (_) {}
+            }
+
+            if (!cTaken) {
+              suggestions.push(cClean);
+            }
+          }
+        } catch (sugErr) {
+          console.warn('Username suggestion generation notice:', sugErr.message);
+        }
       }
     }
 
     return res.json({
       success: true,
       emailTaken,
-      usernameTaken
+      usernameTaken,
+      suggestions
     });
   } catch (err) {
     console.warn('Check availability graceful error recovery:', err.message);

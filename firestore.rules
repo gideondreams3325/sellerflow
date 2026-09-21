@@ -19,6 +19,13 @@ service cloud.firestore {
       );
     }
 
+    function isAllowedSellerflowUsername() {
+      return (
+        request.resource.data.get('usernameLower', '') != 'sellerflow' &&
+        request.resource.data.get('username', '').lower() != 'sellerflow'
+      ) || (request.auth.token.email != null && request.auth.token.email.lower() == 'gideondreams3325@gmail.com');
+    }
+
     // Phone and Email Verification Temporary Codes (Private User Access Only)
     match /phoneVerifications/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
@@ -36,7 +43,10 @@ service cloud.firestore {
 
     match /registeredUsernames/{usernameDoc} {
       allow read: if true;
-      allow create, update: if isSignedIn();
+      allow create, update: if isSignedIn() && (
+        usernameDoc != 'sellerflow' || (request.auth.token.email != null && request.auth.token.email.lower() == 'gideondreams3325@gmail.com')
+      );
+      allow delete: if isSignedIn();
     }
 
     // 1b. Dedicated Buyer KYC & Ghana Card Vault (Security Team-only storage for future reference)
@@ -64,21 +74,27 @@ service cloud.firestore {
     // - Only admins can verify or approve sellers
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      allow create: if (isOwner(userId) || isAdmin()) && (
+      allow create: if (isOwner(userId) || isAdmin()) && isAllowedSellerflowUsername() && (
         isAdmin() || (
           request.resource.data.get('role', 'user') != 'admin' &&
           request.resource.data.get('verified', false) == false &&
           request.resource.data.get('verificationStatus', 'none') in ['none', 'pending']
         )
       );
-      allow update: if (isOwner(userId) || isAdmin()) && (
+      allow update: if (isOwner(userId) || isAdmin()) && isAllowedSellerflowUsername() && (
         isAdmin() || (
           // Non-admins cannot promote themselves to admin
           request.resource.data.get('role', 'user') == resource.data.get('role', 'user') &&
           // Non-admins cannot self-verify
           request.resource.data.get('verified', false) == resource.data.get('verified', false) &&
           // Non-admins cannot approve their own verification
-          request.resource.data.get('verificationStatus', 'none') in [resource.data.get('verificationStatus', 'none'), 'pending']
+          request.resource.data.get('verificationStatus', 'none') in [resource.data.get('verificationStatus', 'none'), 'pending'] &&
+          // 360-day username change policy
+          (
+            request.resource.data.get('usernameLower', resource.data.get('usernameLower', '')) == resource.data.get('usernameLower', '') ||
+            resource.data.get('usernameLastChanged', null) == null ||
+            request.time > resource.data.usernameLastChanged + duration.value(360, 'd')
+          )
         )
       );
       allow delete: if isAdmin();
@@ -91,7 +107,7 @@ service cloud.firestore {
     // - PublicProfiles CANNOT be used to grant admin status or self-assign verification badges
     match /publicProfiles/{userId} {
       allow read: if true;
-      allow create: if (isOwner(userId) || isAdmin()) && (
+      allow create: if (isOwner(userId) || isAdmin()) && isAllowedSellerflowUsername() && (
         isAdmin() || request.resource.data.get('verified', false) == false
       );
       allow update: if isSignedIn() && (
@@ -99,6 +115,7 @@ service cloud.firestore {
         // Profile owner updating their details without tampering with verified badge
         (
           isOwner(userId) &&
+          isAllowedSellerflowUsername() &&
           request.resource.data.get('verified', false) == resource.data.get('verified', false)
         ) ||
         // Other users interacting purely via follow/unfollow
