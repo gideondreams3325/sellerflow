@@ -90,7 +90,7 @@ if (fs.existsSync(uploadsDir)) {
 const androidPublicDir = path.resolve('android/app/src/main/assets/public');
 if (fs.existsSync(androidPublicDir)) {
   try {
-    fs.copyFileSync(path.join(distDir, 'index.html'), path.join(androidPublicDir, 'index.html'));
+    fs.cpSync(distDir, androidPublicDir, { recursive: true });
   } catch (_) {}
 }
 
