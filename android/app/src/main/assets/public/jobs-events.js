@@ -91,37 +91,185 @@ function getJobsEventsDb() {
   if (typeof db !== 'undefined' && db && (typeof db.collection === 'function' || typeof db.doc === 'function')) {
     return db;
   }
-  if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
+  if (typeof firebase !== 'undefined') {
     try {
-      const d = firebase.firestore();
-      window.db = d;
-      return d;
+      if (firebase.apps && firebase.apps.length > 0) {
+        const d = firebase.firestore();
+        window.db = d;
+        return d;
+      }
+      if (typeof window.firebaseConfig !== 'undefined' || typeof firebaseConfig !== 'undefined') {
+        const cfg = window.firebaseConfig || (typeof firebaseConfig !== 'undefined' ? firebaseConfig : null);
+        if (cfg && firebase.initializeApp) {
+          const app = firebase.initializeApp(cfg);
+          const d = app.firestore();
+          window.db = d;
+          return d;
+        }
+      }
     } catch (_) {}
   }
   return {
     collection: (name) => ({
       doc: (id) => ({
-        get: async () => ({ exists: false, data: () => null }),
-        set: async () => {},
-        update: async () => {},
-        delete: async () => {}
+        get: async () => {
+          try {
+            const raw = localStorage.getItem('sf_mock_col_' + name);
+            const list = raw ? JSON.parse(raw) : [];
+            const item = list.find(x => x.id === id);
+            return item ? { exists: true, id, data: () => item } : { exists: false, data: () => null };
+          } catch (_) {
+            return { exists: false, data: () => null };
+          }
+        },
+        set: async (data, opt = {}) => {
+          try {
+            const raw = localStorage.getItem('sf_mock_col_' + name);
+            let list = raw ? JSON.parse(raw) : [];
+            const idx = list.findIndex(x => x.id === id);
+            const docObj = { id, ...(opt.merge && idx >= 0 ? list[idx] : {}), ...data };
+            if (idx >= 0) list[idx] = docObj;
+            else list.push(docObj);
+            localStorage.setItem('sf_mock_col_' + name, JSON.stringify(list));
+          } catch (_) {}
+        },
+        update: async (data) => {
+          try {
+            const raw = localStorage.getItem('sf_mock_col_' + name);
+            let list = raw ? JSON.parse(raw) : [];
+            const idx = list.findIndex(x => x.id === id);
+            if (idx >= 0) {
+              list[idx] = { ...list[idx], ...data };
+              localStorage.setItem('sf_mock_col_' + name, JSON.stringify(list));
+            }
+          } catch (_) {}
+        },
+        delete: async () => {
+          try {
+            const raw = localStorage.getItem('sf_mock_col_' + name);
+            let list = raw ? JSON.parse(raw) : [];
+            list = list.filter(x => x.id !== id);
+            localStorage.setItem('sf_mock_col_' + name, JSON.stringify(list));
+          } catch (_) {}
+        }
       }),
-      where: () => ({
-        where: () => ({
-          limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
-          get: async () => ({ empty: true, docs: [], forEach: () => {} })
+      where: (field, op, val) => {
+        const createQuery = (filters) => ({
+          where: (f2, op2, v2) => createQuery([...filters, { field: f2, op: op2, val: v2 }]),
+          orderBy: () => createQuery(filters),
+          limit: (n) => ({
+            get: async () => {
+              try {
+                const raw = localStorage.getItem('sf_mock_col_' + name);
+                const list = raw ? JSON.parse(raw) : [];
+                const matched = list.filter(item => {
+                  return filters.every(flt => (flt.op === '==' ? item[flt.field] === flt.val : true));
+                });
+                const sliced = matched.slice(0, n || 50);
+                return {
+                  empty: sliced.length === 0,
+                  docs: sliced.map(d => ({ id: d.id, data: () => d })),
+                  forEach: (cb) => sliced.forEach(d => cb({ id: d.id, data: () => d }))
+                };
+              } catch (_) {
+                return { empty: true, docs: [], forEach: () => {} };
+              }
+            }
+          }),
+          get: async () => {
+            try {
+              const raw = localStorage.getItem('sf_mock_col_' + name);
+              const list = raw ? JSON.parse(raw) : [];
+              const matched = list.filter(item => {
+                return filters.every(flt => (flt.op === '==' ? item[flt.field] === flt.val : true));
+              });
+              return {
+                empty: matched.length === 0,
+                docs: matched.map(d => ({ id: d.id, data: () => d })),
+                forEach: (cb) => matched.forEach(d => cb({ id: d.id, data: () => d }))
+              };
+            } catch (_) {
+              return { empty: true, docs: [], forEach: () => {} };
+            }
+          }
+        });
+        return createQuery([{ field, op, val }]);
+      },
+      orderBy: () => ({
+        where: (field, op, val) => ({
+          limit: (n) => ({
+            get: async () => {
+              try {
+                const raw = localStorage.getItem('sf_mock_col_' + name);
+                const list = raw ? JSON.parse(raw) : [];
+                const matched = list.filter(x => (op === '==' ? x[field] === val : true)).slice(0, n || 50);
+                return {
+                  empty: matched.length === 0,
+                  docs: matched.map(d => ({ id: d.id, data: () => d })),
+                  forEach: (cb) => matched.forEach(d => cb({ id: d.id, data: () => d }))
+                };
+              } catch (_) {
+                return { empty: true, docs: [], forEach: () => {} };
+              }
+            }
+          }),
+          get: async () => {
+            try {
+              const raw = localStorage.getItem('sf_mock_col_' + name);
+              const list = raw ? JSON.parse(raw) : [];
+              const matched = list.filter(x => (op === '==' ? x[field] === val : true));
+              return {
+                empty: matched.length === 0,
+                docs: matched.map(d => ({ id: d.id, data: () => d })),
+                forEach: (cb) => matched.forEach(d => cb({ id: d.id, data: () => d }))
+              };
+            } catch (_) {
+              return { empty: true, docs: [], forEach: () => {} };
+            }
+          }
         }),
         limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
-        orderBy: () => ({ limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }), get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
         get: async () => ({ empty: true, docs: [], forEach: () => {} })
       }),
-      orderBy: () => ({
-        limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
-        get: async () => ({ empty: true, docs: [], forEach: () => {} })
+      limit: (n) => ({
+        get: async () => {
+          try {
+            const raw = localStorage.getItem('sf_mock_col_' + name);
+            const list = raw ? JSON.parse(raw) : [];
+            const sliced = list.slice(0, n || 50);
+            return {
+              empty: sliced.length === 0,
+              docs: sliced.map(d => ({ id: d.id, data: () => d })),
+              forEach: (cb) => sliced.forEach(d => cb({ id: d.id, data: () => d }))
+            };
+          } catch (_) {
+            return { empty: true, docs: [], forEach: () => {} };
+          }
+        }
       }),
-      limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
-      get: async () => ({ empty: true, docs: [], forEach: () => {} }),
-      add: async () => ({ id: 'mock_' + Date.now() })
+      get: async () => {
+        try {
+          const raw = localStorage.getItem('sf_mock_col_' + name);
+          const list = raw ? JSON.parse(raw) : [];
+          return {
+            empty: list.length === 0,
+            docs: list.map(d => ({ id: d.id, data: () => d })),
+            forEach: (cb) => list.forEach(d => cb({ id: d.id, data: () => d }))
+          };
+        } catch (_) {
+          return { empty: true, docs: [], forEach: () => {} };
+        }
+      },
+      add: async (data) => {
+        const id = 'sf_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+        try {
+          const raw = localStorage.getItem('sf_mock_col_' + name);
+          let list = raw ? JSON.parse(raw) : [];
+          list.push({ id, ...data });
+          localStorage.setItem('sf_mock_col_' + name, JSON.stringify(list));
+        } catch (_) {}
+        return { id };
+      }
     })
   };
 }
@@ -151,6 +299,50 @@ const EVENT_CATEGORIES = [
 const DEFAULT_FEATURED_JOBS = [];
 
 const DEFAULT_FEATURED_EVENTS = [];
+
+function readImageFileAsDataUrl(file, maxWidth = 1200, maxHeight = 1200, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    if (!file) return resolve('');
+    if (!file.type || !file.type.startsWith('image/')) {
+      return reject(new Error('Please select a valid image file (PNG, JPG, or WEBP).'));
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      return reject(new Error('Image file exceeds the 10MB limit.'));
+    }
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Failed to read selected image file.'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => resolve(e.target.result);
+      img.onload = () => {
+        try {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth || height > maxHeight) {
+            if (width > height) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressed);
+        } catch (_) {
+          resolve(e.target.result);
+        }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 // In-memory cache stores for instant snappy page loads
 let _cachedJobs = null;
@@ -254,13 +446,84 @@ async function checkJobsEventsEligibility(user, actionType = 'interact on Seller
     return false;
   }
 
-  // Candidates applying for jobs or attendees registering for events do NOT need Ghana Card identity verification
-  const isCandidateAction = actionType.includes('apply') || actionType.includes('register') || actionType.includes('ticket') || actionType.includes('rsvp');
-  if (isCandidateAction) {
+  // Admin bypass
+  if (getIsAdmin()) {
     return true;
   }
 
-  // For posting jobs or hosting events: allow signed-in users to proceed
+  // Check identity verification state across profile, auth, and database records
+  let isVerified = false;
+  const profile = getActiveProfile();
+
+  // 1. Check in-memory profile flags
+  if (profile) {
+    if (
+      profile.verified === true ||
+      profile.isBuyerVerified === true ||
+      profile.isSellerVerified === true ||
+      profile.verificationStatus === 'approved' ||
+      profile.kycStatus === 'approved' ||
+      profile.ghanaCardVerified === true
+    ) {
+      isVerified = true;
+    }
+  }
+
+  // 2. Check activeUser object flags
+  if (!isVerified && activeUser) {
+    if (
+      activeUser.verified === true ||
+      activeUser.isBuyerVerified === true ||
+      activeUser.isSellerVerified === true ||
+      activeUser.verificationStatus === 'approved' ||
+      activeUser.kycStatus === 'approved' ||
+      activeUser.ghanaCardVerified === true
+    ) {
+      isVerified = true;
+    }
+  }
+
+  // 3. Check local storage KYC cache
+  if (!isVerified && activeUser.uid) {
+    try {
+      const localKyc = localStorage.getItem('sf_kyc_verified_' + activeUser.uid);
+      if (localKyc === 'true' || localKyc === 'approved') {
+        isVerified = true;
+      }
+    } catch (_) {}
+  }
+
+  // 4. Query Firestore user record if not yet confirmed in memory
+  if (!isVerified && activeUser.uid) {
+    try {
+      const userSnap = await getJobsEventsDb().collection('users').doc(activeUser.uid).get();
+      if (userSnap && userSnap.exists) {
+        const uData = userSnap.data() || {};
+        const hasCardNumber = !!(uData.ghanaCardNumber || uData.ghanaCardMasked || uData.ghanaCardNum);
+        const hasDoc = !!(uData.ghanaCardFrontPath || uData.ghanaCardFrontUrl || uData.ghanaCardFront);
+        if (
+          uData.verified === true ||
+          uData.isBuyerVerified === true ||
+          uData.isSellerVerified === true ||
+          uData.verificationStatus === 'approved' ||
+          uData.kycStatus === 'approved' ||
+          uData.ghanaCardVerified === true ||
+          (hasCardNumber && hasDoc)
+        ) {
+          isVerified = true;
+          try { localStorage.setItem('sf_kyc_verified_' + activeUser.uid, 'true'); } catch (_) {}
+        }
+      }
+    } catch (e) {
+      console.warn('User verification check notice:', e);
+    }
+  }
+
+  if (!isVerified) {
+    openIdentityRequiredModal(actionType);
+    return false;
+  }
+
   return true;
 }
 window.checkJobsEventsEligibility = checkJobsEventsEligibility;
@@ -286,38 +549,39 @@ async function checkUserAcceptedTerms(uid) {
 }
 
 // Modal: Identity Verification Required
-function openIdentityRequiredModal(actionType = 'post') {
+function openIdentityRequiredModal(actionType = 'participate') {
   const modal = document.createElement('div');
   modal.id = 'identityRequiredModal';
   modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in';
   modal.innerHTML = `
     <div class="bg-[#181824] border border-amber-500/40 rounded-3xl max-w-md w-full p-6 text-white shadow-2xl space-y-4">
-      <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-3xl mx-auto">
+      <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-3xl mx-auto shadow-inner">
         🪪
       </div>
       <div class="text-center space-y-1.5">
-        <h3 class="text-lg font-black text-amber-300">Identity Verification Required</h3>
+        <h3 class="text-lg font-black text-amber-300">Verified Account Required</h3>
         <p class="text-xs text-zinc-300 leading-relaxed">
-          To protect Ghanaian jobseekers and attendees from fraud, SellerFlow requires all users to complete <b>Ghana Card identity verification</b> before ${_esc(actionType)}.
+          Only verified accounts can ${_esc(actionType)} on SellerFlow. Please complete your <b>Ghana Card identity verification</b> to apply for jobs and register for events.
         </p>
       </div>
-      <div class="p-3.5 rounded-2xl bg-[#12121a] border border-[#2a2a3c] text-xs text-zinc-400 space-y-1.5">
+      <div class="p-3.5 rounded-2xl bg-[#12121a] border border-[#2a2a3c] text-xs text-zinc-400 space-y-2">
         <div class="flex items-center gap-2 text-zinc-300">
-          <span class="text-amber-400">✓</span> <span>Encrypted Ghana Card KYC storage</span>
+          <span class="text-amber-400 font-bold">✓</span> <span>Anti-fraud protection for applicants & attendees</span>
         </div>
         <div class="flex items-center gap-2 text-zinc-300">
-          <span class="text-amber-400">✓</span> <span>Compliance with Data Protection Act, 2012 (Act 843)</span>
+          <span class="text-amber-400 font-bold">✓</span> <span>Encrypted Ghana Card KYC (Act 843 compliant)</span>
         </div>
         <div class="flex items-center gap-2 text-zinc-300">
-          <span class="text-amber-400">✓</span> <span>Fast automated and security team review</span>
+          <span class="text-amber-400 font-bold">✓</span> <span>Official SellerFlow Verified badge on profile</span>
         </div>
       </div>
       <div class="flex gap-3 pt-2">
         <button id="closeIdReqBtn" type="button" class="flex-1 py-2.5 rounded-xl border border-zinc-700 hover:bg-zinc-800 text-xs font-bold text-zinc-300 transition">
           Cancel
         </button>
-        <button id="goToKycBtn" type="button" class="flex-1 py-2.5 rounded-xl bg-gold text-black hover:brightness-110 text-xs font-black transition shadow-md">
-          Verify Ghana Card →
+        <button id="goToKycBtn" type="button" class="flex-1 py-2.5 rounded-xl bg-gold text-black hover:brightness-110 text-xs font-black transition shadow-md flex items-center justify-center gap-1.5">
+          <span>Verify Account</span>
+          <span>→</span>
         </button>
       </div>
     </div>
@@ -327,9 +591,15 @@ function openIdentityRequiredModal(actionType = 'post') {
   modal.querySelector('#closeIdReqBtn').onclick = () => modal.remove();
   modal.querySelector('#goToKycBtn').onclick = () => {
     modal.remove();
-    if (typeof openBuyerKycModal === 'function') openBuyerKycModal();
-    else if (typeof openGhanaCardModal === 'function') openGhanaCardModal();
-    else navigate('profile');
+    if (typeof openVerificationModal === 'function') {
+      openVerificationModal({ purpose: 'candidate' });
+    } else if (typeof openBuyerKycModal === 'function') {
+      openBuyerKycModal();
+    } else if (typeof openGhanaCardModal === 'function') {
+      openGhanaCardModal();
+    } else if (typeof navigate === 'function') {
+      navigate('profile');
+    }
   };
 }
 
@@ -394,7 +664,7 @@ function openTermsAcceptanceModal(actionType = 'proceed') {
     try {
       btn.textContent = 'Saving...';
       btn.disabled = true;
-      const user = currentUser || (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
+      const user = getActiveUser();
       const uid = user ? user.uid : '';
       const token = user ? await user.getIdToken().catch(() => '') : '';
 
@@ -681,7 +951,7 @@ async function loadJobsFeed() {
     });
     currentList.querySelectorAll('[data-apply-job]').forEach(b => {
       b.onclick = async () => {
-        const eligible = await checkJobsEventsEligibility(currentUser, 'apply for this job');
+        const eligible = await checkJobsEventsEligibility(getActiveUser(), 'apply for this job');
         if (eligible) openApplyJobModal(b.dataset.applyJob);
       };
     });
@@ -698,26 +968,39 @@ function renderJobCardHtml(job) {
     ? `GHS ${(job.salaryMin || 0).toLocaleString()} - ${(job.salaryMax || 0).toLocaleString()} / ${job.salaryPeriod || 'mo'}`
     : 'Negotiable';
 
+  const jobPicture = job.imageUrl || job.logoUrl || job.bannerUrl || '';
+
   return `
     <div class="bg-[#14141e] hover:bg-[#181826] border border-zinc-800/80 hover:border-amber-500/40 rounded-2xl p-4 sm:p-5 transition shadow-sm space-y-3">
-      <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-        <div class="space-y-1 min-w-0">
-          <div class="flex items-center gap-2 flex-wrap">
-            <h3 class="text-base font-black text-white hover:text-amber-300 cursor-pointer transition" data-view-job="${job.id}">
-              ${_esc(job.title)}
-            </h3>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
-              Verified Employer
-            </span>
-          </div>
-          <div class="flex items-center gap-3 text-xs text-zinc-400 flex-wrap">
-            <span class="font-bold text-zinc-300">🏢 ${_esc(job.companyName)}</span>
-            <span>📍 ${_esc(job.region || 'Ghana')} (${_esc(job.locationType || 'On-site')})</span>
-            <span class="text-amber-300 font-semibold">💰 ${_esc(formattedSalary)}</span>
+      <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3.5">
+        <div class="flex items-start gap-3.5 min-w-0 flex-1">
+          ${jobPicture ? `
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-zinc-900 border border-zinc-700 shrink-0 cursor-pointer shadow-sm" data-view-job="${job.id}">
+              <img src="${_esc(jobPicture)}" alt="${_esc(job.title)}" class="w-full h-full object-cover" />
+            </div>
+          ` : `
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 flex items-center justify-center text-xl shrink-0 cursor-pointer" data-view-job="${job.id}">
+              💼
+            </div>
+          `}
+          <div class="space-y-1 min-w-0 flex-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-base font-black text-white hover:text-amber-300 cursor-pointer transition" data-view-job="${job.id}">
+                ${_esc(job.title)}
+              </h3>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                Verified Employer
+              </span>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-zinc-400 flex-wrap">
+              <span class="font-bold text-zinc-300">🏢 ${_esc(job.companyName)}</span>
+              <span>📍 ${_esc(job.region || 'Ghana')} (${_esc(job.locationType || 'On-site')})</span>
+              <span class="text-amber-300 font-semibold">💰 ${_esc(formattedSalary)}</span>
+            </div>
           </div>
         </div>
 
-        <div class="flex items-center gap-2 shrink-0">
+        <div class="flex items-center gap-2 shrink-0 self-end sm:self-start">
           <button data-view-job="${job.id}" class="px-3.5 py-2 rounded-xl border border-zinc-700 hover:bg-zinc-800 text-xs font-bold text-zinc-300 transition">
             View Details
           </button>
@@ -754,13 +1037,35 @@ function openPostJobModal() {
           <img src="/nav-emblem.svg" alt="SellerFlow" class="w-6 h-6 object-contain shrink-0" />
           <div>
             <h3 class="text-base font-black text-white">Post a Verified Job Opening</h3>
-            <p class="text-[11px] text-zinc-400">List your vacancy for verified Ghanaian jobseekers.</p>
+            <p class="text-[11px] text-zinc-400">Attach picture, role specifications, and recruitment details.</p>
           </div>
         </div>
         <button id="closePostJobModalBtn" class="w-8 h-8 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center font-bold">✕</button>
       </div>
 
       <form id="postJobForm" class="flex-1 overflow-y-auto pr-2 space-y-3.5 text-xs text-zinc-300">
+        <div>
+          <label class="block font-bold text-zinc-300 mb-1">Company Logo / Job Banner Picture *</label>
+          <div id="jobImageDropzone" class="border-2 border-dashed border-zinc-700 hover:border-amber-500/60 rounded-2xl p-4 text-center cursor-pointer transition bg-[#12121a] flex flex-col items-center justify-center min-h-[110px] relative group">
+            <input type="file" id="jobImageInput" accept="image/*" class="hidden" />
+            <div id="jobImagePlaceholder" class="space-y-1.5 flex flex-col items-center">
+              <span class="text-2xl block">📷</span>
+              <p class="text-xs font-bold text-white">Click or drag & drop to upload picture *</p>
+              <p class="text-[11px] text-zinc-400">Attach company logo, workplace photo, or flyer (PNG, JPG, WEBP - Max 10MB)</p>
+            </div>
+            <div id="jobImagePreviewWrapper" class="hidden w-full flex items-center gap-3">
+              <img id="jobImagePreview" class="w-16 h-16 object-cover rounded-xl border border-zinc-700 shadow-sm shrink-0" />
+              <div class="text-left flex-1 min-w-0">
+                <p id="jobImageFileName" class="text-xs font-bold text-white truncate"></p>
+                <p id="jobImageFileSize" class="text-[11px] text-emerald-400 font-semibold">✓ Picture ready to attach</p>
+              </div>
+              <button type="button" id="jobImageRemoveBtn" class="px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold hover:bg-rose-500/30">
+                Change
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block font-bold text-zinc-300 mb-1">Job Title *</label>
@@ -845,11 +1150,84 @@ function openPostJobModal() {
   `;
   document.body.appendChild(modal);
 
+  let selectedJobImageData = '';
+
+  const jobImageInput = modal.querySelector('#jobImageInput');
+  const jobImageDropzone = modal.querySelector('#jobImageDropzone');
+  const jobImagePlaceholder = modal.querySelector('#jobImagePlaceholder');
+  const jobImagePreviewWrapper = modal.querySelector('#jobImagePreviewWrapper');
+  const jobImagePreview = modal.querySelector('#jobImagePreview');
+  const jobImageFileName = modal.querySelector('#jobImageFileName');
+  const jobImageRemoveBtn = modal.querySelector('#jobImageRemoveBtn');
+
+  async function handleJobImageFile(file) {
+    if (!file) return;
+    try {
+      const dataUrl = await readImageFileAsDataUrl(file);
+      selectedJobImageData = dataUrl;
+      jobImagePreview.src = dataUrl;
+      jobImageFileName.textContent = file.name || 'job-picture.jpg';
+      jobImagePlaceholder.classList.add('hidden');
+      jobImagePreviewWrapper.classList.remove('hidden');
+      jobImageDropzone.classList.remove('border-rose-500');
+      jobImageDropzone.classList.add('border-emerald-500/50');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  jobImageDropzone.onclick = (e) => {
+    if (e.target !== jobImageRemoveBtn && !jobImageRemoveBtn.contains(e.target)) {
+      jobImageInput.click();
+    }
+  };
+
+  jobImageInput.onchange = () => {
+    if (jobImageInput.files && jobImageInput.files[0]) {
+      handleJobImageFile(jobImageInput.files[0]);
+    }
+  };
+
+  jobImageDropzone.ondragover = (e) => {
+    e.preventDefault();
+    jobImageDropzone.classList.add('border-gold');
+  };
+
+  jobImageDropzone.ondragleave = () => {
+    jobImageDropzone.classList.remove('border-gold');
+  };
+
+  jobImageDropzone.ondrop = (e) => {
+    e.preventDefault();
+    jobImageDropzone.classList.remove('border-gold');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleJobImageFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  jobImageRemoveBtn.onclick = (e) => {
+    e.stopPropagation();
+    selectedJobImageData = '';
+    jobImageInput.value = '';
+    jobImagePreview.src = '';
+    jobImagePreviewWrapper.classList.add('hidden');
+    jobImagePlaceholder.classList.remove('hidden');
+    jobImageDropzone.classList.remove('border-emerald-500/50');
+  };
+
   modal.querySelector('#closePostJobModalBtn').onclick = () => modal.remove();
   modal.querySelector('#cancelPostJobBtn').onclick = () => modal.remove();
 
   modal.querySelector('#postJobForm').onsubmit = async (e) => {
     e.preventDefault();
+
+    if (!selectedJobImageData) {
+      toast('Please upload and attach a picture or company logo for your job posting.', 'error');
+      jobImageDropzone.classList.add('border-rose-500');
+      jobImageDropzone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
     const btn = modal.querySelector('#submitJobBtn');
     btn.disabled = true;
     btn.textContent = 'Submitting & Scanning...';
@@ -860,6 +1238,9 @@ function openPostJobModal() {
       const payload = {
         title: _$('jobTitle').value.trim(),
         companyName: _$('jobCompany').value.trim(),
+        imageUrl: selectedJobImageData,
+        logoUrl: selectedJobImageData,
+        imageBase64: selectedJobImageData,
         category: _$('jobCategory').value,
         region: _$('jobRegion').value,
         locationType: _$('jobLocationType').value,
@@ -972,13 +1353,13 @@ async function openApplyJobModal(jobId) {
       <form id="applyJobForm" class="flex-1 overflow-y-auto pr-2 space-y-3.5 text-xs text-zinc-300">
         <div>
           <label class="block font-bold text-zinc-300 mb-1">Full Name *</label>
-          <input type="text" id="applicantName" required value="${_esc(currentProfile?.name || currentUser?.displayName || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
+          <input type="text" id="applicantName" required value="${_esc(getActiveProfile()?.name || getActiveUser()?.displayName || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block font-bold text-zinc-300 mb-1">Email Address *</label>
-            <input type="email" id="applicantEmail" required value="${_esc(currentUser?.email || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
+            <input type="email" id="applicantEmail" required value="${_esc(getActiveUser()?.email || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
           </div>
           <div>
             <label class="block font-bold text-zinc-300 mb-1">Phone Number (WhatsApp) *</label>
@@ -1166,6 +1547,12 @@ async function openJobDetailModal(jobId) {
         </div>
 
         <div class="flex-1 overflow-y-auto pr-2 space-y-4 text-xs leading-relaxed text-zinc-300">
+          ${(job.imageUrl || job.logoUrl || job.bannerUrl) ? `
+            <div class="h-44 sm:h-52 w-full rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-md">
+              <img src="${_esc(job.imageUrl || job.logoUrl || job.bannerUrl)}" alt="${_esc(job.title)}" class="w-full h-full object-cover" />
+            </div>
+          ` : ''}
+
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-3.5 rounded-2xl bg-[#12121a] border border-zinc-800">
             <div>
               <span class="text-[10px] text-zinc-500 block uppercase font-bold">Salary</span>
@@ -1217,7 +1604,7 @@ async function openJobDetailModal(jobId) {
     modal.querySelector('#detailCloseBtn').onclick = () => modal.remove();
     modal.querySelector('#detailApplyBtn').onclick = async () => {
       modal.remove();
-      const eligible = await checkJobsEventsEligibility(currentUser, 'apply for this job');
+      const eligible = await checkJobsEventsEligibility(getActiveUser(), 'apply for this job');
       if (eligible) openApplyJobModal(jobId);
     };
   } catch (err) {
@@ -1388,39 +1775,39 @@ async function renderEmployerDesk(container) {
           </button>
         </div>
       `;
-      _$('deskPostJobBtn')?.addEventListener('click', () => openPostJobModal());
+      target.querySelector('#deskPostJobBtn')?.addEventListener('click', async () => {
+        const eligible = await checkJobsEventsEligibility(getActiveUser(), 'post a job opening');
+        if (eligible) openPostJobModal();
+      });
       return;
     }
 
     target.innerHTML = `
       <div class="space-y-4">
-        <div class="flex items-center justify-between pb-2">
-          <h3 class="text-sm font-bold text-white">Your Posted Jobs (${myJobs.length})</h3>
-          <button id="deskPostJobBtn2" class="px-3.5 py-1.5 rounded-xl bg-gold text-black font-bold text-xs hover:brightness-110">
-            ＋ Post Another Job
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-bold text-zinc-300">You have <b>${myJobs.length}</b> posted job listing(s)</p>
+          <button id="deskPostJobBtn2" class="px-3.5 py-1.5 rounded-xl bg-gold text-black font-extrabold text-xs hover:brightness-110 flex items-center gap-1 shadow-sm">
+            <span>＋</span><span>Post Another Job</span>
           </button>
         </div>
-
         <div class="space-y-3">
           ${myJobs.map(job => `
-            <div class="bg-[#14141e] border border-zinc-800 rounded-2xl p-4 space-y-3">
-              <div class="flex items-start justify-between gap-3">
-                <div>
-                  <h4 class="text-base font-bold text-white">${_esc(job.title)}</h4>
-                  <p class="text-xs text-zinc-400">📍 ${_esc(job.region)} · Category: ${_esc(job.category)}</p>
+            <div class="bg-[#14141e] border border-zinc-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="space-y-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h4 class="text-sm font-black text-white">${_esc(job.title)}</h4>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                    ${_esc(job.employmentType || 'Full-time')}
+                  </span>
                 </div>
-                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
-                  job.status === 'approved' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' :
-                  job.status === 'rejected' ? 'bg-rose-950 text-rose-300 border border-rose-800' : 'bg-amber-950 text-amber-300 border border-amber-800'
-                }">
-                  ${_esc(job.status || 'Pending')}
-                </span>
+                <p class="text-xs text-zinc-400">🏢 ${_esc(job.companyName || 'Company')} · 📍 ${_esc(job.region || 'Accra')} (${_esc(job.locationType || 'On-site')})</p>
               </div>
-
-              <div class="flex items-center justify-between pt-2 border-t border-zinc-800 text-xs">
-                <span class="text-zinc-400">Applications: <b class="text-amber-300">${job.applicationsCount || 0}</b></span>
-                <button data-view-applicants="${job.id}" class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-xs">
-                  Review Candidates →
+              <div class="flex items-center gap-2 shrink-0">
+                <button data-view-job="${job.id}" class="px-3 py-1.5 rounded-xl border border-zinc-700 hover:bg-zinc-800 text-xs font-bold text-zinc-300 transition">
+                  Preview
+                </button>
+                <button data-view-applicants="${job.id}" class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-black hover:brightness-110 text-xs font-black transition shadow-sm">
+                  View Candidates
                 </button>
               </div>
             </div>
@@ -1429,7 +1816,13 @@ async function renderEmployerDesk(container) {
       </div>
     `;
 
-    _$('deskPostJobBtn2')?.addEventListener('click', () => openPostJobModal());
+    target.querySelector('#deskPostJobBtn2')?.addEventListener('click', async () => {
+      const eligible = await checkJobsEventsEligibility(getActiveUser(), 'post a job opening');
+      if (eligible) openPostJobModal();
+    });
+    target.querySelectorAll('[data-view-job]').forEach(b => {
+      b.onclick = () => openJobDetailModal(b.dataset.viewJob);
+    });
     target.querySelectorAll('[data-view-applicants]').forEach(b => {
       b.onclick = () => openApplicantsModal(b.dataset.viewApplicants);
     });
@@ -1473,13 +1866,29 @@ async function openApplicantsModal(jobId) {
     const area = modal.querySelector('#applicantsListArea');
     if (!area) return;
 
-    if (snap.empty) {
+    const apps = [];
+    const seenAppIds = new Set();
+    if (snap && snap.forEach) {
+      snap.forEach(d => {
+        seenAppIds.add(d.id);
+        apps.push({ id: d.id, ...d.data() });
+      });
+    }
+
+    try {
+      const myApps = JSON.parse(localStorage.getItem('sf_my_job_applications') || '[]');
+      myApps.forEach(a => {
+        if (a && a.jobId === jobId && !seenAppIds.has(a.id)) {
+          seenAppIds.add(a.id);
+          apps.push(a);
+        }
+      });
+    } catch (_) {}
+
+    if (apps.length === 0) {
       area.innerHTML = `<div class="text-center py-10 text-zinc-500">No applications received yet for this listing.</div>`;
       return;
     }
-
-    const apps = [];
-    snap.forEach(d => apps.push({ id: d.id, ...d.data() }));
 
     area.innerHTML = apps.map(app => `
       <div class="bg-[#12121a] border border-zinc-800 rounded-2xl p-4 space-y-2.5">
@@ -1523,10 +1932,21 @@ async function openApplicantsModal(jobId) {
         const appId = btn.dataset.appStatus;
         const newStatus = btn.dataset.status;
         try {
-          await getJobsEventsDb().collection('jobApplications').doc(appId).update({
+          const updatePayload = {
             status: newStatus,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
+            updatedAt: (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
+              ? firebase.firestore.FieldValue.serverTimestamp()
+              : new Date().toISOString()
+          };
+          await getJobsEventsDb().collection('jobApplications').doc(appId).update(updatePayload);
+          try {
+            const myApps = JSON.parse(localStorage.getItem('sf_my_job_applications') || '[]');
+            const idx = myApps.findIndex(a => a.id === appId);
+            if (idx >= 0) {
+              myApps[idx].status = newStatus;
+              localStorage.setItem('sf_my_job_applications', JSON.stringify(myApps));
+            }
+          } catch (_) {}
           toast(`Application updated to ${newStatus}`, 'success');
           openApplicantsModal(jobId);
         } catch (e) {
@@ -1808,7 +2228,7 @@ async function loadEventsFeed() {
 
     currentList.querySelectorAll('[data-register-event]').forEach(b => {
       b.onclick = async () => {
-        const eligible = await checkJobsEventsEligibility(currentUser, 'register for this event');
+        const eligible = await checkJobsEventsEligibility(getActiveUser(), 'register for this event');
         if (eligible) openRegisterEventModal(b.dataset.registerEvent);
       };
     });
@@ -1907,7 +2327,7 @@ async function openEventDetailModal(eventId) {
   modal.querySelector('#eventDetailCloseBtn').onclick = () => modal.remove();
   modal.querySelector('#eventDetailRegisterBtn').onclick = async () => {
     modal.remove();
-    const eligible = await checkJobsEventsEligibility(currentUser, 'register for this event');
+    const eligible = await checkJobsEventsEligibility(getActiveUser(), 'register for this event');
     if (eligible) openRegisterEventModal(eventId);
   };
 }
@@ -1924,13 +2344,35 @@ function openCreateEventModal() {
           <img src="/nav-emblem.svg" alt="SellerFlow" class="w-6 h-6 object-contain shrink-0" />
           <div>
             <h3 class="text-base font-black text-white">Host an Event in Ghana</h3>
-            <p class="text-[11px] text-zinc-400">Publish your gathering for verified attendees.</p>
+            <p class="text-[11px] text-zinc-400">Attach event flyer/picture, venue details, and ticketing.</p>
           </div>
         </div>
         <button id="closeCreateEventModalBtn" class="w-8 h-8 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center font-bold">✕</button>
       </div>
 
       <form id="createEventForm" class="flex-1 overflow-y-auto pr-2 space-y-3.5 text-xs text-zinc-300">
+        <div>
+          <label class="block font-bold text-zinc-300 mb-1">Event Flyer / Banner Picture *</label>
+          <div id="eventImageDropzone" class="border-2 border-dashed border-zinc-700 hover:border-amber-500/60 rounded-2xl p-4 text-center cursor-pointer transition bg-[#12121a] flex flex-col items-center justify-center min-h-[110px] relative group">
+            <input type="file" id="eventImageInput" accept="image/*" class="hidden" />
+            <div id="eventImagePlaceholder" class="space-y-1.5 flex flex-col items-center">
+              <span class="text-2xl block">🎨</span>
+              <p class="text-xs font-bold text-white">Click or drag & drop event flyer/picture *</p>
+              <p class="text-[11px] text-zinc-400">Upload promotional flyer, venue picture, or banner (PNG, JPG, WEBP - Max 10MB)</p>
+            </div>
+            <div id="eventImagePreviewWrapper" class="hidden w-full flex items-center gap-3">
+              <img id="eventImagePreview" class="w-16 h-16 object-cover rounded-xl border border-zinc-700 shadow-sm shrink-0" />
+              <div class="text-left flex-1 min-w-0">
+                <p id="eventImageFileName" class="text-xs font-bold text-white truncate"></p>
+                <p id="eventImageFileSize" class="text-[11px] text-emerald-400 font-semibold">✓ Flyer ready to attach</p>
+              </div>
+              <button type="button" id="eventImageRemoveBtn" class="px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold hover:bg-rose-500/30">
+                Change
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div>
           <label class="block font-bold text-zinc-300 mb-1">Event Title *</label>
           <input type="text" id="eventTitle" required placeholder="e.g. Accra Creators & Sellers Summit 2026" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
@@ -1939,7 +2381,7 @@ function openCreateEventModal() {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block font-bold text-zinc-300 mb-1">Organizer / Host Name *</label>
-            <input type="text" id="eventOrganizer" required value="${_esc(currentProfile?.name || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
+            <input type="text" id="eventOrganizer" required value="${_esc(getActiveProfile()?.name || getActiveUser()?.displayName || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
           </div>
           <div>
             <label class="block font-bold text-zinc-300 mb-1">Category *</label>
@@ -2003,11 +2445,84 @@ function openCreateEventModal() {
   `;
   document.body.appendChild(modal);
 
+  let selectedEventImageData = '';
+
+  const eventImageInput = modal.querySelector('#eventImageInput');
+  const eventImageDropzone = modal.querySelector('#eventImageDropzone');
+  const eventImagePlaceholder = modal.querySelector('#eventImagePlaceholder');
+  const eventImagePreviewWrapper = modal.querySelector('#eventImagePreviewWrapper');
+  const eventImagePreview = modal.querySelector('#eventImagePreview');
+  const eventImageFileName = modal.querySelector('#eventImageFileName');
+  const eventImageRemoveBtn = modal.querySelector('#eventImageRemoveBtn');
+
+  async function handleEventImageFile(file) {
+    if (!file) return;
+    try {
+      const dataUrl = await readImageFileAsDataUrl(file);
+      selectedEventImageData = dataUrl;
+      eventImagePreview.src = dataUrl;
+      eventImageFileName.textContent = file.name || 'event-flyer.jpg';
+      eventImagePlaceholder.classList.add('hidden');
+      eventImagePreviewWrapper.classList.remove('hidden');
+      eventImageDropzone.classList.remove('border-rose-500');
+      eventImageDropzone.classList.add('border-emerald-500/50');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  eventImageDropzone.onclick = (e) => {
+    if (e.target !== eventImageRemoveBtn && !eventImageRemoveBtn.contains(e.target)) {
+      eventImageInput.click();
+    }
+  };
+
+  eventImageInput.onchange = () => {
+    if (eventImageInput.files && eventImageInput.files[0]) {
+      handleEventImageFile(eventImageInput.files[0]);
+    }
+  };
+
+  eventImageDropzone.ondragover = (e) => {
+    e.preventDefault();
+    eventImageDropzone.classList.add('border-gold');
+  };
+
+  eventImageDropzone.ondragleave = () => {
+    eventImageDropzone.classList.remove('border-gold');
+  };
+
+  eventImageDropzone.ondrop = (e) => {
+    e.preventDefault();
+    eventImageDropzone.classList.remove('border-gold');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleEventImageFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  eventImageRemoveBtn.onclick = (e) => {
+    e.stopPropagation();
+    selectedEventImageData = '';
+    eventImageInput.value = '';
+    eventImagePreview.src = '';
+    eventImagePreviewWrapper.classList.add('hidden');
+    eventImagePlaceholder.classList.remove('hidden');
+    eventImageDropzone.classList.remove('border-emerald-500/50');
+  };
+
   modal.querySelector('#closeCreateEventModalBtn').onclick = () => modal.remove();
   modal.querySelector('#cancelCreateEventBtn').onclick = () => modal.remove();
 
   modal.querySelector('#createEventForm').onsubmit = async (e) => {
     e.preventDefault();
+
+    if (!selectedEventImageData) {
+      toast('Please upload and attach an event flyer or banner picture.', 'error');
+      eventImageDropzone.classList.add('border-rose-500');
+      eventImageDropzone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
     const btn = modal.querySelector('#submitEventBtn');
     btn.disabled = true;
     btn.textContent = 'Submitting & Scanning...';
@@ -2018,6 +2533,9 @@ function openCreateEventModal() {
       const payload = {
         title: _$('eventTitle').value.trim(),
         organizerName: _$('eventOrganizer').value.trim(),
+        bannerUrl: selectedEventImageData,
+        imageUrl: selectedEventImageData,
+        imageBase64: selectedEventImageData,
         category: _$('eventCategory').value,
         startDate: _$('eventDate').value,
         startTime: _$('eventTime').value,
@@ -2128,12 +2646,12 @@ async function openRegisterEventModal(eventId) {
       <form id="registerEventForm" class="space-y-3 text-xs text-zinc-300">
         <div>
           <label class="block font-bold text-zinc-300 mb-1">Attendee Name *</label>
-          <input type="text" id="regName" required value="${_esc(currentProfile?.name || currentUser?.displayName || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
+          <input type="text" id="regName" required value="${_esc(getActiveProfile()?.name || getActiveUser()?.displayName || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
         </div>
 
         <div>
           <label class="block font-bold text-zinc-300 mb-1">Email Address *</label>
-          <input type="email" id="regEmail" required value="${_esc(currentUser?.email || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
+          <input type="email" id="regEmail" required value="${_esc(getActiveUser()?.email || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
         </div>
 
         <div>
@@ -2394,7 +2912,10 @@ async function renderOrganizerDesk(container) {
           </button>
         </div>
       `;
-      _$('deskCreateEvBtn')?.addEventListener('click', () => openCreateEventModal());
+      _$('deskCreateEvBtn')?.addEventListener('click', async () => {
+        const eligible = await checkJobsEventsEligibility(getActiveUser(), 'host an event');
+        if (eligible) openCreateEventModal();
+      });
       return;
     }
 
@@ -2421,8 +2942,18 @@ async function renderOrganizerDesk(container) {
                   ${_esc(ev.status || 'Pending')}
                 </span>
               </div>
-              <div class="text-xs text-zinc-400 pt-1 border-t border-zinc-800/60">
-                Registered Attendees: <b class="text-amber-300">${ev.registeredCount || 0}</b>
+              <div class="text-xs text-zinc-400 pt-2 border-t border-zinc-800/60 flex items-center justify-between gap-3">
+                <div>
+                  Registered Attendees: <b class="text-amber-300">${ev.registeredCount || 0}</b>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button data-view-event-detail="${ev.id}" class="px-3 py-1.5 rounded-xl border border-zinc-700 hover:bg-zinc-800 text-xs font-bold text-zinc-300 transition">
+                    Preview
+                  </button>
+                  <button data-view-event-attendees="${ev.id}" class="px-3 py-1.5 rounded-xl bg-amber-500 text-black hover:brightness-110 text-xs font-black transition shadow-sm">
+                    View Attendees
+                  </button>
+                </div>
               </div>
             </div>
           `).join('')}
@@ -2430,12 +2961,95 @@ async function renderOrganizerDesk(container) {
       </div>
     `;
 
-    _$('deskCreateEvBtn2')?.addEventListener('click', () => openCreateEventModal());
+    target.querySelector('#deskCreateEvBtn2')?.addEventListener('click', async () => {
+      const eligible = await checkJobsEventsEligibility(getActiveUser(), 'host an event');
+      if (eligible) openCreateEventModal();
+    });
+    target.querySelectorAll('[data-view-event-detail]').forEach(b => {
+      b.onclick = () => openEventDetailModal(b.dataset.viewEventDetail);
+    });
+    target.querySelectorAll('[data-view-event-attendees]').forEach(b => {
+      b.onclick = () => openAttendeesModal(b.dataset.viewEventAttendees);
+    });
   } catch (err) {
     const target = _$('eventsContentArea') || container;
     if (target) {
       target.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Error: ${_esc(err.message)}</div>`;
     }
+  }
+}
+
+// Modal: Review Registered Attendees for an Event
+async function openAttendeesModal(eventId) {
+  const modal = document.createElement('div');
+  modal.id = 'attendeesModal';
+  modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in';
+  modal.innerHTML = `
+    <div class="bg-[#181824] border border-zinc-700 rounded-3xl max-w-2xl w-full p-6 text-white shadow-2xl space-y-4 max-h-[92vh] flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <div>
+          <h3 class="text-base font-black text-white">Registered Event Attendees</h3>
+          <p class="text-[11px] text-zinc-400">Guest list and ticketing status</p>
+        </div>
+        <button id="closeAttendeesModalBtn" class="w-8 h-8 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center font-bold">✕</button>
+      </div>
+
+      <div id="attendeesListArea" class="flex-1 overflow-y-auto space-y-3 pr-2 text-xs">
+        <div class="text-center py-8 text-zinc-500">Loading attendees...</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  modal.querySelector('#closeAttendeesModalBtn').onclick = () => modal.remove();
+
+  try {
+    const snap = await getJobsEventsDb().collection('eventRegistrations')
+      .where('eventId', '==', eventId)
+      .get();
+
+    const area = modal.querySelector('#attendeesListArea');
+    if (!area) return;
+
+    const attendees = [];
+    const seenIds = new Set();
+    if (snap && snap.forEach) {
+      snap.forEach(d => {
+        seenIds.add(d.id);
+        attendees.push({ id: d.id, ...d.data() });
+      });
+    }
+
+    try {
+      const myRegs = JSON.parse(localStorage.getItem('sf_my_event_registrations') || '[]');
+      myRegs.forEach(r => {
+        if (r && r.eventId === eventId && !seenIds.has(r.id)) {
+          seenIds.add(r.id);
+          attendees.push(r);
+        }
+      });
+    } catch (_) {}
+
+    if (attendees.length === 0) {
+      area.innerHTML = `<div class="text-center py-10 text-zinc-500">No registrations received yet for this event.</div>`;
+      return;
+    }
+
+    area.innerHTML = attendees.map(att => `
+      <div class="bg-[#12121a] border border-zinc-800 rounded-2xl p-4 flex items-center justify-between gap-3">
+        <div class="space-y-1 min-w-0">
+          <h4 class="font-bold text-white text-sm truncate">${_esc(att.attendeeName || 'Attendee')}</h4>
+          <p class="text-[11px] text-zinc-400">📧 ${_esc(att.attendeeEmail || 'N/A')} · 📞 ${_esc(att.attendeePhone || 'N/A')}</p>
+          <p class="text-[10px] text-zinc-500">🎟️ ${att.ticketCount || 1} Ticket · Registered: ${_esc(new Date(att.registeredAt || Date.now()).toLocaleDateString())}</p>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-emerald-950 text-emerald-300 border border-emerald-800 shrink-0">
+          ${_esc(att.status || 'Confirmed')}
+        </span>
+      </div>
+    `).join('');
+  } catch (err) {
+    const area = modal?.querySelector('#attendeesListArea');
+    if (area) area.innerHTML = `<div class="text-center py-8 text-rose-400">Error: ${_esc(err.message)}</div>`;
   }
 }
 
@@ -3287,6 +3901,8 @@ window.openJobDetailModal = openJobDetailModal;
 window.openEventDetailModal = openEventDetailModal;
 window.openApplyJobModal = openApplyJobModal;
 window.openRegisterEventModal = openRegisterEventModal;
+window.openApplicantsModal = openApplicantsModal;
+window.openAttendeesModal = openAttendeesModal;
 window._sfPrefetchJobs = prefetchJobsData;
 window._sfPrefetchEvents = prefetchEventsData;
 window._sfInvalidateJobsEventsCache = () => {

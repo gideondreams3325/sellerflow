@@ -153,12 +153,66 @@ function getJobsEventsDb() {
           } catch (_) {}
         }
       }),
-      where: (field, op, val) => ({
-        where: () => ({
-          limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
-          get: async () => ({ empty: true, docs: [], forEach: () => {} })
-        }),
-        limit: () => ({
+      where: (field, op, val) => {
+        const createQuery = (filters) => ({
+          where: (f2, op2, v2) => createQuery([...filters, { field: f2, op: op2, val: v2 }]),
+          orderBy: () => createQuery(filters),
+          limit: (n) => ({
+            get: async () => {
+              try {
+                const raw = localStorage.getItem('sf_mock_col_' + name);
+                const list = raw ? JSON.parse(raw) : [];
+                const matched = list.filter(item => {
+                  return filters.every(flt => (flt.op === '==' ? item[flt.field] === flt.val : true));
+                });
+                const sliced = matched.slice(0, n || 50);
+                return {
+                  empty: sliced.length === 0,
+                  docs: sliced.map(d => ({ id: d.id, data: () => d })),
+                  forEach: (cb) => sliced.forEach(d => cb({ id: d.id, data: () => d }))
+                };
+              } catch (_) {
+                return { empty: true, docs: [], forEach: () => {} };
+              }
+            }
+          }),
+          get: async () => {
+            try {
+              const raw = localStorage.getItem('sf_mock_col_' + name);
+              const list = raw ? JSON.parse(raw) : [];
+              const matched = list.filter(item => {
+                return filters.every(flt => (flt.op === '==' ? item[flt.field] === flt.val : true));
+              });
+              return {
+                empty: matched.length === 0,
+                docs: matched.map(d => ({ id: d.id, data: () => d })),
+                forEach: (cb) => matched.forEach(d => cb({ id: d.id, data: () => d }))
+              };
+            } catch (_) {
+              return { empty: true, docs: [], forEach: () => {} };
+            }
+          }
+        });
+        return createQuery([{ field, op, val }]);
+      },
+      orderBy: () => ({
+        where: (field, op, val) => ({
+          limit: (n) => ({
+            get: async () => {
+              try {
+                const raw = localStorage.getItem('sf_mock_col_' + name);
+                const list = raw ? JSON.parse(raw) : [];
+                const matched = list.filter(x => (op === '==' ? x[field] === val : true)).slice(0, n || 50);
+                return {
+                  empty: matched.length === 0,
+                  docs: matched.map(d => ({ id: d.id, data: () => d })),
+                  forEach: (cb) => matched.forEach(d => cb({ id: d.id, data: () => d }))
+                };
+              } catch (_) {
+                return { empty: true, docs: [], forEach: () => {} };
+              }
+            }
+          }),
           get: async () => {
             try {
               const raw = localStorage.getItem('sf_mock_col_' + name);
@@ -174,26 +228,6 @@ function getJobsEventsDb() {
             }
           }
         }),
-        orderBy: () => ({
-          limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
-          get: async () => ({ empty: true, docs: [], forEach: () => {} })
-        }),
-        get: async () => {
-          try {
-            const raw = localStorage.getItem('sf_mock_col_' + name);
-            const list = raw ? JSON.parse(raw) : [];
-            const matched = list.filter(x => (op === '==' ? x[field] === val : true));
-            return {
-              empty: matched.length === 0,
-              docs: matched.map(d => ({ id: d.id, data: () => d })),
-              forEach: (cb) => matched.forEach(d => cb({ id: d.id, data: () => d }))
-            };
-          } catch (_) {
-            return { empty: true, docs: [], forEach: () => {} };
-          }
-        }
-      }),
-      orderBy: () => ({
         limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
         get: async () => ({ empty: true, docs: [], forEach: () => {} })
       }),
@@ -1832,13 +1866,29 @@ async function openApplicantsModal(jobId) {
     const area = modal.querySelector('#applicantsListArea');
     if (!area) return;
 
-    if (snap.empty) {
+    const apps = [];
+    const seenAppIds = new Set();
+    if (snap && snap.forEach) {
+      snap.forEach(d => {
+        seenAppIds.add(d.id);
+        apps.push({ id: d.id, ...d.data() });
+      });
+    }
+
+    try {
+      const myApps = JSON.parse(localStorage.getItem('sf_my_job_applications') || '[]');
+      myApps.forEach(a => {
+        if (a && a.jobId === jobId && !seenAppIds.has(a.id)) {
+          seenAppIds.add(a.id);
+          apps.push(a);
+        }
+      });
+    } catch (_) {}
+
+    if (apps.length === 0) {
       area.innerHTML = `<div class="text-center py-10 text-zinc-500">No applications received yet for this listing.</div>`;
       return;
     }
-
-    const apps = [];
-    snap.forEach(d => apps.push({ id: d.id, ...d.data() }));
 
     area.innerHTML = apps.map(app => `
       <div class="bg-[#12121a] border border-zinc-800 rounded-2xl p-4 space-y-2.5">
@@ -1882,10 +1932,21 @@ async function openApplicantsModal(jobId) {
         const appId = btn.dataset.appStatus;
         const newStatus = btn.dataset.status;
         try {
-          await getJobsEventsDb().collection('jobApplications').doc(appId).update({
+          const updatePayload = {
             status: newStatus,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
+            updatedAt: (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
+              ? firebase.firestore.FieldValue.serverTimestamp()
+              : new Date().toISOString()
+          };
+          await getJobsEventsDb().collection('jobApplications').doc(appId).update(updatePayload);
+          try {
+            const myApps = JSON.parse(localStorage.getItem('sf_my_job_applications') || '[]');
+            const idx = myApps.findIndex(a => a.id === appId);
+            if (idx >= 0) {
+              myApps[idx].status = newStatus;
+              localStorage.setItem('sf_my_job_applications', JSON.stringify(myApps));
+            }
+          } catch (_) {}
           toast(`Application updated to ${newStatus}`, 'success');
           openApplicantsModal(jobId);
         } catch (e) {
@@ -2881,8 +2942,18 @@ async function renderOrganizerDesk(container) {
                   ${_esc(ev.status || 'Pending')}
                 </span>
               </div>
-              <div class="text-xs text-zinc-400 pt-1 border-t border-zinc-800/60">
-                Registered Attendees: <b class="text-amber-300">${ev.registeredCount || 0}</b>
+              <div class="text-xs text-zinc-400 pt-2 border-t border-zinc-800/60 flex items-center justify-between gap-3">
+                <div>
+                  Registered Attendees: <b class="text-amber-300">${ev.registeredCount || 0}</b>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button data-view-event-detail="${ev.id}" class="px-3 py-1.5 rounded-xl border border-zinc-700 hover:bg-zinc-800 text-xs font-bold text-zinc-300 transition">
+                    Preview
+                  </button>
+                  <button data-view-event-attendees="${ev.id}" class="px-3 py-1.5 rounded-xl bg-amber-500 text-black hover:brightness-110 text-xs font-black transition shadow-sm">
+                    View Attendees
+                  </button>
+                </div>
               </div>
             </div>
           `).join('')}
@@ -2890,15 +2961,95 @@ async function renderOrganizerDesk(container) {
       </div>
     `;
 
-    _$('deskCreateEvBtn2')?.addEventListener('click', async () => {
+    target.querySelector('#deskCreateEvBtn2')?.addEventListener('click', async () => {
       const eligible = await checkJobsEventsEligibility(getActiveUser(), 'host an event');
       if (eligible) openCreateEventModal();
+    });
+    target.querySelectorAll('[data-view-event-detail]').forEach(b => {
+      b.onclick = () => openEventDetailModal(b.dataset.viewEventDetail);
+    });
+    target.querySelectorAll('[data-view-event-attendees]').forEach(b => {
+      b.onclick = () => openAttendeesModal(b.dataset.viewEventAttendees);
     });
   } catch (err) {
     const target = _$('eventsContentArea') || container;
     if (target) {
       target.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Error: ${_esc(err.message)}</div>`;
     }
+  }
+}
+
+// Modal: Review Registered Attendees for an Event
+async function openAttendeesModal(eventId) {
+  const modal = document.createElement('div');
+  modal.id = 'attendeesModal';
+  modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in';
+  modal.innerHTML = `
+    <div class="bg-[#181824] border border-zinc-700 rounded-3xl max-w-2xl w-full p-6 text-white shadow-2xl space-y-4 max-h-[92vh] flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <div>
+          <h3 class="text-base font-black text-white">Registered Event Attendees</h3>
+          <p class="text-[11px] text-zinc-400">Guest list and ticketing status</p>
+        </div>
+        <button id="closeAttendeesModalBtn" class="w-8 h-8 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center font-bold">✕</button>
+      </div>
+
+      <div id="attendeesListArea" class="flex-1 overflow-y-auto space-y-3 pr-2 text-xs">
+        <div class="text-center py-8 text-zinc-500">Loading attendees...</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  modal.querySelector('#closeAttendeesModalBtn').onclick = () => modal.remove();
+
+  try {
+    const snap = await getJobsEventsDb().collection('eventRegistrations')
+      .where('eventId', '==', eventId)
+      .get();
+
+    const area = modal.querySelector('#attendeesListArea');
+    if (!area) return;
+
+    const attendees = [];
+    const seenIds = new Set();
+    if (snap && snap.forEach) {
+      snap.forEach(d => {
+        seenIds.add(d.id);
+        attendees.push({ id: d.id, ...d.data() });
+      });
+    }
+
+    try {
+      const myRegs = JSON.parse(localStorage.getItem('sf_my_event_registrations') || '[]');
+      myRegs.forEach(r => {
+        if (r && r.eventId === eventId && !seenIds.has(r.id)) {
+          seenIds.add(r.id);
+          attendees.push(r);
+        }
+      });
+    } catch (_) {}
+
+    if (attendees.length === 0) {
+      area.innerHTML = `<div class="text-center py-10 text-zinc-500">No registrations received yet for this event.</div>`;
+      return;
+    }
+
+    area.innerHTML = attendees.map(att => `
+      <div class="bg-[#12121a] border border-zinc-800 rounded-2xl p-4 flex items-center justify-between gap-3">
+        <div class="space-y-1 min-w-0">
+          <h4 class="font-bold text-white text-sm truncate">${_esc(att.attendeeName || 'Attendee')}</h4>
+          <p class="text-[11px] text-zinc-400">📧 ${_esc(att.attendeeEmail || 'N/A')} · 📞 ${_esc(att.attendeePhone || 'N/A')}</p>
+          <p class="text-[10px] text-zinc-500">🎟️ ${att.ticketCount || 1} Ticket · Registered: ${_esc(new Date(att.registeredAt || Date.now()).toLocaleDateString())}</p>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-emerald-950 text-emerald-300 border border-emerald-800 shrink-0">
+          ${_esc(att.status || 'Confirmed')}
+        </span>
+      </div>
+    `).join('');
+  } catch (err) {
+    const area = modal?.querySelector('#attendeesListArea');
+    if (area) area.innerHTML = `<div class="text-center py-8 text-rose-400">Error: ${_esc(err.message)}</div>`;
   }
 }
 
@@ -3750,6 +3901,8 @@ window.openJobDetailModal = openJobDetailModal;
 window.openEventDetailModal = openEventDetailModal;
 window.openApplyJobModal = openApplyJobModal;
 window.openRegisterEventModal = openRegisterEventModal;
+window.openApplicantsModal = openApplicantsModal;
+window.openAttendeesModal = openAttendeesModal;
 window._sfPrefetchJobs = prefetchJobsData;
 window._sfPrefetchEvents = prefetchEventsData;
 window._sfInvalidateJobsEventsCache = () => {
