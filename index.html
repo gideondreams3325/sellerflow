@@ -138,7 +138,7 @@
 </script>
 <script src="capacitor.js"></script>
 <script src="/translations.js"></script>
-<script src="/jobs-events.js"></script>
+<script src="/jobs-events.js?v=2.1.0"></script>
 <script>tailwind.config={theme:{extend:{colors:{gold:'#f5b942'}}}}</script>
 <style>
 *{box-sizing:border-box}
@@ -2638,7 +2638,7 @@ function _createSafeNullElement(id) {
   });
 }
 
-const $ = id => document.getElementById(id) || _createSafeNullElement(id);
+var $ = (typeof window.$ === 'function') ? window.$ : (id => document.getElementById(id) || _createSafeNullElement(id));
 window.$ = $;
 const show = e => { if (e && e.classList) e.classList.remove('hide'); };
 const hide = e => { if (e && e.classList) e.classList.add('hide'); };
@@ -6150,8 +6150,8 @@ async function renderPage(targetPostId, options){
     admin:renderAdmin,
     update:renderSellerFlowUpdatePage,
     chats:renderChats,
-    jobs: (targetPostId, options) => (typeof window.renderJobs === 'function' ? window.renderJobs(targetPostId, options) : (typeof renderJobs === 'function' ? renderJobs(targetPostId, options) : renderFeed(targetPostId, options))),
-    events: (targetPostId, options) => (typeof window.renderEvents === 'function' ? window.renderEvents(targetPostId, options) : (typeof renderEvents === 'function' ? renderEvents(targetPostId, options) : renderFeed(targetPostId, options)))
+    jobs: typeof renderJobs === 'function' ? renderJobs : (typeof window.renderJobs === 'function' ? window.renderJobs : renderFeed),
+    events: typeof renderEvents === 'function' ? renderEvents : (typeof window.renderEvents === 'function' ? window.renderEvents : renderFeed)
   };
   await (map[currentPage]||renderFeed)(targetPostId, options);
   updateCartBadge();

@@ -1,5 +1,5 @@
 /* SellerFlow Progressive Web App & Notification Service Worker */
-const CACHE_NAME = 'sellerflow-cache-v1.1';
+const CACHE_NAME = 'sellerflow-cache-v1.4';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -24,24 +24,80 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.filter((key) => key !== CACHE_NAME && key !== MEDIA_CACHE_NAME).map((key) => caches.delete(key))
       );
     }).then(() => self.clients.claim())
   );
 });
 
+const MEDIA_CACHE_NAME = 'sellerflow-media-v1';
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Skip non-GET, Firebase Firestore, Auth, and third-party APIs
+  // Skip non-GET requests
   if (req.method !== 'GET') return;
+
+  // Strictly exclude sensitive verification/KYC files from caching
+  const isPrivateKyc = (
+    url.pathname.includes('/verification') ||
+    url.pathname.includes('/kyc') ||
+    url.pathname.includes('buyerKycRecords') ||
+    url.pathname.includes('identityVerifications') ||
+    url.pathname.includes('ghanaCard')
+  );
+  if (isPrivateKyc) return;
+
+  // Skip Firebase, Firestore, Auth, and app APIs
   if (
     url.hostname.includes('googleapis.com') ||
     url.hostname.includes('firebase') ||
-    url.hostname.includes('supabase') ||
     url.pathname.startsWith('/api/')
   ) {
+    return;
+  }
+
+  // Handle public CDN / storage images and local media uploads (Cloudinary, Unsplash, Supabase, local /uploads/)
+  const isPublicImageOrMedia = (
+    url.pathname.startsWith('/uploads/') ||
+    url.hostname.includes('cloudinary.com') ||
+    url.hostname.includes('images.unsplash.com') ||
+    (url.hostname.includes('supabase') && url.pathname.includes('/storage/v1/object/public/'))
+  ) && (
+    req.destination === 'image' ||
+    req.destination === 'video' ||
+    req.destination === 'audio' ||
+    /\.(jpe?g|png|webp|gif|svg|mp4|webm|mov|m4v|mp3|ogg|wav)(\?.*)?$/i.test(url.pathname)
+  );
+
+  if (isPublicImageOrMedia) {
+    event.respondWith(
+      caches.open(MEDIA_CACHE_NAME).then((cache) => {
+        return cache.match(req).then((cached) => {
+          if (cached) {
+            // Return cached media immediately, background revalidate if needed
+            fetch(req).then((networkRes) => {
+              if (networkRes && networkRes.status === 200) {
+                cache.put(req, networkRes.clone()).catch(() => {});
+              }
+            }).catch(() => {});
+            return cached;
+          }
+          return fetch(req).then((networkRes) => {
+            if (networkRes && networkRes.status === 200) {
+              cache.put(req, networkRes.clone()).catch(() => {});
+            }
+            return networkRes;
+          }).catch(() => cached);
+        });
+      })
+    );
+    return;
+  }
+
+  // If request is to Supabase (and not an image above), let native browser handle it
+  if (url.hostname.includes('supabase')) {
     return;
   }
 

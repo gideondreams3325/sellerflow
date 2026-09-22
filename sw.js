@@ -1,5 +1,5 @@
 /* SellerFlow Progressive Web App & Notification Service Worker */
-const CACHE_NAME = 'sellerflow-cache-v1.2';
+const CACHE_NAME = 'sellerflow-cache-v1.4';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',

@@ -3247,14 +3247,16 @@ app.get('/sw.js', (req, res) => {
 });
 
 const staticAssetOptions = {
-  maxAge: '1d',
+  maxAge: isProd ? '1h' : 0,
   etag: true,
   lastModified: true,
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-cache, must-revalidate');
-    } else if (/\.(js|css|svg|png|jpg|jpeg|webp|gif|woff2|woff|ttf|ico)$/i.test(filePath)) {
-      res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+    } else if (/\.(js)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', isProd ? 'public, max-age=3600, must-revalidate' : 'no-cache, must-revalidate');
+    } else if (/\.(css|svg|png|jpg|jpeg|webp|gif|woff2|woff|ttf|ico)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', isProd ? 'public, max-age=86400, stale-while-revalidate=604800' : 'no-cache, must-revalidate');
     }
   }
 };
