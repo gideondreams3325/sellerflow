@@ -2151,6 +2151,69 @@ app.post('/api/storage/upload', async (req, res) => {
   }
 });
 
+/* Supabase Media Proxy: allows reading authenticated/private media safely (e.g. avatars, posts) */
+app.get('/api/media/supabase', async (req, res) => {
+  try {
+    let rawPath = req.query.path || '';
+    if (!rawPath) return res.status(400).send('Missing path parameter');
+    try { rawPath = decodeURIComponent(rawPath); } catch (_) {}
+
+    // Check if the path is actually cached locally on disk in uploads/
+    const safeRel = rawPath.replace(/^[/\\]+/, '').replace(/\.\.[/\\]/g, '');
+    const localAttempt = path.join(uploadsDir, safeRel);
+    if (fs.existsSync(localAttempt) && fs.statSync(localAttempt).isFile()) {
+      return res.sendFile(localAttempt);
+    }
+
+    // Strip full URL prefixes or bucket prefix if present
+    let cleanPath = rawPath;
+    if (cleanPath.startsWith('http://') || cleanPath.startsWith('https://')) {
+      const idx = cleanPath.indexOf('/object/');
+      if (idx !== -1) {
+        cleanPath = cleanPath.slice(idx + '/object/'.length);
+      }
+    }
+    cleanPath = cleanPath.replace(/^public\//, '');
+    cleanPath = cleanPath.replace(/^ghana-card-documents\//, '');
+    cleanPath = cleanPath.replace(/^\/+/, '');
+
+    const supaBase = process.env.SUPABASE_URL || 'https://vvpwntehstjbccarqqzp.supabase.co';
+    const supaKey = process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_uxIZMAka2Om0ZFD4tg3xfQ__7Bl_J0V';
+    const supaBucket = process.env.SUPABASE_BUCKET || 'ghana-card-documents';
+
+    const targetUrl = `${supaBase}/storage/v1/object/${supaBucket}/${cleanPath}`;
+    const upstream = await fetch(targetUrl, {
+      headers: {
+        apikey: supaKey,
+        Authorization: `Bearer ${supaKey}`
+      }
+    });
+
+    if (!upstream.ok) {
+      return res.status(upstream.status).send('Media unavailable from upstream storage');
+    }
+
+    const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    const buffer = Buffer.from(await upstream.arrayBuffer());
+    // Also opportunistically cache locally so subsequent loads are instant
+    try {
+      const localCachePath = path.join(uploadsDir, cleanPath);
+      const cacheDir = path.dirname(localCachePath);
+      if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
+      fs.writeFileSync(localCachePath, buffer);
+    } catch (_) {}
+
+    return res.send(buffer);
+  } catch (err) {
+    console.error('Supabase proxy error:', err);
+    return res.status(500).send('Proxy error');
+  }
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', gemini: 'gemini-3.8-flash' });
 });

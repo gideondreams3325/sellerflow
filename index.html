@@ -3067,6 +3067,23 @@ function getOptimizedMediaUrl(url, type = 'card') {
     } catch (_) {}
   }
 
+  // Supabase private bucket media -> route via authenticated server proxy so pictures are fully viewable
+  if (trimmed.includes('supabase.co/storage/v1/object/')) {
+    let cleanPath = trimmed;
+    const marker = '/storage/v1/object/';
+    const idx = cleanPath.indexOf(marker);
+    if (idx !== -1) {
+      cleanPath = cleanPath.slice(idx + marker.length);
+    }
+    cleanPath = cleanPath.replace(/^public\//, '').replace(/^ghana-card-documents\//, '').replace(/^\/+/, '');
+    return `/api/media/supabase?path=${encodeURIComponent(cleanPath)}`;
+  }
+
+  // Local media paths without leading slash
+  if (trimmed.startsWith('media/') || trimmed.startsWith('uploads/')) {
+    return `/${trimmed.replace(/^\/+/, '')}`;
+  }
+
   return trimmed;
 }
 window.getOptimizedMediaUrl = getOptimizedMediaUrl;
@@ -3106,7 +3123,7 @@ function getUserAvatarUrl(p){
       : ((typeof allPublicProfiles !== 'undefined' && allPublicProfiles instanceof Map && allPublicProfiles.has(trimmedStr)) ? allPublicProfiles.get(trimmedStr) : sellerProfile(trimmedStr));
     return getUserAvatarUrl(resolved);
   }
-  let rawUrl = p.avatarUrl || p.photoURL || p.photoUrl || p.avatar || p.avatar_url || p.profilePic || p.profilePicture || p.picture || p.image || p.logoUrl || '';
+  let rawUrl = p.avatarUrl || p.photoURL || p.photoUrl || p.avatar || p.avatar_url || p.profilePic || p.profilePicture || p.picture || p.image || p.logoUrl || p.avatarPath || p.mediaPath || '';
   
   // Check active user session
   if(!rawUrl && currentUser && (p.uid === currentUser.uid || p.email === currentUser.email || p === currentUser || p === currentProfile || p.sellerId === currentUser.uid || p.ownerId === currentUser.uid)){
@@ -3158,6 +3175,17 @@ window.normalizeAvatarClass = normalizeAvatarClass;
 
 window.__sfAvatarFallback = function(img, initial, cls){
   if(!img) return;
+  // If a direct Supabase URL failed to load in the browser, retry via our authenticated server proxy
+  if(img.src && img.src.includes('supabase.co/storage/v1/object/') && !img.dataset.sfProxyAttempted){
+    img.dataset.sfProxyAttempted = '1';
+    let cleanPath = img.src;
+    const marker = '/storage/v1/object/';
+    const idx = cleanPath.indexOf(marker);
+    if(idx !== -1) cleanPath = cleanPath.slice(idx + marker.length);
+    cleanPath = cleanPath.replace(/^public\//, '').replace(/^ghana-card-documents\//, '').replace(/^\/+/, '');
+    img.src = `/api/media/supabase?path=${encodeURIComponent(cleanPath)}`;
+    return;
+  }
   if(img.src && !img.dataset.sfRetriedNoReferrer && (img.src.includes('googleusercontent.com') || img.src.includes('supabase') || img.src.includes('http')) && !img.src.includes('default-avatar.svg') && !img.src.startsWith('data:')){
     img.dataset.sfRetriedNoReferrer = '1';
     img.referrerPolicy = 'no-referrer';
@@ -3166,7 +3194,10 @@ window.__sfAvatarFallback = function(img, initial, cls){
     img.src = origSrc;
     return;
   }
-  img.onerror = null;
+  img.onerror = function(){
+    this.onerror = null;
+    this.src = SF_DEFAULT_AVATAR_DATA_URI;
+  };
   if(img.src && (img.src.includes('default-avatar.svg') || img.src.startsWith('data:'))){
     img.src = SF_DEFAULT_AVATAR_DATA_URI;
   } else {
@@ -3470,32 +3501,7 @@ window.fileToBase64 = fileToBase64;
 async function universalStorageUpload(file, path, maxMB = 250) {
   if (!file) throw Error('No file selected.');
 
-  // 1. Try Supabase storage if available
-  if (supabaseUrl && !supabaseUrl.includes('placeholder')) {
-    try {
-      const endpoint = `${supabaseUrl}/storage/v1/object/${SUPABASE_BUCKET}/${path}`;
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-          'Content-Type': file.type || 'application/octet-stream',
-          'x-upsert': 'false'
-        },
-        body: file
-      });
-      if (res.ok) {
-        return {
-          url: `${supabaseUrl}/storage/v1/object/public/${SUPABASE_BUCKET}/${path}`,
-          path: path
-        };
-      }
-    } catch (supaErr) {
-      console.warn('Supabase storage unavailable:', supaErr);
-    }
-  }
-
-  // 2. Direct binary upload to server storage (/api/storage/upload)
+  // 1. Direct binary upload to server storage (/api/storage/upload)
   try {
     const binResp = await fetch(`/api/storage/upload?path=${encodeURIComponent(path)}`, {
       method: 'POST',
@@ -3508,11 +3514,50 @@ async function universalStorageUpload(file, path, maxMB = 250) {
     if (binResp.ok) {
       const binData = await binResp.json();
       if (binData.success && binData.url) {
+        // Opportunistically sync to Supabase in the background
+        if (supabaseUrl && !supabaseUrl.includes('placeholder')) {
+          fetch(`${supabaseUrl}/storage/v1/object/${SUPABASE_BUCKET}/${path}`, {
+            method: 'POST',
+            headers: {
+              apikey: supabaseKey,
+              Authorization: `Bearer ${supabaseKey}`,
+              'Content-Type': file.type || 'application/octet-stream',
+              'x-upsert': 'true'
+            },
+            body: file
+          }).catch(() => {});
+        }
         return { url: binData.url, path: binData.path || path };
       }
     }
   } catch (binErr) {
-    console.warn('Direct binary upload notice, falling back to base64:', binErr);
+    console.warn('Direct server storage upload notice, falling back to Supabase:', binErr);
+  }
+
+  // 2. Try Supabase storage if server direct upload failed
+  if (supabaseUrl && !supabaseUrl.includes('placeholder')) {
+    try {
+      const endpoint = `${supabaseUrl}/storage/v1/object/${SUPABASE_BUCKET}/${path}`;
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+          'Content-Type': file.type || 'application/octet-stream',
+          'x-upsert': 'true'
+        },
+        body: file
+      });
+      if (res.ok) {
+        // Use our authenticated proxy URL so private bucket objects are actually viewable
+        return {
+          url: `/api/media/supabase?path=${encodeURIComponent(path)}`,
+          path: path
+        };
+      }
+    } catch (supaErr) {
+      console.warn('Supabase storage unavailable:', supaErr);
+    }
   }
 
   // 3. Fallback: JSON base64 upload (/api/storage/upload) to get a compact public URL (/uploads/...)
@@ -6185,7 +6230,7 @@ function postCard(p, idx = 0){
         <!-- 1. Creator avatar with follow '+' button nested underneath -->
         <div class="reel-creator-stack">
           <button type="button" class="reel-avatar-btn" data-open-seller="${p.sellerId}" title="View @${esc(s.username||'seller')}">
-            <img src="${esc(avatarUrl)}" loading="${isFirst ? 'eager' : 'lazy'}" decoding="async" class="reel-avatar-img rounded-full object-cover" alt="${esc(s.username||'seller')}" onerror="window.__sfAvatarFallback(this)">
+            <img src="${esc(avatarUrl)}" loading="${isFirst ? 'eager' : 'lazy'}" decoding="async" referrerpolicy="no-referrer" class="reel-avatar-img rounded-full object-cover" alt="${esc(s.username||'seller')}" onerror="window.__sfAvatarFallback(this)">
           </button>
           ${!isMine && !isFollowing ? `
             <button type="button" class="reel-follow-badge" data-reel-follow="${p.sellerId}" title="Follow @${esc(s.username||'seller')}">
@@ -6269,7 +6314,7 @@ function postCard(p, idx = 0){
         <!-- 7. Spinning audio disc with avatar artwork -->
         <div class="reel-action-group">
           <button type="button" class="reel-sound-disc" data-post-action="sound" data-id="${p.id}" title="Sound: ${esc(soundText)}">
-            <img src="${esc(avatarUrl)}" loading="lazy" decoding="async" class="w-6 h-6 rounded-full object-cover pointer-events-none" alt="" onerror="window.__sfAvatarFallback(this)">
+            <img src="${esc(avatarUrl)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" class="w-6 h-6 rounded-full object-cover pointer-events-none" alt="" onerror="window.__sfAvatarFallback(this)">
           </button>
         </div>
       </div>
@@ -9844,7 +9889,7 @@ async function openProductDetailModal(rawP){
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-full overflow-hidden bg-[#222] border border-[#333] shrink-0 flex items-center justify-center">
-              <img src="${esc(getUserAvatarUrl(s))}" class="w-full h-full object-cover rounded-full" alt="${esc(s.name)}" onerror="window.__sfAvatarFallback(this)">
+              <img src="${esc(getUserAvatarUrl(s))}" referrerpolicy="no-referrer" class="w-full h-full object-cover rounded-full" alt="${esc(s.name)}" onerror="window.__sfAvatarFallback(this)">
             </div>
             <div class="min-w-0">
               <div class="flex items-center gap-1.5 flex-wrap">
@@ -12602,7 +12647,7 @@ async function renderProfile(){
     isLocked: isUsernameLocked
   });
 
-  $('uploadAvatar').onclick=async()=>{try{const f=$('avatarFile').files[0];if(!f)return toast('Choose a picture first','error');const x=await uploadPublic(f,'profiles');await updateDoc(doc(db,'users',currentUser.uid),{avatarUrl:x.url});await updateDoc(doc(db,'publicProfiles',currentUser.uid),{avatarUrl:x.url});currentProfile.avatarUrl=x.url;toast('Profile picture updated','success');navigate('profile')}catch(e){toast(errMsg(e),'error')}};$('saveProfile').onclick=saveProfile;$('verifyEmail')?.addEventListener('click',async()=>{await sendEmailVerification(currentUser);toast('Verification email sent','success')});$('openSettingsVerification')?.addEventListener('click',openVerificationModal);
+  $('uploadAvatar').onclick=async()=>{try{const f=$('avatarFile').files[0];if(!f)return toast('Choose a picture first','error');await sfUpdateProfileAvatar(f,false);navigate('profile')}catch(e){toast(errMsg(e),'error')}};$('saveProfile').onclick=saveProfile;$('verifyEmail')?.addEventListener('click',async()=>{await sendEmailVerification(currentUser);toast('Verification email sent','success')});$('openSettingsVerification')?.addEventListener('click',openVerificationModal);
 }
 async function saveProfile(){
   try{
@@ -22100,14 +22145,14 @@ init();
         <div class="relative z-10 p-4 sm:p-6 md:p-7">
           <div class="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6">
             ${isOwner ? `
-              <button type="button" id="profilePhotoBtn" class="shrink-0 border-0 bg-transparent cursor-pointer relative group self-start sm:self-auto" title="Change profile picture">
-                <img class="sf-profile-avatar rounded-full object-cover" src="${esc(getUserAvatarUrl(p))}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
-                <span class="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-gold text-black flex items-center justify-center text-sm shadow-md border-2 border-[#121212] group-hover:scale-110 transition">📷</span>
+              <button type="button" id="profilePhotoBtn" class="shrink-0 border-0 bg-transparent cursor-pointer relative group self-start sm:self-auto" title="Manage profile picture">
+                <img class="sf-profile-avatar rounded-full object-cover group-hover:brightness-95 transition" src="${esc(getUserAvatarUrl(p))}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
+                <span class="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-gold text-black flex items-center justify-center text-sm shadow-md border-2 border-[#121212] group-hover:scale-110 transition" title="Change photo">📷</span>
               </button>
             ` : `
-              <div class="shrink-0 relative self-start sm:self-auto">
-                <img class="sf-profile-avatar rounded-full object-cover" src="${esc(getUserAvatarUrl(p))}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
-              </div>
+              <button type="button" class="shrink-0 relative self-start sm:self-auto border-0 bg-transparent cursor-pointer group" title="View profile picture" data-view-image="${esc(getUserAvatarUrl(p))}" data-view-title="${esc(p.name||p.username||'User')}'s profile picture">
+                <img class="sf-profile-avatar rounded-full object-cover group-hover:brightness-105 transition" src="${esc(getUserAvatarUrl(p))}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
+              </button>
             `}
             <div class="flex-1 min-w-0">
               <div class="flex flex-wrap items-center gap-2">
@@ -22417,7 +22462,7 @@ init();
     if($('profileCreatePost')) $('profileCreatePost').onclick=openPostModal;
     if($('editProfileTop')) $('editProfileTop').onclick=sfOpenProfileEditor;
     $('profileOpenSettings')?.addEventListener('click',()=>navigate('settings'));
-    $('profilePhotoBtn')?.addEventListener('click',sfOpenProfileEditor);
+    $('profilePhotoBtn')?.addEventListener('click', sfOpenProfilePhotoModal);
 
     $('profileFollowSellerBtn')?.addEventListener('click', async () => {
       if(!currentUser) return showAuthPrompt('follow verified Ghanaian sellers');
@@ -22592,6 +22637,137 @@ init();
     });
   };
 
+  async function sfUpdateProfileAvatar(file, isRemove = false){
+    if(!currentUser) return showAuthPrompt('update your profile picture');
+    try {
+      loading(isRemove ? 'Removing profile picture…' : 'Uploading profile picture…');
+      let avatarUrl = '';
+      let avatarPath = '';
+      if(!isRemove && file){
+        validFile(file, ['image/jpeg', 'image/png', 'image/webp', 'image/*'], 10);
+        const x = await uploadPublic(file, 'profiles');
+        avatarUrl = x.url;
+        avatarPath = x.path;
+      }
+      
+      // Update users doc in Firestore
+      await setDoc(doc(db, 'users', currentUser.uid), {
+        avatarUrl: avatarUrl,
+        avatarPath: avatarPath,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+
+      // Update publicProfiles doc in Firestore
+      await setDoc(doc(db, 'publicProfiles', currentUser.uid), {
+        uid: currentUser.uid,
+        avatarUrl: avatarUrl,
+        avatarPath: avatarPath,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+
+      // Update in-memory state
+      if(!currentProfile) currentProfile = {};
+      currentProfile.avatarUrl = avatarUrl;
+      currentProfile.avatarPath = avatarPath;
+      if(currentUser) currentUser.photoURL = avatarUrl;
+      allPublicProfiles.set(currentUser.uid, { ...currentProfile, uid: currentUser.uid, avatarUrl });
+      saveUserSession(currentUser, currentProfile);
+
+      // Sync Firebase Auth user profile
+      if(auth?.currentUser && typeof auth.currentUser.updateProfile === 'function'){
+        auth.currentUser.updateProfile({ photoURL: avatarUrl }).catch(()=>{});
+      }
+
+      // Refresh navigation header and profile page
+      setNav();
+      toast(isRemove ? 'Profile picture removed' : 'Profile picture updated successfully', 'success');
+      await renderProfile();
+    } catch(e) {
+      console.error('Profile avatar update error:', e);
+      toast(errMsg(e), 'error');
+    } finally {
+      ready();
+    }
+  }
+  window.sfUpdateProfileAvatar = sfUpdateProfileAvatar;
+
+  function sfOpenProfilePhotoModal(){
+    if(!currentUser) return showAuthPrompt('manage your profile picture');
+    const p = currentProfile || {};
+    const photoUrl = getUserAvatarUrl(p);
+    const hasCustomPic = !!(photoUrl && !photoUrl.includes('default-avatar.svg') && !photoUrl.includes('nav-emblem.svg'));
+
+    modal(`<div>
+      <div class="flex items-center gap-3">
+        <div class="policy-icon">📷</div>
+        <div>
+          <h2 class="text-xl font-black">Profile Picture</h2>
+          <p class="muted text-sm">Update or view your public profile photo.</p>
+        </div>
+      </div>
+      <div class="flex flex-col items-center justify-center my-6 gap-3">
+        <div class="relative group">
+          <img id="sfPhotoModalImg" class="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-[#333] bg-[#222] shadow-xl" src="${esc(photoUrl)}" referrerpolicy="no-referrer" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
+        </div>
+        <div class="text-xs text-zinc-400 font-mono">@${esc(p.username||'user')}</div>
+      </div>
+      <input type="file" id="sfQuickAvatarInput" accept="image/*,image/jpeg,image/png,image/webp" class="hidden">
+      <div class="flex flex-col gap-2.5">
+        <button type="button" id="sfChooseNewPhotoBtn" class="btn btn-primary w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+          <span>📁</span><span>Upload New Photo</span>
+        </button>
+        ${hasCustomPic ? `
+          <button type="button" id="sfViewFullPhotoBtn" class="w-full py-2.5 rounded-xl border border-[#333] hover:border-gold text-sm text-zinc-200 bg-[#161616] flex items-center justify-center gap-2 transition">
+            <span>🔍</span><span>View Full Size</span>
+          </button>
+          <button type="button" id="sfRemovePhotoQuickBtn" class="w-full py-2.5 rounded-xl border border-rose-900/50 hover:bg-rose-950/30 text-sm text-rose-400 font-medium flex items-center justify-center gap-2 transition">
+            <span>🗑️</span><span>Remove Current Photo</span>
+          </button>
+        ` : ''}
+        <button type="button" id="sfOpenFullEditorBtn" class="w-full py-2.5 rounded-xl border border-[#333] text-sm text-zinc-400 hover:text-white hover:bg-[#202020] flex items-center justify-center gap-2 transition">
+          <span>✏️</span><span>Edit Name, Bio & Username</span>
+        </button>
+      </div>
+    </div>`);
+
+    $('sfChooseNewPhotoBtn')?.addEventListener('click', () => {
+      $('sfQuickAvatarInput')?.click();
+    });
+
+    $('sfQuickAvatarInput')?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if(file){
+        closeModal();
+        await sfUpdateProfileAvatar(file, false);
+      }
+    });
+
+    $('sfViewFullPhotoBtn')?.addEventListener('click', () => {
+      closeModal();
+      sfOpenImage(photoUrl, `${esc(p.name||p.username||'User')}'s profile picture`);
+    });
+
+    $('sfRemovePhotoQuickBtn')?.addEventListener('click', async () => {
+      const ok = await customConfirm({
+        title: 'Remove Profile Picture?',
+        message: 'Your profile picture will be reset to the default avatar.',
+        confirmText: 'Remove',
+        cancelText: 'Cancel',
+        type: 'danger',
+        icon: '🗑️'
+      });
+      if(!ok) return;
+      closeModal();
+      await sfUpdateProfileAvatar(null, true);
+    });
+
+    $('sfOpenFullEditorBtn')?.addEventListener('click', () => {
+      closeModal();
+      sfOpenProfileEditor();
+    });
+  }
+  window.sfOpenProfilePhotoModal = sfOpenProfilePhotoModal;
+
   function sfOpenProfileEditor(){
     if(!currentUser) return showAuthPrompt('edit your profile');
     const p=currentProfile||{};
@@ -22599,6 +22775,8 @@ init();
     const isUsernameLocked = !usernameCooldown.canChange && !isAdmin;
     const nextDateStr = usernameCooldown.nextChangeDate ? usernameCooldown.nextChangeDate.toLocaleDateString('en-GH', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
     const lastDateStr = usernameCooldown.lastChangedDate ? usernameCooldown.lastChangedDate.toLocaleDateString('en-GH', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+    const currentAvatarUrl = getUserAvatarUrl(p);
+    const hasCustomPic = !!(currentAvatarUrl && !currentAvatarUrl.includes('default-avatar.svg') && !currentAvatarUrl.includes('nav-emblem.svg'));
 
     modal(`<div>
       <div class="flex items-center gap-3">
@@ -22610,12 +22788,15 @@ init();
       </div>
       <div class="flex items-center gap-4 mt-5">
         <button type="button" id="sfEditPhotoPreview" class="border-0 bg-transparent cursor-pointer relative group shrink-0" title="Click to choose a photo">
-          <img class="w-20 h-20 rounded-full object-cover bg-[#222] border-2 border-[#333]" src="${esc(getUserAvatarUrl(p))}" referrerpolicy="no-referrer" alt="Profile picture" onerror="window.__sfAvatarFallback(this)">
+          <img id="sfEditAvatarImg" class="w-20 h-20 rounded-full object-cover bg-[#222] border-2 border-[#333]" src="${esc(currentAvatarUrl)}" referrerpolicy="no-referrer" alt="Profile picture" onerror="window.__sfAvatarFallback(this)">
           <span class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs text-white font-bold transition">Change</span>
         </button>
         <div class="flex-1 min-w-0">
-          <input id="sfEditAvatar" type="file" accept="image/jpeg,image/png,image/webp" class="w-full p-2 rounded-xl bg-[#191919] border border-[#333] text-xs">
-          <div class="muted text-xs mt-1">JPG, PNG or WebP · maximum 10MB.</div>
+          <input id="sfEditAvatar" type="file" accept="image/*,image/jpeg,image/png,image/webp" class="w-full p-2 rounded-xl bg-[#191919] border border-[#333] text-xs">
+          <div class="muted text-xs mt-1.5 flex items-center justify-between gap-2">
+            <span>JPG, PNG or WebP · maximum 10MB.</span>
+            <button type="button" id="sfEditRemovePhotoBtn" class="text-rose-400 hover:text-rose-300 font-bold text-[11px] transition ${hasCustomPic ? '' : 'hidden'}">Remove photo</button>
+          </div>
         </div>
       </div>
       <div class="sf-edit-grid mt-5">
@@ -22667,6 +22848,16 @@ init();
       </div>
     </div>`);
 
+    let isPhotoRemoved = false;
+    $('sfEditRemovePhotoBtn')?.addEventListener('click', () => {
+      isPhotoRemoved = true;
+      if($('sfEditAvatar')) $('sfEditAvatar').value = '';
+      const img = $('sfEditAvatarImg');
+      if(img) img.src = SF_DEFAULT_AVATAR;
+      $('sfEditRemovePhotoBtn')?.classList.add('hidden');
+      toast('Photo marked for removal. Click Save profile to confirm.', 'info');
+    });
+
     // Click on avatar preview opens file picker
     $('sfEditPhotoPreview')?.addEventListener('click', () => $('sfEditAvatar')?.click());
 
@@ -22674,11 +22865,13 @@ init();
     $('sfEditAvatar')?.addEventListener('change', (e) => {
       const file = e.target.files?.[0];
       if(file){
+        isPhotoRemoved = false;
         const previewUrl = URL.createObjectURL(file);
         const container = $('sfEditPhotoPreview');
         if(container){
-          container.innerHTML = `<img class="w-20 h-20 rounded-full object-cover bg-[#222] border-2 border-[#333]" src="${previewUrl}" alt="Preview"><span class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs text-white font-bold transition">Change</span>`;
+          container.innerHTML = `<img id="sfEditAvatarImg" class="w-20 h-20 rounded-full object-cover bg-[#222] border-2 border-[#333]" src="${previewUrl}" alt="Preview"><span class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs text-white font-bold transition">Change</span>`;
         }
+        $('sfEditRemovePhotoBtn')?.classList.remove('hidden');
       }
     });
 
@@ -22733,10 +22926,13 @@ init();
           }
         }
         
-        let avatarUrl=currentProfile.avatarUrl||'';
-        let avatarPath=currentProfile.avatarPath||'';
-        if(file){
-          validFile(file,['image/jpeg','image/png','image/webp'],10);
+        let avatarUrl = currentProfile?.avatarUrl || currentProfile?.photoURL || currentUser?.photoURL || '';
+        let avatarPath = currentProfile?.avatarPath || '';
+        if(isPhotoRemoved){
+          avatarUrl = '';
+          avatarPath = '';
+        } else if(file){
+          validFile(file,['image/jpeg','image/png','image/webp','image/*'],10);
           const x=await uploadPublic(file,'profiles');
           avatarUrl=x.url;
           avatarPath=x.path;
@@ -22753,7 +22949,7 @@ init();
           usernameLastChanged: (newUsername !== oldUsername) ? serverTimestamp() : (currentProfile.usernameLastChanged || null),
           updatedAt:serverTimestamp()
         };
-        await updateDoc(doc(db,'users',currentUser.uid),patch);
+        await setDoc(doc(db,'users',currentUser.uid),patch,{merge:true});
         await setDoc(doc(db,'publicProfiles',currentUser.uid),{
           uid:currentUser.uid,
           name,
@@ -22792,10 +22988,17 @@ init();
           currentProfile.usernameLastChanged = Date.now();
         }
         currentProfile.bio = bio;
-        if(avatarUrl) currentProfile.avatarUrl = avatarUrl;
-        if(avatarPath) currentProfile.avatarPath = avatarPath;
-        allPublicProfiles.set(currentUser.uid, { ...currentProfile, uid: currentUser.uid });
+        currentProfile.avatarUrl = avatarUrl;
+        currentProfile.avatarPath = avatarPath;
+        if(currentUser) currentUser.photoURL = avatarUrl;
+        allPublicProfiles.set(currentUser.uid, { ...currentProfile, uid: currentUser.uid, avatarUrl });
+        saveUserSession(currentUser, currentProfile);
+
+        if(auth?.currentUser && typeof auth.currentUser.updateProfile === 'function'){
+          auth.currentUser.updateProfile({ photoURL: avatarUrl }).catch(()=>{});
+        }
         
+        setNav();
         await refreshProfile();
         closeModal();
         toast('Profile updated successfully','success');
