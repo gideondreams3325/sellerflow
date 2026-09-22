@@ -3348,8 +3348,11 @@ function getOptimizedMediaUrl(url, type = 'card') {
     return `/api/media/supabase?path=${encodeURIComponent(cleanPath)}`;
   }
 
-  // Local media paths without leading slash
-  if (trimmed.startsWith('media/') || trimmed.startsWith('uploads/')) {
+  // Local media paths: route seamlessly to /uploads/
+  if (trimmed.startsWith('media/') || trimmed.startsWith('/media/')) {
+    return `/uploads/${trimmed.replace(/^\/+/, '')}`;
+  }
+  if (trimmed.startsWith('uploads/') || trimmed.startsWith('/uploads/')) {
     return `/${trimmed.replace(/^\/+/, '')}`;
   }
 
@@ -3392,16 +3395,26 @@ function getUserAvatarUrl(p){
       : ((typeof allPublicProfiles !== 'undefined' && allPublicProfiles instanceof Map && allPublicProfiles.has(trimmedStr)) ? allPublicProfiles.get(trimmedStr) : sellerProfile(trimmedStr));
     return getUserAvatarUrl(resolved);
   }
+
+  // If avatar was explicitly removed by user, honor default avatar
+  if(p.avatarRemoved === true || p.avatarRemoved === 'true'){
+    return SF_DEFAULT_AVATAR;
+  }
+
   let rawUrl = p.avatarUrl || p.photoURL || p.photoUrl || p.avatar || p.avatar_url || p.profilePic || p.profilePicture || p.picture || p.image || p.logoUrl || p.avatarPath || p.mediaPath || '';
   
   // Check active user session
   if(!rawUrl && currentUser && (p.uid === currentUser.uid || p.email === currentUser.email || p === currentUser || p === currentProfile || p.sellerId === currentUser.uid || p.ownerId === currentUser.uid)){
-    rawUrl = currentProfile?.avatarUrl || currentProfile?.photoURL || currentUser.photoURL || '';
-    if(!rawUrl){
-      try {
-        const saved = JSON.parse(localStorage.getItem('sf_active_user_session') || '{}');
-        rawUrl = saved.photoURL || saved.profile?.avatarUrl || '';
-      } catch(_) {}
+    if(!currentProfile?.avatarRemoved){
+      rawUrl = currentProfile?.avatarUrl || currentProfile?.photoURL || currentUser.photoURL || '';
+      if(!rawUrl){
+        try {
+          const saved = JSON.parse(localStorage.getItem('sf_active_user_session') || '{}');
+          if(!saved.profile?.avatarRemoved){
+            rawUrl = saved.photoURL || saved.profile?.avatarUrl || '';
+          }
+        } catch(_) {}
+      }
     }
   }
 
@@ -3409,17 +3422,21 @@ function getUserAvatarUrl(p){
   const targetUid = p.uid || p.id || p.sellerId || p.userId || p.senderId || p.buyerId || p.ownerId;
   if(!rawUrl && targetUid){
     if(currentUser && targetUid === currentUser.uid){
-      rawUrl = currentProfile?.avatarUrl || currentUser.photoURL || '';
+      if(!currentProfile?.avatarRemoved){
+        rawUrl = currentProfile?.avatarUrl || currentUser.photoURL || '';
+      }
     } else if(typeof allPublicProfiles !== 'undefined' && allPublicProfiles instanceof Map && allPublicProfiles.has(targetUid)){
       const pub = allPublicProfiles.get(targetUid);
-      rawUrl = pub?.avatarUrl || pub?.photoURL || pub?.logoUrl || '';
+      if(!pub?.avatarRemoved){
+        rawUrl = pub?.avatarUrl || pub?.photoURL || pub?.logoUrl || '';
+      }
     } else if(typeof allStores !== 'undefined' && allStores instanceof Map && allStores.has(targetUid)){
       const st = allStores.get(targetUid);
       rawUrl = st?.logoUrl || '';
     }
   }
 
-  if(!rawUrl && currentUser && p.ownerId === currentUser.uid){
+  if(!rawUrl && currentUser && p.ownerId === currentUser.uid && !currentProfile?.avatarRemoved){
     rawUrl = p.logoUrl || currentProfile?.avatarUrl || currentUser.photoURL || '';
   }
   if(rawUrl && typeof rawUrl === 'string' && rawUrl.trim()){
@@ -3455,7 +3472,15 @@ window.__sfAvatarFallback = function(img, initial, cls){
     img.src = `/api/media/supabase?path=${encodeURIComponent(cleanPath)}`;
     return;
   }
-  if(img.src && !img.dataset.sfRetriedNoReferrer && (img.src.includes('googleusercontent.com') || img.src.includes('supabase') || img.src.includes('http')) && !img.src.includes('default-avatar.svg') && !img.src.startsWith('data:')){
+  // Try media path from dataset if provided and local /uploads/ has not been attempted yet
+  if(img.dataset && img.dataset.mediaPath && !img.dataset.sfTriedMediaPath){
+    img.dataset.sfTriedMediaPath = '1';
+    const cleanMedia = img.dataset.mediaPath.replace(/^[/\\]+/, '');
+    img.src = `/uploads/${cleanMedia}`;
+    return;
+  }
+  // Retry Google usercontent or external avatar once with no-referrer
+  if(img.src && !img.dataset.sfRetriedNoReferrer && img.src.includes('googleusercontent.com') && !img.src.includes('default-avatar.svg') && !img.src.startsWith('data:')){
     img.dataset.sfRetriedNoReferrer = '1';
     img.referrerPolicy = 'no-referrer';
     img.setAttribute('referrerpolicy', 'no-referrer');
@@ -3463,15 +3488,8 @@ window.__sfAvatarFallback = function(img, initial, cls){
     img.src = origSrc;
     return;
   }
-  img.onerror = function(){
-    this.onerror = null;
-    this.src = SF_DEFAULT_AVATAR_DATA_URI;
-  };
-  if(img.src && (img.src.includes('default-avatar.svg') || img.src.startsWith('data:'))){
-    img.src = SF_DEFAULT_AVATAR_DATA_URI;
-  } else {
-    img.src = SF_DEFAULT_AVATAR;
-  }
+  img.onerror = null;
+  img.src = SF_DEFAULT_AVATAR_DATA_URI;
   img.classList.remove('rounded-3xl', 'rounded-2xl', 'rounded-xl', 'rounded-lg', 'rounded-md', 'rounded-sm');
   img.classList.add('rounded-full', 'object-cover');
 };
@@ -3560,8 +3578,13 @@ async function compressImageForUpload(file, options = {}) {
       ctx.drawImage(img, 0, 0, width, height);
       canvas.toBlob((blob) => {
         if (blob && blob.size < file.size) {
-          const newFile = new File([blob], file.name.replace(/\.[^.]+$/, '') + '.webp', { type: 'image/webp' });
-          resolve(newFile);
+          try {
+            const newFile = new File([blob], file.name.replace(/\.[^.]+$/, '') + '.webp', { type: 'image/webp' });
+            resolve(newFile);
+          } catch (_) {
+            blob.name = file.name.replace(/\.[^.]+$/, '') + '.webp';
+            resolve(blob);
+          }
         } else {
           resolve(file);
         }
@@ -3902,7 +3925,10 @@ async function uploadPublic(file, folder) {
   const fileName = uploadableFile?.name || file?.name || 'upload.jpg';
   const ext = (fileName.split('.').pop() || 'bin').replace(/[^a-z0-9]/gi, '').toLowerCase();
   const uid = currentUser?.uid || 'guest';
-  const path = `media/${uid}/${folder}/${Date.now()}_${crypto.randomUUID()}.${ext}`;
+  const randSuffix = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+    ? crypto.randomUUID()
+    : (Math.random().toString(36).slice(2, 11) + '_' + Date.now().toString(36));
+  const path = `media/${uid}/${folder}/${Date.now()}_${randSuffix}.${ext}`;
   const result = await universalStorageUpload(uploadableFile, path, 250);
   return { url: result.url, path: result.path || path, type: uploadableFile.type || file.type || 'application/octet-stream' };
 }
@@ -4765,12 +4791,12 @@ async function ensureProfile(u,extra={}){
     currentProfile.hasBusinessCert = true;
     currentProfile.businessVerified = true;
   }
-  if(currentProfile && u.photoURL && (!currentProfile.avatarUrl || !currentProfile.avatarUrl.trim())){
+  if(currentProfile && u.photoURL && !currentProfile.avatarRemoved && (!currentProfile.avatarUrl || !currentProfile.avatarUrl.trim())){
     currentProfile.avatarUrl = u.photoURL;
     updateDoc(doc(db,'users',u.uid),{avatarUrl:u.photoURL}).catch(()=>{});
     updateDoc(doc(db,'publicProfiles',u.uid),{avatarUrl:u.photoURL}).catch(()=>{});
   }
-  allPublicProfiles.set(u.uid, { ...(currentProfile || {}), uid: u.uid, avatarUrl: currentProfile?.avatarUrl || u.photoURL || '' });
+  allPublicProfiles.set(u.uid, { ...(currentProfile || {}), uid: u.uid, avatarUrl: currentProfile?.avatarUrl || (currentProfile?.avatarRemoved ? '' : (u.photoURL || '')) });
   saveUserSession(u, currentProfile);
   return p;
 }
@@ -4780,7 +4806,7 @@ async function refreshProfile(){
   const s=await getDoc(doc(db,'users',currentUser.uid));
   currentProfile=snapshotExists(s)?s.data():await ensureProfile(currentUser);
   isAdmin=isUserAdminEmail(currentUser.email) || currentProfile?.role === 'admin';
-  if(currentUser.photoURL && (!currentProfile?.avatarUrl || !currentProfile.avatarUrl.trim())){
+  if(currentUser.photoURL && !currentProfile?.avatarRemoved && (!currentProfile?.avatarUrl || !currentProfile.avatarUrl.trim())){
     if(currentProfile) currentProfile.avatarUrl = currentUser.photoURL;
     updateDoc(doc(db,'users',currentUser.uid),{avatarUrl:currentUser.photoURL}).catch(()=>{});
     updateDoc(doc(db,'publicProfiles',currentUser.uid),{avatarUrl:currentUser.photoURL}).catch(()=>{});
@@ -4792,7 +4818,7 @@ async function refreshProfile(){
     currentProfile.businessVerified=true;
   }
   if(currentProfile){
-    allPublicProfiles.set(currentUser.uid, { ...currentProfile, uid: currentUser.uid, avatarUrl: currentProfile.avatarUrl || currentUser.photoURL || '' });
+    allPublicProfiles.set(currentUser.uid, { ...currentProfile, uid: currentUser.uid, avatarUrl: currentProfile.avatarUrl || (currentProfile.avatarRemoved ? '' : (currentUser.photoURL || '')) });
     saveUserSession(currentUser, currentProfile);
   }
   return currentProfile;
@@ -22612,13 +22638,16 @@ init();
     let p = null;
     if(isOwner){
       const pub = (currentUser ? allPublicProfiles.get(currentUser.uid) : null) || {};
-      const activeAvatar = currentProfile?.avatarUrl || pub?.avatarUrl || currentUser?.photoURL || '';
+      const activeAvatar = (currentProfile?.avatarRemoved || pub?.avatarRemoved) 
+        ? '' 
+        : (currentProfile?.avatarUrl || pub?.avatarUrl || currentUser?.photoURL || '');
       p = { 
         ...(currentProfile || {}), 
         ...pub, 
         uid: targetUid,
         avatarUrl: activeAvatar,
-        photoURL: activeAvatar
+        photoURL: activeAvatar,
+        avatarRemoved: !!(currentProfile?.avatarRemoved || pub?.avatarRemoved)
       };
       if(isAdmin){
         p.verified = true;
@@ -23223,28 +23252,46 @@ init();
         avatarPath = x.path;
       }
       
-      // Update users doc in Firestore
-      await setDoc(doc(db, 'users', currentUser.uid), {
-        avatarUrl: avatarUrl,
-        avatarPath: avatarPath,
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-
-      // Update publicProfiles doc in Firestore
-      await setDoc(doc(db, 'publicProfiles', currentUser.uid), {
-        uid: currentUser.uid,
-        avatarUrl: avatarUrl,
-        avatarPath: avatarPath,
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-
-      // Update in-memory state
+      // Update in-memory state FIRST so UI updates immediately and reliably
       if(!currentProfile) currentProfile = {};
       currentProfile.avatarUrl = avatarUrl;
       currentProfile.avatarPath = avatarPath;
+      if(isRemove){
+        currentProfile.avatarRemoved = true;
+      } else {
+        delete currentProfile.avatarRemoved;
+      }
       if(currentUser) currentUser.photoURL = avatarUrl;
-      allPublicProfiles.set(currentUser.uid, { ...currentProfile, uid: currentUser.uid, avatarUrl });
+      allPublicProfiles.set(currentUser.uid, { ...currentProfile, uid: currentUser.uid, avatarUrl, avatarRemoved: isRemove });
       saveUserSession(currentUser, currentProfile);
+
+      // Update users doc in Firestore (safely catch errors so network or rules delay does not block UI)
+      try {
+        await setDoc(doc(db, 'users', currentUser.uid), {
+          avatarUrl: avatarUrl,
+          avatarPath: avatarPath,
+          avatarRemoved: isRemove,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      } catch(uErr) {
+        console.warn('users doc avatar sync notice:', uErr);
+      }
+
+      // Update publicProfiles doc in Firestore (safely catch errors)
+      try {
+        await setDoc(doc(db, 'publicProfiles', currentUser.uid), {
+          uid: currentUser.uid,
+          name: currentProfile?.name || currentUser.displayName || 'SellerFlow User',
+          username: currentProfile?.username || 'user',
+          usernameLower: (currentProfile?.username || 'user').toLowerCase(),
+          avatarUrl: avatarUrl,
+          avatarPath: avatarPath,
+          avatarRemoved: isRemove,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      } catch(pErr) {
+        console.warn('publicProfiles doc avatar sync notice:', pErr);
+      }
 
       // Sync Firebase Auth user profile
       if(auth?.currentUser && typeof auth.currentUser.updateProfile === 'function'){
@@ -23518,26 +23565,36 @@ init();
           bio,
           avatarUrl,
           avatarPath,
+          avatarRemoved: isPhotoRemoved,
           nameLastChanged:serverTimestamp(),
           usernameLastChanged: (newUsername !== oldUsername) ? serverTimestamp() : (currentProfile.usernameLastChanged || null),
           updatedAt:serverTimestamp()
         };
-        await setDoc(doc(db,'users',currentUser.uid),patch,{merge:true});
-        await setDoc(doc(db,'publicProfiles',currentUser.uid),{
-          uid:currentUser.uid,
-          name,
-          username,
-          usernameLower:newUsername,
-          bio,
-          avatarUrl,
-          avatarPath,
-          verified:!!currentProfile.verified,
-          followers:currentProfile.followers||[],
-          following:currentProfile.following||[],
-          role:currentProfile.role||'seller',
-          online:true,
-          lastSeen:serverTimestamp()
-        },{merge:true});
+        try {
+          await setDoc(doc(db,'users',currentUser.uid),patch,{merge:true});
+        } catch(uErr) {
+          console.warn('users doc save notice:', uErr);
+        }
+        try {
+          await setDoc(doc(db,'publicProfiles',currentUser.uid),{
+            uid:currentUser.uid,
+            name,
+            username,
+            usernameLower:newUsername,
+            bio,
+            avatarUrl,
+            avatarPath,
+            avatarRemoved: isPhotoRemoved,
+            verified:!!currentProfile.verified,
+            followers:currentProfile.followers||[],
+            following:currentProfile.following||[],
+            role:currentProfile.role||'seller',
+            online:true,
+            lastSeen:serverTimestamp()
+          },{merge:true});
+        } catch(pErr) {
+          console.warn('publicProfiles doc save notice:', pErr);
+        }
 
         // Sync registeredUsernames registry
         try {
@@ -23563,8 +23620,13 @@ init();
         currentProfile.bio = bio;
         currentProfile.avatarUrl = avatarUrl;
         currentProfile.avatarPath = avatarPath;
+        if(isPhotoRemoved){
+          currentProfile.avatarRemoved = true;
+        } else {
+          delete currentProfile.avatarRemoved;
+        }
         if(currentUser) currentUser.photoURL = avatarUrl;
-        allPublicProfiles.set(currentUser.uid, { ...currentProfile, uid: currentUser.uid, avatarUrl });
+        allPublicProfiles.set(currentUser.uid, { ...currentProfile, uid: currentUser.uid, avatarUrl, avatarRemoved: isPhotoRemoved });
         saveUserSession(currentUser, currentProfile);
 
         if(auth?.currentUser && typeof auth.currentUser.updateProfile === 'function'){
@@ -23572,7 +23634,11 @@ init();
         }
         
         setNav();
-        await refreshProfile();
+        try {
+          await refreshProfile();
+        } catch(refErr) {
+          console.warn('refreshProfile notice:', refErr);
+        }
         closeModal();
         toast('Profile updated successfully','success');
         await renderProfile();

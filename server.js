@@ -52,6 +52,24 @@ app.use('/uploads', express.static(uploadsDir, {
   }
 }));
 
+/* Route /media directly to uploads/media or uploads/ so relative media paths resolve seamlessly */
+app.use('/media', (req, res, next) => {
+  const cleanPath = (req.path || '').replace(/^[/\\]+/, '').replace(/\.\.[/\\]/g, '');
+  const mediaPath = path.join(uploadsDir, 'media', cleanPath);
+  if (fs.existsSync(mediaPath) && fs.statSync(mediaPath).isFile()) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    return res.sendFile(mediaPath);
+  }
+  const directPath = path.join(uploadsDir, cleanPath);
+  if (fs.existsSync(directPath) && fs.statSync(directPath).isFile()) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    return res.sendFile(directPath);
+  }
+  next();
+});
+
 /* Initialize Trusted Firebase Admin SDK */
 let adminApp;
 if (!getApps().length) {
@@ -2119,6 +2137,18 @@ app.post('/api/storage/upload', async (req, res) => {
         const cleanBase64 = base64.replace(/^data:[^;]+;base64,/, '');
         fileBuffer = Buffer.from(cleanBase64, 'base64');
       }
+    }
+
+    if (!fileBuffer || fileBuffer.length === 0) {
+      try {
+        const chunks = [];
+        for await (const chunk of req) {
+          chunks.push(chunk);
+        }
+        if (chunks.length > 0) {
+          fileBuffer = Buffer.concat(chunks);
+        }
+      } catch (_) {}
     }
 
     const safeRelPath = (relPath || `media/upload_${Date.now()}_${crypto.randomUUID()}.bin`)
