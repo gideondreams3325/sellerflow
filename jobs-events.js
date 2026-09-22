@@ -353,63 +353,111 @@ const CACHE_TTL_MS = 60000; // 60s cache lifetime
 
 async function prefetchJobsData() {
   if (_cachedJobs && (Date.now() - _lastJobsFetchTime < CACHE_TTL_MS)) return _cachedJobs;
+  const jobs = [];
+  const seenIds = new Set();
+
+  // 1. Fetch from server API endpoint
+  try {
+    const res = await fetch('/api/jobs?status=approved');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && Array.isArray(data.jobs)) {
+        data.jobs.forEach(j => {
+          if (j && j.id && !seenIds.has(j.id)) {
+            seenIds.add(j.id);
+            jobs.push(j);
+          }
+        });
+      }
+    }
+  } catch (apiErr) {
+    console.warn('Jobs API feed query notice:', apiErr);
+  }
+
+  // 2. Query Firestore collection
   try {
     const snap = await getJobsEventsDb().collection('jobs').where('status', '==', 'approved').limit(50).get();
-    const jobs = [];
-    const seenIds = new Set();
     if (snap && snap.forEach) {
       snap.forEach(doc => {
-        seenIds.add(doc.id);
-        jobs.push({ id: doc.id, ...doc.data() });
-      });
-    }
-    try {
-      const localJobs = JSON.parse(localStorage.getItem('sf_my_posted_jobs') || '[]');
-      localJobs.forEach(lj => {
-        if (lj && lj.id && !seenIds.has(lj.id) && (lj.status === 'approved' || !lj.status)) {
-          seenIds.add(lj.id);
-          jobs.push(lj);
+        if (!seenIds.has(doc.id)) {
+          seenIds.add(doc.id);
+          jobs.push({ id: doc.id, ...doc.data() });
         }
       });
-    } catch (_) {}
-    _cachedJobs = jobs;
-    _lastJobsFetchTime = Date.now();
-    return _cachedJobs;
-  } catch (_) {
-    if (!_cachedJobs) _cachedJobs = [];
-    return _cachedJobs;
+    }
+  } catch (err) {
+    console.warn('Firestore jobs query notice:', err);
   }
+
+  // 3. Include local user posted jobs
+  try {
+    const localJobs = JSON.parse(localStorage.getItem('sf_my_posted_jobs') || '[]');
+    localJobs.forEach(lj => {
+      if (lj && lj.id && !seenIds.has(lj.id) && (lj.status === 'approved' || !lj.status)) {
+        seenIds.add(lj.id);
+        jobs.push(lj);
+      }
+    });
+  } catch (_) {}
+
+  _cachedJobs = jobs;
+  _lastJobsFetchTime = Date.now();
+  return _cachedJobs;
 }
 window._sfPrefetchJobs = prefetchJobsData;
 
 async function prefetchEventsData() {
   if (_cachedEvents && (Date.now() - _lastEventsFetchTime < CACHE_TTL_MS)) return _cachedEvents;
+  const events = [];
+  const seenIds = new Set();
+
+  // 1. Fetch from server API endpoint
+  try {
+    const res = await fetch('/api/events?status=approved');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && Array.isArray(data.events)) {
+        data.events.forEach(e => {
+          if (e && e.id && !seenIds.has(e.id)) {
+            seenIds.add(e.id);
+            events.push(e);
+          }
+        });
+      }
+    }
+  } catch (apiErr) {
+    console.warn('Events API feed query notice:', apiErr);
+  }
+
+  // 2. Query Firestore collection
   try {
     const snap = await getJobsEventsDb().collection('events').where('status', '==', 'approved').limit(40).get();
-    const events = [];
-    const seenIds = new Set();
     if (snap && snap.forEach) {
       snap.forEach(doc => {
-        seenIds.add(doc.id);
-        events.push({ id: doc.id, ...doc.data() });
-      });
-    }
-    try {
-      const localEvents = JSON.parse(localStorage.getItem('sf_my_hosted_events') || '[]');
-      localEvents.forEach(le => {
-        if (le && le.id && !seenIds.has(le.id) && (le.status === 'approved' || !le.status)) {
-          seenIds.add(le.id);
-          events.push(le);
+        if (!seenIds.has(doc.id)) {
+          seenIds.add(doc.id);
+          events.push({ id: doc.id, ...doc.data() });
         }
       });
-    } catch (_) {}
-    _cachedEvents = events;
-    _lastEventsFetchTime = Date.now();
-    return _cachedEvents;
-  } catch (_) {
-    if (!_cachedEvents) _cachedEvents = [];
-    return _cachedEvents;
+    }
+  } catch (err) {
+    console.warn('Firestore events query notice:', err);
   }
+
+  // 3. Include local user hosted events
+  try {
+    const localEvents = JSON.parse(localStorage.getItem('sf_my_hosted_events') || '[]');
+    localEvents.forEach(le => {
+      if (le && le.id && !seenIds.has(le.id) && (le.status === 'approved' || !le.status)) {
+        seenIds.add(le.id);
+        events.push(le);
+      }
+    });
+  } catch (_) {}
+
+  _cachedEvents = events;
+  _lastEventsFetchTime = Date.now();
+  return _cachedEvents;
 }
 window._sfPrefetchEvents = prefetchEventsData;
 window._sfInvalidateJobsEventsCache = () => {
@@ -865,30 +913,7 @@ async function loadJobsFeed() {
     const isCacheStale = !_cachedJobs || (Date.now() - _lastJobsFetchTime > CACHE_TTL_MS);
 
     if (!jobs || !jobs.length) {
-      jobs = [];
-      const seenIds = new Set();
-      try {
-        const snap = await getJobsEventsDb().collection('jobs').where('status', '==', 'approved').limit(50).get();
-        if (snap && snap.forEach) {
-          snap.forEach(doc => {
-            seenIds.add(doc.id);
-            jobs.push({ id: doc.id, ...doc.data() });
-          });
-        }
-      } catch (err) {
-        console.warn('Firestore jobs query notice:', err);
-      }
-      try {
-        const localJobs = JSON.parse(localStorage.getItem('sf_my_posted_jobs') || '[]');
-        localJobs.forEach(lj => {
-          if (lj && lj.id && !seenIds.has(lj.id) && (lj.status === 'approved' || !lj.status)) {
-            seenIds.add(lj.id);
-            jobs.push(lj);
-          }
-        });
-      } catch (_) {}
-      _cachedJobs = jobs;
-      _lastJobsFetchTime = Date.now();
+      jobs = await prefetchJobsData();
     } else if (isCacheStale) {
       // Refresh cache in background without blocking current render
       prefetchJobsData().catch(() => {});
@@ -1510,8 +1535,21 @@ async function openJobDetailModal(jobId) {
     let job = null;
     if (_cachedJobs) job = _cachedJobs.find(j => j.id === jobId);
     if (!job) {
-      const snap = await getJobsEventsDb().collection('jobs').doc(jobId).get();
-      if (snap && snap.exists) job = { id: snap.id, ...snap.data() };
+      try {
+        const snap = await getJobsEventsDb().collection('jobs').doc(jobId).get();
+        if (snap && snap.exists) job = { id: snap.id, ...snap.data() };
+      } catch (_) {}
+    }
+    if (!job) {
+      try {
+        const res = await fetch(`/api/jobs`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.jobs)) {
+            job = data.jobs.find(j => j.id === jobId);
+          }
+        }
+      } catch (_) {}
     }
     if (!job) {
       try {
@@ -2100,30 +2138,7 @@ async function loadEventsFeed() {
     const isCacheStale = !_cachedEvents || (Date.now() - _lastEventsFetchTime > CACHE_TTL_MS);
 
     if (!events || !events.length) {
-      events = [];
-      const seenIds = new Set();
-      try {
-        const snap = await getJobsEventsDb().collection('events').where('status', '==', 'approved').limit(40).get();
-        if (snap && snap.forEach) {
-          snap.forEach(doc => {
-            seenIds.add(doc.id);
-            events.push({ id: doc.id, ...doc.data() });
-          });
-        }
-      } catch (err) {
-        console.warn('Firestore events query notice:', err);
-      }
-      try {
-        const localEvents = JSON.parse(localStorage.getItem('sf_my_hosted_events') || '[]');
-        localEvents.forEach(le => {
-          if (le && le.id && !seenIds.has(le.id) && (le.status === 'approved' || !le.status)) {
-            seenIds.add(le.id);
-            events.push(le);
-          }
-        });
-      } catch (_) {}
-      _cachedEvents = events;
-      _lastEventsFetchTime = Date.now();
+      events = await prefetchEventsData();
     } else if (isCacheStale) {
       // Refresh cache in background without blocking current render
       prefetchEventsData().catch(() => {});
@@ -2246,8 +2261,21 @@ async function openEventDetailModal(eventId) {
   try {
     if (_cachedEvents) ev = _cachedEvents.find(e => e.id === eventId);
     if (!ev) {
-      const snap = await getJobsEventsDb().collection('events').doc(eventId).get();
-      if (snap && snap.exists) ev = { id: snap.id, ...snap.data() };
+      try {
+        const snap = await getJobsEventsDb().collection('events').doc(eventId).get();
+        if (snap && snap.exists) ev = { id: snap.id, ...snap.data() };
+      } catch (_) {}
+    }
+    if (!ev) {
+      try {
+        const res = await fetch(`/api/events`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.events)) {
+            ev = data.events.find(e => e.id === eventId);
+          }
+        }
+      } catch (_) {}
     }
     if (!ev) {
       try {

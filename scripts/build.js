@@ -57,6 +57,16 @@ for (const file of filesToCopy) {
   }
 }
 
+const dataDir = path.resolve('data');
+const distDataDir = path.join(distDir, 'data');
+if (fs.existsSync(dataDir)) {
+  if (!fs.existsSync(distDataDir)) fs.mkdirSync(distDataDir, { recursive: true });
+  for (const file of fs.readdirSync(dataDir)) {
+    fs.copyFileSync(path.join(dataDir, file), path.join(distDataDir, file));
+    copiedCount++;
+  }
+}
+
 const androidPublicDir = path.resolve('android/app/src/main/assets/public');
 if (fs.existsSync(androidPublicDir)) {
   try {

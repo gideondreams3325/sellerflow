@@ -984,7 +984,7 @@ html.light-theme #devVerificationSandboxNotice {
 </head>
 <body>
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center select-none transition-opacity duration-200"><div class="text-center flex flex-col items-center"><div class="flex flex-col items-center gap-1.5 mb-5"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_14px_rgba(245,158,11,0.4)]" /><div class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span><span class="text-[10px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider ml-1.5">GH</span></div><div class="text-[10px] sm:text-[11px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none mt-0.5"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div><div class="w-7 h-7 rounded-full border-2 border-zinc-800 border-t-[#f5b942] animate-spin"></div><div id="loadingText" class="text-xs text-zinc-500 mt-3 font-medium"></div></div></div>
-<div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The administrator has temporarily paused the marketplace. Please try again later.</p></div></div>
+<div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The SellerFlow Team has temporarily paused the marketplace. Please try again later.</p></div></div>
 <div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="flex flex-col items-center justify-center gap-1 mb-2"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_12px_rgba(245,158,11,0.35)]" /><div class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></div><div class="text-[10.5px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name"></div><div id="usernameWrap"><div class="flex items-center justify-between"><label class="text-sm muted">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="authUsernamePreview">username</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="authUsername" type="text" class="w-full pl-8 pr-10 p-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-sm focus:border-gold outline-none transition" placeholder="e.g. gideon_shop" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"><span id="authUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none"></span></div><div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can only be changed once every 360 days.</span></div><div id="authUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="authUsernameSuggestions" class="mt-2 hidden"></div></div><div id="emailInputWrap"><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"><div id="authEmailFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><div id="emailVerifyWrap" class="hide text-center mt-5"><div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl text-amber-400 mb-3 shadow-[0_0_20px_rgba(245,158,11,0.15)]">🔑</div><div class="mt-3 p-4 rounded-xl bg-[#141414] border border-[#2a2a2a] text-left"><div class="text-[11px] font-medium text-zinc-400">We've sent a modern, professional verification code to</div><div id="verifyEmailTarget" class="text-sm font-bold text-amber-400 mt-1 break-all select-all">user@example.com</div><div class="text-[11px] text-zinc-400 mt-2.5 leading-relaxed font-semibold">Please enter the 6-digit security code below to activate your SellerFlow account.</div></div><div class="mt-5 text-left"><label class="block text-xs text-zinc-400 font-semibold mb-1.5 uppercase tracking-wider">Verification Code</label><input id="verificationCodeInput" type="text" maxlength="6" pattern="[0-9]*" inputmode="numeric" class="w-full text-center tracking-[0.5em] font-mono text-2xl font-black p-3 rounded-xl bg-[#141414] border border-[#333] text-gold hover:border-[#444] focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition outline-none" placeholder="000000"></div><div class="space-y-2 mt-5"><button id="submitVerificationCodeBtn" type="button" class="w-full bg-gold text-black p-3.5 rounded-xl font-bold text-sm shadow-md hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center gap-2"><span class="text-base">✓</span><span>Verify Code</span></button><button id="resendVerificationBtn" type="button" class="w-full p-3 rounded-xl border border-[#383838] bg-[#181818] text-zinc-200 hover:text-white hover:border-[#555] font-semibold text-xs transition">Resend email</button><button id="changeEmailBtn" type="button" class="w-full mt-2 text-xs text-zinc-400 hover:text-amber-400 underline transition py-1 font-semibold">Change email / Sign in with another account</button></div></div><button id="googleBtn" class="w-full mt-3 p-3 rounded-xl border border-[#333]">Continue with Google</button><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
 <div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur-md border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-2 sm:gap-4"><div class="flex items-center gap-2 sm:gap-3 shrink-0"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-2 shrink-0 select-none cursor-pointer group" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)] transition-transform group-hover:scale-105" /><div class="flex flex-col items-start text-left leading-none"><div class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span><span class="text-[9px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider ml-1.5 hidden xs:inline-block">GH</span></div><div class="text-[8px] sm:text-[9px] font-black tracking-[0.24em] text-zinc-100 flex items-center gap-1 uppercase select-none mt-0.5 opacity-90"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1.5 sm:gap-2 shrink-0"></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"><div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap flex items-center gap-2"><span>For You</span><span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-gold animate-pulse"></span></h1></div><div class="flex items-center gap-1.5 sm:gap-2 shrink-0"><div class="w-20 h-7 rounded-xl bg-[#1a1a1e] sf-shimmer-box"></div></div></div><div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden"><div class="reel-feed flex-1 min-h-0 w-full overflow-hidden" id="reelFeedSkeleton"><div class="reel-card sf-shimmer-box relative flex items-center justify-center"><div class="flex flex-col items-center justify-center p-6 text-center z-10 select-none pointer-events-none"><div class="relative mb-3.5 flex items-center justify-center"><div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-gold animate-spin"></div><div class="absolute inset-0 flex items-center justify-center"><span class="text-[10px] font-black text-gold font-mono">GH</span></div></div><div class="text-sm font-bold text-white tracking-wide flex items-center gap-1.5"><span>Loading For You Feed</span><span class="inline-flex gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 0ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 150ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 300ms"></span></span></div><div class="text-[11px] text-zinc-400 mt-1 font-medium">Discovering top Ghanaian reels…</div></div><div class="reel-actions flex flex-col items-center gap-4 absolute right-2.5 sm:right-4 bottom-20 z-10 pointer-events-none"><div class="w-11 h-11 rounded-full bg-[#202026] sf-shimmer-box border border-[#333]"></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="w-9 h-9 rounded-full bg-[#202026] sf-shimmer-box border border-gold/30"></div></div><div class="reel-content flex flex-col gap-2 pointer-events-none"><div class="flex items-center gap-2"><div class="w-28 h-4 rounded-md bg-[#25252d] sf-shimmer-box"></div><div class="w-16 h-4 rounded-full bg-amber-500/20 sf-shimmer-box"></div></div><div class="w-52 h-3.5 rounded bg-[#202026] sf-shimmer-box"></div><div class="w-36 h-3 rounded bg-[#202026] sf-shimmer-box"></div><div class="flex items-center gap-2 mt-1"><div class="w-32 h-7 rounded-full bg-[#25252f] sf-shimmer-box"></div><div class="w-20 h-7 rounded-full bg-amber-500/30 sf-shimmer-box"></div></div></div></div></div></div></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1 font-bold tracking-widest text-[11px] text-zinc-300">BUY <span class="text-amber-400 font-black">•</span> SELL <span class="text-amber-400 font-black">•</span> GROW</div><div class="mt-0.5 text-zinc-500 text-[11px]">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
@@ -1162,7 +1162,7 @@ function getAppUrl() {
   if (window.location.origin && window.location.origin.startsWith('http') && !window.location.origin.includes('localhost')) {
     return window.location.origin;
   }
-  const injectedUrl = '____SELLERFLOW_APP_URL____';
+  const injectedUrl = 'https://ais-dev-mhexq5zh7vns6e7oetcy66-909278422069.europe-west2.run.app';
   if (injectedUrl && injectedUrl.startsWith('http')) {
     return injectedUrl;
   }
@@ -2322,6 +2322,7 @@ const getFirestore=(app)=>{
   try{
     const inst = (app && typeof app.firestore === 'function') ? app.firestore() : firebase.firestore();
     db = inst;
+    window.db = inst;
     if(db && typeof db.enablePersistence === 'function' && !window._sfPersistenceTried){
       window._sfPersistenceTried = true;
       db.enablePersistence({ synchronizeTabs: true }).catch(err => {
@@ -2332,20 +2333,26 @@ const getFirestore=(app)=>{
     }
     return db;
   }catch(_){
-    return (app && typeof app.firestore === 'function') ? app.firestore() : firebase.firestore();
+    const fallback = (app && typeof app.firestore === 'function') ? app.firestore() : firebase.firestore();
+    if(fallback) { db = fallback; window.db = fallback; }
+    return fallback;
   }
 };
 function getDbSafe(database){
   if(database && (typeof database.collection === 'function' || typeof database.doc === 'function')) return database;
-  if(typeof db !== 'undefined' && db && (typeof db.collection === 'function' || typeof db.doc === 'function')) return db;
+  if(typeof db !== 'undefined' && db && (typeof db.collection === 'function' || typeof db.doc === 'function')) { window.db = db; return db; }
+  if(typeof window.db !== 'undefined' && window.db && (typeof window.db.collection === 'function' || typeof window.db.doc === 'function')) return window.db;
   if(typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && typeof firebase.firestore === 'function'){
     try {
       db = getFirestore();
+      window.db = db;
       return db;
     } catch(_) {}
   }
   return null;
 }
+window.getDbSafe = getDbSafe;
+window.getFirestore = getFirestore;
 const collection=(database,...pathSegments)=>{
   const d = getDbSafe(database);
   const path = pathSegments.filter(Boolean).join('/');
@@ -2417,6 +2424,7 @@ function snapshotExists(snap){return !!snap && (typeof snap.exists==='function' 
 
 
 const firebaseConfig={apiKey:'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk',authDomain:'sellerflow-efaab.firebaseapp.com',databaseURL:'https://sellerflow-efaab-default-rtdb.firebaseio.com',projectId:'sellerflow-efaab',storageBucket:'sellerflow-efaab.firebasestorage.app',messagingSenderId:'987175352360',appId:'1:987175352360:web:53e44304aaf11b98c61d1d'};
+window.firebaseConfig = firebaseConfig;
 const ADMIN_EMAILS=['gideondreams3325@gmail.com','gideonappiahfriempong@gmail.com'];
 const isUserAdminEmail=(email)=>{
   if(!email) return false;
@@ -3015,6 +3023,225 @@ window.sfPrompt = customPrompt;
    ========================================================================== */
 window._sfCachedPosts = window._sfCachedPosts || new Map();
 
+const SF_COMMERCIAL_TRACK_CATALOG = [
+  { trackTitle: 'Calm Down', artist: 'Rema', claimant: 'Mavin Records / Virgin Music (UMG)', type: 'audio', keywords: ['calm down', 'baby calm down', 'rema calm down', 'rema - calm down', 'calm down remix', 'selena gomez calm down'] },
+  { trackTitle: 'Last Last', artist: 'Burna Boy', claimant: 'Atlantic Records (WMG)', type: 'audio', keywords: ['last last', 'i need igbo and shayo', 'burna last last', 'burna boy last last', 'last last burna'] },
+  { trackTitle: 'City Boys', artist: 'Burna Boy', claimant: 'Atlantic Records (WMG)', type: 'audio', keywords: ['city boys', 'burna boy city boys', 'city boy burna'] },
+  { trackTitle: 'Kwaku the Traveller', artist: 'Black Sherif', claimant: 'Empire / RBA', type: 'audio', keywords: ['kwaku the traveller', 'kwaku the traveler', 'who never fuck up hands in the air', 'black sherif kwaku', 'blacko kwaku'] },
+  { trackTitle: 'Terminator', artist: 'King Promise', claimant: '5K Records / Sony Music', type: 'audio', keywords: ['terminator', 'king promise terminator', 'terminator king promise'] },
+  { trackTitle: 'Sugarcane', artist: 'Camidoh', claimant: 'Grind Don\'t Stop / Empire', type: 'audio', keywords: ['sugarcane', 'camidoh sugarcane', 'sugarcane remix camidoh'] },
+  { trackTitle: 'Touch It', artist: 'KiDi', claimant: 'Lynx Entertainment / Empire', type: 'audio', keywords: ['touch it', 'kidi touch it', 'shut up and bend over', 'touch it kidi'] },
+  { trackTitle: 'Down Flat', artist: 'Kelvyn Boy', claimant: 'Blakk Arm Group', type: 'audio', keywords: ['down flat', 'kelvyn boy down flat', 'down flat remix'] },
+  { trackTitle: 'Into The Future', artist: 'Stonebwoy', claimant: 'Def Jam Africa / UMG', type: 'audio', keywords: ['into the future stonebwoy', 'stonebwoy into the future', 'into the future'] },
+  { trackTitle: 'Country Side', artist: 'Sarkodie ft. Black Sherif', claimant: 'Sarkcess Music / Eagle Plug', type: 'audio', keywords: ['country side sarkodie', 'sarkodie black sherif', 'country side'] },
+  { trackTitle: 'Goodsin', artist: 'Olivetheboy', claimant: 'Loop Music / Columbia Records (SME)', type: 'audio', keywords: ['goodsin', 'olivetheboy goodsin', 'goodsin olivetheboy'] },
+  { trackTitle: 'On God', artist: 'Shatta Wale', claimant: 'Shatta Movement Empire', type: 'audio', keywords: ['on god shatta wale', 'shatta wale on god'] },
+  { trackTitle: 'Wish Me Well', artist: 'Kuami Eugene', claimant: 'Lynx Entertainment', type: 'audio', keywords: ['wish me well kuami', 'kuami eugene wish me well'] },
+  { trackTitle: 'Rush', artist: 'Ayra Starr', claimant: 'Mavin Records / UMG', type: 'audio', keywords: ['rush ayra starr', 'ayra starr rush', 'e dey rush well well', 'rush - ayra starr'] },
+  { trackTitle: 'Soso', artist: 'Omah Lay', claimant: 'Sire / KeyQaad / WMG', type: 'audio', keywords: ['soso omah lay', 'omah lay soso', 'soso take my pain away'] },
+  { trackTitle: 'Essence', artist: 'Wizkid ft. Tems', claimant: 'Starboy / RCA Records (SME)', type: 'audio', keywords: ['essence', 'you don\'t need no other body', 'wizkid essence', 'tems essence', 'essence wizkid'] },
+  { trackTitle: 'Unavailable', artist: 'Davido ft. Musa Keys', claimant: 'DMW / Sony Music Entertainment', type: 'audio', keywords: ['unavailable', 'i\'m unavailable', 'davido unavailable', 'unavailable davido'] },
+  { trackTitle: 'Lonely At The Top', artist: 'Asake', claimant: 'YBNL / Empire', type: 'audio', keywords: ['lonely at the top', 'asake lonely at the top', 'lonely at the top asake'] },
+  { trackTitle: 'Amapiano', artist: 'Asake & Olamide', claimant: 'YBNL / Empire', type: 'audio', keywords: ['amapiano asake', 'asake olamide amapiano'] },
+  { trackTitle: 'Water', artist: 'Tyla', claimant: 'FAX Records / Epic Records (SME)', type: 'audio', keywords: ['tyla water', 'make me sweat make me hotter', 'water by tyla', 'water tyla'] },
+  { trackTitle: 'Tshwala Bam', artist: 'TitoM & Yuppe', claimant: 'Virgin Music Group', type: 'audio', keywords: ['tshwala bam', 'titom yuppe', 'tshwala bam remix'] },
+  { trackTitle: 'Flowers', artist: 'Miley Cyrus', claimant: 'Columbia Records (SME)', type: 'audio', keywords: ['flowers miley cyrus', 'i can buy myself flowers', 'flowers - miley cyrus'] },
+  { trackTitle: 'Shape of You', artist: 'Ed Sheeran', claimant: 'Atlantic Records (WMG)', type: 'audio', keywords: ['shape of you', 'ed sheeran shape of you', 'i\'m in love with the shape of you'] },
+  { trackTitle: 'Blinding Lights', artist: 'The Weeknd', claimant: 'XO / Republic Records (UMG)', type: 'audio', keywords: ['blinding lights', 'the weeknd blinding lights'] },
+  { trackTitle: 'As It Was', artist: 'Harry Styles', claimant: 'Columbia Records (SME)', type: 'audio', keywords: ['as it was', 'harry styles as it was'] },
+  { trackTitle: 'Cruel Summer', artist: 'Taylor Swift', claimant: 'Republic Records (UMG)', type: 'audio', keywords: ['cruel summer', 'taylor swift cruel summer', 'cruel summer taylor'] },
+  { trackTitle: 'Anti-Hero', artist: 'Taylor Swift', claimant: 'Republic Records (UMG)', type: 'audio', keywords: ['anti-hero', 'taylor swift anti-hero'] },
+  { trackTitle: 'Kill Bill', artist: 'SZA', claimant: 'Top Dawg / RCA (SME)', type: 'audio', keywords: ['kill bill sza', 'i might kill my ex', 'sza kill bill'] },
+  { trackTitle: 'Espresso', artist: 'Sabrina Carpenter', claimant: 'Island Records (UMG)', type: 'audio', keywords: ['espresso sabrina', 'that\'s that me espresso', 'sabrina carpenter espresso', 'espresso - sabrina'] },
+  { trackTitle: 'Please Please Please', artist: 'Sabrina Carpenter', claimant: 'Island Records (UMG)', type: 'audio', keywords: ['please please please sabrina', 'sabrina carpenter please'] },
+  { trackTitle: 'Birds of a Feather', artist: 'Billie Eilish', claimant: 'Darkroom / Interscope (UMG)', type: 'audio', keywords: ['birds of a feather', 'billie eilish birds of a feather'] },
+  { trackTitle: 'Not Like Us', artist: 'Kendrick Lamar', claimant: 'pgLang / Interscope Records (UMG)', type: 'audio', keywords: ['not like us', 'kendrick not like us', 'they not like us', 'not like us kendrick'] },
+  { trackTitle: 'God\'s Plan', artist: 'Drake', claimant: 'OVO Sound / Republic Records (UMG)', type: 'audio', keywords: ['god\'s plan', 'drake god\'s plan', 'gods plan drake'] },
+  { trackTitle: 'One Dance', artist: 'Drake ft. Wizkid', claimant: 'OVO Sound / Republic Records (UMG)', type: 'audio', keywords: ['one dance drake', 'drake one dance'] },
+  { trackTitle: 'Levitating', artist: 'Dua Lipa', claimant: 'Warner Records (WMG)', type: 'audio', keywords: ['levitating dua lipa', 'dua lipa levitating'] },
+  { trackTitle: 'Paint The Town Red', artist: 'Doja Cat', claimant: 'Kemosabe / RCA Records (SME)', type: 'audio', keywords: ['paint the town red', 'doja cat paint the town red'] }
+];
+
+const SF_COMMERCIAL_ARTISTS = [
+  { name: 'Taylor Swift', claimant: 'Republic Records (UMG)' },
+  { name: 'Drake', claimant: 'OVO Sound / Republic Records (UMG)' },
+  { name: 'Burna Boy', claimant: 'Atlantic Records (WMG)' },
+  { name: 'Wizkid', claimant: 'Starboy / RCA Records (SME)' },
+  { name: 'Davido', claimant: 'DMW / Sony Music Entertainment' },
+  { name: 'Rema', claimant: 'Mavin Records / Virgin Music (UMG)' },
+  { name: 'Asake', claimant: 'YBNL / Empire' },
+  { name: 'Ayra Starr', claimant: 'Mavin Records (UMG)' },
+  { name: 'Tyla', claimant: 'Epic Records (SME)' },
+  { name: 'Black Sherif', claimant: 'Empire / RBA' },
+  { name: 'King Promise', claimant: '5K Records / Sony Music' },
+  { name: 'Stonebwoy', claimant: 'Def Jam Africa (UMG)' },
+  { name: 'Sarkodie', claimant: 'Sarkcess Music' },
+  { name: 'Kuami Eugene', claimant: 'Lynx Entertainment' },
+  { name: 'KiDi', claimant: 'Lynx Entertainment / Empire' },
+  { name: 'Sabrina Carpenter', claimant: 'Island Records (UMG)' },
+  { name: 'Billie Eilish', claimant: 'Interscope Records (UMG)' },
+  { name: 'Kendrick Lamar', claimant: 'pgLang / Interscope Records (UMG)' },
+  { name: 'The Weeknd', claimant: 'XO / Republic Records (UMG)' },
+  { name: 'Ed Sheeran', claimant: 'Atlantic Records (WMG)' },
+  { name: 'Dua Lipa', claimant: 'Warner Records (WMG)' },
+  { name: 'Justin Bieber', claimant: 'Def Jam Recordings (UMG)' },
+  { name: 'SZA', claimant: 'Top Dawg / RCA (SME)' },
+  { name: 'Doja Cat', claimant: 'Kemosabe / RCA (SME)' }
+];
+
+const SF_COMMERCIAL_BROADCASTS = [
+  { trackTitle: 'Premier League Match Broadcast', artist: 'Premier League Productions', claimant: 'The Football Association Premier League Ltd / Sky Sports / SuperSport', type: 'video', keywords: ['premier league match', 'epl highlights', 'premier league official broadcast', 'manchester united vs', 'arsenal vs chelsea live', 'liverpool vs man city broadcast'] },
+  { trackTitle: 'UEFA Champions League Match Recording', artist: 'UEFA', claimant: 'Union of European Football Associations (UEFA)', type: 'video', keywords: ['uefa champions league highlights', 'ucl match recording', 'champions league official feed', 'uefa champions league'] },
+  { trackTitle: 'FIFA World Cup Official Footage', artist: 'FIFA', claimant: 'Fédération Internationale de Football Association (FIFA)', type: 'video', keywords: ['fifa world cup official match', 'world cup broadcast clip', 'fifa match highlights', 'fifa world cup'] },
+  { trackTitle: 'NBA Official Game Broadcast', artist: 'NBA Entertainment', claimant: 'National Basketball Association (NBA)', type: 'video', keywords: ['nba official broadcast', 'nba game footage', 'nba finals full match', 'nba highlights'] },
+  { trackTitle: 'Formula 1 Grand Prix Broadcast', artist: 'Formula One World Championship', claimant: 'Formula One Licensing B.V. / Sky Sports', type: 'video', keywords: ['f1 grand prix', 'formula 1 highlights', 'f1 official race broadcast'] },
+  { trackTitle: 'Netflix Original Film / Series Excerpt', artist: 'Netflix Studios', claimant: 'Netflix, Inc.', type: 'video', keywords: ['netflix original series episode', 'netflix movie clip full hd', 'stranger things official clip', 'squid game official clip'] },
+  { trackTitle: 'HBO / Warner Bros Television Broadcast', artist: 'Warner Bros. Discovery', claimant: 'Home Box Office, Inc. / Warner Bros. Entertainment', type: 'video', keywords: ['hbo original series broadcast', 'game of thrones episode clip', 'house of the dragon official clip'] },
+  { trackTitle: 'Marvel Studios Cinematographic Recording', artist: 'Marvel Studios', claimant: 'The Walt Disney Company', type: 'video', keywords: ['marvel studios official movie clip', 'avengers full scene hd', 'disney plus official broadcast'] }
+];
+
+function matchStaticCopyrightCatalog(input){
+  const text = typeof input === 'string' ? input : (input?.text || '');
+  const title = input?.title || '';
+  const fileName = (input?.fileName || '').toLowerCase();
+  const mediaUrl = (input?.mediaUrl || '').toLowerCase();
+  const soundName = input?.soundName || '';
+  const soundArtist = input?.soundArtist || '';
+  const soundOriginName = input?.soundOriginName || '';
+
+  const normalizedProbe = [text, title, fileName, mediaUrl, soundName, soundArtist, soundOriginName]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+    .replace(/[\u200B-\u200D\uFEFF]/g, ' ')
+    .replace(/[\-_]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // 1. Specific catalog matches
+  for (const item of SF_COMMERCIAL_TRACK_CATALOG) {
+    for (const kw of item.keywords) {
+      const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const reg = new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i');
+      if (reg.test(normalizedProbe)) {
+        return {
+          copyrightDetected: true,
+          audioMutedByCopyright: true,
+          type: item.type,
+          trackTitle: item.trackTitle,
+          artist: item.artist,
+          claimant: item.claimant,
+          confidence: 0.98,
+          policy: 'mute_audio',
+          reason: `Commercial sound recording match: "${item.trackTitle}" by ${item.artist} (${item.claimant})`,
+          matchedCatalog: true
+        };
+      }
+    }
+  }
+
+  // 2. Video broadcasts
+  for (const item of SF_COMMERCIAL_BROADCASTS) {
+    for (const kw of item.keywords) {
+      const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const reg = new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i');
+      if (reg.test(normalizedProbe)) {
+        return {
+          copyrightDetected: true,
+          audioMutedByCopyright: true,
+          type: item.type,
+          trackTitle: item.trackTitle,
+          artist: item.artist,
+          claimant: item.claimant,
+          confidence: 0.96,
+          policy: 'mute_audio',
+          reason: `Protected video broadcast match: ${item.trackTitle} (${item.claimant})`,
+          matchedCatalog: true
+        };
+      }
+    }
+  }
+
+  // 3. Labels
+  const labelPatterns = [
+    { regex: /(universal\s*music(\s*group)?|\bumg\b|republic\s*records|interscope\s*records|def\s*jam\s*recordings)/i, claimant: 'Universal Music Group (UMG)', artist: 'Commercial Artist' },
+    { regex: /(sony\s*music(\s*entertainment)?|\bsme\b|columbia\s*records|rca\s*records|epic\s*records)/i, claimant: 'Sony Music Entertainment (SME)', artist: 'Commercial Artist' },
+    { regex: /(warner\s*music(\s*group)?|\bwmg\b|atlantic\s*records|warner\s*records|parlophone)/i, claimant: 'Warner Music Group (WMG)', artist: 'Commercial Artist' },
+    { regex: /(vevo\s*official|official\s*music\s*video|commercial\s*master\s*recording|under\s*exclusive\s*licen[sc]e\s*to)/i, claimant: 'Commercial Rights Holder', artist: 'Licensed Audio' },
+    { regex: /\b(isrc\s*[:\-]?\s*[a-z]{2}[a-z0-9]{3}\d{7})\b/i, claimant: 'Recorded Music Licensing Collective', artist: 'Commercial Master Track' }
+  ];
+
+  for (const lp of labelPatterns) {
+    if (lp.regex.test(normalizedProbe)) {
+      return {
+        copyrightDetected: true,
+        audioMutedByCopyright: true,
+        type: 'audio',
+        trackTitle: 'Commercial Sound Recording',
+        artist: lp.artist,
+        claimant: lp.claimant,
+        confidence: 0.94,
+        policy: 'mute_audio',
+        reason: `Commercial sound recording attribution detected: Licensed to ${lp.claimant}`,
+        matchedCatalog: true
+      };
+    }
+  }
+
+  // 4. Commercial artist check
+  for (const art of SF_COMMERCIAL_ARTISTS) {
+    const escaped = art.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const artReg = new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i');
+    if (artReg.test(soundArtist) || artReg.test(soundName) || (artReg.test(normalizedProbe) && /(feat|ft\.|featuring|song|audio|track|remix|official|prod|by)\b/i.test(normalizedProbe))) {
+      return {
+        copyrightDetected: true,
+        audioMutedByCopyright: true,
+        type: 'audio',
+        trackTitle: soundName || 'Commercial Master Recording',
+        artist: art.name,
+        claimant: art.claimant,
+        confidence: 0.94,
+        policy: 'mute_audio',
+        reason: `Commercial recording by verified artist: ${art.name} (${art.claimant})`,
+        matchedCatalog: true
+      };
+    }
+  }
+
+  // 5. Filename check
+  if (/^(calm[._-]?down|last[._-]?last|kwaku|flowers|shape[._-]?of[._-]?you|blinding[._-]?lights|espresso|not[._-]?like[._-]?us|water|tshwala|as[._-]?it[._-]?was|cruel[._-]?summer|kill[._-]?bill|birds[._-]?of[._-]?a[._-]?feather|starboy|gods[._-]?plan|burna|rema|asake|davido|wizkid|taylor[._-]?swift)[._-]/i.test(fileName) || /\.(mp3|wav|m4a|aac|flac|ogg)$/i.test(fileName)) {
+    const isKnownSong = /(calm|last|burna|rema|asake|davido|wizkid|taylor|drake|billie|sabrina|kendrick|tyla|sza|kidi|camidoh|sarkodie)/i.test(fileName);
+    if (isKnownSong) {
+      return {
+        copyrightDetected: true,
+        audioMutedByCopyright: true,
+        type: 'audio',
+        trackTitle: fileName.replace(/\.[^/.]+$/, '').replace(/[_\-+]/g, ' '),
+        artist: 'Commercial Artist',
+        claimant: 'Authorized Music Publisher / Label',
+        confidence: 0.93,
+        policy: 'mute_audio',
+        reason: 'Commercial master track audio identified from source recording filename.',
+        matchedCatalog: true
+      };
+    }
+  }
+
+  return {
+    copyrightDetected: false,
+    audioMutedByCopyright: false,
+    type: 'none',
+    trackTitle: null,
+    artist: null,
+    claimant: null,
+    confidence: 0.95,
+    policy: 'none',
+    reason: 'No commercial copyright match detected.',
+    matchedCatalog: false
+  };
+}
+window.matchStaticCopyrightCatalog = matchStaticCopyrightCatalog;
+
 function getCachedOrDomPost(postOrId){
   if(postOrId && typeof postOrId === 'object' && postOrId.id) return postOrId;
   const id = typeof postOrId === 'string' ? postOrId : '';
@@ -3233,7 +3460,7 @@ async function showCopyrightDisputeModal(postOrId){
 
       if(res.ok){
         cleanup();
-        toast('✅ Copyright dispute submitted! Our administration team will review your documentation.', 'success', 5000);
+        toast('✅ Copyright dispute submitted! The SellerFlow Security Team will review your documentation.', 'success', 5000);
       } else {
         const d = await res.json();
         toast(d.error || 'Failed to submit dispute. Try again.', 'error');
@@ -5274,33 +5501,67 @@ document.addEventListener('click', (e) => {
 
 const _sellerReviewsCache = new Map();
 async function fetchSellerReviewsData(sellerId){
-  if(!sellerId) return { count: 0, avgRating: '5.0', reviews: [] };
+  if(!sellerId) return { count: 0, avgRating: '5.0', positivePercentage: 100, distribution: {5:0,4:0,3:0,2:0,1:0}, subRatings: { quality: '5.0', delivery: '5.0', service: '5.0' }, reviews: [] };
   if(_sellerReviewsCache.has(sellerId)) return _sellerReviewsCache.get(sellerId);
   try{
-    const s = await getDocs(query(collection(db,'reviews'),where('sellerId','==',sellerId),limit(30)));
-    const reviews = s.docs.map(d=>({id:d.id, ...d.data()}));
+    const s = await getDocs(query(collection(db,'reviews'),where('sellerId','==',sellerId),limit(60)));
+    const reviews = s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
     const count = reviews.length;
     let avg = '5.0';
+    let qualSum = 0, delivSum = 0, servSum = 0;
+    const dist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     if(count > 0){
-      const sum = reviews.reduce((acc, r)=>acc + (Number(r.rating) || 5), 0);
+      const sum = reviews.reduce((acc, r)=>{
+        const rVal = Math.min(5, Math.max(1, Math.round(Number(r.rating) || 5)));
+        dist[rVal] = (dist[rVal] || 0) + 1;
+        qualSum += Number(r.qualityRating) || rVal;
+        delivSum += Number(r.deliveryRating) || rVal;
+        servSum += Number(r.serviceRating) || rVal;
+        return acc + (Number(r.rating) || 5);
+      }, 0);
       avg = (sum / count).toFixed(1);
     }
-    const res = { count, avgRating: avg, reviews };
+    const positiveCount = (dist[5] || 0) + (dist[4] || 0);
+    const positivePercentage = count > 0 ? Math.round((positiveCount / count) * 100) : 100;
+    const subRatings = {
+      quality: count > 0 ? (qualSum / count).toFixed(1) : '5.0',
+      delivery: count > 0 ? (delivSum / count).toFixed(1) : '5.0',
+      service: count > 0 ? (servSum / count).toFixed(1) : '5.0',
+    };
+    const res = { count, avgRating: avg, positivePercentage, distribution: dist, subRatings, reviews };
     _sellerReviewsCache.set(sellerId, res);
     return res;
   }catch(_){
-    const fallback = { count: 0, avgRating: '5.0', reviews: [] };
+    const fallback = { count: 0, avgRating: '5.0', positivePercentage: 100, distribution: {5:0,4:0,3:0,2:0,1:0}, subRatings: { quality: '5.0', delivery: '5.0', service: '5.0' }, reviews: [] };
     _sellerReviewsCache.set(sellerId, fallback);
     return fallback;
   }
 }
 function getSellerReviewsSummary(sellerId){
-  if(!sellerId) return { count: 0, avgRating: '5.0', reviews: [] };
+  if(!sellerId) return { count: 0, avgRating: '5.0', positivePercentage: 100, distribution: {5:0,4:0,3:0,2:0,1:0}, subRatings: { quality: '5.0', delivery: '5.0', service: '5.0' }, reviews: [] };
   if(!_sellerReviewsCache.has(sellerId)){
     fetchSellerReviewsData(sellerId);
   }
-  return _sellerReviewsCache.get(sellerId) || { count: 0, avgRating: '5.0', reviews: [] };
+  return _sellerReviewsCache.get(sellerId) || { count: 0, avgRating: '5.0', positivePercentage: 100, distribution: {5:0,4:0,3:0,2:0,1:0}, subRatings: { quality: '5.0', delivery: '5.0', service: '5.0' }, reviews: [] };
 }
+function renderStarIconsHtml(rating, maxStars = 5, colorClass = 'text-amber-400', sizeClass = 'text-sm'){
+  const num = Math.min(maxStars, Math.max(0, Number(rating) || 0));
+  const full = Math.floor(num);
+  const hasHalf = (num - full) >= 0.4;
+  let html = `<span class="inline-flex items-center gap-0.5 ${colorClass} ${sizeClass}" aria-label="${rating} out of ${maxStars} stars">`;
+  for(let i = 1; i <= maxStars; i++){
+    if(i <= full){
+      html += `<span class="leading-none">★</span>`;
+    } else if(i === full + 1 && hasHalf){
+      html += `<span class="leading-none opacity-90">★</span>`;
+    } else {
+      html += `<span class="leading-none text-zinc-600">☆</span>`;
+    }
+  }
+  html += `</span>`;
+  return html;
+}
+window.renderStarIconsHtml = renderStarIconsHtml;
 function getSellerLocation(sellerId){
   if(!sellerId) return 'Accra, Ghana';
   const st = (window._cachedStores || []).find(s => s.ownerId === sellerId || s.id === sellerId);
@@ -7881,6 +8142,12 @@ async function postAction(e){
     showCopyrightNoticeModal(id || b.dataset.copyrightInfo);
     return;
   }
+  const card = b.closest('.reel-card');
+  const isCopyrightMuted = card?.dataset.copyrightMuted === 'true' || b.dataset.copyrightMuted === 'true' || b.classList.contains('is-copyright-muted');
+  if(action === 'sound' && isCopyrightMuted){
+    showCopyrightNoticeModal(id || card?.dataset.reelId);
+    return;
+  }
   if(!currentUser){
     const verb = action === 'like' ? 'like posts on For You' : action === 'comment' ? 'comment on posts' : action === 'save' ? 'save posts to your collection' : action === 'sound' ? 'save and use sounds' : 'interact on SellerFlow';
     showAuthPrompt(verb);
@@ -8094,7 +8361,7 @@ async function renderDashboard(){
       <div class="grid lg:grid-cols-2 gap-5 mt-5">
         <div class="card p-6">
           <h2 class="font-bold text-xl text-white">Seller verification</h2>
-          <p class="muted mt-2">${currentProfile.verified?'Your seller account is verified.':'Submit your Ghana Card so an admin can review your identity.'}</p>
+          <p class="muted mt-2">${currentProfile.verified?'Your seller account is verified.':'Submit your Ghana Card so the SellerFlow Security Team can review your identity.'}</p>
           ${currentProfile.verified?'<div class="font-bold mt-4 flex items-center gap-2 text-emerald-400"><span class="verified-badge">✓</span><span>Verified seller</span></div>':`<div class="muted text-sm mt-4">Verification is managed in Settings.</div>`}
         </div>
         <div class="card p-6">
@@ -10513,6 +10780,7 @@ function productCard(p, idx = 0){
   const isOwner = currentUser && p.sellerId === currentUser.uid;
   const isFirstRow = typeof idx === 'number' && idx < 4;
   const optImgUrl = getProductImageUrl(p, 'card');
+  const reviewSummary = getSellerReviewsSummary(p.sellerId);
 
   return `
     <div class="card sf-store-card p-3 sm:p-4 flex flex-col justify-between" id="store-product-${esc(p.id)}">
@@ -10526,6 +10794,13 @@ function productCard(p, idx = 0){
           <div class="gold sf-store-accent-text font-black text-sm sm:text-base shrink-0">${money(p.price)}</div>
         </div>
         ${p.category ? `<div class="mt-1 flex items-center gap-1">${productCategoryBadge(p.category)}</div>` : ''}
+        ${reviewSummary?.count ? `
+          <div class="flex items-center gap-1 text-[11px] text-amber-400 mt-1 cursor-pointer hover:opacity-80" data-view-product="${esc(p.id)}">
+            <span>★</span>
+            <span class="font-extrabold text-white text-[11px]">${reviewSummary.avgRating}</span>
+            <span class="text-zinc-500 font-normal">(${reviewSummary.count})</span>
+          </div>
+        ` : ''}
         ${p.description ? `<p class="muted text-[11px] sm:text-xs mt-1 line-clamp-2 leading-relaxed">${esc(p.description)}</p>` : ''}
         <div class="text-[11px] text-zinc-400 mt-1.5 flex items-center justify-between">
           <span>${inStock ? `<span class="text-green-400 font-medium">${maxStock} in stock</span>` : `<span class="text-red-400">Sold out</span>`}</span>
@@ -10617,8 +10892,23 @@ async function openProductDetailModal(rawP){
         </div>
         <div class="flex-1 flex flex-col justify-between">
           <div>
-            <h2 class="text-xl sm:text-2xl font-black text-white leading-tight">${esc(p.name || 'Untitled Product')}</h2>
-            <div class="gold font-black text-2xl mt-1.5">${money(p.price || 0)}</div>
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <h2 class="text-xl sm:text-2xl font-black text-white leading-tight">${esc(p.name || 'Untitled Product')}</h2>
+            </div>
+            
+            <!-- Star Rating & Credibility Pill -->
+            <div class="flex items-center gap-2 mt-2 flex-wrap" id="productModalRatingSummary">
+              <div class="flex items-center gap-1 bg-[#1c1c20] px-2.5 py-1 rounded-lg border border-[#333]">
+                ${renderStarIconsHtml(avgRating, 5, 'text-amber-400', 'text-xs')}
+                <span class="text-xs font-black text-white ml-1">${avgRating}</span>
+                <span class="text-[11px] text-zinc-400">(${reviewCount} review${reviewCount===1?'':'s'})</span>
+              </div>
+              <button type="button" id="productModalReviewTrigger" class="text-xs text-gold hover:underline font-bold flex items-center gap-1">
+                <span>⭐</span><span>Rate / Review</span>
+              </button>
+            </div>
+
+            <div class="gold font-black text-2xl mt-2">${money(p.price || 0)}</div>
             ${p.description ? `<p class="text-xs sm:text-sm text-zinc-300 mt-2.5 leading-relaxed bg-[#141416] p-3 rounded-xl border border-[#242424] max-h-32 overflow-y-auto">${esc(p.description)}</p>` : ''}
           </div>
           
@@ -10649,12 +10939,12 @@ async function openProductDetailModal(rawP){
         </div>
       </div>
 
-      <!-- Verified Seller Info & Reviews Section (Buyers inspect before adding to cart) -->
+      <!-- Verified Seller Info & Star Ratings Section -->
       <div class="p-4 rounded-2xl bg-[#141416] border border-[#26262a]">
         <div class="flex items-center justify-between mb-3 pb-2.5 border-b border-[#222]">
           <div class="flex items-center gap-2">
             <span class="text-base">🏪</span>
-            <h3 class="font-bold text-sm text-zinc-200">Seller Profile & Trust Details</h3>
+            <h3 class="font-bold text-sm text-zinc-200">Seller Profile & Trust Ratings</h3>
           </div>
           <span class="text-[11px] bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 px-2 py-0.5 rounded-full font-bold">Direct Merchant</span>
         </div>
@@ -10680,10 +10970,14 @@ async function openProductDetailModal(rawP){
             </div>
           </div>
 
-          <div class="flex items-center gap-2 shrink-0">
+          <div class="flex items-center gap-2 shrink-0 flex-wrap">
+            <button type="button" id="modalReviewProductBtn" class="border border-gold/60 text-gold hover:bg-gold/10 rounded-xl px-3 py-2 text-xs font-bold transition flex items-center gap-1.5">
+              <span>⭐</span>
+              <span>Rate Product & Store</span>
+            </button>
             <button type="button" id="modalMessageSellerBtn" class="border border-[#3a3a3a] hover:border-gold rounded-xl px-3 py-2 text-xs font-semibold text-zinc-200 bg-[#181818] transition flex items-center gap-1.5">
               <span>💬</span>
-              <span>Message Seller</span>
+              <span>Message</span>
             </button>
             <button type="button" id="modalVisitStoreBtn" class="border border-gold/60 text-gold hover:bg-gold/10 rounded-xl px-3 py-2 text-xs font-bold transition flex items-center gap-1.5">
               <span>🏪 View Store</span>
@@ -10691,31 +10985,44 @@ async function openProductDetailModal(rawP){
           </div>
         </div>
 
-        <!-- Seller Reviews & Ratings -->
+        <!-- Seller Reviews & Ratings Breakdown -->
         <div class="mt-3 pt-3 border-t border-[#222]">
-          <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
             <div class="flex items-center gap-2">
-              <span class="text-amber-400 text-sm">★</span>
+              ${renderStarIconsHtml(avgRating, 5, 'text-amber-400', 'text-sm')}
               <span class="font-extrabold text-sm text-white">${avgRating}</span>
-              <span class="text-xs text-zinc-400">(${reviewCount} review${reviewCount===1?'':'s'})</span>
+              <span class="text-xs text-zinc-400">(${reviewCount} verified review${reviewCount===1?'':'s'})</span>
             </div>
-            ${reviewCount > 0 ? `<span class="text-[11px] text-green-400 font-medium">98% Positive Feedback</span>` : `<span class="text-[11px] text-zinc-400">Newly Verified Ghanaian Seller</span>`}
+            <div class="flex items-center gap-2 text-xs">
+              <span class="text-green-400 font-medium">🛡️ ${reviewData.positivePercentage || 100}% Positive Feedback</span>
+            </div>
           </div>
 
           ${recentReviews.length ? `
-            <div class="space-y-1.5 max-h-24 overflow-y-auto pr-1">
+            <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
               ${recentReviews.map(r => `
-                <div class="text-xs bg-[#101012] p-2 rounded-xl border border-[#202024] flex items-baseline justify-between gap-2">
-                  <div class="truncate">
-                    <span class="font-bold text-zinc-300">${esc(r.reviewerName||'Customer')}:</span>
-                    <span class="text-zinc-400 ml-1">"${esc(r.text||'Great product and fast delivery.')}"</span>
+                <div class="text-xs bg-[#101012] p-2.5 rounded-xl border border-[#202024] space-y-1">
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-bold text-zinc-200">${esc(r.reviewerName||'Verified Buyer')}</span>
+                      ${r.verifiedPurchase !== false ? '<span class="text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 px-1.5 py-0.2 rounded font-bold">✓ Verified Purchase</span>' : ''}
+                      ${r.productName ? `<span class="text-[10px] text-zinc-400 truncate max-w-[120px]">• ${esc(r.productName)}</span>` : ''}
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                      ${renderStarIconsHtml(r.rating || 5, 5, 'text-amber-400', 'text-[11px]')}
+                    </div>
                   </div>
-                  <span class="text-gold text-[11px] shrink-0">${'★'.repeat(Math.min(5, Math.max(1, Number(r.rating)||5)))}</span>
+                  <p class="text-zinc-300 text-[11.5px] leading-relaxed">"${esc(r.text || 'Great product and reliable Ghanaian merchant.')}"</p>
+                  ${Array.isArray(r.tags) && r.tags.length ? `
+                    <div class="flex flex-wrap gap-1 mt-1">
+                      ${r.tags.slice(0, 3).map(t => `<span class="text-[9.5px] bg-[#1a1a20] border border-[#333] text-zinc-300 px-1.5 py-0.5 rounded">${esc(t)}</span>`).join('')}
+                    </div>
+                  ` : ''}
                 </div>
               `).join('')}
             </div>
           ` : `
-            <p class="text-[11px] text-zinc-400 italic">No public review comments yet. Be among the first to order and review this seller!</p>
+            <p class="text-[11px] text-zinc-400 italic">No public reviews yet. Be the first to order and review this Ghanaian seller!</p>
           `}
         </div>
       </div>
@@ -10792,6 +11099,16 @@ async function openProductDetailModal(rawP){
     if(!currentUser) return showAuthPrompt('message Ghanaian sellers');
     startSellerFlowChat(p.sellerId);
   });
+  $('modalReviewProductBtn')?.addEventListener('click', () => {
+    closeModal();
+    if(!currentUser) return showAuthPrompt('rate and review Ghanaian sellers & products');
+    openReviewModal({ sellerId: p.sellerId, productId: p.id, productName: p.name, productImage: p.imageUrl });
+  });
+  $('productModalReviewTrigger')?.addEventListener('click', () => {
+    closeModal();
+    if(!currentUser) return showAuthPrompt('rate and review Ghanaian sellers & products');
+    openReviewModal({ sellerId: p.sellerId, productId: p.id, productName: p.name, productImage: p.imageUrl });
+  });
 
   $('modalAddToCartBtn')?.addEventListener('click', () => {
     const q = parseInt(qtyInput?.value, 10) || 1;
@@ -10811,8 +11128,781 @@ async function openProductDetailModal(rawP){
   });
 }
 window.openProductDetailModal = openProductDetailModal;
-async function renderReviews(uid){const s=await getDocs(query(collection(db,'reviews'),where('sellerId','==',uid),limit(50)));$('reviews').innerHTML=s.docs.map(d=>{const r=d.data();return `<div class="border-b border-[#292929] py-3"><b>${esc(r.reviewerName)}</b><span class="gold ml-2">${'★'.repeat(Math.max(1,Math.min(5,r.rating)))}</span><p class="muted text-sm mt-1">${esc(r.text)}</p></div>`}).join('')||'<span class="muted">No reviews yet.</span>'}
-function openReviewModal(uid){modal(`<h2 class="text-xl font-bold">Review seller</h2><select id="reviewRating" class="w-full mt-4 p-3 rounded-xl bg-[#191919] border border-[#333]"><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — Average</option><option value="2">2 — Poor</option><option value="1">1 — Very poor</option></select><textarea id="reviewText" rows="4" class="w-full mt-3 p-3 rounded-xl bg-[#191919] border border-[#333]" placeholder="Tell other buyers about your experience…"></textarea><div class="flex justify-end gap-2 mt-4"><button data-close-modal>Cancel</button>${button('Submit','submitReview')}</div>`);$('submitReview').onclick=async()=>{try{const existing=await getDocs(query(collection(db,'reviews'),where('sellerId','==',uid),where('reviewerId','==',currentUser.uid),limit(1)));if(!existing.empty)throw Error('You already reviewed this seller.');const delivered=await getDocs(query(collection(db,'orders'),where('buyerId','==',currentUser.uid),where('sellerIds','array-contains',uid),where('status','==','delivered'),limit(1)));if(delivered.empty)throw Error('You can review a seller after a delivered order.');await addDoc(collection(db,'reviews'),{sellerId:uid,reviewerId:currentUser.uid,reviewerName:currentProfile.name,rating:Number($('reviewRating').value),text:$('reviewText').value.trim(),createdAt:serverTimestamp()});closeModal();toast('Review submitted','success');await openStore(uid)}catch(e){toast(errMsg(e),'error')}}}
+
+async function renderReviews(uid, targetProductId = null){
+  const reviewsContainer = $('reviews');
+  if(!reviewsContainer) return;
+
+  try {
+    const s = await getDocs(query(collection(db,'reviews'), where('sellerId','==',uid), limit(60)));
+    const allReviews = s.docs.map(d=>({ id: d.id, ...d.data() })).sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
+    
+    // Update local cache
+    _sellerReviewsCache.delete(uid);
+    const summary = await fetchSellerReviewsData(uid);
+    const count = allReviews.length;
+    const isStoreOwner = currentUser && currentUser.uid === uid;
+
+    if(count === 0){
+      reviewsContainer.innerHTML = `
+        <div class="p-6 rounded-2xl bg-[#141416] border border-[#242426] text-center space-y-3">
+          <div class="w-12 h-12 rounded-full bg-gold/15 border border-gold/30 flex items-center justify-center text-xl mx-auto">⭐</div>
+          <div>
+            <h3 class="font-bold text-white text-base">No Customer Reviews Yet</h3>
+            <p class="text-xs text-zinc-400 mt-1 max-w-sm mx-auto leading-relaxed">Delivered buyers across Ghana can rate product quality, courier delivery, and merchant service to build seller credibility.</p>
+          </div>
+          ${!isStoreOwner ? `
+            <button type="button" data-write-review-btn class="bg-gold text-black font-extrabold px-4 py-2 rounded-xl text-xs hover:brightness-110 shadow-sm transition inline-flex items-center gap-1.5">
+              <span>⭐</span><span>Be the First to Rate & Review</span>
+            </button>
+          ` : ''}
+        </div>
+      `;
+      reviewsContainer.querySelector('[data-write-review-btn]')?.addEventListener('click', () => {
+        if(!currentUser) return showAuthPrompt('write a review');
+        openReviewModal({ sellerId: uid });
+      });
+      return;
+    }
+
+    const dist = summary.distribution || { 5:0, 4:0, 3:0, 2:0, 1:0 };
+    const avg = summary.avgRating || '5.0';
+    const posPct = summary.positivePercentage || 100;
+    const sub = summary.subRatings || { quality: '5.0', delivery: '5.0', service: '5.0' };
+
+    let currentFilter = 'all';
+
+    const renderReviewListHtml = (filteredList) => {
+      if(!filteredList.length){
+        return `<div class="p-4 text-center text-xs text-zinc-400 bg-[#121214] rounded-xl border border-[#222]">No reviews match this filter.</div>`;
+      }
+      return filteredList.map(r => {
+        const ratingNum = Math.min(5, Math.max(1, Number(r.rating) || 5));
+        const hasVerified = r.verifiedPurchase !== false;
+        const timeAgo = r.createdAt ? formatTimeAgo(ts(r.createdAt)) : 'Recently';
+        const hasPhoto = !!r.photoUrl;
+
+        return `
+          <div class="p-4 rounded-2xl bg-[#121214] border border-[#222226] space-y-2.5 transition hover:border-[#333]" id="review-card-${esc(r.id)}">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-full bg-[#202024] border border-[#333] flex items-center justify-center text-xs font-bold text-white shrink-0 overflow-hidden">
+                  ${r.reviewerAvatarUrl ? `<img src="${esc(r.reviewerAvatarUrl)}" class="w-full h-full object-cover" onerror="this.remove()">` : esc((r.reviewerName||'B')[0].toUpperCase())}
+                </div>
+                <div>
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="font-black text-sm text-white">${esc(r.reviewerName || 'Ghanaian Buyer')}</span>
+                    ${hasVerified ? `<span class="text-[10px] bg-emerald-950/90 text-emerald-300 border border-emerald-700/70 px-2 py-0.5 rounded-full font-bold">✓ Verified Purchase</span>` : ''}
+                  </div>
+                  <div class="text-[11px] text-zinc-500 mt-0.5">${esc(timeAgo)}</div>
+                </div>
+              </div>
+
+              <!-- Rating Badge -->
+              <div class="flex flex-col items-end">
+                <div class="flex items-center gap-1">
+                  ${renderStarIconsHtml(ratingNum, 5, 'text-amber-400', 'text-sm')}
+                  <span class="text-xs font-extrabold text-white ml-0.5">${ratingNum}.0</span>
+                </div>
+                <span class="text-[10px] text-zinc-400 mt-0.5">
+                  ${ratingNum === 5 ? 'Exceptional' : ratingNum === 4 ? 'Very Good' : ratingNum === 3 ? 'Average' : ratingNum === 2 ? 'Below Expectations' : 'Poor'}
+                </span>
+              </div>
+            </div>
+
+            <!-- Product / Store Context Tag -->
+            ${r.productName ? `
+              <div class="inline-flex items-center gap-1.5 bg-[#18181c] border border-[#2c2c32] px-2.5 py-1 rounded-lg text-xs text-zinc-300">
+                <span>📦</span>
+                <span>Product:</span>
+                <b class="text-white">${esc(r.productName)}</b>
+              </div>
+            ` : `
+              <div class="inline-flex items-center gap-1.5 bg-[#18181c] border border-[#2c2c32] px-2.5 py-1 rounded-lg text-xs text-zinc-300">
+                <span>🏪</span>
+                <span class="text-zinc-400">Storefront Experience</span>
+              </div>
+            `}
+
+            <!-- Sub-criteria breakdown tags if available -->
+            ${(r.qualityRating || r.deliveryRating || r.serviceRating) ? `
+              <div class="flex items-center gap-2 flex-wrap text-[10.5px]">
+                ${r.qualityRating ? `<span class="bg-black/40 border border-[#2a2a30] px-2 py-0.5 rounded text-zinc-300">💎 Quality: <b class="text-amber-300">${r.qualityRating}★</b></span>` : ''}
+                ${r.deliveryRating ? `<span class="bg-black/40 border border-[#2a2a30] px-2 py-0.5 rounded text-zinc-300">🚚 Delivery: <b class="text-amber-300">${r.deliveryRating}★</b></span>` : ''}
+                ${r.serviceRating ? `<span class="bg-black/40 border border-[#2a2a30] px-2 py-0.5 rounded text-zinc-300">💬 Service: <b class="text-amber-300">${r.serviceRating}★</b></span>` : ''}
+              </div>
+            ` : ''}
+
+            <!-- Written Comment -->
+            ${r.text ? `<p class="text-zinc-200 text-xs sm:text-sm leading-relaxed">${esc(r.text)}</p>` : ''}
+
+            <!-- Attached Unboxing / Product Photo -->
+            ${hasPhoto ? `
+              <div class="mt-2">
+                <div class="w-24 h-24 rounded-xl overflow-hidden border border-[#333] bg-[#161616] cursor-pointer relative group" data-view-image="${esc(r.photoUrl)}" data-view-title="Buyer Review Photo">
+                  <img src="${esc(r.photoUrl)}" class="w-full h-full object-cover group-hover:scale-105 transition" alt="Review Photo" onerror="this.remove()">
+                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-xs font-bold text-white">🔍 Zoom</div>
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Credibility Highlight Chips -->
+            ${Array.isArray(r.tags) && r.tags.length ? `
+              <div class="flex flex-wrap gap-1.5 pt-1">
+                ${r.tags.map(t => `<span class="text-[10px] bg-amber-950/40 text-amber-300 border border-amber-800/40 px-2 py-0.5 rounded-md font-semibold">${esc(t)}</span>`).join('')}
+              </div>
+            ` : ''}
+
+            <!-- Merchant / Store Owner Reply -->
+            ${r.reply ? `
+              <div class="mt-2 p-3 rounded-xl bg-[#18181c] border-l-2 border-gold space-y-1">
+                <div class="flex items-center gap-1.5 text-xs font-bold text-gold">
+                  <span>🏪</span>
+                  <span>Store Owner Response</span>
+                  <span class="text-[10px] text-zinc-500 font-normal">(${r.repliedAt ? formatTimeAgo(ts(r.repliedAt)) : 'Merchant'})</span>
+                </div>
+                <p class="text-xs text-zinc-300 leading-relaxed">${esc(r.reply)}</p>
+              </div>
+            ` : isStoreOwner ? `
+              <div class="pt-1">
+                <button type="button" data-reply-btn="${esc(r.id)}" class="text-xs text-gold hover:underline font-bold flex items-center gap-1">
+                  <span>💬</span><span>Reply as Store Owner</span>
+                </button>
+                <div id="reply-box-${esc(r.id)}" class="hide mt-2 space-y-2">
+                  <textarea id="reply-input-${esc(r.id)}" rows="2" class="w-full p-2.5 rounded-xl bg-[#1a1a1d] border border-[#333] text-xs text-white" placeholder="Thank your customer and address feedback…"></textarea>
+                  <div class="flex justify-end gap-2">
+                    <button type="button" data-cancel-reply="${esc(r.id)}" class="px-3 py-1 text-xs text-zinc-400 border border-[#333] rounded-lg">Cancel</button>
+                    <button type="button" data-submit-reply="${esc(r.id)}" class="px-3 py-1 text-xs bg-gold text-black font-bold rounded-lg hover:brightness-110">Post Reply</button>
+                  </div>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    };
+
+    reviewsContainer.innerHTML = `
+      <div class="space-y-4">
+        <!-- Credibility & Ratings Scorecard -->
+        <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#18181c] to-[#121214] border border-[#2a2a30]">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+            
+            <!-- Left Score Column -->
+            <div class="md:col-span-4 text-center md:text-left border-b md:border-b-0 md:border-r border-[#26262a] pb-4 md:pb-0 md:pr-4">
+              <div class="text-3xl sm:text-4xl font-black text-white leading-none">${avg}</div>
+              <div class="mt-2 flex items-center justify-center md:justify-start gap-1">
+                ${renderStarIconsHtml(avg, 5, 'text-amber-400', 'text-base sm:text-lg')}
+              </div>
+              <div class="text-xs text-zinc-400 mt-1 font-medium">Based on <b>${count}</b> verified review${count===1?'':'s'}</div>
+              <div class="mt-2.5 inline-flex items-center gap-1.5 bg-emerald-950/70 border border-emerald-700/50 text-emerald-300 text-[11px] px-2.5 py-1 rounded-full font-bold">
+                <span>🛡️</span><span>${posPct}% Positive Feedback</span>
+              </div>
+            </div>
+
+            <!-- Middle Distribution Progress Bars -->
+            <div class="md:col-span-5 space-y-1.5">
+              ${[5, 4, 3, 2, 1].map(stars => {
+                const c = dist[stars] || 0;
+                const pct = count > 0 ? Math.round((c / count) * 100) : 0;
+                return `
+                  <div class="flex items-center gap-2 text-xs">
+                    <span class="w-7 text-zinc-400 font-bold flex items-center gap-0.5 justify-end">${stars} <span class="text-amber-400">★</span></span>
+                    <div class="flex-1 h-2 rounded-full bg-[#202024] overflow-hidden">
+                      <div class="h-full bg-amber-400 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                    </div>
+                    <span class="w-8 text-[11px] text-zinc-500 text-right font-mono">${pct}%</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- Right Specific Metric Badges -->
+            <div class="md:col-span-3 space-y-2 border-t md:border-t-0 md:border-l border-[#26262a] pt-4 md:pt-0 md:pl-4">
+              <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Rating Breakdown</div>
+              <div class="space-y-1.5 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-zinc-300 flex items-center gap-1"><span>💎</span> Product Quality</span>
+                  <b class="text-amber-400 font-mono">${sub.quality} ★</b>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-zinc-300 flex items-center gap-1"><span>🚚</span> Delivery Speed</span>
+                  <b class="text-amber-400 font-mono">${sub.delivery} ★</b>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-zinc-300 flex items-center gap-1"><span>💬</span> Merchant Service</span>
+                  <b class="text-amber-400 font-mono">${sub.service} ★</b>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Filter Bar & Write Review CTA -->
+        <div class="flex items-center justify-between gap-2 flex-wrap pb-1">
+          <div class="flex items-center gap-1.5 overflow-x-auto py-1">
+            <button type="button" data-filter="all" class="review-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-gold text-black transition">All (${count})</button>
+            <button type="button" data-filter="5" class="review-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#18181c] text-zinc-300 hover:text-white border border-[#333] transition">⭐ 5 Stars (${dist[5]||0})</button>
+            <button type="button" data-filter="products" class="review-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#18181c] text-zinc-300 hover:text-white border border-[#333] transition">📦 Products</button>
+            <button type="button" data-filter="photos" class="review-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#18181c] text-zinc-300 hover:text-white border border-[#333] transition">📷 Photos</button>
+          </div>
+
+          ${!isStoreOwner ? `
+            <button type="button" id="cardWriteReviewBtn" class="bg-gold text-black font-extrabold px-4 py-2 rounded-xl text-xs hover:brightness-110 shadow-sm transition flex items-center gap-1.5">
+              <span>⭐</span><span>Write a Review</span>
+            </button>
+          ` : ''}
+        </div>
+
+        <!-- Review List -->
+        <div id="reviewsListContainer" class="space-y-3">
+          ${renderReviewListHtml(allReviews)}
+        </div>
+      </div>
+    `;
+
+    // Filter event listeners
+    const filterBtns = reviewsContainer.querySelectorAll('.review-filter-btn');
+    const listContainer = reviewsContainer.querySelector('#reviewsListContainer');
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => {
+          b.className = 'review-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#18181c] text-zinc-300 hover:text-white border border-[#333] transition';
+        });
+        btn.className = 'review-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-gold text-black transition';
+
+        const filter = btn.dataset.filter;
+        let filtered = allReviews;
+        if(filter === '5') filtered = allReviews.filter(r => (Number(r.rating)||5) >= 5);
+        else if(filter === 'products') filtered = allReviews.filter(r => !!r.productName || !!r.productId);
+        else if(filter === 'photos') filtered = allReviews.filter(r => !!r.photoUrl);
+
+        if(listContainer) listContainer.innerHTML = renderReviewListHtml(filtered);
+        attachReplyHandlers();
+      });
+    });
+
+    reviewsContainer.querySelector('#cardWriteReviewBtn')?.addEventListener('click', () => {
+      if(!currentUser) return showAuthPrompt('write a review');
+      openReviewModal({ sellerId: uid });
+    });
+
+    function attachReplyHandlers(){
+      reviewsContainer.querySelectorAll('[data-reply-btn]').forEach(b => {
+        b.onclick = () => {
+          const rId = b.dataset.replyBtn;
+          const box = reviewsContainer.querySelector('#reply-box-' + rId);
+          if(box) box.classList.toggle('hide');
+        };
+      });
+      reviewsContainer.querySelectorAll('[data-cancel-reply]').forEach(b => {
+        b.onclick = () => {
+          const rId = b.dataset.cancelReply;
+          const box = reviewsContainer.querySelector('#reply-box-' + rId);
+          if(box) box.classList.add('hide');
+        };
+      });
+      reviewsContainer.querySelectorAll('[data-submit-reply]').forEach(b => {
+        b.onclick = async () => {
+          const rId = b.dataset.submitReply;
+          const input = reviewsContainer.querySelector('#reply-input-' + rId);
+          const replyText = input?.value.trim();
+          if(!replyText) return toast('Please type a reply message.', 'error');
+          try {
+            loading('Posting store owner reply…');
+            await updateDoc(doc(db, 'reviews', rId), {
+              reply: replyText,
+              repliedAt: serverTimestamp(),
+              storeId: uid
+            });
+            toast('Reply published successfully!', 'success');
+            await renderReviews(uid);
+          } catch(err) {
+            toast(errMsg(err), 'error');
+          } finally {
+            ready();
+          }
+        };
+      });
+    }
+
+    attachReplyHandlers();
+
+  } catch(e) {
+    console.warn('Render reviews notice:', e);
+    reviewsContainer.innerHTML = `<span class="muted text-xs">Reviews temporarily unavailable.</span>`;
+  }
+}
+
+async function openReviewModal(targetOptions){
+  if(!currentUser) return showAuthPrompt('rate and review sellers or products');
+
+  const options = typeof targetOptions === 'string' ? { sellerId: targetOptions } : (targetOptions || {});
+  const sellerId = options.sellerId || options.uid;
+  if(!sellerId) return toast('Seller information missing.', 'error');
+
+  if(currentUser.uid === sellerId){
+    return toast('You cannot review your own storefront or products.', 'info');
+  }
+
+  // Fetch available products from this seller so buyer can pick store or specific product
+  let sellerProducts = [];
+  let storeData = null;
+  let hasDeliveredOrder = false;
+
+  loading('Preparing star rating & review modal…');
+  try {
+    const [prodsSnap, storeSnap, ordersSnap] = await Promise.all([
+      getDocs(query(collection(db, 'products'), where('sellerId', '==', sellerId), limit(25))).catch(()=>({ docs: [] })),
+      getDoc(doc(db, 'stores', sellerId)).catch(()=>null),
+      getDocs(query(collection(db, 'orders'), where('buyerId', '==', currentUser.uid), where('sellerIds', 'array-contains', sellerId), limit(10))).catch(()=>({ docs: [] }))
+    ]);
+
+    sellerProducts = prodsSnap.docs.map(d=>({ id: d.id, ...d.data() }));
+    if(storeSnap && storeSnap.exists()) storeData = storeSnap.data();
+
+    // Check if user has a completed or delivered order
+    ordersSnap.docs.forEach(d => {
+      const o = d.data();
+      if(['delivered', 'completed', 'paid', 'confirmed'].includes(o.status)){
+        hasDeliveredOrder = true;
+      }
+    });
+  } catch(e) {
+    console.warn('Review pre-check notice:', e);
+  } finally {
+    ready();
+  }
+
+  let currentTargetType = options.productId ? 'product' : 'store';
+  let selectedProductId = options.productId || (sellerProducts[0]?.id || '');
+  let selectedProductName = options.productName || (sellerProducts.find(x => x.id === selectedProductId)?.name || '');
+  let selectedProductImage = options.productImage || (sellerProducts.find(x => x.id === selectedProductId)?.imageUrl || '');
+
+  let primaryRating = Math.min(5, Math.max(1, Number(options.defaultRating) || 5));
+  let qualityRating = 5;
+  let deliveryRating = 5;
+  let serviceRating = 5;
+
+  const selectedTags = new Set(['✨ Authentic Quality', '⚡ Fast Delivery']);
+  let attachedPhotoFile = null;
+  let attachedPhotoPreview = null;
+
+  const ratingTiers = {
+    5: { label: '5.0 — Outstanding! Exceeded all expectations', desc: 'Top tier quality, lightning-fast delivery, and great merchant communication in Ghana.', color: 'text-amber-400' },
+    4: { label: '4.0 — Very Good! High quality & reliable', desc: 'Item arrived in great condition with good packaging and dependable service.', color: 'text-amber-400' },
+    3: { label: '3.0 — Satisfactory • Standard experience', desc: 'Product and delivery met standard expectations with room for minor improvement.', color: 'text-yellow-400' },
+    2: { label: '2.0 — Below Expectations • Needs improvement', desc: 'Encountered some delivery delays, packaging issues, or product discrepancies.', color: 'text-orange-400' },
+    1: { label: '1.0 — Unsatisfactory • Major issues faced', desc: 'Poor item quality, wrong order dispatched, or unresponsive merchant support.', color: 'text-red-400' }
+  };
+
+  const productTags = [
+    '✨ Authentic Quality', '⚡ Fast Delivery', '📦 Secure Packaging', 
+    '🎯 Matches Description', '💎 Value for Money', '👌 Durable Material', 
+    '🇬🇭 Proudly Ghanaian', '💯 100% Recommended'
+  ];
+
+  const storeTags = [
+    '🤝 Friendly Merchant', '⚡ Swift Communication', '🚚 Reliable Courier', 
+    '💯 Honest Seller', '🔄 Smooth Transaction', '🛡️ Trusted Store', 
+    '📦 Neatly Packed', '🇬🇭 Verified Local Seller'
+  ];
+
+  const renderModalContent = () => `
+    <div class="space-y-4 text-left max-w-lg mx-auto" id="starReviewModalRoot">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-[#26262a]">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-gold/15 border border-gold/30 flex items-center justify-center text-base shrink-0">⭐</div>
+          <div>
+            <h2 class="text-base sm:text-lg font-black text-white">Rate & Review</h2>
+            <p class="text-xs text-zinc-400">Boost merchant credibility with authentic star feedback</p>
+          </div>
+        </div>
+        <button type="button" data-close-modal class="text-zinc-400 hover:text-white p-1 text-sm font-bold">✕</button>
+      </div>
+
+      <!-- Verified Ghanaian Buyer Guarantee Notice -->
+      <div class="p-3 rounded-xl ${hasDeliveredOrder ? 'bg-emerald-950/40 border border-emerald-700/40 text-emerald-300' : 'bg-[#18181b] border border-[#2a2a30] text-zinc-300'} text-xs flex items-center gap-2">
+        <span class="text-base">${hasDeliveredOrder ? '🛡️' : '🇬🇭'}</span>
+        <div class="flex-1">
+          <b>${hasDeliveredOrder ? 'Verified Purchase Order on Record' : 'Community Buyer Review'}</b>
+          <p class="text-[11px] text-zinc-400 mt-0.5">
+            ${hasDeliveredOrder ? 'Your review will feature an official Verified Buyer badge.' : 'Share your genuine experience with other Ghanaian shoppers.'}
+          </p>
+        </div>
+      </div>
+
+      <!-- Target Switcher: Store Experience vs Specific Product -->
+      ${sellerProducts.length ? `
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-zinc-300 block">Review Target:</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="reviewTargetStoreBtn" class="p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition ${currentTargetType === 'store' ? 'bg-gold text-black border-gold' : 'bg-[#161619] border-[#333] text-zinc-300 hover:text-white'}">
+              <span>🏪</span><span>Entire Store</span>
+            </button>
+            <button type="button" id="reviewTargetProdBtn" class="p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition ${currentTargetType === 'product' ? 'bg-gold text-black border-gold' : 'bg-[#161619] border-[#333] text-zinc-300 hover:text-white'}">
+              <span>📦</span><span>Specific Product</span>
+            </button>
+          </div>
+
+          ${currentTargetType === 'product' ? `
+            <div class="mt-2">
+              <label class="text-[11px] text-zinc-400 block mb-1">Select Product to Rate:</label>
+              <select id="reviewProductSelect" class="w-full p-2.5 rounded-xl bg-[#161619] border border-[#383838] text-xs text-white outline-none">
+                ${sellerProducts.map(pr => `
+                  <option value="${esc(pr.id)}" ${pr.id === selectedProductId ? 'selected' : ''}>
+                    ${esc(pr.name)} (${money(pr.price)})
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
+
+      <!-- Primary 5-Star Interactive Rating Section -->
+      <div class="p-4 rounded-2xl bg-[#161619] border border-[#2a2a30] text-center space-y-2">
+        <label class="text-xs font-bold text-zinc-300 uppercase tracking-wider block">Overall Star Rating</label>
+        
+        <!-- Big Interactive Stars -->
+        <div class="flex items-center justify-center gap-2 sm:gap-3 py-1" id="starButtonsRow">
+          ${[1, 2, 3, 4, 5].map(s => `
+            <button type="button" data-star-val="${s}" class="star-picker-btn text-3xl sm:text-4xl transition-transform transform active:scale-90 hover:scale-125 focus:outline-none ${s <= primaryRating ? 'text-amber-400' : 'text-zinc-600'}" title="${s} Star${s>1?'s':''}">
+              ★
+            </button>
+          `).join('')}
+        </div>
+
+        <!-- Dynamic Descriptive Tier Pill -->
+        <div class="text-xs font-bold ${ratingTiers[primaryRating]?.color || 'text-amber-400'}" id="starTierLabel">
+          ${ratingTiers[primaryRating]?.label || '5.0 — Outstanding'}
+        </div>
+        <p class="text-[11px] text-zinc-400 max-w-sm mx-auto leading-relaxed" id="starTierDesc">
+          ${ratingTiers[primaryRating]?.desc || ''}
+        </p>
+      </div>
+
+      <!-- Specific Aspect Star Ratings (Quality, Delivery, Service) -->
+      <div class="p-3.5 rounded-xl bg-[#141417] border border-[#26262a] space-y-2.5">
+        <div class="text-xs font-bold text-zinc-300">Detailed Aspect Ratings:</div>
+        
+        <!-- Aspect: Product Quality -->
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-zinc-300 flex items-center gap-1.5">
+            <span>💎</span><span>${currentTargetType === 'product' ? 'Product Quality & Authenticity' : 'Item Quality'}</span>
+          </span>
+          <div class="flex items-center gap-1" data-aspect="quality">
+            ${[1, 2, 3, 4, 5].map(s => `
+              <button type="button" data-aspect-star="quality" data-star-val="${s}" class="text-base transition hover:scale-110 ${s <= qualityRating ? 'text-amber-400' : 'text-zinc-600'}">★</button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Aspect: Delivery Speed -->
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-zinc-300 flex items-center gap-1.5">
+            <span>🚚</span><span>Courier & Delivery Speed</span>
+          </span>
+          <div class="flex items-center gap-1" data-aspect="delivery">
+            ${[1, 2, 3, 4, 5].map(s => `
+              <button type="button" data-aspect-star="delivery" data-star-val="${s}" class="text-base transition hover:scale-110 ${s <= deliveryRating ? 'text-amber-400' : 'text-zinc-600'}">★</button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Aspect: Service & Communication -->
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-zinc-300 flex items-center gap-1.5">
+            <span>💬</span><span>Merchant Communication</span>
+          </span>
+          <div class="flex items-center gap-1" data-aspect="service">
+            ${[1, 2, 3, 4, 5].map(s => `
+              <button type="button" data-aspect-star="service" data-star-val="${s}" class="text-base transition hover:scale-110 ${s <= serviceRating ? 'text-amber-400' : 'text-zinc-600'}">★</button>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Credibility Feature Tags -->
+      <div class="space-y-1.5">
+        <label class="text-xs font-bold text-zinc-300 block">Highlight Key Highlights (Tap to select):</label>
+        <div class="flex flex-wrap gap-1.5" id="reviewTagsContainer">
+          ${(currentTargetType === 'product' ? productTags : storeTags).map(tag => {
+            const isSel = selectedTags.has(tag);
+            return `
+              <button type="button" data-tag="${esc(tag)}" class="review-tag-chip px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${isSel ? 'bg-amber-950/80 border-amber-500/80 text-amber-200' : 'bg-[#18181c] border-[#333] text-zinc-400 hover:text-white'}">
+                ${esc(tag)}
+              </button>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Written Review Comment -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between text-xs">
+          <label class="font-bold text-zinc-300" for="reviewCommentInput">Detailed Customer Review:</label>
+          <span class="text-zinc-500 font-mono text-[11px]" id="reviewCharCount">0/500</span>
+        </div>
+        <textarea id="reviewCommentInput" rows="3" maxlength="500" class="w-full p-3 rounded-xl bg-[#161619] border border-[#333] text-xs sm:text-sm text-white focus:border-gold outline-none leading-relaxed" placeholder="Tell other Ghanaian buyers about product condition, packaging, delivery speed, and how the seller treated you…"></textarea>
+      </div>
+
+      <!-- Optional Unboxing / Product Photo Upload -->
+      <div class="space-y-2">
+        <label class="text-xs font-bold text-zinc-300 block">Attach Photo (Optional proof / unboxing):</label>
+        <div class="flex items-center gap-3">
+          <label class="border border-dashed border-[#444] hover:border-gold rounded-xl px-3.5 py-2.5 text-xs text-zinc-300 hover:text-white bg-[#18181c] cursor-pointer transition flex items-center gap-2 shrink-0">
+            <span>📷</span><span>Select Photo</span>
+            <input type="file" id="reviewPhotoInput" accept="image/jpeg,image/png,image/webp" class="hide">
+          </label>
+          <div id="reviewPhotoPreviewWrapper" class="${attachedPhotoPreview ? '' : 'hide'} flex items-center gap-2">
+            <div class="w-10 h-10 rounded-lg overflow-hidden border border-[#444] bg-[#222]">
+              <img id="reviewPhotoImg" src="${attachedPhotoPreview || ''}" class="w-full h-full object-cover" alt="Preview">
+            </div>
+            <button type="button" id="reviewPhotoRemoveBtn" class="text-red-400 text-xs hover:underline font-semibold">Remove</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-[#26262a]">
+        <button type="button" data-close-modal class="border border-[#444] hover:border-zinc-400 px-4 py-2.5 rounded-xl text-xs font-semibold text-zinc-300">
+          Cancel
+        </button>
+        <button type="button" id="submitStarReviewBtn" class="bg-gold hover:brightness-110 active:scale-[0.98] text-black font-black px-5 py-2.5 rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5 shadow-sm">
+          <span>⭐</span>
+          <span>Submit Star Review</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  modal(renderModalContent());
+
+  const root = $('starReviewModalRoot');
+  if(!root) return;
+
+  const updateStarVisuals = () => {
+    root.querySelectorAll('.star-picker-btn').forEach(btn => {
+      const v = Number(btn.dataset.starVal);
+      if(v <= primaryRating){
+        btn.className = 'star-picker-btn text-3xl sm:text-4xl transition-transform transform active:scale-90 hover:scale-125 focus:outline-none text-amber-400';
+      } else {
+        btn.className = 'star-picker-btn text-3xl sm:text-4xl transition-transform transform active:scale-90 hover:scale-125 focus:outline-none text-zinc-600';
+      }
+    });
+    const tier = ratingTiers[primaryRating] || ratingTiers[5];
+    const tierLbl = root.querySelector('#starTierLabel');
+    const tierDesc = root.querySelector('#starTierDesc');
+    if(tierLbl){
+      tierLbl.className = `text-xs font-bold ${tier.color}`;
+      tierLbl.textContent = tier.label;
+    }
+    if(tierDesc) tierDesc.textContent = tier.desc;
+  };
+
+  const updateAspectStars = (aspect, val) => {
+    root.querySelectorAll(`[data-aspect-star="${aspect}"]`).forEach(btn => {
+      const v = Number(btn.dataset.starVal);
+      btn.className = `text-base transition hover:scale-110 ${v <= val ? 'text-amber-400' : 'text-zinc-600'}`;
+    });
+  };
+
+  // Wire primary stars
+  root.querySelectorAll('.star-picker-btn').forEach(btn => {
+    btn.addEventListener('mouseenter', () => {
+      const v = Number(btn.dataset.starVal);
+      root.querySelectorAll('.star-picker-btn').forEach(b => {
+        const bv = Number(b.dataset.starVal);
+        b.classList.toggle('text-amber-400', bv <= v);
+        b.classList.toggle('text-zinc-600', bv > v);
+      });
+      const tier = ratingTiers[v] || ratingTiers[5];
+      const tierLbl = root.querySelector('#starTierLabel');
+      if(tierLbl) tierLbl.textContent = tier.label;
+    });
+
+    btn.addEventListener('mouseleave', () => {
+      updateStarVisuals();
+    });
+
+    btn.addEventListener('click', () => {
+      primaryRating = Number(btn.dataset.starVal) || 5;
+      updateStarVisuals();
+    });
+  });
+
+  // Wire aspect stars
+  root.querySelectorAll('[data-aspect-star]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const aspect = btn.dataset.aspectStar;
+      const v = Number(btn.dataset.starVal) || 5;
+      if(aspect === 'quality') qualityRating = v;
+      else if(aspect === 'delivery') deliveryRating = v;
+      else if(aspect === 'service') serviceRating = v;
+      updateAspectStars(aspect, v);
+    });
+  });
+
+  // Wire tag toggle chips
+  root.querySelectorAll('.review-tag-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tag = btn.dataset.tag;
+      if(selectedTags.has(tag)){
+        selectedTags.delete(tag);
+        btn.className = 'review-tag-chip px-2.5 py-1 rounded-lg text-xs font-semibold border transition bg-[#18181c] border-[#333] text-zinc-400 hover:text-white';
+      } else {
+        selectedTags.add(tag);
+        btn.className = 'review-tag-chip px-2.5 py-1 rounded-lg text-xs font-semibold border transition bg-amber-950/80 border-amber-500/80 text-amber-200';
+      }
+    });
+  });
+
+  // Target switcher buttons
+  root.querySelector('#reviewTargetStoreBtn')?.addEventListener('click', () => {
+    currentTargetType = 'store';
+    openReviewModal({ sellerId, defaultRating: primaryRating });
+  });
+  root.querySelector('#reviewTargetProdBtn')?.addEventListener('click', () => {
+    currentTargetType = 'product';
+    openReviewModal({ sellerId, productId: selectedProductId || sellerProducts[0]?.id, defaultRating: primaryRating });
+  });
+  root.querySelector('#reviewProductSelect')?.addEventListener('change', (e) => {
+    selectedProductId = e.target.value;
+    const found = sellerProducts.find(x => x.id === selectedProductId);
+    if(found){
+      selectedProductName = found.name;
+      selectedProductImage = found.imageUrl;
+    }
+  });
+
+  // Character counter
+  const commentInput = root.querySelector('#reviewCommentInput');
+  const charCount = root.querySelector('#reviewCharCount');
+  commentInput?.addEventListener('input', () => {
+    if(charCount) charCount.textContent = `${commentInput.value.length}/500`;
+  });
+
+  // Photo upload
+  const photoInput = root.querySelector('#reviewPhotoInput');
+  const previewWrapper = root.querySelector('#reviewPhotoPreviewWrapper');
+  const previewImg = root.querySelector('#reviewPhotoImg');
+  const photoRemoveBtn = root.querySelector('#reviewPhotoRemoveBtn');
+
+  photoInput?.addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    if(!f) return;
+    try {
+      validFile(f, ['image/jpeg', 'image/png', 'image/webp'], 10);
+      attachedPhotoFile = f;
+      const r = new FileReader();
+      r.onload = (ev) => {
+        attachedPhotoPreview = ev.target.result;
+        if(previewImg) previewImg.src = attachedPhotoPreview;
+        if(previewWrapper) previewWrapper.classList.remove('hide');
+      };
+      r.readAsDataURL(f);
+    } catch(err) {
+      toast(errMsg(err), 'error');
+    }
+  });
+
+  photoRemoveBtn?.addEventListener('click', () => {
+    attachedPhotoFile = null;
+    attachedPhotoPreview = null;
+    if(photoInput) photoInput.value = '';
+    if(previewWrapper) previewWrapper.classList.add('hide');
+  });
+
+  // Submit Review
+  root.querySelector('#submitStarReviewBtn')?.addEventListener('click', async () => {
+    const reviewText = commentInput?.value.trim() || '';
+    if(!primaryRating || primaryRating < 1 || primaryRating > 5){
+      return toast('Please select an overall star rating (1 to 5 stars).', 'error');
+    }
+
+    try {
+      loading('Submitting your verified star review…');
+
+      // Check if duplicate review exists for this seller & product
+      let dupQuery;
+      if(currentTargetType === 'product' && selectedProductId){
+        dupQuery = query(collection(db, 'reviews'), where('sellerId', '==', sellerId), where('reviewerId', '==', currentUser.uid), where('productId', '==', selectedProductId), limit(1));
+      } else {
+        dupQuery = query(collection(db, 'reviews'), where('sellerId', '==', sellerId), where('reviewerId', '==', currentUser.uid), limit(1));
+      }
+
+      const dupSnap = await getDocs(dupQuery);
+      if(!dupSnap.empty){
+        // Ask if they want to update their review
+        const existingDoc = dupSnap.docs[0];
+        let photoUp = null;
+        if(attachedPhotoFile){
+          photoUp = await uploadPublic(attachedPhotoFile, 'reviews');
+        }
+        await updateDoc(doc(db, 'reviews', existingDoc.id), {
+          rating: primaryRating,
+          qualityRating: qualityRating || primaryRating,
+          deliveryRating: deliveryRating || primaryRating,
+          serviceRating: serviceRating || primaryRating,
+          tags: Array.from(selectedTags),
+          text: reviewText,
+          ...(photoUp ? { photoUrl: photoUp.url, photoPath: photoUp.path } : {}),
+          verifiedPurchase: hasDeliveredOrder,
+          updatedAt: serverTimestamp()
+        });
+        _sellerReviewsCache.delete(sellerId);
+        closeModal();
+        toast('Star review updated successfully! ⭐', 'success');
+        await renderReviews(sellerId);
+        return;
+      }
+
+      let photoUp = null;
+      if(attachedPhotoFile){
+        photoUp = await uploadPublic(attachedPhotoFile, 'reviews');
+      }
+
+      const newReviewDoc = {
+        sellerId,
+        storeName: storeData?.name || currentProfile?.name || 'Verified Store',
+        productId: currentTargetType === 'product' ? selectedProductId : null,
+        productName: currentTargetType === 'product' ? (selectedProductName || 'Product') : null,
+        productImageUrl: currentTargetType === 'product' ? selectedProductImage : null,
+        reviewerId: currentUser.uid,
+        reviewerName: currentProfile?.name || 'Ghanaian Shopper',
+        reviewerAvatarUrl: currentProfile?.avatarUrl || '',
+        rating: primaryRating,
+        qualityRating: qualityRating || primaryRating,
+        deliveryRating: deliveryRating || primaryRating,
+        serviceRating: serviceRating || primaryRating,
+        tags: Array.from(selectedTags),
+        text: reviewText,
+        photoUrl: photoUp?.url || null,
+        photoPath: photoUp?.path || null,
+        verifiedPurchase: hasDeliveredOrder,
+        createdAt: serverTimestamp()
+      };
+
+      await addDoc(collection(db, 'reviews'), newReviewDoc);
+      _sellerReviewsCache.delete(sellerId);
+
+      closeModal();
+      toast('🎉 Star rating and review submitted! Thank you for boosting seller credibility.', 'success');
+      await renderReviews(sellerId);
+
+    } catch(err) {
+      toast(errMsg(err), 'error');
+    } finally {
+      ready();
+    }
+  });
+}
+window.renderReviews = renderReviews;
+window.openReviewModal = openReviewModal;
 
 async function renderProducts(targetPostId, options){
   return renderMarketplace('products', targetPostId, options);
@@ -10843,14 +11933,14 @@ function openProductModal(p=null){
         <div class="w-10 h-10 rounded-xl bg-gold/15 border border-gold/30 flex items-center justify-center text-xl shrink-0">📦</div>
         <div>
           <h2 class="text-xl font-bold text-white">${isEdit ? 'Edit Product' : 'Add New Product'}</h2>
-          <p class="muted text-xs">Products are reviewed by SellerFlow administration before appearing live in the marketplace.</p>
+          <p class="muted text-xs">Products are reviewed by the SellerFlow Team before appearing live in the marketplace.</p>
         </div>
       </div>
 
       ${!isAdmin ? `
         <div class="p-3 rounded-xl bg-amber-950/40 border border-amber-600/40 text-xs text-amber-300 flex items-center gap-2">
           <span>⏳</span>
-          <span>Sellers submit products for admin review. Once approved, your product will appear in the Ghanaian marketplace.</span>
+          <span>Sellers submit products for SellerFlow review. Once approved by us, your product will appear in the Ghanaian marketplace.</span>
         </div>
       ` : ''}
 
@@ -10918,7 +12008,7 @@ function openProductModal(p=null){
       <div class="flex justify-end gap-2 pt-2 border-t border-[#262626]">
         <button data-close-modal class="px-4 py-2.5 rounded-xl border border-[#333] hover:border-zinc-500 text-xs font-bold text-zinc-300">Cancel</button>
         <button id="saveProduct" class="bg-gold text-black px-5 py-2.5 rounded-xl font-black text-xs hover:brightness-110 shadow-sm flex items-center gap-1.5">
-          <span>${isAdmin ? '✓ Save Product' : '📤 Submit for Admin Review'}</span>
+          <span>${isAdmin ? '✓ Save Product' : '📤 Submit for SellerFlow Review'}</span>
         </button>
       </div>
     </div>
@@ -11063,7 +12153,7 @@ function openProductModal(p=null){
       if(isAdmin){
         toast(isEdit ? 'Product updated' : 'Product published', 'success');
       } else {
-        toast('Product submitted for admin review. Once approved, it will appear in the marketplace.', 'success');
+        toast('Product submitted for SellerFlow review. Once approved by us, it will appear in the marketplace.', 'success');
       }
 
       if(currentPage === 'marketplace' || currentPage === 'products') renderMarketplace('products');
@@ -12649,7 +13739,7 @@ async function renderStore(forceEdit = false){
 
               ${isAdmin ? `
                 <div class="p-3 rounded-xl bg-amber-950/30 border border-amber-800/60 text-xs text-amber-200/90 leading-relaxed">
-                  🛡️ <b>Admin Automatic Business Verification:</b> As an administrator, your business is <b>automatically verified</b> with the official <b class="text-amber-300">🏢 Business Verified</b> badge without needing to upload certificates.
+                  🛡️ <b>SellerFlow Team Business Verification:</b> As part of the SellerFlow Team, your business is <b>automatically verified</b> with the official <b class="text-amber-300">🏢 Business Verified</b> badge without needing to upload certificates.
                 </div>
               ` : `
                 <p class="text-xs text-zinc-300 leading-relaxed">
@@ -12673,7 +13763,7 @@ async function renderStore(forceEdit = false){
 
               <div>
                 <label class="text-xs font-semibold text-zinc-300 block mb-1">
-                  ${store.businessCertUrl ? 'Replace Business Registration Certificate' : (isAdmin ? 'Upload Business Registration Certificate (Optional for Admin)' : 'Upload Business Registration Certificate (Optional)')}
+                  ${store.businessCertUrl ? 'Replace Business Registration Certificate' : (isAdmin ? 'Upload Business Registration Certificate (Optional for SellerFlow Team)' : 'Upload Business Registration Certificate (Optional)')}
                 </label>
                 <input id="storeBusinessCertFile" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="text-xs text-zinc-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer w-full">
                 <p class="muted text-[11px] mt-1">Accepts JPG, PNG, WebP or PDF · max 15MB · Optional</p>
@@ -12801,7 +13891,7 @@ async function renderStore(forceEdit = false){
             <div class="pt-4 border-t border-[#262626] flex flex-wrap items-center justify-between gap-3">
               <div class="flex items-center gap-2">
                 <button id="saveStore" class="bg-gold text-black px-6 py-3 rounded-xl font-black text-sm hover:brightness-110 shadow-md flex items-center gap-2 transition">
-                  <span>${isAdmin ? '✓ Save & Publish Store' : '📤 Submit Store for Admin Review'}</span>
+                  <span>${isAdmin ? '✓ Save & Publish Store' : '📤 Submit Store for SellerFlow Review'}</span>
                 </button>
               </div>
 
@@ -12826,7 +13916,7 @@ async function renderStore(forceEdit = false){
               </button>
             </div>
 
-            <p class="text-xs text-zinc-400">Products are reviewed by administration before becoming publicly visible to shoppers.</p>
+            <p class="text-xs text-zinc-400">Products are reviewed by the SellerFlow Team before becoming publicly visible to shoppers.</p>
 
             <div class="space-y-3 max-h-[600px] overflow-y-auto pr-1">
               ${myProducts.length ? myProducts.map(prod => {
@@ -13399,7 +14489,7 @@ async function renderStore(forceEdit = false){
         if(isAdmin){
           toast('Store settings saved and published.', 'success');
         } else {
-          toast('Store submitted for admin review. Once approved, it will appear in the marketplace.', 'success', 4500);
+          toast('Store submitted for SellerFlow review. Once approved by us, it will appear in the marketplace.', 'success', 4500);
         }
         await openStore(currentUser.uid);
       } catch(e) {
@@ -16064,8 +17154,8 @@ async function markAllNotifications(){
     toast('All notifications marked as read','success');
   }catch(e){toast(errMsg(e),'error')}
 }
-async function sendAdminNotification(recipientId,title,message){if(!isAdmin)throw Error('Admin access required.');if(!recipientId||!title||!message)throw Error('Recipient, title and message are required.');await addDoc(collection(db,'notifications'),{recipientId,title,message,fromAdmin:true,senderName:'SellerFlow',read:false,createdAt:serverTimestamp()});const recipient=allPublicProfiles.get(recipientId);try{if(recipientId===currentUser.uid&&'Notification' in window&&Notification.permission==='granted')new Notification(title,{body:message})}catch(_){}toast('Notification sent','success')}
-async function sendAdminBroadcast(title,message){if(!isAdmin)throw Error('Admin access required.');const users=await getDocs(query(collection(db,'users'),limit(300)));for(const d of users.docs)await addDoc(collection(db,'notifications'),{recipientId:d.id,title,message,fromAdmin:true,senderName:'SellerFlow',read:false,createdAt:serverTimestamp()});toast(`Notification sent to ${users.size} users`,'success')}
+async function sendAdminNotification(recipientId,title,message){if(!isAdmin)throw Error('SellerFlow Team access required.');if(!recipientId||!title||!message)throw Error('Recipient, title and message are required.');await addDoc(collection(db,'notifications'),{recipientId,title,message,fromAdmin:true,senderName:'SellerFlow Security Team',read:false,createdAt:serverTimestamp()});const recipient=allPublicProfiles.get(recipientId);try{if(recipientId===currentUser.uid&&'Notification' in window&&Notification.permission==='granted')new Notification(title,{body:message})}catch(_){}toast('Notification sent','success')}
+async function sendAdminBroadcast(title,message){if(!isAdmin)throw Error('SellerFlow Team access required.');const users=await getDocs(query(collection(db,'users'),limit(300)));for(const d of users.docs)await addDoc(collection(db,'notifications'),{recipientId:d.id,title,message,fromAdmin:true,senderName:'SellerFlow Security Team',read:false,createdAt:serverTimestamp()});toast(`Notification sent to ${users.size} users`,'success')}
 
 async function renderAdmin(){
   if(typeof window.renderAdminFull === 'function'){
@@ -16342,7 +17432,7 @@ async function viewVerificationRecord(uid){
           updateDoc(doc(db, 'users', uid), { adminNotes: noteVal }).catch(() => null)
         ]);
         ready();
-        toast('Compliance notes saved to administrative archive.', 'success');
+        toast('Compliance notes saved to SellerFlow Security records.', 'success');
       } catch(err) {
         ready();
         toast('Could not save notes: ' + errMsg(err), 'error');
@@ -16400,7 +17490,7 @@ async function reviewVerification(uid,approve,adminNote = ''){
       updateDoc(doc(db,'publicProfiles',uid), { verified: approve }).catch(() => null),
       setDoc(doc(db,'buyerKycRecords',uid), {
         ...update,
-        notes: adminNote || (approve ? 'Approved by admin' : 'Rejected by admin'),
+        notes: adminNote || (approve ? 'Approved by SellerFlow Security Team' : 'Rejected by SellerFlow Security Team'),
         lastUpdatedAt: serverTimestamp()
       }, { merge: true }).catch(() => null)
     ]);
@@ -16581,7 +17671,7 @@ async function openHelpSupportModal(){
         ${isAdmin ? `
           <div class="pt-2 border-t border-[#262626]">
             <button type="button" id="adminEditSupportBtnModal" class="w-full bg-gold text-black font-extrabold p-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md hover:brightness-110 transition">
-              <span>✏️</span><span>Edit Customer Support Details (Admin)</span>
+              <span>✏️</span><span>Edit Customer Support Details (SellerFlow Team)</span>
             </button>
           </div>
         ` : ''}
@@ -16607,7 +17697,7 @@ async function openHelpSupportModal(){
 window.openHelpSupportModal = openHelpSupportModal;
 
 async function openAdminSupportEditor(currentData){
-  if(!isAdmin) return toast('Admin privileges required.', 'error');
+  if(!isAdmin) return toast('SellerFlow Team access required.', 'error');
   modal(`
     <div class="space-y-4 max-w-lg mx-auto">
       <div class="pb-3 border-b border-[#262626]">
@@ -17598,7 +18688,7 @@ async function startUser(u){
     await signOut(auth);
     if(typeof clearUserSession === 'function') clearUserSession();
     bootingUid=null;
-    throw Error('This account is blocked. Contact the administrator.');
+    throw Error('This account is blocked. Contact the SellerFlow Team.');
   }
   if(currentProfile?.language && typeof setLanguage === 'function'){
     try{ setLanguage(currentProfile.language, false); }catch(_){}
@@ -17749,6 +18839,8 @@ async function init(){
     firebaseApp=initializeApp(firebaseConfig);
     auth=getAuth(firebaseApp);
     db=getFirestore(firebaseApp);
+    window.db = db;
+    window.auth = auth;
 
     // Configure persistent local storage for Firebase Auth
     if (auth && typeof auth.setPersistence === 'function' && firebase?.auth?.Auth?.Persistence) {
@@ -18445,6 +19537,22 @@ init();
     // 2. Query authoritative server-side moderation endpoint with Gemini 3.8 Flash
     let evalResult = null;
     let verdict = 'REVIEW';
+    let copyrightResult = null;
+
+    // Run client-side deterministic check immediately for instant feedback
+    const clientCopyright = matchStaticCopyrightCatalog({
+      text: postData.text || '',
+      title: postData.title || '',
+      fileName: uploadFile?.name || '',
+      mediaUrl: postData.mediaUrl || '',
+      soundName: postData.soundName || '',
+      soundArtist: postData.soundArtist || '',
+      soundOriginName: postData.soundOriginName || ''
+    });
+    if(clientCopyright && clientCopyright.copyrightDetected){
+      copyrightResult = clientCopyright;
+    }
+
     try{
       if(!currentUser){
         throw new Error('User not authenticated');
@@ -18472,17 +19580,30 @@ init();
         body: JSON.stringify(moderationPayload)
       });
 
-      let copyrightResult = null;
       if(res && res.ok){
         const data = await res.json();
         verdict = data.verdict || 'REVIEW';
         evalResult = data.evalResult || data;
-        copyrightResult = data.copyrightResult || null;
+        if(data.copyrightResult && data.copyrightResult.copyrightDetected){
+          copyrightResult = data.copyrightResult;
+        }
       } else {
         console.warn('Moderation backend returned non-OK status; post remains hidden/under_review');
       }
     }catch(err){
       console.warn('Server moderation request error; post remains securely in hidden/under_review state', err);
+    }
+
+    if(copyrightResult && copyrightResult.copyrightDetected){
+      if(window._sfCachedPosts && ref?.id){
+        window._sfCachedPosts.set(ref.id, {
+          id: ref.id,
+          ...postData,
+          copyrightDetected: true,
+          audioMutedByCopyright: true,
+          copyrightMatch: copyrightResult
+        });
+      }
     }
 
     if(!evalResult){
@@ -19826,7 +20947,7 @@ init();
   window.__openPostModal = openPostModal = function(){
     if(!currentUser) return showAuthPrompt('create a post');
     if(currentProfile?.blocked){
-      return toast('Your account has been blocked by an administrator from accessing SellerFlow features.', 'error', 5000);
+      return toast('Your account has been blocked by the SellerFlow Security Team from accessing SellerFlow features.', 'error', 5000);
     }
     if(currentProfile?.postingRestricted){
       return toast('Your account is currently restricted from creating or publishing new posts.', 'error', 5000);
@@ -21480,7 +22601,7 @@ init();
     $('publishPost').onclick = async () => {
       try {
         if(currentProfile?.blocked) throw Error('Your account has been blocked from SellerFlow.');
-        if(currentProfile?.postingRestricted) throw Error('Your account is restricted from posting by an administrator.');
+        if(currentProfile?.postingRestricted) throw Error('Your account is restricted from posting by the SellerFlow Security Team.');
         if(currentProfile?.suspendedUntil && ts(currentProfile.suspendedUntil) > Date.now()){
           throw Error('Your account is currently suspended. You cannot publish new posts.');
         }
@@ -21817,9 +22938,9 @@ init();
         if(x && x.sellerId && (!currentUser || x.sellerId !== currentUser.uid)){
           await addDoc(collection(db, 'notifications'), {
             recipientId: x.sellerId,
-            senderName: 'SellerFlow',
+            senderName: 'SellerFlow Security Team',
             title: 'Post taken down',
-            message: 'An administrator removed your SellerFlow post after a platform safety review.',
+            message: 'The SellerFlow Security Team removed your post after a platform safety review.',
             fromAdmin: true,
             postId: uid,
             read: false,
@@ -21878,14 +22999,14 @@ init();
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           },
-          body: JSON.stringify({ type: 'product', id, reason: reason || 'Taken down by administration' })
+          body: JSON.stringify({ type: 'product', id, reason: reason || 'Taken down by the SellerFlow Security Team' })
         });
       } catch (_) {}
 
       await updateDoc(doc(db, 'products', id), {
         status: 'taken_down',
         reviewStatus: 'taken_down',
-        takedownReason: reason || 'Taken down by administration',
+        takedownReason: reason || 'Taken down by the SellerFlow Security Team',
         takenDownAt: serverTimestamp(),
         takenDownBy: currentUser?.uid || 'admin'
       }).catch(() => {});
@@ -24168,9 +25289,9 @@ init();
       if(x && x.sellerId && (!currentUser || x.sellerId !== currentUser.uid)){
         await addDoc(collection(db, 'notifications'), {
           recipientId: x.sellerId,
-          senderName: 'SellerFlow',
+          senderName: 'SellerFlow Security Team',
           title: 'Post restored',
-          message: 'An administrator restored your post back to the live For You feed.',
+          message: 'The SellerFlow Security Team restored your post back to the live For You feed.',
           fromAdmin: true,
           postId: postId,
           read: false,
@@ -24215,7 +25336,7 @@ init();
     try {
       loading('Deleting post permanently…');
       if(typeof purgeAndHidePostImmediately === 'function') {
-        purgeAndHidePostImmediately(postId, 'Permanently deleted by admin');
+        purgeAndHidePostImmediately(postId, 'Permanently removed by the SellerFlow Security Team');
       }
       try {
         const token = currentUser ? await currentUser.getIdToken() : '';
@@ -24225,7 +25346,7 @@ init();
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           },
-          body: JSON.stringify({ type: 'post', id: postId, reason: 'Permanently deleted by admin' })
+          body: JSON.stringify({ type: 'post', id: postId, reason: 'Permanently removed by the SellerFlow Security Team' })
         });
       } catch (_) {}
       await deleteDoc(doc(db, 'posts', postId));
@@ -24306,11 +25427,11 @@ init();
       });
       await addDoc(collection(db, 'notifications'), {
         recipientId: uid,
-        senderName: 'SellerFlow',
+        senderName: 'SellerFlow Security Team',
         title: currentlyRestricted ? 'Posting privileges restored' : 'Posting privileges restricted',
         message: currentlyRestricted 
-          ? 'Your SellerFlow posting privileges have been restored by an administrator.' 
-          : 'Your account has been restricted from creating or publishing new posts by an administrator.',
+          ? 'Your SellerFlow posting privileges have been restored by the SellerFlow Security Team.' 
+          : 'Your account has been restricted from creating or publishing new posts by the SellerFlow Security Team.',
         fromAdmin: true,
         read: false,
         createdAt: serverTimestamp()
@@ -24402,7 +25523,7 @@ init();
     if($('sfApplySuspensionBtn')) $('sfApplySuspensionBtn').onclick = async () => {
       try {
         const dur = $('sfSuspendDuration').value;
-        const reason = $('sfSuspendReason').value.trim() || 'Administrator safety moderation';
+        const reason = $('sfSuspendReason').value.trim() || 'SellerFlow Security Team safety moderation';
         let ms = 0;
         if(dur === '24h') ms = 24 * 60 * 60 * 1000;
         else if(dur === '3d') ms = 3 * 24 * 60 * 60 * 1000;
@@ -24420,9 +25541,9 @@ init();
         });
         await addDoc(collection(db, 'notifications'), {
           recipientId: uid,
-          senderName: 'SellerFlow',
+          senderName: 'SellerFlow Security Team',
           title: 'Account suspended',
-          message: `Your account has been suspended by an administrator${untilDate ? ` until ${untilDate.toLocaleDateString('en-GH')}` : ''}. Reason: ${reason}.`,
+          message: `Your account has been suspended by the SellerFlow Security Team${untilDate ? ` until ${untilDate.toLocaleDateString('en-GH')}` : ''}. Reason: ${reason}.`,
           fromAdmin: true,
           read: false,
           createdAt: serverTimestamp()
@@ -24955,7 +26076,7 @@ init();
                 <span class="text-xs font-bold px-2 py-0.5 rounded-full ${pendingKycCount ? 'bg-amber-950 text-amber-300 border border-amber-800 animate-pulse' : 'bg-zinc-800 text-zinc-300'}">${allGhanaCardRecords.length} Dossiers</span>
               </div>
               <h2 class="text-lg font-black text-white group-hover:text-gold transition">Ghana Card Vault</h2>
-              <p class="muted text-xs mt-1 leading-relaxed">Admin storage for buyer Ghana Card credentials, front and back photos, and compliance notes for future reference.</p>
+              <p class="muted text-xs mt-1 leading-relaxed">Secure storage for buyer Ghana Card credentials, front and back photos, and compliance notes for future reference.</p>
               
               <div class="flex flex-wrap gap-2 mt-4">
                 <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg ${pendingKycCount ? 'bg-amber-950/80 text-amber-300 border border-amber-800 animate-pulse' : 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60'}">${pendingKycCount ? `${pendingKycCount} Review` : `${verifiedKycCount} Verified`}</span>
@@ -25083,9 +26204,9 @@ init();
               <div>
                 <h3 class="text-base font-black text-white flex items-center gap-2">
                   <span>Buyer Ghana Card Identity Vault Desk</span>
-                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">Admin-Only</span>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">Security Team</span>
                 </h3>
-                <p class="muted text-xs">Buyers must provide valid Ghana Card credentials before placing marketplace orders. Admin archives all documents for future reference.</p>
+                <p class="muted text-xs">Buyers provide valid Ghana Card credentials before placing marketplace orders. The SellerFlow Security Team archives all documents for future reference.</p>
               </div>
             </div>
             <div class="flex items-center gap-2">
@@ -25741,7 +26862,7 @@ init();
     const isApproved = s.status === 'approved' || (!s.status && !isPending && !isTakenDown && !isRejected);
 
     let statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800">🟢 Live Store</span>`;
-    if(isPending) statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800 animate-pulse">⏳ Pending Admin Review</span>`;
+    if(isPending) statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800 animate-pulse">⏳ Pending SellerFlow Review</span>`;
     if(isTakenDown) statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800">🚫 Taken Down</span>`;
     if(isRejected) statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-950 text-orange-300 border border-orange-800">⚠️ Changes Requested</span>`;
 
@@ -25916,7 +27037,7 @@ init();
     const isApproved = p.status === 'approved' || (!p.status && !isPending && !isTakenDown && !isRejected);
 
     let statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800">🟢 Live in Market</span>`;
-    if(isPending) statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800 animate-pulse">⏳ Pending Admin Review</span>`;
+    if(isPending) statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800 animate-pulse">⏳ Pending SellerFlow Review</span>`;
     if(isTakenDown) statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800">🚫 Taken Down</span>`;
     if(isRejected) statusPill = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-950 text-orange-300 border border-orange-800">⚠️ Changes Requested</span>`;
 
@@ -26209,7 +27330,7 @@ init();
                 <div class="flex items-center gap-1.5 flex-wrap">
                   <b class="text-sm text-white truncate">${esc(u.name || u.email || 'User')}</b>
                   ${u.verified ? '<span class="verified-badge">✓</span>' : ''}
-                  ${u.role === 'admin' ? '<span class="text-[10px] bg-gold/20 text-gold border border-gold/40 px-1.5 py-0.2 rounded font-bold">Admin</span>' : ''}
+                  ${u.role === 'admin' ? '<span class="text-[10px] bg-gold/20 text-gold border border-gold/40 px-1.5 py-0.2 rounded font-bold">SellerFlow Team</span>' : ''}
                 </div>
                 <div class="muted text-xs truncate mt-0.5">@${esc(u.username || 'user')} · <span class="text-zinc-500">${esc(u.email || '')}</span></div>
                 <div class="mt-2 flex flex-wrap items-center gap-1.5">

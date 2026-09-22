@@ -2322,6 +2322,7 @@ const getFirestore=(app)=>{
   try{
     const inst = (app && typeof app.firestore === 'function') ? app.firestore() : firebase.firestore();
     db = inst;
+    window.db = inst;
     if(db && typeof db.enablePersistence === 'function' && !window._sfPersistenceTried){
       window._sfPersistenceTried = true;
       db.enablePersistence({ synchronizeTabs: true }).catch(err => {
@@ -2332,20 +2333,26 @@ const getFirestore=(app)=>{
     }
     return db;
   }catch(_){
-    return (app && typeof app.firestore === 'function') ? app.firestore() : firebase.firestore();
+    const fallback = (app && typeof app.firestore === 'function') ? app.firestore() : firebase.firestore();
+    if(fallback) { db = fallback; window.db = fallback; }
+    return fallback;
   }
 };
 function getDbSafe(database){
   if(database && (typeof database.collection === 'function' || typeof database.doc === 'function')) return database;
-  if(typeof db !== 'undefined' && db && (typeof db.collection === 'function' || typeof db.doc === 'function')) return db;
+  if(typeof db !== 'undefined' && db && (typeof db.collection === 'function' || typeof db.doc === 'function')) { window.db = db; return db; }
+  if(typeof window.db !== 'undefined' && window.db && (typeof window.db.collection === 'function' || typeof window.db.doc === 'function')) return window.db;
   if(typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length && typeof firebase.firestore === 'function'){
     try {
       db = getFirestore();
+      window.db = db;
       return db;
     } catch(_) {}
   }
   return null;
 }
+window.getDbSafe = getDbSafe;
+window.getFirestore = getFirestore;
 const collection=(database,...pathSegments)=>{
   const d = getDbSafe(database);
   const path = pathSegments.filter(Boolean).join('/');
@@ -2417,6 +2424,7 @@ function snapshotExists(snap){return !!snap && (typeof snap.exists==='function' 
 
 
 const firebaseConfig={apiKey:'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk',authDomain:'sellerflow-efaab.firebaseapp.com',databaseURL:'https://sellerflow-efaab-default-rtdb.firebaseio.com',projectId:'sellerflow-efaab',storageBucket:'sellerflow-efaab.firebasestorage.app',messagingSenderId:'987175352360',appId:'1:987175352360:web:53e44304aaf11b98c61d1d'};
+window.firebaseConfig = firebaseConfig;
 const ADMIN_EMAILS=['gideondreams3325@gmail.com','gideonappiahfriempong@gmail.com'];
 const isUserAdminEmail=(email)=>{
   if(!email) return false;
@@ -18831,6 +18839,8 @@ async function init(){
     firebaseApp=initializeApp(firebaseConfig);
     auth=getAuth(firebaseApp);
     db=getFirestore(firebaseApp);
+    window.db = db;
+    window.auth = auth;
 
     // Configure persistent local storage for Firebase Auth
     if (auth && typeof auth.setPersistence === 'function' && firebase?.auth?.Auth?.Persistence) {
