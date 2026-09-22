@@ -32,7 +32,7 @@ const filesToCopy = [
 try {
   const rootFiles = fs.readdirSync(path.resolve('.'));
   for (const file of rootFiles) {
-    if (file.endsWith('.svg') || file.endsWith('.png') || file.endsWith('.ico') || file.endsWith('.webp')) {
+    if (file.endsWith('.svg') || file.endsWith('.png') || file.endsWith('.ico') || file.endsWith('.webp') || file.endsWith('.jpg') || file.endsWith('.jpeg')) {
       if (!filesToCopy.includes(file)) {
         filesToCopy.push(file);
       }
@@ -55,6 +55,13 @@ for (const file of filesToCopy) {
     }
     copiedCount++;
   }
+}
+
+const androidPublicDir = path.resolve('android/app/src/main/assets/public');
+if (fs.existsSync(androidPublicDir)) {
+  try {
+    fs.copyFileSync(path.join(distDir, 'index.html'), path.join(androidPublicDir, 'index.html'));
+  } catch (_) {}
 }
 
 console.log(`Build complete: ${copiedCount} assets ready in dist/`);

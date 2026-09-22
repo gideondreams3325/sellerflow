@@ -739,9 +739,9 @@ app.post('/api/moderation/inspect-post', async (req, res) => {
         await adminDb.collection('notifications').doc(`warn_${postId}`).set({
           recipientId: callerUid,
           userId: callerUid,
-          senderName: 'SellerFlow Safety AI',
+          senderName: 'SellerFlow Safety Team',
           title: '⚠️ Safety Policy Violation Warning',
-          message: `Your post was flagged by Gemini 3.8 Flash and hidden from public view because it violated SellerFlow Ghana safety policies: ${evalResult.reason} (Detected Rule: ${evalResult.detectedRule}). It has been submitted for manual administrator review.`,
+          message: `Your post was flagged by Gemini 3.8 Flash and hidden from public view because it violated SellerFlow Ghana safety policies: ${evalResult.reason} (Detected Rule: ${evalResult.detectedRule}). It has been submitted to the SellerFlow Security Team for manual review.`,
           type: 'warning',
           fromAdmin: true,
           read: false,
@@ -952,10 +952,73 @@ app.post('/api/copyright/dispute', async (req, res) => {
     return res.json({
       success: true,
       disputeId,
-      message: 'Your copyright dispute has been submitted for administrator review.'
+      message: 'Your copyright dispute has been submitted to the SellerFlow Security Team for review.'
     });
   } catch (err) {
     console.error('Copyright dispute error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * Copyright Dispute Resolution Endpoint (Admin only)
+ * Allows administrators to approve or reject disputes and unmute audio if authorized.
+ */
+app.post('/api/copyright/resolve-dispute', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing Firebase ID token' });
+    }
+
+    const idToken = authHeader.split('Bearer ')[1].trim();
+    let decodedToken;
+    try {
+      decodedToken = await verifyFirebaseToken(idToken);
+    } catch (authErr) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid token' });
+    }
+
+    const callerUid = decodedToken.uid;
+    const userDoc = await adminDb.collection('users').doc(callerUid).get();
+    const userData = userDoc.data() || {};
+    if (userData.role !== 'admin' && userData.role !== 'super_admin' && !userData.isAdmin) {
+      return res.status(403).json({ success: false, error: 'Forbidden: SellerFlow Security Team access required' });
+    }
+
+    const { disputeId, postId, action } = req.body || {};
+    if (!disputeId || !postId) {
+      return res.status(400).json({ success: false, error: 'Missing disputeId or postId' });
+    }
+
+    if (action === 'approve') {
+      // Unmute the post and record resolution
+      await adminDb.collection('posts').doc(postId).set({
+        copyrightDetected: false,
+        audioMutedByCopyright: false,
+        copyrightResolved: true,
+        copyrightResolvedAt: FieldValue.serverTimestamp(),
+        copyrightResolvedBy: callerUid
+      }, { merge: true });
+
+      await adminDb.collection('copyrightDisputes').doc(disputeId).set({
+        status: 'approved',
+        resolvedAt: FieldValue.serverTimestamp(),
+        resolvedBy: callerUid
+      }, { merge: true });
+
+      return res.json({ success: true, message: 'Dispute approved. Audio unmuted for this post.' });
+    } else {
+      await adminDb.collection('copyrightDisputes').doc(disputeId).set({
+        status: 'rejected',
+        resolvedAt: FieldValue.serverTimestamp(),
+        resolvedBy: callerUid
+      }, { merge: true });
+
+      return res.json({ success: true, message: 'Dispute rejected. Audio remains muted.' });
+    }
+  } catch (err) {
+    console.error('Resolve copyright dispute error:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -1290,7 +1353,7 @@ Respond strictly in JSON format:
         verifiedBy: geminiVerdict === 'VERIFIED' ? 'gemini-3.8-flash' : 'pending_security_team',
         rejectionReason: geminiVerdict === 'CORRECTION_REQUIRED' || geminiVerdict === 'REJECTED' ? geminiMessage : '',
         source: 'sellerflow_identity_and_liveness_verification',
-        notes: geminiVerdict === 'VERIFIED' ? 'Identity & Live Selfie Liveness verified with Gemini 3.8 Flash' : 'Identity verification recorded. Accessible strictly to Security Team administrators.'
+        notes: geminiVerdict === 'VERIFIED' ? 'Identity & Live Selfie Liveness verified with Gemini 3.8 Flash' : 'Identity verification recorded. Accessible strictly to the SellerFlow Security Team.'
       }, { merge: true });
     } catch (vaultErr) {
       console.warn('buyerKycRecords archival notice:', vaultErr.message);
@@ -1395,13 +1458,16 @@ Respond strictly in JSON format:
  * Handles taking down posts, products, and store accounts authoritatively via Firebase Admin SDK.
  */
 app.post('/api/admin/takedown', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.split('Bearer ')[1].trim() : '';
+  const { type = 'post', id, targetId, reason = 'Taken down after administrative safety review' } = req.body || {};
+  const itemUid = id || targetId;
+
   try {
-    const authHeader = req.headers.authorization || '';
-    if (!authHeader.startsWith('Bearer ')) {
+    if (!idToken) {
       return res.status(401).json({ success: false, error: 'Unauthorized: Missing token' });
     }
 
-    const idToken = authHeader.split('Bearer ')[1].trim();
     let decodedToken;
     try {
       decodedToken = await verifyFirebaseToken(idToken);
@@ -1410,11 +1476,18 @@ app.post('/api/admin/takedown', async (req, res) => {
     }
 
     const callerUid = decodedToken.uid;
-    if (decodedToken.role !== 'admin') {
+    let isAdmin = decodedToken.role === 'admin' || decodedToken.role === 'super_admin' || !!decodedToken.isAdmin || isUserAdminEmail(decodedToken.email);
+    if (!isAdmin) {
+      try {
+        const userDoc = await adminDb.collection('users').doc(callerUid).get();
+        const userData = userDoc.data() || {};
+        isAdmin = userData.role === 'admin' || userData.role === 'super_admin' || !!userData.isAdmin;
+      } catch (_) {}
+    }
+
+    if (!isAdmin) {
       return res.status(403).json({ success: false, error: 'Forbidden: Admin access required' });
     }
-    const { type = 'post', id, targetId, reason = 'Taken down after administrative safety review' } = req.body || {};
-    const itemUid = id || targetId;
 
     if (!itemUid) {
       return res.status(400).json({ success: false, error: 'Missing target item ID' });
@@ -1488,9 +1561,9 @@ app.post('/api/admin/takedown', async (req, res) => {
         await adminDb.collection('notifications').doc(`takedown_prod_${itemUid}`).set({
           recipientId: sellerId,
           userId: sellerId,
-          senderName: 'SellerFlow Admin',
+          senderName: 'SellerFlow Security Team',
           title: 'Product Removed from Marketplace',
-          message: `Your product "${prodData?.name || 'item'}" was taken down from the marketplace: ${reason}.`,
+          message: `Your product "${prodData?.name || 'item'}" was removed from the marketplace by the SellerFlow Security Team: ${reason}.`,
           type: 'takedown',
           fromAdmin: true,
           read: false,
@@ -1516,9 +1589,9 @@ app.post('/api/admin/takedown', async (req, res) => {
         await adminDb.collection('notifications').doc(`takedown_store_${itemUid}`).set({
           recipientId: itemUid,
           userId: itemUid,
-          senderName: 'SellerFlow Admin',
+          senderName: 'SellerFlow Security Team',
           title: 'Storefront Suspended',
-          message: `Your storefront was taken down by administration: ${reason}.`,
+          message: `Your storefront was taken down by the SellerFlow Security Team: ${reason}.`,
           type: 'takedown',
           fromAdmin: true,
           read: false,
@@ -1533,7 +1606,7 @@ app.post('/api/admin/takedown', async (req, res) => {
   } catch (err) {
     console.warn('Admin takedown Admin SDK note:', err.message);
     // If gRPC permissions are missing, execute via authenticated Firestore REST API with the caller's admin token
-    if (err.message && (err.message.includes('PERMISSION_DENIED') || err.message.includes('Missing or insufficient permissions') || err.code === 7)) {
+    if (itemUid && idToken && err.message && (err.message.includes('PERMISSION_DENIED') || err.message.includes('Missing or insufficient permissions') || err.code === 7)) {
       try {
         const coll = type === 'product' ? 'products' : type === 'store' ? 'stores' : 'posts';
         const url = `https://firestore.googleapis.com/v1/projects/sellerflow-efaab/databases/(default)/documents/${coll}/${itemUid}`;
@@ -3321,7 +3394,7 @@ app.post('/api/jobs/security-action', async (req, res) => {
           targetType,
           reviewerUid: callerUid,
           action: 'delete',
-          reason: reason || 'Listing deleted by platform administrator.',
+          reason: reason || 'Listing removed by the SellerFlow Security Team.',
           notes: notes || reason || '',
           timestamp: FieldValue.serverTimestamp()
         });

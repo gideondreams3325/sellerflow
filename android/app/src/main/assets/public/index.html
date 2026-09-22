@@ -239,7 +239,7 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 .reel-order-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:800;background:#f5b942;color:#000;border:1px solid #e0a32e;box-shadow:0 2px 10px rgba(245,185,66,.35);transition:all .15s ease;cursor:pointer;white-space:nowrap!important}
 .reel-order-btn:hover{background:#ffc759;transform:translateY(-1px);box-shadow:0 4px 14px rgba(245,185,66,.5)}
 .reel-order-btn:active{transform:scale(.94)}
-.reel-no-store-tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-size:10.5px;font-weight:750;background:rgba(85,15,15,.9);color:#fecaca;border:1px solid rgba(239,68,68,.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(0,0,0,.5);transition:all .15s ease;cursor:pointer;white-space:nowrap!important}
+.reel-no-store-tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-size:10.5px;font-weight:750;background:rgba(85,15,15,.9);color:#fecaca;border:1px solid rgba(239,68,68,.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(0,0,0,.5);transition:all .15s ease;cursor:pointer;max-width:100%;white-space:nowrap!important}
 .reel-no-store-tag:hover{background:rgba(125,20,20,.95);border-color:#ef4444;color:#fff;transform:translateY(-.5px)}
 .reel-no-store-tag:active{transform:scale(.94)}
 .reel-sound-ticker{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.5);backdrop-filter:blur(8px);border-radius:999px;padding:6px 12px;font-size:12px;color:#f4f4f5;transition:border-color .15s;cursor:pointer}
@@ -2617,7 +2617,8 @@ function _createSafeNullElement(id) {
           add: () => {},
           remove: () => {},
           toggle: () => false,
-          contains: () => false
+          contains: () => false,
+          replace: () => {}
         };
       }
       if (prop === 'style') {
@@ -2628,13 +2629,22 @@ function _createSafeNullElement(id) {
       }
       if (prop === 'dataset') return {};
       if (typeof prop === 'string' && prop.startsWith('on')) return null;
-      if (['addEventListener', 'removeEventListener', 'setAttribute', 'removeAttribute', 'appendChild', 'removeChild', 'replaceChild', 'insertAdjacentHTML', 'focus', 'blur', 'click', 'scrollIntoView', 'scroll', 'scrollTo'].includes(prop)) {
+      if (['remove', 'replaceWith', 'replaceChildren', 'addEventListener', 'removeEventListener', 'setAttribute', 'removeAttribute', 'appendChild', 'removeChild', 'replaceChild', 'insertAdjacentHTML', 'insertAdjacentElement', 'insertAdjacentText', 'focus', 'blur', 'click', 'scrollIntoView', 'scroll', 'scrollTo', 'load', 'play', 'pause', 'reset', 'submit', 'checkValidity', 'reportValidity', 'setCustomValidity', 'matches', 'contains', 'cloneNode'].includes(prop)) {
+        if (prop === 'matches' || prop === 'contains') return () => false;
+        if (prop === 'play') return () => Promise.resolve();
         return () => {};
       }
+      if (prop === 'getBoundingClientRect') return () => ({ top: 0, left: 0, bottom: 0, right: 0, width: 0, height: 0, x: 0, y: 0 });
+      if (prop === 'getAttribute') return () => null;
+      if (prop === 'hasAttribute') return () => false;
+      if (prop === 'closest') return () => null;
       if (prop === 'querySelector') return () => null;
       if (prop === 'querySelectorAll') return () => [];
-      if (prop === 'innerHTML' || prop === 'innerText' || prop === 'textContent' || prop === 'value' || prop === 'src' || prop === 'href') {
-        return '';
+      if (prop === 'getElementsByClassName' || prop === 'getElementsByTagName') return () => [];
+      if (prop === 'parentElement' || prop === 'parentNode' || prop === 'nextSibling' || prop === 'previousSibling' || prop === 'firstChild' || prop === 'lastChild' || prop === 'firstElementChild' || prop === 'lastElementChild') return null;
+      if (prop === 'children' || prop === 'childNodes') return [];
+      if (prop === 'innerHTML' || prop === 'innerText' || prop === 'textContent' || prop === 'value' || prop === 'src' || prop === 'href' || prop === 'tagName' || prop === 'nodeName') {
+        return prop === 'tagName' || prop === 'nodeName' ? 'DIV' : '';
       }
       return undefined;
     },
@@ -3345,15 +3355,34 @@ function getOptimizedMediaUrl(url, type = 'card') {
       cleanPath = cleanPath.slice(idx + marker.length);
     }
     cleanPath = cleanPath.replace(/^public\//, '').replace(/^ghana-card-documents\//, '').replace(/^\/+/, '');
-    return `/api/media/supabase?path=${encodeURIComponent(cleanPath)}`;
+    const isCapacitor = (typeof window !== 'undefined') && (
+      window.location.protocol === 'capacitor:' ||
+      (typeof window.Capacitor !== 'undefined' && window.Capacitor?.isNativePlatform && window.Capacitor.isNativePlatform())
+    );
+    const remoteHost = isCapacitor ? (window.__sfBackendUrl || '') : '';
+    return `${remoteHost}/api/media/supabase?path=${encodeURIComponent(cleanPath)}`;
+  }
+
+  // Google Usercontent avatar optimization (ensure permissive parameters & no-referrer compatibility)
+  if (trimmed.includes('googleusercontent.com')) {
+    if (trimmed.includes('=s')) {
+      return trimmed.replace(/=s\d+(-c)?/, '=s320-c');
+    }
+    return trimmed;
   }
 
   // Local media paths: route seamlessly to /uploads/
+  const isCapacitor = (typeof window !== 'undefined') && (
+    window.location.protocol === 'capacitor:' ||
+    (typeof window.Capacitor !== 'undefined' && window.Capacitor?.isNativePlatform && window.Capacitor.isNativePlatform())
+  );
+  const remoteHost = isCapacitor ? (window.__sfBackendUrl || '') : '';
+
   if (trimmed.startsWith('media/') || trimmed.startsWith('/media/')) {
-    return `/uploads/${trimmed.replace(/^\/+/, '')}`;
+    return `${remoteHost}/uploads/${trimmed.replace(/^\/+/, '')}`;
   }
   if (trimmed.startsWith('uploads/') || trimmed.startsWith('/uploads/')) {
-    return `/${trimmed.replace(/^\/+/, '')}`;
+    return `${remoteHost}/${trimmed.replace(/^\/+/, '')}`;
   }
 
   return trimmed;
@@ -3376,7 +3405,21 @@ function getOptimizedVideoPoster(videoUrl, thumbUrl) {
 window.getOptimizedVideoPoster = getOptimizedVideoPoster;
 
 const SF_DEFAULT_AVATAR = '/default-avatar.svg';
-const SF_DEFAULT_AVATAR_DATA_URI = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23242430'/%3E%3Cstop offset='100%25' stop-color='%2314141a'/%3E%3C/linearGradient%3E%3ClinearGradient id='f' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23f4f4f5'/%3E%3Cstop offset='100%25' stop-color='%23a1a1aa'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='64' cy='64' r='64' fill='url(%23b)'/%3E%3Ccircle cx='64' cy='46' r='21' fill='url(%23f)'/%3E%3Cpath d='M 22 108 C 22 84 41 76 64 76 C 87 76 106 84 106 108 Z' fill='url(%23f)'/%3E%3C/svg%3E";
+const SF_DEFAULT_AVATAR_FALLBACK = '/default-avatar.svg';
+const SF_DEFAULT_AVATAR_DATA_URI = '/default-avatar.svg';
+
+function isDefaultProfilePic(url){
+  if(!url || typeof url !== 'string') return true;
+  return url.includes('default-avatar.svg') || 
+         url.includes('default-profile-picture.jpg') || 
+         url.includes('default-profile-picture') ||
+         url.includes('nav-emblem.svg') || 
+         url === SF_DEFAULT_AVATAR || 
+         url === SF_DEFAULT_AVATAR_FALLBACK || 
+         url === SF_DEFAULT_AVATAR_DATA_URI;
+}
+window.isDefaultProfilePic = isDefaultProfilePic;
+window.getUserProfilePictureUrl = getUserAvatarUrl;
 
 function getUserAvatarUrl(p){
   if(!p){
@@ -3387,9 +3430,24 @@ function getUserAvatarUrl(p){
   }
   if(typeof p === 'string'){
     const trimmedStr = p.trim();
-    if(trimmedStr.startsWith('http://') || trimmedStr.startsWith('https://') || trimmedStr.startsWith('data:') || trimmedStr.startsWith('blob:') || trimmedStr.startsWith('/')){
+    if(!trimmedStr) return SF_DEFAULT_AVATAR;
+
+    // Check if the string is an image URL / path rather than a user UID
+    if(
+      trimmedStr.startsWith('http://') || 
+      trimmedStr.startsWith('https://') || 
+      trimmedStr.startsWith('data:') || 
+      trimmedStr.startsWith('blob:') || 
+      trimmedStr.startsWith('/') || 
+      trimmedStr.startsWith('media/') || 
+      trimmedStr.startsWith('uploads/') || 
+      trimmedStr.includes('/') || 
+      /\.(jpe?g|png|webp|svg|gif|avif)$/i.test(trimmedStr)
+    ){
       return getOptimizedMediaUrl(trimmedStr, 'avatar');
     }
+
+    // Otherwise it's a user UID
     const resolved = (currentUser && trimmedStr === currentUser.uid) 
       ? (currentProfile || currentUser) 
       : ((typeof allPublicProfiles !== 'undefined' && allPublicProfiles instanceof Map && allPublicProfiles.has(trimmedStr)) ? allPublicProfiles.get(trimmedStr) : sellerProfile(trimmedStr));
@@ -3401,17 +3459,41 @@ function getUserAvatarUrl(p){
     return SF_DEFAULT_AVATAR;
   }
 
-  let rawUrl = p.avatarUrl || p.photoURL || p.photoUrl || p.avatar || p.avatar_url || p.profilePic || p.profilePicture || p.picture || p.image || p.logoUrl || p.avatarPath || p.mediaPath || '';
+  const targetUid = p.uid || p.id || p.sellerId || p.userId || p.senderId || p.buyerId || p.ownerId || '';
+
+  // 1. Check persistent device local cache first (renders instant user-uploaded photo even offline)
+  if(targetUid){
+    try {
+      const cached = localStorage.getItem('sf_user_avatar_' + targetUid);
+      if(cached && typeof cached === 'string' && cached.trim() && !isDefaultProfilePic(cached)){
+        return getOptimizedMediaUrl(cached.trim(), 'avatar');
+      }
+    } catch(_) {}
+  }
+
+  // 2. Extract profile photo from properties
+  let rawUrl = p.avatarUrl || p.photoURL || p.photoUrl || p.avatar || p.avatar_url || p.sellerAvatarUrl || p.authorAvatar || p.userAvatar || p.sellerAvatar || p.creatorAvatar || p.profilePic || p.profilePicture || p.picture || p.image || p.logoUrl || p.avatarPath || p.mediaPath || '';
+  if(rawUrl && isDefaultProfilePic(rawUrl)){
+    rawUrl = '';
+  }
   
   // Check active user session
-  if(!rawUrl && currentUser && (p.uid === currentUser.uid || p.email === currentUser.email || p === currentUser || p === currentProfile || p.sellerId === currentUser.uid || p.ownerId === currentUser.uid)){
+  if(!rawUrl && currentUser && (targetUid === currentUser.uid || p.uid === currentUser.uid || p.email === currentUser.email || p === currentUser || p === currentProfile || p.sellerId === currentUser.uid || p.ownerId === currentUser.uid)){
     if(!currentProfile?.avatarRemoved){
       rawUrl = currentProfile?.avatarUrl || currentProfile?.photoURL || currentUser.photoURL || '';
+      if(rawUrl && isDefaultProfilePic(rawUrl)) rawUrl = '';
+      if(!rawUrl){
+        try {
+          const cachedPic = localStorage.getItem('sf_user_avatar_' + currentUser.uid);
+          if(cachedPic && !isDefaultProfilePic(cachedPic)) rawUrl = cachedPic;
+        } catch(_) {}
+      }
       if(!rawUrl){
         try {
           const saved = JSON.parse(localStorage.getItem('sf_active_user_session') || '{}');
           if(!saved.profile?.avatarRemoved){
-            rawUrl = saved.photoURL || saved.profile?.avatarUrl || '';
+            const sPic = saved.photoURL || saved.profile?.avatarUrl || '';
+            if(sPic && !isDefaultProfilePic(sPic)) rawUrl = sPic;
           }
         } catch(_) {}
       }
@@ -3419,7 +3501,6 @@ function getUserAvatarUrl(p){
   }
 
   // Check public profiles or stores cache by ID
-  const targetUid = p.uid || p.id || p.sellerId || p.userId || p.senderId || p.buyerId || p.ownerId;
   if(!rawUrl && targetUid){
     if(currentUser && targetUid === currentUser.uid){
       if(!currentProfile?.avatarRemoved){
@@ -3428,18 +3509,20 @@ function getUserAvatarUrl(p){
     } else if(typeof allPublicProfiles !== 'undefined' && allPublicProfiles instanceof Map && allPublicProfiles.has(targetUid)){
       const pub = allPublicProfiles.get(targetUid);
       if(!pub?.avatarRemoved){
-        rawUrl = pub?.avatarUrl || pub?.photoURL || pub?.logoUrl || '';
+        const pubPic = pub?.avatarUrl || pub?.photoURL || pub?.logoUrl || '';
+        if(pubPic && !isDefaultProfilePic(pubPic)) rawUrl = pubPic;
       }
     } else if(typeof allStores !== 'undefined' && allStores instanceof Map && allStores.has(targetUid)){
       const st = allStores.get(targetUid);
-      rawUrl = st?.logoUrl || '';
+      const stLogo = st?.logoUrl || '';
+      if(stLogo && !isDefaultProfilePic(stLogo)) rawUrl = stLogo;
     }
   }
 
   if(!rawUrl && currentUser && p.ownerId === currentUser.uid && !currentProfile?.avatarRemoved){
     rawUrl = p.logoUrl || currentProfile?.avatarUrl || currentUser.photoURL || '';
   }
-  if(rawUrl && typeof rawUrl === 'string' && rawUrl.trim()){
+  if(rawUrl && typeof rawUrl === 'string' && rawUrl.trim() && !isDefaultProfilePic(rawUrl)){
     return getOptimizedMediaUrl(rawUrl.trim(), 'avatar');
   }
   const uname = String(p.username || '').toLowerCase().trim();
@@ -3461,7 +3544,21 @@ window.normalizeAvatarClass = normalizeAvatarClass;
 
 window.__sfAvatarFallback = function(img, initial, cls){
   if(!img) return;
-  // If a direct Supabase URL failed to load in the browser, retry via our authenticated server proxy
+
+  // 1. Check if we have a locally cached avatar in localStorage for this user UID
+  const avatarUid = img.dataset?.avatarUid || img.dataset?.sellerAvatar || img.dataset?.sellerSoundAvatar || img.dataset?.userUid || '';
+  if(avatarUid && !img.dataset.sfTriedLocalCache){
+    img.dataset.sfTriedLocalCache = '1';
+    try {
+      const localCached = localStorage.getItem('sf_user_avatar_' + avatarUid);
+      if(localCached && typeof localCached === 'string' && localCached.trim() && !isDefaultProfilePic(localCached)){
+        img.src = getOptimizedMediaUrl(localCached.trim(), 'avatar');
+        return;
+      }
+    } catch(_) {}
+  }
+
+  // 2. If a direct Supabase URL failed to load in the browser, retry via our authenticated server proxy
   if(img.src && img.src.includes('supabase.co/storage/v1/object/') && !img.dataset.sfProxyAttempted){
     img.dataset.sfProxyAttempted = '1';
     let cleanPath = img.src;
@@ -3469,27 +3566,37 @@ window.__sfAvatarFallback = function(img, initial, cls){
     const idx = cleanPath.indexOf(marker);
     if(idx !== -1) cleanPath = cleanPath.slice(idx + marker.length);
     cleanPath = cleanPath.replace(/^public\//, '').replace(/^ghana-card-documents\//, '').replace(/^\/+/, '');
-    img.src = `/api/media/supabase?path=${encodeURIComponent(cleanPath)}`;
+    const isCapacitor = (typeof window !== 'undefined') && (
+      window.location.protocol === 'capacitor:' ||
+      (typeof window.Capacitor !== 'undefined' && window.Capacitor?.isNativePlatform && window.Capacitor.isNativePlatform())
+    );
+    const remoteBackend = isCapacitor ? (window.__sfBackendUrl || '') : '';
+    img.src = `${remoteBackend}/api/media/supabase?path=${encodeURIComponent(cleanPath)}`;
     return;
   }
-  // Try media path from dataset if provided and local /uploads/ has not been attempted yet
-  if(img.dataset && img.dataset.mediaPath && !img.dataset.sfTriedMediaPath){
-    img.dataset.sfTriedMediaPath = '1';
-    const cleanMedia = img.dataset.mediaPath.replace(/^[/\\]+/, '');
-    img.src = `/uploads/${cleanMedia}`;
-    return;
-  }
-  // Retry Google usercontent or external avatar once with no-referrer
-  if(img.src && !img.dataset.sfRetriedNoReferrer && img.src.includes('googleusercontent.com') && !img.src.includes('default-avatar.svg') && !img.src.startsWith('data:')){
+
+  // 3. Retry Google usercontent or external avatar once with permissive params and no-referrer
+  if(img.src && !img.dataset.sfRetriedNoReferrer && img.src.includes('googleusercontent.com') && !isDefaultProfilePic(img.src) && !img.src.startsWith('data:')){
     img.dataset.sfRetriedNoReferrer = '1';
     img.referrerPolicy = 'no-referrer';
     img.setAttribute('referrerpolicy', 'no-referrer');
-    const origSrc = img.src;
+    const origSrc = img.src.replace(/=s\d+(-c)?/, '=s320-no');
     img.src = origSrc;
     return;
   }
-  img.onerror = null;
-  img.src = SF_DEFAULT_AVATAR_DATA_URI;
+
+  // 4. Retry external avatar once via secure proxy if cross-origin policy blocked the image
+  if(img.src && !img.dataset.sfTriedProxy && (img.src.startsWith('http://') || img.src.startsWith('https://')) && !isDefaultProfilePic(img.src) && !img.src.includes('/api/media/proxy') && !img.src.startsWith('data:') && !img.src.includes(window.location.host)){
+    img.dataset.sfTriedProxy = '1';
+    img.src = `/api/media/proxy?url=${encodeURIComponent(img.src)}`;
+    return;
+  }
+
+  img.onerror = function(){
+    this.onerror = null;
+    this.src = SF_DEFAULT_AVATAR_FALLBACK;
+  };
+  img.src = SF_DEFAULT_AVATAR;
   img.classList.remove('rounded-3xl', 'rounded-2xl', 'rounded-xl', 'rounded-lg', 'rounded-md', 'rounded-sm');
   img.classList.add('rounded-full', 'object-cover');
 };
@@ -3506,11 +3613,13 @@ window.__sfBannerFallback = function(img){
 
 function avatar(p,cls='avatar'){
   const finalCls = normalizeAvatarClass(cls);
+  const targetUid = (p && typeof p === 'object') ? (p.uid || p.id || p.sellerId || p.userId || p.ownerId || '') : (typeof p === 'string' ? p : '');
   const url = getUserAvatarUrl(p);
   const name = esc(p?.name || p?.username || 'User');
-  const hasCustomPic = !!(url && !url.includes('default-avatar.svg') && !url.includes('nav-emblem.svg'));
+  const hasCustomPic = !isDefaultProfilePic(url);
   const viewAttr = hasCustomPic ? `data-view-image="${esc(url)}" data-view-title="${name}'s profile picture"` : '';
-  return `<img ${viewAttr} class="${finalCls}" src="${esc(url)}" alt="${name}" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-avatar-cls="${finalCls}" onerror="window.__sfAvatarFallback(this)">`;
+  const uidAttr = targetUid ? `data-avatar-uid="${esc(targetUid)}"` : '';
+  return `<img ${viewAttr} ${uidAttr} class="${finalCls}" src="${esc(url)}" alt="${name}" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-avatar-cls="${finalCls}" onerror="window.__sfAvatarFallback(this)">`;
 }
 function validFile(file,types,maxMB){
   if(!file)return false;
@@ -4791,10 +4900,16 @@ async function ensureProfile(u,extra={}){
     currentProfile.hasBusinessCert = true;
     currentProfile.businessVerified = true;
   }
-  if(currentProfile && u.photoURL && !currentProfile.avatarRemoved && (!currentProfile.avatarUrl || !currentProfile.avatarUrl.trim())){
-    currentProfile.avatarUrl = u.photoURL;
-    updateDoc(doc(db,'users',u.uid),{avatarUrl:u.photoURL}).catch(()=>{});
-    updateDoc(doc(db,'publicProfiles',u.uid),{avatarUrl:u.photoURL}).catch(()=>{});
+  if(currentProfile && !currentProfile.avatarRemoved && (!currentProfile.avatarUrl || !currentProfile.avatarUrl.trim() || isDefaultProfilePic(currentProfile.avatarUrl))){
+    let localPic = '';
+    try { localPic = localStorage.getItem('sf_user_avatar_' + u.uid) || ''; } catch(_) {}
+    if(localPic && !isDefaultProfilePic(localPic)){
+      currentProfile.avatarUrl = localPic;
+    } else if(u.photoURL && !isDefaultProfilePic(u.photoURL)){
+      currentProfile.avatarUrl = u.photoURL;
+      updateDoc(doc(db,'users',u.uid),{avatarUrl:u.photoURL}).catch(()=>{});
+      updateDoc(doc(db,'publicProfiles',u.uid),{avatarUrl:u.photoURL}).catch(()=>{});
+    }
   }
   allPublicProfiles.set(u.uid, { ...(currentProfile || {}), uid: u.uid, avatarUrl: currentProfile?.avatarUrl || (currentProfile?.avatarRemoved ? '' : (u.photoURL || '')) });
   saveUserSession(u, currentProfile);
@@ -4806,10 +4921,16 @@ async function refreshProfile(){
   const s=await getDoc(doc(db,'users',currentUser.uid));
   currentProfile=snapshotExists(s)?s.data():await ensureProfile(currentUser);
   isAdmin=isUserAdminEmail(currentUser.email) || currentProfile?.role === 'admin';
-  if(currentUser.photoURL && !currentProfile?.avatarRemoved && (!currentProfile?.avatarUrl || !currentProfile.avatarUrl.trim())){
-    if(currentProfile) currentProfile.avatarUrl = currentUser.photoURL;
-    updateDoc(doc(db,'users',currentUser.uid),{avatarUrl:currentUser.photoURL}).catch(()=>{});
-    updateDoc(doc(db,'publicProfiles',currentUser.uid),{avatarUrl:currentUser.photoURL}).catch(()=>{});
+  if(currentProfile && !currentProfile.avatarRemoved && (!currentProfile.avatarUrl || !currentProfile.avatarUrl.trim() || isDefaultProfilePic(currentProfile.avatarUrl))){
+    let localPic = '';
+    try { localPic = localStorage.getItem('sf_user_avatar_' + currentUser.uid) || ''; } catch(_) {}
+    if(localPic && !isDefaultProfilePic(localPic)){
+      currentProfile.avatarUrl = localPic;
+    } else if(currentUser.photoURL && !isDefaultProfilePic(currentUser.photoURL)){
+      currentProfile.avatarUrl = currentUser.photoURL;
+      updateDoc(doc(db,'users',currentUser.uid),{avatarUrl:currentUser.photoURL}).catch(()=>{});
+      updateDoc(doc(db,'publicProfiles',currentUser.uid),{avatarUrl:currentUser.photoURL}).catch(()=>{});
+    }
   }
   if(isAdmin && currentProfile){
     currentProfile.verified=true;
@@ -4850,6 +4971,23 @@ async function loadPublicProfiles(){
         window._cachedStores = storeList;
         try { localStorage.setItem('sf_cached_stores', JSON.stringify(storeList)); } catch(_) {}
       }
+
+      // Refresh any feed avatars that might have rendered with the default placeholder before public profiles finished loading
+      try {
+        if(currentPage === 'feed'){
+          document.querySelectorAll('.reel-avatar-img, [data-seller-avatar], [data-seller-sound-avatar], [data-avatar-uid]').forEach(img => {
+            const btn = img.closest('[data-open-seller]') || img.closest('[data-reel-card]') || img;
+            const sellerId = img.dataset.sellerAvatar || img.dataset.sellerSoundAvatar || img.dataset.avatarUid || btn.dataset?.openSeller;
+            if(sellerId){
+              const pub = sellerProfile(sellerId);
+              const av = getUserAvatarUrl(pub);
+              if(av && !isDefaultProfilePic(av) && (isDefaultProfilePic(img.src) || !img.src || img.src !== av)){
+                img.src = av;
+              }
+            }
+          });
+        }
+      } catch(_) {}
     }catch(e){
       console.warn('Background public profiles load warning:',e);
     } finally {
@@ -4858,17 +4996,22 @@ async function loadPublicProfiles(){
   })();
   return _publicProfilesPromise;
 }
-function sellerProfile(uid){
+function sellerProfile(uid, fallbackData = null){
   if(!uid) return { uid: '', name: 'Seller', username: 'seller', verified: false, followers: [], following: [] };
   let base = allPublicProfiles.get(uid);
   if(currentUser && uid === currentUser.uid){
-    const activeAvatar = currentProfile?.avatarUrl || currentUser?.photoURL || base?.avatarUrl || '';
+    let localPic = '';
+    try { localPic = localStorage.getItem('sf_user_avatar_' + currentUser.uid) || ''; } catch(_) {}
+    const activeAvatar = (!currentProfile?.avatarRemoved)
+      ? (currentProfile?.avatarUrl || (localPic && !isDefaultProfilePic(localPic) ? localPic : '') || currentProfile?.photoURL || currentProfile?.photoUrl || currentProfile?.avatar || currentProfile?.profilePic || currentUser?.photoURL || (base?.avatarUrl && !isDefaultProfilePic(base.avatarUrl) ? base.avatarUrl : '') || (base?.photoURL && !isDefaultProfilePic(base.photoURL) ? base.photoURL : '') || (fallbackData?.sellerAvatarUrl && !isDefaultProfilePic(fallbackData.sellerAvatarUrl) ? fallbackData.sellerAvatarUrl : '') || (fallbackData?.authorAvatar && !isDefaultProfilePic(fallbackData.authorAvatar) ? fallbackData.authorAvatar : '') || (fallbackData?.avatarUrl && !isDefaultProfilePic(fallbackData.avatarUrl) ? fallbackData.avatarUrl : '') || '')
+      : '';
     return {
       ...(base || {}),
+      ...(fallbackData || {}),
       ...(currentProfile || {}),
       uid,
-      name: currentProfile?.name || currentUser.displayName || base?.name || 'Seller',
-      username: currentProfile?.username || base?.username || 'seller',
+      name: currentProfile?.name || currentUser.displayName || base?.name || fallbackData?.sellerName || fallbackData?.name || 'Seller',
+      username: currentProfile?.username || base?.username || fallbackData?.sellerUsername || fallbackData?.username || 'seller',
       avatarUrl: activeAvatar,
       photoURL: activeAvatar,
       verified: isAdmin ? true : (currentProfile?.verified || base?.verified || false),
@@ -4877,19 +5020,56 @@ function sellerProfile(uid){
       role: isAdmin ? 'admin' : (currentProfile?.role || base?.role || 'seller')
     };
   }
-  if(!base){
-    return { uid, name: 'Seller', username: 'seller', verified: false, followers: [], following: [] };
+  let otherLocalPic = '';
+  try { otherLocalPic = localStorage.getItem('sf_user_avatar_' + uid) || ''; } catch(_) {}
+  
+  const fallbackAvatar = (fallbackData?.sellerAvatarUrl && !isDefaultProfilePic(fallbackData.sellerAvatarUrl) ? fallbackData.sellerAvatarUrl : '') ||
+    (fallbackData?.authorAvatar && !isDefaultProfilePic(fallbackData.authorAvatar) ? fallbackData.authorAvatar : '') ||
+    (fallbackData?.avatarUrl && !isDefaultProfilePic(fallbackData.avatarUrl) ? fallbackData.avatarUrl : '') ||
+    (fallbackData?.userPhoto && !isDefaultProfilePic(fallbackData.userPhoto) ? fallbackData.userPhoto : '') ||
+    (fallbackData?.sellerAvatar && !isDefaultProfilePic(fallbackData.sellerAvatar) ? fallbackData.sellerAvatar : '') ||
+    (fallbackData?.creatorAvatar && !isDefaultProfilePic(fallbackData.creatorAvatar) ? fallbackData.creatorAvatar : '') ||
+    (fallbackData?.photoURL && !isDefaultProfilePic(fallbackData.photoURL) ? fallbackData.photoURL : '') ||
+    (fallbackData?.avatar && !isDefaultProfilePic(fallbackData.avatar) ? fallbackData.avatar : '') || '';
+
+  const effectiveAvatar = (otherLocalPic && !isDefaultProfilePic(otherLocalPic))
+    ? otherLocalPic
+    : ((base?.avatarUrl && !isDefaultProfilePic(base.avatarUrl))
+      ? base.avatarUrl
+      : ((base?.photoURL && !isDefaultProfilePic(base.photoURL))
+        ? base.photoURL
+        : fallbackAvatar));
+
+  if(!base && fallbackData){
+    return {
+      uid,
+      name: fallbackData.sellerName || fallbackData.authorName || fallbackData.name || 'Seller',
+      username: fallbackData.sellerUsername || fallbackData.username || 'seller',
+      avatarUrl: effectiveAvatar,
+      photoURL: effectiveAvatar,
+      verified: !!fallbackData.verified,
+      followers: [],
+      following: []
+    };
   }
+  if(!base){
+    return { uid, name: 'Seller', username: 'seller', avatarUrl: effectiveAvatar, photoURL: effectiveAvatar, verified: false, followers: [], following: [] };
+  }
+  const mergedBase = {
+    ...base,
+    avatarUrl: effectiveAvatar || base.avatarUrl || '',
+    photoURL: effectiveAvatar || base.photoURL || ''
+  };
   if(isUserAdminEmail(base.email) || base.role === 'admin'){
     return {
-      ...base,
+      ...mergedBase,
       verified: true,
       role: 'admin',
       hasBusinessCert: true,
       businessVerified: true
     };
   }
-  return base;
+  return mergedBase;
 }
 
 function isFollowingUser(sellerUid){
@@ -4931,14 +5111,14 @@ function showNoStoreScamNotice(sellerId){
         ⚠️
       </div>
       <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-rose-900/60 text-rose-300 border border-rose-500/40 mb-3">
-        <span>Scam Prevention Alert</span>
+        <span>⚠️ Beware of Scam</span>
       </div>
-      <h3 class="text-xl font-black text-white mb-2">No Store Created</h3>
+      <h3 class="text-xl font-black text-white mb-2">No Verified Store on SellerFlow</h3>
       <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed mb-4">
         ${isSelf ? `
-          You have <strong class="text-white">not created an official SellerFlow store</strong> yet. Buyers cannot order your products directly until you set up your storefront.
+          You have <strong class="text-white">no verified store on SellerFlow</strong>. Buyers cannot order your products directly until you set up a verified storefront.
         ` : `
-          <strong class="text-white">${username}</strong> has <strong class="text-white">not created an official SellerFlow store</strong> yet.
+          <strong class="text-white">${username}</strong> has <strong class="text-white">no verified store on SellerFlow</strong>. <span class="text-amber-300 font-bold">Beware of scam:</span> Do not make direct off-platform payments or wire transfers outside verified stores.
         `}
       </p>
       <div class="p-4 rounded-xl bg-[#141416] border border-rose-800/40 text-left text-xs text-zinc-300 space-y-2.5 mb-5">
@@ -5004,7 +5184,77 @@ async function ensureFeedStoresChecked(posts){
 }
 window.ensureFeedStoresChecked = ensureFeedStoresChecked;
 
+const checkedSellerProfiles = window._sfCheckedSellerProfiles = window._sfCheckedSellerProfiles || new Set();
+async function ensureFeedProfilesChecked(posts){
+  if(!Array.isArray(posts) || !posts.length) return;
+  const unknownSellerIds = [...new Set(posts.map(p => p.sellerId).filter(id => id && (!allPublicProfiles.has(id) || (!allPublicProfiles.get(id)?.avatarUrl && !allPublicProfiles.get(id)?.photoURL && !allPublicProfiles.get(id)?.avatarRemoved))))];
+  if(!unknownSellerIds.length) return;
+  
+  await Promise.all(unknownSellerIds.slice(0, 30).map(async (uid) => {
+    if(checkedSellerProfiles.has(uid) && allPublicProfiles.has(uid) && (allPublicProfiles.get(uid)?.avatarUrl || allPublicProfiles.get(uid)?.photoURL)) return;
+    checkedSellerProfiles.add(uid);
+    try {
+      let profData = null;
+      // 1. Try publicProfiles collection first
+      const pubSnap = await getDoc(doc(db, 'publicProfiles', uid));
+      if(snapshotExists(pubSnap)){
+        profData = { uid: pubSnap.id, ...pubSnap.data() };
+      }
+      // 2. If missing or no avatar in publicProfiles, check users collection
+      if(!profData?.avatarUrl && !profData?.photoURL){
+        const userSnap = await getDoc(doc(db, 'users', uid)).catch(()=>null);
+        if(userSnap && snapshotExists(userSnap)){
+          profData = { ...(profData || {}), uid: userSnap.id, ...userSnap.data() };
+        }
+      }
+      if(profData){
+        const existing = allPublicProfiles.get(uid) || {};
+        const merged = { ...existing, ...profData };
+        allPublicProfiles.set(uid, merged);
+        const resolvedAvatar = getUserAvatarUrl(merged);
+        if(resolvedAvatar && !isDefaultProfilePic(resolvedAvatar)){
+          document.querySelectorAll(`[data-seller-avatar="${uid}"], [data-seller-sound-avatar="${uid}"], [data-avatar-uid="${uid}"], [data-open-seller="${uid}"] img.reel-avatar-img, [data-open-seller="${uid}"] img`).forEach(img => {
+            img.src = resolvedAvatar;
+          });
+        }
+        if(merged.username && merged.username !== 'seller'){
+          document.querySelectorAll(`[data-open-seller="${uid}"] span`).forEach(span => {
+            if(span.textContent && (span.textContent.startsWith('@seller') || span.textContent === '@seller')){
+              span.textContent = `@${merged.username}`;
+            }
+          });
+        }
+      }
+    } catch(err) {
+      console.warn('Feed seller profile resolution warning:', err);
+    }
+  }));
+}
+window.ensureFeedProfilesChecked = ensureFeedProfilesChecked;
+
 document.addEventListener('click', (e) => {
+  const jobBtn = e.target.closest('[data-open-job-post]');
+  if(jobBtn){
+    e.stopPropagation();
+    const pId = jobBtn.dataset.openJobPost;
+    if(typeof window.openJobDetailModal === 'function'){
+      window.openJobDetailModal(pId);
+    } else if(typeof navigate === 'function'){
+      navigate('jobs');
+    }
+    return;
+  }
+  const eventBtn = e.target.closest('[data-open-event-post]');
+  if(eventBtn){
+    e.stopPropagation();
+    const pId = eventBtn.dataset.openEventPost;
+    if(typeof window.openEventDetailModal === 'function'){
+      window.openEventDetailModal(pId);
+    } else if(typeof navigate === 'function'){
+      navigate('events');
+    }
+    return;
+  }
   const orderBtn = e.target.closest('[data-order-store]');
   if(orderBtn){
     e.stopPropagation();
@@ -6591,6 +6841,10 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
     const pList = feedPosts || [];
     ensureFeedStoresChecked(pList).catch(()=>{});
   }
+  if(typeof ensureFeedProfilesChecked === 'function') {
+    const pList = feedPosts || [];
+    ensureFeedProfilesChecked(pList).catch(()=>{});
+  }
   setupReelPlayback(targetPostId);
   if(typeof updateForYouWakeLock === 'function') updateForYouWakeLock();
 }
@@ -6665,7 +6919,7 @@ function businessCertBadge(s, mode='full'){
   return ` <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-300 border border-amber-500/40 shadow-sm shrink-0 whitespace-nowrap" title="Registered Business with Official Registration Certificate"><span>🏢</span><span>Registered Business</span></span>`;
 }
 function postCard(p, idx = 0){
-  const s=p.platformLabel==='SellerFlow'&&p.isAdminPost?{...sellerProfile(p.sellerId),name:'SellerFlow',username:'sellerflow',verified:true}:sellerProfile(p.sellerId);
+  const s=p.platformLabel==='SellerFlow'&&p.isAdminPost?{...sellerProfile(p.sellerId, p),name:'SellerFlow',username:'sellerflow',verified:true}:sellerProfile(p.sellerId, p);
   const liked=(p.likes||[]).includes(currentUser?.uid);
   const saved=(p.saves||[]).includes(currentUser?.uid);
   const isMine = currentUser && currentUser.uid === p.sellerId;
@@ -6714,7 +6968,7 @@ function postCard(p, idx = 0){
     media=`<div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"><img src="/nav-emblem.svg" alt="SellerFlow" class="w-16 h-16 object-contain mb-3 drop-shadow-[0_2px_12px_rgba(245,158,11,0.3)]"><div class="text-lg font-bold max-w-md">${esc(p.text||'SellerFlow post')}</div></div>${audioEl}${soundBtnHtml}`;
   }
   const soundText=p.soundName||'Original sound';
-  const avatarUrl=getUserAvatarUrl(s);
+  const avatarUrl=getUserAvatarUrl(s) || getUserAvatarUrl(p) || (p.sellerAvatarUrl || p.authorAvatar || p.avatarUrl ? getUserAvatarUrl(p.sellerAvatarUrl || p.authorAvatar || p.avatarUrl) : SF_DEFAULT_AVATAR);
 
   return `
     <article class="reel-card" data-reel-id="${p.id}" data-copyright-muted="${isCopyrightMuted ? 'true' : 'false'}">
@@ -6731,7 +6985,7 @@ function postCard(p, idx = 0){
         <!-- 1. Creator avatar with follow '+' button nested underneath -->
         <div class="reel-creator-stack">
           <button type="button" class="reel-avatar-btn" data-open-seller="${p.sellerId}" title="View @${esc(s.username||'seller')}">
-            <img src="${esc(avatarUrl)}" loading="${isFirst ? 'eager' : 'lazy'}" decoding="async" referrerpolicy="no-referrer" class="reel-avatar-img rounded-full object-cover" alt="${esc(s.username||'seller')}" onerror="window.__sfAvatarFallback(this)">
+            <img src="${esc(avatarUrl)}" data-seller-avatar="${p.sellerId}" data-avatar-uid="${p.sellerId}" loading="${isFirst ? 'eager' : 'lazy'}" decoding="async" referrerpolicy="no-referrer" class="reel-avatar-img rounded-full object-cover" alt="${esc(s.username||'seller')}" onerror="window.__sfAvatarFallback(this)">
           </button>
           ${!isMine && !isFollowing ? `
             <button type="button" class="reel-follow-badge" data-reel-follow="${p.sellerId}" title="Follow @${esc(s.username||'seller')}">
@@ -6815,7 +7069,7 @@ function postCard(p, idx = 0){
         <!-- 7. Spinning audio disc with avatar artwork -->
         <div class="reel-action-group">
           <button type="button" class="reel-sound-disc" data-post-action="sound" data-id="${p.id}" title="Sound: ${esc(soundText)}">
-            <img src="${esc(avatarUrl)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" class="w-6 h-6 rounded-full object-cover pointer-events-none" alt="" onerror="window.__sfAvatarFallback(this)">
+            <img src="${esc(avatarUrl)}" data-seller-sound-avatar="${p.sellerId}" data-avatar-uid="${p.sellerId}" loading="lazy" decoding="async" referrerpolicy="no-referrer" class="w-6 h-6 rounded-full object-cover pointer-events-none" alt="" onerror="window.__sfAvatarFallback(this)">
           </button>
         </div>
       </div>
@@ -6834,15 +7088,23 @@ function postCard(p, idx = 0){
               Follow
             </button>
           ` : ''}
-          ${hasSellerStore(p.sellerId) ? `
+          ${p.category === 'job_vacancy' ? `
+            <button type="button" class="reel-job-btn px-2.5 py-1 rounded-full text-xs font-black bg-amber-500 text-black hover:brightness-110 active:scale-95 transition flex items-center gap-1 shadow-md" data-open-job-post="${p.id}" title="View Job Details & Apply">
+              <span>💼</span><span>VIEW JOB</span>
+            </button>
+          ` : (p.category === 'event' ? `
+            <button type="button" class="reel-event-btn px-2.5 py-1 rounded-full text-xs font-black bg-purple-600 text-white hover:brightness-110 active:scale-95 transition flex items-center gap-1 shadow-md" data-open-event-post="${p.id}" title="View Event Details & RSVP">
+              <span>🎟️</span><span>VIEW EVENT</span>
+            </button>
+          ` : (hasSellerStore(p.sellerId) ? `
             <button type="button" class="reel-order-btn" data-order-store="${p.sellerId}" title="Visit @${esc(s.username||'seller')}'s Store">
               <span>🛍️</span><span>VISIT store</span>
             </button>
           ` : `
-            <button type="button" class="reel-no-store-tag" data-scam-notice="${p.sellerId}" title="Beware of scam: Seller has no official storefront. Tap to read scam notice.">
-              <span>⚠️</span><span class="font-bold text-white">No Store</span><span class="text-[10px] text-amber-300 font-semibold">· Beware of scam</span>
+            <button type="button" class="reel-no-store-tag" data-scam-notice="${p.sellerId}" title="No verified store on SellerFlow beware of scam">
+              <span>⚠️</span><span class="font-bold text-white">No verified store on SellerFlow</span> <span class="text-[10px] text-amber-300 font-semibold">· Beware of scam</span>
             </button>
-          `}
+          `))}
         </div>
         ${p.text ? `<p class="reel-caption text-sm md:text-base text-zinc-100/95 leading-snug line-clamp-3 mb-2.5">${esc(p.text)}</p>` : ''}
         <div class="flex items-center gap-2">
@@ -9969,10 +10231,10 @@ async function openStore(uid){
           <span class="text-2xl">⚠️</span>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-1">
-              <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40">No Store Created</span>
+              <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40">No Verified Store on SellerFlow</span>
             </div>
             <b class="text-rose-300 text-sm">Beware of Scam Notice</b>
-            <p class="text-xs text-rose-200/80 mt-1">This creator has not created an official SellerFlow store yet. Do not make direct off-platform payments or wire transfers outside verified stores.</p>
+            <p class="text-xs text-rose-200/80 mt-1">This creator has no verified store on SellerFlow. Beware of scam: Do not make direct off-platform payments or wire transfers outside verified stores.</p>
           </div>
         </div>
       `;
@@ -10006,7 +10268,7 @@ async function openStore(uid){
             </button>
             <div class="relative group">
               ${effectiveLogoUrl ? `
-                <img id="storefrontLogoImg" src="${esc(effectiveLogoUrl)}" class="w-16 h-16 rounded-full object-cover border border-[#333] bg-[#222]" alt="Store logo" data-initial="${esc((store?.name||p.name||p.username||'S')[0].toUpperCase())}" data-avatar-cls="w-16 h-16 rounded-full object-cover bg-[#222]" onerror="window.__sfAvatarFallback(this)">
+                <img id="storefrontLogoImg" src="${esc(effectiveLogoUrl)}" data-avatar-uid="${esc(sellerId || p.uid || '')}" class="w-16 h-16 rounded-full object-cover border border-[#333] bg-[#222]" alt="Store logo" data-initial="${esc((store?.name||p.name||p.username||'S')[0].toUpperCase())}" data-avatar-cls="w-16 h-16 rounded-full object-cover bg-[#222]" onerror="window.__sfAvatarFallback(this)">
               ` : avatar(p,'w-16 h-16 rounded-full object-cover bg-[#222]')}
               ${isOwner ? `
                 <label class="absolute -bottom-1 -right-1 sf-store-btn-primary w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer shadow border border-black/30 transition z-10" title="Change logo">
@@ -12959,7 +13221,11 @@ async function renderStore(forceEdit = false){
         if(bannerFile){
           validFile(bannerFile, ['image/jpeg','image/png','image/webp'], 10);
           loading('Uploading store banner…');
-          const up = await uploadPublic(bannerFile, 'stores');
+          let compressedBanner = bannerFile;
+          try {
+            compressedBanner = await compressImageForUpload(bannerFile, { maxDimension: 1200, quality: 0.82 });
+          } catch (_) {}
+          const up = await uploadPublic(compressedBanner, 'stores');
           bannerUrl = up.url;
           bannerPath = up.path;
         }
@@ -12967,9 +13233,28 @@ async function renderStore(forceEdit = false){
         if(logoFile){
           validFile(logoFile, ['image/jpeg','image/png','image/webp'], 10);
           loading('Uploading store profile picture…');
-          const up = await uploadPublic(logoFile, 'stores');
+          let compressedLogo = logoFile;
+          try {
+            compressedLogo = await compressImageForUpload(logoFile, { maxDimension: 320, quality: 0.85 });
+          } catch (_) {}
+
+          let base64Logo = '';
+          try {
+            base64Logo = await fileToBase64(compressedLogo);
+          } catch (_) {}
+
+          const up = await uploadPublic(compressedLogo, 'stores');
           logoUrl = up.url;
           logoPath = up.path;
+
+          if (base64Logo && (!logoUrl || logoUrl.startsWith('/uploads/') || logoUrl.startsWith('media/') || logoUrl.startsWith('/media/'))) {
+            logoUrl = base64Logo;
+          }
+          if (logoUrl) {
+            try {
+              localStorage.setItem('sf_user_avatar_' + currentUser.uid, logoUrl);
+            } catch (_) {}
+          }
         }
 
         if(certFile){
@@ -13187,6 +13472,11 @@ async function saveProfile(){
       }
     }
     
+    const avatarFileInput = $('avatarFile');
+    if(avatarFileInput && avatarFileInput.files && avatarFileInput.files[0]){
+      await sfUpdateProfileAvatar(avatarFileInput.files[0], false);
+    }
+
     loading('Saving profile…');
     await updateDoc(doc(db,'users',currentUser.uid),{
       name,
@@ -17231,10 +17521,16 @@ async function startUser(u){
     if(snapshotExists(snap))currentProfile=snap.data();
   }catch(e){console.warn('Profile load skipped; authentication remains valid.',e)}
   if(currentProfile?.role === 'admin') isAdmin = true;
-  if(u.photoURL && currentProfile && (!currentProfile.avatarUrl || !currentProfile.avatarUrl.trim())){
-    currentProfile.avatarUrl = u.photoURL;
-    updateDoc(doc(db,'users',u.uid),{avatarUrl:u.photoURL}).catch(()=>{});
-    updateDoc(doc(db,'publicProfiles',u.uid),{avatarUrl:u.photoURL}).catch(()=>{});
+  if(currentProfile && !currentProfile.avatarRemoved && (!currentProfile.avatarUrl || !currentProfile.avatarUrl.trim() || isDefaultProfilePic(currentProfile.avatarUrl))){
+    let localPic = '';
+    try { localPic = localStorage.getItem('sf_user_avatar_' + u.uid) || ''; } catch(_) {}
+    if(localPic && !isDefaultProfilePic(localPic)){
+      currentProfile.avatarUrl = localPic;
+    } else if(u.photoURL && !isDefaultProfilePic(u.photoURL)){
+      currentProfile.avatarUrl = u.photoURL;
+      updateDoc(doc(db,'users',u.uid),{avatarUrl:u.photoURL}).catch(()=>{});
+      updateDoc(doc(db,'publicProfiles',u.uid),{avatarUrl:u.photoURL}).catch(()=>{});
+    }
   }
   if(isAdmin && currentProfile) {
     currentProfile={
@@ -17270,11 +17566,21 @@ async function startUser(u){
     await createMissingProfile(u,{name:u.displayName||'SellerFlow User',username,usernameLower:username.toLowerCase(),role:isAdmin?'admin':'seller',verified:isAdmin,hasBusinessCert:isAdmin,businessVerified:isAdmin});
   }
   if(currentProfile){
+    let localPic = '';
+    try { localPic = localStorage.getItem('sf_user_avatar_' + u.uid) || ''; } catch(_) {}
+    const resolvedAvatar = (!currentProfile.avatarRemoved) 
+      ? (currentProfile.avatarUrl || (localPic && !isDefaultProfilePic(localPic) ? localPic : '') || u.photoURL || '') 
+      : '';
     allPublicProfiles.set(u.uid, {
       ...currentProfile,
       uid: u.uid,
-      avatarUrl: currentProfile.avatarUrl || u.photoURL || ''
+      avatarUrl: resolvedAvatar
     });
+    if(resolvedAvatar && !currentProfile.avatarRemoved && !isDefaultProfilePic(resolvedAvatar)){
+      try {
+        localStorage.setItem('sf_user_avatar_' + u.uid, resolvedAvatar);
+      } catch(_) {}
+    }
   }
   setNav();
   if(typeof saveUserSession === 'function') {
@@ -17655,8 +17961,8 @@ init();
   let _lightboxStartY = 0;
 
   window.sfCloseImageViewer = function(){
-    const el = $('sfLightboxViewer');
-    if(el) el.remove();
+    const el = document.getElementById('sfLightboxViewer');
+    if(el && typeof el.remove === 'function') el.remove();
     document.body.classList.remove('sf-lightbox-open');
     document.removeEventListener('keydown', _lightboxKeyHandler);
   };
@@ -18950,6 +19256,28 @@ init();
         openUserProfile(sId);
         return;
       }
+      const jobPostBtn = e.target.closest('[data-open-job-post]');
+      if(jobPostBtn){
+        e.stopPropagation();
+        const pId = jobPostBtn.dataset.openJobPost;
+        if(typeof window.openJobDetailModal === 'function'){
+          window.openJobDetailModal(pId);
+        } else if(typeof navigate === 'function'){
+          navigate('jobs');
+        }
+        return;
+      }
+      const eventPostBtn = e.target.closest('[data-open-event-post]');
+      if(eventPostBtn){
+        e.stopPropagation();
+        const pId = eventPostBtn.dataset.openEventPost;
+        if(typeof window.openEventDetailModal === 'function'){
+          window.openEventDetailModal(pId);
+        } else if(typeof navigate === 'function'){
+          navigate('events');
+        }
+        return;
+      }
       const orderBtn = e.target.closest('[data-order-store]');
       if(orderBtn){
         e.stopPropagation();
@@ -19030,6 +19358,9 @@ init();
       if(typeof ensureFeedStoresChecked === 'function') {
         ensureFeedStoresChecked(nextBatch).catch(()=>{});
       }
+      if(typeof ensureFeedProfilesChecked === 'function') {
+        ensureFeedProfilesChecked(nextBatch).catch(()=>{});
+      }
       isAppending = false;
     };
 
@@ -19041,6 +19372,9 @@ init();
 
     if(typeof ensureFeedStoresChecked === 'function') {
       ensureFeedStoresChecked(initialCards).catch(()=>{});
+    }
+    if(typeof ensureFeedProfilesChecked === 'function') {
+      ensureFeedProfilesChecked(initialCards).catch(()=>{});
     }
     setupReelPlayback(targetPostId);
   };
@@ -21331,8 +21665,17 @@ init();
         const activeFilterObj = SF_PHOTO_FILTERS.find(f => f.id === imageFilters.filter) || SF_PHOTO_FILTERS[0];
         const finalFilterCss = getCombinedFilterCss();
 
+        const activeAuthorAvatar = (!currentProfile?.avatarRemoved)
+          ? (currentProfile?.avatarUrl || currentProfile?.photoURL || currentUser.photoURL || (localStorage.getItem('sf_user_avatar_' + currentUser.uid) || ''))
+          : '';
+
         const postData = {
           sellerId: currentUser.uid,
+          sellerName: currentProfile?.name || currentUser.displayName || 'SellerFlow User',
+          sellerUsername: currentProfile?.username || 'user',
+          sellerAvatarUrl: activeAuthorAvatar,
+          authorAvatar: activeAuthorAvatar,
+          avatarUrl: activeAuthorAvatar,
           text,
           category: postCategory,
           categoryLabel: postCategory === 'marketing' ? 'Marketing' : (postCategory === 'job_vacancy' ? 'Job Vacancy' : 'Event'),
@@ -22332,7 +22675,7 @@ init();
   .sf-user-row{transition:.15s ease}.sf-user-row:hover{border-color:#f5b942!important;background:#171717}
   .sf-profile-cover{position:relative;overflow:hidden;border:1px solid #2b2b2b;border-radius:26px;background:radial-gradient(circle at 15% 0%,rgba(245,185,66,.18),transparent 38%),linear-gradient(145deg,#191919,#0d0d0d)}
   .sf-profile-cover:after{content:"";position:absolute;inset:auto 0 0;height:90px;background:linear-gradient(transparent,rgba(0,0,0,.6));pointer-events:none}
-  .sf-profile-avatar{width:112px;height:112px;border-radius:50%;object-fit:cover;border:4px solid #0d0d0d;box-shadow:0 10px 30px rgba(0,0,0,.45);background:#242424}
+  .sf-profile-avatar, .sf-profile-picture{width:112px;height:112px;border-radius:50%;object-fit:cover;border:4px solid #0d0d0d;box-shadow:0 10px 30px rgba(0,0,0,.45);background:#242424}
   .sf-profile-tabs{display:flex;gap:4px;border-bottom:1px solid #292929}.sf-profile-tab{padding:14px 18px;color:#999;border-bottom:2px solid transparent}.sf-profile-tab.active{color:#fff;border-color:#f5b942}
   .sf-post-tile{aspect-ratio:1/1;position:relative;overflow:hidden;background:#151515;cursor:pointer}.sf-post-tile img,.sf-post-tile video{width:100%;height:100%;object-fit:cover}.sf-post-tile:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 60%,rgba(0,0,0,.7));pointer-events:none}
   .sf-tile-meta{position:absolute;left:8px;right:8px;bottom:7px;z-index:2;font-size:11px;display:flex;justify-content:space-between}
@@ -22638,16 +22981,19 @@ init();
     let p = null;
     if(isOwner){
       const pub = (currentUser ? allPublicProfiles.get(currentUser.uid) : null) || {};
-      const activeAvatar = (currentProfile?.avatarRemoved || pub?.avatarRemoved) 
+      let localPic = '';
+      try { localPic = localStorage.getItem('sf_user_avatar_' + currentUser.uid) || ''; } catch(_) {}
+      const isRemoved = !!(currentProfile?.avatarRemoved || pub?.avatarRemoved);
+      const activeAvatar = isRemoved 
         ? '' 
-        : (currentProfile?.avatarUrl || pub?.avatarUrl || currentUser?.photoURL || '');
+        : (currentProfile?.avatarUrl || (localPic && !isDefaultProfilePic(localPic) ? localPic : '') || pub?.avatarUrl || currentUser?.photoURL || '');
       p = { 
         ...(currentProfile || {}), 
         ...pub, 
         uid: targetUid,
         avatarUrl: activeAvatar,
         photoURL: activeAvatar,
-        avatarRemoved: !!(currentProfile?.avatarRemoved || pub?.avatarRemoved)
+        avatarRemoved: isRemoved
       };
       if(isAdmin){
         p.verified = true;
@@ -22664,6 +23010,22 @@ init();
         ]);
         if (pubDoc && snapshotExists(pubDoc)) Object.assign(p, pubDoc.data());
         if (userDoc && snapshotExists(userDoc)) Object.assign(p, userDoc.data());
+
+        if (p.avatarUrl && isDefaultProfilePic(p.avatarUrl)) p.avatarUrl = '';
+        if (p.photoURL && isDefaultProfilePic(p.photoURL)) p.photoURL = '';
+
+        if(currentUser && (targetUid === currentUser.uid || (p.email && p.email === currentUser.email) || (p.username && currentProfile?.username && p.username.toLowerCase() === currentProfile.username.toLowerCase()))){
+          let localPic = '';
+          try { localPic = localStorage.getItem('sf_user_avatar_' + currentUser.uid) || ''; } catch(_) {}
+          const userPic = (!currentProfile?.avatarRemoved)
+            ? (currentProfile?.avatarUrl || (localPic && !isDefaultProfilePic(localPic) ? localPic : '') || currentProfile?.photoURL || currentUser?.photoURL || '')
+            : '';
+          if(userPic && !isDefaultProfilePic(userPic)){
+            p.avatarUrl = userPic;
+            p.photoURL = userPic;
+          }
+        }
+
         if (isUserAdminEmail(p.email) || p.role === 'admin' || (currentUser && targetUid === currentUser.uid && isAdmin)) {
           p.verified = true;
           p.role = 'admin';
@@ -22748,12 +23110,12 @@ init();
           <div class="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6">
             ${isOwner ? `
               <button type="button" id="profilePhotoBtn" class="shrink-0 border-0 bg-transparent cursor-pointer relative group self-start sm:self-auto" title="Manage profile picture">
-                <img class="sf-profile-avatar rounded-full object-cover group-hover:brightness-95 transition" src="${esc(getUserAvatarUrl(p))}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
+                <img class="sf-profile-avatar sf-profile-picture rounded-full object-cover group-hover:brightness-95 transition" src="${esc(getUserAvatarUrl(p))}" data-avatar-uid="${esc(p.uid || currentUser?.uid || '')}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
                 <span class="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-gold text-black flex items-center justify-center text-sm shadow-md border-2 border-[#121212] group-hover:scale-110 transition" title="Change photo">📷</span>
               </button>
             ` : `
               <button type="button" class="shrink-0 relative self-start sm:self-auto border-0 bg-transparent cursor-pointer group" title="View profile picture" data-view-image="${esc(getUserAvatarUrl(p))}" data-view-title="${esc(p.name||p.username||'User')}'s profile picture">
-                <img class="sf-profile-avatar rounded-full object-cover group-hover:brightness-105 transition" src="${esc(getUserAvatarUrl(p))}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
+                <img class="sf-profile-avatar sf-profile-picture rounded-full object-cover group-hover:brightness-105 transition" src="${esc(getUserAvatarUrl(p))}" data-avatar-uid="${esc(p.uid || p.id || '')}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
               </button>
             `}
             <div class="flex-1 min-w-0">
@@ -23247,9 +23609,32 @@ init();
       let avatarPath = '';
       if(!isRemove && file){
         validFile(file, ['image/jpeg', 'image/png', 'image/webp', 'image/*'], 10);
-        const x = await uploadPublic(file, 'profiles');
-        avatarUrl = x.url;
-        avatarPath = x.path;
+        let compressedFile = file;
+        try {
+          compressedFile = await compressImageForUpload(file, { maxDimension: 320, quality: 0.85 });
+        } catch (_) {}
+
+        let base64Avatar = '';
+        try {
+          base64Avatar = await fileToBase64(compressedFile);
+        } catch (_) {}
+
+        try {
+          const x = await uploadPublic(compressedFile, 'profiles');
+          if(x && x.url){
+            avatarUrl = x.url;
+            avatarPath = x.path || '';
+          }
+        } catch(uploadErr) {
+          console.warn('uploadPublic notice, using resilient base64 avatar fallback:', uploadErr);
+        }
+
+        // Ensure ultra-portable avatar so uploaded picture always displays reliably
+        if (base64Avatar && (!avatarUrl || avatarUrl.startsWith('/uploads/') || avatarUrl.startsWith('media/') || avatarUrl.startsWith('/media/'))) {
+          avatarUrl = base64Avatar;
+        } else if(!avatarUrl && base64Avatar){
+          avatarUrl = base64Avatar;
+        }
       }
       
       // Update in-memory state FIRST so UI updates immediately and reliably
@@ -23263,6 +23648,47 @@ init();
       }
       if(currentUser) currentUser.photoURL = avatarUrl;
       allPublicProfiles.set(currentUser.uid, { ...currentProfile, uid: currentUser.uid, avatarUrl, avatarRemoved: isRemove });
+      
+      // Save to persistent device cache for instant offline and cross-origin reliability
+      try {
+        if (avatarUrl && !isRemove) {
+          localStorage.setItem('sf_user_avatar_' + currentUser.uid, avatarUrl);
+        } else if (isRemove) {
+          localStorage.removeItem('sf_user_avatar_' + currentUser.uid);
+        }
+      } catch (_) {}
+
+      // Immediately update visible avatar images on screen for this user
+      try {
+        const matchingImgs = document.querySelectorAll(`[data-avatar-uid="${currentUser.uid}"], [data-seller-avatar="${currentUser.uid}"], [data-seller-sound-avatar="${currentUser.uid}"], [data-open-seller="${currentUser.uid}"] img.reel-avatar-img, [data-open-seller="${currentUser.uid}"] img`);
+        matchingImgs.forEach(img => {
+          img.src = avatarUrl || SF_DEFAULT_AVATAR;
+        });
+      } catch(_) {}
+
+      // Update cached feed posts so user's uploaded avatar immediately appears on their feed items
+      try {
+        if(Array.isArray(_cachedFeedPosts)){
+          _cachedFeedPosts.forEach(p => {
+            if(p.sellerId === currentUser.uid){
+              p.sellerAvatarUrl = avatarUrl;
+              p.authorAvatar = avatarUrl;
+              p.avatarUrl = avatarUrl;
+            }
+          });
+          localStorage.setItem('sf_cached_feed_posts', JSON.stringify(_cachedFeedPosts.slice(0, 30)));
+        }
+        if(window._sfCachedPosts && typeof window._sfCachedPosts.forEach === 'function'){
+          window._sfCachedPosts.forEach(p => {
+            if(p.sellerId === currentUser.uid){
+              p.sellerAvatarUrl = avatarUrl;
+              p.authorAvatar = avatarUrl;
+              p.avatarUrl = avatarUrl;
+            }
+          });
+        }
+      } catch(_) {}
+
       saveUserSession(currentUser, currentProfile);
 
       // Update users doc in Firestore (safely catch errors so network or rules delay does not block UI)
@@ -23310,12 +23736,13 @@ init();
     }
   }
   window.sfUpdateProfileAvatar = sfUpdateProfileAvatar;
+  window.sfUpdateProfilePicture = sfUpdateProfileAvatar;
 
   function sfOpenProfilePhotoModal(){
     if(!currentUser) return showAuthPrompt('manage your profile picture');
     const p = currentProfile || {};
     const photoUrl = getUserAvatarUrl(p);
-    const hasCustomPic = !!(photoUrl && !photoUrl.includes('default-avatar.svg') && !photoUrl.includes('nav-emblem.svg'));
+    const hasCustomPic = !isDefaultProfilePic(photoUrl);
 
     modal(`<div>
       <div class="flex items-center gap-3">
@@ -23370,7 +23797,7 @@ init();
     $('sfRemovePhotoQuickBtn')?.addEventListener('click', async () => {
       const ok = await customConfirm({
         title: 'Remove Profile Picture?',
-        message: 'Your profile picture will be reset to the default avatar.',
+        message: 'Your profile picture will be reset to the default picture.',
         confirmText: 'Remove',
         cancelText: 'Cancel',
         type: 'danger',
@@ -23396,7 +23823,7 @@ init();
     const nextDateStr = usernameCooldown.nextChangeDate ? usernameCooldown.nextChangeDate.toLocaleDateString('en-GH', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
     const lastDateStr = usernameCooldown.lastChangedDate ? usernameCooldown.lastChangedDate.toLocaleDateString('en-GH', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
     const currentAvatarUrl = getUserAvatarUrl(p);
-    const hasCustomPic = !!(currentAvatarUrl && !currentAvatarUrl.includes('default-avatar.svg') && !currentAvatarUrl.includes('nav-emblem.svg'));
+    const hasCustomPic = !isDefaultProfilePic(currentAvatarUrl);
 
     modal(`<div>
       <div class="flex items-center gap-3">
@@ -23553,9 +23980,31 @@ init();
           avatarPath = '';
         } else if(file){
           validFile(file,['image/jpeg','image/png','image/webp','image/*'],10);
-          const x=await uploadPublic(file,'profiles');
-          avatarUrl=x.url;
-          avatarPath=x.path;
+          let compressedFile = file;
+          try {
+            compressedFile = await compressImageForUpload(file, { maxDimension: 320, quality: 0.85 });
+          } catch (_) {}
+
+          let base64Avatar = '';
+          try {
+            base64Avatar = await fileToBase64(compressedFile);
+          } catch (_) {}
+
+          try {
+            const x = await uploadPublic(compressedFile, 'profiles');
+            if(x && x.url){
+              avatarUrl = x.url;
+              avatarPath = x.path || '';
+            }
+          } catch(uploadErr) {
+            console.warn('uploadPublic in profile editor notice, using base64 fallback:', uploadErr);
+          }
+
+          if (base64Avatar && (!avatarUrl || avatarUrl.startsWith('/uploads/') || avatarUrl.startsWith('media/') || avatarUrl.startsWith('/media/'))) {
+            avatarUrl = base64Avatar;
+          } else if(!avatarUrl && base64Avatar){
+            avatarUrl = base64Avatar;
+          }
         }
         loading('Saving profile…');
         const patch={
@@ -23627,6 +24076,47 @@ init();
         }
         if(currentUser) currentUser.photoURL = avatarUrl;
         allPublicProfiles.set(currentUser.uid, { ...currentProfile, uid: currentUser.uid, avatarUrl, avatarRemoved: isPhotoRemoved });
+
+        // Save to persistent device cache for instant offline & cross-platform display
+        try {
+          if (avatarUrl && !isPhotoRemoved) {
+            localStorage.setItem('sf_user_avatar_' + currentUser.uid, avatarUrl);
+          } else if (isPhotoRemoved) {
+            localStorage.removeItem('sf_user_avatar_' + currentUser.uid);
+          }
+        } catch (_) {}
+
+        // Immediately update visible avatar images on screen for this user
+        try {
+          const matchingImgs = document.querySelectorAll(`[data-avatar-uid="${currentUser.uid}"], [data-seller-avatar="${currentUser.uid}"], [data-seller-sound-avatar="${currentUser.uid}"], [data-open-seller="${currentUser.uid}"] img.reel-avatar-img, [data-open-seller="${currentUser.uid}"] img`);
+          matchingImgs.forEach(img => {
+            img.src = avatarUrl || SF_DEFAULT_AVATAR;
+          });
+        } catch(_) {}
+
+        // Update cached feed posts
+        try {
+          if(Array.isArray(_cachedFeedPosts)){
+            _cachedFeedPosts.forEach(p => {
+              if(p.sellerId === currentUser.uid){
+                p.sellerAvatarUrl = avatarUrl;
+                p.authorAvatar = avatarUrl;
+                p.avatarUrl = avatarUrl;
+              }
+            });
+            localStorage.setItem('sf_cached_feed_posts', JSON.stringify(_cachedFeedPosts.slice(0, 30)));
+          }
+          if(window._sfCachedPosts && typeof window._sfCachedPosts.forEach === 'function'){
+            window._sfCachedPosts.forEach(p => {
+              if(p.sellerId === currentUser.uid){
+                p.sellerAvatarUrl = avatarUrl;
+                p.authorAvatar = avatarUrl;
+                p.avatarUrl = avatarUrl;
+              }
+            });
+          }
+        } catch(_) {}
+
         saveUserSession(currentUser, currentProfile);
 
         if(auth?.currentUser && typeof auth.currentUser.updateProfile === 'function'){

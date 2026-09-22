@@ -1,10 +1,11 @@
 /* SellerFlow Progressive Web App & Notification Service Worker */
-const CACHE_NAME = 'sellerflow-cache-v1.4';
+const CACHE_NAME = 'sellerflow-cache-v1.6';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/icon.svg',
+  '/default-avatar.svg',
   '/pwa-192x192.png',
   '/pwa-512x512.png',
   '/apple-touch-icon.png'
