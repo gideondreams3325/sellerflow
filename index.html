@@ -2590,8 +2590,14 @@ try {
       if(currentProfile){
         allPublicProfiles.set(s.uid, { ...currentProfile, uid: s.uid, avatarUrl: currentProfile.avatarUrl || s.photoURL || '' });
       }
+      window.currentUser = currentUser;
+      window.currentProfile = currentProfile;
+      window.isAdmin = isAdmin;
     }
   }
+  window.getCurrentUser = () => currentUser;
+  window.getCurrentProfile = () => currentProfile;
+  window.getIsAdmin = () => isAdmin;
   const savedRoute = localStorage.getItem('sf_saved_route');
   if(savedRoute) {
     const r = JSON.parse(savedRoute);
@@ -17510,6 +17516,8 @@ async function init(){
 
       currentUser=u;
       isAdmin=isUserAdminEmail(u.email);
+      window.currentUser = u;
+      window.isAdmin = isAdmin;
       if(typeof saveUserSession === 'function') saveUserSession(u, currentProfile);
       showApp();
       setNav();
@@ -23915,7 +23923,7 @@ init();
   /* Admin Modern Dashboard & Control Center */
   renderAdmin = async function(){
     if(!isAdmin){ $('page').innerHTML = pageTitle('Access denied', 'You do not have permission to access the SellerFlow Security Portal.'); return; }
-    const [users, posts, reports, termsSnap, storesSnap, productsSnap, fraudSnap, kycSnap, ordersSnap] = await Promise.all([
+    const [users, posts, reports, termsSnap, storesSnap, productsSnap, fraudSnap, kycSnap, ordersSnap, jobsSnap, eventsSnap] = await Promise.all([
       getDocs(query(collection(db, 'users'), limit(300))),
       getDocs(query(collection(db, 'posts'), limit(250))),
       getDocs(query(collection(db, 'scamReports'), limit(100))),
@@ -23924,7 +23932,9 @@ init();
       getDocs(query(collection(db, 'products'), limit(300))),
       getDocs(query(collection(db, 'fraudReports'), limit(200))),
       getDocs(query(collection(db, 'buyerKycRecords'), limit(300))).catch(() => ({ docs: [], size: 0 })),
-      getDocs(query(collection(db, 'orders'), limit(300))).catch(() => ({ docs: [], size: 0 }))
+      getDocs(query(collection(db, 'orders'), limit(300))).catch(() => ({ docs: [], size: 0 })),
+      getDocs(query(collection(db, 'jobs'), limit(300))).catch(() => ({ docs: [], size: 0 })),
+      getDocs(query(collection(db, 'events'), limit(300))).catch(() => ({ docs: [], size: 0 }))
     ]);
 
     // Build unified Buyer Ghana Card records from buyerKycRecords and users collection
@@ -24026,6 +24036,14 @@ init();
     const pendingReviewOrders = allOrderDocs.filter(o => o.status === 'pending_review' || o.securityReviewStatus === 'pending');
     const approvedOrders = allOrderDocs.filter(o => o.status !== 'pending_review' && o.status !== 'cancelled');
     const cancelledOrders = allOrderDocs.filter(o => o.status === 'cancelled');
+
+    // Jobs & Events Moderation metrics
+    const allJobsDocs = jobsSnap.docs ? jobsSnap.docs.map(d => ({ id: d.id, ...d.data() })) : [];
+    const allEventsDocs = eventsSnap.docs ? eventsSnap.docs.map(d => ({ id: d.id, ...d.data() })) : [];
+    const allJobsEvents = [...allJobsDocs, ...allEventsDocs];
+    const pendingJobsEvents = allJobsEvents.filter(i => i.status === 'pending_review' || i.reviewStatus === 'pending_review');
+    const liveJobsEvents = allJobsEvents.filter(i => i.status === 'approved' || (!i.status && i.reviewStatus !== 'pending_review' && i.status !== 'taken_down' && i.status !== 'rejected'));
+    const takenDownJobsEvents = allJobsEvents.filter(i => i.status === 'taken_down' || i.status === 'removed' || i.reviewStatus === 'taken_down' || i.reviewStatus === 'removed');
 
     const termData = snapshotExists(termsSnap) ? termsSnap.data() : { text: DEFAULT_TERMS, version: appTermsVersion };
     const initialTab = window._currentAdminTab || 'overview';
@@ -24210,6 +24228,31 @@ init();
             <span>→</span>
           </div>
         </button>
+
+        <!-- Card 9: Jobs & Events Moderation Hub -->
+        <button type="button" class="sf-dash-card group" id="dashCardJobsEvents">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Jobs & Events</span>
+              <span class="text-lg p-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50">💼</span>
+            </div>
+            <div class="text-2xl font-black ${pendingJobsEvents.length ? 'text-amber-400' : 'text-white'} mt-1.5 group-hover:text-gold transition">${allJobsEvents.length}</div>
+            <div class="flex flex-wrap gap-1 mt-2">
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${pendingJobsEvents.length ? 'bg-amber-950/80 text-amber-300 border border-amber-800 animate-pulse' : 'bg-zinc-800 text-zinc-400'}">
+                ${pendingJobsEvents.length ? `${pendingJobsEvents.length} Review` : '0 Pending'}
+              </span>
+              ${takenDownJobsEvents.length ? `
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-950/80 text-rose-300 border border-rose-800">
+                  ${takenDownJobsEvents.length} Down
+                </span>
+              ` : ''}
+            </div>
+          </div>
+          <div class="text-[10px] font-bold text-gold group-hover:underline mt-3 flex items-center justify-between">
+            <span>Moderate Hub</span>
+            <span>→</span>
+          </div>
+        </button>
       </div>
 
       <!-- Sleek Tab-Based Interface for Navigation -->
@@ -24250,7 +24293,8 @@ init();
           <span class="admin-tab-count ${fraudSnap.size ? 'bg-rose-950 text-rose-300 border border-rose-800' : ''}">${fraudSnap.size}</span>
         </button>
         <button class="admin-tab ${initialTab === 'jobs_events' ? 'active' : ''}" data-admin-tab="jobs_events">
-          <span>💼 Jobs & Events Desk</span>
+          <span>💼 Jobs & Events Hub</span>
+          <span class="admin-tab-count ${pendingJobsEvents.length ? 'bg-amber-950 text-amber-300 border border-amber-800 animate-pulse' : ''}">${allJobsEvents.length}</span>
         </button>
         <button class="admin-tab ${initialTab === 'notify' ? 'active' : ''}" data-admin-tab="notify">
           <span>🔔 Broadcasts</span>
@@ -24305,6 +24349,7 @@ init();
     if($('dashCardReports')) $('dashCardReports').onclick = () => setAdminTab('reports');
     if($('dashCardFrauds')) $('dashCardFrauds').onclick = () => setAdminTab('frauds');
     if($('dashCardRestoration')) $('dashCardRestoration').onclick = () => setAdminTab('posts', 'restoration');
+    if($('dashCardJobsEvents')) $('dashCardJobsEvents').onclick = () => setAdminTab('jobs_events');
 
     setAdminTab(initialTab);
   };

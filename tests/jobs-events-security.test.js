@@ -99,4 +99,16 @@ assert.ok(indexHtml.includes('events: typeof renderEvents'), 'renderPage map mus
 assert.ok(indexHtml.includes('data-admin-tab="jobs_events"'), 'Admin desk must contain jobs_events tab');
 console.log('  ✓ Applet router and Security Desk seamlessly wired to Jobs & Events engine');
 
-console.log('--- All 6 Jobs & Events Security & Statutory Verification Tests Passed Successfully ---');
+// 7. Verification: Empty initial state until user posts jobs/events
+console.log('Test 7: No hardcoded mock jobs/events displayed until users post');
+assert.ok(jobsEventsJs.includes('const DEFAULT_FEATURED_JOBS = [];'), 'DEFAULT_FEATURED_JOBS must be empty array');
+assert.ok(jobsEventsJs.includes('const DEFAULT_FEATURED_EVENTS = [];'), 'DEFAULT_FEATURED_EVENTS must be empty array');
+assert.ok(jobsEventsJs.includes('No Job Openings Posted Yet'), 'Empty state for jobs feed must be implemented');
+assert.ok(jobsEventsJs.includes('No Events Posted Yet'), 'Empty state for events feed must be implemented');
+
+const serverJs = fs.readFileSync('server.js', 'utf8');
+assert.ok(serverJs.includes('const SERVER_FEATURED_JOBS = {};'), 'SERVER_FEATURED_JOBS must be empty object');
+assert.ok(serverJs.includes('const SERVER_FEATURED_EVENTS = {};'), 'SERVER_FEATURED_EVENTS must be empty object');
+console.log('  ✓ Mock jobs and events successfully removed; empty state verified');
+
+console.log('--- All 7 Jobs & Events Security & Statutory Verification Tests Passed Successfully ---');

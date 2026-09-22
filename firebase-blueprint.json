@@ -285,6 +285,8 @@
         "salaryMax": { "type": "number" },
         "salaryCurrency": { "type": "string" },
         "salaryPeriod": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "logoUrl": { "type": "string" },
         "description": { "type": "string" },
         "requirements": { "type": "string" },
         "responsibilities": { "type": "string" },
