@@ -2471,6 +2471,768 @@ app.post('/api/auth/delete-account', async (req, res) => {
   }
 });
 
+/* ==========================================================================
+   SELLERFLOW JOBS & EVENTS SECURITY ENGINE & API ENDPOINTS
+   Enforces identity verification gate, terms versioning, scam keyword filtering,
+   and immutable security team audit trails.
+   ========================================================================== */
+
+const JOBS_TERMS_VERSION = 'jobs_events_terms_v1.0';
+const JOBS_PRIVACY_VERSION = 'jobs_events_privacy_v1.0';
+const IDENTITY_VERIFICATION_VERSION = 'identity_verification_v1.0';
+
+const SCAM_PATTERNS = [
+  /pay\s*(before|prior\s*to|for)\s*(interview|job|employment|training|visa|offer)/i,
+  /registration\s*fee\s*(required|is\s*ghs|is\s*gh¢|to\s*apply)/i,
+  /interview\s*fee/i,
+  /processing\s*fee\s*(required|to\s*secure)/i,
+  /send\s*(momo|money|cash|funds)\s*(to|before|first)/i,
+  /western\s*union|moneygram/i,
+  /guaranteed\s*visa\s*(sponsorship|work\s*permit)/i,
+  /earn\s*(ghs|gh¢|\$)\s*[0-9,]+\s*(daily|per\s*day|hourly)\s*(from\s*home|typing)/i,
+  /crypto\s*investment\s*opportunity/i,
+  /double\s*your\s*(money|investment)/i,
+  /send\s*(your\s*)?(password|pin|otp|momo\s*pin)/i,
+  /bank\s*verification\s*pin/i
+];
+
+function inspectJobEventSafety({ title = '', description = '', companyName = '', organizerName = '', howToApply = '', applicationUrl = '', externalTicketUrl = '', requirements = '', responsibilities = '' }) {
+  const combined = `${title} ${description} ${companyName} ${organizerName} ${howToApply} ${requirements} ${responsibilities} ${applicationUrl} ${externalTicketUrl}`.toLowerCase();
+  const matchedScams = [];
+
+  for (const pattern of SCAM_PATTERNS) {
+    if (pattern.test(combined)) {
+      matchedScams.push(pattern.source);
+    }
+  }
+
+  // Phishing and suspicious external URL check
+  const urlsToCheck = [applicationUrl, externalTicketUrl].filter(Boolean);
+  let suspiciousUrl = false;
+  for (const u of urlsToCheck) {
+    try {
+      const parsed = new URL(u);
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        suspiciousUrl = true;
+      }
+      const hostname = parsed.hostname.toLowerCase();
+      if (hostname.endsWith('.tk') || hostname.endsWith('.ml') || hostname.endsWith('.ga') || hostname.endsWith('.cf') || hostname.endsWith('.gq') || hostname.includes('free-gift') || hostname.includes('claim-reward')) {
+        suspiciousUrl = true;
+        matchedScams.push('Suspicious or untrusted high-risk domain');
+      }
+    } catch (_) {
+      if (u && u.length > 5) suspiciousUrl = true;
+    }
+  }
+
+  const isFlagged = matchedScams.length > 0 || suspiciousUrl;
+  return {
+    isSafe: !isFlagged,
+    verdict: isFlagged ? 'FLAGGED' : 'PENDING_REVIEW',
+    flags: matchedScams,
+    reason: isFlagged ? `Flagged security patterns detected: ${matchedScams.join(', ')}` : 'Passed automated security scan. Queued for Security Team review.'
+  };
+}
+
+/**
+ * Check if a user has completed SellerFlow Ghana Card identity verification
+ */
+async function checkUserIdentityVerified(uid) {
+  if (!uid) return false;
+  try {
+    const userSnap = await adminDb.collection('users').doc(uid).get();
+    if (!userSnap.exists) return false;
+    const data = userSnap.data() || {};
+    return data.verified === true || data.verificationStatus === 'approved';
+  } catch (err) {
+    console.warn('checkUserIdentityVerified error:', err.message);
+    return false;
+  }
+}
+
+/**
+ * 1. Submit or Edit Job Listing Endpoint
+ */
+app.post('/api/jobs/submit', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing token' });
+    }
+    const idToken = authHeader.split('Bearer ')[1].trim();
+    const decodedToken = await verifyFirebaseToken(idToken);
+    const callerUid = decodedToken.uid;
+    const isAdminUser = decodedToken.role === 'admin';
+
+    // Verification Gate: Fail-closed if user is not identity-verified
+    const isVerified = await checkUserIdentityVerified(callerUid);
+    if (!isVerified && !isAdminUser) {
+      return res.status(403).json({
+        success: false,
+        error: 'Identity Verification Required: You must complete SellerFlow Ghana Card identity verification before posting jobs.',
+        requiresVerification: true
+      });
+    }
+
+    const {
+      id,
+      title,
+      companyName,
+      location,
+      locationType = 'on_site',
+      region = 'Greater Accra',
+      category = 'General',
+      employmentType = 'full_time',
+      salaryMin = 0,
+      salaryMax = 0,
+      salaryCurrency = 'GHS',
+      salaryPeriod = 'monthly',
+      description = '',
+      requirements = '',
+      responsibilities = '',
+      benefits = '',
+      howToApplyType = 'in_app',
+      applicationUrl = '',
+      applicationEmail = '',
+      deadline = '',
+      contactPhone = '',
+      contactEmail = '',
+      scamWarningAcknowledged = false,
+      termsVersion = JOBS_TERMS_VERSION
+    } = req.body || {};
+
+    if (!title || !companyName || !description) {
+      return res.status(400).json({ success: false, error: 'Missing required job fields (title, companyName, description).' });
+    }
+
+    if (!scamWarningAcknowledged) {
+      return res.status(400).json({ success: false, error: 'You must acknowledge the platform anti-scam recruitment policy.' });
+    }
+
+    // Automated Security Scan
+    const safetyCheck = inspectJobEventSafety({
+      title,
+      description,
+      companyName,
+      howToApply: howToApplyType,
+      applicationUrl,
+      requirements,
+      responsibilities
+    });
+
+    const jobId = id || `job_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const initialStatus = isAdminUser ? 'approved' : (safetyCheck.isSafe ? 'pending_review' : 'rejected');
+    const reviewStatus = isAdminUser ? 'approved' : (safetyCheck.isSafe ? 'pending_review' : 'flagged');
+
+    const jobDoc = {
+      id: jobId,
+      creatorId: callerUid,
+      creatorName: decodedToken.name || decodedToken.email || 'Employer',
+      title: String(title).trim(),
+      companyName: String(companyName).trim(),
+      location: String(location || '').trim(),
+      locationType,
+      region,
+      category,
+      employmentType,
+      salaryMin: Number(salaryMin) || 0,
+      salaryMax: Number(salaryMax) || 0,
+      salaryCurrency,
+      salaryPeriod,
+      description: String(description).trim(),
+      requirements: String(requirements || '').trim(),
+      responsibilities: String(responsibilities || '').trim(),
+      benefits: String(benefits || '').trim(),
+      howToApplyType,
+      applicationUrl: String(applicationUrl || '').trim(),
+      applicationEmail: String(applicationEmail || '').trim(),
+      deadline: deadline || null,
+      contactPhone: String(contactPhone || '').trim(),
+      contactEmail: String(contactEmail || '').trim(),
+      status: initialStatus,
+      reviewStatus,
+      verifiedCreator: true,
+      scamWarningAcknowledged: true,
+      termsVersion,
+      viewsCount: 0,
+      savesCount: 0,
+      applicationsCount: 0,
+      isPromoted: false,
+      rejectionReason: safetyCheck.isSafe ? '' : safetyCheck.reason,
+      moderationNotes: safetyCheck.reason,
+      updatedAt: FieldValue.serverTimestamp()
+    };
+
+    if (!id) {
+      jobDoc.createdAt = FieldValue.serverTimestamp();
+    }
+
+    if (isAdminUser) {
+      jobDoc.reviewedAt = FieldValue.serverTimestamp();
+      jobDoc.reviewedBy = callerUid;
+    }
+
+    await adminDb.collection('jobs').doc(jobId).set(jobDoc, { merge: true });
+
+    // If flagged, log to securityReviews
+    if (!safetyCheck.isSafe) {
+      await adminDb.collection('securityReviews').doc(`rev_job_${jobId}`).set({
+        targetId: jobId,
+        targetType: 'job',
+        reviewerUid: 'automated_safety_guard',
+        action: 'flag',
+        reason: safetyCheck.reason,
+        flags: safetyCheck.flags,
+        timestamp: FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+
+    return res.json({
+      success: true,
+      jobId,
+      status: initialStatus,
+      reviewStatus,
+      safetyCheck,
+      message: initialStatus === 'approved' 
+        ? 'Job listing published successfully.' 
+        : (safetyCheck.isSafe 
+            ? 'Job listing submitted securely and queued for Security Team review.' 
+            : 'Job listing flagged by automated safety screening and placed under security investigation.')
+    });
+  } catch (err) {
+    console.error('Job submission endpoint error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * 2. Submit Job Application Endpoint
+ */
+app.post('/api/jobs/apply', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing token' });
+    }
+    const idToken = authHeader.split('Bearer ')[1].trim();
+    const decodedToken = await verifyFirebaseToken(idToken);
+    const callerUid = decodedToken.uid;
+    const isAdminUser = decodedToken.role === 'admin';
+
+    // Verification Gate: Job applicant must be identity-verified
+    const isVerified = await checkUserIdentityVerified(callerUid);
+    if (!isVerified && !isAdminUser) {
+      return res.status(403).json({
+        success: false,
+        error: 'Identity Verification Required: You must complete SellerFlow Ghana Card identity verification before applying for jobs.',
+        requiresVerification: true
+      });
+    }
+
+    const {
+      jobId,
+      applicantName,
+      applicantEmail,
+      applicantPhone,
+      coverLetter = '',
+      cvBase64,
+      cvFileName = 'resume.pdf',
+      cvFileType = 'application/pdf',
+      scamWarningAcknowledged = false,
+      termsVersion = JOBS_TERMS_VERSION
+    } = req.body || {};
+
+    if (!jobId || !applicantName || !applicantEmail) {
+      return res.status(400).json({ success: false, error: 'Missing required applicant fields.' });
+    }
+
+    if (!scamWarningAcknowledged) {
+      return res.status(400).json({ success: false, error: 'You must acknowledge the anti-fraud jobseeker notice.' });
+    }
+
+    // Verify job existence and active status
+    const jobSnap = await adminDb.collection('jobs').doc(jobId).get();
+    if (!jobSnap.exists) {
+      return res.status(404).json({ success: false, error: 'Job listing not found.' });
+    }
+    const jobData = jobSnap.data() || {};
+    if (jobData.status !== 'approved' && !isAdminUser) {
+      return res.status(400).json({ success: false, error: 'This job listing is not accepting applications.' });
+    }
+
+    // Prevent duplicate application from same applicant for same job
+    const existingAppSnap = await adminDb.collection('jobApplications')
+      .where('jobId', '==', jobId)
+      .where('applicantId', '==', callerUid)
+      .limit(1)
+      .get();
+
+    if (!existingAppSnap.empty) {
+      return res.status(409).json({
+        success: false,
+        error: 'You have already submitted an application for this position.'
+      });
+    }
+
+    let cvStoragePath = '';
+    let cvFileSize = 0;
+
+    // Handle CV file storage if provided
+    if (cvBase64) {
+      const cvsDir = path.join(uploadsDir, 'cvs');
+      if (!fs.existsSync(cvsDir)) {
+        try { fs.mkdirSync(cvsDir, { recursive: true }); } catch (_) {}
+      }
+      const ext = path.extname(cvFileName) || '.pdf';
+      const safeCvName = `cv_${callerUid}_${Date.now()}${ext}`;
+      const cvFilePath = path.join(cvsDir, safeCvName);
+      const cvBuffer = Buffer.from(cvBase64.replace(/^data:[^;]+;base64,/, ''), 'base64');
+      fs.writeFileSync(cvFilePath, cvBuffer);
+      cvStoragePath = `/uploads/cvs/${safeCvName}`;
+      cvFileSize = cvBuffer.length;
+    }
+
+    const applicationId = `app_${callerUid}_${jobId}`;
+    const applicationDoc = {
+      id: applicationId,
+      jobId,
+      jobTitle: jobData.title || '',
+      companyName: jobData.companyName || '',
+      employerId: jobData.creatorId || '',
+      applicantId: callerUid,
+      applicantName: String(applicantName).trim(),
+      applicantEmail: String(applicantEmail).trim(),
+      applicantPhone: String(applicantPhone || '').trim(),
+      coverLetter: String(coverLetter || '').trim(),
+      cvStoragePath,
+      cvFileName,
+      cvFileType,
+      cvFileSize,
+      status: 'submitted',
+      scamWarningAcknowledged: true,
+      termsVersion,
+      appliedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp()
+    };
+
+    await adminDb.collection('jobApplications').doc(applicationId).set(applicationDoc);
+
+    // Increment job applications count
+    await adminDb.collection('jobs').doc(jobId).update({
+      applicationsCount: FieldValue.increment(1)
+    }).catch(() => {});
+
+    // Send in-app notification to the employer
+    if (jobData.creatorId && jobData.creatorId !== callerUid) {
+      await adminDb.collection('notifications').add({
+        recipientId: jobData.creatorId,
+        userId: jobData.creatorId,
+        senderName: 'SellerFlow Jobs Desk',
+        title: `📄 New Applicant for ${jobData.title}`,
+        message: `${applicantName} submitted a verified job application with CV for "${jobData.title}".`,
+        type: 'job_application',
+        jobId,
+        applicationId,
+        read: false,
+        createdAt: FieldValue.serverTimestamp()
+      }).catch(() => {});
+    }
+
+    return res.json({
+      success: true,
+      applicationId,
+      message: 'Your application has been submitted securely to the employer.'
+    });
+  } catch (err) {
+    console.error('Job application endpoint error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * 3. Submit or Edit Event Endpoint
+ */
+app.post('/api/events/submit', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing token' });
+    }
+    const idToken = authHeader.split('Bearer ')[1].trim();
+    const decodedToken = await verifyFirebaseToken(idToken);
+    const callerUid = decodedToken.uid;
+    const isAdminUser = decodedToken.role === 'admin';
+
+    // Verification Gate: Event creator must be identity-verified
+    const isVerified = await checkUserIdentityVerified(callerUid);
+    if (!isVerified && !isAdminUser) {
+      return res.status(403).json({
+        success: false,
+        error: 'Identity Verification Required: You must complete SellerFlow Ghana Card identity verification before creating events.',
+        requiresVerification: true
+      });
+    }
+
+    const {
+      id,
+      title,
+      organizerName,
+      category = 'Business & Networking',
+      eventType = 'in_person',
+      venue = '',
+      address = '',
+      city = 'Accra',
+      region = 'Greater Accra',
+      onlineMeetingUrl = '',
+      startDate = '',
+      startTime = '',
+      endDate = '',
+      endTime = '',
+      timezone = 'GMT/Accra',
+      description = '',
+      bannerUrl = '',
+      ticketType = 'free',
+      ticketPrice = 0,
+      capacity = 100,
+      registrationDeadline = '',
+      externalTicketUrl = '',
+      contactEmail = '',
+      contactPhone = '',
+      termsVersion = JOBS_TERMS_VERSION
+    } = req.body || {};
+
+    if (!title || !organizerName || !description) {
+      return res.status(400).json({ success: false, error: 'Missing required event fields (title, organizerName, description).' });
+    }
+
+    // Automated Security Scan
+    const safetyCheck = inspectJobEventSafety({
+      title,
+      description,
+      organizerName,
+      externalTicketUrl
+    });
+
+    const eventId = id || `event_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const initialStatus = isAdminUser ? 'approved' : (safetyCheck.isSafe ? 'pending_review' : 'rejected');
+    const reviewStatus = isAdminUser ? 'approved' : (safetyCheck.isSafe ? 'pending_review' : 'flagged');
+
+    const eventDoc = {
+      id: eventId,
+      creatorId: callerUid,
+      creatorName: decodedToken.name || decodedToken.email || 'Organizer',
+      title: String(title).trim(),
+      organizerName: String(organizerName).trim(),
+      category,
+      eventType,
+      venue: String(venue || '').trim(),
+      address: String(address || '').trim(),
+      city: String(city || '').trim(),
+      region,
+      onlineMeetingUrl: String(onlineMeetingUrl || '').trim(),
+      startDate: startDate || new Date().toISOString().split('T')[0],
+      startTime: startTime || '09:00',
+      endDate: endDate || startDate || '',
+      endTime: endTime || '17:00',
+      timezone,
+      description: String(description).trim(),
+      bannerUrl: String(bannerUrl || '').trim(),
+      ticketType,
+      ticketPrice: Number(ticketPrice) || 0,
+      capacity: Number(capacity) || 100,
+      registeredCount: 0,
+      registrationDeadline: registrationDeadline || '',
+      externalTicketUrl: String(externalTicketUrl || '').trim(),
+      contactEmail: String(contactEmail || '').trim(),
+      contactPhone: String(contactPhone || '').trim(),
+      status: initialStatus,
+      reviewStatus,
+      verifiedOrganizer: true,
+      termsVersion,
+      viewsCount: 0,
+      savesCount: 0,
+      isPromoted: false,
+      rejectionReason: safetyCheck.isSafe ? '' : safetyCheck.reason,
+      moderationNotes: safetyCheck.reason,
+      updatedAt: FieldValue.serverTimestamp()
+    };
+
+    if (!id) {
+      eventDoc.createdAt = FieldValue.serverTimestamp();
+    }
+
+    if (isAdminUser) {
+      eventDoc.reviewedAt = FieldValue.serverTimestamp();
+      eventDoc.reviewedBy = callerUid;
+    }
+
+    await adminDb.collection('events').doc(eventId).set(eventDoc, { merge: true });
+
+    if (!safetyCheck.isSafe) {
+      await adminDb.collection('securityReviews').doc(`rev_event_${eventId}`).set({
+        targetId: eventId,
+        targetType: 'event',
+        reviewerUid: 'automated_safety_guard',
+        action: 'flag',
+        reason: safetyCheck.reason,
+        flags: safetyCheck.flags,
+        timestamp: FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+
+    return res.json({
+      success: true,
+      eventId,
+      status: initialStatus,
+      reviewStatus,
+      safetyCheck,
+      message: initialStatus === 'approved'
+        ? 'Event published successfully.'
+        : (safetyCheck.isSafe
+            ? 'Event submitted securely and queued for Security Team review.'
+            : 'Event flagged by automated safety screening and queued for Security Team investigation.')
+    });
+  } catch (err) {
+    console.error('Event submission endpoint error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * 4. Register for Event Endpoint
+ */
+app.post('/api/events/register', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing token' });
+    }
+    const idToken = authHeader.split('Bearer ')[1].trim();
+    const decodedToken = await verifyFirebaseToken(idToken);
+    const callerUid = decodedToken.uid;
+
+    const {
+      eventId,
+      attendeeName,
+      attendeeEmail,
+      attendeePhone = '',
+      ticketCount = 1,
+      notes = ''
+    } = req.body || {};
+
+    if (!eventId || !attendeeName || !attendeeEmail) {
+      return res.status(400).json({ success: false, error: 'Missing required attendee fields.' });
+    }
+
+    const eventSnap = await adminDb.collection('events').doc(eventId).get();
+    if (!eventSnap.exists) {
+      return res.status(404).json({ success: false, error: 'Event not found.' });
+    }
+    const eventData = eventSnap.data() || {};
+    if (eventData.status !== 'approved') {
+      return res.status(400).json({ success: false, error: 'This event is not open for registration.' });
+    }
+
+    const regId = `reg_${callerUid}_${eventId}`;
+    const regDoc = {
+      id: regId,
+      eventId,
+      eventTitle: eventData.title || '',
+      creatorId: eventData.creatorId || '',
+      attendeeId: callerUid,
+      attendeeName: String(attendeeName).trim(),
+      attendeeEmail: String(attendeeEmail).trim(),
+      attendeePhone: String(attendeePhone || '').trim(),
+      ticketCount: Number(ticketCount) || 1,
+      notes: String(notes || '').trim(),
+      status: 'registered',
+      registeredAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp()
+    };
+
+    await adminDb.collection('eventRegistrations').doc(regId).set(regDoc);
+
+    await adminDb.collection('events').doc(eventId).update({
+      registeredCount: FieldValue.increment(Number(ticketCount) || 1)
+    }).catch(() => {});
+
+    // Send in-app notification to organizer
+    if (eventData.creatorId && eventData.creatorId !== callerUid) {
+      await adminDb.collection('notifications').add({
+        recipientId: eventData.creatorId,
+        userId: eventData.creatorId,
+        senderName: 'SellerFlow Events Desk',
+        title: `🎟️ New Event RSVP: ${eventData.title}`,
+        message: `${attendeeName} registered ${ticketCount} ticket(s) for "${eventData.title}".`,
+        type: 'event_registration',
+        eventId,
+        read: false,
+        createdAt: FieldValue.serverTimestamp()
+      }).catch(() => {});
+    }
+
+    return res.json({
+      success: true,
+      registrationId: regId,
+      message: 'You have registered successfully for this event.'
+    });
+  } catch (err) {
+    console.error('Event registration endpoint error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * 5. Terms and Privacy Acceptance Endpoint
+ */
+app.post('/api/terms/accept', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing token' });
+    }
+    const idToken = authHeader.split('Bearer ')[1].trim();
+    const decodedToken = await verifyFirebaseToken(idToken);
+    const callerUid = decodedToken.uid;
+
+    const {
+      termsVersion = JOBS_TERMS_VERSION,
+      privacyVersion = JOBS_PRIVACY_VERSION,
+      identityVerificationVersion = IDENTITY_VERIFICATION_VERSION,
+      featuresAccepted = ['jobs_post', 'jobs_apply', 'events_create', 'events_register']
+    } = req.body || {};
+
+    const acceptanceDoc = {
+      userId: callerUid,
+      termsVersion,
+      privacyVersion,
+      identityVerificationVersion,
+      featuresAccepted,
+      acceptedAt: FieldValue.serverTimestamp(),
+      userAgent: req.headers['user-agent'] || 'unknown',
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || 'client'
+    };
+
+    await adminDb.collection('termsAcceptances').doc(callerUid).set(acceptanceDoc, { merge: true });
+
+    return res.json({
+      success: true,
+      termsVersion,
+      privacyVersion,
+      message: 'Terms of Service, Privacy Notice, and Identity Verification policies accepted successfully.'
+    });
+  } catch (err) {
+    console.error('Terms acceptance endpoint error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * 6. Authoritative Security Team Action Endpoint for Jobs & Events
+ */
+app.post('/api/jobs/security-action', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing token' });
+    }
+    const idToken = authHeader.split('Bearer ')[1].trim();
+    const decodedToken = await verifyFirebaseToken(idToken);
+    const callerUid = decodedToken.uid;
+
+    if (decodedToken.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Forbidden: Security Team administrative privileges required.' });
+    }
+
+    const {
+      targetType = 'job', // 'job' or 'event'
+      targetId,
+      action, // 'approve', 'reject', 'pause', 'remove', 'request_info'
+      reason = '',
+      notes = ''
+    } = req.body || {};
+
+    if (!targetId || !action) {
+      return res.status(400).json({ success: false, error: 'Missing targetId or action.' });
+    }
+
+    const collectionName = targetType === 'event' ? 'events' : 'jobs';
+    const docRef = adminDb.collection(collectionName).doc(targetId);
+    const snap = await docRef.get();
+
+    if (!snap.exists) {
+      return res.status(404).json({ success: false, error: `${targetType} document not found.` });
+    }
+    const data = snap.data() || {};
+
+    let newStatus = 'approved';
+    let newReviewStatus = 'approved';
+
+    if (action === 'approve') {
+      newStatus = 'approved';
+      newReviewStatus = 'approved';
+    } else if (action === 'reject') {
+      newStatus = 'rejected';
+      newReviewStatus = 'rejected';
+    } else if (action === 'pause') {
+      newStatus = 'paused';
+      newReviewStatus = 'paused';
+    } else if (action === 'remove' || action === 'takedown') {
+      newStatus = 'removed';
+      newReviewStatus = 'removed';
+    }
+
+    await docRef.update({
+      status: newStatus,
+      reviewStatus: newReviewStatus,
+      rejectionReason: action === 'reject' ? reason : '',
+      moderationNotes: notes || reason,
+      reviewedAt: FieldValue.serverTimestamp(),
+      reviewedBy: callerUid
+    });
+
+    // Write immutable Security Review audit log
+    await adminDb.collection('securityReviews').add({
+      targetId,
+      targetType,
+      reviewerUid: callerUid,
+      action,
+      reason,
+      notes,
+      timestamp: FieldValue.serverTimestamp()
+    });
+
+    // Dispatch notification to creator
+    if (data.creatorId) {
+      const titlePrefix = targetType === 'event' ? 'Event' : 'Job';
+      await adminDb.collection('notifications').add({
+        recipientId: data.creatorId,
+        userId: data.creatorId,
+        senderName: 'SellerFlow Security Team',
+        title: action === 'approve' ? `✅ ${titlePrefix} Listing Approved` : `🛡️ ${titlePrefix} Security Team Notice`,
+        message: action === 'approve' 
+          ? `Your ${targetType} "${data.title}" has been reviewed and approved by the Security Team. It is now live.`
+          : `Your ${targetType} "${data.title}" review update: ${reason || 'Please check with security team.'}`,
+        type: 'security_review_outcome',
+        fromAdmin: true,
+        read: false,
+        createdAt: FieldValue.serverTimestamp()
+      }).catch(() => {});
+    }
+
+    return res.json({
+      success: true,
+      targetId,
+      action,
+      status: newStatus,
+      message: `${targetType} has been successfully updated with action "${action}".`
+    });
+  } catch (err) {
+    console.error('Security action endpoint error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 const distPath = path.join(__dirname, 'dist');
 const isProd = process.env.NODE_ENV === 'production';
 

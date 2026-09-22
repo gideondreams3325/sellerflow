@@ -266,9 +266,215 @@
         "submittedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid"]
+    },
+    "Job": {
+      "title": "Job",
+      "description": "Verified Ghanaian employment listing with security screening",
+      "type": "object",
+      "properties": {
+        "creatorId": { "type": "string" },
+        "creatorName": { "type": "string" },
+        "title": { "type": "string" },
+        "companyName": { "type": "string" },
+        "location": { "type": "string" },
+        "locationType": { "type": "string", "enum": ["on_site", "hybrid", "remote"] },
+        "region": { "type": "string" },
+        "category": { "type": "string" },
+        "employmentType": { "type": "string", "enum": ["full_time", "part_time", "contract", "internship", "temporary", "remote"] },
+        "salaryMin": { "type": "number" },
+        "salaryMax": { "type": "number" },
+        "salaryCurrency": { "type": "string" },
+        "salaryPeriod": { "type": "string" },
+        "description": { "type": "string" },
+        "requirements": { "type": "string" },
+        "responsibilities": { "type": "string" },
+        "benefits": { "type": "string" },
+        "howToApplyType": { "type": "string", "enum": ["in_app", "external_url", "email"] },
+        "applicationUrl": { "type": "string" },
+        "applicationEmail": { "type": "string" },
+        "deadline": { "type": "string", "format": "date-time" },
+        "contactPhone": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending_review", "approved", "rejected", "paused", "expired", "removed", "draft"] },
+        "reviewStatus": { "type": "string", "enum": ["pending_review", "approved", "rejected", "flagged"] },
+        "verifiedCreator": { "type": "boolean" },
+        "scamWarningAcknowledged": { "type": "boolean" },
+        "termsVersion": { "type": "string" },
+        "viewsCount": { "type": "number" },
+        "savesCount": { "type": "number" },
+        "applicationsCount": { "type": "number" },
+        "isPromoted": { "type": "boolean" },
+        "promotionStatus": { "type": "string" },
+        "rejectionReason": { "type": "string" },
+        "moderationNotes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "reviewedAt": { "type": "string", "format": "date-time" },
+        "reviewedBy": { "type": "string" }
+      },
+      "required": ["creatorId", "title", "companyName", "status"]
+    },
+    "JobApplication": {
+      "title": "JobApplication",
+      "description": "Confidential candidate application submitted for a verified job listing",
+      "type": "object",
+      "properties": {
+        "jobId": { "type": "string" },
+        "jobTitle": { "type": "string" },
+        "companyName": { "type": "string" },
+        "employerId": { "type": "string" },
+        "applicantId": { "type": "string" },
+        "applicantName": { "type": "string" },
+        "applicantEmail": { "type": "string" },
+        "applicantPhone": { "type": "string" },
+        "coverLetter": { "type": "string" },
+        "cvStoragePath": { "type": "string" },
+        "cvFileName": { "type": "string" },
+        "cvFileType": { "type": "string" },
+        "cvFileSize": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending_security_check", "submitted", "under_review", "shortlisted", "interview_scheduled", "accepted", "rejected", "withdrawn", "flagged", "blocked"] },
+        "flagReason": { "type": "string" },
+        "scamWarningAcknowledged": { "type": "boolean" },
+        "termsVersion": { "type": "string" },
+        "employerNotes": { "type": "string" },
+        "appliedAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "reviewedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["jobId", "applicantId", "applicantName", "status"]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "Verified Ghanaian event and workshop gathering with security audit",
+      "type": "object",
+      "properties": {
+        "creatorId": { "type": "string" },
+        "creatorName": { "type": "string" },
+        "title": { "type": "string" },
+        "organizerName": { "type": "string" },
+        "category": { "type": "string" },
+        "eventType": { "type": "string", "enum": ["in_person", "online", "hybrid"] },
+        "venue": { "type": "string" },
+        "address": { "type": "string" },
+        "city": { "type": "string" },
+        "region": { "type": "string" },
+        "onlineMeetingUrl": { "type": "string" },
+        "startDate": { "type": "string" },
+        "startTime": { "type": "string" },
+        "endDate": { "type": "string" },
+        "endTime": { "type": "string" },
+        "timezone": { "type": "string" },
+        "description": { "type": "string" },
+        "bannerUrl": { "type": "string" },
+        "bannerPath": { "type": "string" },
+        "ticketType": { "type": "string", "enum": ["free", "paid", "rsvp"] },
+        "ticketPrice": { "type": "number" },
+        "capacity": { "type": "number" },
+        "registeredCount": { "type": "number" },
+        "registrationDeadline": { "type": "string" },
+        "externalTicketUrl": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "contactPhone": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending_review", "approved", "rejected", "paused", "cancelled", "removed", "expired", "draft"] },
+        "reviewStatus": { "type": "string", "enum": ["pending_review", "approved", "rejected", "flagged"] },
+        "verifiedOrganizer": { "type": "boolean" },
+        "termsVersion": { "type": "string" },
+        "viewsCount": { "type": "number" },
+        "savesCount": { "type": "number" },
+        "isPromoted": { "type": "boolean" },
+        "rejectionReason": { "type": "string" },
+        "moderationNotes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "reviewedAt": { "type": "string", "format": "date-time" },
+        "reviewedBy": { "type": "string" }
+      },
+      "required": ["creatorId", "title", "organizerName", "status"]
+    },
+    "EventRegistration": {
+      "title": "EventRegistration",
+      "description": "Private attendee event RSVP and registration record",
+      "type": "object",
+      "properties": {
+        "eventId": { "type": "string" },
+        "eventTitle": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "attendeeId": { "type": "string" },
+        "attendeeName": { "type": "string" },
+        "attendeeEmail": { "type": "string" },
+        "attendeePhone": { "type": "string" },
+        "ticketCount": { "type": "number" },
+        "notes": { "type": "string" },
+        "status": { "type": "string", "enum": ["registered", "cancelled", "checked_in"] },
+        "registeredAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["eventId", "attendeeId", "attendeeName", "status"]
+    },
+    "TermsAcceptance": {
+      "title": "TermsAcceptance",
+      "description": "Statutory audit record of user acceptance of versioned terms and privacy notices",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "termsVersion": { "type": "string" },
+        "privacyVersion": { "type": "string" },
+        "identityVerificationVersion": { "type": "string" },
+        "featuresAccepted": { "type": "array" },
+        "acceptedAt": { "type": "string", "format": "date-time" },
+        "userAgent": { "type": "string" }
+      },
+      "required": ["userId", "termsVersion", "acceptedAt"]
+    },
+    "SecurityReview": {
+      "title": "SecurityReview",
+      "description": "Immutable security team review and action audit log",
+      "type": "object",
+      "properties": {
+        "targetId": { "type": "string" },
+        "targetType": { "type": "string", "enum": ["job", "event", "application", "post", "product", "user"] },
+        "reviewerUid": { "type": "string" },
+        "action": { "type": "string", "enum": ["approve", "reject", "request_info", "pause", "remove", "takedown", "escalate"] },
+        "reason": { "type": "string" },
+        "notes": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["targetId", "targetType", "reviewerUid", "action"]
     }
   },
   "firestore": {
+    "/jobs/{jobId}": {
+      "schema": { "$ref": "#/entities/Job" },
+      "description": "Verified jobs and career listings in Ghana"
+    },
+    "/jobApplications/{applicationId}": {
+      "schema": { "$ref": "#/entities/JobApplication" },
+      "description": "Confidential candidate job applications"
+    },
+    "/jobSaves/{userId}/items/{jobId}": {
+      "schema": "string",
+      "description": "User bookmarked job listings"
+    },
+    "/events/{eventId}": {
+      "schema": { "$ref": "#/entities/Event" },
+      "description": "Verified events, expos, and community gatherings in Ghana"
+    },
+    "/eventRegistrations/{regId}": {
+      "schema": { "$ref": "#/entities/EventRegistration" },
+      "description": "Private event registrations and RSVPs"
+    },
+    "/eventSaves/{userId}/items/{eventId}": {
+      "schema": "string",
+      "description": "User bookmarked events"
+    },
+    "/termsAcceptances/{userId}": {
+      "schema": { "$ref": "#/entities/TermsAcceptance" },
+      "description": "Explicit user terms of service and privacy acceptance audit records"
+    },
+    "/securityReviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/SecurityReview" },
+      "description": "Authoritative security team moderation audit trail"
+    },
     "/identityVerifications/{recordId}": {
       "schema": { "$ref": "#/entities/IdentityVerification" },
       "description": "Private Ghana Card and live selfie liveness verification records"

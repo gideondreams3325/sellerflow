@@ -138,6 +138,7 @@
 </script>
 <script src="capacitor.js"></script>
 <script src="/translations.js"></script>
+<script src="/jobs-events.js"></script>
 <script>tailwind.config={theme:{extend:{colors:{gold:'#f5b942'}}}}</script>
 <style>
 *{box-sizing:border-box}
@@ -5075,7 +5076,9 @@ function setNav(){
   if(dNav){
     const navItems = [
       { page: 'feed', label: typeof t === 'function' ? t('nav_for_you','For You') : 'For You' },
-      { page: 'marketplace', label: typeof t === 'function' ? t('nav_marketplace','Marketplace') : 'Marketplace' }
+      { page: 'marketplace', label: typeof t === 'function' ? t('nav_marketplace','Marketplace') : 'Marketplace' },
+      { page: 'jobs', label: typeof t === 'function' ? t('nav_jobs','Jobs') : 'Jobs' },
+      { page: 'events', label: typeof t === 'function' ? t('nav_events','Events') : 'Events' }
     ];
     if(currentUser){
       navItems.push({ page: 'orders', label: typeof t === 'function' ? t('nav_orders','Orders') : 'Orders', hasBadge: true });
@@ -5204,7 +5207,9 @@ function setNav(){
 
     const discoverPages = [
       { key: 'feed', label: typeof t === 'function' ? t('nav_for_you', 'For You') : 'For You', icon: '🎬', desc: typeof t === 'function' ? t('sub_for_you', 'Reels & Video Showcase') : 'Reels & Video Showcase' },
-      { key: 'marketplace', label: typeof t === 'function' ? t('nav_marketplace', 'Marketplace') : 'Marketplace', icon: '🛍️', desc: typeof t === 'function' ? t('sub_marketplace', 'Stores & Products Catalog') : 'Stores & Products Catalog' }
+      { key: 'marketplace', label: typeof t === 'function' ? t('nav_marketplace', 'Marketplace') : 'Marketplace', icon: '🛍️', desc: typeof t === 'function' ? t('sub_marketplace', 'Stores & Products Catalog') : 'Stores & Products Catalog' },
+      { key: 'jobs', label: typeof t === 'function' ? t('nav_jobs', 'Jobs & Careers') : 'Jobs & Careers', icon: '💼', desc: typeof t === 'function' ? t('sub_jobs', 'Verified Employment in Ghana') : 'Verified Employment in Ghana' },
+      { key: 'events', label: typeof t === 'function' ? t('nav_events', 'Events & Meetups') : 'Events & Meetups', icon: '🎟️', desc: typeof t === 'function' ? t('sub_events', 'Conferences, Markets & Workshops') : 'Conferences, Markets & Workshops' }
     ];
 
     let commercePages = [];
@@ -5773,7 +5778,7 @@ async function renderChats(...args){
 window.renderChats = renderChats;
 
 async function renderPage(targetPostId, options){
-  if(!currentUser && currentPage !== 'feed' && currentPage !== 'marketplace' && currentPage !== 'products' && currentPage !== 'update'){
+  if(!currentUser && currentPage !== 'feed' && currentPage !== 'marketplace' && currentPage !== 'products' && currentPage !== 'update' && currentPage !== 'jobs' && currentPage !== 'events'){
     showAuthPrompt('access this page');
     navigate('feed');
     return;
@@ -5783,7 +5788,23 @@ async function renderPage(targetPostId, options){
   $('app')?.classList.toggle('is-feed-page',isFeed);
   $('appMainScroll')?.classList.toggle('is-feed-scroll',isFeed);
   setNav();
-  const map={feed:renderFeed,dashboard:renderDashboard,analysis:renderAnalysis,marketplace:renderMarketplace,products:renderProducts,orders:renderOrders,store:renderStore,profile:renderProfile,cart:renderCart,settings:renderSettings,admin:renderAdmin,update:renderSellerFlowUpdatePage,chats:renderChats};
+  const map={
+    feed:renderFeed,
+    dashboard:renderDashboard,
+    analysis:renderAnalysis,
+    marketplace:renderMarketplace,
+    products:renderProducts,
+    orders:renderOrders,
+    store:renderStore,
+    profile:renderProfile,
+    cart:renderCart,
+    settings:renderSettings,
+    admin:renderAdmin,
+    update:renderSellerFlowUpdatePage,
+    chats:renderChats,
+    jobs: typeof renderJobs === 'function' ? renderJobs : renderFeed,
+    events: typeof renderEvents === 'function' ? renderEvents : renderFeed
+  };
   await (map[currentPage]||renderFeed)(targetPostId, options);
   updateCartBadge();
 }
@@ -6005,6 +6026,74 @@ try {
   }
 } catch(_) {}
 
+function updateReelEngagementInDOM(id, d){
+  if(!id || !d) return;
+  const wrap = document.querySelector(`[data-reel-id="${id}"]`);
+  if(!wrap) return;
+
+  // 1. Likes count and state
+  const likesArr = Array.isArray(d.likes) ? d.likes : [];
+  const likeBtn = wrap.querySelector('[data-post-action="like"]');
+  const likeCountEl = likeBtn?.parentElement?.querySelector('.reel-action-count');
+  if(likeCountEl){
+    likeCountEl.textContent = formatReelCount(likesArr.length);
+  }
+  if(likeBtn && currentUser){
+    const isLiked = likesArr.includes(currentUser.uid);
+    likeBtn.classList.toggle('is-liked', isLiked);
+    const heartSvg = likeBtn.querySelector('svg');
+    if(heartSvg){
+      heartSvg.setAttribute('class', isLiked ? 'w-6 h-6 text-red-500 fill-red-500' : 'w-6 h-6 text-white fill-none stroke-current');
+    }
+  }
+
+  // 2. Comments count
+  const commentsArr = Array.isArray(d.comments) ? d.comments : [];
+  const commentBtn = wrap.querySelector('[data-post-action="comment"]');
+  const commentCountEl = commentBtn?.parentElement?.querySelector('.reel-action-count');
+  if(commentCountEl){
+    commentCountEl.textContent = formatReelCount(commentsArr.length);
+  }
+
+  // 3. Saves count and state
+  const savesArr = Array.isArray(d.saves) ? d.saves : [];
+  const saveBtn = wrap.querySelector('[data-post-action="save"]');
+  const saveCountEl = saveBtn?.parentElement?.querySelector('.reel-action-count');
+  if(saveCountEl){
+    saveCountEl.textContent = formatReelCount(savesArr.length);
+  }
+  if(saveBtn && currentUser){
+    const isSaved = savesArr.includes(currentUser.uid);
+    saveBtn.classList.toggle('is-saved', isSaved);
+    const saveSvg = saveBtn.querySelector('svg');
+    if(saveSvg){
+      saveSvg.setAttribute('class', isSaved ? 'w-6 h-6 text-yellow-400 fill-yellow-400' : 'w-6 h-6 text-white fill-none stroke-current');
+    }
+  }
+
+  // 4. Shares count
+  const sharesArr = Array.isArray(d.shares) ? d.shares : [];
+  const shareCount = sharesArr.length || d.shareCount || 0;
+  const shareBtn = wrap.querySelector('[data-post-action="share"]');
+  const shareCountEl = shareBtn?.parentElement?.querySelector('.reel-action-count');
+  if(shareCountEl){
+    shareCountEl.textContent = formatReelCount(shareCount);
+  }
+
+  // Sync memory cache
+  if(window._sfCachedPosts && window._sfCachedPosts.has(id)){
+    const prev = window._sfCachedPosts.get(id);
+    window._sfCachedPosts.set(id, { ...prev, ...d });
+  }
+  if(Array.isArray(_cachedFeedPosts)){
+    const idx = _cachedFeedPosts.findIndex(x => x.id === id);
+    if(idx !== -1){
+      _cachedFeedPosts[idx] = { ..._cachedFeedPosts[idx], ...d };
+    }
+  }
+}
+window.updateReelEngagementInDOM = updateReelEngagementInDOM;
+
 function _renderFeedHTML(feedPosts, targetPostId, options){
   const fromProfile = options?.fromProfile;
   $('page').innerHTML = `
@@ -6012,8 +6101,15 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
       <div class="flex items-center gap-2 min-w-0">
         ${fromProfile ? `<button type="button" id="feedBackProfile" class="border border-[#333] hover:border-gold px-2.5 py-1 rounded-xl text-xs font-bold mr-1 shrink-0 whitespace-nowrap">← Profile</button>` : ''}
         <h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap">For You</h1>
+        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-400 font-semibold shrink-0" title="Real-time live engagement active">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live
+        </span>
       </div>
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <button type="button" id="feedRefreshBtn" class="border border-[#333] hover:border-gold px-2.5 py-1.5 rounded-xl text-xs font-bold text-zinc-300 hover:text-white bg-[#141416] flex items-center gap-1.5 transition" title="Refresh feed & engagement metrics">
+          <span class="text-xs transition-transform inline-block" id="feedRefreshIcon">🔄</span>
+          <span class="hidden sm:inline">Refresh</span>
+        </button>
         <div class="hidden sm:inline-flex items-center gap-1 bg-[#141416] p-0.5 rounded-xl border border-[#2a2a2e]" title="Scroll reels (or use ↑ / ↓ arrow keys)">
           <button type="button" id="feedPrevBtn" class="feed-nav-btn feed-prev-btn" title="Previous video (↑ or K)">▲</button>
           <button type="button" id="feedNextBtn" class="feed-nav-btn feed-next-btn" title="Next video (↓ or J)">▼</button>
@@ -6050,6 +6146,23 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
       </aside>
     </div>
   `;
+
+  $('feedRefreshBtn')?.addEventListener('click', async () => {
+    const btn = $('feedRefreshBtn');
+    const icon = $('feedRefreshIcon');
+    if(btn) btn.disabled = true;
+    if(icon) icon.classList.add('animate-spin');
+    try {
+      toast('Refreshing latest posts & metrics…', 'info', 1500);
+      await renderFeed(null, { forceRefresh: true });
+      toast('For You feed updated', 'success', 2000);
+    } catch(err) {
+      toast('Refresh failed: ' + (err?.message || 'Network error'), 'error');
+    } finally {
+      if(btn) btn.disabled = false;
+      if(icon) icon.classList.remove('animate-spin');
+    }
+  });
 
   $('feedBackProfile')?.addEventListener('click',()=>navigate('profile'));
   $('openFeedUpload')?.addEventListener('click',()=>{
@@ -7295,6 +7408,15 @@ function openCommentPanel(id,p){
     await updateDoc(doc(db,'posts',id),{
       comments: arrayUnion(commentObj)
     });
+    if(Array.isArray(p.comments)){
+      p.comments.push(commentObj);
+    }
+    const wrap = document.querySelector(`[data-reel-id="${id}"]`);
+    const countEl = wrap?.querySelector(`[data-post-action="comment"]`)?.parentElement?.querySelector('.reel-action-count');
+    if(countEl){
+      const currentCommentsCount = Array.isArray(p.comments) ? p.comments.length : (parseInt(countEl.textContent, 10) || 0) + 1;
+      countEl.textContent = formatReelCount(currentCommentsCount);
+    }
     closeModal();
     toast('Comment added','success');
   };
@@ -8991,70 +9113,70 @@ function openStoreThemeCustomizerModal(storeId, currentTheme, onSavedCallback) {
   function renderModalContent() {
     const currentFont = SF_STORE_FONT_OPTIONS.find(f => f.id === workingTheme.fontFamily) || SF_STORE_FONT_OPTIONS[0];
     return `
-      <div class="space-y-4 max-w-2xl mx-auto">
+      <div class="space-y-4 max-w-2xl mx-auto overflow-hidden">
         <!-- Header -->
-        <div class="flex items-center justify-between pb-3 border-b border-[#2b2b35]">
-          <div class="flex items-center gap-3">
+        <div class="flex items-start sm:items-center justify-between gap-3 pb-3 border-b border-[#2b2b35]">
+          <div class="flex items-center gap-3 min-w-0 flex-1">
             <div class="w-10 h-10 rounded-xl bg-gold/15 border border-gold/30 flex items-center justify-center text-xl shrink-0">🎨</div>
-            <div>
-              <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                <span>Store Theme Customizer</span>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                <span class="truncate">Store Theme Customizer</span>
               </h2>
               <p class="muted text-xs">Select brand colors, corner styling, and Google Fonts typography for your storefront.</p>
             </div>
           </div>
-          <button type="button" data-close-modal class="p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-white/5 transition text-sm">✕</button>
+          <button type="button" data-close-modal class="p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-white/5 transition text-sm shrink-0">✕</button>
         </div>
 
         <!-- Live Store Preview Card -->
         <div class="space-y-2">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
             <label class="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
               <span>👁️</span><span>Live Storefront Preview</span>
             </label>
-            <span class="text-[10px] text-zinc-400 font-mono">Dynamic CSS Variable styling</span>
+            <span class="text-[10px] text-zinc-400 font-mono whitespace-nowrap">Dynamic CSS Variable styling</span>
           </div>
           
-          <div id="themeLivePreviewContainer" class="sf-storefront-wrapper p-4 rounded-2xl border transition-all duration-200" style="${generateStoreCssVars(workingTheme)}">
-            <div class="sf-store-surface p-4 rounded-xl space-y-3">
+          <div id="themeLivePreviewContainer" class="sf-storefront-wrapper p-3 sm:p-4 rounded-2xl border transition-all duration-200 overflow-hidden max-w-full" style="${generateStoreCssVars(workingTheme)}">
+            <div class="sf-store-surface p-3 sm:p-4 rounded-xl space-y-3">
               <!-- Banner & Header Mock -->
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-2.5">
-                  <div class="w-12 h-12 rounded-xl sf-store-btn-primary flex items-center justify-center font-black text-base shadow-sm">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sf-store-btn-primary flex items-center justify-center font-black text-base shadow-sm shrink-0">
                     🏪
                   </div>
-                  <div>
+                  <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-1.5">
-                      <b class="text-white text-sm">Your Store Name</b>
-                      <span class="verified-badge">✓</span>
+                      <b class="text-white text-xs sm:text-sm truncate">Your Store Name</b>
+                      <span class="verified-badge shrink-0">✓</span>
                     </div>
-                    <div class="text-[11px] text-zinc-400">@yourstore · Verified Merchant in Ghana</div>
+                    <div class="text-[10px] sm:text-[11px] text-zinc-400 truncate">@yourstore · Verified Merchant in Ghana</div>
                   </div>
                 </div>
-                <div class="flex items-center gap-1.5">
-                  <button type="button" class="sf-store-btn-primary text-xs font-bold px-3 py-1.5 shadow-sm pointer-events-none">
+                <div class="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+                  <button type="button" class="sf-store-btn-primary text-xs font-bold px-3 py-1.5 shadow-sm pointer-events-none whitespace-nowrap">
                     Follow
                   </button>
-                  <button type="button" class="sf-store-btn-outline text-xs font-bold px-3 py-1.5 pointer-events-none">
+                  <button type="button" class="sf-store-btn-outline text-xs font-bold px-3 py-1.5 pointer-events-none whitespace-nowrap">
                     Message
                   </button>
                 </div>
               </div>
 
               <!-- Product Preview Card Mock -->
-              <div class="sf-store-card p-3 rounded-xl flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3 min-w-0">
-                  <div class="w-12 h-12 rounded-lg bg-[#222] flex items-center justify-center text-xl shrink-0 border border-white/10">
+              <div class="sf-store-card p-3 rounded-xl flex items-center justify-between gap-3 min-w-0">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-[#222] flex items-center justify-center text-xl shrink-0 border border-white/10">
                     👗
                   </div>
-                  <div class="min-w-0">
+                  <div class="min-w-0 flex-1">
                     <b class="text-xs text-white block truncate">Handcrafted Ghanaian Kente</b>
-                    <span class="sf-store-badge text-[10px] font-bold px-2 py-0.5 rounded-full inline-block mt-0.5">Top Seller</span>
+                    <span class="sf-store-badge text-[10px] font-bold px-2 py-0.5 rounded-full inline-block mt-0.5 whitespace-nowrap">Top Seller</span>
                   </div>
                 </div>
-                <div class="flex items-center gap-3 shrink-0">
-                  <span class="sf-store-accent-text font-black text-sm">GH₵ 180.00</span>
-                  <button type="button" class="sf-store-btn-primary text-xs font-bold px-3 py-1.5 shadow-sm pointer-events-none">
+                <div class="flex items-center gap-2.5 shrink-0">
+                  <span class="sf-store-accent-text font-black text-xs sm:text-sm whitespace-nowrap">GH₵ 180.00</span>
+                  <button type="button" class="sf-store-btn-primary text-xs font-bold px-2.5 sm:px-3 py-1.5 shadow-sm pointer-events-none whitespace-nowrap">
                     🛒 Add
                   </button>
                 </div>
@@ -11710,36 +11832,36 @@ async function renderStore(forceEdit = false){
           </div>
 
           <!-- Store Theme Customizer (Brand Colors & CSS Variables) -->
-          <div class="card p-5 space-y-4 border border-amber-500/20 bg-[#121217]">
-            <div class="flex items-center justify-between border-b border-[#252530] pb-3">
-              <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-gold/15 border border-gold/30 flex items-center justify-center text-base shrink-0">🎨</div>
-                <div>
-                  <h2 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
-                    <span>Store Theme Customizer</span>
-                    <span class="text-[10px] font-mono bg-gold/10 text-gold border border-gold/30 px-2 py-0.5 rounded-full">CSS VARIABLES</span>
-                  </h2>
-                  <p class="text-zinc-400 text-xs">Set custom brand colors and styles for your storefront.</p>
+          <div class="card p-4 sm:p-5 space-y-4 border border-amber-500/20 bg-[#121217] overflow-hidden max-w-full">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#252530] pb-3">
+              <div class="flex items-start sm:items-center gap-2.5 min-w-0 flex-1">
+                <div class="w-8 h-8 rounded-lg bg-gold/15 border border-gold/30 flex items-center justify-center text-base shrink-0 mt-0.5 sm:mt-0">🎨</div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h2 class="font-bold text-sm sm:text-base text-white truncate">Store Theme Customizer</h2>
+                    <span class="text-[9px] sm:text-[10px] font-mono bg-gold/10 text-gold border border-gold/30 px-2 py-0.5 rounded-full whitespace-nowrap">CSS VARIABLES</span>
+                  </div>
+                  <p class="text-zinc-400 text-xs mt-0.5">Set custom brand colors and styles for your storefront.</p>
                 </div>
               </div>
-              <button type="button" id="formOpenCustomizerStudioBtn" class="text-xs text-gold hover:underline font-bold px-3 py-1.5 rounded-lg bg-black/40 border border-gold/30 hover:border-gold transition shrink-0">
+              <button type="button" id="formOpenCustomizerStudioBtn" class="text-xs text-gold hover:underline font-bold px-3 py-1.5 rounded-lg bg-black/40 border border-gold/30 hover:border-gold transition shrink-0 self-start sm:self-auto whitespace-nowrap">
                 Open Studio ↗
               </button>
             </div>
 
             <!-- Live Theme Preview Box -->
-            <div id="formThemePreview" class="sf-storefront-wrapper p-3.5 rounded-xl border transition-all duration-200" style="${generateStoreCssVars(store.theme || currentProfile.storeTheme || null)}">
-              <div class="sf-store-surface p-3 rounded-lg flex items-center justify-between gap-3">
-                <div class="flex items-center gap-2 min-w-0">
+            <div id="formThemePreview" class="sf-storefront-wrapper p-3 sm:p-3.5 rounded-xl border transition-all duration-200 overflow-hidden max-w-full" style="${generateStoreCssVars(store.theme || currentProfile.storeTheme || null)}">
+              <div class="sf-store-surface p-2.5 sm:p-3 rounded-lg flex items-center justify-between gap-2.5 min-w-0">
+                <div class="flex items-center gap-2 min-w-0 flex-1">
                   <div class="w-8 h-8 rounded-lg sf-store-btn-primary flex items-center justify-center font-bold text-xs shrink-0">
                     🏪
                   </div>
-                  <div class="min-w-0">
+                  <div class="min-w-0 flex-1">
                     <b class="text-xs text-white block truncate" id="themePreviewStoreName">${esc(store.name || currentProfile.name || 'Your Storefront')}</b>
-                    <span class="sf-store-accent-text text-[10px] font-bold">GH₵ 150.00</span>
+                    <span class="sf-store-accent-text text-[10px] font-bold block">GH₵ 150.00</span>
                   </div>
                 </div>
-                <button type="button" class="sf-store-btn-primary text-[11px] font-bold px-3 py-1.5 shadow-sm pointer-events-none">
+                <button type="button" class="sf-store-btn-primary text-[11px] font-bold px-3 py-1.5 shadow-sm pointer-events-none shrink-0 whitespace-nowrap">
                   Add to cart
                 </button>
               </div>
@@ -11748,14 +11870,14 @@ async function renderStore(forceEdit = false){
             <!-- Presets Selector -->
             <div>
               <label class="text-xs font-bold text-zinc-300 block mb-1.5">Color Palette Presets</label>
-              <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5" id="formPresetsRow">
+              <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5 sm:gap-2" id="formPresetsRow">
                 ${SF_STORE_THEME_PRESETS.map(pr => {
                   const currPrId = (store.theme?.presetId) || (store.theme?.primaryColor ? 'custom' : 'ghana_gold');
                   const isCur = currPrId === pr.id;
                   return `
-                    <button type="button" data-form-preset="${pr.id}" class="p-2 rounded-xl bg-[#181820] border ${isCur ? 'border-gold text-gold font-bold bg-gold/10' : 'border-[#2d2d38] text-zinc-300'} text-[11px] flex items-center gap-1.5 truncate transition hover:border-gold">
+                    <button type="button" data-form-preset="${pr.id}" class="p-2 rounded-xl bg-[#181820] border ${isCur ? 'border-gold text-gold font-bold bg-gold/10' : 'border-[#2d2d38] text-zinc-300'} text-[11px] flex items-center gap-1.5 min-w-0 transition hover:border-gold">
                       <span class="w-3 h-3 rounded-full shrink-0 border border-black" style="background:${pr.primaryColor}"></span>
-                      <span class="truncate">${pr.name.split(' ')[0]}</span>
+                      <span class="truncate min-w-0">${esc(pr.name)}</span>
                     </button>
                   `;
                 }).join('')}
@@ -11768,7 +11890,7 @@ async function renderStore(forceEdit = false){
                 <label class="muted text-xs block mb-1">Primary Color</label>
                 <div class="flex items-center gap-2">
                   <input type="color" id="storeThemePrimary" value="${(store.theme?.primaryColor) || '#f5b942'}" class="w-8 h-8 rounded-lg bg-transparent border-0 cursor-pointer p-0 shrink-0">
-                  <input type="text" id="storeThemePrimaryHex" value="${(store.theme?.primaryColor) || '#f5b942'}" maxlength="7" class="w-full p-2 text-xs font-mono rounded-lg bg-[#181818] border border-[#333] focus:border-gold text-white uppercase">
+                  <input type="text" id="storeThemePrimaryHex" value="${(store.theme?.primaryColor) || '#f5b942'}" maxlength="7" class="w-full p-2 text-xs font-mono rounded-lg bg-[#181818] border border-[#333] focus:border-gold text-white uppercase min-w-0">
                 </div>
               </div>
 
@@ -11776,13 +11898,13 @@ async function renderStore(forceEdit = false){
                 <label class="muted text-xs block mb-1">Accent Color</label>
                 <div class="flex items-center gap-2">
                   <input type="color" id="storeThemeAccent" value="${(store.theme?.accentColor) || '#d97706'}" class="w-8 h-8 rounded-lg bg-transparent border-0 cursor-pointer p-0 shrink-0">
-                  <input type="text" id="storeThemeAccentHex" value="${(store.theme?.accentColor) || '#d97706'}" maxlength="7" class="w-full p-2 text-xs font-mono rounded-lg bg-[#181818] border border-[#333] focus:border-gold text-white uppercase">
+                  <input type="text" id="storeThemeAccentHex" value="${(store.theme?.accentColor) || '#d97706'}" maxlength="7" class="w-full p-2 text-xs font-mono rounded-lg bg-[#181818] border border-[#333] focus:border-gold text-white uppercase min-w-0">
                 </div>
               </div>
 
               <div>
                 <label class="muted text-xs block mb-1">Corner Style</label>
-                <select id="storeThemeRadius" class="w-full p-2 text-xs rounded-lg bg-[#181818] border border-[#333] focus:border-gold text-white">
+                <select id="storeThemeRadius" class="w-full p-2 text-xs rounded-lg bg-[#181818] border border-[#333] focus:border-gold text-white min-w-0">
                   <option value="8px" ${(store.theme?.borderRadius === '8px') ? 'selected' : ''}>Sharp (8px)</option>
                   <option value="14px" ${(store.theme?.borderRadius === '14px') ? 'selected' : ''}>Smooth (14px)</option>
                   <option value="18px" ${(!store.theme?.borderRadius || store.theme?.borderRadius === '18px') ? 'selected' : ''}>Rounded (18px)</option>
@@ -11792,11 +11914,11 @@ async function renderStore(forceEdit = false){
             </div>
 
             <div class="pt-2 border-t border-[#222]">
-              <div class="flex items-center justify-between mb-1">
-                <label for="storeThemeFont" class="muted text-xs block">Storefront Typography (Google Fonts)</label>
-                <span class="text-[10px] text-gold/80 font-mono">--sf-theme-font</span>
+              <div class="flex items-center justify-between mb-1 gap-2 flex-wrap">
+                <label for="storeThemeFont" class="muted text-xs block truncate">Storefront Typography (Google Fonts)</label>
+                <span class="text-[10px] text-gold/80 font-mono whitespace-nowrap">--sf-theme-font</span>
               </div>
-              <select id="storeThemeFont" class="w-full p-2 text-xs rounded-lg bg-[#181818] border border-[#333] focus:border-gold text-white">
+              <select id="storeThemeFont" class="w-full p-2 text-xs rounded-lg bg-[#181818] border border-[#333] focus:border-gold text-white min-w-0">
                 ${SF_STORE_FONT_OPTIONS.map(f => `
                   <option value="${f.id}" ${(store.theme?.fontFamily === f.id || (!store.theme?.fontFamily && f.id === 'Plus Jakarta Sans')) ? 'selected' : ''} style="font-family: ${f.family}">
                     ${f.name} (${f.category})
@@ -18330,8 +18452,15 @@ init();
       <div class="flex items-center gap-2 min-w-0">
         ${fromProfile?`<button type="button" id="feedBackProfile" class="border border-[#333] hover:border-gold px-2.5 py-1 rounded-xl text-xs font-bold mr-1 shrink-0 whitespace-nowrap">← Profile</button>`:''}
         <h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap">For You</h1>
+        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-400 font-semibold shrink-0" title="Real-time live engagement active">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live
+        </span>
       </div>
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <button type="button" id="feedRefreshBtn" class="border border-[#333] hover:border-gold px-2.5 py-1.5 rounded-xl text-xs font-bold text-zinc-300 hover:text-white bg-[#141416] flex items-center gap-1.5 transition" title="Refresh feed & engagement metrics">
+          <span class="text-xs transition-transform inline-block" id="feedRefreshIcon">🔄</span>
+          <span class="hidden sm:inline">Refresh</span>
+        </button>
         <div class="hidden sm:inline-flex items-center gap-1 bg-[#141416] p-0.5 rounded-xl border border-[#2a2a2e]" title="Scroll reels (or use ↑ / ↓ arrow keys)">
           <button type="button" id="feedPrevBtn" class="feed-nav-btn feed-prev-btn" title="Previous video (↑ or K)">▲</button>
           <button type="button" id="feedNextBtn" class="feed-nav-btn feed-next-btn" title="Next video (↓ or J)">▼</button>
@@ -18353,6 +18482,22 @@ init();
         </button>
       </aside>
     </div>`;
+    $('feedRefreshBtn')?.addEventListener('click', async () => {
+      const btn = $('feedRefreshBtn');
+      const icon = $('feedRefreshIcon');
+      if(btn) btn.disabled = true;
+      if(icon) icon.classList.add('animate-spin');
+      try {
+        toast('Refreshing latest posts & metrics…', 'info', 1500);
+        await renderFeed(null, { forceRefresh: true });
+        toast('For You feed updated', 'success', 2000);
+      } catch(err) {
+        toast('Refresh failed: ' + (err?.message || 'Network error'), 'error');
+      } finally {
+        if(btn) btn.disabled = false;
+        if(icon) icon.classList.remove('animate-spin');
+      }
+    });
     $('feedBackProfile')?.addEventListener('click',()=>navigate('profile'));
     $('openFeedUpload')?.addEventListener('click',()=>currentUser?openPostModal():showAuthPrompt('upload videos or photos to For You'));
     $('openFeedUploadEmpty')?.addEventListener('click',()=>currentUser?openPostModal():showAuthPrompt('upload videos or photos to For You'));
@@ -18451,7 +18596,8 @@ init();
       }
     });
 
-    // Real-time security moderation listener: instantly delete & hide any taken down post
+    // Real-time security moderation & live engagement sync listener:
+    // Instantly syncs likes, comments, saves, shares and purges taken down posts across devices
     if(window._sfFeedSecurityUnsub) {
       try { window._sfFeedSecurityUnsub(); } catch(_) {}
       window._sfFeedSecurityUnsub = null;
@@ -18463,10 +18609,13 @@ init();
           const d = change.doc.data();
           if (change.type === 'removed' || isPostRemovedBySecurity({ id, ...d })) {
             purgeAndHidePostImmediately(id, 'Real-time security sync');
+          } else {
+            // Live real-time engagement updates
+            updateReelEngagementInDOM(id, d);
           }
         });
       }, (err) => {
-        console.warn('Real-time feed security sync:', err?.message);
+        console.warn('Real-time feed engagement & security sync:', err?.message);
       });
     } catch(_) {}
 
@@ -23684,6 +23833,9 @@ init();
           <span>🚨 Reported Frauds</span>
           <span class="admin-tab-count ${fraudSnap.size ? 'bg-rose-950 text-rose-300 border border-rose-800' : ''}">${fraudSnap.size}</span>
         </button>
+        <button class="admin-tab ${initialTab === 'jobs_events' ? 'active' : ''}" data-admin-tab="jobs_events">
+          <span>💼 Jobs & Events Desk</span>
+        </button>
         <button class="admin-tab ${initialTab === 'notify' ? 'active' : ''}" data-admin-tab="notify">
           <span>🔔 Broadcasts</span>
         </button>
@@ -23717,6 +23869,7 @@ init();
       else if(tabName === 'products') sfAdminProducts(productsSnap, liveProducts, pendingProducts, takenDownProducts, rejectedProducts, subOption);
       else if(tabName === 'reports') sfAdminReports(reports);
       else if(tabName === 'frauds') sfAdminFraudReportsTab(fraudSnap.docs);
+      else if(tabName === 'jobs_events') { if(typeof renderAdminJobsDesk === 'function') renderAdminJobsDesk($('adminWorkspace')); }
       else if(tabName === 'notify') sfAdminNotifyTab(users);
       else if(tabName === 'terms') sfAdminTermsTab(termData);
       window.scrollTo({ top: 0, behavior: 'smooth' });

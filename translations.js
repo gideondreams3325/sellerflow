@@ -39,6 +39,8 @@ const translations = {
     nav_settings: "Settings",
     nav_chats: "Chats",
     nav_cart: "Cart",
+    nav_jobs: "Jobs",
+    nav_events: "Events",
     nav_admin: "Admin",
     nav_back: "← Back",
     nav_signin_register: "Sign In / Register",
@@ -54,6 +56,8 @@ const translations = {
     title_settings: "Settings",
     title_chats: "Chats",
     title_cart: "Cart",
+    title_jobs: "Jobs & Careers",
+    title_events: "Events & Gatherings",
     title_notifications: "Notifications",
     title_dashboard: "Seller Dashboard",
     
@@ -67,6 +71,8 @@ const translations = {
     sub_settings: "Manage your account, language, notifications and verification.",
     sub_chats: "Chat directly with buyers and verified Ghanaian sellers.",
     sub_cart: "Review your items and proceed to secure checkout.",
+    sub_jobs: "Discover verified career opportunities and post job openings in Ghana.",
+    sub_events: "Find and host conferences, pop-up markets, workshops and social events.",
     
     auth_create_account: "Create your account",
     auth_welcome_back: "Welcome back",

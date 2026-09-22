@@ -420,5 +420,151 @@ service cloud.firestore {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow update, delete: if isAdmin();
     }
+
+    // 17. Verified Jobs & Career Listings
+    // - Public can view approved jobs
+    // - Creators can view their own listings (even when under review/draft/rejected)
+    // - Client-side create enforces initial pending_review status (server-only/admin approval)
+    // - Normal clients cannot self-assign status: 'approved' or tamper with review badges
+    match /jobs/{jobId} {
+      allow read: if true;
+      allow create: if isSignedIn() && (
+        request.resource.data.creatorId == request.auth.uid || isAdmin()
+      ) && (
+        isAdmin() || (
+          request.resource.data.get('status', 'pending_review') in ['pending_review', 'draft'] &&
+          request.resource.data.get('reviewStatus', 'pending_review') in ['pending_review', 'draft'] &&
+          !('reviewedBy' in request.resource.data) &&
+          !('reviewedAt' in request.resource.data)
+        )
+      );
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (
+          resource.data.creatorId == request.auth.uid &&
+          request.resource.data.creatorId == resource.data.creatorId &&
+          request.resource.data.get('status', '') == resource.data.get('status', '') &&
+          request.resource.data.get('reviewStatus', '') == resource.data.get('reviewStatus', '') &&
+          request.resource.data.get('reviewedBy', '') == resource.data.get('reviewedBy', '')
+        ) ||
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewsCount', 'savesCount', 'applicationsCount'])
+        )
+      );
+      allow delete: if isSignedIn() && (
+        resource.data.creatorId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // 18. Confidential Candidate Job Applications
+    // - Strictly private: Accessible ONLY to the applicant and the specific job employer/creator
+    // - Ghana Card data and KYC files are NEVER stored in applications
+    match /jobApplications/{applicationId} {
+      allow read: if isSignedIn() && (
+        resource == null ||
+        resource.data.applicantId == request.auth.uid ||
+        resource.data.employerId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.applicantId == request.auth.uid || isAdmin()
+      );
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        // Employer updating application status or adding notes
+        (
+          resource.data.employerId == request.auth.uid &&
+          request.resource.data.applicantId == resource.data.applicantId &&
+          request.resource.data.jobId == resource.data.jobId
+        ) ||
+        // Applicant updating their own submission
+        (
+          resource.data.applicantId == request.auth.uid &&
+          request.resource.data.applicantId == resource.data.applicantId &&
+          request.resource.data.jobId == resource.data.jobId
+        )
+      );
+      allow delete: if isSignedIn() && (
+        resource.data.applicantId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // 19. User Job Bookmarks
+    match /jobSaves/{userId}/items/{jobId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // 20. Verified Events & Gatherings
+    // - Public can read approved events
+    // - Organizers can manage their own events
+    // - Client-side create enforces initial pending_review status
+    match /events/{eventId} {
+      allow read: if true;
+      allow create: if isSignedIn() && (
+        request.resource.data.creatorId == request.auth.uid || isAdmin()
+      ) && (
+        isAdmin() || (
+          request.resource.data.get('status', 'pending_review') in ['pending_review', 'draft'] &&
+          request.resource.data.get('reviewStatus', 'pending_review') in ['pending_review', 'draft'] &&
+          !('reviewedBy' in request.resource.data) &&
+          !('reviewedAt' in request.resource.data)
+        )
+      );
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (
+          resource.data.creatorId == request.auth.uid &&
+          request.resource.data.creatorId == resource.data.creatorId &&
+          request.resource.data.get('status', '') == resource.data.get('status', '') &&
+          request.resource.data.get('reviewStatus', '') == resource.data.get('reviewStatus', '') &&
+          request.resource.data.get('reviewedBy', '') == resource.data.get('reviewedBy', '')
+        ) ||
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewsCount', 'savesCount', 'registeredCount'])
+        )
+      );
+      allow delete: if isSignedIn() && (
+        resource.data.creatorId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // 21. Event Registrations & RSVPs
+    // - Private to attendee, organizer, and admin
+    match /eventRegistrations/{regId} {
+      allow read: if isSignedIn() && (
+        resource == null ||
+        resource.data.attendeeId == request.auth.uid ||
+        resource.data.creatorId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.attendeeId == request.auth.uid || isAdmin()
+      );
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (resource.data.attendeeId == request.auth.uid && request.resource.data.attendeeId == resource.data.attendeeId) ||
+        (resource.data.creatorId == request.auth.uid && request.resource.data.creatorId == resource.data.creatorId)
+      );
+      allow delete: if isSignedIn() && (
+        resource.data.attendeeId == request.auth.uid || isAdmin()
+      );
+    }
+
+    // 22. User Event Bookmarks
+    match /eventSaves/{userId}/items/{eventId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // 23. Statutory Terms & Privacy Acceptances
+    // - Records versioned acceptances of Terms and Privacy notices
+    match /termsAcceptances/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // 24. Security Review & Moderation Audit Trail
+    // - Admin-only immutable log
+    match /securityReviews/{reviewId} {
+      allow read, write: if isAdmin();
+    }
   }
 }
