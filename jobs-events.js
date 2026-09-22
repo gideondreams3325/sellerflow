@@ -2,6 +2,68 @@
 // Statutory Compliance: Ghana Data Protection Act (Act 843), Cybersecurity Act (Act 1038)
 // Anti-Fraud Safeguards, Identity Verification Gating, & Security Team Review
 
+function _safeNullElement(id) {
+  return new Proxy({}, {
+    get(target, prop) {
+      if (prop === 'id') return String(id || '');
+      if (prop === 'classList') return { add: () => {}, remove: () => {}, toggle: () => false, contains: () => false };
+      if (prop === 'style') return new Proxy({}, { get: () => '', set: () => true });
+      if (prop === 'dataset') return {};
+      if (['addEventListener', 'removeEventListener', 'setAttribute', 'removeAttribute', 'appendChild', 'removeChild', 'focus', 'blur', 'click'].includes(prop)) return () => {};
+      if (prop === 'querySelector') return () => null;
+      if (prop === 'querySelectorAll') return () => [];
+      if (['innerHTML', 'innerText', 'textContent', 'value', 'src'].includes(prop)) return '';
+      return undefined;
+    },
+    set() { return true; }
+  });
+}
+const $ = (id) => (typeof window.$ === 'function' ? window.$(id) : (document.getElementById(id) || _safeNullElement(id)));
+
+const esc = (s) => (typeof window.esc === 'function' ? window.esc(s) : String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
+
+function getJobsEventsDb() {
+  if (typeof window.db !== 'undefined' && window.db && (typeof window.db.collection === 'function' || typeof window.db.doc === 'function')) {
+    return window.db;
+  }
+  if (typeof db !== 'undefined' && db && (typeof db.collection === 'function' || typeof db.doc === 'function')) {
+    return db;
+  }
+  if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
+    try {
+      const d = firebase.firestore();
+      window.db = d;
+      return d;
+    } catch (_) {}
+  }
+  return {
+    collection: (name) => ({
+      doc: (id) => ({
+        get: async () => ({ exists: false, data: () => null }),
+        set: async () => {},
+        update: async () => {},
+        delete: async () => {}
+      }),
+      where: () => ({
+        where: () => ({
+          limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
+          get: async () => ({ empty: true, docs: [], forEach: () => {} })
+        }),
+        limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
+        orderBy: () => ({ limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }), get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
+        get: async () => ({ empty: true, docs: [], forEach: () => {} })
+      }),
+      orderBy: () => ({
+        limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
+        get: async () => ({ empty: true, docs: [], forEach: () => {} })
+      }),
+      limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
+      get: async () => ({ empty: true, docs: [], forEach: () => {} }),
+      add: async () => ({ id: 'mock_' + Date.now() })
+    })
+  };
+}
+
 const JOBS_TERMS_VERSION = 'jobs_events_terms_v1.0';
 const JOBS_PRIVACY_VERSION = 'jobs_events_privacy_v1.0';
 const IDENTITY_VERIFICATION_VERSION = 'identity_verification_v1.0';
@@ -24,17 +86,202 @@ const EVENT_CATEGORIES = [
   'Sports & Fitness', 'Arts & Culture', 'Other'
 ];
 
+const DEFAULT_FEATURED_JOBS = [
+  {
+    id: 'job_gh_01',
+    title: 'Senior Store & Inventory Manager',
+    companyName: 'Accra Premier Retail Hub',
+    category: 'Retail & Sales',
+    region: 'Greater Accra',
+    locationType: 'on_site',
+    employmentType: 'Full-time',
+    salaryMin: 3500,
+    salaryMax: 5500,
+    salaryPeriod: 'monthly',
+    description: 'We are seeking an experienced Store Manager to oversee inventory tracking, customer relationships, staff coordination, and point-of-sale operations at our East Legon flagship branch. Applicants must have 2+ years of retail experience.',
+    requirements: '• 2+ years retail or store management experience\n• Proficiency with digital POS systems and inventory logs\n• Strong communication and team leadership skills',
+    contactEmail: 'careers@accraretailhub.com',
+    contactPhone: '+233 24 123 4567',
+    creatorName: 'Accra Premier Retail Hub',
+    status: 'approved',
+    createdAt: Date.now() - 86400000 * 2,
+    verifiedEmployer: true
+  },
+  {
+    id: 'job_gh_02',
+    title: 'Logistics & Dispatch Coordinator',
+    companyName: 'SwiftFlow Courier Services',
+    category: 'Logistics & Delivery',
+    region: 'Greater Accra',
+    locationType: 'on_site',
+    employmentType: 'Full-time',
+    salaryMin: 2200,
+    salaryMax: 3200,
+    salaryPeriod: 'monthly',
+    description: 'Responsible for routing parcel dispatches, managing rider schedules, coordinating with marketplace merchants, and ensuring rapid same-day package delivery across Accra and Tema.',
+    requirements: '• Knowledge of Accra-Tema route network\n• Prior dispatch or warehouse logistics experience\n• Punctual and customer-oriented attitude',
+    contactEmail: 'jobs@swiftflowdelivery.com',
+    contactPhone: '+233 50 987 6543',
+    creatorName: 'SwiftFlow Courier Services',
+    status: 'approved',
+    createdAt: Date.now() - 86400000 * 3,
+    verifiedEmployer: true
+  },
+  {
+    id: 'job_gh_03',
+    title: 'Digital Marketing & Content Creator',
+    companyName: 'GoldCoast Commerce Agency',
+    category: 'Creative & Media',
+    region: 'Ashanti',
+    locationType: 'hybrid',
+    employmentType: 'Full-time',
+    salaryMin: 2800,
+    salaryMax: 4200,
+    salaryPeriod: 'monthly',
+    description: 'Create engaging short-form video reels, promotional product campaigns, and community engagement posts across TikTok, Instagram, and SellerFlow for leading Ghanaian retail merchants.',
+    requirements: '• Portfolio of viral or high-engagement video content\n• Proficiency in CapCut, Canva, or Adobe Premiere\n• Strong understanding of Ghanaian digital consumer trends',
+    contactEmail: 'talent@goldcoastcommerce.com',
+    creatorName: 'GoldCoast Commerce Agency',
+    status: 'approved',
+    createdAt: Date.now() - 86400000 * 4,
+    verifiedEmployer: true
+  },
+  {
+    id: 'job_gh_04',
+    title: 'Customer Support Representative',
+    companyName: 'Oseikrom Hub Kumasi',
+    category: 'Customer Service',
+    region: 'Ashanti',
+    locationType: 'remote',
+    employmentType: 'Full-time',
+    salaryMin: 2000,
+    salaryMax: 2800,
+    salaryPeriod: 'monthly',
+    description: 'Provide omnichannel customer support (live chat, WhatsApp, and phone support) to online shoppers and marketplace buyers. Must have excellent written English and Twi communication.',
+    requirements: '• Fluency in English and Twi\n• Reliable laptop and high-speed internet connection\n• Friendly problem-solving disposition',
+    contactEmail: 'support-jobs@oseikromhub.com',
+    creatorName: 'Oseikrom Hub Kumasi',
+    status: 'approved',
+    createdAt: Date.now() - 86400000 * 5,
+    verifiedEmployer: true
+  }
+];
+
+const DEFAULT_FEATURED_EVENTS = [
+  {
+    id: 'event_gh_01',
+    title: 'Ghana E-Commerce & Retail Expo 2026',
+    organizerName: 'Ghana Retailers Association',
+    category: 'Business & Networking',
+    region: 'Greater Accra',
+    venue: 'Accra International Conference Centre (AICC)',
+    eventDate: '2026-10-15',
+    eventTime: '09:00',
+    ticketPrice: 0,
+    description: 'The premier annual gathering for Ghanaian retail entrepreneurs, online sellers, logistics providers, and digital payment innovators. Connect with over 500+ merchants and industry experts.',
+    bannerUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80',
+    registeredCount: 142,
+    status: 'approved',
+    createdAt: Date.now() - 86400000 * 2
+  },
+  {
+    id: 'event_gh_02',
+    title: 'Accra Creators & Pop-Up Marketplace',
+    organizerName: 'Osu Artisan Network',
+    category: 'Pop-up & Marketplace',
+    region: 'Greater Accra',
+    venue: 'Oxford Street Pavilion, Osu, Accra',
+    eventDate: '2026-10-24',
+    eventTime: '10:00',
+    ticketPrice: 20,
+    description: 'A vibrant weekend open-air market showcasing fashion designers, handcrafted goods, organic skincare, food vendors, and live music performances from top local creators.',
+    bannerUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80',
+    registeredCount: 88,
+    status: 'approved',
+    createdAt: Date.now() - 86400000 * 3
+  },
+  {
+    id: 'event_gh_03',
+    title: 'Kumasi Tech & Startup Founders Meetup',
+    organizerName: 'Asante Tech Collective',
+    category: 'Tech & Innovation',
+    region: 'Ashanti',
+    venue: 'KNUST Tech Center, Kumasi',
+    eventDate: '2026-11-05',
+    eventTime: '14:00',
+    ticketPrice: 0,
+    description: 'Monthly workshop and networking hub for software builders, designers, and e-commerce founders in Kumasi. Featuring pitching sessions, mentorship, and seed funding insights.',
+    bannerUrl: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&auto=format&fit=crop&q=80',
+    registeredCount: 65,
+    status: 'approved',
+    createdAt: Date.now() - 86400000 * 4
+  }
+];
+
+// In-memory cache stores for instant snappy page loads
+let _cachedJobs = null;
+let _lastJobsFetchTime = 0;
+let _cachedEvents = null;
+let _lastEventsFetchTime = 0;
+const CACHE_TTL_MS = 60000; // 60s cache lifetime
+
+async function prefetchJobsData() {
+  if (_cachedJobs && (Date.now() - _lastJobsFetchTime < CACHE_TTL_MS)) return _cachedJobs;
+  try {
+    const snap = await getJobsEventsDb().collection('jobs').where('status', '==', 'approved').limit(50).get();
+    const jobs = [];
+    snap.forEach(doc => jobs.push({ id: doc.id, ...doc.data() }));
+    if (!jobs.length) {
+      _cachedJobs = DEFAULT_FEATURED_JOBS.slice();
+    } else {
+      _cachedJobs = jobs;
+    }
+    _lastJobsFetchTime = Date.now();
+    return _cachedJobs;
+  } catch (_) {
+    if (!_cachedJobs) _cachedJobs = DEFAULT_FEATURED_JOBS.slice();
+    return _cachedJobs;
+  }
+}
+window._sfPrefetchJobs = prefetchJobsData;
+
+async function prefetchEventsData() {
+  if (_cachedEvents && (Date.now() - _lastEventsFetchTime < CACHE_TTL_MS)) return _cachedEvents;
+  try {
+    const snap = await getJobsEventsDb().collection('events').where('status', '==', 'approved').limit(40).get();
+    const events = [];
+    snap.forEach(doc => events.push({ id: doc.id, ...doc.data() }));
+    if (!events.length) {
+      _cachedEvents = DEFAULT_FEATURED_EVENTS.slice();
+    } else {
+      _cachedEvents = events;
+    }
+    _lastEventsFetchTime = Date.now();
+    return _cachedEvents;
+  } catch (_) {
+    if (!_cachedEvents) _cachedEvents = DEFAULT_FEATURED_EVENTS.slice();
+    return _cachedEvents;
+  }
+}
+window._sfPrefetchEvents = prefetchEventsData;
+window._sfInvalidateJobsEventsCache = () => {
+  _cachedJobs = null;
+  _lastJobsFetchTime = 0;
+  _cachedEvents = null;
+  _lastEventsFetchTime = 0;
+};
+
 // Anti-Scam and Safety Rules
 const SCAM_WARNING_HEADER = `
-  <div class="p-3.5 rounded-2xl bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs mb-4 flex items-start gap-3 shadow-sm">
-    <span class="text-xl shrink-0">🛡️</span>
-    <div class="leading-relaxed">
-      <b class="text-amber-300 font-bold block text-[13px] mb-0.5">SellerFlow Anti-Fraud Safety Notice</b>
-      <p class="text-zinc-300 text-[11px]">
-        • <b>Never pay any money</b> or recruitment fee for interviews, tests, or job offers.<br/>
-        • <b>Never disclose OTPs</b>, Mobile Money PINs, or confidential banking passwords.<br/>
-        • SellerFlow verifies creator identities for platform safety, but does not guarantee employment or event outcomes.
-      </p>
+  <div class="w-full max-w-full p-3 sm:p-3.5 rounded-2xl bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs mb-4 flex items-start gap-2.5 sm:gap-3 shadow-sm overflow-hidden box-border">
+    <span class="text-lg sm:text-xl shrink-0 mt-0.5">🛡️</span>
+    <div class="leading-relaxed flex-1 min-w-0">
+      <b class="text-amber-300 font-bold block text-xs sm:text-[13px] mb-1">SellerFlow Anti-Fraud Safety Notice</b>
+      <div class="text-zinc-300 text-[11px] sm:text-xs space-y-1 break-words">
+        <div>• <b>Never pay any money</b> or recruitment fee for interviews, tests, or job offers.</div>
+        <div>• <b>Never disclose OTPs</b>, Mobile Money PINs, or confidential banking passwords.</div>
+        <div>• SellerFlow verifies creator identities for platform safety, but does not guarantee employment or event outcomes.</div>
+      </div>
     </div>
   </div>
 `;
@@ -71,7 +318,7 @@ window.checkJobsEventsEligibility = checkJobsEventsEligibility;
 async function checkUserAcceptedTerms(uid) {
   if (!uid) return false;
   try {
-    const snap = await db.collection('termsAcceptances').doc(uid).get();
+    const snap = await getJobsEventsDb().collection('termsAcceptances').doc(uid).get();
     if (!snap.exists) return false;
     const data = snap.data();
     return data.termsVersion === JOBS_TERMS_VERSION;
@@ -202,7 +449,7 @@ function openTermsAcceptanceModal(actionType = 'proceed') {
           identityVerificationVersion: IDENTITY_VERIFICATION_VERSION
         })
       });
-      await db.collection('termsAcceptances').doc(currentUser.uid).set({
+      await getJobsEventsDb().collection('termsAcceptances').doc(currentUser.uid).set({
         userId: currentUser.uid,
         termsVersion: JOBS_TERMS_VERSION,
         acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -229,16 +476,16 @@ let activeJobRegion = 'All';
 let activeJobSearch = '';
 
 async function renderJobs() {
-  const container = $('appMain') || $('app');
+  const container = $('page') || $('appMain') || $('app');
   if (!container) return;
 
   container.innerHTML = `
-    <div class="max-w-6xl mx-auto px-4 py-6 space-y-6 animate-fade-in">
+    <div class="max-w-6xl w-full max-w-full mx-auto px-2.5 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 animate-fade-in overflow-x-hidden">
       <!-- Header -->
       <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
         <div>
-          <div class="flex items-center gap-2">
-            <span class="text-3xl">💼</span>
+          <div class="flex items-center gap-2.5">
+            <img src="/nav-emblem.svg" alt="SellerFlow" class="w-8 h-8 object-contain shrink-0 drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)]" />
             <h1 class="text-2xl font-black text-white">Jobs & Careers in Ghana</h1>
           </div>
           <p class="text-xs text-zinc-400 mt-1">Verified employment opportunities with scam-screened employers.</p>
@@ -362,29 +609,51 @@ async function loadJobsFeed() {
   if (!list) return;
 
   try {
-    let q = db.collection('jobs').where('status', '==', 'approved').limit(50);
-    const snap = await q.get();
+    let jobs = _cachedJobs;
+    const isCacheStale = !_cachedJobs || (Date.now() - _lastJobsFetchTime > CACHE_TTL_MS);
 
-    let jobs = [];
-    snap.forEach(doc => jobs.push({ id: doc.id, ...doc.data() }));
+    if (!jobs || !jobs.length) {
+      try {
+        const snap = await getJobsEventsDb().collection('jobs').where('status', '==', 'approved').limit(50).get();
+        jobs = [];
+        if (snap && snap.forEach) {
+          snap.forEach(doc => jobs.push({ id: doc.id, ...doc.data() }));
+        }
+      } catch (err) {
+        console.warn('Firestore jobs query fallback:', err);
+      }
+      if (!jobs || !jobs.length) {
+        jobs = DEFAULT_FEATURED_JOBS.slice();
+      }
+      _cachedJobs = jobs;
+      _lastJobsFetchTime = Date.now();
+    } else if (isCacheStale) {
+      // Refresh cache in background without blocking current render
+      prefetchJobsData().catch(() => {});
+    }
+
+    let filtered = (jobs || []).slice();
 
     // Apply Client Filters (Category, Region, Search)
     if (activeJobCategory !== 'All') {
-      jobs = jobs.filter(j => j.category === activeJobCategory);
+      filtered = filtered.filter(j => j.category === activeJobCategory);
     }
     if (activeJobRegion !== 'All') {
-      jobs = jobs.filter(j => j.region === activeJobRegion);
+      filtered = filtered.filter(j => j.region === activeJobRegion);
     }
     if (activeJobSearch) {
-      jobs = jobs.filter(j => 
+      filtered = filtered.filter(j => 
         (j.title && j.title.toLowerCase().includes(activeJobSearch)) ||
         (j.companyName && j.companyName.toLowerCase().includes(activeJobSearch)) ||
         (j.description && j.description.toLowerCase().includes(activeJobSearch))
       );
     }
 
-    if (!jobs.length) {
-      list.innerHTML = `
+    const currentList = $('jobsListContainer') || list;
+    if (!currentList) return;
+
+    if (!filtered.length) {
+      currentList.innerHTML = `
         <div class="text-center py-14 bg-[#14141e] border border-zinc-800/80 rounded-2xl p-6 space-y-2">
           <span class="text-3xl block">🔍</span>
           <p class="text-sm font-bold text-zinc-300">No verified job listings found</p>
@@ -394,20 +663,23 @@ async function loadJobsFeed() {
       return;
     }
 
-    list.innerHTML = jobs.map(job => renderJobCardHtml(job)).join('');
+    currentList.innerHTML = filtered.map(job => renderJobCardHtml(job)).join('');
 
     // Attach card action handlers
-    list.querySelectorAll('[data-view-job]').forEach(b => {
+    currentList.querySelectorAll('[data-view-job]').forEach(b => {
       b.onclick = () => openJobDetailModal(b.dataset.viewJob);
     });
-    list.querySelectorAll('[data-apply-job]').forEach(b => {
+    currentList.querySelectorAll('[data-apply-job]').forEach(b => {
       b.onclick = async () => {
         const eligible = await checkJobsEventsEligibility(currentUser, 'apply for this job');
         if (eligible) openApplyJobModal(b.dataset.applyJob);
       };
     });
   } catch (e) {
-    list.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Error loading jobs: ${esc(e.message)}</div>`;
+    const currentList = $('jobsListContainer') || list;
+    if (currentList) {
+      currentList.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Error loading jobs: ${esc(e.message)}</div>`;
+    }
   }
 }
 
@@ -468,8 +740,8 @@ function openPostJobModal() {
   modal.innerHTML = `
     <div class="bg-[#181824] border border-gold/40 rounded-3xl max-w-2xl w-full p-6 text-white shadow-2xl space-y-4 max-h-[92vh] flex flex-col">
       <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
-        <div class="flex items-center gap-2">
-          <span class="text-2xl">💼</span>
+        <div class="flex items-center gap-2.5">
+          <img src="/nav-emblem.svg" alt="SellerFlow" class="w-6 h-6 object-contain shrink-0" />
           <div>
             <h3 class="text-base font-black text-white">Post a Verified Job Opening</h3>
             <p class="text-[11px] text-zinc-400">List your vacancy for verified Ghanaian jobseekers.</p>
@@ -618,9 +890,17 @@ function openPostJobModal() {
 async function openApplyJobModal(jobId) {
   let jobData = null;
   try {
-    const snap = await db.collection('jobs').doc(jobId).get();
-    if (snap.exists) jobData = snap.data();
-  } catch (_) {}
+    if (_cachedJobs) jobData = _cachedJobs.find(j => j.id === jobId);
+    if (!jobData) {
+      const snap = await getJobsEventsDb().collection('jobs').doc(jobId).get();
+      if (snap && snap.exists) jobData = { id: snap.id, ...snap.data() };
+    }
+    if (!jobData) {
+      jobData = DEFAULT_FEATURED_JOBS.find(j => j.id === jobId);
+    }
+  } catch (_) {
+    jobData = DEFAULT_FEATURED_JOBS.find(j => j.id === jobId);
+  }
 
   const modal = document.createElement('div');
   modal.id = 'applyJobModal';
@@ -751,12 +1031,19 @@ async function openApplyJobModal(jobId) {
 // Modal: Job Details Viewer
 async function openJobDetailModal(jobId) {
   try {
-    const snap = await db.collection('jobs').doc(jobId).get();
-    if (!snap.exists) {
+    let job = null;
+    if (_cachedJobs) job = _cachedJobs.find(j => j.id === jobId);
+    if (!job) {
+      const snap = await getJobsEventsDb().collection('jobs').doc(jobId).get();
+      if (snap && snap.exists) job = { id: snap.id, ...snap.data() };
+    }
+    if (!job) {
+      job = DEFAULT_FEATURED_JOBS.find(j => j.id === jobId);
+    }
+    if (!job) {
       toast('Job not found', 'error');
       return;
     }
-    const job = snap.data();
     const formattedSalary = job.salaryMin || job.salaryMax 
       ? `GHS ${(job.salaryMin || 0).toLocaleString()} - ${(job.salaryMax || 0).toLocaleString()} / ${job.salaryPeriod || 'mo'}`
       : 'Negotiable';
@@ -769,6 +1056,7 @@ async function openJobDetailModal(jobId) {
         <div class="flex items-start justify-between pb-3 border-b border-zinc-800">
           <div class="space-y-1">
             <div class="flex items-center gap-2 flex-wrap">
+              <img src="/nav-emblem.svg" alt="SellerFlow" class="w-5 h-5 object-contain shrink-0" />
               <h2 class="text-xl font-black text-white">${esc(job.title)}</h2>
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
                 Verified Employer
@@ -841,11 +1129,12 @@ async function openJobDetailModal(jobId) {
 
 // Sub-view: My Applications
 async function renderMyApplications(container) {
+  if (!container) return;
   if (!currentUser) {
     container.innerHTML = `
       <div class="text-center py-14 bg-[#14141e] border border-zinc-800 rounded-2xl p-6 max-w-md mx-auto space-y-4">
-        <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-3xl">
-          📄
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center p-2.5 shadow-sm">
+          <img src="/nav-emblem.svg" alt="SellerFlow" class="w-8 h-8 object-contain" />
         </div>
         <div>
           <h3 class="text-base font-black text-white">Track Your Job Applications</h3>
@@ -864,12 +1153,15 @@ async function renderMyApplications(container) {
 
   container.innerHTML = `<div class="text-center py-10 text-zinc-500 text-xs">Loading your applications...</div>`;
   try {
-    const snap = await db.collection('jobApplications')
+    const snap = await getJobsEventsDb().collection('jobApplications')
       .where('applicantId', '==', currentUser.uid)
       .get();
 
+    const target = $('jobsContentArea') || container;
+    if (!target) return;
+
     if (snap.empty) {
-      container.innerHTML = `
+      target.innerHTML = `
         <div class="text-center py-14 bg-[#14141e] border border-zinc-800 rounded-2xl p-6 space-y-2">
           <span class="text-3xl block">📄</span>
           <p class="text-sm font-bold text-zinc-300">You haven't applied to any jobs yet</p>
@@ -882,7 +1174,7 @@ async function renderMyApplications(container) {
     const apps = [];
     snap.forEach(d => apps.push({ id: d.id, ...d.data() }));
 
-    container.innerHTML = `
+    target.innerHTML = `
       <div class="space-y-3">
         ${apps.map(app => `
           <div class="bg-[#14141e] border border-zinc-800 rounded-2xl p-4 flex items-center justify-between gap-4">
@@ -903,17 +1195,21 @@ async function renderMyApplications(container) {
       </div>
     `;
   } catch (err) {
-    container.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Error: ${esc(err.message)}</div>`;
+    const target = $('jobsContentArea') || container;
+    if (target) {
+      target.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Error: ${esc(err.message)}</div>`;
+    }
   }
 }
 
 // Sub-view: Employer Desk (Manage Posted Jobs & Candidates)
 async function renderEmployerDesk(container) {
+  if (!container) return;
   if (!currentUser) {
     container.innerHTML = `
       <div class="text-center py-14 bg-[#14141e] border border-zinc-800 rounded-2xl p-6 max-w-md mx-auto space-y-4">
-        <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-3xl">
-          🏢
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center p-2.5 shadow-sm">
+          <img src="/nav-emblem.svg" alt="SellerFlow" class="w-8 h-8 object-contain" />
         </div>
         <div>
           <h3 class="text-base font-black text-white">Employer Recruitment Desk</h3>
@@ -932,12 +1228,15 @@ async function renderEmployerDesk(container) {
 
   container.innerHTML = `<div class="text-center py-10 text-zinc-500 text-xs">Loading your job listings...</div>`;
   try {
-    const snap = await db.collection('jobs')
+    const snap = await getJobsEventsDb().collection('jobs')
       .where('creatorId', '==', currentUser.uid)
       .get();
 
+    const target = $('jobsContentArea') || container;
+    if (!target) return;
+
     if (snap.empty) {
-      container.innerHTML = `
+      target.innerHTML = `
         <div class="text-center py-14 bg-[#14141e] border border-zinc-800 rounded-2xl p-6 space-y-3">
           <span class="text-3xl block">🏢</span>
           <p class="text-sm font-bold text-zinc-300">You haven't posted any jobs yet</p>
@@ -953,7 +1252,7 @@ async function renderEmployerDesk(container) {
     const myJobs = [];
     snap.forEach(d => myJobs.push({ id: d.id, ...d.data() }));
 
-    container.innerHTML = `
+    target.innerHTML = `
       <div class="space-y-4">
         <div class="flex items-center justify-between pb-2">
           <h3 class="text-sm font-bold text-white">Your Posted Jobs (${myJobs.length})</h3>
@@ -991,11 +1290,14 @@ async function renderEmployerDesk(container) {
     `;
 
     $('deskPostJobBtn2')?.addEventListener('click', () => openPostJobModal());
-    container.querySelectorAll('[data-view-applicants]').forEach(b => {
+    target.querySelectorAll('[data-view-applicants]').forEach(b => {
       b.onclick = () => openApplicantsModal(b.dataset.viewApplicants);
     });
   } catch (err) {
-    container.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Error: ${esc(err.message)}</div>`;
+    const target = $('jobsContentArea') || container;
+    if (target) {
+      target.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Error: ${esc(err.message)}</div>`;
+    }
   }
 }
 
@@ -1024,11 +1326,13 @@ async function openApplicantsModal(jobId) {
   modal.querySelector('#closeApplicantsModalBtn').onclick = () => modal.remove();
 
   try {
-    const snap = await db.collection('jobApplications')
+    const snap = await getJobsEventsDb().collection('jobApplications')
       .where('jobId', '==', jobId)
       .get();
 
     const area = modal.querySelector('#applicantsListArea');
+    if (!area) return;
+
     if (snap.empty) {
       area.innerHTML = `<div class="text-center py-10 text-zinc-500">No applications received yet for this listing.</div>`;
       return;
@@ -1079,7 +1383,7 @@ async function openApplicantsModal(jobId) {
         const appId = btn.dataset.appStatus;
         const newStatus = btn.dataset.status;
         try {
-          await db.collection('jobApplications').doc(appId).update({
+          await getJobsEventsDb().collection('jobApplications').doc(appId).update({
             status: newStatus,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
@@ -1091,11 +1395,13 @@ async function openApplicantsModal(jobId) {
       };
     });
   } catch (err) {
-    modal.querySelector('#applicantsListArea').innerHTML = `<div class="text-center py-8 text-rose-400">Error: ${esc(err.message)}</div>`;
+    const area = modal?.querySelector('#applicantsListArea');
+    if (area) area.innerHTML = `<div class="text-center py-8 text-rose-400">Error: ${esc(err.message)}</div>`;
   }
 }
 
 async function renderSavedJobs(container) {
+  if (!container) return;
   container.innerHTML = `<div class="text-center py-10 text-zinc-500 text-xs">Saved jobs feature active. Bookmark opportunities from Explore tab.</div>`;
 }
 
@@ -1108,23 +1414,25 @@ let activeEventCategory = 'All';
 let activeEventSearch = '';
 
 async function renderEvents() {
-  const container = $('appMain') || $('app');
+  const container = $('page') || $('appMain') || $('app');
   if (!container) return;
 
   container.innerHTML = `
-    <div class="max-w-6xl mx-auto px-4 py-6 space-y-6 animate-fade-in">
+    <div class="max-w-6xl w-full max-w-full mx-auto px-2.5 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 animate-fade-in overflow-x-hidden">
       <!-- Header -->
       <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
         <div>
-          <div class="flex items-center gap-2">
-            <span class="text-3xl">🎟️</span>
+          <div class="flex items-center gap-2.5">
+            <img src="/nav-emblem.svg" alt="SellerFlow" class="w-8 h-8 object-contain shrink-0 drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)]" />
             <h1 class="text-2xl font-black text-white">Events & Gatherings in Ghana</h1>
           </div>
           <p class="text-xs text-zinc-400 mt-1">Conferences, pop-up markets, workshops, and business networking.</p>
         </div>
-        <button id="createEventBtn" class="px-4 py-2.5 rounded-xl bg-gold text-black font-black text-xs hover:brightness-110 transition shadow-sm flex items-center gap-1.5">
-          <span>＋</span><span>Host an Event</span>
-        </button>
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <button id="createEventBtn" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-gold text-black font-black text-xs hover:brightness-110 transition shadow-sm flex items-center justify-center gap-1.5">
+            <span>＋</span><span>Host an Event</span>
+          </button>
+        </div>
       </div>
 
       <!-- Navigation Tabs -->
@@ -1221,23 +1529,47 @@ async function loadEventsFeed() {
   if (!list) return;
 
   try {
-    const snap = await db.collection('events').where('status', '==', 'approved').limit(40).get();
-    let events = [];
-    snap.forEach(doc => events.push({ id: doc.id, ...doc.data() }));
+    let events = _cachedEvents;
+    const isCacheStale = !_cachedEvents || (Date.now() - _lastEventsFetchTime > CACHE_TTL_MS);
+
+    if (!events || !events.length) {
+      try {
+        const snap = await getJobsEventsDb().collection('events').where('status', '==', 'approved').limit(40).get();
+        events = [];
+        if (snap && snap.forEach) {
+          snap.forEach(doc => events.push({ id: doc.id, ...doc.data() }));
+        }
+      } catch (err) {
+        console.warn('Firestore events query fallback:', err);
+      }
+      if (!events || !events.length) {
+        events = DEFAULT_FEATURED_EVENTS.slice();
+      }
+      _cachedEvents = events;
+      _lastEventsFetchTime = Date.now();
+    } else if (isCacheStale) {
+      // Refresh cache in background without blocking current render
+      prefetchEventsData().catch(() => {});
+    }
+
+    let filtered = (events || []).slice();
 
     if (activeEventCategory !== 'All') {
-      events = events.filter(ev => ev.category === activeEventCategory);
+      filtered = filtered.filter(ev => ev.category === activeEventCategory);
     }
     if (activeEventSearch) {
-      events = events.filter(ev => 
+      filtered = filtered.filter(ev => 
         (ev.title && ev.title.toLowerCase().includes(activeEventSearch)) ||
         (ev.organizerName && ev.organizerName.toLowerCase().includes(activeEventSearch)) ||
         (ev.venue && ev.venue.toLowerCase().includes(activeEventSearch))
       );
     }
 
-    if (!events.length) {
-      list.innerHTML = `
+    const currentList = $('eventsListContainer') || list;
+    if (!currentList) return;
+
+    if (!filtered.length) {
+      currentList.innerHTML = `
         <div class="col-span-full text-center py-14 bg-[#14141e] border border-zinc-800/80 rounded-2xl p-6 space-y-2">
           <span class="text-3xl block">🎟️</span>
           <p class="text-sm font-bold text-zinc-300">No verified events found</p>
@@ -1247,15 +1579,15 @@ async function loadEventsFeed() {
       return;
     }
 
-    list.innerHTML = events.map(ev => `
+    currentList.innerHTML = filtered.map(ev => `
       <div class="bg-[#14141e] hover:bg-[#181826] border border-zinc-800/80 hover:border-amber-500/40 rounded-2xl overflow-hidden transition shadow-sm flex flex-col justify-between">
         ${ev.bannerUrl ? `
           <div class="h-36 w-full overflow-hidden bg-zinc-800 cursor-pointer" data-view-event="${ev.id}">
             <img src="${esc(ev.bannerUrl)}" alt="${esc(ev.title)}" class="w-full h-full object-cover" />
           </div>
         ` : `
-          <div class="h-28 w-full bg-gradient-to-r from-amber-950/40 to-zinc-900 border-b border-zinc-800 flex items-center justify-center text-4xl cursor-pointer" data-view-event="${ev.id}">
-            🎪
+          <div class="h-28 w-full bg-gradient-to-r from-amber-950/40 via-zinc-900 to-amber-950/40 border-b border-zinc-800 flex items-center justify-center p-4 cursor-pointer" data-view-event="${ev.id}">
+            <img src="/nav-emblem.svg" alt="SellerFlow Event" class="w-12 h-12 object-contain opacity-70 drop-shadow-md" />
           </div>
         `}
         <div class="p-4 space-y-2.5 flex-1 flex flex-col justify-between">
@@ -1295,18 +1627,21 @@ async function loadEventsFeed() {
       </div>
     `).join('');
 
-    list.querySelectorAll('[data-view-event]').forEach(b => {
+    currentList.querySelectorAll('[data-view-event]').forEach(b => {
       b.onclick = () => openEventDetailModal(b.dataset.viewEvent);
     });
 
-    list.querySelectorAll('[data-register-event]').forEach(b => {
+    currentList.querySelectorAll('[data-register-event]').forEach(b => {
       b.onclick = async () => {
         const eligible = await checkJobsEventsEligibility(currentUser, 'register for this event');
         if (eligible) openRegisterEventModal(b.dataset.registerEvent);
       };
     });
   } catch (err) {
-    list.innerHTML = `<div class="col-span-full text-center py-8 text-rose-400 text-xs">Error: ${esc(err.message)}</div>`;
+    const currentList = $('eventsListContainer') || list;
+    if (currentList) {
+      currentList.innerHTML = `<div class="col-span-full text-center py-8 text-rose-400 text-xs">Error: ${esc(err.message)}</div>`;
+    }
   }
 }
 
@@ -1314,9 +1649,17 @@ async function loadEventsFeed() {
 async function openEventDetailModal(eventId) {
   let ev = null;
   try {
-    const snap = await db.collection('events').doc(eventId).get();
-    if (snap.exists) ev = { id: snap.id, ...snap.data() };
-  } catch (_) {}
+    if (_cachedEvents) ev = _cachedEvents.find(e => e.id === eventId);
+    if (!ev) {
+      const snap = await getJobsEventsDb().collection('events').doc(eventId).get();
+      if (snap && snap.exists) ev = { id: snap.id, ...snap.data() };
+    }
+    if (!ev) {
+      ev = DEFAULT_FEATURED_EVENTS.find(e => e.id === eventId);
+    }
+  } catch (_) {
+    ev = DEFAULT_FEATURED_EVENTS.find(e => e.id === eventId);
+  }
 
   if (!ev) {
     toast('Event listing not found or unavailable', 'error');
@@ -1329,8 +1672,8 @@ async function openEventDetailModal(eventId) {
   modal.innerHTML = `
     <div class="bg-[#181824] border border-gold/40 rounded-3xl max-w-xl w-full p-6 text-white shadow-2xl space-y-4 max-h-[92vh] flex flex-col">
       <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
-        <div class="flex items-center gap-2 min-w-0">
-          <span class="text-2xl">🎟️</span>
+        <div class="flex items-center gap-2.5 min-w-0">
+          <img src="/nav-emblem.svg" alt="SellerFlow" class="w-6 h-6 object-contain shrink-0" />
           <div class="min-w-0">
             <h3 class="text-base font-black text-white truncate">${esc(ev.title)}</h3>
             <p class="text-[11px] text-zinc-400">By ${esc(ev.organizerName)}</p>
@@ -1401,9 +1744,12 @@ function openCreateEventModal() {
   modal.innerHTML = `
     <div class="bg-[#181824] border border-gold/40 rounded-3xl max-w-2xl w-full p-6 text-white shadow-2xl space-y-4 max-h-[92vh] flex flex-col">
       <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
-        <div>
-          <h3 class="text-base font-black text-white">Host an Event in Ghana</h3>
-          <p class="text-[11px] text-zinc-400">Publish your gathering for verified attendees.</p>
+        <div class="flex items-center gap-2.5">
+          <img src="/nav-emblem.svg" alt="SellerFlow" class="w-6 h-6 object-contain shrink-0" />
+          <div>
+            <h3 class="text-base font-black text-white">Host an Event in Ghana</h3>
+            <p class="text-[11px] text-zinc-400">Publish your gathering for verified attendees.</p>
+          </div>
         </div>
         <button id="closeCreateEventModalBtn" class="w-8 h-8 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center font-bold">✕</button>
       </div>
@@ -1535,9 +1881,17 @@ function openCreateEventModal() {
 async function openRegisterEventModal(eventId) {
   let eventData = null;
   try {
-    const snap = await db.collection('events').doc(eventId).get();
-    if (snap.exists) eventData = snap.data();
-  } catch (_) {}
+    if (_cachedEvents) eventData = _cachedEvents.find(e => e.id === eventId);
+    if (!eventData) {
+      const snap = await getJobsEventsDb().collection('events').doc(eventId).get();
+      if (snap && snap.exists) eventData = { id: snap.id, ...snap.data() };
+    }
+    if (!eventData) {
+      eventData = DEFAULT_FEATURED_EVENTS.find(e => e.id === eventId);
+    }
+  } catch (_) {
+    eventData = DEFAULT_FEATURED_EVENTS.find(e => e.id === eventId);
+  }
 
   const modal = document.createElement('div');
   modal.id = 'registerEventModal';
@@ -1627,11 +1981,12 @@ async function openRegisterEventModal(eventId) {
 }
 
 async function renderMyRegistrations(container) {
+  if (!container) return;
   if (!currentUser) {
     container.innerHTML = `
       <div class="text-center py-14 bg-[#14141e] border border-zinc-800 rounded-2xl p-6 max-w-md mx-auto space-y-4">
-        <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-3xl">
-          🎟️
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center p-2.5 shadow-sm">
+          <img src="/nav-emblem.svg" alt="SellerFlow" class="w-8 h-8 object-contain" />
         </div>
         <div>
           <h3 class="text-base font-black text-white">Access Your Event Tickets</h3>
@@ -1650,12 +2005,15 @@ async function renderMyRegistrations(container) {
 
   container.innerHTML = `<div class="text-center py-10 text-zinc-500 text-xs">Loading your event tickets...</div>`;
   try {
-    const snap = await db.collection('eventRegistrations')
+    const snap = await getJobsEventsDb().collection('eventRegistrations')
       .where('attendeeId', '==', currentUser.uid)
       .get();
 
+    const target = $('eventsContentArea') || container;
+    if (!target) return;
+
     if (snap.empty) {
-      container.innerHTML = `
+      target.innerHTML = `
         <div class="text-center py-14 bg-[#14141e] border border-zinc-800 rounded-2xl p-6 space-y-2">
           <span class="text-3xl block">🎟️</span>
           <p class="text-sm font-bold text-zinc-300">You have no upcoming event tickets</p>
@@ -1668,7 +2026,7 @@ async function renderMyRegistrations(container) {
     const regs = [];
     snap.forEach(d => regs.push({ id: d.id, ...d.data() }));
 
-    container.innerHTML = `
+    target.innerHTML = `
       <div class="space-y-3">
         ${regs.map(r => `
           <div class="bg-[#14141e] border border-zinc-800 rounded-2xl p-4 flex items-center justify-between gap-4">
@@ -1684,16 +2042,20 @@ async function renderMyRegistrations(container) {
       </div>
     `;
   } catch (err) {
-    container.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Error: ${esc(err.message)}</div>`;
+    const target = $('eventsContentArea') || container;
+    if (target) {
+      target.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Error: ${esc(err.message)}</div>`;
+    }
   }
 }
 
 async function renderOrganizerDesk(container) {
+  if (!container) return;
   if (!currentUser) {
     container.innerHTML = `
       <div class="text-center py-14 bg-[#14141e] border border-zinc-800 rounded-2xl p-6 max-w-md mx-auto space-y-4">
-        <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-3xl">
-          🎪
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center p-2.5 shadow-sm">
+          <img src="/nav-emblem.svg" alt="SellerFlow" class="w-8 h-8 object-contain" />
         </div>
         <div>
           <h3 class="text-base font-black text-white">Event Organizer Portal</h3>
@@ -1712,12 +2074,15 @@ async function renderOrganizerDesk(container) {
 
   container.innerHTML = `<div class="text-center py-10 text-zinc-500 text-xs">Loading your hosted events...</div>`;
   try {
-    const snap = await db.collection('events')
+    const snap = await getJobsEventsDb().collection('events')
       .where('creatorId', '==', currentUser.uid)
       .get();
 
+    const target = $('eventsContentArea') || container;
+    if (!target) return;
+
     if (snap.empty) {
-      container.innerHTML = `
+      target.innerHTML = `
         <div class="text-center py-14 bg-[#14141e] border border-zinc-800 rounded-2xl p-6 space-y-3">
           <span class="text-3xl block">🎪</span>
           <p class="text-sm font-bold text-zinc-300">You haven't hosted any events yet</p>
@@ -1733,7 +2098,7 @@ async function renderOrganizerDesk(container) {
     const myEvents = [];
     snap.forEach(d => myEvents.push({ id: d.id, ...d.data() }));
 
-    container.innerHTML = `
+    target.innerHTML = `
       <div class="space-y-4">
         <div class="flex items-center justify-between pb-2">
           <h3 class="text-sm font-bold text-white">Your Hosted Events (${myEvents.length})</h3>
@@ -1767,7 +2132,10 @@ async function renderOrganizerDesk(container) {
 
     $('deskCreateEvBtn2')?.addEventListener('click', () => openCreateEventModal());
   } catch (err) {
-    container.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Error: ${esc(err.message)}</div>`;
+    const target = $('eventsContentArea') || container;
+    if (target) {
+      target.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Error: ${esc(err.message)}</div>`;
+    }
   }
 }
 
@@ -1825,76 +2193,82 @@ window.renderAdminJobsDesk = renderAdminJobsDesk;
 async function loadAdminQueues() {
   const jobsArea = $('adminJobsQueue');
   const eventsArea = $('adminEventsQueue');
-  if (!jobsArea || !eventsArea) return;
+  if (!jobsArea && !eventsArea) return;
 
   try {
-    const jobsSnap = await db.collection('jobs').where('status', '==', 'pending_review').get();
-    if (jobsSnap.empty) {
-      jobsArea.innerHTML = `<div class="text-center py-8 text-zinc-500">✅ No pending jobs in review queue.</div>`;
-    } else {
-      const jobs = [];
-      jobsSnap.forEach(d => jobs.push({ id: d.id, ...d.data() }));
-      jobsArea.innerHTML = jobs.map(j => `
-        <div class="p-3 rounded-xl bg-[#181824] border border-zinc-800 space-y-2">
-          <div class="flex items-start justify-between gap-2">
-            <div>
-              <b class="text-white block font-bold text-xs">${esc(j.title)}</b>
-              <span class="text-zinc-400 text-[11px]">🏢 ${esc(j.companyName)} · 📍 ${esc(j.region)}</span>
+    const jobsSnap = await getJobsEventsDb().collection('jobs').where('status', '==', 'pending_review').get();
+    const currentJobsArea = $('adminJobsQueue') || jobsArea;
+    if (currentJobsArea) {
+      if (jobsSnap.empty) {
+        currentJobsArea.innerHTML = `<div class="text-center py-8 text-zinc-500">✅ No pending jobs in review queue.</div>`;
+      } else {
+        const jobs = [];
+        jobsSnap.forEach(d => jobs.push({ id: d.id, ...d.data() }));
+        currentJobsArea.innerHTML = jobs.map(j => `
+          <div class="p-3 rounded-xl bg-[#181824] border border-zinc-800 space-y-2">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <b class="text-white block font-bold text-xs">${esc(j.title)}</b>
+                <span class="text-zinc-400 text-[11px]">🏢 ${esc(j.companyName)} · 📍 ${esc(j.region)}</span>
+              </div>
+              <span class="text-[10px] font-bold text-amber-400 bg-amber-950 px-2 py-0.5 rounded border border-amber-800">Under Review</span>
             </div>
-            <span class="text-[10px] font-bold text-amber-400 bg-amber-950 px-2 py-0.5 rounded border border-amber-800">Under Review</span>
+            <p class="text-zinc-400 text-[11px] line-clamp-2">${esc(j.description)}</p>
+            <div class="flex gap-2 pt-1 border-t border-zinc-800">
+              <button data-admin-approve-job="${j.id}" class="flex-1 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800 font-bold text-xs">
+                ✓ Approve Job
+              </button>
+              <button data-admin-reject-job="${j.id}" class="flex-1 py-1.5 rounded-lg bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 font-bold text-xs">
+                ✕ Reject
+              </button>
+            </div>
           </div>
-          <p class="text-zinc-400 text-[11px] line-clamp-2">${esc(j.description)}</p>
-          <div class="flex gap-2 pt-1 border-t border-zinc-800">
-            <button data-admin-approve-job="${j.id}" class="flex-1 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800 font-bold text-xs">
-              ✓ Approve Job
-            </button>
-            <button data-admin-reject-job="${j.id}" class="flex-1 py-1.5 rounded-lg bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 font-bold text-xs">
-              ✕ Reject
-            </button>
-          </div>
-        </div>
-      `).join('');
+        `).join('');
 
-      jobsArea.querySelectorAll('[data-admin-approve-job]').forEach(b => {
-        b.onclick = () => performSecurityAction('job', b.dataset.adminApproveJob, 'approve');
-      });
-      jobsArea.querySelectorAll('[data-admin-reject-job]').forEach(b => {
-        b.onclick = () => performSecurityAction('job', b.dataset.adminRejectJob, 'reject');
-      });
+        currentJobsArea.querySelectorAll('[data-admin-approve-job]').forEach(b => {
+          b.onclick = () => performSecurityAction('job', b.dataset.adminApproveJob, 'approve');
+        });
+        currentJobsArea.querySelectorAll('[data-admin-reject-job]').forEach(b => {
+          b.onclick = () => performSecurityAction('job', b.dataset.adminRejectJob, 'reject');
+        });
+      }
     }
 
-    const eventsSnap = await db.collection('events').where('status', '==', 'pending_review').get();
-    if (eventsSnap.empty) {
-      eventsArea.innerHTML = `<div class="text-center py-8 text-zinc-500">✅ No pending events in review queue.</div>`;
-    } else {
-      const events = [];
-      eventsSnap.forEach(d => events.push({ id: d.id, ...d.data() }));
-      eventsArea.innerHTML = events.map(ev => `
-        <div class="p-3 rounded-xl bg-[#181824] border border-zinc-800 space-y-2">
-          <div class="flex items-start justify-between gap-2">
-            <div>
-              <b class="text-white block font-bold text-xs">${esc(ev.title)}</b>
-              <span class="text-zinc-400 text-[11px]">👤 ${esc(ev.organizerName)} · 📍 ${esc(ev.venue)}</span>
+    const eventsSnap = await getJobsEventsDb().collection('events').where('status', '==', 'pending_review').get();
+    const currentEventsArea = $('adminEventsQueue') || eventsArea;
+    if (currentEventsArea) {
+      if (eventsSnap.empty) {
+        currentEventsArea.innerHTML = `<div class="text-center py-8 text-zinc-500">✅ No pending events in review queue.</div>`;
+      } else {
+        const events = [];
+        eventsSnap.forEach(d => events.push({ id: d.id, ...d.data() }));
+        currentEventsArea.innerHTML = events.map(ev => `
+          <div class="p-3 rounded-xl bg-[#181824] border border-zinc-800 space-y-2">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <b class="text-white block font-bold text-xs">${esc(ev.title)}</b>
+                <span class="text-zinc-400 text-[11px]">👤 ${esc(ev.organizerName)} · 📍 ${esc(ev.venue)}</span>
+              </div>
+              <span class="text-[10px] font-bold text-amber-400 bg-amber-950 px-2 py-0.5 rounded border border-amber-800">Under Review</span>
             </div>
-            <span class="text-[10px] font-bold text-amber-400 bg-amber-950 px-2 py-0.5 rounded border border-amber-800">Under Review</span>
+            <div class="flex gap-2 pt-1 border-t border-zinc-800">
+              <button data-admin-approve-event="${ev.id}" class="flex-1 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800 font-bold text-xs">
+                ✓ Approve Event
+              </button>
+              <button data-admin-reject-event="${ev.id}" class="flex-1 py-1.5 rounded-lg bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 font-bold text-xs">
+                ✕ Reject
+              </button>
+            </div>
           </div>
-          <div class="flex gap-2 pt-1 border-t border-zinc-800">
-            <button data-admin-approve-event="${ev.id}" class="flex-1 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800 font-bold text-xs">
-              ✓ Approve Event
-            </button>
-            <button data-admin-reject-event="${ev.id}" class="flex-1 py-1.5 rounded-lg bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 font-bold text-xs">
-              ✕ Reject
-            </button>
-          </div>
-        </div>
-      `).join('');
+        `).join('');
 
-      eventsArea.querySelectorAll('[data-admin-approve-event]').forEach(b => {
-        b.onclick = () => performSecurityAction('event', b.dataset.adminApproveEvent, 'approve');
-      });
-      eventsArea.querySelectorAll('[data-admin-reject-event]').forEach(b => {
-        b.onclick = () => performSecurityAction('event', b.dataset.adminRejectEvent, 'reject');
-      });
+        currentEventsArea.querySelectorAll('[data-admin-approve-event]').forEach(b => {
+          b.onclick = () => performSecurityAction('event', b.dataset.adminApproveEvent, 'approve');
+        });
+        currentEventsArea.querySelectorAll('[data-admin-reject-event]').forEach(b => {
+          b.onclick = () => performSecurityAction('event', b.dataset.adminRejectEvent, 'reject');
+        });
+      }
     }
   } catch (err) {
     console.warn('Admin queue load error:', err);

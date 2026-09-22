@@ -600,6 +600,150 @@ input, textarea, select { color: #ffffff !important; }
 .sf-dialog-chip{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#d4d4d8;font-size:11px;padding:4px 9px;border-radius:999px;cursor:pointer;transition:all .15s ease}
 .sf-dialog-chip:hover{background:rgba(245,185,66,0.15);border-color:rgba(245,185,66,0.4);color:#f5b942}
 
+/* ==========================================================================
+   SELLERFLOW DEVICE-AWARE RESPONSIVE & OVERFLOW PREVENTION ENGINE
+   Dynamically adapts layouts for Mobile, Tablet, and Desktop screens so that
+   no content, cards, tables, headers, forms or modals can overflow and get hidden.
+   ========================================================================== */
+:root {
+  --sf-viewport-width: 100vw;
+  --sf-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --sf-safe-area-top: env(safe-area-inset-top, 0px);
+}
+
+/* Universal safe box constraint to prevent horizontal breakout on any screen */
+html, body, #app, #appMainScroll, #page, main, .app-shell-lock {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Guard long words, handles, emails, hashtags and code from pushing out container boundaries */
+p, span, h1, h2, h3, h4, h5, h6, b, strong, div, a, label, li, td, th {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+input, textarea, select {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Mobile & Touchscreen Detection Active State Overrides */
+html.is-mobile-device body,
+body[data-device-type="mobile"],
+body[data-device-type="tablet"] {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Mobile & Small Screen Layout Protection (<= 768px) */
+@media (max-width: 768px), (pointer: coarse) and (max-width: 900px) {
+  /* Prevent content area from clipping or bursting horizontally */
+  #page {
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Modal Card: Automatically adjust to safe mobile height & padding without overflowing viewport */
+  .modal-card {
+    width: 100% !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100dvh - 24px - env(safe-area-inset-bottom, 0px)) !important;
+    padding: 14px !important;
+    border-radius: 18px !important;
+    margin: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Chat window inside modal */
+  .modal-card:has(.chat-window), .modal-card.chat-modal-active {
+    height: calc(100dvh - 28px) !important;
+    max-height: calc(100dvh - 28px) !important;
+    padding: 12px !important;
+  }
+
+  /* Admin Security Dashboard grids on mobile */
+  .sf-dash-card {
+    min-height: 110px !important;
+    padding: 12px !important;
+    border-radius: 16px !important;
+  }
+  .sf-dash-card .text-2xl {
+    font-size: 1.25rem !important;
+  }
+
+  /* Settings items on mobile wrap smoothly instead of squishing */
+  .settings-item {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+  .settings-item > div:first-child {
+    font-size: 1.25rem !important;
+  }
+  .settings-item > button, .settings-item > .btn {
+    width: 100% !important;
+    justify-content: center !important;
+    margin-top: 4px !important;
+  }
+
+  /* Data tables and receipts auto-scroll gracefully instead of clipping */
+  table {
+    display: block !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+  th, td {
+    padding: 8px 10px !important;
+    font-size: 11.5px !important;
+  }
+
+  /* Confirmation Dialog Card on mobile */
+  .sf-dialog-card {
+    width: calc(100vw - 24px) !important;
+    max-width: 400px !important;
+    padding: 18px 16px !important;
+    max-height: calc(100dvh - 32px) !important;
+    overflow-y: auto !important;
+  }
+
+  /* Action headers & filter tabs on mobile */
+  .market-filter, .admin-tab {
+    padding: 6px 12px !important;
+    font-size: 11.5px !important;
+  }
+}
+
+/* Extra small mobile screens (<= 420px) */
+@media (max-width: 420px) {
+  .modal-card {
+    padding: 12px !important;
+    border-radius: 16px !important;
+  }
+  .card {
+    border-radius: 14px !important;
+    padding: 12px !important;
+  }
+}
+
+/* Desktop Precision State */
+@media (min-width: 769px) {
+  html.is-desktop-device body,
+  body[data-device-type="desktop"] {
+    overflow-y: auto;
+  }
+  .modal-card {
+    max-width: 760px;
+    max-height: 88vh;
+  }
+}
+
 @media print{
   @page{margin:6mm 8mm;size:auto}
   html,body{position:static!important;height:auto!important;min-height:100%!important;max-height:none!important;overflow:visible!important;background:#ffffff!important;color:#000000!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
@@ -914,6 +1058,84 @@ html.light-theme #devVerificationSandboxNotice {
     if(id==='backLanding'){showHomeFeed();if(typeof navigate==='function')navigate('feed');}
     if(id==='viewSignupTerms'){if(typeof ensureTerms==='function'&&typeof showTermsModal==='function')ensureTerms().then(()=>showTermsModal(false))}
   },true);
+})();
+</script>
+<script>
+/**
+ * SellerFlow Device Detector & Layout Guardian
+ * Accurately detects mobile vs tablet vs desktop environments using screen width,
+ * touch pointers, userAgent indicators, and orientation.
+ * Automatically synchronizes DOM classes, dataset attributes, and viewport variables
+ * so that no page content overflows or hides.
+ */
+(function initDeviceDetection() {
+  function detectDevice() {
+    const width = window.innerWidth || document.documentElement.clientWidth || screen.width;
+    const height = window.innerHeight || document.documentElement.clientHeight || screen.height;
+    const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+    const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+    const isMobileUA = /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const isTabletUA = /iPad|Tablet|PlayBook/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    let type = 'desktop';
+    if (width <= 640 || isMobileUA || (hasTouch && width < 768)) {
+      type = 'mobile';
+    } else if (width <= 1024 && (hasTouch || isTabletUA)) {
+      type = 'tablet';
+    } else {
+      type = 'desktop';
+    }
+
+    const isMobile = type === 'mobile';
+    const isTablet = type === 'tablet';
+    const isDesktop = type === 'desktop';
+
+    window.deviceInfo = {
+      type: type,
+      isMobile: isMobile,
+      isTablet: isTablet,
+      isDesktop: isDesktop,
+      hasTouch: hasTouch,
+      width: width,
+      height: height,
+      orientation: width > height ? 'landscape' : 'portrait'
+    };
+
+    // Reflect on html and body roots for direct CSS styling
+    const root = document.documentElement;
+    const body = document.body;
+
+    root.classList.toggle('is-mobile-device', isMobile);
+    root.classList.toggle('is-tablet-device', isTablet);
+    root.classList.toggle('is-desktop-device', isDesktop);
+    root.classList.toggle('has-touch', hasTouch);
+
+    if (body) {
+      body.setAttribute('data-device-type', type);
+      body.setAttribute('data-touch', hasTouch ? 'true' : 'false');
+      body.classList.toggle('is-mobile-device', isMobile);
+      body.classList.toggle('is-desktop-device', isDesktop);
+    }
+
+    // Set precise css variable for viewport width calculation
+    root.style.setProperty('--sf-viewport-width', width + 'px');
+  }
+
+  // Run immediately on boot
+  detectDevice();
+
+  // Watch for window resize, orientation change, or zoom
+  let resizeTimer = null;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(detectDevice, 80);
+  }, { passive: true });
+
+  window.addEventListener('orientationchange', function() {
+    setTimeout(detectDevice, 100);
+  }, { passive: true });
+
+  document.addEventListener('DOMContentLoaded', detectDevice);
 })();
 </script>
 <script>
@@ -2380,7 +2602,47 @@ try {
     }
   }
 } catch(_) {}
-const $=id=>document.getElementById(id), show=e=>e?.classList.remove('hide'), hide=e=>e?.classList.add('hide');
+function _createSafeNullElement(id) {
+  return new Proxy({}, {
+    get(target, prop) {
+      if (prop === 'id') return String(id || '');
+      if (prop === 'classList') {
+        return {
+          add: () => {},
+          remove: () => {},
+          toggle: () => false,
+          contains: () => false
+        };
+      }
+      if (prop === 'style') {
+        return new Proxy({}, {
+          get: () => '',
+          set: () => true
+        });
+      }
+      if (prop === 'dataset') return {};
+      if (typeof prop === 'string' && prop.startsWith('on')) return null;
+      if (['addEventListener', 'removeEventListener', 'setAttribute', 'removeAttribute', 'appendChild', 'removeChild', 'replaceChild', 'insertAdjacentHTML', 'focus', 'blur', 'click', 'scrollIntoView', 'scroll', 'scrollTo'].includes(prop)) {
+        return () => {};
+      }
+      if (prop === 'querySelector') return () => null;
+      if (prop === 'querySelectorAll') return () => [];
+      if (prop === 'innerHTML' || prop === 'innerText' || prop === 'textContent' || prop === 'value' || prop === 'src' || prop === 'href') {
+        return '';
+      }
+      return undefined;
+    },
+    set(target, prop, value) {
+      return true;
+    }
+  });
+}
+
+const $ = id => document.getElementById(id) || _createSafeNullElement(id);
+window.$ = $;
+const show = e => { if (e && e.classList) e.classList.remove('hide'); };
+const hide = e => { if (e && e.classList) e.classList.add('hide'); };
+
 function esc(v=''){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function money(n){return new Intl.NumberFormat('en-GH',{style:'currency',currency:'GHS',maximumFractionDigits:2}).format(Number(n)||0)}
 function ts(v){return v?.toMillis?v.toMillis():v?.seconds?v.seconds*1000:0}
@@ -4769,12 +5031,20 @@ window.getSellerReviewsSummary = getSellerReviewsSummary;
 window.getSellerLocation = getSellerLocation;
 let _prefetchedPages = new Set();
 function prefetchPage(page){
-  if(!page || _prefetchedPages.has(page) || !currentUser) return;
+  if(!page || _prefetchedPages.has(page)) return;
   _prefetchedPages.add(page);
   setTimeout(() => _prefetchedPages.delete(page), 45000);
   
   try {
-    if(page === 'marketplace' || page === 'products'){
+    if(page === 'jobs'){
+      if(typeof window._sfPrefetchJobs === 'function'){
+        window._sfPrefetchJobs();
+      }
+    } else if(page === 'events'){
+      if(typeof window._sfPrefetchEvents === 'function'){
+        window._sfPrefetchEvents();
+      }
+    } else if(page === 'marketplace' || page === 'products'){
       if(!window._cachedStores || !window._cachedProducts){
         Promise.all([
           getDocs(query(collection(db,'stores'),limit(100))),
@@ -4785,7 +5055,7 @@ function prefetchPage(page){
           _lastMarketplaceFetchTime = Date.now();
         }).catch(()=>{});
       }
-    } else if(page === 'orders'){
+    } else if(page === 'orders' && currentUser){
       if(!window._cachedUserOrders){
         Promise.all([
           getDocs(query(collection(db,'orders'), where('buyerId','==',currentUser.uid), limit(100))),
@@ -4796,13 +5066,13 @@ function prefetchPage(page){
           window._cachedUserOrders = { mine, sales, timestamp: Date.now() };
         }).catch(()=>{});
       }
-    } else if(page === 'chats'){
+    } else if(page === 'chats' && currentUser){
       if(!window._cachedConversations){
         getDocs(query(collection(db,'conversations'),where('participants','array-contains',currentUser.uid),limit(100))).then(snap => {
           window._cachedConversations = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ts(b.updatedAt)-ts(a.updatedAt));
         }).catch(()=>{});
       }
-    } else if(page === 'profile'){
+    } else if(page === 'profile' && currentUser){
       if(!window._cachedProfileData?.[currentUser.uid]){
         Promise.all([
           getDocs(query(collection(db,'posts'),where('sellerId','==',currentUser.uid),limit(100))).catch(()=>({docs:[]})),
@@ -5039,6 +5309,76 @@ function renderPageLoadingSkeleton(page, targetPostId, options = {}){
                   <div class="w-12 h-3 rounded bg-[#202028]"></div>
                 </div>
                 <div class="w-3/4 h-3 rounded bg-[#202028]"></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if(page === 'jobs'){
+    pageEl.innerHTML = `
+      <div class="max-w-6xl w-full max-w-full mx-auto px-2.5 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
+          <div class="space-y-2">
+            <div class="w-48 sm:w-64 h-7 rounded-xl bg-[#1a1a24] sf-shimmer-box"></div>
+            <div class="w-36 sm:w-52 h-3.5 rounded bg-[#15151e] sf-shimmer-box"></div>
+          </div>
+          <div class="w-32 h-9 rounded-xl bg-amber-500/20 sf-shimmer-box"></div>
+        </div>
+        <div class="flex gap-2 border-b border-zinc-800 pb-2">
+          <div class="w-28 h-8 rounded-xl bg-amber-500/20 sf-shimmer-box"></div>
+          <div class="w-32 h-8 rounded-xl bg-[#14141e] sf-shimmer-box"></div>
+          <div class="w-28 h-8 rounded-xl bg-[#14141e] sf-shimmer-box"></div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+          <div class="sm:col-span-6 h-10 rounded-xl bg-[#14141e] sf-shimmer-box"></div>
+          <div class="sm:col-span-3 h-10 rounded-xl bg-[#14141e] sf-shimmer-box"></div>
+          <div class="sm:col-span-3 h-10 rounded-xl bg-[#14141e] sf-shimmer-box"></div>
+        </div>
+        <div class="space-y-3 pt-2">
+          ${[1,2,3,4].map(() => `
+            <div class="p-4 rounded-2xl bg-[#14141e] border border-zinc-800/80 space-y-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-[#20202c] sf-shimmer-box shrink-0"></div>
+                <div class="flex-1 space-y-1.5">
+                  <div class="w-1/3 h-4 rounded bg-[#262634] sf-shimmer-box"></div>
+                  <div class="w-1/4 h-3 rounded bg-[#1c1c24] sf-shimmer-box"></div>
+                </div>
+              </div>
+              <div class="w-full h-8 rounded-lg bg-[#181822] sf-shimmer-box"></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if(page === 'events'){
+    pageEl.innerHTML = `
+      <div class="max-w-6xl w-full max-w-full mx-auto px-2.5 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
+          <div class="space-y-2">
+            <div class="w-48 sm:w-64 h-7 rounded-xl bg-[#1a1a24] sf-shimmer-box"></div>
+            <div class="w-36 sm:w-52 h-3.5 rounded bg-[#15151e] sf-shimmer-box"></div>
+          </div>
+          <div class="w-32 h-9 rounded-xl bg-gold/20 sf-shimmer-box"></div>
+        </div>
+        <div class="flex gap-2 border-b border-zinc-800 pb-2">
+          <div class="w-28 h-8 rounded-xl bg-amber-500/20 sf-shimmer-box"></div>
+          <div class="w-32 h-8 rounded-xl bg-[#14141e] sf-shimmer-box"></div>
+          <div class="w-28 h-8 rounded-xl bg-[#14141e] sf-shimmer-box"></div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+          ${[1,2,3,4,5,6].map(() => `
+            <div class="rounded-2xl bg-[#14141e] border border-zinc-800/80 overflow-hidden space-y-3 pb-4">
+              <div class="h-36 w-full bg-[#20202c] sf-shimmer-box"></div>
+              <div class="px-4 space-y-2">
+                <div class="w-3/4 h-4 rounded bg-[#262634] sf-shimmer-box"></div>
+                <div class="w-1/2 h-3 rounded bg-[#1c1c24] sf-shimmer-box"></div>
               </div>
             </div>
           `).join('')}
@@ -5561,7 +5901,7 @@ if(typeof document !== 'undefined'){
 window._sfNavigationStack = window._sfNavigationStack || [];
 
 async function navigate(page, targetPostId, options){
-  if(!currentUser && page !== 'feed' && page !== 'marketplace' && page !== 'products' && page !== 'update'){
+  if(!currentUser && page !== 'feed' && page !== 'marketplace' && page !== 'products' && page !== 'update' && page !== 'jobs' && page !== 'events'){
     const promptMsg = page === 'store' ? 'view verified stores and seller catalogues'
       : (page === 'orders' ? 'make orders and track deliveries'
       : (page === 'cart' ? 'view your cart and make an order'
@@ -5625,6 +5965,14 @@ async function navigate(page, targetPostId, options){
     $('retryPage').onclick=()=>navigate(page);
   }finally{
     completePageProgress();
+    // Safety check: ensure main scroller and page container clear any accidental horizontal overflow
+    try {
+      const pageEl = document.getElementById('page');
+      if (pageEl && pageEl.scrollWidth > window.innerWidth) {
+        pageEl.style.maxWidth = '100vw';
+        pageEl.style.overflowX = 'hidden';
+      }
+    } catch (_) {}
   }
 }
 window.openFeedWithPost=function(postId, options={}){
@@ -5802,8 +6150,8 @@ async function renderPage(targetPostId, options){
     admin:renderAdmin,
     update:renderSellerFlowUpdatePage,
     chats:renderChats,
-    jobs: typeof renderJobs === 'function' ? renderJobs : renderFeed,
-    events: typeof renderEvents === 'function' ? renderEvents : renderFeed
+    jobs: (targetPostId, options) => (typeof window.renderJobs === 'function' ? window.renderJobs(targetPostId, options) : (typeof renderJobs === 'function' ? renderJobs(targetPostId, options) : renderFeed(targetPostId, options))),
+    events: (targetPostId, options) => (typeof window.renderEvents === 'function' ? window.renderEvents(targetPostId, options) : (typeof renderEvents === 'function' ? renderEvents(targetPostId, options) : renderFeed(targetPostId, options)))
   };
   await (map[currentPage]||renderFeed)(targetPostId, options);
   updateCartBadge();
@@ -6294,6 +6642,14 @@ function postCard(p, idx = 0){
   const isCopyrightMuted = !!(p.audioMutedByCopyright || p.copyrightDetected);
   if(window._sfCachedPosts) window._sfCachedPosts.set(p.id, p);
 
+  const postCategoryBadge = p.category === 'marketing'
+    ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm shrink-0 whitespace-nowrap" title="Category: Marketing"><span>🛍️</span><span>Marketing</span></span>`
+    : (p.category === 'job_vacancy'
+      ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm shrink-0 whitespace-nowrap" title="Category: Job Vacancy"><span>💼</span><span>Job Vacancy</span></span>`
+      : (p.category === 'event'
+        ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm shrink-0 whitespace-nowrap" title="Category: Event"><span>🎟️</span><span>Event</span></span>`
+        : ''));
+
   // Default sound state is unmuted on app open/start until user explicitly mutes
   const isSoundUnmuted = window._sfUserUnmuted !== false;
 
@@ -6323,7 +6679,7 @@ function postCard(p, idx = 0){
   }else{
     const audioEl = hasAudio ? `<audio class="reel-media reel-audio sf-feed-audio" src="${esc(p.soundUrl||p.audioUrl)}" data-post-id="${p.id}" data-copyright-muted="${isCopyrightMuted ? 'true' : 'false'}" ${isCopyrightMuted || !isSoundUnmuted ? 'muted' : ''} loop playsinline preload="${isFirst ? 'auto' : 'none'}"></audio>` : '';
     const soundBtnHtml = hasAudio ? `<button type="button" class="reel-sound-label sf-sound-toggle ${isSoundUnmuted ? 'is-unmuted' : ''}" data-sound-toggle="${p.id}" title="${isSoundUnmuted ? 'Mute video sound' : 'Unmute video sound'}">${isSoundUnmuted ? '🔊 Sound on' : '🔇 Tap for sound'}</button>` : '';
-    media=`<div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"><div class="text-6xl mb-3">🛍️</div><div class="text-lg font-bold max-w-md">${esc(p.text||'SellerFlow post')}</div></div>${audioEl}${soundBtnHtml}`;
+    media=`<div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"><img src="/nav-emblem.svg" alt="SellerFlow" class="w-16 h-16 object-contain mb-3 drop-shadow-[0_2px_12px_rgba(245,158,11,0.3)]"><div class="text-lg font-bold max-w-md">${esc(p.text||'SellerFlow post')}</div></div>${audioEl}${soundBtnHtml}`;
   }
   const soundText=p.soundName||'Original sound';
   const avatarUrl=getUserAvatarUrl(s);
@@ -6439,6 +6795,7 @@ function postCard(p, idx = 0){
             <span>@${esc(s.username||'seller')}</span>
             ${verifyBadge(s)}
             ${businessCertBadge(s, 'compact')}
+            ${postCategoryBadge}
           </button>
           ${!isMine && !isFollowing ? `
             <button type="button" class="reel-follow-pill" data-reel-follow="${p.sellerId}">
@@ -19113,9 +19470,12 @@ init();
     const active = getActiveSound();
     modal(`<div>
       <div class="flex items-center justify-between pb-3 border-b border-[#262626]">
-        <div>
-          <h2 class="text-xl font-black text-white">Create post</h2>
-          <p class="muted text-xs">Upload, crop, select resolution & edit photos or videos (up to 3 mins / 180s) for SellerFlow.</p>
+        <div class="flex items-center gap-2.5">
+          <img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-7 h-7 object-contain drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)]" />
+          <div>
+            <h2 class="text-xl font-black text-white">Create post</h2>
+            <p class="muted text-xs">Upload, crop, select resolution & edit photos or videos (up to 3 mins / 180s) for SellerFlow.</p>
+          </div>
         </div>
       </div>
       <div class="mt-4">
@@ -19164,6 +19524,41 @@ init();
         </div>
       </div>
 
+      <!-- Mandatory Post Category Selection -->
+      <div class="mt-4">
+        <label class="block text-xs font-semibold text-zinc-300 mb-1.5 flex items-center justify-between">
+          <span class="flex items-center gap-1.5">
+            <span>Post Category</span>
+            <span class="text-rose-400 font-bold">*</span>
+          </span>
+          <span id="postCategoryHint" class="text-[11px] text-amber-400 font-medium">Select one required</span>
+        </label>
+        <div class="grid grid-cols-3 gap-2" id="postCategorySelector">
+          <label class="cursor-pointer group relative">
+            <input type="radio" name="postCategory" value="marketing" class="sr-only peer" />
+            <div class="p-2.5 sm:p-3 rounded-xl bg-[#191919] border border-[#333] hover:border-[#555] peer-checked:border-gold peer-checked:bg-amber-500/15 peer-checked:text-amber-300 text-zinc-300 transition text-center flex flex-col items-center justify-center gap-1 shadow-sm">
+              <span class="text-lg sm:text-xl">🛍️</span>
+              <span class="text-xs font-bold whitespace-nowrap">Marketing</span>
+            </div>
+          </label>
+          <label class="cursor-pointer group relative">
+            <input type="radio" name="postCategory" value="job_vacancy" class="sr-only peer" />
+            <div class="p-2.5 sm:p-3 rounded-xl bg-[#191919] border border-[#333] hover:border-[#555] peer-checked:border-gold peer-checked:bg-amber-500/15 peer-checked:text-amber-300 text-zinc-300 transition text-center flex flex-col items-center justify-center gap-1 shadow-sm">
+              <span class="text-lg sm:text-xl">💼</span>
+              <span class="text-xs font-bold whitespace-nowrap">Job Vacancy</span>
+            </div>
+          </label>
+          <label class="cursor-pointer group relative">
+            <input type="radio" name="postCategory" value="event" class="sr-only peer" />
+            <div class="p-2.5 sm:p-3 rounded-xl bg-[#191919] border border-[#333] hover:border-[#555] peer-checked:border-gold peer-checked:bg-amber-500/15 peer-checked:text-amber-300 text-zinc-300 transition text-center flex flex-col items-center justify-center gap-1 shadow-sm">
+              <span class="text-lg sm:text-xl">🎟️</span>
+              <span class="text-xs font-bold whitespace-nowrap">Event</span>
+            </div>
+          </label>
+        </div>
+        <div id="postCategoryError" class="text-xs text-rose-400 mt-1.5 font-semibold hidden"></div>
+      </div>
+
       ${active?`
       <div class="sound-chip mt-3 p-2.5 rounded-xl bg-[#1a1710] border border-gold/40 text-xs text-gold flex items-center justify-between gap-2 shadow-sm">
         <div class="flex items-center gap-2 truncate">
@@ -19194,6 +19589,12 @@ init();
           t.value=(t.value.trim()+' '+tag).trim()+' ';
         }
       };
+    });
+
+    document.querySelectorAll('input[name="postCategory"]').forEach(r => {
+      r.addEventListener('change', () => {
+        $('postCategoryError')?.classList.add('hidden');
+      });
     });
 
     const SF_PHOTO_FILTERS = [
@@ -20718,6 +21119,19 @@ init();
         const text = $('postText').value.trim();
         const isAiGenerated = !!$('aiGeneratedCheckbox')?.checked;
         const privacy = $('postPrivacySelect')?.value || 'public';
+        const catRadio = document.querySelector('input[name="postCategory"]:checked');
+        const postCategory = catRadio?.value || '';
+        const catErr = $('postCategoryError');
+        if(!postCategory){
+          if(catErr){
+            catErr.textContent = 'Please categorize your post: select Marketing, Job Vacancy, or Event.';
+            catErr.classList.remove('hidden');
+          }
+          $('postCategorySelector')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          throw Error('Please categorize your post (Marketing, Job Vacancy, or Event) before publishing.');
+        } else if(catErr){
+          catErr.classList.add('hidden');
+        }
         if(!text && !file) throw Error('Add text or media to publish.');
         
         if(file && kind === 'video'){
@@ -20886,6 +21300,8 @@ init();
         const postData = {
           sellerId: currentUser.uid,
           text,
+          category: postCategory,
+          categoryLabel: postCategory === 'marketing' ? 'Marketing' : (postCategory === 'job_vacancy' ? 'Job Vacancy' : 'Event'),
           mediaUrl,
           mediaPath,
           mediaType,
@@ -28042,6 +28458,9 @@ FINANCIAL:
       }
       if (typeof window._cachedStores !== 'undefined') {
         window._cachedStores = null;
+      }
+      if (typeof window._sfInvalidateJobsEventsCache === 'function') {
+        window._sfInvalidateJobsEventsCache();
       }
 
       // 2. Fetch fresh user profile, public profiles, and notifications
