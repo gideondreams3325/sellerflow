@@ -1160,8 +1160,8 @@ function getOAuthCallbackUrl() {
   if (window.SELLERFLOW_APP_URL && typeof window.SELLERFLOW_APP_URL === 'string' && window.SELLERFLOW_APP_URL.startsWith('http')) {
     return window.SELLERFLOW_APP_URL.replace(/\/+$/, '') + '/oauth-callback';
   }
-  // Authorized Firebase domain fallback for SellerFlow (sellerflow-efaab)
-  return 'https://sellerflow-efaab.firebaseapp.com/oauth-callback';
+  // Live production domain for SellerFlow web and mobile OAuth callback
+  return 'https://sellerflow-tan.vercel.app/oauth-callback';
 }
 
 function getAppUrl() {
@@ -1176,7 +1176,7 @@ function getAppUrl() {
   if (window.SELLERFLOW_APP_URL && typeof window.SELLERFLOW_APP_URL === 'string' && window.SELLERFLOW_APP_URL.startsWith('http')) {
     return window.SELLERFLOW_APP_URL.replace(/\/+$/, '');
   }
-  return 'https://sellerflow-efaab.firebaseapp.com';
+  return 'https://sellerflow-tan.vercel.app';
 }
 
 async function handleCapacitorGoogleSignIn() {
