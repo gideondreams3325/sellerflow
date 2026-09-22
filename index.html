@@ -3401,7 +3401,7 @@ function getUserAvatarUrl(p){
     return SF_DEFAULT_AVATAR;
   }
 
-  let rawUrl = p.avatarUrl || p.photoURL || p.photoUrl || p.avatar || p.avatar_url || p.profilePic || p.profilePicture || p.picture || p.image || p.logoUrl || p.avatarPath || p.mediaPath || '';
+  let rawUrl = p.avatarUrl || p.photoURL || p.photoUrl || p.avatar || p.avatar_url || p.sellerAvatarUrl || p.authorAvatar || p.userAvatar || p.sellerAvatar || p.creatorAvatar || p.profilePic || p.profilePicture || p.picture || p.image || p.logoUrl || p.avatarPath || p.mediaPath || '';
   
   // Check active user session
   if(!rawUrl && currentUser && (p.uid === currentUser.uid || p.email === currentUser.email || p === currentUser || p === currentProfile || p.sellerId === currentUser.uid || p.ownerId === currentUser.uid)){
@@ -4850,6 +4850,23 @@ async function loadPublicProfiles(){
         window._cachedStores = storeList;
         try { localStorage.setItem('sf_cached_stores', JSON.stringify(storeList)); } catch(_) {}
       }
+
+      // Refresh any feed avatars that might have rendered with the default placeholder before public profiles finished loading
+      try {
+        if(currentPage === 'feed'){
+          document.querySelectorAll('.reel-avatar-img, [data-seller-avatar], [data-seller-sound-avatar]').forEach(img => {
+            const btn = img.closest('[data-open-seller]') || img.closest('[data-reel-card]') || img;
+            const sellerId = img.dataset.sellerAvatar || img.dataset.sellerSoundAvatar || btn.dataset?.openSeller;
+            if(sellerId && allPublicProfiles.has(sellerId)){
+              const pub = sellerProfile(sellerId);
+              const av = getUserAvatarUrl(pub);
+              if(av && !av.includes('default-avatar.svg') && (img.src.includes('default-avatar.svg') || img.src.startsWith('data:') || !img.src)){
+                img.src = av;
+              }
+            }
+          });
+        }
+      } catch(_) {}
     }catch(e){
       console.warn('Background public profiles load warning:',e);
     } finally {
@@ -4858,17 +4875,20 @@ async function loadPublicProfiles(){
   })();
   return _publicProfilesPromise;
 }
-function sellerProfile(uid){
+function sellerProfile(uid, fallbackData = null){
   if(!uid) return { uid: '', name: 'Seller', username: 'seller', verified: false, followers: [], following: [] };
   let base = allPublicProfiles.get(uid);
   if(currentUser && uid === currentUser.uid){
-    const activeAvatar = currentProfile?.avatarUrl || currentUser?.photoURL || base?.avatarUrl || '';
+    const activeAvatar = (!currentProfile?.avatarRemoved)
+      ? (currentProfile?.avatarUrl || currentProfile?.photoURL || currentProfile?.photoUrl || currentProfile?.avatar || currentProfile?.profilePic || currentUser?.photoURL || base?.avatarUrl || base?.photoURL || (fallbackData?.sellerAvatarUrl || fallbackData?.authorAvatar || fallbackData?.avatarUrl || fallbackData?.photoURL || ''))
+      : '';
     return {
       ...(base || {}),
+      ...(fallbackData || {}),
       ...(currentProfile || {}),
       uid,
-      name: currentProfile?.name || currentUser.displayName || base?.name || 'Seller',
-      username: currentProfile?.username || base?.username || 'seller',
+      name: currentProfile?.name || currentUser.displayName || base?.name || fallbackData?.sellerName || fallbackData?.name || 'Seller',
+      username: currentProfile?.username || base?.username || fallbackData?.sellerUsername || fallbackData?.username || 'seller',
       avatarUrl: activeAvatar,
       photoURL: activeAvatar,
       verified: isAdmin ? true : (currentProfile?.verified || base?.verified || false),
@@ -4876,6 +4896,21 @@ function sellerProfile(uid){
       businessVerified: isAdmin ? true : (currentProfile?.businessVerified || base?.businessVerified || false),
       role: isAdmin ? 'admin' : (currentProfile?.role || base?.role || 'seller')
     };
+  }
+  if(!base && fallbackData){
+    const fallbackAvatar = fallbackData?.sellerAvatarUrl || fallbackData?.authorAvatar || fallbackData?.avatarUrl || fallbackData?.userPhoto || fallbackData?.sellerAvatar || fallbackData?.creatorAvatar || fallbackData?.photoURL || fallbackData?.avatar || '';
+    if(fallbackAvatar || fallbackData?.sellerName || fallbackData?.sellerUsername || fallbackData?.name){
+      return {
+        uid,
+        name: fallbackData.sellerName || fallbackData.authorName || fallbackData.name || 'Seller',
+        username: fallbackData.sellerUsername || fallbackData.username || 'seller',
+        avatarUrl: fallbackAvatar,
+        photoURL: fallbackAvatar,
+        verified: !!fallbackData.verified,
+        followers: [],
+        following: []
+      };
+    }
   }
   if(!base){
     return { uid, name: 'Seller', username: 'seller', verified: false, followers: [], following: [] };
@@ -5004,7 +5039,83 @@ async function ensureFeedStoresChecked(posts){
 }
 window.ensureFeedStoresChecked = ensureFeedStoresChecked;
 
+const checkedSellerProfiles = window._sfCheckedSellerProfiles = window._sfCheckedSellerProfiles || new Set();
+async function ensureFeedProfilesChecked(posts){
+  if(!Array.isArray(posts) || !posts.length) return;
+  const unknownSellerIds = [...new Set(posts.map(p => p.sellerId).filter(id => id && (!allPublicProfiles.has(id) || (!allPublicProfiles.get(id)?.avatarUrl && !allPublicProfiles.get(id)?.photoURL && !allPublicProfiles.get(id)?.avatarRemoved))))];
+  if(!unknownSellerIds.length) return;
+  
+  await Promise.all(unknownSellerIds.slice(0, 30).map(async (uid) => {
+    if(checkedSellerProfiles.has(uid) && allPublicProfiles.has(uid) && (allPublicProfiles.get(uid)?.avatarUrl || allPublicProfiles.get(uid)?.photoURL)) return;
+    checkedSellerProfiles.add(uid);
+    try {
+      let profData = null;
+      // 1. Try publicProfiles collection first
+      const pubSnap = await getDoc(doc(db, 'publicProfiles', uid));
+      if(snapshotExists(pubSnap)){
+        profData = { uid: pubSnap.id, ...pubSnap.data() };
+      }
+      // 2. If missing or no avatar in publicProfiles, check users collection
+      if(!profData?.avatarUrl && !profData?.photoURL){
+        const userSnap = await getDoc(doc(db, 'users', uid)).catch(()=>null);
+        if(userSnap && snapshotExists(userSnap)){
+          profData = { ...(profData || {}), uid: userSnap.id, ...userSnap.data() };
+        }
+      }
+      if(profData){
+        const existing = allPublicProfiles.get(uid) || {};
+        const merged = { ...existing, ...profData };
+        allPublicProfiles.set(uid, merged);
+        const resolvedAvatar = getUserAvatarUrl(merged);
+        if(resolvedAvatar && !resolvedAvatar.includes('default-avatar.svg')){
+          document.querySelectorAll(`[data-seller-avatar="${uid}"]`).forEach(img => {
+            img.src = resolvedAvatar;
+          });
+          document.querySelectorAll(`[data-seller-sound-avatar="${uid}"]`).forEach(img => {
+            img.src = resolvedAvatar;
+          });
+          document.querySelectorAll(`[data-open-seller="${uid}"] img.reel-avatar-img`).forEach(img => {
+            img.src = resolvedAvatar;
+          });
+        }
+        if(merged.username && merged.username !== 'seller'){
+          document.querySelectorAll(`[data-open-seller="${uid}"] span`).forEach(span => {
+            if(span.textContent && (span.textContent.startsWith('@seller') || span.textContent === '@seller')){
+              span.textContent = `@${merged.username}`;
+            }
+          });
+        }
+      }
+    } catch(err) {
+      console.warn('Feed seller profile resolution warning:', err);
+    }
+  }));
+}
+window.ensureFeedProfilesChecked = ensureFeedProfilesChecked;
+
 document.addEventListener('click', (e) => {
+  const jobBtn = e.target.closest('[data-open-job-post]');
+  if(jobBtn){
+    e.stopPropagation();
+    const pId = jobBtn.dataset.openJobPost;
+    if(typeof window.openJobDetailModal === 'function'){
+      window.openJobDetailModal(pId);
+    } else if(typeof navigate === 'function'){
+      navigate('jobs');
+    }
+    return;
+  }
+  const eventBtn = e.target.closest('[data-open-event-post]');
+  if(eventBtn){
+    e.stopPropagation();
+    const pId = eventBtn.dataset.openEventPost;
+    if(typeof window.openEventDetailModal === 'function'){
+      window.openEventDetailModal(pId);
+    } else if(typeof navigate === 'function'){
+      navigate('events');
+    }
+    return;
+  }
   const orderBtn = e.target.closest('[data-order-store]');
   if(orderBtn){
     e.stopPropagation();
@@ -6591,6 +6702,10 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
     const pList = feedPosts || [];
     ensureFeedStoresChecked(pList).catch(()=>{});
   }
+  if(typeof ensureFeedProfilesChecked === 'function') {
+    const pList = feedPosts || [];
+    ensureFeedProfilesChecked(pList).catch(()=>{});
+  }
   setupReelPlayback(targetPostId);
   if(typeof updateForYouWakeLock === 'function') updateForYouWakeLock();
 }
@@ -6665,7 +6780,7 @@ function businessCertBadge(s, mode='full'){
   return ` <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-300 border border-amber-500/40 shadow-sm shrink-0 whitespace-nowrap" title="Registered Business with Official Registration Certificate"><span>🏢</span><span>Registered Business</span></span>`;
 }
 function postCard(p, idx = 0){
-  const s=p.platformLabel==='SellerFlow'&&p.isAdminPost?{...sellerProfile(p.sellerId),name:'SellerFlow',username:'sellerflow',verified:true}:sellerProfile(p.sellerId);
+  const s=p.platformLabel==='SellerFlow'&&p.isAdminPost?{...sellerProfile(p.sellerId, p),name:'SellerFlow',username:'sellerflow',verified:true}:sellerProfile(p.sellerId, p);
   const liked=(p.likes||[]).includes(currentUser?.uid);
   const saved=(p.saves||[]).includes(currentUser?.uid);
   const isMine = currentUser && currentUser.uid === p.sellerId;
@@ -6714,7 +6829,7 @@ function postCard(p, idx = 0){
     media=`<div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"><img src="/nav-emblem.svg" alt="SellerFlow" class="w-16 h-16 object-contain mb-3 drop-shadow-[0_2px_12px_rgba(245,158,11,0.3)]"><div class="text-lg font-bold max-w-md">${esc(p.text||'SellerFlow post')}</div></div>${audioEl}${soundBtnHtml}`;
   }
   const soundText=p.soundName||'Original sound';
-  const avatarUrl=getUserAvatarUrl(s);
+  const avatarUrl=getUserAvatarUrl(s) || (p.sellerAvatarUrl || p.authorAvatar || p.avatarUrl ? getUserAvatarUrl(p.sellerAvatarUrl || p.authorAvatar || p.avatarUrl) : SF_DEFAULT_AVATAR);
 
   return `
     <article class="reel-card" data-reel-id="${p.id}" data-copyright-muted="${isCopyrightMuted ? 'true' : 'false'}">
@@ -6731,7 +6846,7 @@ function postCard(p, idx = 0){
         <!-- 1. Creator avatar with follow '+' button nested underneath -->
         <div class="reel-creator-stack">
           <button type="button" class="reel-avatar-btn" data-open-seller="${p.sellerId}" title="View @${esc(s.username||'seller')}">
-            <img src="${esc(avatarUrl)}" loading="${isFirst ? 'eager' : 'lazy'}" decoding="async" referrerpolicy="no-referrer" class="reel-avatar-img rounded-full object-cover" alt="${esc(s.username||'seller')}" onerror="window.__sfAvatarFallback(this)">
+            <img src="${esc(avatarUrl)}" data-seller-avatar="${p.sellerId}" loading="${isFirst ? 'eager' : 'lazy'}" decoding="async" referrerpolicy="no-referrer" class="reel-avatar-img rounded-full object-cover" alt="${esc(s.username||'seller')}" onerror="window.__sfAvatarFallback(this)">
           </button>
           ${!isMine && !isFollowing ? `
             <button type="button" class="reel-follow-badge" data-reel-follow="${p.sellerId}" title="Follow @${esc(s.username||'seller')}">
@@ -6815,7 +6930,7 @@ function postCard(p, idx = 0){
         <!-- 7. Spinning audio disc with avatar artwork -->
         <div class="reel-action-group">
           <button type="button" class="reel-sound-disc" data-post-action="sound" data-id="${p.id}" title="Sound: ${esc(soundText)}">
-            <img src="${esc(avatarUrl)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" class="w-6 h-6 rounded-full object-cover pointer-events-none" alt="" onerror="window.__sfAvatarFallback(this)">
+            <img src="${esc(avatarUrl)}" data-seller-sound-avatar="${p.sellerId}" loading="lazy" decoding="async" referrerpolicy="no-referrer" class="w-6 h-6 rounded-full object-cover pointer-events-none" alt="" onerror="window.__sfAvatarFallback(this)">
           </button>
         </div>
       </div>
@@ -6834,7 +6949,15 @@ function postCard(p, idx = 0){
               Follow
             </button>
           ` : ''}
-          ${hasSellerStore(p.sellerId) ? `
+          ${p.category === 'job_vacancy' ? `
+            <button type="button" class="reel-job-btn px-2.5 py-1 rounded-full text-xs font-black bg-amber-500 text-black hover:brightness-110 active:scale-95 transition flex items-center gap-1 shadow-md" data-open-job-post="${p.id}" title="View Job Details & Apply">
+              <span>💼</span><span>VIEW JOB</span>
+            </button>
+          ` : (p.category === 'event' ? `
+            <button type="button" class="reel-event-btn px-2.5 py-1 rounded-full text-xs font-black bg-purple-600 text-white hover:brightness-110 active:scale-95 transition flex items-center gap-1 shadow-md" data-open-event-post="${p.id}" title="View Event Details & RSVP">
+              <span>🎟️</span><span>VIEW EVENT</span>
+            </button>
+          ` : (hasSellerStore(p.sellerId) ? `
             <button type="button" class="reel-order-btn" data-order-store="${p.sellerId}" title="Visit @${esc(s.username||'seller')}'s Store">
               <span>🛍️</span><span>VISIT store</span>
             </button>
@@ -6842,7 +6965,7 @@ function postCard(p, idx = 0){
             <button type="button" class="reel-no-store-tag" data-scam-notice="${p.sellerId}" title="Beware of scam: Seller has no official storefront. Tap to read scam notice.">
               <span>⚠️</span><span class="font-bold text-white">No Store</span><span class="text-[10px] text-amber-300 font-semibold">· Beware of scam</span>
             </button>
-          `}
+          `))}
         </div>
         ${p.text ? `<p class="reel-caption text-sm md:text-base text-zinc-100/95 leading-snug line-clamp-3 mb-2.5">${esc(p.text)}</p>` : ''}
         <div class="flex items-center gap-2">
@@ -18950,6 +19073,28 @@ init();
         openUserProfile(sId);
         return;
       }
+      const jobPostBtn = e.target.closest('[data-open-job-post]');
+      if(jobPostBtn){
+        e.stopPropagation();
+        const pId = jobPostBtn.dataset.openJobPost;
+        if(typeof window.openJobDetailModal === 'function'){
+          window.openJobDetailModal(pId);
+        } else if(typeof navigate === 'function'){
+          navigate('jobs');
+        }
+        return;
+      }
+      const eventPostBtn = e.target.closest('[data-open-event-post]');
+      if(eventPostBtn){
+        e.stopPropagation();
+        const pId = eventPostBtn.dataset.openEventPost;
+        if(typeof window.openEventDetailModal === 'function'){
+          window.openEventDetailModal(pId);
+        } else if(typeof navigate === 'function'){
+          navigate('events');
+        }
+        return;
+      }
       const orderBtn = e.target.closest('[data-order-store]');
       if(orderBtn){
         e.stopPropagation();
@@ -19030,6 +19175,9 @@ init();
       if(typeof ensureFeedStoresChecked === 'function') {
         ensureFeedStoresChecked(nextBatch).catch(()=>{});
       }
+      if(typeof ensureFeedProfilesChecked === 'function') {
+        ensureFeedProfilesChecked(nextBatch).catch(()=>{});
+      }
       isAppending = false;
     };
 
@@ -19041,6 +19189,9 @@ init();
 
     if(typeof ensureFeedStoresChecked === 'function') {
       ensureFeedStoresChecked(initialCards).catch(()=>{});
+    }
+    if(typeof ensureFeedProfilesChecked === 'function') {
+      ensureFeedProfilesChecked(initialCards).catch(()=>{});
     }
     setupReelPlayback(targetPostId);
   };
@@ -21331,8 +21482,15 @@ init();
         const activeFilterObj = SF_PHOTO_FILTERS.find(f => f.id === imageFilters.filter) || SF_PHOTO_FILTERS[0];
         const finalFilterCss = getCombinedFilterCss();
 
+        const activeAuthorAvatar = (!currentProfile?.avatarRemoved)
+          ? (currentProfile?.avatarUrl || currentProfile?.photoURL || currentUser.photoURL || '')
+          : '';
+
         const postData = {
           sellerId: currentUser.uid,
+          sellerName: currentProfile?.name || currentUser.displayName || 'SellerFlow User',
+          sellerUsername: currentProfile?.username || 'user',
+          sellerAvatarUrl: activeAuthorAvatar,
           text,
           category: postCategory,
           categoryLabel: postCategory === 'marketing' ? 'Marketing' : (postCategory === 'job_vacancy' ? 'Job Vacancy' : 'Event'),

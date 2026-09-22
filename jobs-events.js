@@ -91,37 +91,151 @@ function getJobsEventsDb() {
   if (typeof db !== 'undefined' && db && (typeof db.collection === 'function' || typeof db.doc === 'function')) {
     return db;
   }
-  if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
+  if (typeof firebase !== 'undefined') {
     try {
-      const d = firebase.firestore();
-      window.db = d;
-      return d;
+      if (firebase.apps && firebase.apps.length > 0) {
+        const d = firebase.firestore();
+        window.db = d;
+        return d;
+      }
+      if (typeof window.firebaseConfig !== 'undefined' || typeof firebaseConfig !== 'undefined') {
+        const cfg = window.firebaseConfig || (typeof firebaseConfig !== 'undefined' ? firebaseConfig : null);
+        if (cfg && firebase.initializeApp) {
+          const app = firebase.initializeApp(cfg);
+          const d = app.firestore();
+          window.db = d;
+          return d;
+        }
+      }
     } catch (_) {}
   }
   return {
     collection: (name) => ({
       doc: (id) => ({
-        get: async () => ({ exists: false, data: () => null }),
-        set: async () => {},
-        update: async () => {},
-        delete: async () => {}
+        get: async () => {
+          try {
+            const raw = localStorage.getItem('sf_mock_col_' + name);
+            const list = raw ? JSON.parse(raw) : [];
+            const item = list.find(x => x.id === id);
+            return item ? { exists: true, id, data: () => item } : { exists: false, data: () => null };
+          } catch (_) {
+            return { exists: false, data: () => null };
+          }
+        },
+        set: async (data, opt = {}) => {
+          try {
+            const raw = localStorage.getItem('sf_mock_col_' + name);
+            let list = raw ? JSON.parse(raw) : [];
+            const idx = list.findIndex(x => x.id === id);
+            const docObj = { id, ...(opt.merge && idx >= 0 ? list[idx] : {}), ...data };
+            if (idx >= 0) list[idx] = docObj;
+            else list.push(docObj);
+            localStorage.setItem('sf_mock_col_' + name, JSON.stringify(list));
+          } catch (_) {}
+        },
+        update: async (data) => {
+          try {
+            const raw = localStorage.getItem('sf_mock_col_' + name);
+            let list = raw ? JSON.parse(raw) : [];
+            const idx = list.findIndex(x => x.id === id);
+            if (idx >= 0) {
+              list[idx] = { ...list[idx], ...data };
+              localStorage.setItem('sf_mock_col_' + name, JSON.stringify(list));
+            }
+          } catch (_) {}
+        },
+        delete: async () => {
+          try {
+            const raw = localStorage.getItem('sf_mock_col_' + name);
+            let list = raw ? JSON.parse(raw) : [];
+            list = list.filter(x => x.id !== id);
+            localStorage.setItem('sf_mock_col_' + name, JSON.stringify(list));
+          } catch (_) {}
+        }
       }),
-      where: () => ({
+      where: (field, op, val) => ({
         where: () => ({
           limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
           get: async () => ({ empty: true, docs: [], forEach: () => {} })
         }),
-        limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
-        orderBy: () => ({ limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }), get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
-        get: async () => ({ empty: true, docs: [], forEach: () => {} })
+        limit: () => ({
+          get: async () => {
+            try {
+              const raw = localStorage.getItem('sf_mock_col_' + name);
+              const list = raw ? JSON.parse(raw) : [];
+              const matched = list.filter(x => (op === '==' ? x[field] === val : true));
+              return {
+                empty: matched.length === 0,
+                docs: matched.map(d => ({ id: d.id, data: () => d })),
+                forEach: (cb) => matched.forEach(d => cb({ id: d.id, data: () => d }))
+              };
+            } catch (_) {
+              return { empty: true, docs: [], forEach: () => {} };
+            }
+          }
+        }),
+        orderBy: () => ({
+          limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
+          get: async () => ({ empty: true, docs: [], forEach: () => {} })
+        }),
+        get: async () => {
+          try {
+            const raw = localStorage.getItem('sf_mock_col_' + name);
+            const list = raw ? JSON.parse(raw) : [];
+            const matched = list.filter(x => (op === '==' ? x[field] === val : true));
+            return {
+              empty: matched.length === 0,
+              docs: matched.map(d => ({ id: d.id, data: () => d })),
+              forEach: (cb) => matched.forEach(d => cb({ id: d.id, data: () => d }))
+            };
+          } catch (_) {
+            return { empty: true, docs: [], forEach: () => {} };
+          }
+        }
       }),
       orderBy: () => ({
         limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
         get: async () => ({ empty: true, docs: [], forEach: () => {} })
       }),
-      limit: () => ({ get: async () => ({ empty: true, docs: [], forEach: () => {} }) }),
-      get: async () => ({ empty: true, docs: [], forEach: () => {} }),
-      add: async () => ({ id: 'mock_' + Date.now() })
+      limit: (n) => ({
+        get: async () => {
+          try {
+            const raw = localStorage.getItem('sf_mock_col_' + name);
+            const list = raw ? JSON.parse(raw) : [];
+            const sliced = list.slice(0, n || 50);
+            return {
+              empty: sliced.length === 0,
+              docs: sliced.map(d => ({ id: d.id, data: () => d })),
+              forEach: (cb) => sliced.forEach(d => cb({ id: d.id, data: () => d }))
+            };
+          } catch (_) {
+            return { empty: true, docs: [], forEach: () => {} };
+          }
+        }
+      }),
+      get: async () => {
+        try {
+          const raw = localStorage.getItem('sf_mock_col_' + name);
+          const list = raw ? JSON.parse(raw) : [];
+          return {
+            empty: list.length === 0,
+            docs: list.map(d => ({ id: d.id, data: () => d })),
+            forEach: (cb) => list.forEach(d => cb({ id: d.id, data: () => d }))
+          };
+        } catch (_) {
+          return { empty: true, docs: [], forEach: () => {} };
+        }
+      },
+      add: async (data) => {
+        const id = 'sf_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+        try {
+          const raw = localStorage.getItem('sf_mock_col_' + name);
+          let list = raw ? JSON.parse(raw) : [];
+          list.push({ id, ...data });
+          localStorage.setItem('sf_mock_col_' + name, JSON.stringify(list));
+        } catch (_) {}
+        return { id };
+      }
     })
   };
 }
@@ -516,7 +630,7 @@ function openTermsAcceptanceModal(actionType = 'proceed') {
     try {
       btn.textContent = 'Saving...';
       btn.disabled = true;
-      const user = currentUser || (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
+      const user = getActiveUser();
       const uid = user ? user.uid : '';
       const token = user ? await user.getIdToken().catch(() => '') : '';
 
@@ -803,7 +917,7 @@ async function loadJobsFeed() {
     });
     currentList.querySelectorAll('[data-apply-job]').forEach(b => {
       b.onclick = async () => {
-        const eligible = await checkJobsEventsEligibility(currentUser, 'apply for this job');
+        const eligible = await checkJobsEventsEligibility(getActiveUser(), 'apply for this job');
         if (eligible) openApplyJobModal(b.dataset.applyJob);
       };
     });
@@ -1205,13 +1319,13 @@ async function openApplyJobModal(jobId) {
       <form id="applyJobForm" class="flex-1 overflow-y-auto pr-2 space-y-3.5 text-xs text-zinc-300">
         <div>
           <label class="block font-bold text-zinc-300 mb-1">Full Name *</label>
-          <input type="text" id="applicantName" required value="${_esc(currentProfile?.name || currentUser?.displayName || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
+          <input type="text" id="applicantName" required value="${_esc(getActiveProfile()?.name || getActiveUser()?.displayName || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block font-bold text-zinc-300 mb-1">Email Address *</label>
-            <input type="email" id="applicantEmail" required value="${_esc(currentUser?.email || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
+            <input type="email" id="applicantEmail" required value="${_esc(getActiveUser()?.email || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
           </div>
           <div>
             <label class="block font-bold text-zinc-300 mb-1">Phone Number (WhatsApp) *</label>
@@ -1456,7 +1570,7 @@ async function openJobDetailModal(jobId) {
     modal.querySelector('#detailCloseBtn').onclick = () => modal.remove();
     modal.querySelector('#detailApplyBtn').onclick = async () => {
       modal.remove();
-      const eligible = await checkJobsEventsEligibility(currentUser, 'apply for this job');
+      const eligible = await checkJobsEventsEligibility(getActiveUser(), 'apply for this job');
       if (eligible) openApplyJobModal(jobId);
     };
   } catch (err) {
@@ -1627,13 +1741,53 @@ async function renderEmployerDesk(container) {
           </button>
         </div>
       `;
-      _$('deskPostJobBtn')?.addEventListener('click', async () => {
+      target.querySelector('#deskPostJobBtn')?.addEventListener('click', async () => {
+        const eligible = await checkJobsEventsEligibility(getActiveUser(), 'post a job opening');
+        if (eligible) openPostJobModal();
+      });
+      return;
+    }
+
+    target.innerHTML = `
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-bold text-zinc-300">You have <b>${myJobs.length}</b> posted job listing(s)</p>
+          <button id="deskPostJobBtn2" class="px-3.5 py-1.5 rounded-xl bg-gold text-black font-extrabold text-xs hover:brightness-110 flex items-center gap-1 shadow-sm">
+            <span>＋</span><span>Post Another Job</span>
+          </button>
+        </div>
+        <div class="space-y-3">
+          ${myJobs.map(job => `
+            <div class="bg-[#14141e] border border-zinc-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="space-y-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h4 class="text-sm font-black text-white">${_esc(job.title)}</h4>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                    ${_esc(job.employmentType || 'Full-time')}
+                  </span>
+                </div>
+                <p class="text-xs text-zinc-400">🏢 ${_esc(job.companyName || 'Company')} · 📍 ${_esc(job.region || 'Accra')} (${_esc(job.locationType || 'On-site')})</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button data-view-job="${job.id}" class="px-3 py-1.5 rounded-xl border border-zinc-700 hover:bg-zinc-800 text-xs font-bold text-zinc-300 transition">
+                  Preview
+                </button>
+                <button data-view-applicants="${job.id}" class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-black hover:brightness-110 text-xs font-black transition shadow-sm">
+                  View Candidates
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+
+    target.querySelector('#deskPostJobBtn2')?.addEventListener('click', async () => {
       const eligible = await checkJobsEventsEligibility(getActiveUser(), 'post a job opening');
       if (eligible) openPostJobModal();
     });
-    _$('deskPostJobBtn2')?.addEventListener('click', async () => {
-      const eligible = await checkJobsEventsEligibility(getActiveUser(), 'post a job opening');
-      if (eligible) openPostJobModal();
+    target.querySelectorAll('[data-view-job]').forEach(b => {
+      b.onclick = () => openJobDetailModal(b.dataset.viewJob);
     });
     target.querySelectorAll('[data-view-applicants]').forEach(b => {
       b.onclick = () => openApplicantsModal(b.dataset.viewApplicants);
@@ -2013,7 +2167,7 @@ async function loadEventsFeed() {
 
     currentList.querySelectorAll('[data-register-event]').forEach(b => {
       b.onclick = async () => {
-        const eligible = await checkJobsEventsEligibility(currentUser, 'register for this event');
+        const eligible = await checkJobsEventsEligibility(getActiveUser(), 'register for this event');
         if (eligible) openRegisterEventModal(b.dataset.registerEvent);
       };
     });
@@ -2112,7 +2266,7 @@ async function openEventDetailModal(eventId) {
   modal.querySelector('#eventDetailCloseBtn').onclick = () => modal.remove();
   modal.querySelector('#eventDetailRegisterBtn').onclick = async () => {
     modal.remove();
-    const eligible = await checkJobsEventsEligibility(currentUser, 'register for this event');
+    const eligible = await checkJobsEventsEligibility(getActiveUser(), 'register for this event');
     if (eligible) openRegisterEventModal(eventId);
   };
 }
@@ -2166,7 +2320,7 @@ function openCreateEventModal() {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block font-bold text-zinc-300 mb-1">Organizer / Host Name *</label>
-            <input type="text" id="eventOrganizer" required value="${_esc(currentProfile?.name || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
+            <input type="text" id="eventOrganizer" required value="${_esc(getActiveProfile()?.name || getActiveUser()?.displayName || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
           </div>
           <div>
             <label class="block font-bold text-zinc-300 mb-1">Category *</label>
@@ -2431,12 +2585,12 @@ async function openRegisterEventModal(eventId) {
       <form id="registerEventForm" class="space-y-3 text-xs text-zinc-300">
         <div>
           <label class="block font-bold text-zinc-300 mb-1">Attendee Name *</label>
-          <input type="text" id="regName" required value="${_esc(currentProfile?.name || currentUser?.displayName || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
+          <input type="text" id="regName" required value="${_esc(getActiveProfile()?.name || getActiveUser()?.displayName || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
         </div>
 
         <div>
           <label class="block font-bold text-zinc-300 mb-1">Email Address *</label>
-          <input type="email" id="regEmail" required value="${_esc(currentUser?.email || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
+          <input type="email" id="regEmail" required value="${_esc(getActiveUser()?.email || '')}" class="w-full bg-[#12121a] border border-zinc-800 rounded-xl px-3 py-2 text-white text-xs focus:border-gold/60 focus:outline-none" />
         </div>
 
         <div>
