@@ -67,6 +67,26 @@ if (fs.existsSync(dataDir)) {
   }
 }
 
+// Copy src directory assets (such as profile pictures) to dist/src
+const srcDir = path.resolve('src');
+const distSrcDir = path.join(distDir, 'src');
+if (fs.existsSync(srcDir)) {
+  try {
+    fs.cpSync(srcDir, distSrcDir, { recursive: true });
+    copiedCount++;
+  } catch (_) {}
+}
+
+// Copy uploads directory to dist/uploads
+const uploadsDir = path.resolve('uploads');
+const distUploadsDir = path.join(distDir, 'uploads');
+if (fs.existsSync(uploadsDir)) {
+  try {
+    fs.cpSync(uploadsDir, distUploadsDir, { recursive: true });
+    copiedCount++;
+  } catch (_) {}
+}
+
 const androidPublicDir = path.resolve('android/app/src/main/assets/public');
 if (fs.existsSync(androidPublicDir)) {
   try {
