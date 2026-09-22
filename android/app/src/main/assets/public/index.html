@@ -1150,23 +1150,33 @@ const signInWithPopup=(auth,provider)=>auth.signInWithPopup(provider);
 
 function getOAuthCallbackUrl() {
   const origin = window.location.origin || '';
-  if (origin.includes('sellerflow-nine.vercel.app') || origin.includes('sellerflow-fz92.vercel.app')) {
+  if (origin && origin.startsWith('http') && !origin.includes('localhost') && !origin.includes('capacitor://') && !origin.includes('127.0.0.1')) {
     return origin + '/oauth-callback';
   }
-  // sellerflow-nine.vercel.app is an authorized domain in Firebase Auth for sellerflow-efaab
-  // and hosts the active deep-link redirection back to the native Android app (com.sellerflow.app://oauth-callback)
-  return 'https://sellerflow-nine.vercel.app/oauth-callback';
+  const injectedUrl = 'https://ais-dev-fz2folk2y4mw6aehzhffjc-473516995477.europe-west2.run.app';
+  if (injectedUrl && injectedUrl.startsWith('http') && !injectedUrl.includes('____')) {
+    return injectedUrl.replace(/\/+$/, '') + '/oauth-callback';
+  }
+  if (window.SELLERFLOW_APP_URL && typeof window.SELLERFLOW_APP_URL === 'string' && window.SELLERFLOW_APP_URL.startsWith('http')) {
+    return window.SELLERFLOW_APP_URL.replace(/\/+$/, '') + '/oauth-callback';
+  }
+  // Authorized Firebase domain fallback for SellerFlow (sellerflow-efaab)
+  return 'https://sellerflow-efaab.firebaseapp.com/oauth-callback';
 }
 
 function getAppUrl() {
-  if (window.location.origin && window.location.origin.startsWith('http') && !window.location.origin.includes('localhost')) {
-    return window.location.origin;
+  const origin = window.location.origin || '';
+  if (origin && origin.startsWith('http') && !origin.includes('localhost') && !origin.includes('capacitor://') && !origin.includes('127.0.0.1')) {
+    return origin;
   }
-  const injectedUrl = 'https://ais-dev-mhexq5zh7vns6e7oetcy66-909278422069.europe-west2.run.app';
-  if (injectedUrl && injectedUrl.startsWith('http')) {
-    return injectedUrl;
+  const injectedUrl = 'https://ais-dev-fz2folk2y4mw6aehzhffjc-473516995477.europe-west2.run.app';
+  if (injectedUrl && injectedUrl.startsWith('http') && !injectedUrl.includes('____')) {
+    return injectedUrl.replace(/\/+$/, '');
   }
-  return 'https://sellerflow-nine.vercel.app';
+  if (window.SELLERFLOW_APP_URL && typeof window.SELLERFLOW_APP_URL === 'string' && window.SELLERFLOW_APP_URL.startsWith('http')) {
+    return window.SELLERFLOW_APP_URL.replace(/\/+$/, '');
+  }
+  return 'https://sellerflow-efaab.firebaseapp.com';
 }
 
 async function handleCapacitorGoogleSignIn() {
@@ -18827,6 +18837,7 @@ async function init(){
       .then(res => { if (res.ok) return res.json(); })
       .then(cfg => {
         if (cfg) {
+          if (cfg.appUrl) window.SELLERFLOW_APP_URL = cfg.appUrl;
           if (cfg.firebaseApiKey) firebaseConfig.apiKey = cfg.firebaseApiKey;
           if (cfg.supabaseUrl) supabaseUrl = cfg.supabaseUrl;
           if (cfg.supabaseKey) supabaseKey = cfg.supabaseKey;

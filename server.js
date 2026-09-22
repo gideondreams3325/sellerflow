@@ -2356,8 +2356,12 @@ app.get('/api/health', (req, res) => {
 });
 
 app.get('/api/config', (req, res) => {
+  const host = req.get('host');
+  const protocol = req.protocol || (req.secure ? 'https' : 'http');
+  const derivedOrigin = host ? `${protocol}://${host}` : '';
   res.json({
     firebaseApiKey: process.env.FIREBASE_API_KEY || '',
+    appUrl: process.env.APP_URL || derivedOrigin || '',
     supabaseUrl: process.env.SUPABASE_URL || '',
     supabaseKey: process.env.SUPABASE_KEY || '',
     moderationFunctionUrl: '/api/moderation/inspect-post',
