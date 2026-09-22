@@ -2549,13 +2549,23 @@ async function checkUserIdentityVerified(uid) {
     const userSnap = await adminDb.collection('users').doc(uid).get();
     if (userSnap && userSnap.exists) {
       const data = userSnap.data() || {};
-      return data.verified === true || data.verificationStatus === 'approved' || data.isBuyerVerified === true;
+      const hasCardNumber = !!(data.ghanaCardNumber || data.ghanaCardMasked || data.ghanaCardNum);
+      const hasDoc = !!(data.ghanaCardFrontPath || data.ghanaCardFrontUrl || data.ghanaCardFront);
+      return (
+        data.verified === true ||
+        data.isBuyerVerified === true ||
+        data.isSellerVerified === true ||
+        data.verificationStatus === 'approved' ||
+        data.kycStatus === 'approved' ||
+        data.ghanaCardVerified === true ||
+        (hasCardNumber && hasDoc)
+      );
     }
   } catch (err) {
     // If adminDb has permission limitations, log notice but do not crash
     console.warn('checkUserIdentityVerified notice:', err.message);
   }
-  return true;
+  return false;
 }
 
 /**
@@ -2572,8 +2582,14 @@ app.post('/api/jobs/submit', async (req, res) => {
     const callerUid = decodedToken.uid;
     const isAdminUser = decodedToken.role === 'admin';
 
-    // Check identity verification state
+    // Check identity verification state: only verified accounts can post jobs
     const isVerified = await checkUserIdentityVerified(callerUid);
+    if (!isAdminUser && !isVerified) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only verified accounts can post jobs. Please complete Ghana Card verification in your profile.'
+      });
+    }
 
     const {
       id,
@@ -2734,6 +2750,15 @@ app.post('/api/jobs/apply', async (req, res) => {
     const callerUid = decodedToken.uid;
     const isAdminUser = decodedToken.role === 'admin';
 
+    // Verify identity verification state: only verified accounts can apply for jobs
+    const isVerified = await checkUserIdentityVerified(callerUid);
+    if (!isAdminUser && !isVerified) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only verified accounts can apply for jobs. Please complete Ghana Card verification in your profile.'
+      });
+    }
+
     const {
       jobId,
       applicantName,
@@ -2873,8 +2898,14 @@ app.post('/api/events/submit', async (req, res) => {
     const callerUid = decodedToken.uid;
     const isAdminUser = decodedToken.role === 'admin';
 
-    // Check identity verification state
+    // Check identity verification state: only verified accounts can host events
     const isVerified = await checkUserIdentityVerified(callerUid);
+    if (!isAdminUser && !isVerified) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only verified accounts can host events. Please complete Ghana Card verification in your profile.'
+      });
+    }
 
     const {
       id,
@@ -3026,6 +3057,16 @@ app.post('/api/events/register', async (req, res) => {
     const idToken = authHeader.split('Bearer ')[1].trim();
     const decodedToken = await verifyFirebaseToken(idToken);
     const callerUid = decodedToken.uid;
+    const isAdminUser = decodedToken.role === 'admin';
+
+    // Verify identity verification state: only verified accounts can register for events
+    const isVerified = await checkUserIdentityVerified(callerUid);
+    if (!isAdminUser && !isVerified) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only verified accounts can register for events. Please complete Ghana Card verification in your profile.'
+      });
+    }
 
     const {
       eventId,
@@ -3412,7 +3453,12 @@ app.get('*', (req, res) => {
   res.sendFile(indexPath);
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`SellerFlow server is running on http://0.0.0.0:${PORT}`);
-});
+export { app };
+export default app;
+
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`SellerFlow server is running on http://0.0.0.0:${PORT}`);
+  });
+}
 

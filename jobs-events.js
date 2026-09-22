@@ -298,13 +298,84 @@ async function checkJobsEventsEligibility(user, actionType = 'interact on Seller
     return false;
   }
 
-  // Candidates applying for jobs or attendees registering for events do NOT need Ghana Card identity verification
-  const isCandidateAction = actionType.includes('apply') || actionType.includes('register') || actionType.includes('ticket') || actionType.includes('rsvp');
-  if (isCandidateAction) {
+  // Admin bypass
+  if (getIsAdmin()) {
     return true;
   }
 
-  // For posting jobs or hosting events: allow signed-in users to proceed
+  // Check identity verification state across profile, auth, and database records
+  let isVerified = false;
+  const profile = getActiveProfile();
+
+  // 1. Check in-memory profile flags
+  if (profile) {
+    if (
+      profile.verified === true ||
+      profile.isBuyerVerified === true ||
+      profile.isSellerVerified === true ||
+      profile.verificationStatus === 'approved' ||
+      profile.kycStatus === 'approved' ||
+      profile.ghanaCardVerified === true
+    ) {
+      isVerified = true;
+    }
+  }
+
+  // 2. Check activeUser object flags
+  if (!isVerified && activeUser) {
+    if (
+      activeUser.verified === true ||
+      activeUser.isBuyerVerified === true ||
+      activeUser.isSellerVerified === true ||
+      activeUser.verificationStatus === 'approved' ||
+      activeUser.kycStatus === 'approved' ||
+      activeUser.ghanaCardVerified === true
+    ) {
+      isVerified = true;
+    }
+  }
+
+  // 3. Check local storage KYC cache
+  if (!isVerified && activeUser.uid) {
+    try {
+      const localKyc = localStorage.getItem('sf_kyc_verified_' + activeUser.uid);
+      if (localKyc === 'true' || localKyc === 'approved') {
+        isVerified = true;
+      }
+    } catch (_) {}
+  }
+
+  // 4. Query Firestore user record if not yet confirmed in memory
+  if (!isVerified && activeUser.uid) {
+    try {
+      const userSnap = await getJobsEventsDb().collection('users').doc(activeUser.uid).get();
+      if (userSnap && userSnap.exists) {
+        const uData = userSnap.data() || {};
+        const hasCardNumber = !!(uData.ghanaCardNumber || uData.ghanaCardMasked || uData.ghanaCardNum);
+        const hasDoc = !!(uData.ghanaCardFrontPath || uData.ghanaCardFrontUrl || uData.ghanaCardFront);
+        if (
+          uData.verified === true ||
+          uData.isBuyerVerified === true ||
+          uData.isSellerVerified === true ||
+          uData.verificationStatus === 'approved' ||
+          uData.kycStatus === 'approved' ||
+          uData.ghanaCardVerified === true ||
+          (hasCardNumber && hasDoc)
+        ) {
+          isVerified = true;
+          try { localStorage.setItem('sf_kyc_verified_' + activeUser.uid, 'true'); } catch (_) {}
+        }
+      }
+    } catch (e) {
+      console.warn('User verification check notice:', e);
+    }
+  }
+
+  if (!isVerified) {
+    openIdentityRequiredModal(actionType);
+    return false;
+  }
+
   return true;
 }
 window.checkJobsEventsEligibility = checkJobsEventsEligibility;
@@ -330,38 +401,39 @@ async function checkUserAcceptedTerms(uid) {
 }
 
 // Modal: Identity Verification Required
-function openIdentityRequiredModal(actionType = 'post') {
+function openIdentityRequiredModal(actionType = 'participate') {
   const modal = document.createElement('div');
   modal.id = 'identityRequiredModal';
   modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in';
   modal.innerHTML = `
     <div class="bg-[#181824] border border-amber-500/40 rounded-3xl max-w-md w-full p-6 text-white shadow-2xl space-y-4">
-      <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-3xl mx-auto">
+      <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-3xl mx-auto shadow-inner">
         🪪
       </div>
       <div class="text-center space-y-1.5">
-        <h3 class="text-lg font-black text-amber-300">Identity Verification Required</h3>
+        <h3 class="text-lg font-black text-amber-300">Verified Account Required</h3>
         <p class="text-xs text-zinc-300 leading-relaxed">
-          To protect Ghanaian jobseekers and attendees from fraud, SellerFlow requires all users to complete <b>Ghana Card identity verification</b> before ${_esc(actionType)}.
+          Only verified accounts can ${_esc(actionType)} on SellerFlow. Please complete your <b>Ghana Card identity verification</b> to apply for jobs and register for events.
         </p>
       </div>
-      <div class="p-3.5 rounded-2xl bg-[#12121a] border border-[#2a2a3c] text-xs text-zinc-400 space-y-1.5">
+      <div class="p-3.5 rounded-2xl bg-[#12121a] border border-[#2a2a3c] text-xs text-zinc-400 space-y-2">
         <div class="flex items-center gap-2 text-zinc-300">
-          <span class="text-amber-400">✓</span> <span>Encrypted Ghana Card KYC storage</span>
+          <span class="text-amber-400 font-bold">✓</span> <span>Anti-fraud protection for applicants & attendees</span>
         </div>
         <div class="flex items-center gap-2 text-zinc-300">
-          <span class="text-amber-400">✓</span> <span>Compliance with Data Protection Act, 2012 (Act 843)</span>
+          <span class="text-amber-400 font-bold">✓</span> <span>Encrypted Ghana Card KYC (Act 843 compliant)</span>
         </div>
         <div class="flex items-center gap-2 text-zinc-300">
-          <span class="text-amber-400">✓</span> <span>Fast automated and security team review</span>
+          <span class="text-amber-400 font-bold">✓</span> <span>Official SellerFlow Verified badge on profile</span>
         </div>
       </div>
       <div class="flex gap-3 pt-2">
         <button id="closeIdReqBtn" type="button" class="flex-1 py-2.5 rounded-xl border border-zinc-700 hover:bg-zinc-800 text-xs font-bold text-zinc-300 transition">
           Cancel
         </button>
-        <button id="goToKycBtn" type="button" class="flex-1 py-2.5 rounded-xl bg-gold text-black hover:brightness-110 text-xs font-black transition shadow-md">
-          Verify Ghana Card →
+        <button id="goToKycBtn" type="button" class="flex-1 py-2.5 rounded-xl bg-gold text-black hover:brightness-110 text-xs font-black transition shadow-md flex items-center justify-center gap-1.5">
+          <span>Verify Account</span>
+          <span>→</span>
         </button>
       </div>
     </div>
@@ -371,9 +443,15 @@ function openIdentityRequiredModal(actionType = 'post') {
   modal.querySelector('#closeIdReqBtn').onclick = () => modal.remove();
   modal.querySelector('#goToKycBtn').onclick = () => {
     modal.remove();
-    if (typeof openBuyerKycModal === 'function') openBuyerKycModal();
-    else if (typeof openGhanaCardModal === 'function') openGhanaCardModal();
-    else navigate('profile');
+    if (typeof openVerificationModal === 'function') {
+      openVerificationModal({ purpose: 'candidate' });
+    } else if (typeof openBuyerKycModal === 'function') {
+      openBuyerKycModal();
+    } else if (typeof openGhanaCardModal === 'function') {
+      openGhanaCardModal();
+    } else if (typeof navigate === 'function') {
+      navigate('profile');
+    }
   };
 }
 
@@ -1549,48 +1627,14 @@ async function renderEmployerDesk(container) {
           </button>
         </div>
       `;
-      _$('deskPostJobBtn')?.addEventListener('click', () => openPostJobModal());
-      return;
-    }
-
-    target.innerHTML = `
-      <div class="space-y-4">
-        <div class="flex items-center justify-between pb-2">
-          <h3 class="text-sm font-bold text-white">Your Posted Jobs (${myJobs.length})</h3>
-          <button id="deskPostJobBtn2" class="px-3.5 py-1.5 rounded-xl bg-gold text-black font-bold text-xs hover:brightness-110">
-            ＋ Post Another Job
-          </button>
-        </div>
-
-        <div class="space-y-3">
-          ${myJobs.map(job => `
-            <div class="bg-[#14141e] border border-zinc-800 rounded-2xl p-4 space-y-3">
-              <div class="flex items-start justify-between gap-3">
-                <div>
-                  <h4 class="text-base font-bold text-white">${_esc(job.title)}</h4>
-                  <p class="text-xs text-zinc-400">📍 ${_esc(job.region)} · Category: ${_esc(job.category)}</p>
-                </div>
-                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
-                  job.status === 'approved' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' :
-                  job.status === 'rejected' ? 'bg-rose-950 text-rose-300 border border-rose-800' : 'bg-amber-950 text-amber-300 border border-amber-800'
-                }">
-                  ${_esc(job.status || 'Pending')}
-                </span>
-              </div>
-
-              <div class="flex items-center justify-between pt-2 border-t border-zinc-800 text-xs">
-                <span class="text-zinc-400">Applications: <b class="text-amber-300">${job.applicationsCount || 0}</b></span>
-                <button data-view-applicants="${job.id}" class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-xs">
-                  Review Candidates →
-                </button>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-
-    _$('deskPostJobBtn2')?.addEventListener('click', () => openPostJobModal());
+      _$('deskPostJobBtn')?.addEventListener('click', async () => {
+      const eligible = await checkJobsEventsEligibility(getActiveUser(), 'post a job opening');
+      if (eligible) openPostJobModal();
+    });
+    _$('deskPostJobBtn2')?.addEventListener('click', async () => {
+      const eligible = await checkJobsEventsEligibility(getActiveUser(), 'post a job opening');
+      if (eligible) openPostJobModal();
+    });
     target.querySelectorAll('[data-view-applicants]').forEach(b => {
       b.onclick = () => openApplicantsModal(b.dataset.viewApplicants);
     });
@@ -2653,7 +2697,10 @@ async function renderOrganizerDesk(container) {
           </button>
         </div>
       `;
-      _$('deskCreateEvBtn')?.addEventListener('click', () => openCreateEventModal());
+      _$('deskCreateEvBtn')?.addEventListener('click', async () => {
+        const eligible = await checkJobsEventsEligibility(getActiveUser(), 'host an event');
+        if (eligible) openCreateEventModal();
+      });
       return;
     }
 
@@ -2689,7 +2736,10 @@ async function renderOrganizerDesk(container) {
       </div>
     `;
 
-    _$('deskCreateEvBtn2')?.addEventListener('click', () => openCreateEventModal());
+    _$('deskCreateEvBtn2')?.addEventListener('click', async () => {
+      const eligible = await checkJobsEventsEligibility(getActiveUser(), 'host an event');
+      if (eligible) openCreateEventModal();
+    });
   } catch (err) {
     const target = _$('eventsContentArea') || container;
     if (target) {

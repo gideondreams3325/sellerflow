@@ -1,0 +1,60 @@
+import fs from 'fs';
+import path from 'path';
+
+const distDir = path.resolve('dist');
+
+if (!fs.existsSync(distDir)) {
+  fs.mkdirSync(distDir, { recursive: true });
+}
+
+// Key files to copy
+const filesToCopy = [
+  'index.html',
+  '_redirects',
+  'sw.js',
+  'manifest.json',
+  'icon.svg',
+  'logo-full.svg',
+  'nav-emblem.svg',
+  'default-avatar.svg',
+  'pwa-192x192.png',
+  'pwa-512x512.png',
+  'apple-touch-icon.png',
+  'translations.js',
+  'recommendation-engine.js',
+  'copyright-detector.js',
+  'jobs-events.js',
+  'capacitor.js',
+  'capacitor.config.json'
+];
+
+// Scan root for any additional icon or asset files
+try {
+  const rootFiles = fs.readdirSync(path.resolve('.'));
+  for (const file of rootFiles) {
+    if (file.endsWith('.svg') || file.endsWith('.png') || file.endsWith('.ico') || file.endsWith('.webp')) {
+      if (!filesToCopy.includes(file)) {
+        filesToCopy.push(file);
+      }
+    }
+  }
+} catch (_) {}
+
+let copiedCount = 0;
+for (const file of filesToCopy) {
+  const srcPath = path.resolve(file);
+  const destPath = path.join(distDir, file);
+  if (fs.existsSync(srcPath)) {
+    if (file === 'index.html') {
+      let content = fs.readFileSync(srcPath, 'utf8');
+      const appUrl = process.env.APP_URL || '';
+      content = content.replace(/____SELLERFLOW_APP_URL____/g, appUrl);
+      fs.writeFileSync(destPath, content, 'utf8');
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+    copiedCount++;
+  }
+}
+
+console.log(`Build complete: ${copiedCount} assets ready in dist/`);

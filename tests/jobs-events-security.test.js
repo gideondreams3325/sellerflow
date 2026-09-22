@@ -111,4 +111,13 @@ assert.ok(serverJs.includes('const SERVER_FEATURED_JOBS = {};'), 'SERVER_FEATURE
 assert.ok(serverJs.includes('const SERVER_FEATURED_EVENTS = {};'), 'SERVER_FEATURED_EVENTS must be empty object');
 console.log('  ✓ Mock jobs and events successfully removed; empty state verified');
 
-console.log('--- All 7 Jobs & Events Security & Statutory Verification Tests Passed Successfully ---');
+// 8. Verification: Verified account enforcement for posting jobs & events
+console.log('Test 8: Verified account gating for posting jobs and hosting events');
+assert.ok(serverJs.includes("error: 'Only verified accounts can post jobs."), 'server.js must enforce verified account on /api/jobs/submit');
+assert.ok(serverJs.includes("error: 'Only verified accounts can host events."), 'server.js must enforce verified account on /api/events/submit');
+assert.ok(serverJs.includes("error: 'Only verified accounts can apply for jobs."), 'server.js must enforce verified account on /api/jobs/apply');
+assert.ok(serverJs.includes("error: 'Only verified accounts can register for events."), 'server.js must enforce verified account on /api/events/register');
+assert.ok(jobsEventsJs.includes('openIdentityRequiredModal'), 'jobs-events.js must prompt unverified users to verify Ghana Card');
+console.log('  ✓ Only verified accounts can post jobs, host events, apply for jobs, and register for events');
+
+console.log('--- All 8 Jobs & Events Security & Statutory Verification Tests Passed Successfully ---');
