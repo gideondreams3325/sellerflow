@@ -3345,15 +3345,36 @@ function getOptimizedMediaUrl(url, type = 'card') {
       cleanPath = cleanPath.slice(idx + marker.length);
     }
     cleanPath = cleanPath.replace(/^public\//, '').replace(/^ghana-card-documents\//, '').replace(/^\/+/, '');
-    return `/api/media/supabase?path=${encodeURIComponent(cleanPath)}`;
+    const isCapacitorOrVercel = (typeof window !== 'undefined') && (
+      window.location.protocol === 'capacitor:' ||
+      window.location.origin.includes('localhost') ||
+      window.location.origin.includes('vercel.app')
+    );
+    const remoteHost = isCapacitorOrVercel ? 'https://ais-pre-3l4esbiqnxysjl7fptdkvq-404136744563.europe-west1.run.app' : '';
+    return `${remoteHost}/api/media/supabase?path=${encodeURIComponent(cleanPath)}`;
   }
 
-  // Local media paths: route seamlessly to /uploads/
+  // Google Usercontent avatar optimization (ensure permissive parameters & no-referrer compatibility)
+  if (trimmed.includes('googleusercontent.com')) {
+    if (trimmed.includes('=s')) {
+      return trimmed.replace(/=s\d+(-c)?/, '=s320-c');
+    }
+    return trimmed;
+  }
+
+  // Local media paths: route seamlessly to /uploads/ and remote backend if on Vercel/Capacitor
+  const isCapacitorOrVercel = (typeof window !== 'undefined') && (
+    window.location.protocol === 'capacitor:' ||
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('vercel.app')
+  );
+  const remoteHost = isCapacitorOrVercel ? 'https://ais-pre-3l4esbiqnxysjl7fptdkvq-404136744563.europe-west1.run.app' : '';
+
   if (trimmed.startsWith('media/') || trimmed.startsWith('/media/')) {
-    return `/uploads/${trimmed.replace(/^\/+/, '')}`;
+    return `${remoteHost}/uploads/${trimmed.replace(/^\/+/, '')}`;
   }
   if (trimmed.startsWith('uploads/') || trimmed.startsWith('/uploads/')) {
-    return `/${trimmed.replace(/^\/+/, '')}`;
+    return `${remoteHost}/${trimmed.replace(/^\/+/, '')}`;
   }
 
   return trimmed;
@@ -3387,7 +3408,7 @@ function getUserAvatarUrl(p){
   }
   if(typeof p === 'string'){
     const trimmedStr = p.trim();
-    if(trimmedStr.startsWith('http://') || trimmedStr.startsWith('https://') || trimmedStr.startsWith('data:') || trimmedStr.startsWith('blob:') || trimmedStr.startsWith('/')){
+    if(trimmedStr.startsWith('http://') || trimmedStr.startsWith('https://') || trimmedStr.startsWith('data:') || trimmedStr.startsWith('blob:')){
       return getOptimizedMediaUrl(trimmedStr, 'avatar');
     }
     const resolved = (currentUser && trimmedStr === currentUser.uid) 
@@ -3399,6 +3420,18 @@ function getUserAvatarUrl(p){
   // If avatar was explicitly removed by user, honor default avatar
   if(p.avatarRemoved === true || p.avatarRemoved === 'true'){
     return SF_DEFAULT_AVATAR;
+  }
+
+  const targetUid = p.uid || p.id || p.sellerId || p.userId || p.senderId || p.buyerId || p.ownerId || '';
+
+  // 1. Check persistent device local cache first (works 100% on Vercel & native mobile app even offline)
+  if(targetUid){
+    try {
+      const cached = localStorage.getItem('sf_user_avatar_' + targetUid);
+      if(cached && (cached.startsWith('data:') || cached.startsWith('http'))){
+        return getOptimizedMediaUrl(cached, 'avatar');
+      }
+    } catch(_) {}
   }
 
   let rawUrl = p.avatarUrl || p.photoURL || p.photoUrl || p.avatar || p.avatar_url || p.sellerAvatarUrl || p.authorAvatar || p.userAvatar || p.sellerAvatar || p.creatorAvatar || p.profilePic || p.profilePicture || p.picture || p.image || p.logoUrl || p.avatarPath || p.mediaPath || '';
@@ -3419,7 +3452,6 @@ function getUserAvatarUrl(p){
   }
 
   // Check public profiles or stores cache by ID
-  const targetUid = p.uid || p.id || p.sellerId || p.userId || p.senderId || p.buyerId || p.ownerId;
   if(!rawUrl && targetUid){
     if(currentUser && targetUid === currentUser.uid){
       if(!currentProfile?.avatarRemoved){
@@ -3461,7 +3493,30 @@ window.normalizeAvatarClass = normalizeAvatarClass;
 
 window.__sfAvatarFallback = function(img, initial, cls){
   if(!img) return;
-  // If a direct Supabase URL failed to load in the browser, retry via our authenticated server proxy
+
+  // 1. Check if we have a locally cached avatar in localStorage for this user UID
+  const avatarUid = img.dataset?.avatarUid || img.dataset?.sellerAvatar || img.dataset?.userUid || '';
+  if(avatarUid && !img.dataset.sfTriedLocalCache){
+    img.dataset.sfTriedLocalCache = '1';
+    try {
+      const localCached = localStorage.getItem('sf_user_avatar_' + avatarUid);
+      if(localCached && (localCached.startsWith('data:') || localCached.startsWith('http'))){
+        img.src = localCached;
+        return;
+      }
+    } catch(_) {}
+  }
+
+  // 2. If running on Capacitor APK or Vercel and a relative or local upload failed, try the primary Cloud Run backend
+  if(img.src && (img.src.includes('/uploads/') || img.src.includes('/media/')) && !img.dataset.sfTriedRemoteBackend){
+    img.dataset.sfTriedRemoteBackend = '1';
+    const remoteBackend = 'https://ais-pre-3l4esbiqnxysjl7fptdkvq-404136744563.europe-west1.run.app';
+    const cleanPath = img.src.replace(/^https?:\/\/[^/]+/, '');
+    img.src = remoteBackend + (cleanPath.startsWith('/') ? cleanPath : ('/' + cleanPath));
+    return;
+  }
+
+  // 3. If a direct Supabase URL failed to load in the browser, retry via our authenticated server proxy
   if(img.src && img.src.includes('supabase.co/storage/v1/object/') && !img.dataset.sfProxyAttempted){
     img.dataset.sfProxyAttempted = '1';
     let cleanPath = img.src;
@@ -3469,25 +3524,43 @@ window.__sfAvatarFallback = function(img, initial, cls){
     const idx = cleanPath.indexOf(marker);
     if(idx !== -1) cleanPath = cleanPath.slice(idx + marker.length);
     cleanPath = cleanPath.replace(/^public\//, '').replace(/^ghana-card-documents\//, '').replace(/^\/+/, '');
-    img.src = `/api/media/supabase?path=${encodeURIComponent(cleanPath)}`;
+    const isCapacitorOrVercel = (typeof window !== 'undefined') && (
+      window.location.protocol === 'capacitor:' ||
+      window.location.origin.includes('localhost') ||
+      window.location.origin.includes('vercel.app')
+    );
+    const remoteBackend = isCapacitorOrVercel
+      ? 'https://ais-pre-3l4esbiqnxysjl7fptdkvq-404136744563.europe-west1.run.app'
+      : '';
+    img.src = `${remoteBackend}/api/media/supabase?path=${encodeURIComponent(cleanPath)}`;
     return;
   }
-  // Try media path from dataset if provided and local /uploads/ has not been attempted yet
-  if(img.dataset && img.dataset.mediaPath && !img.dataset.sfTriedMediaPath){
-    img.dataset.sfTriedMediaPath = '1';
-    const cleanMedia = img.dataset.mediaPath.replace(/^[/\\]+/, '');
-    img.src = `/uploads/${cleanMedia}`;
-    return;
-  }
-  // Retry Google usercontent or external avatar once with no-referrer
+
+  // 4. Retry Google usercontent or external avatar once with permissive params and no-referrer
   if(img.src && !img.dataset.sfRetriedNoReferrer && img.src.includes('googleusercontent.com') && !img.src.includes('default-avatar.svg') && !img.src.startsWith('data:')){
     img.dataset.sfRetriedNoReferrer = '1';
     img.referrerPolicy = 'no-referrer';
     img.setAttribute('referrerpolicy', 'no-referrer');
-    const origSrc = img.src;
+    const origSrc = img.src.replace(/=s\d+(-c)?/, '=s320-no');
     img.src = origSrc;
     return;
   }
+
+  // 5. Retry external avatar once via secure proxy if cross-origin policy blocked the image
+  if(img.src && !img.dataset.sfTriedProxy && (img.src.startsWith('http://') || img.src.startsWith('https://')) && !img.src.includes('default-avatar.svg') && !img.src.includes('/api/media/proxy') && !img.src.startsWith('data:')){
+    img.dataset.sfTriedProxy = '1';
+    const isCapacitorOrVercel = (typeof window !== 'undefined') && (
+      window.location.protocol === 'capacitor:' ||
+      window.location.origin.includes('localhost') ||
+      window.location.origin.includes('vercel.app')
+    );
+    const remoteBackend = isCapacitorOrVercel
+      ? 'https://ais-pre-3l4esbiqnxysjl7fptdkvq-404136744563.europe-west1.run.app'
+      : '';
+    img.src = `${remoteBackend}/api/media/proxy?url=${encodeURIComponent(img.src)}`;
+    return;
+  }
+
   img.onerror = null;
   img.src = SF_DEFAULT_AVATAR_DATA_URI;
   img.classList.remove('rounded-3xl', 'rounded-2xl', 'rounded-xl', 'rounded-lg', 'rounded-md', 'rounded-sm');
@@ -3506,11 +3579,13 @@ window.__sfBannerFallback = function(img){
 
 function avatar(p,cls='avatar'){
   const finalCls = normalizeAvatarClass(cls);
+  const targetUid = (p && typeof p === 'object') ? (p.uid || p.id || p.sellerId || p.userId || p.ownerId || '') : (typeof p === 'string' ? p : '');
   const url = getUserAvatarUrl(p);
   const name = esc(p?.name || p?.username || 'User');
   const hasCustomPic = !!(url && !url.includes('default-avatar.svg') && !url.includes('nav-emblem.svg'));
   const viewAttr = hasCustomPic ? `data-view-image="${esc(url)}" data-view-title="${name}'s profile picture"` : '';
-  return `<img ${viewAttr} class="${finalCls}" src="${esc(url)}" alt="${name}" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-avatar-cls="${finalCls}" onerror="window.__sfAvatarFallback(this)">`;
+  const uidAttr = targetUid ? `data-avatar-uid="${esc(targetUid)}"` : '';
+  return `<img ${viewAttr} ${uidAttr} class="${finalCls}" src="${esc(url)}" alt="${name}" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-avatar-cls="${finalCls}" onerror="window.__sfAvatarFallback(this)">`;
 }
 function validFile(file,types,maxMB){
   if(!file)return false;
@@ -10129,7 +10204,7 @@ async function openStore(uid){
             </button>
             <div class="relative group">
               ${effectiveLogoUrl ? `
-                <img id="storefrontLogoImg" src="${esc(effectiveLogoUrl)}" class="w-16 h-16 rounded-full object-cover border border-[#333] bg-[#222]" alt="Store logo" data-initial="${esc((store?.name||p.name||p.username||'S')[0].toUpperCase())}" data-avatar-cls="w-16 h-16 rounded-full object-cover bg-[#222]" onerror="window.__sfAvatarFallback(this)">
+                <img id="storefrontLogoImg" src="${esc(effectiveLogoUrl)}" data-avatar-uid="${esc(sellerId || p.uid || '')}" class="w-16 h-16 rounded-full object-cover border border-[#333] bg-[#222]" alt="Store logo" data-initial="${esc((store?.name||p.name||p.username||'S')[0].toUpperCase())}" data-avatar-cls="w-16 h-16 rounded-full object-cover bg-[#222]" onerror="window.__sfAvatarFallback(this)">
               ` : avatar(p,'w-16 h-16 rounded-full object-cover bg-[#222]')}
               ${isOwner ? `
                 <label class="absolute -bottom-1 -right-1 sf-store-btn-primary w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer shadow border border-black/30 transition z-10" title="Change logo">
@@ -13082,7 +13157,11 @@ async function renderStore(forceEdit = false){
         if(bannerFile){
           validFile(bannerFile, ['image/jpeg','image/png','image/webp'], 10);
           loading('Uploading store banner…');
-          const up = await uploadPublic(bannerFile, 'stores');
+          let compressedBanner = bannerFile;
+          try {
+            compressedBanner = await compressImageForUpload(bannerFile, { maxDimension: 1200, quality: 0.82 });
+          } catch (_) {}
+          const up = await uploadPublic(compressedBanner, 'stores');
           bannerUrl = up.url;
           bannerPath = up.path;
         }
@@ -13090,9 +13169,28 @@ async function renderStore(forceEdit = false){
         if(logoFile){
           validFile(logoFile, ['image/jpeg','image/png','image/webp'], 10);
           loading('Uploading store profile picture…');
-          const up = await uploadPublic(logoFile, 'stores');
+          let compressedLogo = logoFile;
+          try {
+            compressedLogo = await compressImageForUpload(logoFile, { maxDimension: 320, quality: 0.85 });
+          } catch (_) {}
+
+          let base64Logo = '';
+          try {
+            base64Logo = await fileToBase64(compressedLogo);
+          } catch (_) {}
+
+          const up = await uploadPublic(compressedLogo, 'stores');
           logoUrl = up.url;
           logoPath = up.path;
+
+          if (base64Logo && (!logoUrl || logoUrl.startsWith('/uploads/') || logoUrl.startsWith('media/') || logoUrl.startsWith('/media/'))) {
+            logoUrl = base64Logo;
+          }
+          if (logoUrl) {
+            try {
+              localStorage.setItem('sf_user_avatar_' + currentUser.uid, logoUrl);
+            } catch (_) {}
+          }
         }
 
         if(certFile){
@@ -17393,11 +17491,17 @@ async function startUser(u){
     await createMissingProfile(u,{name:u.displayName||'SellerFlow User',username,usernameLower:username.toLowerCase(),role:isAdmin?'admin':'seller',verified:isAdmin,hasBusinessCert:isAdmin,businessVerified:isAdmin});
   }
   if(currentProfile){
+    const resolvedAvatar = currentProfile.avatarUrl || u.photoURL || '';
     allPublicProfiles.set(u.uid, {
       ...currentProfile,
       uid: u.uid,
-      avatarUrl: currentProfile.avatarUrl || u.photoURL || ''
+      avatarUrl: resolvedAvatar
     });
+    if(resolvedAvatar && !currentProfile.avatarRemoved){
+      try {
+        localStorage.setItem('sf_user_avatar_' + u.uid, resolvedAvatar);
+      } catch(_) {}
+    }
   }
   setNav();
   if(typeof saveUserSession === 'function') {
@@ -22906,12 +23010,12 @@ init();
           <div class="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6">
             ${isOwner ? `
               <button type="button" id="profilePhotoBtn" class="shrink-0 border-0 bg-transparent cursor-pointer relative group self-start sm:self-auto" title="Manage profile picture">
-                <img class="sf-profile-avatar rounded-full object-cover group-hover:brightness-95 transition" src="${esc(getUserAvatarUrl(p))}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
+                <img class="sf-profile-avatar rounded-full object-cover group-hover:brightness-95 transition" src="${esc(getUserAvatarUrl(p))}" data-avatar-uid="${esc(p.uid || currentUser?.uid || '')}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
                 <span class="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-gold text-black flex items-center justify-center text-sm shadow-md border-2 border-[#121212] group-hover:scale-110 transition" title="Change photo">📷</span>
               </button>
             ` : `
               <button type="button" class="shrink-0 relative self-start sm:self-auto border-0 bg-transparent cursor-pointer group" title="View profile picture" data-view-image="${esc(getUserAvatarUrl(p))}" data-view-title="${esc(p.name||p.username||'User')}'s profile picture">
-                <img class="sf-profile-avatar rounded-full object-cover group-hover:brightness-105 transition" src="${esc(getUserAvatarUrl(p))}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
+                <img class="sf-profile-avatar rounded-full object-cover group-hover:brightness-105 transition" src="${esc(getUserAvatarUrl(p))}" data-avatar-uid="${esc(p.uid || p.id || '')}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
               </button>
             `}
             <div class="flex-1 min-w-0">
@@ -23405,9 +23509,24 @@ init();
       let avatarPath = '';
       if(!isRemove && file){
         validFile(file, ['image/jpeg', 'image/png', 'image/webp', 'image/*'], 10);
-        const x = await uploadPublic(file, 'profiles');
+        let compressedFile = file;
+        try {
+          compressedFile = await compressImageForUpload(file, { maxDimension: 320, quality: 0.85 });
+        } catch (_) {}
+
+        let base64Avatar = '';
+        try {
+          base64Avatar = await fileToBase64(compressedFile);
+        } catch (_) {}
+
+        const x = await uploadPublic(compressedFile, 'profiles');
         avatarUrl = x.url;
         avatarPath = x.path;
+
+        // Ensure ultra-portable avatar for Vercel and Capacitor APKs
+        if (base64Avatar && (!avatarUrl || avatarUrl.startsWith('/uploads/') || avatarUrl.startsWith('media/') || avatarUrl.startsWith('/media/'))) {
+          avatarUrl = base64Avatar;
+        }
       }
       
       // Update in-memory state FIRST so UI updates immediately and reliably
@@ -23421,6 +23540,16 @@ init();
       }
       if(currentUser) currentUser.photoURL = avatarUrl;
       allPublicProfiles.set(currentUser.uid, { ...currentProfile, uid: currentUser.uid, avatarUrl, avatarRemoved: isRemove });
+      
+      // Save to persistent device cache for instant offline and cross-origin reliability
+      try {
+        if (avatarUrl && !isRemove) {
+          localStorage.setItem('sf_user_avatar_' + currentUser.uid, avatarUrl);
+        } else if (isRemove) {
+          localStorage.removeItem('sf_user_avatar_' + currentUser.uid);
+        }
+      } catch (_) {}
+
       saveUserSession(currentUser, currentProfile);
 
       // Update users doc in Firestore (safely catch errors so network or rules delay does not block UI)
@@ -23711,9 +23840,23 @@ init();
           avatarPath = '';
         } else if(file){
           validFile(file,['image/jpeg','image/png','image/webp','image/*'],10);
-          const x=await uploadPublic(file,'profiles');
-          avatarUrl=x.url;
-          avatarPath=x.path;
+          let compressedFile = file;
+          try {
+            compressedFile = await compressImageForUpload(file, { maxDimension: 320, quality: 0.85 });
+          } catch (_) {}
+
+          let base64Avatar = '';
+          try {
+            base64Avatar = await fileToBase64(compressedFile);
+          } catch (_) {}
+
+          const x = await uploadPublic(compressedFile, 'profiles');
+          avatarUrl = x.url;
+          avatarPath = x.path;
+
+          if (base64Avatar && (!avatarUrl || avatarUrl.startsWith('/uploads/') || avatarUrl.startsWith('media/') || avatarUrl.startsWith('/media/'))) {
+            avatarUrl = base64Avatar;
+          }
         }
         loading('Saving profile…');
         const patch={
@@ -23785,6 +23928,16 @@ init();
         }
         if(currentUser) currentUser.photoURL = avatarUrl;
         allPublicProfiles.set(currentUser.uid, { ...currentProfile, uid: currentUser.uid, avatarUrl, avatarRemoved: isPhotoRemoved });
+
+        // Save to persistent device cache for instant offline & cross-platform display
+        try {
+          if (avatarUrl && !isPhotoRemoved) {
+            localStorage.setItem('sf_user_avatar_' + currentUser.uid, avatarUrl);
+          } else if (isPhotoRemoved) {
+            localStorage.removeItem('sf_user_avatar_' + currentUser.uid);
+          }
+        } catch (_) {}
+
         saveUserSession(currentUser, currentProfile);
 
         if(auth?.currentUser && typeof auth.currentUser.updateProfile === 'function'){
