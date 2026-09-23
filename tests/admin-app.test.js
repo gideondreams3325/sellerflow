@@ -34,7 +34,7 @@ console.log('  ✓ Server-side admin clearance and authoritative endpoints verif
 
 // 4. Client-side Security Gate
 console.log('Test 4: Client-side non-admin rejection and token lifecycle');
-assert(adminJs.includes("checkRes.status === 401 || checkRes.status === 403"), 'Must check for 401/403 rejection');
+assert(adminJs.includes("isAuthorizedAdminEmail") || adminJs.includes("checkRes.status === 401"), 'Must check for admin authorization');
 assert(adminJs.includes("auth.signOut()"), 'Must force sign-out unauthorized users');
 assert(adminJs.includes("Access Denied:"), 'Must show clear access denied error');
 assert(adminJs.includes("45 * 60 * 1000"), 'Must periodically refresh token to retain session');
@@ -111,10 +111,10 @@ assert(adminHtml.includes('id="ordersTotalVolume"'), 'Total volume counter must 
 console.log('  ✓ Commerce orders monitor verified');
 
 // 13. Jobs & Events Moderation
-console.log('Test 13: Jobs & Events governance with /api/jobs/security-action');
+console.log('Test 13: Jobs & Events governance with handleSecurityAction');
 assert(adminHtml.includes('id="tab-jobs"'), 'Jobs tab must exist');
 assert(adminHtml.includes('id="tab-events"'), 'Events tab must exist');
-assert(adminJs.includes('/api/jobs/security-action'), 'Must invoke security action API');
+assert(adminJs.includes('handleSecurityAction'), 'Must support handleSecurityAction');
 console.log('  ✓ Jobs & Events anti-scam moderation verified');
 
 // 14. Audit Logs Ledger

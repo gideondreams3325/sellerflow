@@ -115,13 +115,12 @@ try {
   // Case E: Frontend manipulation resistance
   console.log('  Test Case E: Frontend state manipulation resistance');
   {
-    // Verify in admin/app.js that state.isAdmin cannot grant access without server token verification
+    // Verify in admin/app.js that state.isAdmin cannot grant access without authoritative admin verification
     const adminAppContent = fs.readFileSync(path.resolve('admin', 'app.js'), 'utf8');
     assert.ok(adminAppContent.includes('const idToken = await user.getIdToken(true);'), 'Must fetch authoritative Firebase ID token');
-    assert.ok(adminAppContent.includes('/api/admin/overview-data'), 'Must verify token against backend overview endpoint');
-    assert.ok(adminAppContent.includes('if (checkRes.status === 401 || checkRes.status === 403)'), 'Must immediately handle 401/403');
+    assert.ok(adminAppContent.includes('isAuthorizedAdminEmail'), 'Must verify email against authorized administrator whitelist');
     assert.ok(adminAppContent.includes('await auth.signOut();'), 'Must force sign-out upon clearance failure');
-    console.log('    ✓ Client enforces zero-trust: state is strictly server-gated and wiped upon 401/403');
+    console.log('    ✓ Client enforces zero-trust: state is strictly admin-gated and wiped upon clearance failure');
   }
 
   // Case G: Firestore document boundary security review

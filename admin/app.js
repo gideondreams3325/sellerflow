@@ -133,6 +133,22 @@ window.closePostModal = function() {
 };
 
 // 5. Authentication & Authorization Lifecycle
+const ADMIN_EMAILS = ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com'];
+function isAuthorizedAdminEmail(email) {
+  if (!email) return false;
+  const em = String(email).toLowerCase().trim();
+  return em === 'gideondreams3325@gmail.com' || em === 'gfappiah3325@gmail.com' || ADMIN_EMAILS.includes(em);
+}
+
+function maskGhanaCard(val) {
+  if (!val) return '—';
+  const str = String(val).trim();
+  if (str.length < 8) return 'GHA-***-X';
+  const head = str.substring(0, 6);
+  const tail = str.slice(-2);
+  return `${head}***${tail}`;
+}
+
 auth.onAuthStateChanged(async (user) => {
   const loginScreen = document.getElementById('loginScreen');
   const adminShell = document.getElementById('adminShell');
@@ -152,16 +168,10 @@ auth.onAuthStateChanged(async (user) => {
     state.currentUser = user;
     state.currentIdToken = idToken;
 
-    // Verify admin privileges against backend /api/admin/overview-data
-    const checkRes = await fetch('/api/admin/overview-data', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${idToken}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    // Verify admin privileges directly against authorized admin identity
+    const isAdmin = isAuthorizedAdminEmail(user.email);
 
-    if (checkRes.status === 401 || checkRes.status === 403) {
+    if (!isAdmin) {
       console.warn('[Admin Gate] Non-admin user access attempt:', user.email);
       await auth.signOut();
       if (loginAlert) {
@@ -171,27 +181,7 @@ auth.onAuthStateChanged(async (user) => {
       return;
     }
 
-    const payload = await checkRes.json();
-    if (!payload.success) {
-      throw new Error(payload.error || 'Server rejected administrative credentials');
-    }
-
     state.isAdmin = true;
-
-    // Populate data
-    state.data = {
-      users: payload.data.users || [],
-      stores: payload.data.stores || [],
-      products: payload.data.products || [],
-      posts: payload.data.posts || [],
-      orders: payload.data.orders || [],
-      buyerKycRecords: payload.data.buyerKycRecords || [],
-      scamReports: payload.data.scamReports || [],
-      fraudReports: payload.data.fraudReports || [],
-      jobs: payload.data.jobs || [],
-      events: payload.data.events || [],
-      auditLogs: []
-    };
 
     // Update UI profile
     const emailEl = document.getElementById('adminUserEmail');
@@ -204,6 +194,9 @@ auth.onAuthStateChanged(async (user) => {
     // Switch views
     loginScreen?.classList.add('hidden');
     adminShell?.classList.remove('hidden');
+
+    // Populate administrative data directly through Firebase Web SDK
+    await fetchAdminData();
 
     // Render dashboard and current tab
     renderCurrentTab();
@@ -234,39 +227,100 @@ setInterval(async () => {
 
 // 6. Data Fetching & Sync
 async function fetchAdminData(force = false) {
-  if (!state.currentIdToken || state.refreshing) return;
+  if (!state.isAdmin || state.refreshing) return;
   state.refreshing = true;
   const refreshIcon = document.getElementById('refreshIcon');
   if (refreshIcon) refreshIcon.classList.add('animate-spin');
 
   try {
-    const res = await fetch('/api/admin/overview-data', {
-      headers: {
-        'Authorization': `Bearer ${state.currentIdToken}`,
-        'Content-Type': 'application/json'
+    const serializeDoc = (d) => ({ id: d.id, ...d.data() });
+
+    const [
+      usersSnap,
+      publicProfilesSnap,
+      postsSnap,
+      storesSnap,
+      productsSnap,
+      fraudSnap,
+      scamSnap,
+      kycSnap,
+      ordersSnap,
+      jobsSnap,
+      eventsSnap,
+      adminReviewsSnap
+    ] = await Promise.all([
+      db.collection('users').limit(400).get().catch(err => { console.warn('users fetch error', err); return { docs: [] }; }),
+      db.collection('publicProfiles').limit(400).get().catch(() => ({ docs: [] })),
+      db.collection('posts').limit(300).get().catch(err => { console.warn('posts fetch error', err); return { docs: [] }; }),
+      db.collection('stores').limit(400).get().catch(err => { console.warn('stores fetch error', err); return { docs: [] }; }),
+      db.collection('products').limit(400).get().catch(err => { console.warn('products fetch error', err); return { docs: [] }; }),
+      db.collection('fraudReports').limit(200).get().catch(() => ({ docs: [] })),
+      db.collection('scamReports').limit(200).get().catch(() => ({ docs: [] })),
+      db.collection('buyerKycRecords').limit(400).get().catch(() => ({ docs: [] })),
+      db.collection('orders').limit(400).get().catch(() => ({ docs: [] })),
+      db.collection('jobs').limit(300).get().catch(() => ({ docs: [] })),
+      db.collection('events').limit(300).get().catch(() => ({ docs: [] })),
+      db.collection('adminReviews').where('action', '==', 'takedown').limit(100).get().catch(() => ({ docs: [] }))
+    ]);
+
+    // Build unified posts list (merging archived reviews if any)
+    const postMap = new Map();
+    (postsSnap.docs || []).forEach(d => {
+      postMap.set(d.id, serializeDoc(d));
+    });
+    (adminReviewsSnap.docs || []).forEach(d => {
+      const rev = d.data() || {};
+      if (rev.targetId && rev.postSnapshot && !postMap.has(rev.targetId)) {
+        postMap.set(rev.targetId, {
+          id: rev.targetId,
+          ...rev.postSnapshot,
+          status: 'taken_down',
+          reviewStatus: 'removed',
+          takedownReason: rev.reason || 'Taken down by Security Team',
+          removedAt: rev.timestamp || null
+        });
       }
     });
 
-    const result = await res.json();
-    if (!result.success) throw new Error(result.error);
+    // Build unified map of users
+    const userMap = new Map();
+    (publicProfilesSnap.docs || []).forEach(d => {
+      userMap.set(d.id, { id: d.id, uid: d.id, ...d.data() });
+    });
+    (usersSnap.docs || []).forEach(d => {
+      const existing = userMap.get(d.id) || {};
+      userMap.set(d.id, { ...existing, id: d.id, uid: d.id, ...d.data() });
+    });
 
-    state.data.users = result.data.users || [];
-    state.data.stores = result.data.stores || [];
-    state.data.products = result.data.products || [];
-    state.data.posts = result.data.posts || [];
-    state.data.orders = result.data.orders || [];
-    state.data.buyerKycRecords = result.data.buyerKycRecords || [];
-    state.data.scamReports = result.data.scamReports || [];
-    state.data.fraudReports = result.data.fraudReports || [];
-    state.data.jobs = result.data.jobs || [];
-    state.data.events = result.data.events || [];
+    state.data = {
+      users: Array.from(userMap.values()),
+      stores: (storesSnap.docs || []).map(serializeDoc),
+      products: (productsSnap.docs || []).map(serializeDoc),
+      posts: Array.from(postMap.values()),
+      orders: (ordersSnap.docs || []).map(serializeDoc),
+      buyerKycRecords: (kycSnap.docs || []).map(d => {
+        const doc = serializeDoc(d);
+        const rawPin = doc.ghanaCardNumber || doc.ghanaCardPin || '';
+        const masked = doc.ghanaCardMasked || (rawPin ? maskGhanaCard(rawPin) : '—');
+        return {
+          ...doc,
+          ghanaCardNumber: masked,
+          ghanaCardMasked: masked
+        };
+      }),
+      scamReports: (scamSnap.docs || []).map(serializeDoc),
+      fraudReports: (fraudSnap.docs || []).map(serializeDoc),
+      jobs: (jobsSnap.docs || []).map(serializeDoc),
+      events: (eventsSnap.docs || []).map(serializeDoc),
+      auditLogs: state.data.auditLogs || []
+    };
 
     const lastSync = document.getElementById('lastSyncedTime');
     if (lastSync) lastSync.textContent = `Synced: ${new Date().toLocaleTimeString()}`;
 
     renderCurrentTab();
     await fetchAuditLogs();
-    if (force) showToast('All administrative data refreshed from backend', 'success');
+    if (force) showToast('All administrative data refreshed from Firestore', 'success');
   } catch (err) {
     console.error('Data fetch error:', err);
     showToast(`Failed to refresh data: ${err.message}`, 'error');
@@ -660,20 +714,50 @@ window.handleUserAction = function(userId, action) {
     btnText: action === 'suspend' ? 'Confirm Suspension' : action === 'block' ? 'Confirm Permanent Block' : 'Confirm Restoration',
     onExecute: async (reason, durationDays) => {
       try {
-        const res = await fetch('/api/admin/user-action', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${state.currentIdToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ userId, action, reason, durationDays })
+        const isSusp = action === 'suspend';
+        const isBlk = action === 'block';
+        const statusVal = isSusp ? 'suspended' : isBlk ? 'blocked' : 'active';
+
+        const updates = {
+          isSuspended: isSusp,
+          isBlocked: isBlk,
+          status: statusVal,
+          suspensionReason: reason || null,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if (isSusp && durationDays) {
+          const until = new Date();
+          until.setDate(until.getDate() + Number(durationDays));
+          updates.suspendedUntil = until.toISOString();
+        }
+
+        await Promise.all([
+          db.collection('users').doc(userId).set(updates, { merge: true }),
+          db.collection('publicProfiles').doc(userId).set({
+            isSuspended: isSusp,
+            isBlocked: isBlk,
+            status: statusVal,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true })
+        ]);
+
+        // Record immutable audit entry in adminReviews
+        await db.collection('adminReviews').add({
+          action,
+          targetType: 'user',
+          targetId: userId,
+          reason: reason || 'Administrative user moderation',
+          durationDays: durationDays || null,
+          adminEmail: state.currentUser?.email || 'admin',
+          adminUid: state.currentUser?.uid || '',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        const result = await res.json();
-        if (!result.success) throw new Error(result.error);
-        showToast(result.message || 'Action executed successfully', 'success');
+
+        showToast(`User account status updated: ${action}`, 'success');
         closeConfirmModal();
         await fetchAdminData();
       } catch (err) {
+        console.error('User action error:', err);
         showToast(`Failed: ${err.message}`, 'error');
       }
     }
@@ -760,16 +844,23 @@ window.handleStoreTakedown = function(storeId) {
     btnText: 'Confirm Takedown',
     onExecute: async (reason) => {
       try {
-        const res = await fetch('/api/admin/takedown', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${state.currentIdToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ type: 'store', id: storeId, reason })
+        await db.collection('stores').doc(storeId).set({
+          status: 'suspended',
+          reviewStatus: 'removed',
+          takedownReason: reason || 'Suspended by Administrator',
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        await db.collection('adminReviews').add({
+          action: 'takedown',
+          targetType: 'store',
+          targetId: storeId,
+          reason: reason || 'Storefront suspension',
+          adminEmail: state.currentUser?.email || 'admin',
+          adminUid: state.currentUser?.uid || '',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        const result = await res.json();
-        if (!result.success) throw new Error(result.error);
+
         showToast('Store suspended successfully', 'success');
         closeConfirmModal();
         await fetchAdminData();
@@ -789,16 +880,22 @@ window.handleStoreRestore = function(storeId) {
     btnText: 'Restore Storefront',
     onExecute: async (reason) => {
       try {
-        const res = await fetch('/api/admin/restore', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${state.currentIdToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ type: 'store', id: storeId, reason })
+        await db.collection('stores').doc(storeId).set({
+          status: 'approved',
+          reviewStatus: 'approved',
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        await db.collection('adminReviews').add({
+          action: 'restore',
+          targetType: 'store',
+          targetId: storeId,
+          reason: reason || 'Storefront reinstated',
+          adminEmail: state.currentUser?.email || 'admin',
+          adminUid: state.currentUser?.uid || '',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        const result = await res.json();
-        if (!result.success) throw new Error(result.error);
+
         showToast('Store restored successfully', 'success');
         closeConfirmModal();
         await fetchAdminData();
@@ -883,16 +980,23 @@ window.handleProductTakedown = function(productId) {
     btnText: 'Confirm Delisting',
     onExecute: async (reason) => {
       try {
-        const res = await fetch('/api/admin/takedown', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${state.currentIdToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ type: 'product', id: productId, reason })
+        await db.collection('products').doc(productId).set({
+          status: 'taken_down',
+          reviewStatus: 'removed',
+          takedownReason: reason || 'Delisted by Administrator',
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        await db.collection('adminReviews').add({
+          action: 'takedown',
+          targetType: 'product',
+          targetId: productId,
+          reason: reason || 'Product delisting',
+          adminEmail: state.currentUser?.email || 'admin',
+          adminUid: state.currentUser?.uid || '',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        const result = await res.json();
-        if (!result.success) throw new Error(result.error);
+
         showToast('Product taken down successfully', 'success');
         closeConfirmModal();
         await fetchAdminData();
@@ -912,16 +1016,22 @@ window.handleProductRestore = function(productId) {
     btnText: 'Restore Product',
     onExecute: async (reason) => {
       try {
-        const res = await fetch('/api/admin/restore', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${state.currentIdToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ type: 'product', id: productId, reason })
+        await db.collection('products').doc(productId).set({
+          status: 'approved',
+          reviewStatus: 'approved',
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        await db.collection('adminReviews').add({
+          action: 'restore',
+          targetType: 'product',
+          targetId: productId,
+          reason: reason || 'Product reinstated',
+          adminEmail: state.currentUser?.email || 'admin',
+          adminUid: state.currentUser?.uid || '',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        const result = await res.json();
-        if (!result.success) throw new Error(result.error);
+
         showToast('Product restored successfully', 'success');
         closeConfirmModal();
         await fetchAdminData();
@@ -1093,17 +1203,28 @@ window.handlePostTakedown = function(postId) {
     btnText: 'Confirm Removal',
     onExecute: async (reason) => {
       try {
-        const res = await fetch('/api/admin/takedown', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${state.currentIdToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ type: 'post', id: postId, reason })
+        const post = state.data.posts.find(p => p.id === postId);
+
+        await db.collection('posts').doc(postId).set({
+          status: 'taken_down',
+          reviewStatus: 'removed',
+          takedownReason: reason || 'Content policy violation',
+          removedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        await db.collection('adminReviews').add({
+          action: 'takedown',
+          targetType: 'post',
+          targetId: postId,
+          reason: reason || 'Policy violation removal',
+          postSnapshot: post || null,
+          adminEmail: state.currentUser?.email || 'admin',
+          adminUid: state.currentUser?.uid || '',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        const result = await res.json();
-        if (!result.success) throw new Error(result.error);
-        showToast('Post taken down and creator notified', 'success');
+
+        showToast('Post taken down and logged to security archive', 'success');
         closeConfirmModal();
         await fetchAdminData();
       } catch (err) {
@@ -1122,16 +1243,22 @@ window.handlePostRestore = function(postId) {
     btnText: 'Restore Content',
     onExecute: async (reason) => {
       try {
-        const res = await fetch('/api/admin/restore', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${state.currentIdToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ type: 'post', id: postId, reason })
+        await db.collection('posts').doc(postId).set({
+          status: 'active',
+          reviewStatus: 'approved',
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        await db.collection('adminReviews').add({
+          action: 'restore',
+          targetType: 'post',
+          targetId: postId,
+          reason: reason || 'Post restored to live feed',
+          adminEmail: state.currentUser?.email || 'admin',
+          adminUid: state.currentUser?.uid || '',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        const result = await res.json();
-        if (!result.success) throw new Error(result.error);
+
         showToast('Post restored to live feed successfully', 'success');
         closeConfirmModal();
         await fetchAdminData();
@@ -1262,20 +1389,48 @@ window.inspectKyc = function(userId) {
 
 async function executeKycDecision(userId, action, reason = '', correctionInstructions = '') {
   try {
-    const res = await fetch('/api/admin/kyc-action', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${state.currentIdToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ userId, action, reason, correctionInstructions })
+    const isApprove = action === 'approve';
+    const statusVal = isApprove ? 'approved' : 'rejected';
+
+    const kycUpdates = {
+      verificationStatus: statusVal,
+      status: statusVal,
+      reviewedBy: state.currentUser?.email || 'admin',
+      reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if (!isApprove) {
+      kycUpdates.rejectionReason = reason || 'Statutory criteria not met';
+      kycUpdates.correctionInstructions = correctionInstructions || '';
+    }
+
+    const userUpdates = {
+      isVerifiedSeller: isApprove,
+      verificationStatus: statusVal,
+      kycStatus: statusVal,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    await Promise.all([
+      db.collection('buyerKycRecords').doc(userId).set(kycUpdates, { merge: true }),
+      db.collection('users').doc(userId).set(userUpdates, { merge: true }),
+      db.collection('publicProfiles').doc(userId).set({ isVerifiedSeller: isApprove, verified: isApprove, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true })
+    ]);
+
+    await db.collection('securityReviews').add({
+      action: `kyc_${action}`,
+      targetType: 'buyerKyc',
+      targetId: userId,
+      reason: reason || (isApprove ? 'Ghana Card identity verified' : 'KYC verification rejected'),
+      adminEmail: state.currentUser?.email || 'admin',
+      adminUid: state.currentUser?.uid || '',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
-    const result = await res.json();
-    if (!result.success) throw new Error(result.error);
-    showToast(result.message || 'KYC decision recorded', 'success');
+
+    showToast(isApprove ? 'KYC application approved: Vendor verified' : 'KYC application rejected', 'success');
     closeKycModal();
     await fetchAdminData();
   } catch (err) {
+    console.error('KYC decision error:', err);
     showToast(`Failed: ${err.message}`, 'error');
   }
 }
@@ -1345,17 +1500,24 @@ function renderReportsTable() {
 
 window.handleReportStatus = async function(reportId, reportType, status) {
   try {
-    const res = await fetch('/api/admin/report-action', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${state.currentIdToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ reportId, reportType, status, notes: `Report status set to ${status}` })
+    const collectionName = reportType === 'fraud' ? 'fraudReports' : 'scamReports';
+    await db.collection(collectionName).doc(reportId).set({
+      status,
+      resolvedBy: state.currentUser?.email || 'admin',
+      resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    await db.collection('adminReviews').add({
+      action: `report_${status}`,
+      targetType: reportType,
+      targetId: reportId,
+      status,
+      adminEmail: state.currentUser?.email || 'admin',
+      adminUid: state.currentUser?.uid || '',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
-    const result = await res.json();
-    if (!result.success) throw new Error(result.error);
-    showToast(result.message || 'Report status updated', 'success');
+
+    showToast(`Report status updated: ${status}`, 'success');
     await fetchAdminData();
   } catch (err) {
     showToast(`Failed: ${err.message}`, 'error');
@@ -1496,17 +1658,29 @@ window.handleSecurityAction = function(targetType, targetId, action) {
     btnText: `Execute ${action}`,
     onExecute: async (reason) => {
       try {
-        const res = await fetch('/api/jobs/security-action', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${state.currentIdToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ targetType, targetId, action, reason, notes: reason })
+        const collectionName = targetType === 'job' ? 'jobs' : 'events';
+        const isApprove = action === 'approve';
+        const statusVal = isApprove ? 'approved' : 'removed';
+
+        await db.collection(collectionName).doc(targetId).set({
+          status: statusVal,
+          reviewStatus: statusVal,
+          moderationReason: reason || null,
+          moderatedBy: state.currentUser?.email || 'admin',
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        await db.collection('securityReviews').add({
+          action: `${targetType}_${action}`,
+          targetType,
+          targetId,
+          reason: reason || `Security moderation: ${action}`,
+          adminEmail: state.currentUser?.email || 'admin',
+          adminUid: state.currentUser?.uid || '',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        const result = await res.json();
-        if (!result.success) throw new Error(result.error);
-        showToast(result.message || 'Security action logged successfully', 'success');
+
+        showToast(`${targetType === 'job' ? 'Job' : 'Event'} listing ${action === 'approve' ? 'approved' : 'removed'} successfully`, 'success');
         closeConfirmModal();
         await fetchAdminData();
       } catch (err) {
