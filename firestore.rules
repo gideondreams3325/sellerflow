@@ -49,6 +49,18 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
+    // Authorized Administrator Directory
+    match /admins/{adminId} {
+      allow read: if isAdmin();
+      allow write: if isSignedIn() && (
+        isAdmin() ||
+        (request.auth.uid == adminId && request.auth.token.email != null && (
+          request.auth.token.email == 'gideondreams3325@gmail.com' ||
+          request.auth.token.email.matches('(?i)^gideondreams3325@gmail\\.com$')
+        ))
+      );
+    }
+
     // Public registries for email and username availability checks
     match /registeredEmails/{emailDoc} {
       allow read: if true;

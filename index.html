@@ -1258,14 +1258,14 @@ const signInWithPopup=(auth,provider)=>auth.signInWithPopup(provider);
 
 function getOAuthCallbackUrl() {
   const origin = window.location.origin || '';
-  if (origin && origin.startsWith('http') && !origin.includes('localhost') && !origin.includes('capacitor://') && !origin.includes('127.0.0.1')) {
+  if (origin && origin.startsWith('http') && !origin.includes('localhost') && !origin.includes('capacitor://') && !origin.includes('127.0.0.1') && !origin.includes('.run.app')) {
     return origin + '/oauth-callback';
   }
   const injectedUrl = '____SELLERFLOW_APP_URL____';
-  if (injectedUrl && injectedUrl.startsWith('http') && !injectedUrl.includes('____')) {
+  if (injectedUrl && injectedUrl.startsWith('http') && !injectedUrl.includes('____') && !injectedUrl.includes('.run.app') && !injectedUrl.includes('ais-dev-')) {
     return injectedUrl.replace(/\/+$/, '') + '/oauth-callback';
   }
-  if (window.SELLERFLOW_APP_URL && typeof window.SELLERFLOW_APP_URL === 'string' && window.SELLERFLOW_APP_URL.startsWith('http')) {
+  if (window.SELLERFLOW_APP_URL && typeof window.SELLERFLOW_APP_URL === 'string' && window.SELLERFLOW_APP_URL.startsWith('http') && !window.SELLERFLOW_APP_URL.includes('.run.app')) {
     return window.SELLERFLOW_APP_URL.replace(/\/+$/, '') + '/oauth-callback';
   }
   // Live production domain for SellerFlow web and mobile OAuth callback
@@ -1274,14 +1274,14 @@ function getOAuthCallbackUrl() {
 
 function getAppUrl() {
   const origin = window.location.origin || '';
-  if (origin && origin.startsWith('http') && !origin.includes('localhost') && !origin.includes('capacitor://') && !origin.includes('127.0.0.1')) {
+  if (origin && origin.startsWith('http') && !origin.includes('localhost') && !origin.includes('capacitor://') && !origin.includes('127.0.0.1') && !origin.includes('.run.app')) {
     return origin;
   }
   const injectedUrl = '____SELLERFLOW_APP_URL____';
-  if (injectedUrl && injectedUrl.startsWith('http') && !injectedUrl.includes('____')) {
+  if (injectedUrl && injectedUrl.startsWith('http') && !injectedUrl.includes('____') && !injectedUrl.includes('.run.app') && !injectedUrl.includes('ais-dev-')) {
     return injectedUrl.replace(/\/+$/, '');
   }
-  if (window.SELLERFLOW_APP_URL && typeof window.SELLERFLOW_APP_URL === 'string' && window.SELLERFLOW_APP_URL.startsWith('http')) {
+  if (window.SELLERFLOW_APP_URL && typeof window.SELLERFLOW_APP_URL === 'string' && window.SELLERFLOW_APP_URL.startsWith('http') && !window.SELLERFLOW_APP_URL.includes('.run.app')) {
     return window.SELLERFLOW_APP_URL.replace(/\/+$/, '');
   }
   return 'https://sellerflow-tan.vercel.app';
@@ -1626,6 +1626,9 @@ async function initCapacitorHandlers() {
       App.addListener('appStateChange', async (state) => {
         if (state.isActive) {
           if (typeof auth !== 'undefined' && auth.currentUser) {
+            if (typeof isUserAdminEmail === 'function' && isUserAdminEmail(auth.currentUser.email) && typeof auth.currentUser.getIdToken === 'function') {
+              auth.currentUser.getIdToken(true).catch(() => {});
+            }
             hide($('authPage'));
             showApp();
             if (typeof navigate === 'function' && (!currentPage || currentPage === 'auth')) {
@@ -1652,6 +1655,21 @@ async function initCapacitorHandlers() {
                   showApp();
                   if (typeof navigate === 'function' && (!currentPage || currentPage === 'auth')) {
                     navigate('feed');
+                  }
+                  // Asynchronously bind to real Firebase Auth currentUser as soon as ready
+                  if (typeof auth !== 'undefined' && auth && typeof auth.authStateReady === 'function') {
+                    auth.authStateReady().then(async () => {
+                      if (auth.currentUser) {
+                        if (isUserAdminEmail(auth.currentUser.email) && typeof auth.currentUser.getIdToken === 'function') {
+                          await auth.currentUser.getIdToken(true).catch(() => {});
+                        }
+                        startUser(auth.currentUser).then(() => {
+                          if (isAdmin && currentPage === 'admin' && typeof renderAdmin === 'function') {
+                            renderAdmin().catch(() => {});
+                          }
+                        }).catch(() => {});
+                      }
+                    }).catch(() => {});
                   }
                 }
               } catch (_) {}
@@ -1791,20 +1809,19 @@ async function initCapacitorHandlers() {
             }
           }
           
-          // Method 2: Google Auth Credential with oauthIdToken or idToken
-          const effectiveIdToken = oauthIdToken || idToken;
+          // Method 2: Google Auth Credential with oauthIdToken
           const effectiveAccessToken = oauthAccessToken || accessToken;
-          if (!signedIn && effectiveIdToken) {
+          if (!signedIn && oauthIdToken) {
             try {
-              console.log('Attempting signInWithCredential with ID token...');
-              const credential = firebase.auth.GoogleAuthProvider.credential(effectiveIdToken, effectiveAccessToken || undefined);
+              console.log('Attempting signInWithCredential with OAuth ID token...');
+              const credential = firebase.auth.GoogleAuthProvider.credential(oauthIdToken, effectiveAccessToken || undefined);
               const userCred = await auth.signInWithCredential(credential);
               if (userCred && userCred.user) {
                 signedIn = true;
                 console.log('signInWithCredential succeeded for user:', userCred.user.uid);
               }
             } catch (credErr) {
-              console.warn('signInWithCredential with ID token error:', credErr);
+              console.warn('signInWithCredential with OAuth ID token error:', credErr);
               if (!lastAuthError) lastAuthError = credErr.message || String(credErr);
             }
           }
@@ -1823,6 +1840,17 @@ async function initCapacitorHandlers() {
               console.warn('signInWithCredential with accessToken error:', accErr);
               if (!lastAuthError) lastAuthError = accErr.message || String(accErr);
             }
+          }
+
+          // Method 3b: Fallback with idToken if provider accepted
+          if (!signedIn && idToken && !oauthIdToken) {
+            try {
+              const credential = firebase.auth.GoogleAuthProvider.credential(idToken, effectiveAccessToken || undefined);
+              const userCred = await auth.signInWithCredential(credential);
+              if (userCred && userCred.user) {
+                signedIn = true;
+              }
+            } catch (_) {}
           }
 
           // Method 4: Secure token refresh via Google Identity Toolkit
@@ -19158,7 +19186,7 @@ async function startUser(u){
       businessCertificateStatus:'approved'
     };
     if (typeof u.getIdToken === 'function') {
-      u.getIdToken(true).catch(() => {});
+      await u.getIdToken(true).catch(() => {});
     }
     updateDoc(doc(db,'users',u.uid),{
       verified:true,
@@ -19185,6 +19213,32 @@ async function startUser(u){
       if(!available)username='seller_'+u.uid.slice(0,8).toLowerCase();
     }catch(e){console.warn('Generated username check skipped:',e)}
     await createMissingProfile(u,{name:u.displayName||'SellerFlow User',username,usernameLower:username.toLowerCase(),role:isAdmin?'admin':'seller',verified:isAdmin,hasBusinessCert:isAdmin,businessVerified:isAdmin});
+    if(isAdmin) {
+      if(currentProfile) {
+        currentProfile.role = 'admin';
+        currentProfile.isAdmin = true;
+        currentProfile.verified = true;
+      }
+      if (typeof u.getIdToken === 'function') {
+        await u.getIdToken(true).catch(() => {});
+      }
+      updateDoc(doc(db,'users',u.uid),{
+        verified:true,
+        role:'admin',
+        isAdmin:true,
+        hasBusinessCert:true,
+        businessVerified:true,
+        verificationStatus:'approved'
+      }).catch(()=>{});
+      updateDoc(doc(db,'publicProfiles',u.uid),{
+        verified:true,
+        role:'admin',
+        isAdmin:true,
+        hasBusinessCert:true,
+        businessVerified:true
+      }).catch(()=>{});
+      setDoc(doc(db, 'admins', u.uid), { uid: u.uid, email: u.email, role: 'admin', updatedAt: serverTimestamp() }, { merge: true }).catch(()=>{});
+    }
   }
   if(currentProfile){
     let localPic = '';
@@ -19351,13 +19405,35 @@ function setupAuthInputRepaintFix() {
 window.SELLERFLOW_AUTH_STATE = 'AUTH_INITIALIZING';
 
 let _sfAuthInitResolver = null;
-window._sfWaitForAuthInit = () => new Promise(resolve => {
+window._sfWaitForAuthInit = () => new Promise(async (resolve) => {
+  if (typeof auth !== 'undefined' && auth?.currentUser) {
+    if (typeof isUserAdminEmail === 'function' && isUserAdminEmail(auth.currentUser.email)) {
+      try { await auth.currentUser.getIdToken(true); } catch (_) {}
+    }
+    return resolve(auth.currentUser);
+  }
+
+  if (typeof auth !== 'undefined' && auth && typeof auth.authStateReady === 'function') {
+    try {
+      await Promise.race([
+        auth.authStateReady(),
+        new Promise(r => setTimeout(r, 4500))
+      ]);
+      if (auth.currentUser) {
+        if (typeof isUserAdminEmail === 'function' && isUserAdminEmail(auth.currentUser.email)) {
+          try { await auth.currentUser.getIdToken(true); } catch (_) {}
+        }
+        return resolve(auth.currentUser);
+      }
+    } catch (_) {}
+  }
+
   if (window.SELLERFLOW_AUTH_STATE !== 'AUTH_INITIALIZING') {
-    resolve(currentUser || auth?.currentUser || null);
+    resolve(auth?.currentUser || currentUser || null);
   } else if (_sfAuthInitResolver) {
-    _sfAuthInitResolver.then(resolve);
+    _sfAuthInitResolver.then(u => resolve(auth?.currentUser || u || currentUser || null));
   } else {
-    setTimeout(() => resolve(currentUser || auth?.currentUser || null), 2000);
+    setTimeout(() => resolve(auth?.currentUser || currentUser || null), 2500);
   }
 });
 
@@ -19409,9 +19485,12 @@ async function init(){
 
     _sfAuthInitResolver = new Promise((resolve) => {
       let resolved = false;
-      const done = (u) => {
+      const done = async (u) => {
         if (!resolved) {
           resolved = true;
+          if (u && typeof isUserAdminEmail === 'function' && isUserAdminEmail(u.email) && typeof u.getIdToken === 'function') {
+            try { await u.getIdToken(true); } catch (_) {}
+          }
           resolve(u);
         }
       };
@@ -19421,10 +19500,11 @@ async function init(){
         return;
       }
 
-      // Fast deterministic timeout fallback (1000ms) for offline/poor connectivity
+      // Fast deterministic timeout fallback (4500ms on Android native/Capacitor, 2500ms on web)
+      const isNativeEnv = typeof window.Capacitor !== 'undefined' || (window.location.origin && window.location.origin.includes('localhost'));
       const timer = setTimeout(() => {
         done(auth?.currentUser || currentUser || null);
-      }, 1000);
+      }, isNativeEnv ? 4500 : 2500);
 
       if (typeof auth.authStateReady === 'function') {
         auth.authStateReady().then(() => {
@@ -26302,6 +26382,19 @@ init();
     if (typeof _sfWaitForAuthInit === 'function') {
       await _sfWaitForAuthInit().catch(() => {});
     }
+
+    // Ensure Firebase Auth currentUser is resolved if a session exists
+    if ((!auth?.currentUser || !auth.currentUser.email) && (currentUser?.email || localStorage.getItem('sf_active_user_session'))) {
+      if (typeof auth !== 'undefined' && auth && typeof auth.authStateReady === 'function') {
+        try {
+          await Promise.race([
+            auth.authStateReady(),
+            new Promise(r => setTimeout(r, 4000))
+          ]);
+        } catch (_) {}
+      }
+    }
+
     const u = auth?.currentUser || currentUser || (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
     const em = (u && u.email) ? u.email.toLowerCase().trim() : '';
     const isOwnerAdmin = (typeof isUserAdminEmail === 'function' && em) ? isUserAdminEmail(em) : (em === 'gideondreams3325@gmail.com');
@@ -26326,18 +26419,7 @@ init();
       return;
     }
 
-    // Proactively ensure admin role and permissions in Firestore
-    if(u && u.uid && em && isUserAdminEmail(em)){
-      try {
-        await Promise.all([
-          setDoc(doc(db, 'admins', u.uid), { uid: u.uid, email: 'gideondreams3325@gmail.com', role: 'admin', updatedAt: serverTimestamp() }, { merge: true }).catch(()=>{}),
-          setDoc(doc(db, 'users', u.uid), { role: 'admin', isAdmin: true, verified: true, verificationStatus: 'approved' }, { merge: true }).catch(()=>{}),
-          setDoc(doc(db, 'publicProfiles', u.uid), { role: 'admin', isAdmin: true, verified: true }, { merge: true }).catch(()=>{})
-        ]);
-      } catch(_) {}
-    }
-
-    // Acquire refreshed auth token for backend Admin SDK overview sync and custom claims
+    // Acquire refreshed auth token FIRST so Firestore SDK and backend have fresh admin claims
     let idToken = '';
     try {
       if (auth && auth.currentUser && typeof auth.currentUser.getIdToken === 'function') {
@@ -26348,6 +26430,17 @@ init();
         idToken = await firebase.auth().currentUser.getIdToken(true);
       }
     } catch (_) {}
+
+    // Proactively ensure admin role and permissions in Firestore
+    if(u && u.uid && em && isUserAdminEmail(em)){
+      try {
+        await Promise.all([
+          setDoc(doc(db, 'admins', u.uid), { uid: u.uid, email: 'gideondreams3325@gmail.com', role: 'admin', updatedAt: serverTimestamp() }, { merge: true }).catch(()=>{}),
+          setDoc(doc(db, 'users', u.uid), { role: 'admin', isAdmin: true, verified: true, verificationStatus: 'approved' }, { merge: true }).catch(()=>{}),
+          setDoc(doc(db, 'publicProfiles', u.uid), { role: 'admin', isAdmin: true, verified: true }, { merge: true }).catch(()=>{})
+        ]);
+      } catch(_) {}
+    }
 
     // Parallel fetch from Direct Firestore + Backend Admin Overview Route
     const [

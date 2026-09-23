@@ -80,6 +80,19 @@ if (!getApps().length) {
     } catch (_) {
       adminApp = initializeApp({ projectId: 'sellerflow-efaab' });
     }
+  } else if (process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+    try {
+      adminApp = initializeApp({
+        credential: cert({
+          projectId: process.env.FIREBASE_PROJECT_ID || 'sellerflow-efaab',
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+        }),
+        projectId: process.env.FIREBASE_PROJECT_ID || 'sellerflow-efaab'
+      });
+    } catch (_) {
+      adminApp = initializeApp({ projectId: 'sellerflow-efaab' });
+    }
   } else {
     // We must initialize with the project ID matching the client's Firebase configuration
     // to ensure client ID tokens are verified successfully.
