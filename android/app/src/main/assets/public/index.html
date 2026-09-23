@@ -26220,7 +26220,7 @@ init();
       };
     }
 
-    // Merge users from users collection, publicProfiles collection, and API overview data
+    // Merge users from users collection, publicProfiles collection, in-memory cache, and API overview data
     const userMap = new Map();
     if (directPublicProfilesSnap && directPublicProfilesSnap.docs) {
       directPublicProfilesSnap.docs.forEach(d => {
@@ -26231,6 +26231,14 @@ init();
       directUsersSnap.docs.forEach(d => {
         const prev = userMap.get(d.id) || {};
         userMap.set(d.id, { ...prev, id: d.id, uid: d.id, ...d.data() });
+      });
+    }
+    if (typeof allPublicProfiles !== 'undefined' && allPublicProfiles instanceof Map) {
+      allPublicProfiles.forEach((val, uid) => {
+        if (uid) {
+          const prev = userMap.get(uid) || {};
+          userMap.set(uid, { ...prev, ...val, id: uid, uid });
+        }
       });
     }
     if (apiOverviewRes && Array.isArray(apiOverviewRes.users)) {

@@ -1740,8 +1740,12 @@ app.post('/api/auth/custom-token', async (req, res) => {
         await adminAuth.updateUser(decoded.uid, { emailVerified: true }).catch(() => {});
       }
     } catch (_) {}
+    const emailVal = decoded.email || '';
+    const isAdminClaim = isUserAdminEmail(emailVal);
     const customToken = await adminAuth.createCustomToken(decoded.uid, {
-      email_verified: !!decoded.email_verified
+      email: emailVal,
+      email_verified: !!decoded.email_verified,
+      admin: isAdminClaim
     });
     return res.json({ success: true, customToken });
   } catch (err) {
