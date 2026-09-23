@@ -47,7 +47,7 @@ for (const file of filesToCopy) {
   if (fs.existsSync(srcPath)) {
     if (file === 'index.html') {
       let content = fs.readFileSync(srcPath, 'utf8');
-      const appUrl = process.env.APP_URL || '';
+      const appUrl = process.env.APP_URL || 'https://sellerflow-tan.vercel.app';
       content = content.replace(/____SELLERFLOW_APP_URL____/g, appUrl);
       fs.writeFileSync(destPath, content, 'utf8');
     } else {
