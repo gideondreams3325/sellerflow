@@ -1244,15 +1244,41 @@ function isCapacitorNative() {
 window.isCapacitorNative = isCapacitorNative;
 
 function getSfApiUrl(path) {
+  if (!path) return '';
   const p = path.startsWith('/') ? path : '/' + path;
   const isCapacitor = typeof isCapacitorNative === 'function' ? isCapacitorNative() : false;
   const appBase = (typeof getAppUrl === 'function') ? getAppUrl() : 'https://sellerflow-tan.vercel.app';
-  if (isCapacitor || window.location.origin.includes('capacitor://') || window.location.origin.includes('localhost')) {
-    return (window.__sfBackendUrl || appBase).replace(/\/+$/, '') + p;
+  if (isCapacitor || window.location.origin.includes('capacitor://') || window.location.origin.includes('localhost') || window.location.protocol === 'file:') {
+    const base = (window.__sfBackendUrl || appBase).replace(/\/+$/, '');
+    return base + p;
   }
   return p;
 }
 window.getSfApiUrl = getSfApiUrl;
+window.__sfBackendUrl = (typeof getAppUrl === 'function') ? getAppUrl() : 'https://sellerflow-tan.vercel.app';
+
+// Universal Fetch Interceptor for Native Capacitor and relative API routes
+(function() {
+  const originalFetch = window.fetch;
+  window.fetch = function(input, init) {
+    try {
+      if (typeof input === 'string') {
+        if (input.startsWith('/api/') || input.startsWith('/uploads/') || input.startsWith('api/') || input.startsWith('uploads/')) {
+          const resolved = getSfApiUrl(input);
+          return originalFetch.call(this, resolved, init);
+        }
+      } else if (input && typeof input === 'object' && input.url) {
+        const url = input.url;
+        if (typeof url === 'string' && (url.startsWith('/api/') || url.startsWith('/uploads/'))) {
+          const resolved = getSfApiUrl(url);
+          const newReq = new Request(resolved, input);
+          return originalFetch.call(this, newReq, init);
+        }
+      }
+    } catch (_) {}
+    return originalFetch.apply(this, arguments);
+  };
+})();
 
 async function handleCapacitorGoogleSignIn() {
   const callbackUrl = getOAuthCallbackUrl();
@@ -6412,9 +6438,6 @@ function setNav(){
       $('headerUploadBtn')?.addEventListener('click', () => openPostModal());
       $('headerProfileBtn')?.addEventListener('click', () => navigate('profile'));
       $('notificationBtn')?.addEventListener('click', () => {
-        if(window.markNotificationsRead && notificationCache && notificationCache.length){
-          window.markNotificationsRead(notificationCache.map(n=>n.id));
-        }
         if(window.renderGroupedNotifications) return window.renderGroupedNotifications();
         if(window.openNotifications) return window.openNotifications();
         if(typeof openNotifications === 'function') openNotifications();
@@ -17308,8 +17331,18 @@ function handleNotificationsSnapshot(snap, isInitial=false){
 async function loadNotifications(announce=false){
   if(!currentUser)return;
   try{
-    const snap=await getDocs(query(collection(db,'notifications'),where('recipientId','==',currentUser.uid),limit(100)));
-    handleNotificationsSnapshot(snap,!announce);
+    const [snap1, snap2] = await Promise.all([
+      getDocs(query(collection(db,'notifications'),where('recipientId','in',[currentUser.uid, 'all']),limit(100))).catch(()=>({docs:[]})),
+      getDocs(query(collection(db,'notifications'),where('userId','==',currentUser.uid),limit(100))).catch(()=>({docs:[]}))
+    ]);
+    const mergedDocs = [...(snap1?.docs||[]), ...(snap2?.docs||[])];
+    const uniqueMap = new Map();
+    mergedDocs.forEach(d => {
+      if(d && d.id && !uniqueMap.has(d.id)) {
+        uniqueMap.set(d.id, d);
+      }
+    });
+    handleNotificationsSnapshot({ docs: Array.from(uniqueMap.values()) }, !announce);
   }catch(e){
     console.warn('Notifications unavailable',e);
   }
@@ -17589,7 +17622,8 @@ async function adminTakeDown(arg1,arg2){
       if(typeof purgeAndHidePostImmediately==='function') purgeAndHidePostImmediately(id, 'Security team takedown');
       try {
         const token = currentUser ? await currentUser.getIdToken() : '';
-        await fetch('/api/admin/takedown', {
+        const apiUrl = (typeof getSfApiUrl === 'function') ? getSfApiUrl('/api/admin/takedown') : '/api/admin/takedown';
+        await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -17598,10 +17632,17 @@ async function adminTakeDown(arg1,arg2){
           body: JSON.stringify({ type: 'post', id, reason: 'Administrative safety takedown' })
         });
       } catch (_) {}
-      await deleteDoc(doc(db,'posts',id)).catch(async () => {
-        await updateDoc(doc(db,'posts',id),{status:'removed',reviewStatus:'removed',safeContent:false,isDeleted:true,hidden:true,removedAt:serverTimestamp(),removedBy:currentUser?currentUser.uid:'admin'}).catch(()=>{});
-      });
-      toast('Post taken down and deleted from For You feed','success');
+      await updateDoc(doc(db, 'posts', id), {
+        status: 'taken_down',
+        reviewStatus: 'removed',
+        safeContent: false,
+        hidden: true,
+        isDeleted: false,
+        takedownReason: 'Administrative safety takedown',
+        removedAt: serverTimestamp(),
+        removedBy: currentUser ? currentUser.uid : 'admin'
+      }).catch(() => {});
+      toast('Post taken down and archived in Restoration Hub', 'success');
     }else if(type==='product'){
       await deleteDoc(doc(db,'products',id));
       toast('Product removed','success');
@@ -19273,10 +19314,15 @@ async function init(){
         }
       };
 
-      // Set deterministic timeout fallback (3000ms) for offline/poor connectivity
+      if (auth?.currentUser) {
+        done(auth.currentUser);
+        return;
+      }
+
+      // Fast deterministic timeout fallback (1000ms) for offline/poor connectivity
       const timer = setTimeout(() => {
         done(auth?.currentUser || currentUser || null);
-      }, 3000);
+      }, 1000);
 
       if (typeof auth.authStateReady === 'function') {
         auth.authStateReady().then(() => {
@@ -19357,6 +19403,7 @@ async function init(){
 
       showApp();
       setNav();
+      ready();
 
       const savedRoute = getSavedRoute();
       const initialPage = savedRoute?.page || 'feed';
@@ -19364,23 +19411,21 @@ async function init(){
       const initialOptions = savedRoute?.options || null;
 
       if (initialPage === 'store' && initialTargetId) {
-        await openStore(initialTargetId);
+        openStore(initialTargetId);
       } else if (initialPage === 'profile' && initialTargetId) {
         if (typeof openUserProfile === 'function') {
           openUserProfile(initialTargetId, initialOptions || {});
         } else {
-          await navigate('profile', initialTargetId, initialOptions);
+          navigate('profile', initialTargetId, initialOptions);
         }
       } else {
-        await navigate(initialPage, initialTargetId, initialOptions);
+        navigate(initialPage, initialTargetId, initialOptions);
       }
 
-      // Load Firestore profile asynchronously
-      try {
-        await startUser(resolvedUser);
-      } catch (pErr) {
+      // Load Firestore profile asynchronously without blocking UI mount
+      startUser(resolvedUser).catch(pErr => {
         console.warn('Background profile fetch notice:', pErr);
-      }
+      });
 
       // STATE 2: AUTHENTICATED
       window.SELLERFLOW_AUTH_STATE = 'AUTHENTICATED';
@@ -23417,7 +23462,8 @@ init();
       let serverSuccess = false;
       try {
         const token = currentUser ? await currentUser.getIdToken() : '';
-        const res = await fetch('/api/admin/takedown', {
+        const apiUrl = (typeof getSfApiUrl === 'function') ? getSfApiUrl('/api/admin/takedown') : '/api/admin/takedown';
+        const res = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -23431,17 +23477,16 @@ init();
       const s = await getDoc(doc(db, 'posts', uid)).catch(() => null);
       if(s && snapshotExists(s)){
         const x = s.data();
-        await deleteDoc(doc(db, 'posts', uid)).catch(async () => {
-          await updateDoc(doc(db, 'posts', uid), {
-            status: 'removed',
-            reviewStatus: 'removed',
-            safeContent: false,
-            isDeleted: true,
-            hidden: true,
-            removedAt: serverTimestamp(),
-            removedBy: currentUser ? currentUser.uid : 'admin'
-          }).catch(() => {});
-        });
+        await updateDoc(doc(db, 'posts', uid), {
+          status: 'taken_down',
+          reviewStatus: 'removed',
+          safeContent: false,
+          isDeleted: false,
+          hidden: true,
+          takedownReason: 'Administrative safety takedown',
+          removedAt: serverTimestamp(),
+          removedBy: currentUser ? currentUser.uid : 'admin'
+        }).catch(() => {});
 
         if(x && x.sellerId && (!currentUser || x.sellerId !== currentUser.uid)){
           await addDoc(collection(db, 'notifications'), {
@@ -23456,9 +23501,18 @@ init();
           }).catch(() => {});
         }
       } else {
-        await deleteDoc(doc(db, 'posts', uid)).catch(() => {});
+        await updateDoc(doc(db, 'posts', uid), {
+          status: 'taken_down',
+          reviewStatus: 'removed',
+          safeContent: false,
+          isDeleted: false,
+          hidden: true,
+          takedownReason: 'Administrative safety takedown',
+          removedAt: serverTimestamp(),
+          removedBy: currentUser ? currentUser.uid : 'admin'
+        }).catch(() => {});
       }
-      toast('Post taken down and deleted from For You feed', 'success');
+      toast('Post taken down and archived in Restoration Hub', 'success');
       if(typeof renderAdmin==='function'&&currentPage==='admin') renderAdmin();
       else if(currentPage==='feed') renderFeed();
       else if(typeof renderPage==='function') renderPage();
@@ -25787,27 +25841,42 @@ init();
     if(!ok) return;
     try {
       loading('Restoring post to live feed…');
-      const s = await getDoc(doc(db, 'posts', postId));
-      if(!snapshotExists(s)) throw Error('Post not found in database.');
-      const x = s.data();
-      await updateDoc(doc(db, 'posts', postId), {
-        status: 'published',
-        reviewStatus: 'reviewed',
-        safeContent: true,
-        restoredAt: serverTimestamp(),
-        restoredBy: currentUser?.uid || 'admin'
-      });
-      if(x && x.sellerId && (!currentUser || x.sellerId !== currentUser.uid)){
-        await addDoc(collection(db, 'notifications'), {
-          recipientId: x.sellerId,
-          senderName: 'SellerFlow Security Team',
-          title: 'Post restored',
-          message: 'The SellerFlow Security Team restored your post back to the live For You feed.',
-          fromAdmin: true,
-          postId: postId,
-          read: false,
-          createdAt: serverTimestamp()
+      try {
+        const token = currentUser ? await currentUser.getIdToken() : '';
+        const apiUrl = (typeof getSfApiUrl === 'function') ? getSfApiUrl('/api/admin/restore') : '/api/admin/restore';
+        await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({ type: 'post', id: postId })
         });
+      } catch (_) {}
+      const s = await getDoc(doc(db, 'posts', postId)).catch(() => null);
+      if(s && snapshotExists(s)) {
+        const x = s.data();
+        await updateDoc(doc(db, 'posts', postId), {
+          status: 'published',
+          reviewStatus: 'reviewed',
+          safeContent: true,
+          isDeleted: false,
+          hidden: false,
+          restoredAt: serverTimestamp(),
+          restoredBy: currentUser?.uid || 'admin'
+        }).catch(() => {});
+        if(x && x.sellerId && (!currentUser || x.sellerId !== currentUser.uid)){
+          await addDoc(collection(db, 'notifications'), {
+            recipientId: x.sellerId,
+            senderName: 'SellerFlow Security Team',
+            title: 'Post restored',
+            message: 'The SellerFlow Security Team restored your post back to the live For You feed.',
+            fromAdmin: true,
+            postId: postId,
+            read: false,
+            createdAt: serverTimestamp()
+          }).catch(() => {});
+        }
       }
       if(window._sfRemovedPostIds) {
         window._sfRemovedPostIds.delete(postId);
@@ -25818,8 +25887,9 @@ init();
       toast('Post restored back to live For You feed!', 'success', 3500);
       if(typeof renderAdmin === 'function' && currentPage === 'admin'){
         await renderAdmin();
-        const tab = document.querySelector('[data-admin-tab="restoration"]');
-        if(tab) tab.click();
+        if(typeof window.setAdminTab === 'function') {
+          window.setAdminTab('posts', 'restoration');
+        }
       } else if(typeof renderPage === 'function') {
         renderPage();
       }
@@ -25861,11 +25931,20 @@ init();
         });
       } catch (_) {}
       await deleteDoc(doc(db, 'posts', postId));
+      if(window._sfRemovedPostIds) {
+        window._sfRemovedPostIds.delete(postId);
+        try {
+          localStorage.setItem('sf_removed_post_ids', JSON.stringify([...window._sfRemovedPostIds]));
+        } catch(_) {}
+      }
       toast('Post permanently removed and deleted from SellerFlow.', 'info', 3500);
       if(typeof renderAdmin === 'function' && currentPage === 'admin'){
         await renderAdmin();
-        const tab = document.querySelector('[data-admin-tab="restoration"]');
-        if(tab) tab.click();
+        if(typeof window.setAdminTab === 'function') {
+          window.setAdminTab('posts', 'restoration');
+        }
+      } else if(typeof renderPage === 'function') {
+        renderPage();
       }
     } catch(e) {
       toast(errMsg(e), 'error');
@@ -26350,7 +26429,7 @@ init();
     // Restoration queue: taken down, hidden or removed posts
     const takenDownPosts = posts.docs
       .map(d => ({ id: d.id, data: d.data() }))
-      .filter(x => x.data.status === 'removed' || x.data.reviewStatus === 'removed' || x.data.status === 'taken_down' || (x.data.status === 'hidden' && x.data.reviewStatus === 'violation'));
+      .filter(x => x.data.status === 'removed' || x.data.reviewStatus === 'removed' || x.data.status === 'taken_down' || (x.data.status === 'hidden' && x.data.reviewStatus === 'violation') || (window._sfRemovedPostIds && window._sfRemovedPostIds.has(x.id)));
 
     // Stores metrics
     const allStoreDocs = storesSnap.docs.map(d => ({ id: d.id, ...d.data() }));

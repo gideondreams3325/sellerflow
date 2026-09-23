@@ -1532,21 +1532,19 @@ app.post('/api/admin/takedown', async (req, res) => {
         }, { merge: true });
       }
 
-      // Mark removed first so real-time listeners trigger, then permanently delete document
+      // Update post status to taken_down / removed so it is securely hidden from public feed but preserved in Restoration Hub
       await postRef.set({
-        status: 'removed',
+        status: 'taken_down',
         reviewStatus: 'removed',
         safeContent: false,
-        isDeleted: true,
+        isDeleted: false,
         hidden: true,
         takedownReason: reason,
         removedAt: FieldValue.serverTimestamp(),
         removedBy: callerUid
       }, { merge: true });
 
-      await postRef.delete();
-
-      return res.json({ success: true, message: 'Post taken down and deleted from For You feed successfully' });
+      return res.json({ success: true, message: 'Post taken down and archived in Restoration Hub successfully' });
     }
 
     if (type === 'product') {
@@ -1633,6 +1631,120 @@ app.post('/api/admin/takedown', async (req, res) => {
   }
 });
 
+/**
+ * Server-Side Authoritative Restore API Endpoint
+ * Restores taken-down posts, products, and stores back to active status via Firebase Admin SDK.
+ */
+app.post('/api/admin/restore', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.split('Bearer ')[1].trim() : '';
+  const { type = 'post', id, targetId } = req.body || {};
+  const itemUid = id || targetId;
+
+  try {
+    if (!idToken) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing token' });
+    }
+
+    let decodedToken;
+    try {
+      decodedToken = await verifyFirebaseToken(idToken);
+    } catch (authErr) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid token' });
+    }
+
+    const callerUid = decodedToken.uid;
+    let isAdmin = isUserAdminEmail(decodedToken.email);
+    if (!isAdmin) {
+      try {
+        const userDoc = await adminDb.collection('users').doc(callerUid).get();
+        const userData = userDoc.data() || {};
+        isAdmin = isUserAdminEmail(userData.email);
+      } catch (_) {}
+    }
+
+    if (!isAdmin) {
+      return res.status(403).json({ success: false, error: 'Forbidden: Admin access required' });
+    }
+
+    if (!itemUid) {
+      return res.status(400).json({ success: false, error: 'Missing target item ID' });
+    }
+
+    if (type === 'post') {
+      const postRef = adminDb.collection('posts').doc(itemUid);
+      const postSnap = await postRef.get();
+      let postData = postSnap.exists ? postSnap.data() : null;
+
+      // If post doc was archived in adminReviews, retrieve and restore it
+      if (!postData) {
+        try {
+          const revSnap = await adminDb.collection('adminReviews').doc(`takedown_post_${itemUid}`).get();
+          if (revSnap.exists && revSnap.data()?.postSnapshot) {
+            postData = revSnap.data().postSnapshot;
+          }
+        } catch (_) {}
+      }
+
+      await postRef.set({
+        ...(postData || {}),
+        status: 'published',
+        reviewStatus: 'reviewed',
+        safeContent: true,
+        isDeleted: false,
+        hidden: false,
+        restoredAt: FieldValue.serverTimestamp(),
+        restoredBy: callerUid
+      }, { merge: true });
+
+      const sellerId = postData?.sellerId;
+      if (sellerId && sellerId !== callerUid) {
+        await adminDb.collection('notifications').doc(`restore_post_${itemUid}`).set({
+          recipientId: sellerId,
+          userId: sellerId,
+          senderName: 'SellerFlow Security Team',
+          title: 'Post Restored to Live Feed',
+          message: 'The SellerFlow Security Team has restored your post back to the live For You feed.',
+          type: 'restore',
+          fromAdmin: true,
+          read: false,
+          postId: itemUid,
+          createdAt: FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
+
+      return res.json({ success: true, message: 'Post restored to live feed successfully' });
+    }
+
+    if (type === 'product') {
+      const prodRef = adminDb.collection('products').doc(itemUid);
+      await prodRef.set({
+        status: 'approved',
+        reviewStatus: 'approved',
+        restoredAt: FieldValue.serverTimestamp(),
+        restoredBy: callerUid
+      }, { merge: true });
+      return res.json({ success: true, message: 'Product restored successfully' });
+    }
+
+    if (type === 'store') {
+      const storeRef = adminDb.collection('stores').doc(itemUid);
+      await storeRef.set({
+        status: 'active',
+        reviewStatus: 'approved',
+        restoredAt: FieldValue.serverTimestamp(),
+        restoredBy: callerUid
+      }, { merge: true });
+      return res.json({ success: true, message: 'Store restored successfully' });
+    }
+
+    return res.status(400).json({ success: false, error: 'Unknown item type for restore' });
+  } catch (err) {
+    console.warn('Admin restore error:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.all('/api/admin/overview-data', async (req, res) => {
   try {
     const authHeader = req.headers.authorization || '';
@@ -1674,7 +1786,8 @@ app.all('/api/admin/overview-data', async (req, res) => {
       kycSnap,
       ordersSnap,
       jobsSnap,
-      eventsSnap
+      eventsSnap,
+      adminReviewsSnap
     ] = await Promise.all([
       adminDb.collection('users').limit(400).get().catch(() => ({ docs: [] })),
       adminDb.collection('publicProfiles').limit(400).get().catch(() => ({ docs: [] })),
@@ -1686,13 +1799,34 @@ app.all('/api/admin/overview-data', async (req, res) => {
       adminDb.collection('buyerKycRecords').limit(400).get().catch(() => ({ docs: [] })),
       adminDb.collection('orders').limit(400).get().catch(() => ({ docs: [] })),
       adminDb.collection('jobs').limit(300).get().catch(() => ({ docs: [] })),
-      adminDb.collection('events').limit(300).get().catch(() => ({ docs: [] }))
+      adminDb.collection('events').limit(300).get().catch(() => ({ docs: [] })),
+      adminDb.collection('adminReviews').where('action', '==', 'takedown').limit(100).get().catch(() => ({ docs: [] }))
     ]);
 
     const serializeDoc = (d) => {
       const data = d.data() || {};
       return { id: d.id, ...data };
     };
+
+    // Build unified posts list (including any active taken_down posts or archived review snapshots)
+    const postMap = new Map();
+    (postsSnap.docs || []).forEach(d => {
+      postMap.set(d.id, serializeDoc(d));
+    });
+    (adminReviewsSnap.docs || []).forEach(d => {
+      const rev = d.data() || {};
+      if (rev.targetId && rev.postSnapshot && !postMap.has(rev.targetId)) {
+        postMap.set(rev.targetId, {
+          id: rev.targetId,
+          ...rev.postSnapshot,
+          status: 'taken_down',
+          reviewStatus: 'removed',
+          takedownReason: rev.reason || 'Taken down by Security Team',
+          removedAt: rev.timestamp || null
+        });
+      }
+    });
+    const postsList = Array.from(postMap.values());
 
     // Build unified map of users (combining users and publicProfiles)
     const userMap = new Map();
@@ -1710,7 +1844,7 @@ app.all('/api/admin/overview-data', async (req, res) => {
       success: true,
       data: {
         users: usersList,
-        posts: (postsSnap.docs || []).map(serializeDoc),
+        posts: postsList,
         stores: (storesSnap.docs || []).map(serializeDoc),
         products: (productsSnap.docs || []).map(serializeDoc),
         fraudReports: (fraudSnap.docs || []).map(serializeDoc),
