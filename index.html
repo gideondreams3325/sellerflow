@@ -1017,6 +1017,63 @@ html.light-theme #devVerificationSandboxNotice {
   border-color: #fde68a !important;
   color: #92400e !important;
 }
+html.light-theme .settings-item {
+  border-color: #e4e4e7 !important;
+  color: #18181b !important;
+}
+html.light-theme .settings-item:hover {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+html.light-theme #settingsThemeSegment {
+  background-color: #f4f4f5 !important;
+  border-color: #e4e4e7 !important;
+}
+html.light-theme .sf-stat-card,
+html.light-theme .sf-user-row {
+  background-color: #ffffff !important;
+  border-color: #e4e4e7 !important;
+  color: #18181b !important;
+}
+html.light-theme .terms-box {
+  background-color: #f4f4f5 !important;
+  border-color: #e4e4e7 !important;
+  color: #27272a !important;
+}
+html.light-theme .feed-top-bar {
+  background-color: rgba(249, 249, 250, 0.95) !important;
+  border-color: #e4e4e7 !important;
+}
+html.light-theme .feed-top-bar h1 {
+  color: #18181b !important;
+}
+html.light-theme .chat-bubble.from-other {
+  background-color: #f4f4f5 !important;
+  border-color: #e4e4e7 !important;
+  color: #18181b !important;
+}
+html.light-theme .chat-bubble.from-me {
+  background-color: #f5b942 !important;
+  color: #080808 !important;
+}
+html.light-theme .sf-search-btn {
+  background-color: #f4f4f5 !important;
+  border-color: #e4e4e7 !important;
+  color: #71717a !important;
+}
+html.light-theme table {
+  color: #18181b !important;
+}
+html.light-theme th {
+  background-color: #f4f4f5 !important;
+  color: #71717a !important;
+  border-color: #e4e4e7 !important;
+}
+html.light-theme td {
+  border-color: #f4f4f5 !important;
+}
+html.light-theme .border-b {
+  border-color: #e4e4e7 !important;
+}
 #page {
   animation: sfPageTransition 0.14s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
@@ -2111,13 +2168,16 @@ function getCurrentTheme() {
   return document.documentElement.classList.contains('light-theme') ? 'light' : 'dark';
 }
 function setTheme(theme, save = true) {
-  if (theme === 'light') {
+  const isLight = theme === 'light';
+  if (isLight) {
     document.documentElement.classList.add('light-theme');
   } else {
     document.documentElement.classList.remove('light-theme');
   }
   if (save) {
-    localStorage.setItem('theme', theme);
+    try {
+      localStorage.setItem('theme', theme);
+    } catch (_) {}
     // Persist to user profile if logged in
     if (typeof currentUser !== 'undefined' && currentUser && typeof db !== 'undefined') {
       try {
@@ -2129,26 +2189,34 @@ function setTheme(theme, save = true) {
   if (typeof currentPage !== 'undefined' && currentPage === 'settings') {
     const btnText = document.getElementById('themeBtnText');
     if (btnText) {
-      btnText.textContent = theme === 'light' ? 'Light Mode' : 'Dark Mode';
+      btnText.textContent = isLight ? 'Light Mode' : 'Dark Mode';
     }
     const icon = document.getElementById('themeToggleIcon');
     if (icon) {
-      icon.textContent = theme === 'light' ? '☀️' : '🌙';
+      icon.textContent = isLight ? '☀️' : '🌙';
     }
-    const changeThemeBtn = document.getElementById('changeThemeBtn');
-    if (changeThemeBtn) {
-      if (theme === 'light') {
-        changeThemeBtn.className = 'border border-zinc-300 bg-zinc-100 text-black px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 hover:bg-zinc-200';
+    const darkBtn = document.getElementById('themeDarkBtn');
+    const lightBtn = document.getElementById('themeLightBtn');
+    if (darkBtn && lightBtn) {
+      if (isLight) {
+        lightBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-gold text-black shadow-sm';
+        darkBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-zinc-500 hover:text-zinc-800';
       } else {
-        changeThemeBtn.className = 'border border-[#444] bg-transparent text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 hover:brightness-110';
+        darkBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-gold text-black shadow-sm';
+        lightBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-zinc-400 hover:text-white';
       }
     }
   }
   // Toggle header button visual indicator
   const headerBtn = document.getElementById('headerThemeToggle');
   if (headerBtn) {
-    headerBtn.innerHTML = theme === 'light' ? '☀️' : '🌙';
-    headerBtn.title = theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+    headerBtn.innerHTML = isLight ? '☀️' : '🌙';
+    headerBtn.title = isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+  }
+  const mobileHeaderBtn = document.getElementById('mobileHeaderThemeToggle');
+  if (mobileHeaderBtn) {
+    mobileHeaderBtn.innerHTML = isLight ? '☀️' : '🌙';
+    mobileHeaderBtn.title = isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode';
   }
 }
 function toggleTheme() {
@@ -16590,9 +16658,14 @@ async function renderSettings(){
             <b>Theme Mode</b>
             <p class="muted text-sm">Toggle between dark luxury and crisp, elegant light layouts.</p>
           </div>
-          <button id="changeThemeBtn" class="${getCurrentTheme() === 'light' ? 'border border-zinc-300 bg-zinc-100 text-black' : 'border border-[#444] bg-transparent text-white'} px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 hover:brightness-110">
-            <span id="themeBtnText">${getCurrentTheme() === 'light' ? 'Light Mode' : 'Dark Mode'}</span>
-          </button>
+          <div class="flex items-center gap-1 p-1 bg-black/40 border border-[#333] rounded-xl" id="settingsThemeSegment">
+            <button type="button" id="themeDarkBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${getCurrentTheme() === 'dark' ? 'bg-gold text-black shadow-sm' : 'text-zinc-400 hover:text-white'}" title="Switch to Dark Mode">
+              <span>🌙</span><span>Dark</span>
+            </button>
+            <button type="button" id="themeLightBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${getCurrentTheme() === 'light' ? 'bg-gold text-black shadow-sm' : 'text-zinc-400 hover:text-white'}" title="Switch to Light Mode">
+              <span>☀️</span><span>Light</span>
+            </button>
+          </div>
         </div>
         <div class="settings-item">
           <div class="text-2xl">📜</div>
@@ -16659,6 +16732,14 @@ async function renderSettings(){
   </section>
   `;
   $('replayTutorialBtn')?.addEventListener('click', () => showFirstTimeTutorial(true));
+  $('themeDarkBtn')?.addEventListener('click', () => {
+    setTheme('dark');
+    toast('Theme set to Dark Mode', 'info', 1500);
+  });
+  $('themeLightBtn')?.addEventListener('click', () => {
+    setTheme('light');
+    toast('Theme set to Light Mode', 'info', 1500);
+  });
   $('changeThemeBtn')?.addEventListener('click', () => {
     toggleTheme();
     toast(`Theme changed to ${getCurrentTheme() === 'light' ? 'Light' : 'Dark'} Mode`, 'info', 1500);
