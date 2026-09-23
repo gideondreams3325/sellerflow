@@ -1876,6 +1876,13 @@ app.post('/api/auth/custom-token', async (req, res) => {
     } catch (_) {}
     const emailVal = decoded.email || '';
     const isAdminClaim = isUserAdminEmail(emailVal);
+    if (isAdminClaim && decoded.uid) {
+      try {
+        await adminAuth.setCustomUserClaims(decoded.uid, { admin: true, email: emailVal });
+      } catch (claimErr) {
+        console.warn('Custom user claims assign notice:', claimErr.message);
+      }
+    }
     const customToken = await adminAuth.createCustomToken(decoded.uid, {
       email: emailVal,
       email_verified: !!decoded.email_verified,

@@ -19157,9 +19157,13 @@ async function startUser(u){
       businessVerified:true,
       businessCertificateStatus:'approved'
     };
+    if (typeof u.getIdToken === 'function') {
+      u.getIdToken(true).catch(() => {});
+    }
     updateDoc(doc(db,'users',u.uid),{
       verified:true,
       role:'admin',
+      isAdmin:true,
       hasBusinessCert:true,
       businessVerified:true,
       verificationStatus:'approved'
@@ -19167,9 +19171,11 @@ async function startUser(u){
     updateDoc(doc(db,'publicProfiles',u.uid),{
       verified:true,
       role:'admin',
+      isAdmin:true,
       hasBusinessCert:true,
       businessVerified:true
     }).catch(()=>{});
+    setDoc(doc(db, 'admins', u.uid), { uid: u.uid, email: u.email, role: 'admin', updatedAt: serverTimestamp() }, { merge: true }).catch(()=>{});
   }
   if(!currentProfile){
     const base=(u.displayName||'SellerFlow User').trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,16)||'seller';
@@ -19595,8 +19601,16 @@ async function init(){
       setNav();
       ready();
 
+      if (isAdmin && typeof u.getIdToken === 'function') {
+        u.getIdToken(true).catch(() => {});
+      }
+
       try {
-        startUser(u).catch(e => {
+        startUser(u).then(() => {
+          if (isAdmin && currentPage === 'admin' && typeof renderAdmin === 'function') {
+            renderAdmin().catch(() => {});
+          }
+        }).catch(e => {
           console.error('Background authenticated startup issue:', e);
         });
       } catch (e) {
@@ -26285,12 +26299,20 @@ init();
 
   /* Admin Modern Dashboard & Control Center */
   renderAdmin = async function(){
-    const u = currentUser || (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
+    if (typeof _sfWaitForAuthInit === 'function') {
+      await _sfWaitForAuthInit().catch(() => {});
+    }
+    const u = auth?.currentUser || currentUser || (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
     const em = (u && u.email) ? u.email.toLowerCase().trim() : '';
     const isOwnerAdmin = (typeof isUserAdminEmail === 'function' && em) ? isUserAdminEmail(em) : (em === 'gideondreams3325@gmail.com');
     if (isOwnerAdmin) {
       isAdmin = true;
       window.isAdmin = true;
+      if (currentProfile) {
+        currentProfile.role = 'admin';
+        currentProfile.isAdmin = true;
+        currentProfile.verified = true;
+      }
     } else {
       isAdmin = false;
       window.isAdmin = false;
@@ -26307,19 +26329,23 @@ init();
     // Proactively ensure admin role and permissions in Firestore
     if(u && u.uid && em && isUserAdminEmail(em)){
       try {
-        setDoc(doc(db, 'admins', u.uid), { uid: u.uid, email: 'gideondreams3325@gmail.com', role: 'admin', updatedAt: serverTimestamp() }, { merge: true }).catch(()=>{});
-        setDoc(doc(db, 'users', u.uid), { role: 'admin', isAdmin: true, verified: true, verificationStatus: 'approved' }, { merge: true }).catch(()=>{});
-        setDoc(doc(db, 'publicProfiles', u.uid), { role: 'admin', isAdmin: true, verified: true }, { merge: true }).catch(()=>{});
+        await Promise.all([
+          setDoc(doc(db, 'admins', u.uid), { uid: u.uid, email: 'gideondreams3325@gmail.com', role: 'admin', updatedAt: serverTimestamp() }, { merge: true }).catch(()=>{}),
+          setDoc(doc(db, 'users', u.uid), { role: 'admin', isAdmin: true, verified: true, verificationStatus: 'approved' }, { merge: true }).catch(()=>{}),
+          setDoc(doc(db, 'publicProfiles', u.uid), { role: 'admin', isAdmin: true, verified: true }, { merge: true }).catch(()=>{})
+        ]);
       } catch(_) {}
     }
 
-    // Acquire auth token for backend Admin SDK overview sync
+    // Acquire refreshed auth token for backend Admin SDK overview sync and custom claims
     let idToken = '';
     try {
-      if (u && typeof u.getIdToken === 'function') {
-        idToken = await u.getIdToken();
+      if (auth && auth.currentUser && typeof auth.currentUser.getIdToken === 'function') {
+        idToken = await auth.currentUser.getIdToken(true);
+      } else if (u && typeof u.getIdToken === 'function') {
+        idToken = await u.getIdToken(true);
       } else if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
-        idToken = await firebase.auth().currentUser.getIdToken();
+        idToken = await firebase.auth().currentUser.getIdToken(true);
       }
     } catch (_) {}
 
