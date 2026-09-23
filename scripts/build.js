@@ -7,6 +7,44 @@ if (!fs.existsSync(distDir)) {
   fs.mkdirSync(distDir, { recursive: true });
 }
 
+// Ensure capacitor.js runtime bundle is properly built from @capacitor dependencies
+function buildCapacitorBundle() {
+  const corePath = path.resolve('node_modules/@capacitor/core/dist/capacitor.js');
+  const browserPath = path.resolve('node_modules/@capacitor/browser/dist/plugin.js');
+  const appPath = path.resolve('node_modules/@capacitor/app/dist/plugin.js');
+  const pushPath = path.resolve('node_modules/@capacitor/push-notifications/dist/plugin.js');
+
+  if (fs.existsSync(corePath) && fs.existsSync(browserPath) && fs.existsSync(appPath) && fs.existsSync(pushPath)) {
+    const core = fs.readFileSync(corePath, 'utf8');
+    const browser = fs.readFileSync(browserPath, 'utf8');
+    const app = fs.readFileSync(appPath, 'utf8');
+    const push = fs.readFileSync(pushPath, 'utf8');
+
+    const bundle = [
+      '// SellerFlow Capacitor Runtime Bridge Bundle',
+      core,
+      'if (typeof window !== "undefined" && typeof capacitorExports !== "undefined") {',
+      '  window.capacitorExports = capacitorExports;',
+      '}',
+      browser,
+      app,
+      push,
+      '(function() {',
+      '  if (typeof window === "undefined") return;',
+      '  var cap = window.Capacitor || (typeof capacitorExports !== "undefined" && capacitorExports.Capacitor) || {};',
+      '  cap.Plugins = cap.Plugins || {};',
+      '  if (typeof capacitorBrowser !== "undefined" && capacitorBrowser.Browser) cap.Plugins.Browser = capacitorBrowser.Browser;',
+      '  if (typeof capacitorApp !== "undefined" && capacitorApp.App) cap.Plugins.App = capacitorApp.App;',
+      '  if (typeof capacitorPushNotifications !== "undefined" && capacitorPushNotifications.PushNotifications) cap.Plugins.PushNotifications = capacitorPushNotifications.PushNotifications;',
+      '  window.Capacitor = cap;',
+      '})();\n'
+    ].join('\n');
+
+    fs.writeFileSync(path.resolve('capacitor.js'), bundle, 'utf8');
+  }
+}
+buildCapacitorBundle();
+
 // Key files to copy
 const filesToCopy = [
   'index.html',

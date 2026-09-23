@@ -1338,13 +1338,16 @@ window.__sfBackendUrl = (typeof getAppUrl === 'function') ? getAppUrl() : 'https
 })();
 
 async function handleCapacitorGoogleSignIn() {
+  if (typeof initCapacitorHandlers === 'function') {
+    try { await initCapacitorHandlers(); } catch (_) {}
+  }
   const callbackUrl = getOAuthCallbackUrl();
   const startUrl = callbackUrl + (callbackUrl.includes('?') ? '&' : '?') + 'start=google';
   
   console.log('Launching external Google sign-in flow via:', startUrl);
   loading('Opening Google sign-in…');
   
-  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser && typeof window.Capacitor.Plugins.Browser.open === 'function') {
     try {
       window.Capacitor.Plugins.Browser.addListener('browserFinished', () => {
         if (typeof ready === 'function') ready();
@@ -1356,8 +1359,11 @@ async function handleCapacitorGoogleSignIn() {
       }).catch(() => {});
     } catch (_) {}
     await window.Capacitor.Plugins.Browser.open({ url: startUrl });
-  } else {
+  } else if (!isCapacitorNative()) {
     window.location.href = startUrl;
+  } else {
+    ready();
+    toast('Unable to launch system browser for authentication.', 'error');
   }
 }
 
@@ -17088,6 +17094,15 @@ let swRegistration = null;
 let _sfBackgroundUpdateToastShown = false;
 
 async function initServiceWorker(){
+  if (typeof isCapacitorNative === 'function' && isCapacitorNative()) {
+    if ('serviceWorker' in navigator) {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const r of regs) { await r.unregister(); }
+      } catch (_) {}
+    }
+    return;
+  }
   if ('serviceWorker' in navigator) {
     try {
       const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
