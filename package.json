@@ -11,7 +11,7 @@
     "start": "node server.js",
     "lint": "node -e \"console.log('Lint passed')\"",
     "postinstall": "node scripts/patch-capacitor.js",
-    "test": "node tests/moderation-security.test.js && node tests/ghana-card-verification.test.js && node tests/recommendation-engine.test.js && node tests/copyright-detection.test.js && node tests/jobs-events-security.test.js && node tests/auth-persistence-lifecycle.test.js && node tests/firebase-data-sync.test.js"
+    "test": "node tests/moderation-security.test.js && node tests/ghana-card-verification.test.js && node tests/recommendation-engine.test.js && node tests/copyright-detection.test.js && node tests/jobs-events-security.test.js && node tests/auth-persistence-lifecycle.test.js && node tests/firebase-data-sync.test.js && node tests/admin-app.test.js && node tests/admin-security-operations-phase2.test.js && node tests/final-production-integration-verification.js && node tests/same-domain-deployment-verification.js && node tests/vercel-deployment-verification.test.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",

@@ -128,6 +128,29 @@ if (fs.existsSync(uploadsDir)) {
   } catch (_) {}
 }
 
+// Bundle SellerFlow Admin standalone application into dist/admin
+const adminDir = path.resolve('admin');
+const distAdminDir = path.join(distDir, 'admin');
+if (fs.existsSync(adminDir)) {
+  try {
+    if (!fs.existsSync(distAdminDir)) fs.mkdirSync(distAdminDir, { recursive: true });
+    for (const f of ['index.html', 'admin.css', 'app.js', 'package.json', '_redirects']) {
+      const srcF = path.join(adminDir, f);
+      if (fs.existsSync(srcF)) {
+        fs.copyFileSync(srcF, path.join(distAdminDir, f));
+        copiedCount++;
+      }
+    }
+    const adminAssets = path.join(adminDir, 'assets');
+    if (fs.existsSync(adminAssets)) {
+      fs.cpSync(adminAssets, path.join(distAdminDir, 'assets'), { recursive: true });
+      copiedCount++;
+    }
+  } catch (adminErr) {
+    console.warn('Admin build copy notice:', adminErr.message);
+  }
+}
+
 const androidPublicDir = path.resolve('android/app/src/main/assets/public');
 if (fs.existsSync(androidPublicDir)) {
   try {

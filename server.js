@@ -31,6 +31,14 @@ app.use(express.json({ limit: '250mb' }));
 app.use(express.urlencoded({ extended: true, limit: '250mb' }));
 app.use(express.raw({ limit: '250mb', type: ['application/octet-stream', 'video/*', 'image/*', 'audio/*', 'application/pdf'] }));
 
+// Secure JSON parsing error handler (prevents stack trace disclosure on malformed bodies)
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && (err.status === 400 || err.statusCode === 400) && 'body' in err) {
+    return res.status(400).json({ success: false, error: 'Bad Request: Malformed JSON payload' });
+  }
+  next(err);
+});
+
 // Universal CORS & Preflight Middleware for Android native Capacitor and web clients
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -118,11 +126,11 @@ const adminDb = getFirestore(adminApp);
 
 const JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
 
-const ADMIN_EMAILS = ['gideondreams3325@gmail.com'];
+const ADMIN_EMAILS = ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com'];
 function isUserAdminEmail(email) {
   if (!email) return false;
   const em = String(email).toLowerCase().trim();
-  return em === 'gideondreams3325@gmail.com';
+  return em === 'gideondreams3325@gmail.com' || em === 'gfappiah3325@gmail.com' || ADMIN_EMAILS.includes(em);
 }
 
 async function verifyFirebaseToken(idToken) {
@@ -1776,21 +1784,26 @@ app.all('/api/admin/overview-data', async (req, res) => {
     let isAdmin = false;
     let decodedToken = null;
 
-    if (token) {
+    if (!token) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing token' });
+    }
+
+    try {
+      decodedToken = await verifyFirebaseToken(token);
+    } catch (authErr) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid or expired token' });
+    }
+
+    const email = (decodedToken.email || '').toLowerCase().trim();
+    isAdmin = isUserAdminEmail(email) || decodedToken.admin === true || decodedToken.role === 'admin';
+    if (!isAdmin && decodedToken.uid) {
       try {
-        decodedToken = await verifyFirebaseToken(token);
-        const email = (decodedToken.email || '').toLowerCase().trim();
-        isAdmin = isUserAdminEmail(email);
-        if (!isAdmin && decodedToken.uid) {
-          const uSnap = await adminDb.collection('users').doc(decodedToken.uid).get();
-          if (uSnap.exists) {
-            const ud = uSnap.data() || {};
-            isAdmin = isUserAdminEmail(ud.email);
-          }
+        const uSnap = await adminDb.collection('users').doc(decodedToken.uid).get();
+        if (uSnap.exists) {
+          const ud = uSnap.data() || {};
+          isAdmin = isUserAdminEmail(ud.email) || ud.role === 'admin' || ud.isAdmin === true;
         }
-      } catch (authErr) {
-        console.warn('Admin overview token check warning:', authErr.message);
-      }
+      } catch (_) {}
     }
 
     // If caller email was verified as admin
@@ -1873,7 +1886,16 @@ app.all('/api/admin/overview-data', async (req, res) => {
         products: (productsSnap.docs || []).map(serializeDoc),
         fraudReports: (fraudSnap.docs || []).map(serializeDoc),
         scamReports: (scamSnap.docs || []).map(serializeDoc),
-        buyerKycRecords: (kycSnap.docs || []).map(serializeDoc),
+        buyerKycRecords: (kycSnap.docs || []).map(d => {
+          const doc = serializeDoc(d);
+          const rawPin = doc.ghanaCardNumber || doc.ghanaCardPin || '';
+          const masked = doc.ghanaCardMasked || (rawPin ? maskGhanaCard(rawPin) : '—');
+          return {
+            ...doc,
+            ghanaCardNumber: masked,
+            ghanaCardMasked: masked
+          };
+        }),
         orders: (ordersSnap.docs || []).map(serializeDoc),
         jobs: (jobsSnap.docs || []).map(serializeDoc),
         events: (eventsSnap.docs || []).map(serializeDoc)
@@ -1885,6 +1907,342 @@ app.all('/api/admin/overview-data', async (req, res) => {
   }
 });
 
+/**
+ * Server-Side Authoritative User Management Action Endpoint
+ * Supports: suspend, unsuspend, block, unblock, restore
+ */
+app.post('/api/admin/user-action', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.split('Bearer ')[1].trim() : '';
+  const { userId, action, reason = '', durationDays = 0, notes = '' } = req.body || {};
+
+  try {
+    if (!idToken) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing token' });
+    }
+
+    let decodedToken;
+    try {
+      decodedToken = await verifyFirebaseToken(idToken);
+    } catch (authErr) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid token' });
+    }
+
+    const callerUid = decodedToken.uid;
+    let isAdmin = isUserAdminEmail(decodedToken.email) || decodedToken.admin === true || decodedToken.role === 'admin';
+    if (!isAdmin) {
+      try {
+        const userDoc = await adminDb.collection('users').doc(callerUid).get();
+        const userData = userDoc.data() || {};
+        isAdmin = isUserAdminEmail(userData.email) || userData.role === 'admin' || userData.isAdmin === true;
+      } catch (_) {}
+    }
+
+    if (!isAdmin) {
+      return res.status(403).json({ success: false, error: 'Forbidden: Admin clearance required.' });
+    }
+
+    if (!userId || !action) {
+      return res.status(400).json({ success: false, error: 'Missing userId or action parameter' });
+    }
+
+    const userRef = adminDb.collection('users').doc(userId);
+    const userSnap = await userRef.get();
+    const userData = userSnap.exists ? userSnap.data() : {};
+
+    let updatePayload = { updatedAt: FieldValue.serverTimestamp() };
+    let notifTitle = 'Account Status Update';
+    let notifMsg = `Your account status has been updated: ${reason}`;
+
+    if (action === 'suspend') {
+      const suspendedUntil = durationDays > 0 ? new Date(Date.now() + durationDays * 86400000) : null;
+      updatePayload.suspended = true;
+      updatePayload.suspendedAt = FieldValue.serverTimestamp();
+      updatePayload.suspendedUntil = suspendedUntil ? suspendedUntil.toISOString() : null;
+      updatePayload.suspensionReason = reason || 'Violation of SellerFlow Ghana safety policies';
+      updatePayload.postingRestricted = true;
+
+      notifTitle = '⚠️ Account Suspended';
+      notifMsg = `Your account has been temporarily suspended by the Security Team: ${reason || 'Terms of service violation'}.${suspendedUntil ? ` Suspension expires on ${suspendedUntil.toLocaleDateString()}.` : ''}`;
+    } else if (action === 'unsuspend' || action === 'restore') {
+      updatePayload.suspended = false;
+      updatePayload.suspendedUntil = null;
+      updatePayload.suspensionReason = null;
+      updatePayload.postingRestricted = false;
+      updatePayload.unsuspendedAt = FieldValue.serverTimestamp();
+
+      notifTitle = '✅ Account Reinstated';
+      notifMsg = 'Your SellerFlow account privileges have been restored by the Security Team.';
+    } else if (action === 'block') {
+      updatePayload.blocked = true;
+      updatePayload.blockedAt = FieldValue.serverTimestamp();
+      updatePayload.blockReason = reason || 'Severe policy violations or fraudulent activity';
+      updatePayload.postingRestricted = true;
+
+      notifTitle = '🛑 Account Blocked';
+      notifMsg = `Your account has been permanently blocked by the Security Team: ${reason || 'Severe safety violation'}.`;
+    } else if (action === 'unblock') {
+      updatePayload.blocked = false;
+      updatePayload.blockReason = null;
+      updatePayload.postingRestricted = false;
+      updatePayload.unblockedAt = FieldValue.serverTimestamp();
+
+      notifTitle = '✅ Account Unblocked';
+      notifMsg = 'Your account block has been removed by the Security Team.';
+    } else {
+      return res.status(400).json({ success: false, error: `Unsupported user action: ${action}` });
+    }
+
+    await userRef.set(updatePayload, { merge: true });
+
+    // Record immutable audit entry in securityReviews
+    await adminDb.collection('securityReviews').add({
+      targetId: userId,
+      targetType: 'user',
+      reviewerUid: callerUid,
+      action,
+      reason: reason || action,
+      notes: notes || '',
+      durationDays: durationDays || 0,
+      timestamp: FieldValue.serverTimestamp()
+    });
+
+    // Notify user
+    await adminDb.collection('notifications').add({
+      recipientId: userId,
+      userId: userId,
+      senderName: 'SellerFlow Security Team',
+      title: notifTitle,
+      message: notifMsg,
+      type: 'account_status',
+      fromAdmin: true,
+      read: false,
+      createdAt: FieldValue.serverTimestamp()
+    }).catch(() => {});
+
+    return res.json({ success: true, message: `User ${userId} updated with action "${action}" successfully.` });
+  } catch (err) {
+    console.error('Error in /api/admin/user-action:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * Server-Side Authoritative KYC / Ghana Card Action Endpoint
+ * Supports: approve, reject, request_review
+ */
+app.post('/api/admin/kyc-action', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.split('Bearer ')[1].trim() : '';
+  const { userId, action, reason = '', correctionInstructions = '', notes = '' } = req.body || {};
+
+  try {
+    if (!idToken) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing token' });
+    }
+
+    let decodedToken;
+    try {
+      decodedToken = await verifyFirebaseToken(idToken);
+    } catch (authErr) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid token' });
+    }
+
+    const callerUid = decodedToken.uid;
+    let isAdmin = isUserAdminEmail(decodedToken.email) || decodedToken.admin === true || decodedToken.role === 'admin';
+    if (!isAdmin) {
+      try {
+        const userDoc = await adminDb.collection('users').doc(callerUid).get();
+        const userData = userDoc.data() || {};
+        isAdmin = isUserAdminEmail(userData.email) || userData.role === 'admin' || userData.isAdmin === true;
+      } catch (_) {}
+    }
+
+    if (!isAdmin) {
+      return res.status(403).json({ success: false, error: 'Forbidden: Admin clearance required.' });
+    }
+
+    if (!userId || !action) {
+      return res.status(400).json({ success: false, error: 'Missing userId or action parameter' });
+    }
+
+    if (action === 'approve') {
+      await Promise.all([
+        adminDb.collection('users').doc(userId).set({
+          verified: true,
+          verificationStatus: 'approved',
+          verifiedAt: FieldValue.serverTimestamp(),
+          verifiedBy: callerUid
+        }, { merge: true }),
+        adminDb.collection('publicProfiles').doc(userId).set({
+          verified: true
+        }, { merge: true }),
+        adminDb.collection('buyerKycRecords').doc(userId).set({
+          verified: true,
+          verificationStatus: 'approved',
+          verifiedAt: FieldValue.serverTimestamp(),
+          verifiedBy: callerUid
+        }, { merge: true }),
+        adminDb.collection('identityVerifications').doc(userId).set({
+          verificationStatus: 'VERIFIED',
+          verifiedAt: FieldValue.serverTimestamp(),
+          verifiedBy: callerUid
+        }, { merge: true })
+      ]);
+
+      await adminDb.collection('notifications').add({
+        recipientId: userId,
+        userId: userId,
+        senderName: 'SellerFlow Security Team',
+        title: '🎉 Ghana Card Verification Approved',
+        message: 'Your Ghana Card identity verification has been officially approved. Your verified merchant badge is now active across SellerFlow.',
+        type: 'verification_approved',
+        fromAdmin: true,
+        read: false,
+        createdAt: FieldValue.serverTimestamp()
+      }).catch(() => {});
+    } else if (action === 'reject') {
+      await Promise.all([
+        adminDb.collection('users').doc(userId).set({
+          verified: false,
+          verificationStatus: 'rejected',
+          rejectionReason: reason || 'Submitted identity details could not be verified.',
+          correctionInstructions: correctionInstructions || 'Please re-submit your official Ghana Card with clear unedited photos.',
+          verificationReviewedAt: FieldValue.serverTimestamp(),
+          reviewedBy: callerUid
+        }, { merge: true }),
+        adminDb.collection('publicProfiles').doc(userId).set({
+          verified: false
+        }, { merge: true }),
+        adminDb.collection('buyerKycRecords').doc(userId).set({
+          verified: false,
+          verificationStatus: 'rejected',
+          rejectionReason: reason || 'Rejected by Security Team review',
+          lastUpdatedAt: FieldValue.serverTimestamp()
+        }, { merge: true }),
+        adminDb.collection('identityVerifications').doc(userId).set({
+          verificationStatus: 'REJECTED',
+          rejectionReason: reason || 'Rejected by Security Team review'
+        }, { merge: true })
+      ]);
+
+      await adminDb.collection('notifications').add({
+        recipientId: userId,
+        userId: userId,
+        senderName: 'SellerFlow Security Team',
+        title: '⚠️ Ghana Card Verification Update',
+        message: `Your Ghana Card verification was not approved: ${reason || 'Details could not be verified'}. ${correctionInstructions ? `Action required: ${correctionInstructions}` : 'Please submit correct details.'}`,
+        type: 'verification_rejected',
+        fromAdmin: true,
+        read: false,
+        createdAt: FieldValue.serverTimestamp()
+      }).catch(() => {});
+    } else if (action === 'request_review' || action === 'request_correction') {
+      await Promise.all([
+        adminDb.collection('users').doc(userId).set({
+          verificationStatus: action === 'request_correction' ? 'correction_needed' : 'pending',
+          needsAdminReview: true,
+          adminReviewNotes: notes || reason || 'Correction or secondary compliance check required',
+          correctionInstructions: correctionInstructions || reason || 'Please upload a clearer image of your Ghana Card'
+        }, { merge: true }),
+        adminDb.collection('buyerKycRecords').doc(userId).set({
+          verificationStatus: 'pending',
+          notes: notes || reason || 'Queued for secondary review'
+        }, { merge: true }),
+        adminDb.collection('identityVerifications').doc(userId).set({
+          verificationStatus: 'REVIEW'
+        }, { merge: true })
+      ]);
+    } else {
+      return res.status(400).json({ success: false, error: `Unsupported KYC action: ${action}` });
+    }
+
+    // Record immutable audit log
+    await adminDb.collection('securityReviews').add({
+      targetId: userId,
+      targetType: 'kyc',
+      reviewerUid: callerUid,
+      action,
+      reason: reason || action,
+      notes: notes || '',
+      timestamp: FieldValue.serverTimestamp()
+    });
+
+    return res.json({ success: true, message: `KYC status for user ${userId} updated to "${action}" successfully.` });
+  } catch (err) {
+    console.error('Error in /api/admin/kyc-action:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * Server-Side Authoritative Report Management Action Endpoint
+ * Supports updating scam/fraud report status: investigating, resolved, dismissed
+ */
+app.post('/api/admin/report-action', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.split('Bearer ')[1].trim() : '';
+  const { reportId, reportType = 'scam', status: rawStatus, action, notes = '' } = req.body || {};
+  const status = rawStatus || (action === 'resolve' ? 'resolved' : (action === 'dismiss' ? 'dismissed' : action));
+
+  try {
+    if (!idToken) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing token' });
+    }
+
+    let decodedToken;
+    try {
+      decodedToken = await verifyFirebaseToken(idToken);
+    } catch (authErr) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid token' });
+    }
+
+    const callerUid = decodedToken.uid;
+    let isAdmin = isUserAdminEmail(decodedToken.email) || decodedToken.admin === true || decodedToken.role === 'admin';
+    if (!isAdmin) {
+      try {
+        const userDoc = await adminDb.collection('users').doc(callerUid).get();
+        const userData = userDoc.data() || {};
+        isAdmin = isUserAdminEmail(userData.email) || userData.role === 'admin' || userData.isAdmin === true;
+      } catch (_) {}
+    }
+
+    if (!isAdmin) {
+      return res.status(403).json({ success: false, error: 'Forbidden: Admin clearance required.' });
+    }
+
+    if (!reportId || !status) {
+      return res.status(400).json({ success: false, error: 'Missing reportId or status parameter' });
+    }
+
+    const collectionName = reportType === 'fraud' ? 'fraudReports' : 'scamReports';
+    const reportRef = adminDb.collection(collectionName).doc(reportId);
+
+    await reportRef.set({
+      status,
+      resolutionNotes: notes,
+      resolvedBy: callerUid,
+      resolvedAt: FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    // Record immutable audit entry
+    await adminDb.collection('securityReviews').add({
+      targetId: reportId,
+      targetType: `${reportType}_report`,
+      reviewerUid: callerUid,
+      action: `report_${status}`,
+      reason: `Report status set to ${status}`,
+      notes: notes || '',
+      timestamp: FieldValue.serverTimestamp()
+    });
+
+    return res.json({ success: true, message: `Report ${reportId} marked as ${status} successfully.` });
+  } catch (err) {
+    console.error('Error in /api/admin/report-action:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.post('/api/auth/custom-token', async (req, res) => {
   try {
     const authHeader = req.headers.authorization || '';
@@ -1892,7 +2250,12 @@ app.post('/api/auth/custom-token', async (req, res) => {
     if (!token) {
       return res.status(400).json({ success: false, error: 'Missing token' });
     }
-    const decoded = await verifyFirebaseToken(token);
+    let decoded;
+    try {
+      decoded = await verifyFirebaseToken(token);
+    } catch (tokenErr) {
+      return res.status(401).json({ success: false, error: `Invalid token: ${tokenErr.message}` });
+    }
     try {
       if (decoded.email_verified && decoded.uid) {
         await adminAuth.updateUser(decoded.uid, { emailVerified: true }).catch(() => {});
@@ -4243,6 +4606,33 @@ const staticAssetOptions = {
   }
 };
 
+// SELLER FLOW ADMIN Application Routes
+const adminDistPath = path.join(distPath, 'admin');
+const adminSrcPath = path.join(__dirname, 'admin');
+const adminStaticDir = (isProd && fs.existsSync(adminDistPath))
+  ? adminDistPath
+  : adminSrcPath;
+
+const adminStaticOptions = { ...staticAssetOptions, redirect: false };
+if (fs.existsSync(adminDistPath)) {
+  app.use('/admin', express.static(adminDistPath, adminStaticOptions));
+}
+app.use('/admin', express.static(adminSrcPath, adminStaticOptions));
+
+app.get(['/admin', '/admin/*'], (req, res) => {
+  const adminHtmlPath = (isProd && fs.existsSync(path.join(adminDistPath, 'index.html')))
+    ? path.join(adminDistPath, 'index.html')
+    : (fs.existsSync(path.join(adminStaticDir, 'index.html'))
+        ? path.join(adminStaticDir, 'index.html')
+        : path.join(__dirname, 'admin', 'index.html'));
+  if (fs.existsSync(adminHtmlPath)) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    return res.sendFile(adminHtmlPath);
+  }
+  return res.status(404).send('SellerFlow Admin application not found');
+});
+
 if (isProd && fs.existsSync(distPath)) {
   app.use(express.static(distPath, staticAssetOptions));
 }
@@ -4275,6 +4665,11 @@ function getCachedIndexHtml() {
   }
 }
 
+// Unmatched /api/* routes must return 404 JSON, NOT the consumer index.html
+app.all(['/api', '/api/*'], (req, res) => {
+  res.status(404).json({ success: false, error: 'API endpoint not found' });
+});
+
 app.get('*', (req, res) => {
   const cached = getCachedIndexHtml();
   if (cached) {
@@ -4297,7 +4692,9 @@ app.get('*', (req, res) => {
 export { app };
 export default app;
 
-if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+const isDirectRun = Boolean(process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url)));
+
+if (isDirectRun && !process.env.VERCEL && process.env.NODE_ENV !== 'test') {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`SellerFlow server is running on http://0.0.0.0:${PORT}`);
   });

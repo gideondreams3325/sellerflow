@@ -15,17 +15,17 @@ service cloud.firestore {
       return isSignedIn() && (
         request.auth.token.get('admin', false) == true ||
         (request.auth.token.email != null && (
-          request.auth.token.email == 'gideondreams3325@gmail.com' ||
-          request.auth.token.email.matches('(?i)^gideondreams3325@gmail\\.com$')
+          request.auth.token.email in ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com'] ||
+          request.auth.token.email.matches('(?i)^(gideondreams3325|gfappiah3325)@gmail\\.com$')
         )) ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && (
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('email', '') in ['gideondreams3325@gmail.com'] && (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('email', '') in ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com'] && (
             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') in ['admin', 'super_admin'] ||
             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isAdmin', false) == true
           )
         )) ||
         (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) && (
-          get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get('email', '') in ['gideondreams3325@gmail.com']
+          get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get('email', '') in ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com']
         ))
       );
     }
@@ -35,8 +35,8 @@ service cloud.firestore {
         request.resource.data.get('usernameLower', '') != 'sellerflow' &&
         !request.resource.data.get('username', '').matches('(?i)^sellerflow$')
       ) || (request.auth.token.email != null && (
-        request.auth.token.email == 'gideondreams3325@gmail.com' ||
-        request.auth.token.email.matches('(?i)^gideondreams3325@gmail\\.com$')
+        request.auth.token.email in ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com'] ||
+        request.auth.token.email.matches('(?i)^(gideondreams3325|gfappiah3325)@gmail\\.com$')
       ));
     }
 
@@ -106,6 +106,8 @@ service cloud.firestore {
       allow create: if (isOwner(userId) || isAdmin()) && isAllowedSellerflowUsername() && (
         isAdmin() || (
           request.resource.data.get('role', 'user') != 'admin' &&
+          request.resource.data.get('isAdmin', false) == false &&
+          request.resource.data.get('admin', false) == false &&
           request.resource.data.get('verified', false) == false &&
           request.resource.data.get('verificationStatus', 'none') in ['none', 'pending']
         )
@@ -114,6 +116,8 @@ service cloud.firestore {
         isAdmin() || (
           // Non-admins cannot promote themselves to admin
           request.resource.data.get('role', 'user') == resource.data.get('role', 'user') &&
+          request.resource.data.get('isAdmin', false) == resource.data.get('isAdmin', false) &&
+          request.resource.data.get('admin', false) == resource.data.get('admin', false) &&
           // Non-admins cannot self-verify
           request.resource.data.get('verified', false) == resource.data.get('verified', false) &&
           // Non-admins cannot approve their own verification
@@ -363,9 +367,10 @@ service cloud.firestore {
     }
 
     // 9b. AI Admin Review Records & Moderation Logs
-    // ONLY trusted server processes (via Firebase Admin SDK bypass) and authorized admins can create or manage audit records
+    // Immutable audit trail: only authorized admins can read or create; updates/deletions are strictly prohibited
     match /adminReviews/{reviewId} {
-      allow create, read, update, delete: if isAdmin();
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
     }
 
     // 10. Direct Chats & Conversations
@@ -591,9 +596,10 @@ service cloud.firestore {
     }
 
     // 24. Security Review & Moderation Audit Trail
-    // - Admin-only immutable log
+    // - Admin-only immutable log: cannot be modified or deleted
     match /securityReviews/{reviewId} {
-      allow read, write: if isAdmin();
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
     }
   }
 }
