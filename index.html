@@ -19413,12 +19413,27 @@ window._sfWaitForAuthInit = () => new Promise(async (resolve) => {
     return resolve(auth.currentUser);
   }
 
-  if (typeof auth !== 'undefined' && auth && typeof auth.authStateReady === 'function') {
+  if (typeof auth !== 'undefined' && auth && !auth.currentUser) {
     try {
-      await Promise.race([
-        auth.authStateReady(),
-        new Promise(r => setTimeout(r, 4500))
-      ]);
+      if (typeof auth.authStateReady === 'function') {
+        await Promise.race([
+          auth.authStateReady(),
+          new Promise(r => setTimeout(r, 4500))
+        ]);
+      } else if (typeof auth.onAuthStateChanged === 'function') {
+        await new Promise(r => {
+          let unsub = null;
+          const t = setTimeout(() => {
+            if (typeof unsub === 'function') unsub();
+            r();
+          }, 4000);
+          unsub = auth.onAuthStateChanged(() => {
+            clearTimeout(t);
+            if (typeof unsub === 'function') unsub();
+            r();
+          });
+        });
+      }
       if (auth.currentUser) {
         if (typeof isUserAdminEmail === 'function' && isUserAdminEmail(auth.currentUser.email)) {
           try { await auth.currentUser.getIdToken(true); } catch (_) {}
@@ -26384,15 +26399,58 @@ init();
     }
 
     // Ensure Firebase Auth currentUser is resolved if a session exists
-    if ((!auth?.currentUser || !auth.currentUser.email) && (currentUser?.email || localStorage.getItem('sf_active_user_session'))) {
-      if (typeof auth !== 'undefined' && auth && typeof auth.authStateReady === 'function') {
+    if (!auth?.currentUser || !auth.currentUser.email) {
+      if (typeof auth !== 'undefined' && auth) {
         try {
-          await Promise.race([
-            auth.authStateReady(),
-            new Promise(r => setTimeout(r, 4000))
-          ]);
+          if (typeof auth.authStateReady === 'function') {
+            await Promise.race([
+              auth.authStateReady(),
+              new Promise(r => setTimeout(r, 4000))
+            ]);
+          } else if (typeof auth.onAuthStateChanged === 'function') {
+            await new Promise(r => {
+              let unsub = null;
+              const t = setTimeout(() => {
+                if (typeof unsub === 'function') unsub();
+                r();
+              }, 4000);
+              unsub = auth.onAuthStateChanged(() => {
+                clearTimeout(t);
+                if (typeof unsub === 'function') unsub();
+                r();
+              });
+            });
+          }
         } catch (_) {}
       }
+    }
+
+    if (!auth?.currentUser || !auth.currentUser.email) {
+      try {
+        const savedSession = localStorage.getItem('sf_active_user_session');
+        const fbKey = (typeof firebaseConfig !== 'undefined' && firebaseConfig?.apiKey) ? `firebase:authUser:${firebaseConfig.apiKey}:[DEFAULT]` : '';
+        const fbSaved = fbKey ? localStorage.getItem(fbKey) : null;
+        let tokenToUse = '';
+        if (savedSession) {
+          const s = JSON.parse(savedSession);
+          if (s?.firebaseToken) tokenToUse = s.firebaseToken;
+        }
+        if (fbSaved) {
+          const fb = JSON.parse(fbSaved);
+          if (!tokenToUse && fb?.stsTokenManager?.accessToken) tokenToUse = fb.stsTokenManager.accessToken;
+        }
+        if (tokenToUse && auth && typeof auth.signInWithCustomToken === 'function') {
+          const customUrl = (typeof getSfApiUrl === 'function') ? getSfApiUrl('/api/auth/custom-token') : '/api/auth/custom-token';
+          const customRes = await fetch(customUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken: tokenToUse })
+          }).then(r => r.ok ? r.json() : null).catch(() => null);
+          if (customRes?.success && customRes.customToken) {
+            await auth.signInWithCustomToken(customRes.customToken).catch(() => {});
+          }
+        }
+      } catch (_) {}
     }
 
     const u = auth?.currentUser || currentUser || (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
@@ -26430,6 +26488,25 @@ init();
         idToken = await firebase.auth().currentUser.getIdToken(true);
       }
     } catch (_) {}
+    if (!idToken) {
+      try {
+        const saved = localStorage.getItem('sf_active_user_session');
+        if (saved) {
+          const s = JSON.parse(saved);
+          if (s?.firebaseToken) idToken = s.firebaseToken;
+        }
+      } catch (_) {}
+    }
+    if (!idToken && typeof firebaseConfig !== 'undefined' && firebaseConfig?.apiKey) {
+      try {
+        const fbKey = `firebase:authUser:${firebaseConfig.apiKey}:[DEFAULT]`;
+        const fbSaved = localStorage.getItem(fbKey);
+        if (fbSaved) {
+          const fb = JSON.parse(fbSaved);
+          if (fb?.stsTokenManager?.accessToken) idToken = fb.stsTokenManager.accessToken;
+        }
+      } catch (_) {}
+    }
 
     // Proactively ensure admin role and permissions in Firestore
     if(u && u.uid && em && isUserAdminEmail(em)){
@@ -26458,18 +26535,51 @@ init();
       directEventsSnap,
       apiOverviewRes
     ] = await Promise.all([
-      getDocs(query(collection(db, 'users'), limit(300))).catch(e => { console.warn('Admin users query fallback:', e); return { docs: [], size: 0 }; }),
-      getDocs(query(collection(db, 'publicProfiles'), limit(300))).catch(e => { console.warn('Admin public profiles fallback:', e); return { docs: [], size: 0 }; }),
-      getDocs(query(collection(db, 'posts'), limit(250))).catch(e => { console.warn('Admin posts query fallback:', e); return { docs: [], size: 0 }; }),
-      getDocs(query(collection(db, 'scamReports'), limit(100))).catch(e => { console.warn('Admin scam reports query fallback:', e); return { docs: [], size: 0 }; }),
+      getDocs(query(collection(db, 'users'), limit(300))).catch(e => {
+        console.warn('Admin users query warning:', { code: e?.code || 'unknown', message: e?.message || String(e), hasAuthUser: !!auth?.currentUser, isAdminDetected: isAdmin });
+        return { docs: [], size: 0 };
+      }),
+      getDocs(query(collection(db, 'publicProfiles'), limit(300))).catch(e => {
+        console.warn('Admin public profiles warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+        return { docs: [], size: 0 };
+      }),
+      getDocs(query(collection(db, 'posts'), limit(250))).catch(e => {
+        console.warn('Admin posts query warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+        return { docs: [], size: 0 };
+      }),
+      getDocs(query(collection(db, 'scamReports'), limit(100))).catch(e => {
+        console.warn('Admin scam reports warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+        return { docs: [], size: 0 };
+      }),
       getDoc(doc(db, 'settings', 'terms')).catch(() => null),
-      getDocs(query(collection(db, 'stores'), limit(300))).catch(e => { console.warn('Admin stores query fallback:', e); return { docs: [], size: 0 }; }),
-      getDocs(query(collection(db, 'products'), limit(300))).catch(e => { console.warn('Admin products query fallback:', e); return { docs: [], size: 0 }; }),
-      getDocs(query(collection(db, 'fraudReports'), limit(200))).catch(e => { console.warn('Admin fraud reports query fallback:', e); return { docs: [], size: 0 }; }),
-      getDocs(query(collection(db, 'buyerKycRecords'), limit(300))).catch(() => ({ docs: [], size: 0 })),
-      getDocs(query(collection(db, 'orders'), limit(300))).catch(() => ({ docs: [], size: 0 })),
-      getDocs(query(collection(db, 'jobs'), limit(300))).catch(() => ({ docs: [], size: 0 })),
-      getDocs(query(collection(db, 'events'), limit(300))).catch(() => ({ docs: [], size: 0 })),
+      getDocs(query(collection(db, 'stores'), limit(300))).catch(e => {
+        console.warn('Admin stores query warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+        return { docs: [], size: 0 };
+      }),
+      getDocs(query(collection(db, 'products'), limit(300))).catch(e => {
+        console.warn('Admin products query warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+        return { docs: [], size: 0 };
+      }),
+      getDocs(query(collection(db, 'fraudReports'), limit(200))).catch(e => {
+        console.warn('Admin fraud reports warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+        return { docs: [], size: 0 };
+      }),
+      getDocs(query(collection(db, 'buyerKycRecords'), limit(300))).catch(e => {
+        console.warn('Admin buyerKycRecords query warning:', { code: e?.code || 'unknown', message: e?.message || String(e), hasAuthUser: !!auth?.currentUser, isAdminDetected: isAdmin });
+        return { docs: [], size: 0 };
+      }),
+      getDocs(query(collection(db, 'orders'), limit(300))).catch(e => {
+        console.warn('Admin orders query warning:', { code: e?.code || 'unknown', message: e?.message || String(e), hasAuthUser: !!auth?.currentUser, isAdminDetected: isAdmin });
+        return { docs: [], size: 0 };
+      }),
+      getDocs(query(collection(db, 'jobs'), limit(300))).catch(e => {
+        console.warn('Admin jobs query warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+        return { docs: [], size: 0 };
+      }),
+      getDocs(query(collection(db, 'events'), limit(300))).catch(e => {
+        console.warn('Admin events query warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+        return { docs: [], size: 0 };
+      }),
       (async () => {
         try {
           const url = (typeof getSfApiUrl === 'function') ? getSfApiUrl('/api/admin/overview-data') : '/api/admin/overview-data';
@@ -26479,8 +26589,12 @@ init();
           if (r.ok) {
             const j = await r.json();
             return j && j.data ? j.data : null;
+          } else {
+            console.warn('Admin overview-data API non-ok status:', { status: r.status, statusText: r.statusText, hasToken: !!idToken });
           }
-        } catch (_) {}
+        } catch (apiErr) {
+          console.warn('Admin overview-data API network notice:', { message: apiErr?.message || String(apiErr), hasToken: !!idToken });
+        }
         return null;
       })()
     ]);
