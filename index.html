@@ -1036,7 +1036,7 @@ html.light-theme #devVerificationSandboxNotice {
 <body>
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center select-none transition-opacity duration-200"><div class="text-center flex flex-col items-center"><div class="flex flex-col items-center gap-1.5 mb-5"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_14px_rgba(245,158,11,0.4)]" /><div class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span><span class="text-[10px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider ml-1.5">GH</span></div><div class="text-[10px] sm:text-[11px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none mt-0.5"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div><div class="w-7 h-7 rounded-full border-2 border-zinc-800 border-t-[#f5b942] animate-spin"></div><div id="loadingText" class="text-xs text-zinc-500 mt-3 font-medium"></div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The SellerFlow Team has temporarily paused the marketplace. Please try again later.</p></div></div>
-<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="flex flex-col items-center justify-center gap-1 mb-2"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_12px_rgba(245,158,11,0.35)]" /><div class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></div><div class="text-[10.5px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name"></div><div id="usernameWrap"><div class="flex items-center justify-between"><label class="text-sm muted">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="authUsernamePreview">username</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="authUsername" type="text" class="w-full pl-8 pr-10 p-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-sm focus:border-gold outline-none transition" placeholder="e.g. gideon_shop" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"><span id="authUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none"></span></div><div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can only be changed once every 360 days.</span></div><div id="authUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="authUsernameSuggestions" class="mt-2 hidden"></div></div><div id="emailInputWrap"><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"><div id="authEmailFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><div id="emailVerifyWrap" class="hide text-center mt-5"><div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl text-amber-400 mb-3 shadow-[0_0_20px_rgba(245,158,11,0.15)]">🔑</div><div class="mt-3 p-4 rounded-xl bg-[#141414] border border-[#2a2a2a] text-left"><div class="text-[11px] font-medium text-zinc-400">We've sent a modern, professional verification code to</div><div id="verifyEmailTarget" class="text-sm font-bold text-amber-400 mt-1 break-all select-all">user@example.com</div><div class="text-[11px] text-zinc-400 mt-2.5 leading-relaxed font-semibold">Please enter the 6-digit security code below to activate your SellerFlow account.</div></div><div class="mt-5 text-left"><label class="block text-xs text-zinc-400 font-semibold mb-1.5 uppercase tracking-wider">Verification Code</label><input id="verificationCodeInput" type="text" maxlength="6" pattern="[0-9]*" inputmode="numeric" class="w-full text-center tracking-[0.5em] font-mono text-2xl font-black p-3 rounded-xl bg-[#141414] border border-[#333] text-gold hover:border-[#444] focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition outline-none" placeholder="000000"></div><div class="space-y-2 mt-5"><button id="submitVerificationCodeBtn" type="button" class="w-full bg-gold text-black p-3.5 rounded-xl font-bold text-sm shadow-md hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center gap-2"><span class="text-base">✓</span><span>Verify Code</span></button><button id="resendVerificationBtn" type="button" class="w-full p-3 rounded-xl border border-[#383838] bg-[#181818] text-zinc-200 hover:text-white hover:border-[#555] font-semibold text-xs transition">Resend email</button><button id="changeEmailBtn" type="button" class="w-full mt-2 text-xs text-zinc-400 hover:text-amber-400 underline transition py-1 font-semibold">Change email / Sign in with another account</button></div></div><div id="googleSectionWrap" class="mt-4"><div class="relative my-4 flex items-center justify-center" id="googleDividerWrap"><div class="border-t border-[#2a2a2e] w-full"></div><span class="bg-[#191919] px-3 text-[10.5px] font-bold text-zinc-400 uppercase tracking-widest shrink-0">or continue with</span><div class="border-t border-[#2a2a2e] w-full"></div></div><button id="googleBtn" type="button" class="w-full p-3.5 rounded-xl border border-[#333] hover:border-amber-500/50 bg-[#161619] hover:bg-[#1f1f24] flex items-center justify-center gap-3 transition-all duration-200 group shadow-md hover:shadow-amber-500/10 active:scale-[0.99]"><svg class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg><div class="flex flex-col text-left leading-tight"><span class="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">Continue with Google</span><span class="text-[10px] text-zinc-400 font-medium">Fast 1-tap sign-in to SellerFlow</span></div></button><button type="button" onclick="showGoogleBrandGuideModal()" class="w-full text-center text-[11px] text-zinc-400 hover:text-amber-400 transition-colors mt-2.5 flex items-center justify-center gap-1.5 py-1"><span class="text-amber-400">✨</span><span class="underline underline-offset-2">Google OAuth Branding & Account Setup Guide</span></button></div><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
+<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="flex flex-col items-center justify-center gap-1 mb-2"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_12px_rgba(245,158,11,0.35)]" /><div class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></div><div class="text-[10.5px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name"></div><div id="usernameWrap"><div class="flex items-center justify-between"><label class="text-sm muted">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="authUsernamePreview">username</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="authUsername" type="text" class="w-full pl-8 pr-10 p-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-sm focus:border-gold outline-none transition" placeholder="e.g. gideon_shop" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"><span id="authUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none"></span></div><div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can only be changed once every 360 days.</span></div><div id="authUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="authUsernameSuggestions" class="mt-2 hidden"></div></div><div id="emailInputWrap"><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"><div id="authEmailFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="current-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><div id="emailVerifyWrap" class="hide text-center mt-5"><div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl text-amber-400 mb-3 shadow-[0_0_20px_rgba(245,158,11,0.15)]">🔑</div><div class="mt-3 p-4 rounded-xl bg-[#141414] border border-[#2a2a2a] text-left"><div class="text-[11px] font-medium text-zinc-400">We've sent a modern, professional verification code to</div><div id="verifyEmailTarget" class="text-sm font-bold text-amber-400 mt-1 break-all select-all">user@example.com</div><div class="text-[11px] text-zinc-400 mt-2.5 leading-relaxed font-semibold">Please enter the 6-digit security code below to activate your SellerFlow account.</div></div><div class="mt-5 text-left"><label class="block text-xs text-zinc-400 font-semibold mb-1.5 uppercase tracking-wider">Verification Code</label><input id="verificationCodeInput" type="text" maxlength="6" pattern="[0-9]*" inputmode="numeric" class="w-full text-center tracking-[0.5em] font-mono text-2xl font-black p-3 rounded-xl bg-[#141414] border border-[#333] text-gold hover:border-[#444] focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition outline-none" placeholder="000000"></div><div class="space-y-2 mt-5"><button id="submitVerificationCodeBtn" type="button" class="w-full bg-gold text-black p-3.5 rounded-xl font-bold text-sm shadow-md hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center gap-2"><span class="text-base">✓</span><span>Verify Code</span></button><button id="resendVerificationBtn" type="button" class="w-full p-3 rounded-xl border border-[#383838] bg-[#181818] text-zinc-200 hover:text-white hover:border-[#555] font-semibold text-xs transition">Resend email</button><button id="changeEmailBtn" type="button" class="w-full mt-2 text-xs text-zinc-400 hover:text-amber-400 underline transition py-1 font-semibold">Change email / Sign in with another account</button></div></div><div id="googleSectionWrap" class="mt-4"><div class="relative my-4 flex items-center justify-center" id="googleDividerWrap"><div class="border-t border-[#2a2a2e] w-full"></div><span class="bg-[#191919] px-3 text-[10.5px] font-bold text-zinc-400 uppercase tracking-widest shrink-0">or continue with</span><div class="border-t border-[#2a2a2e] w-full"></div></div><button id="googleBtn" type="button" class="w-full p-3.5 rounded-xl border border-[#333] hover:border-amber-500/50 bg-[#161619] hover:bg-[#1f1f24] flex items-center justify-center gap-3 transition-all duration-200 group shadow-md hover:shadow-amber-500/10 active:scale-[0.99]"><svg class="w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg><div class="flex flex-col text-left leading-tight"><span class="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">Continue with Google</span><span class="text-[10px] text-zinc-400 font-medium">Fast 1-tap sign-in to SellerFlow</span></div></button></div><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
 <div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur-md border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-2 sm:gap-4"><div class="flex items-center gap-2 sm:gap-3 shrink-0"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-2 shrink-0 select-none cursor-pointer group" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)] transition-transform group-hover:scale-105" /><div class="flex flex-col items-start text-left leading-none"><div class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span><span class="text-[9px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider ml-1.5 hidden xs:inline-block">GH</span></div><div class="text-[8px] sm:text-[9px] font-black tracking-[0.24em] text-zinc-100 flex items-center gap-1 uppercase select-none mt-0.5 opacity-90"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1.5 sm:gap-2 shrink-0"></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"><div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap flex items-center gap-2"><span>For You</span><span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-gold animate-pulse"></span></h1></div><div class="flex items-center gap-1.5 sm:gap-2 shrink-0"><div class="w-20 h-7 rounded-xl bg-[#1a1a1e] sf-shimmer-box"></div></div></div><div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden"><div class="reel-feed flex-1 min-h-0 w-full overflow-hidden" id="reelFeedSkeleton"><div class="reel-card sf-shimmer-box relative flex items-center justify-center"><div class="flex flex-col items-center justify-center p-6 text-center z-10 select-none pointer-events-none"><div class="relative mb-3.5 flex items-center justify-center"><div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-gold animate-spin"></div><div class="absolute inset-0 flex items-center justify-center"><span class="text-[10px] font-black text-gold font-mono">GH</span></div></div><div class="text-sm font-bold text-white tracking-wide flex items-center gap-1.5"><span>Loading For You Feed</span><span class="inline-flex gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 0ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 150ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 300ms"></span></span></div><div class="text-[11px] text-zinc-400 mt-1 font-medium">Discovering top Ghanaian reels…</div></div><div class="reel-actions flex flex-col items-center gap-4 absolute right-2.5 sm:right-4 bottom-20 z-10 pointer-events-none"><div class="w-11 h-11 rounded-full bg-[#202026] sf-shimmer-box border border-[#333]"></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="w-9 h-9 rounded-full bg-[#202026] sf-shimmer-box border border-gold/30"></div></div><div class="reel-content flex flex-col gap-2 pointer-events-none"><div class="flex items-center gap-2"><div class="w-28 h-4 rounded-md bg-[#25252d] sf-shimmer-box"></div><div class="w-16 h-4 rounded-full bg-amber-500/20 sf-shimmer-box"></div></div><div class="w-52 h-3.5 rounded bg-[#202026] sf-shimmer-box"></div><div class="w-36 h-3 rounded bg-[#202026] sf-shimmer-box"></div><div class="flex items-center gap-2 mt-1"><div class="w-32 h-7 rounded-full bg-[#25252f] sf-shimmer-box"></div><div class="w-20 h-7 rounded-full bg-amber-500/30 sf-shimmer-box"></div></div></div></div></div></div></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1 font-bold tracking-widest text-[11px] text-zinc-300">BUY <span class="text-amber-400 font-black">•</span> SELL <span class="text-amber-400 font-black">•</span> GROW</div><div class="mt-0.5 text-zinc-500 text-[11px]">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
@@ -2573,130 +2573,7 @@ const triggerGoogleSignIn = async (onSuccess, onError) => {
   }
 };
 
-function showGoogleBrandGuideModal() {
-  modal(`
-    <div class="space-y-4 max-w-lg mx-auto text-left">
-      <!-- Header -->
-      <div class="flex items-center gap-3 pb-3 border-b border-[#26262a]">
-        <div class="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl text-amber-400 shrink-0 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
-          ✨
-        </div>
-        <div>
-          <h2 class="text-lg font-black text-white flex items-center gap-2">
-            <span>Google Sign-In Branding</span>
-            <span class="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-800">OAuth Guide</span>
-          </h2>
-          <p class="text-xs text-zinc-400">Display "to continue to SellerFlow" on Google Account Chooser</p>
-        </div>
-      </div>
-
-      <!-- Visual Side-by-Side Comparison -->
-      <div class="space-y-2">
-        <div class="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Live Visual Comparison:</div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <!-- Unbranded Card -->
-          <div class="p-3 rounded-xl bg-[#121214] border border-rose-900/40 relative">
-            <span class="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800">Default Unbranded</span>
-            <div class="text-[11px] text-zinc-400">Google Screen:</div>
-            <div class="text-sm font-bold text-white mt-1">Choose an account</div>
-            <div class="text-[11px] text-zinc-400">to continue to</div>
-            <div class="text-[11px] font-mono text-rose-400 font-bold bg-rose-950/30 px-1.5 py-0.5 rounded border border-rose-900/40 mt-1 break-all line-through opacity-85">sellerflow-efaab.firebaseapp.com</div>
-          </div>
-
-          <!-- Branded Card -->
-          <div class="p-3 rounded-xl bg-gradient-to-b from-[#181610] to-[#121215] border border-amber-500/40 relative shadow-[0_0_20px_rgba(245,158,11,0.1)]">
-            <span class="absolute top-2 right-2 text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700/60">SellerFlow Brand</span>
-            <div class="text-[11px] text-amber-300/80">Google Screen:</div>
-            <div class="text-sm font-bold text-white mt-1 flex items-center gap-1.5">
-              <span>Choose an account</span>
-            </div>
-            <div class="text-[11px] text-zinc-400">to continue to</div>
-            <div class="flex items-center gap-1.5 mt-1">
-              <img src="/nav-emblem.svg" class="w-4 h-4 object-contain inline-block drop-shadow-[0_1px_4px_rgba(245,158,11,0.4)]" alt="SellerFlow">
-              <span class="text-xs font-black text-amber-300 tracking-tight">SellerFlow</span>
-              <span class="text-[9px] font-bold text-emerald-400 bg-emerald-950/80 px-1 rounded border border-emerald-800">Verified</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick 1-Minute Action Steps -->
-      <div class="p-3.5 rounded-xl bg-[#141418] border border-[#2b2b32] space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-white flex items-center gap-1.5">
-            <span>⚡ 60-Second Setup in Google Cloud Console</span>
-          </span>
-          <a href="https://console.cloud.google.com/apis/credentials/consent?project=sellerflow-efaab" target="_blank" rel="noopener noreferrer" class="bg-amber-400 hover:bg-amber-300 text-black text-[11px] font-bold px-2.5 py-1 rounded-lg transition inline-flex items-center gap-1 shadow-sm">
-            <span>Open Google Cloud</span>
-            <span>↗</span>
-          </a>
-        </div>
-
-        <p class="text-[11.5px] text-zinc-300 leading-relaxed">
-          When Firebase creates Google Sign-In, it defaults to showing the raw domain (<code>sellerflow-efaab.firebaseapp.com</code>) until you type the app name in your Google Cloud OAuth Consent Screen. Here are the exact fields:
-        </p>
-
-        <!-- Pre-filled Fields with 1-Click Copy -->
-        <div class="space-y-2 text-xs">
-          <div class="flex items-center justify-between bg-black/60 p-2 rounded-lg border border-[#2b2b32]">
-            <div class="flex flex-col min-w-0 pr-2">
-              <span class="text-[10px] text-zinc-400 font-semibold uppercase">App Name</span>
-              <span class="text-white font-mono font-bold truncate">SellerFlow</span>
-            </div>
-            <button type="button" onclick="navigator.clipboard.writeText('SellerFlow'); toast('Copied App Name: SellerFlow!', 'success');" class="bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] font-bold px-2.5 py-1 rounded transition shrink-0">
-              Copy
-            </button>
-          </div>
-
-          <div class="flex items-center justify-between bg-black/60 p-2 rounded-lg border border-[#2b2b32]">
-            <div class="flex flex-col min-w-0 pr-2">
-              <span class="text-[10px] text-zinc-400 font-semibold uppercase">Developer & Support Email</span>
-              <span class="text-white font-mono font-bold truncate">gideondreams3325@gmail.com</span>
-            </div>
-            <button type="button" onclick="navigator.clipboard.writeText('gideondreams3325@gmail.com'); toast('Copied Developer Email: gideondreams3325@gmail.com!', 'success');" class="bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] font-bold px-2.5 py-1 rounded transition shrink-0">
-              Copy
-            </button>
-          </div>
-
-          <div class="flex items-center justify-between bg-black/60 p-2 rounded-lg border border-[#2b2b32]">
-            <div class="flex flex-col min-w-0 pr-2">
-              <span class="text-[10px] text-zinc-400 font-semibold uppercase">Application Home Page</span>
-              <span class="text-white font-mono font-bold truncate">https://sellerflow-tan.vercel.app</span>
-            </div>
-            <button type="button" onclick="navigator.clipboard.writeText('https://sellerflow-tan.vercel.app'); toast('Copied Home Page URL!', 'success');" class="bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] font-bold px-2.5 py-1 rounded transition shrink-0">
-              Copy
-            </button>
-          </div>
-
-          <div class="flex items-center justify-between bg-black/60 p-2 rounded-lg border border-[#2b2b32]">
-            <div class="flex flex-col min-w-0 pr-2">
-              <span class="text-[10px] text-zinc-400 font-semibold uppercase">Authorized Domains</span>
-              <span class="text-white font-mono font-bold truncate">sellerflow-tan.vercel.app, firebaseapp.com</span>
-            </div>
-            <button type="button" onclick="navigator.clipboard.writeText('sellerflow-tan.vercel.app'); toast('Copied Authorized Domain!', 'success');" class="bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] font-bold px-2.5 py-1 rounded transition shrink-0">
-              Copy
-            </button>
-          </div>
-        </div>
-
-        <div class="text-[11px] text-zinc-300 bg-amber-950/30 border border-amber-800/50 p-2.5 rounded-xl leading-relaxed flex items-start gap-2">
-          <span class="text-base shrink-0">🚀</span>
-          <div>
-            <strong class="text-amber-300">Instant Global Update:</strong> Once saved in Google Cloud Console, Google applies <em>"to continue to SellerFlow"</em> to all Android and Web users automatically. No APK re-compilation or app store update is needed!
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal Footer -->
-      <div class="flex items-center justify-between gap-2 pt-2 border-t border-[#26262a]">
-        <span class="text-[11px] text-zinc-500 font-medium">© 2026 POMAAH GROUP</span>
-        <button type="button" data-close-modal class="bg-amber-400 hover:bg-amber-300 text-black font-bold px-5 py-2 rounded-xl text-xs transition shadow-md">
-          Close Guide
-        </button>
-      </div>
-    </div>
-  `);
-}
+function showGoogleBrandGuideModal() {}
 window.showGoogleBrandGuideModal = showGoogleBrandGuideModal;
 
 const signOut=(auth)=>auth.signOut();
@@ -2859,12 +2736,14 @@ function snapshotExists(snap){return !!snap && (typeof snap.exists==='function' 
 
 const firebaseConfig={apiKey:'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk',authDomain:'sellerflow-efaab.firebaseapp.com',databaseURL:'https://sellerflow-efaab-default-rtdb.firebaseio.com',projectId:'sellerflow-efaab',storageBucket:'sellerflow-efaab.firebasestorage.app',messagingSenderId:'987175352360',appId:'1:987175352360:web:53e44304aaf11b98c61d1d'};
 window.firebaseConfig = firebaseConfig;
-const ADMIN_EMAILS=['gideondreams3325@gmail.com','gideonappiahfriempong@gmail.com'];
+const ADMIN_EMAILS=['gideondreams3325@gmail.com'];
 const isUserAdminEmail=(email)=>{
   if(!email) return false;
   const em = String(email).toLowerCase().trim();
-  return ADMIN_EMAILS.includes(em) || em.startsWith('gideonappiahfriempong@') || em.startsWith('gideondreams3325@');
+  return em === 'gideondreams3325@gmail.com';
 };
+window.ADMIN_EMAILS = ADMIN_EMAILS;
+window.isUserAdminEmail = isUserAdminEmail;
 function isUserEmailVerified(u){
   if(!u) return false;
   if(u.emailVerified) return true;
@@ -3019,7 +2898,11 @@ try {
         isCached: true
       };
       currentProfile = s.profile || null;
-      isAdmin = isUserAdminEmail(s.email) || currentProfile?.role === 'admin';
+      isAdmin = isUserAdminEmail(s.email);
+      if(!isAdmin && currentProfile && (currentProfile.role === 'admin' || currentProfile.isAdmin)){
+        currentProfile.role = 'seller';
+        currentProfile.isAdmin = false;
+      }
       if(currentProfile && s.photoURL && !currentProfile.avatarUrl){
         currentProfile.avatarUrl = s.photoURL;
       }
@@ -5556,7 +5439,11 @@ async function ensureProfile(u,extra={}){
     try{await setDoc(doc(db,'users',u.uid),extra,{merge:true});p={...p,...extra};currentProfile=p}catch(e){console.warn('Profile update skipped:',e)}
   }
   currentProfile=p;
-  isAdmin=isUserAdminEmail(u.email) || currentProfile?.role === 'admin';
+  isAdmin=isUserAdminEmail(u.email);
+  if(!isAdmin && currentProfile && (currentProfile.role === 'admin' || currentProfile.isAdmin)){
+    currentProfile.role = 'seller';
+    currentProfile.isAdmin = false;
+  }
   if(isAdmin && currentProfile){
     currentProfile.verified = true;
     currentProfile.role = 'admin';
@@ -5583,7 +5470,11 @@ async function refreshProfile(){
   if(!currentUser){currentProfile=null;isAdmin=false;return null;}
   const s=await getDoc(doc(db,'users',currentUser.uid));
   currentProfile=snapshotExists(s)?s.data():await ensureProfile(currentUser);
-  isAdmin=isUserAdminEmail(currentUser.email) || currentProfile?.role === 'admin';
+  isAdmin=isUserAdminEmail(currentUser.email);
+  if(!isAdmin && currentProfile && (currentProfile.role === 'admin' || currentProfile.isAdmin)){
+    currentProfile.role = 'seller';
+    currentProfile.isAdmin = false;
+  }
   if(currentProfile && !currentProfile.avatarRemoved && (!currentProfile.avatarUrl || !currentProfile.avatarUrl.trim() || isDefaultProfilePic(currentProfile.avatarUrl))){
     let localPic = '';
     try { localPic = localStorage.getItem('sf_user_avatar_' + currentUser.uid) || ''; } catch(_) {}
@@ -5723,7 +5614,7 @@ function sellerProfile(uid, fallbackData = null){
     avatarUrl: effectiveAvatar || base.avatarUrl || '',
     photoURL: effectiveAvatar || base.photoURL || ''
   };
-  if(isUserAdminEmail(base.email) || base.role === 'admin'){
+  if(isUserAdminEmail(base.email)){
     return {
       ...mergedBase,
       verified: true,
@@ -5731,6 +5622,9 @@ function sellerProfile(uid, fallbackData = null){
       hasBusinessCert: true,
       businessVerified: true
     };
+  } else if (mergedBase.role === 'admin') {
+    mergedBase.role = 'seller';
+    mergedBase.isAdmin = false;
   }
   return mergedBase;
 }
@@ -7594,13 +7488,13 @@ async function renderFeed(targetPostId, options){
   }
 }
 function verifyBadge(s){
-  const isAdm = (s?.role === 'admin') || (s?.isAdmin) || isUserAdminEmail(s?.email) || (currentUser && s?.uid === currentUser.uid && isAdmin);
+  const isAdm = isUserAdminEmail(s?.email) || (currentUser && s?.uid === currentUser.uid && isUserAdminEmail(currentUser.email));
   return (s?.verified || isAdm)?` <span class="verified-badge" title="SellerFlow verified">✓</span>`:''
 }
 function isBusinessVerified(s){
   if(!s) return false;
-  if(s.role === 'admin' || s.isAdmin || isUserAdminEmail(s.email)) return true;
-  if(currentUser && (s.uid === currentUser.uid || s.id === currentUser.uid || s.ownerId === currentUser.uid) && isAdmin) return true;
+  if(isUserAdminEmail(s.email)) return true;
+  if(currentUser && (s.uid === currentUser.uid || s.id === currentUser.uid || s.ownerId === currentUser.uid) && isUserAdminEmail(currentUser.email)) return true;
   if(s.ownerId && isUserAdminEmail(allPublicProfiles.get(s.ownerId)?.email)) return true;
   if(s.uid && isUserAdminEmail(allPublicProfiles.get(s.uid)?.email)) return true;
   return !!(s.hasBusinessCert || s.businessCertUrl || s.businessCertUploaded || s.businessVerified);
@@ -7741,7 +7635,7 @@ function postCard(p, idx = 0){
           <span class="reel-action-count">More</span>
         </div>
 
-        ${((isAdmin || currentProfile?.role === 'admin' || (typeof isUserAdminEmail === 'function' && currentUser?.email && isUserAdminEmail(currentUser.email))) ? `
+        ${((isAdmin && typeof isUserAdminEmail === 'function' && currentUser?.email && isUserAdminEmail(currentUser.email)) ? `
         <!-- Security Team Direct Takedown -->
         <div class="reel-action-group">
           <button type="button" class="reel-action bg-red-950/80 border border-red-600 text-red-300 hover:bg-red-900 active:scale-95 transition" data-admin-takedown-reel="${p.id}" title="Security Team: Take down & delete post immediately from For You">
@@ -21113,7 +21007,7 @@ init();
       </div>
       `}
 
-      ${(isAdmin || currentProfile?.role === 'admin' || (typeof isUserAdminEmail === 'function' && currentUser?.email && isUserAdminEmail(currentUser.email))) ? `
+      ${(isAdmin && typeof isUserAdminEmail === 'function' && currentUser?.email && isUserAdminEmail(currentUser.email)) ? `
       <div class="mt-4 p-4 rounded-2xl bg-[#1e1010] border border-red-600/70">
         <div class="flex items-center gap-2">
           <span class="text-base">🛡️</span>
@@ -24596,11 +24490,14 @@ init();
           }
         }
 
-        if (isUserAdminEmail(p.email) || p.role === 'admin' || (currentUser && targetUid === currentUser.uid && isAdmin)) {
+        if (isUserAdminEmail(p.email) || (currentUser && targetUid === currentUser.uid && isUserAdminEmail(currentUser.email))) {
           p.verified = true;
           p.role = 'admin';
           p.hasBusinessCert = true;
           p.businessVerified = true;
+        } else if (p.role === 'admin') {
+          p.role = 'seller';
+          p.isAdmin = false;
         }
       } catch(_) {}
     }
@@ -26050,30 +25947,29 @@ init();
   renderAdmin = async function(){
     const u = currentUser || (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
     const em = (u && u.email) ? u.email.toLowerCase().trim() : '';
-    if (typeof isUserAdminEmail === 'function' && em && isUserAdminEmail(em)) {
+    const isOwnerAdmin = (typeof isUserAdminEmail === 'function' && em) ? isUserAdminEmail(em) : (em === 'gideondreams3325@gmail.com');
+    if (isOwnerAdmin) {
       isAdmin = true;
       window.isAdmin = true;
-    }
-    if (currentProfile && (currentProfile.role === 'admin' || currentProfile.isAdmin)) {
-      isAdmin = true;
-      window.isAdmin = true;
-    }
-    if(!isAdmin){
-      if (em && (em.includes('gideon') || em.includes('admin') || isUserAdminEmail(em))) {
-        isAdmin = true;
-        window.isAdmin = true;
+    } else {
+      isAdmin = false;
+      window.isAdmin = false;
+      if (currentProfile && (currentProfile.role === 'admin' || currentProfile.isAdmin)) {
+        currentProfile.role = 'seller';
+        currentProfile.isAdmin = false;
       }
     }
     if(!isAdmin){
-      $('page').innerHTML = pageTitle('Access denied', 'You do not have permission to access the SellerFlow Security Portal.');
+      $('page').innerHTML = pageTitle('Access denied', 'Only the authorized administrator gideondreams3325@gmail.com has permission to manage the SellerFlow Security Portal.');
       return;
     }
 
     // Proactively ensure admin role and permissions in Firestore
     if(u && u.uid && em && isUserAdminEmail(em)){
       try {
-        setDoc(doc(db, 'admins', u.uid), { uid: u.uid, email: em, updatedAt: serverTimestamp() }, { merge: true }).catch(()=>{});
+        setDoc(doc(db, 'admins', u.uid), { uid: u.uid, email: 'gideondreams3325@gmail.com', role: 'admin', updatedAt: serverTimestamp() }, { merge: true }).catch(()=>{});
         setDoc(doc(db, 'users', u.uid), { role: 'admin', isAdmin: true, verified: true, verificationStatus: 'approved' }, { merge: true }).catch(()=>{});
+        setDoc(doc(db, 'publicProfiles', u.uid), { role: 'admin', isAdmin: true, verified: true }, { merge: true }).catch(()=>{});
       } catch(_) {}
     }
 
@@ -26519,29 +26415,6 @@ init();
             <span>→</span>
           </div>
         </button>
-
-        <!-- Card 10: Google OAuth Consent Branding -->
-        <button type="button" class="sf-dash-card group border-amber-500/30 hover:border-amber-500/60 bg-gradient-to-b from-[#181611] to-[#121215]" id="dashCardGoogleBrand">
-          <div>
-            <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold text-amber-300 uppercase tracking-wider">Google OAuth</span>
-              <span class="text-lg p-1 rounded-lg bg-amber-950/80 border border-amber-700/60">✨</span>
-            </div>
-            <div class="text-xl font-black text-amber-300 mt-1.5 group-hover:text-gold transition flex items-center gap-1.5">
-              <span>SellerFlow</span>
-              <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-bold uppercase">Branded</span>
-            </div>
-            <div class="flex flex-wrap gap-1 mt-2">
-              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-800">
-                to continue to SellerFlow
-              </span>
-            </div>
-          </div>
-          <div class="text-[10px] font-bold text-amber-300 group-hover:underline mt-3 flex items-center justify-between">
-            <span>Brand Guide</span>
-            <span>→</span>
-          </div>
-        </button>
       </div>
 
       <!-- Sleek Tab-Based Interface for Navigation -->
@@ -26639,7 +26512,6 @@ init();
     if($('dashCardFrauds')) $('dashCardFrauds').onclick = () => setAdminTab('frauds');
     if($('dashCardRestoration')) $('dashCardRestoration').onclick = () => setAdminTab('posts', 'restoration');
     if($('dashCardJobsEvents')) $('dashCardJobsEvents').onclick = () => setAdminTab('jobs_events');
-    if($('dashCardGoogleBrand')) $('dashCardGoogleBrand').onclick = () => showGoogleBrandGuideModal();
 
     setAdminTab(initialTab);
   };
@@ -29724,6 +29596,9 @@ FINANCIAL:
       }
     };
   }
+
+  window.renderAdmin = renderAdmin;
+  window.renderAdminFull = renderAdmin;
 })();
 </script>
 

@@ -71,16 +71,12 @@ function getActiveProfile() {
 }
 
 function getIsAdmin() {
-  if (typeof window !== 'undefined') {
-    if (typeof window.getIsAdmin === 'function') {
-      const adm = window.getIsAdmin();
-      if (adm) return true;
-    }
-    if (window.isAdmin) return true;
-  }
-  if (typeof isAdmin !== 'undefined' && isAdmin) return true;
   const u = getActiveUser();
-  if (u && (u.email === 'gideondreams3325@gmail.com' || u.email === 'gideonappiahfriempong@gmail.com')) return true;
+  const email = (u && u.email) ? String(u.email).toLowerCase().trim() : '';
+  if (email === 'gideondreams3325@gmail.com') return true;
+  if (typeof window !== 'undefined' && typeof window.isUserAdminEmail === 'function' && email) {
+    return window.isUserAdminEmail(email);
+  }
   return false;
 }
 

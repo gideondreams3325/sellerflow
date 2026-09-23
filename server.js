@@ -94,11 +94,11 @@ const adminDb = getFirestore(adminApp);
 
 const JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
 
-const ADMIN_EMAILS = ['gideondreams3325@gmail.com', 'gideonappiahfriempong@gmail.com'];
+const ADMIN_EMAILS = ['gideondreams3325@gmail.com'];
 function isUserAdminEmail(email) {
   if (!email) return false;
   const em = String(email).toLowerCase().trim();
-  return ADMIN_EMAILS.includes(em) || em.startsWith('gideonappiahfriempong@') || em.startsWith('gideondreams3325@');
+  return em === 'gideondreams3325@gmail.com';
 }
 
 async function verifyFirebaseToken(idToken) {
@@ -980,9 +980,15 @@ app.post('/api/copyright/resolve-dispute', async (req, res) => {
     }
 
     const callerUid = decodedToken.uid;
-    const userDoc = await adminDb.collection('users').doc(callerUid).get();
-    const userData = userDoc.data() || {};
-    if (userData.role !== 'admin' && userData.role !== 'super_admin' && !userData.isAdmin) {
+    let isAdmin = isUserAdminEmail(decodedToken.email);
+    if (!isAdmin) {
+      try {
+        const userDoc = await adminDb.collection('users').doc(callerUid).get();
+        const userData = userDoc.data() || {};
+        isAdmin = isUserAdminEmail(userData.email);
+      } catch (_) {}
+    }
+    if (!isAdmin) {
       return res.status(403).json({ success: false, error: 'Forbidden: SellerFlow Security Team access required' });
     }
 
@@ -1476,12 +1482,12 @@ app.post('/api/admin/takedown', async (req, res) => {
     }
 
     const callerUid = decodedToken.uid;
-    let isAdmin = decodedToken.role === 'admin' || decodedToken.role === 'super_admin' || !!decodedToken.isAdmin || isUserAdminEmail(decodedToken.email);
+    let isAdmin = isUserAdminEmail(decodedToken.email);
     if (!isAdmin) {
       try {
         const userDoc = await adminDb.collection('users').doc(callerUid).get();
         const userData = userDoc.data() || {};
-        isAdmin = userData.role === 'admin' || userData.role === 'super_admin' || !!userData.isAdmin;
+        isAdmin = isUserAdminEmail(userData.email);
       } catch (_) {}
     }
 
@@ -1638,12 +1644,12 @@ app.all('/api/admin/overview-data', async (req, res) => {
       try {
         decodedToken = await verifyFirebaseToken(token);
         const email = (decodedToken.email || '').toLowerCase().trim();
-        isAdmin = decodedToken.role === 'admin' || decodedToken.role === 'super_admin' || !!decodedToken.isAdmin || isUserAdminEmail(email);
+        isAdmin = isUserAdminEmail(email);
         if (!isAdmin && decodedToken.uid) {
           const uSnap = await adminDb.collection('users').doc(decodedToken.uid).get();
           if (uSnap.exists) {
             const ud = uSnap.data() || {};
-            isAdmin = ud.role === 'admin' || ud.role === 'super_admin' || !!ud.isAdmin || isUserAdminEmail(ud.email);
+            isAdmin = isUserAdminEmail(ud.email);
           }
         }
       } catch (authErr) {
@@ -2948,7 +2954,7 @@ app.get('/api/jobs/:id/applicants', async (req, res) => {
     const idToken = authHeader.split('Bearer ')[1].trim();
     const decodedToken = await verifyFirebaseToken(idToken);
     const callerUid = decodedToken.uid;
-    const isAdmin = decodedToken.role === 'admin' || isUserAdminEmail(decodedToken.email);
+    const isAdmin = isUserAdminEmail(decodedToken.email);
 
     const jobId = req.params.id;
     const store = getJobsEventsStore();
@@ -2976,7 +2982,7 @@ app.post('/api/jobs/applications/:id/status', async (req, res) => {
     const idToken = authHeader.split('Bearer ')[1].trim();
     const decodedToken = await verifyFirebaseToken(idToken);
     const callerUid = decodedToken.uid;
-    const isAdmin = decodedToken.role === 'admin' || isUserAdminEmail(decodedToken.email);
+    const isAdmin = isUserAdminEmail(decodedToken.email);
 
     const appId = req.params.id;
     const { status } = req.body || {};
@@ -3029,7 +3035,7 @@ app.post('/api/jobs/submit', async (req, res) => {
     const idToken = authHeader.split('Bearer ')[1].trim();
     const decodedToken = await verifyFirebaseToken(idToken);
     const callerUid = decodedToken.uid;
-    const isAdminUser = decodedToken.role === 'admin' || isUserAdminEmail(decodedToken.email);
+    const isAdminUser = isUserAdminEmail(decodedToken.email);
 
     // Check identity verification state: only verified accounts can post jobs
     req.userEmail = decodedToken.email;
@@ -3218,7 +3224,7 @@ app.post('/api/jobs/apply', async (req, res) => {
     const idToken = authHeader.split('Bearer ')[1].trim();
     const decodedToken = await verifyFirebaseToken(idToken);
     const callerUid = decodedToken.uid;
-    const isAdminUser = decodedToken.role === 'admin' || isUserAdminEmail(decodedToken.email);
+    const isAdminUser = isUserAdminEmail(decodedToken.email);
 
     // Verify identity verification state: only verified accounts can apply for jobs
     req.userEmail = decodedToken.email;
@@ -3461,7 +3467,7 @@ app.get('/api/events/:id/attendees', async (req, res) => {
     const idToken = authHeader.split('Bearer ')[1].trim();
     const decodedToken = await verifyFirebaseToken(idToken);
     const callerUid = decodedToken.uid;
-    const isAdmin = decodedToken.role === 'admin' || isUserAdminEmail(decodedToken.email);
+    const isAdmin = isUserAdminEmail(decodedToken.email);
 
     const eventId = req.params.id;
     const store = getJobsEventsStore();
@@ -3511,7 +3517,7 @@ app.post('/api/events/submit', async (req, res) => {
     const idToken = authHeader.split('Bearer ')[1].trim();
     const decodedToken = await verifyFirebaseToken(idToken);
     const callerUid = decodedToken.uid;
-    const isAdminUser = decodedToken.role === 'admin' || isUserAdminEmail(decodedToken.email);
+    const isAdminUser = isUserAdminEmail(decodedToken.email);
 
     // Check identity verification state: only verified accounts can host events
     req.userEmail = decodedToken.email;
@@ -3692,7 +3698,7 @@ app.post('/api/events/register', async (req, res) => {
     const idToken = authHeader.split('Bearer ')[1].trim();
     const decodedToken = await verifyFirebaseToken(idToken);
     const callerUid = decodedToken.uid;
-    const isAdminUser = decodedToken.role === 'admin' || isUserAdminEmail(decodedToken.email);
+    const isAdminUser = isUserAdminEmail(decodedToken.email);
 
     // Verify identity verification state: only verified accounts can register for events
     req.userEmail = decodedToken.email;
