@@ -1735,7 +1735,14 @@ app.post('/api/auth/custom-token', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Missing token' });
     }
     const decoded = await verifyFirebaseToken(token);
-    const customToken = await adminAuth.createCustomToken(decoded.uid);
+    try {
+      if (decoded.email_verified && decoded.uid) {
+        await adminAuth.updateUser(decoded.uid, { emailVerified: true }).catch(() => {});
+      }
+    } catch (_) {}
+    const customToken = await adminAuth.createCustomToken(decoded.uid, {
+      email_verified: !!decoded.email_verified
+    });
     return res.json({ success: true, customToken });
   } catch (err) {
     console.warn('Custom token creation issue:', err.message);

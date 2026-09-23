@@ -1539,7 +1539,9 @@ async function initCapacitorHandlers() {
           if (typeof auth !== 'undefined' && auth.currentUser) {
             hide($('authPage'));
             showApp();
-            if (typeof navigate === 'function') navigate('feed');
+            if (typeof navigate === 'function' && (!currentPage || currentPage === 'auth')) {
+              navigate('feed');
+            }
           } else {
             const savedSession = localStorage.getItem('sf_active_user_session');
             if (savedSession) {
@@ -1559,7 +1561,9 @@ async function initCapacitorHandlers() {
                   window.isAdmin = isAdmin;
                   hide($('authPage'));
                   showApp();
-                  if (typeof navigate === 'function') navigate('feed');
+                  if (typeof navigate === 'function' && (!currentPage || currentPage === 'auth')) {
+                    navigate('feed');
+                  }
                 }
               } catch (_) {}
             }
@@ -2747,8 +2751,30 @@ window.isUserAdminEmail = isUserAdminEmail;
 function isUserEmailVerified(u){
   if(!u) return false;
   if(u.emailVerified) return true;
-  if(u.providerData && u.providerData.some(p=>p && p.providerId==='google.com')) return true;
+  if(u.providerData && u.providerData.some(p=>p && (p.providerId==='google.com' || p.providerId==='custom'))) return true;
   if(isUserAdminEmail(u.email)) return true;
+  if(u.isCached && u.emailVerified !== false) return true;
+  if(typeof currentProfile !== 'undefined' && currentProfile && (currentProfile.emailVerified === true || currentProfile.verified === true || currentProfile.provider === 'google.com')) return true;
+  try {
+    const saved = localStorage.getItem('sf_active_user_session');
+    if (saved) {
+      const s = JSON.parse(saved);
+      if (s && s.uid === u.uid && (s.emailVerified === true || s.isGoogle === true || s.provider === 'google.com')) {
+        return true;
+      }
+    }
+  } catch(_) {}
+  try {
+    if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey) {
+      const fbSaved = localStorage.getItem(`firebase:authUser:${firebaseConfig.apiKey}:[DEFAULT]`);
+      if (fbSaved) {
+        const fbUser = JSON.parse(fbSaved);
+        if (fbUser && fbUser.uid === u.uid && (fbUser.emailVerified === true || (fbUser.providerData && fbUser.providerData.some(p => p && p.providerId === 'google.com')))) {
+          return true;
+        }
+      }
+    }
+  } catch(_) {}
   return false;
 }
 function maskEmail(email){
@@ -2829,16 +2855,29 @@ let firebaseApp,auth,db;let currentUser=null,currentProfile=null,isAdmin=false,c
 function saveUserSession(user, profile) {
   if (!user || !user.uid) return;
   try {
+    const isVerified = typeof isUserEmailVerified === 'function' ? isUserEmailVerified(user) : (user.emailVerified !== false);
     const sessionData = {
       uid: user.uid,
       email: user.email || '',
       displayName: user.displayName || profile?.name || '',
       photoURL: user.photoURL || profile?.avatarUrl || '',
-      emailVerified: typeof isUserEmailVerified === 'function' ? isUserEmailVerified(user) : (user.emailVerified !== false),
+      emailVerified: isVerified,
       profile: profile || currentProfile || null,
       savedAt: Date.now()
     };
     localStorage.setItem('sf_active_user_session', JSON.stringify(sessionData));
+
+    // Dual-persist to Firebase standard localStorage cache so fallback is always available across restarts
+    if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey) {
+      const storageKey = `firebase:authUser:${firebaseConfig.apiKey}:[DEFAULT]`;
+      if (typeof user.toJSON === 'function') {
+        const uJson = user.toJSON();
+        if (uJson && uJson.uid) {
+          if (isVerified) uJson.emailVerified = true;
+          localStorage.setItem(storageKey, JSON.stringify(uJson));
+        }
+      }
+    }
   } catch (_) {}
 }
 window.saveUserSession = saveUserSession;
@@ -6774,6 +6813,13 @@ if(typeof document !== 'undefined'){
 window._sfNavigationStack = window._sfNavigationStack || [];
 
 async function navigate(page, targetPostId, options){
+  // If authentication state is still initializing on cold start, wait for authoritative resolution before prompting
+  if (window.SELLERFLOW_AUTH_STATE === 'AUTH_INITIALIZING' && typeof window._sfWaitForAuthInit === 'function') {
+    try {
+      await window._sfWaitForAuthInit();
+    } catch (_) {}
+  }
+
   if(!currentUser && page !== 'feed' && page !== 'marketplace' && page !== 'products' && page !== 'update' && page !== 'jobs' && page !== 'events'){
     const promptMsg = page === 'store' ? 'view verified stores and seller catalogues'
       : (page === 'orders' ? 'make orders and track deliveries'
@@ -19073,6 +19119,7 @@ async function startUser(u){
 }
 
 async function logoutUser(){
+  window._sfExplicitSignOut = true;
   try{
     if (typeof removeCurrentDevicePushToken === 'function') {
       await removeCurrentDevicePushToken().catch(() => {});
@@ -19083,6 +19130,11 @@ async function logoutUser(){
   }
   if(typeof clearUserSession === 'function') {
     clearUserSession();
+  }
+  if(typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey) {
+    try {
+      localStorage.removeItem(`firebase:authUser:${firebaseConfig.apiKey}:[DEFAULT]`);
+    } catch (_) {}
   }
   try {
     localStorage.removeItem('sf_saved_route');
@@ -19152,6 +19204,20 @@ function setupAuthInputRepaintFix() {
   });
 }
 
+// Global Authentication Lifecycle States
+window.SELLERFLOW_AUTH_STATE = 'AUTH_INITIALIZING';
+
+let _sfAuthInitResolver = null;
+window._sfWaitForAuthInit = () => new Promise(resolve => {
+  if (window.SELLERFLOW_AUTH_STATE !== 'AUTH_INITIALIZING') {
+    resolve(currentUser || auth?.currentUser || null);
+  } else if (_sfAuthInitResolver) {
+    _sfAuthInitResolver.then(resolve);
+  } else {
+    setTimeout(() => resolve(currentUser || auth?.currentUser || null), 2000);
+  }
+});
+
 async function init(){
   try{
     if (window.IS_SELLERFLOW_OAUTH_CALLBACK || (window.location.pathname && window.location.pathname.includes('/oauth-callback'))) {
@@ -19194,33 +19260,46 @@ async function init(){
       }
     }
 
-    // Determine target route from saved history or default to feed
-    const savedRoute = getSavedRoute();
-    const hasLoggedInSession = !!(currentUser || auth?.currentUser);
-    const initialPage = savedRoute?.page || 'feed';
-    const initialTargetId = savedRoute?.targetId || null;
-    const initialOptions = savedRoute?.options || null;
+    // STATE 1: AUTH INITIALIZING
+    // Keep splash/loading active while Firebase resolves persistent auth state deterministically
+    window.SELLERFLOW_AUTH_STATE = 'AUTH_INITIALIZING';
 
-    // 2. Smoothly mount app shell and restore saved route
-    showApp();
-    
-    const isPublicRoute = initialPage === 'feed' || initialPage === 'marketplace' || initialPage === 'products' || initialPage === 'update';
-    if (isPublicRoute || hasLoggedInSession) {
-      if (initialPage === 'store' && initialTargetId) {
-        await openStore(initialTargetId);
-      } else if (initialPage === 'profile' && initialTargetId) {
-        if (typeof openUserProfile === 'function') {
-          openUserProfile(initialTargetId, initialOptions || {});
-        } else {
-          await navigate('profile', initialTargetId, initialOptions);
+    _sfAuthInitResolver = new Promise((resolve) => {
+      let resolved = false;
+      const done = (u) => {
+        if (!resolved) {
+          resolved = true;
+          resolve(u);
         }
+      };
+
+      // Set deterministic timeout fallback (3000ms) for offline/poor connectivity
+      const timer = setTimeout(() => {
+        done(auth?.currentUser || currentUser || null);
+      }, 3000);
+
+      if (typeof auth.authStateReady === 'function') {
+        auth.authStateReady().then(() => {
+          clearTimeout(timer);
+          done(auth?.currentUser || currentUser || null);
+        }).catch(() => {
+          clearTimeout(timer);
+          done(auth?.currentUser || currentUser || null);
+        });
       } else {
-        await navigate(initialPage, initialTargetId, initialOptions);
+        const unsub = auth.onAuthStateChanged((u) => {
+          clearTimeout(timer);
+          if (typeof unsub === 'function') unsub();
+          done(u);
+        }, () => {
+          clearTimeout(timer);
+          done(auth?.currentUser || currentUser || null);
+        });
       }
-    } else {
-      await navigate('feed');
-    }
-    ready();
+    });
+
+    const initialUser = await _sfAuthInitResolver;
+    const resolvedUser = initialUser || auth?.currentUser || currentUser;
 
     // Start background Service Worker with automatic update monitoring
     initServiceWorker();
@@ -19253,27 +19332,111 @@ async function init(){
     } catch(errCap) {
       console.warn('Capacitor handlers init issue:', errCap);
     }
-    
-    let _sfAuthInitialized = false;
-    onAuthStateChanged(auth,async u=>{
-      if(!u){
-        if(typeof stopOrdersWatcher==='function')stopOrdersWatcher();
-        if(typeof clearUserSession==='function')clearUserSession();
-        currentUser=null;currentProfile=null;isAdmin=false;
-        showApp();
-        setNav();
-        _sfAuthInitialized = true;
+
+    if (resolvedUser && resolvedUser.uid) {
+      // Check email verification status
+      if (!isUserEmailVerified(resolvedUser)) {
+        // STATE 3: AUTHENTICATED BUT EMAIL VERIFICATION REQUIRED
+        window.SELLERFLOW_AUTH_STATE = 'AUTHENTICATED_EMAIL_VERIFICATION_REQUIRED';
+        currentUser = resolvedUser;
+        isAdmin = false;
+        window.currentUser = currentUser;
+        window.isAdmin = isAdmin;
+        showAuth('verifyEmail', resolvedUser.email);
         ready();
-        const currentSaved = getSavedRoute();
-        const curPage = currentSaved?.page || currentPage;
-        if (curPage !== 'feed' && curPage !== 'marketplace' && curPage !== 'products' && curPage !== 'update') {
+        return;
+      }
+
+      // STATE 4: AUTHENTICATED BUT PROFILE DATA STILL LOADING
+      window.SELLERFLOW_AUTH_STATE = 'AUTHENTICATED_PROFILE_LOADING';
+      currentUser = resolvedUser;
+      isAdmin = isUserAdminEmail(resolvedUser.email);
+      window.currentUser = currentUser;
+      window.isAdmin = isAdmin;
+      if (typeof saveUserSession === 'function') saveUserSession(resolvedUser, currentProfile);
+
+      showApp();
+      setNav();
+
+      const savedRoute = getSavedRoute();
+      const initialPage = savedRoute?.page || 'feed';
+      const initialTargetId = savedRoute?.targetId || null;
+      const initialOptions = savedRoute?.options || null;
+
+      if (initialPage === 'store' && initialTargetId) {
+        await openStore(initialTargetId);
+      } else if (initialPage === 'profile' && initialTargetId) {
+        if (typeof openUserProfile === 'function') {
+          openUserProfile(initialTargetId, initialOptions || {});
+        } else {
+          await navigate('profile', initialTargetId, initialOptions);
+        }
+      } else {
+        await navigate(initialPage, initialTargetId, initialOptions);
+      }
+
+      // Load Firestore profile asynchronously
+      try {
+        await startUser(resolvedUser);
+      } catch (pErr) {
+        console.warn('Background profile fetch notice:', pErr);
+      }
+
+      // STATE 2: AUTHENTICATED
+      window.SELLERFLOW_AUTH_STATE = 'AUTHENTICATED';
+      ready();
+
+    } else {
+      // STATE 5: NOT AUTHENTICATED
+      window.SELLERFLOW_AUTH_STATE = 'NOT_AUTHENTICATED';
+      currentUser = null;
+      currentProfile = null;
+      isAdmin = false;
+      showApp();
+      setNav();
+
+      const savedRoute = getSavedRoute();
+      const initialPage = savedRoute?.page || 'feed';
+      const isPublicRoute = initialPage === 'feed' || initialPage === 'marketplace' || initialPage === 'products' || initialPage === 'update';
+      if (isPublicRoute) {
+        await navigate(initialPage, savedRoute?.targetId || null, savedRoute?.options || null);
+      } else {
+        await navigate('feed');
+      }
+      ready();
+    }
+
+    // Register ongoing runtime listener for continuous auth state updates (e.g. login/logout)
+    onAuthStateChanged(auth, async (u) => {
+      if (!u) {
+        // Only wipe user session if this was an explicit user logout or blocked account
+        if (window._sfExplicitSignOut) {
+          window._sfExplicitSignOut = false;
+          if (typeof stopOrdersWatcher === 'function') stopOrdersWatcher();
+          if (typeof clearUserSession === 'function') clearUserSession();
+          currentUser = null;
+          currentProfile = null;
+          isAdmin = false;
+          window.SELLERFLOW_AUTH_STATE = 'NOT_AUTHENTICATED';
+          showApp();
+          setNav();
           navigate('feed');
+        } else {
+          // If auth emitted null during offline blip or background check, preserve cached session if present
+          if (!currentUser) {
+            currentUser = null;
+            currentProfile = null;
+            isAdmin = false;
+            window.SELLERFLOW_AUTH_STATE = 'NOT_AUTHENTICATED';
+            setNav();
+          }
         }
         return;
       }
-      
-      // Verification check: email/password accounts must be email-verified before full access
+
+      // Check email verification on runtime transitions
       if (!isUserEmailVerified(u)) {
+        window.SELLERFLOW_AUTH_STATE = 'AUTHENTICATED_EMAIL_VERIFICATION_REQUIRED';
         currentUser = u;
         isAdmin = false;
         showAuth('verifyEmail', u.email);
@@ -19281,26 +19444,28 @@ async function init(){
         return;
       }
 
-      currentUser=u;
-      isAdmin=isUserAdminEmail(u.email);
+      window.SELLERFLOW_AUTH_STATE = 'AUTHENTICATED';
+      currentUser = u;
+      isAdmin = isUserAdminEmail(u.email);
       window.currentUser = u;
       window.isAdmin = isAdmin;
-      if(typeof saveUserSession === 'function') saveUserSession(u, currentProfile);
+      if (typeof saveUserSession === 'function') saveUserSession(u, currentProfile);
       showApp();
       setNav();
-      _sfAuthInitialized = true;
       ready();
-      
-      try{
+
+      try {
         startUser(u).catch(e => {
           console.error('Background authenticated startup issue:', e);
         });
-      }catch(e){
-        console.error('Authenticated startup trigger issue:',e);
+      } catch (e) {
+        console.error('Authenticated startup trigger issue:', e);
       }
     });
-  }catch(e){
-    console.error('Firebase initialization failed:',e);
+
+  } catch(e) {
+    console.error('Firebase initialization error:', e);
+    window.SELLERFLOW_AUTH_STATE = 'AUTHENTICATION_ERROR';
     showApp();
     navigate('feed');
     ready();
