@@ -1,0 +1,58 @@
+name: SellerFlow Firebase Hosting Deployment
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  deploy-hosting:
+    name: Deploy Web App to Firebase Hosting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 3. Install NPM Dependencies
+        run: npm install
+
+      - name: 4. Build Web Application Bundle (dist/)
+        run: npm run build
+
+      - name: 5. Verify Web Build Output
+        run: |
+          if [ -f "dist/index.html" ]; then
+            echo "✅ dist/index.html verified."
+            ls -la dist/
+          else
+            echo "❌ dist/index.html missing!"
+            exit 1
+          fi
+
+      - name: 6. Deploy to Firebase Hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$FIREBASE_TOKEN" ] && [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "=================================================================="
+            echo "ℹ️ NOTICE: Firebase deploy credentials not yet configured."
+            echo "To enable automated Firebase Hosting deployments:"
+            echo "Add GitHub Secret 'FIREBASE_SERVICE_ACCOUNT' or 'FIREBASE_TOKEN'."
+            echo "=================================================================="
+            exit 0
+          fi
+
+          if [ -n "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
+            export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-service-account.json"
+          fi
+
+          npx --yes firebase-tools deploy --only hosting --project sellerflow-efaab
+          echo "✅ Firebase Hosting deploy succeeded!"

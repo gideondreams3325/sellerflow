@@ -1,10 +1,8 @@
-name: SellerFlow Android Debug APK
+name: SellerFlow Android Debug APK (Standalone)
 
+# Primary Debug & Distribution workflow is located in firebase-android-debug.yml
+# This workflow is maintained as a standalone fallback for manual execution.
 on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -53,7 +51,7 @@ jobs:
                 },
                 client: [{
                   client_info: {
-                    mobilesdk_app_id: "1:987175352360:android:a1b2c3d4e5f67890abcdef",
+                    mobilesdk_app_id: "1:987175352360:android:9f58f9d0e4985553c61d1d",
                     android_client_info: { package_name: "com.sellerflow.app" }
                   },
                   oauth_client: [],
