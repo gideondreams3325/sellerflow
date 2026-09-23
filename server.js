@@ -1627,6 +1627,100 @@ app.post('/api/admin/takedown', async (req, res) => {
   }
 });
 
+app.all('/api/admin/overview-data', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : (req.body?.idToken || req.query?.token || '');
+    let isAdmin = false;
+    let decodedToken = null;
+
+    if (token) {
+      try {
+        decodedToken = await verifyFirebaseToken(token);
+        const email = (decodedToken.email || '').toLowerCase().trim();
+        isAdmin = decodedToken.role === 'admin' || decodedToken.role === 'super_admin' || !!decodedToken.isAdmin || isUserAdminEmail(email);
+        if (!isAdmin && decodedToken.uid) {
+          const uSnap = await adminDb.collection('users').doc(decodedToken.uid).get();
+          if (uSnap.exists) {
+            const ud = uSnap.data() || {};
+            isAdmin = ud.role === 'admin' || ud.role === 'super_admin' || !!ud.isAdmin || isUserAdminEmail(ud.email);
+          }
+        }
+      } catch (authErr) {
+        console.warn('Admin overview token check warning:', authErr.message);
+      }
+    }
+
+    // If caller email was verified as admin
+    if (!isAdmin) {
+      return res.status(403).json({ success: false, error: 'Forbidden: Admin clearance required.' });
+    }
+
+    // Parallel fetch with Admin SDK
+    const [
+      usersSnap,
+      publicProfilesSnap,
+      postsSnap,
+      storesSnap,
+      productsSnap,
+      fraudSnap,
+      scamSnap,
+      kycSnap,
+      ordersSnap,
+      jobsSnap,
+      eventsSnap
+    ] = await Promise.all([
+      adminDb.collection('users').limit(400).get().catch(() => ({ docs: [] })),
+      adminDb.collection('publicProfiles').limit(400).get().catch(() => ({ docs: [] })),
+      adminDb.collection('posts').limit(300).get().catch(() => ({ docs: [] })),
+      adminDb.collection('stores').limit(400).get().catch(() => ({ docs: [] })),
+      adminDb.collection('products').limit(400).get().catch(() => ({ docs: [] })),
+      adminDb.collection('fraudReports').limit(200).get().catch(() => ({ docs: [] })),
+      adminDb.collection('scamReports').limit(200).get().catch(() => ({ docs: [] })),
+      adminDb.collection('buyerKycRecords').limit(400).get().catch(() => ({ docs: [] })),
+      adminDb.collection('orders').limit(400).get().catch(() => ({ docs: [] })),
+      adminDb.collection('jobs').limit(300).get().catch(() => ({ docs: [] })),
+      adminDb.collection('events').limit(300).get().catch(() => ({ docs: [] }))
+    ]);
+
+    const serializeDoc = (d) => {
+      const data = d.data() || {};
+      return { id: d.id, ...data };
+    };
+
+    // Build unified map of users (combining users and publicProfiles)
+    const userMap = new Map();
+    (publicProfilesSnap.docs || []).forEach(d => {
+      userMap.set(d.id, { id: d.id, uid: d.id, ...d.data() });
+    });
+    (usersSnap.docs || []).forEach(d => {
+      const existing = userMap.get(d.id) || {};
+      userMap.set(d.id, { ...existing, id: d.id, uid: d.id, ...d.data() });
+    });
+
+    const usersList = Array.from(userMap.values());
+
+    return res.json({
+      success: true,
+      data: {
+        users: usersList,
+        posts: (postsSnap.docs || []).map(serializeDoc),
+        stores: (storesSnap.docs || []).map(serializeDoc),
+        products: (productsSnap.docs || []).map(serializeDoc),
+        fraudReports: (fraudSnap.docs || []).map(serializeDoc),
+        scamReports: (scamSnap.docs || []).map(serializeDoc),
+        buyerKycRecords: (kycSnap.docs || []).map(serializeDoc),
+        orders: (ordersSnap.docs || []).map(serializeDoc),
+        jobs: (jobsSnap.docs || []).map(serializeDoc),
+        events: (eventsSnap.docs || []).map(serializeDoc)
+      }
+    });
+  } catch (err) {
+    console.error('Error in /api/admin/overview-data:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.post('/api/auth/custom-token', async (req, res) => {
   try {
     const authHeader = req.headers.authorization || '';

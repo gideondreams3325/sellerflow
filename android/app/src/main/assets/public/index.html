@@ -1243,6 +1243,17 @@ function isCapacitorNative() {
 }
 window.isCapacitorNative = isCapacitorNative;
 
+function getSfApiUrl(path) {
+  const p = path.startsWith('/') ? path : '/' + path;
+  const isCapacitor = typeof isCapacitorNative === 'function' ? isCapacitorNative() : false;
+  const appBase = (typeof getAppUrl === 'function') ? getAppUrl() : 'https://sellerflow-tan.vercel.app';
+  if (isCapacitor || window.location.origin.includes('capacitor://') || window.location.origin.includes('localhost')) {
+    return (window.__sfBackendUrl || appBase).replace(/\/+$/, '') + p;
+  }
+  return p;
+}
+window.getSfApiUrl = getSfApiUrl;
+
 async function handleCapacitorGoogleSignIn() {
   const callbackUrl = getOAuthCallbackUrl();
   const startUrl = callbackUrl + (callbackUrl.includes('?') ? '&' : '?') + 'start=google';
@@ -26066,8 +26077,34 @@ init();
       } catch(_) {}
     }
 
-    const [users, posts, reports, termsSnap, storesSnap, productsSnap, fraudSnap, kycSnap, ordersSnap, jobsSnap, eventsSnap] = await Promise.all([
+    // Acquire auth token for backend Admin SDK overview sync
+    let idToken = '';
+    try {
+      if (u && typeof u.getIdToken === 'function') {
+        idToken = await u.getIdToken();
+      } else if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+        idToken = await firebase.auth().currentUser.getIdToken();
+      }
+    } catch (_) {}
+
+    // Parallel fetch from Direct Firestore + Backend Admin Overview Route
+    const [
+      directUsersSnap,
+      directPublicProfilesSnap,
+      directPostsSnap,
+      directReportsSnap,
+      termsSnap,
+      directStoresSnap,
+      directProductsSnap,
+      directFraudSnap,
+      directKycSnap,
+      directOrdersSnap,
+      directJobsSnap,
+      directEventsSnap,
+      apiOverviewRes
+    ] = await Promise.all([
       getDocs(query(collection(db, 'users'), limit(300))).catch(e => { console.warn('Admin users query fallback:', e); return { docs: [], size: 0 }; }),
+      getDocs(query(collection(db, 'publicProfiles'), limit(300))).catch(e => { console.warn('Admin public profiles fallback:', e); return { docs: [], size: 0 }; }),
       getDocs(query(collection(db, 'posts'), limit(250))).catch(e => { console.warn('Admin posts query fallback:', e); return { docs: [], size: 0 }; }),
       getDocs(query(collection(db, 'scamReports'), limit(100))).catch(e => { console.warn('Admin scam reports query fallback:', e); return { docs: [], size: 0 }; }),
       getDoc(doc(db, 'settings', 'terms')).catch(() => null),
@@ -26077,8 +26114,94 @@ init();
       getDocs(query(collection(db, 'buyerKycRecords'), limit(300))).catch(() => ({ docs: [], size: 0 })),
       getDocs(query(collection(db, 'orders'), limit(300))).catch(() => ({ docs: [], size: 0 })),
       getDocs(query(collection(db, 'jobs'), limit(300))).catch(() => ({ docs: [], size: 0 })),
-      getDocs(query(collection(db, 'events'), limit(300))).catch(() => ({ docs: [], size: 0 }))
+      getDocs(query(collection(db, 'events'), limit(300))).catch(() => ({ docs: [], size: 0 })),
+      (async () => {
+        try {
+          const url = (typeof getSfApiUrl === 'function') ? getSfApiUrl('/api/admin/overview-data') : '/api/admin/overview-data';
+          const headers = { 'Content-Type': 'application/json' };
+          if (idToken) headers['Authorization'] = 'Bearer ' + idToken;
+          const r = await fetch(url, { headers });
+          if (r.ok) {
+            const j = await r.json();
+            return j && j.data ? j.data : null;
+          }
+        } catch (_) {}
+        return null;
+      })()
     ]);
+
+    // Helper to merge Firestore snapshots and API records into unified doc collection
+    function mergeToDocSnap(directSnap, apiArray = []) {
+      const map = new Map();
+      if (directSnap && directSnap.docs) {
+        directSnap.docs.forEach(d => {
+          map.set(d.id, { id: d.id, ...d.data() });
+        });
+      }
+      if (Array.isArray(apiArray)) {
+        apiArray.forEach(item => {
+          if (item && item.id) {
+            const prev = map.get(item.id) || {};
+            map.set(item.id, { ...prev, ...item });
+          }
+        });
+      }
+      const docs = Array.from(map.entries()).map(([id, data]) => ({
+        id,
+        data: () => data,
+        ...data
+      }));
+      return {
+        docs,
+        size: docs.length,
+        empty: docs.length === 0,
+        forEach: (fn) => docs.forEach(fn)
+      };
+    }
+
+    // Merge users from users collection, publicProfiles collection, and API overview data
+    const userMap = new Map();
+    if (directPublicProfilesSnap && directPublicProfilesSnap.docs) {
+      directPublicProfilesSnap.docs.forEach(d => {
+        userMap.set(d.id, { id: d.id, uid: d.id, ...d.data() });
+      });
+    }
+    if (directUsersSnap && directUsersSnap.docs) {
+      directUsersSnap.docs.forEach(d => {
+        const prev = userMap.get(d.id) || {};
+        userMap.set(d.id, { ...prev, id: d.id, uid: d.id, ...d.data() });
+      });
+    }
+    if (apiOverviewRes && Array.isArray(apiOverviewRes.users)) {
+      apiOverviewRes.users.forEach(item => {
+        if (item && (item.id || item.uid)) {
+          const id = item.id || item.uid;
+          const prev = userMap.get(id) || {};
+          userMap.set(id, { ...prev, ...item, id, uid: id });
+        }
+      });
+    }
+    const mergedUserDocs = Array.from(userMap.entries()).map(([id, data]) => ({
+      id,
+      data: () => data,
+      ...data
+    }));
+    const users = {
+      docs: mergedUserDocs,
+      size: mergedUserDocs.length,
+      empty: mergedUserDocs.length === 0,
+      forEach: (fn) => mergedUserDocs.forEach(fn)
+    };
+
+    const posts = mergeToDocSnap(directPostsSnap, apiOverviewRes?.posts);
+    const reports = mergeToDocSnap(directReportsSnap, apiOverviewRes?.scamReports);
+    const storesSnap = mergeToDocSnap(directStoresSnap, apiOverviewRes?.stores);
+    const productsSnap = mergeToDocSnap(directProductsSnap, apiOverviewRes?.products);
+    const fraudSnap = mergeToDocSnap(directFraudSnap, apiOverviewRes?.fraudReports);
+    const kycSnap = mergeToDocSnap(directKycSnap, apiOverviewRes?.buyerKycRecords);
+    const ordersSnap = mergeToDocSnap(directOrdersSnap, apiOverviewRes?.orders);
+    const jobsSnap = mergeToDocSnap(directJobsSnap, apiOverviewRes?.jobs);
+    const eventsSnap = mergeToDocSnap(directEventsSnap, apiOverviewRes?.events);
 
     // Build unified Buyer Ghana Card records from buyerKycRecords and users collection
     const kycMap = new Map();
