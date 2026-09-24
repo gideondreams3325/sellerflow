@@ -126,11 +126,11 @@ const adminDb = getFirestore(adminApp);
 
 const JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
 
-const ADMIN_EMAILS = ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com'];
+const ADMIN_EMAILS = ['gideondreams3325@gmail.com'];
 function isUserAdminEmail(email) {
   if (!email) return false;
   const em = String(email).toLowerCase().trim();
-  return em === 'gideondreams3325@gmail.com' || em === 'gfappiah3325@gmail.com' || ADMIN_EMAILS.includes(em);
+  return em === 'gideondreams3325@gmail.com' || ADMIN_EMAILS.includes(em);
 }
 
 async function verifyFirebaseToken(idToken) {
@@ -1585,6 +1585,17 @@ app.post('/api/admin/takedown', async (req, res) => {
       const prodData = prodSnap.exists ? prodSnap.data() : null;
       const sellerId = prodData?.sellerId;
 
+      await adminDb.collection('adminReviews').doc(`takedown_product_${itemUid}`).set({
+        userId: sellerId || callerUid,
+        targetId: itemUid,
+        type: 'product',
+        action: 'takedown',
+        reason,
+        productSnapshot: prodData || null,
+        takenDownBy: callerUid,
+        timestamp: FieldValue.serverTimestamp()
+      }, { merge: true });
+
       await prodRef.set({
         status: 'taken_down',
         reviewStatus: 'taken_down',
@@ -1608,11 +1619,25 @@ app.post('/api/admin/takedown', async (req, res) => {
         }, { merge: true });
       }
 
-      return res.json({ success: true, message: 'Product taken down successfully' });
+      return res.json({ success: true, message: 'Product taken down and archived in Restoration Hub successfully' });
     }
 
     if (type === 'store') {
       const storeRef = adminDb.collection('stores').doc(itemUid);
+      const storeSnap = await storeRef.get();
+      const storeData = storeSnap.exists ? storeSnap.data() : null;
+
+      await adminDb.collection('adminReviews').doc(`takedown_store_${itemUid}`).set({
+        userId: storeData?.ownerId || itemUid,
+        targetId: itemUid,
+        type: 'store',
+        action: 'takedown',
+        reason,
+        storeSnapshot: storeData || null,
+        takenDownBy: callerUid,
+        timestamp: FieldValue.serverTimestamp()
+      }, { merge: true });
+
       await storeRef.set({
         status: 'taken_down',
         reviewStatus: 'taken_down',
@@ -1635,7 +1660,61 @@ app.post('/api/admin/takedown', async (req, res) => {
         }, { merge: true });
       }
 
-      return res.json({ success: true, message: 'Store taken down successfully' });
+      return res.json({ success: true, message: 'Store taken down and archived in Restoration Hub successfully' });
+    }
+
+    if (type === 'job') {
+      const jobRef = adminDb.collection('jobs').doc(itemUid);
+      const jobSnap = await jobRef.get();
+      const jobData = jobSnap.exists ? jobSnap.data() : null;
+
+      await adminDb.collection('adminReviews').doc(`takedown_job_${itemUid}`).set({
+        userId: jobData?.creatorId || callerUid,
+        targetId: itemUid,
+        type: 'job',
+        action: 'takedown',
+        reason,
+        jobSnapshot: jobData || null,
+        takenDownBy: callerUid,
+        timestamp: FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      await jobRef.set({
+        status: 'taken_down',
+        reviewStatus: 'taken_down',
+        takedownReason: reason,
+        takenDownAt: FieldValue.serverTimestamp(),
+        takenDownBy: callerUid
+      }, { merge: true });
+
+      return res.json({ success: true, message: 'Job taken down and archived in Restoration Hub successfully' });
+    }
+
+    if (type === 'event') {
+      const evRef = adminDb.collection('events').doc(itemUid);
+      const evSnap = await evRef.get();
+      const evData = evSnap.exists ? evSnap.data() : null;
+
+      await adminDb.collection('adminReviews').doc(`takedown_event_${itemUid}`).set({
+        userId: evData?.creatorId || callerUid,
+        targetId: itemUid,
+        type: 'event',
+        action: 'takedown',
+        reason,
+        eventSnapshot: evData || null,
+        takenDownBy: callerUid,
+        timestamp: FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      await evRef.set({
+        status: 'taken_down',
+        reviewStatus: 'taken_down',
+        takedownReason: reason,
+        takenDownAt: FieldValue.serverTimestamp(),
+        takenDownBy: callerUid
+      }, { merge: true });
+
+      return res.json({ success: true, message: 'Event taken down and archived in Restoration Hub successfully' });
     }
 
     return res.status(400).json({ success: false, error: 'Unknown item type for takedown' });
@@ -1770,9 +1849,92 @@ app.post('/api/admin/restore', async (req, res) => {
       return res.json({ success: true, message: 'Store restored successfully' });
     }
 
+    if (type === 'job') {
+      const jobRef = adminDb.collection('jobs').doc(itemUid);
+      await jobRef.set({
+        status: 'published',
+        reviewStatus: 'approved',
+        restoredAt: FieldValue.serverTimestamp(),
+        restoredBy: callerUid
+      }, { merge: true });
+      return res.json({ success: true, message: 'Job vacancy restored successfully' });
+    }
+
+    if (type === 'event') {
+      const evRef = adminDb.collection('events').doc(itemUid);
+      await evRef.set({
+        status: 'published',
+        reviewStatus: 'approved',
+        restoredAt: FieldValue.serverTimestamp(),
+        restoredBy: callerUid
+      }, { merge: true });
+      return res.json({ success: true, message: 'Event listing restored successfully' });
+    }
+
     return res.status(400).json({ success: false, error: 'Unknown item type for restore' });
   } catch (err) {
     console.warn('Admin restore error:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * Server-Side Authoritative Permanent Delete Endpoint
+ * Permanently removes a document from Firestore and purges its review records.
+ */
+app.post('/api/admin/permanent-delete', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.split('Bearer ')[1].trim() : '';
+  const { type = 'post', id, targetId } = req.body || {};
+  const itemUid = id || targetId;
+
+  try {
+    if (!idToken) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing token' });
+    }
+
+    let decodedToken;
+    try {
+      decodedToken = await verifyFirebaseToken(idToken);
+    } catch (authErr) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid token' });
+    }
+
+    const callerUid = decodedToken.uid;
+    let isAdmin = isUserAdminEmail(decodedToken.email);
+    if (!isAdmin) {
+      try {
+        const userDoc = await adminDb.collection('users').doc(callerUid).get();
+        const userData = userDoc.data() || {};
+        isAdmin = isUserAdminEmail(userData.email);
+      } catch (_) {}
+    }
+
+    if (!isAdmin) {
+      return res.status(403).json({ success: false, error: 'Forbidden: Admin access required' });
+    }
+
+    if (!itemUid) {
+      return res.status(400).json({ success: false, error: 'Missing target item ID' });
+    }
+
+    const collectionName = type === 'product' ? 'products'
+      : type === 'store' ? 'stores'
+      : type === 'job' ? 'jobs'
+      : type === 'event' ? 'events'
+      : type === 'user' ? 'users'
+      : 'posts';
+
+    // Delete primary document
+    await adminDb.collection(collectionName).doc(itemUid).delete().catch(() => {});
+
+    // Clean up archive review markers
+    await adminDb.collection('adminReviews').doc(`takedown_${type}_${itemUid}`).delete().catch(() => {});
+    await adminDb.collection('adminReviews').doc(itemUid).delete().catch(() => {});
+
+    return res.json({ success: true, message: `${type} permanently deleted from database` });
+  } catch (err) {
+    console.warn('Admin permanent-delete error:', err.message);
     return res.status(500).json({ success: false, error: err.message });
   }
 });

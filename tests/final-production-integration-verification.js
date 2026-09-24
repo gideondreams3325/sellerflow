@@ -136,7 +136,6 @@ async function runVerification() {
   console.log('\n--- 3. ADMIN LOGIN & TOKEN LIFECYCLE ---');
   // Verify admin email whitelisting in server.js
   assert.ok(serverJs.includes('gideondreams3325@gmail.com'), 'Admin list must include primary authorized email');
-  assert.ok(serverJs.includes('gfappiah3325@gmail.com'), 'Admin list must include primary authorized email');
   assert.ok(serverJs.includes('isUserAdminEmail'), 'isUserAdminEmail helper function must exist');
 
   // Verify client-side token lifecycle
@@ -218,7 +217,6 @@ async function runVerification() {
   // Check isAdmin definition
   assert.ok(firestoreRules.includes('function isAdmin()'), 'firestore.rules must define isAdmin()');
   assert.ok(firestoreRules.includes('gideondreams3325@gmail.com'), 'isAdmin() must check authorized admin emails');
-  assert.ok(firestoreRules.includes('gfappiah3325@gmail.com'), 'isAdmin() must check authorized admin emails');
 
   // Check admin write protection
   assert.ok(firestoreRules.includes('match /admins/{adminId}'), 'admins collection rule must exist');

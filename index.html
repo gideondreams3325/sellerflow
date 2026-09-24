@@ -2389,6 +2389,10 @@ window.toggleTheme = toggleTheme;
 
 /* Interactive Ghana Phone Number Verification Modal & Controller */
 async function openPhoneVerificationModal() {
+  if (isAdmin || (typeof isUserAdminEmail === 'function' && isUserAdminEmail(currentUser?.email))) {
+    toast('Admin account: Phone verification check automatically bypassed.', 'success');
+    return;
+  }
   let step = 1;
   let enteredPhone = currentProfile?.phone || '';
   let storedDevCode = '';
@@ -2998,7 +3002,7 @@ const ADMIN_EMAILS=['gideondreams3325@gmail.com'];
 const isUserAdminEmail=(email)=>{
   if(!email) return false;
   const em = String(email).toLowerCase().trim();
-  return em === 'gideondreams3325@gmail.com';
+  return em === 'gideondreams3325@gmail.com' || ADMIN_EMAILS.includes(em);
 };
 window.ADMIN_EMAILS = ADMIN_EMAILS;
 window.isUserAdminEmail = isUserAdminEmail;
@@ -3178,6 +3182,13 @@ try {
     list.forEach(st => { if(st && st.id) { allStores.set(st.id, st); if(st.ownerId) allStores.set(st.ownerId, st); } });
     window._cachedStores = list;
   }
+  const savedProd = localStorage.getItem('sf_cached_products');
+  if(savedProd) {
+    try {
+      const pList = JSON.parse(savedProd);
+      if(Array.isArray(pList) && pList.length > 0) window._cachedProducts = pList;
+    } catch (_) {}
+  }
   const savedSession = localStorage.getItem('sf_active_user_session');
   if(savedSession) {
     const s = JSON.parse(savedSession);
@@ -3192,7 +3203,17 @@ try {
       };
       currentProfile = s.profile || null;
       isAdmin = isUserAdminEmail(s.email);
-      if(!isAdmin && currentProfile && (currentProfile.role === 'admin' || currentProfile.isAdmin)){
+      if(isAdmin && currentProfile) {
+        currentProfile.verified = true;
+        currentProfile.verificationStatus = 'approved';
+        currentProfile.reviewStatus = 'approved';
+        currentProfile.role = 'admin';
+        currentProfile.isAdmin = true;
+        currentProfile.hasGhanaCard = true;
+        currentProfile.ghanaCardVerified = true;
+        currentProfile.hasBusinessCert = true;
+        currentProfile.businessVerified = true;
+      } else if(!isAdmin && currentProfile && (currentProfile.role === 'admin' || currentProfile.isAdmin)){
         currentProfile.role = 'seller';
         currentProfile.isAdmin = false;
       }
@@ -7730,49 +7751,68 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
 
 async function renderFeed(targetPostId, options){
   // 1. Instant Cache-First Render (0ms):
+  let renderedFromCache = false;
   if(_cachedFeedPosts && _cachedFeedPosts.length > 0 && !targetPostId){
     const cleanCached = _cachedFeedPosts.filter(p => !isPostRemovedBySecurity(p));
     if(cleanCached.length > 0){
       _renderFeedHTML(cleanCached, targetPostId, options);
+      renderedFromCache = true;
     }
   }
 
-  // 2. Fetch fresh posts from Firestore
-  try {
-    if(!db){
-      const cleanFallback = (_cachedFeedPosts || []).filter(p => !isPostRemovedBySecurity(p));
-      _renderFeedHTML(cleanFallback, targetPostId, options);
-      return;
-    }
-    const snap = await getDocs(query(collection(db,'posts'),limit(100)));
-    const posts = snap.docs.map(d=>({id:d.id,...d.data()}))
-      .filter(p=>p.sellerId && !isPostRemovedBySecurity(p) && (p.status==='published'||p.status==='approved')&&p.status!=='hidden'&&p.reviewStatus!=='violation')
-      .sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
-    
-    _cachedFeedPosts = posts;
-    window._sfFeedInitialLoadDone = true;
-    try { localStorage.setItem('sf_cached_feed_posts', JSON.stringify(posts.slice(0, 30))); } catch(_) {}
-    
-    let feedPosts = [...posts];
-    if(targetPostId && !feedPosts.some(p=>p.id===targetPostId)){
-      try{
-        const s = await getDoc(doc(db,'posts',targetPostId));
-        if(snapshotExists(s) && !isPostRemovedBySecurity({id: s.id, ...s.data()}) && s.data().status!=='hidden'&&s.data().reviewStatus!=='violation') feedPosts.unshift({id:s.id,...s.data()});
-      }catch(_){}
-    } else if(targetPostId){
-      const idx = feedPosts.findIndex(p=>p.id===targetPostId);
-      if(idx > 0){
-        const [tp] = feedPosts.splice(idx, 1);
-        feedPosts.unshift(tp);
+  // 2. Fetch fresh posts from Firestore (with timeout race for speed)
+  const fetchFreshPosts = async () => {
+    try {
+      if(!db){
+        if(!renderedFromCache){
+          const cleanFallback = (_cachedFeedPosts || []).filter(p => !isPostRemovedBySecurity(p));
+          _renderFeedHTML(cleanFallback, targetPostId, options);
+        }
+        return;
+      }
+      const fetchPromise = getDocs(query(collection(db,'posts'),limit(100)));
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Feed query timeout')), 2800));
+      const snap = await Promise.race([fetchPromise, timeoutPromise]);
+      const posts = snap.docs.map(d=>({id:d.id,...d.data()}))
+        .filter(p=>p.sellerId && !isPostRemovedBySecurity(p) && (p.status==='published'||p.status==='approved')&&p.status!=='hidden'&&p.reviewStatus!=='violation')
+        .sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
+      
+      _cachedFeedPosts = posts;
+      window._sfFeedInitialLoadDone = true;
+      try { localStorage.setItem('sf_cached_feed_posts', JSON.stringify(posts.slice(0, 30))); } catch(_) {}
+      
+      let feedPosts = [...posts];
+      if(targetPostId && !feedPosts.some(p=>p.id===targetPostId)){
+        try{
+          const s = await getDoc(doc(db,'posts',targetPostId));
+          if(snapshotExists(s) && !isPostRemovedBySecurity({id: s.id, ...s.data()}) && s.data().status!=='hidden'&&s.data().reviewStatus!=='violation') feedPosts.unshift({id:s.id,...s.data()});
+        }catch(_){}
+      } else if(targetPostId){
+        const idx = feedPosts.findIndex(p=>p.id===targetPostId);
+        if(idx > 0){
+          const [tp] = feedPosts.splice(idx, 1);
+          feedPosts.unshift(tp);
+        }
+      }
+      
+      // Update DOM if not already rendered or if target post specified or feed is active
+      if(!renderedFromCache || targetPostId || currentPage === 'feed'){
+        _renderFeedHTML(feedPosts, targetPostId, options);
+      }
+    } catch(e) {
+      console.warn('Feed fetch fallback:', e);
+      window._sfFeedInitialLoadDone = true;
+      if(!renderedFromCache){
+        const cleanFallback = (_cachedFeedPosts || []).filter(p => !isPostRemovedBySecurity(p));
+        _renderFeedHTML(cleanFallback, targetPostId, options);
       }
     }
-    
-    _renderFeedHTML(feedPosts, targetPostId, options);
-  } catch(e) {
-    console.warn('Feed fetch fallback:', e);
-    window._sfFeedInitialLoadDone = true;
-    const cleanFallback = (_cachedFeedPosts || []).filter(p => !isPostRemovedBySecurity(p));
-    _renderFeedHTML(cleanFallback, targetPostId, options);
+  };
+
+  if(renderedFromCache && !targetPostId && !options?.forceRefresh){
+    fetchFreshPosts();
+  } else {
+    await fetchFreshPosts();
   }
 }
 function verifyBadge(s){
@@ -9572,35 +9612,61 @@ window.invalidateMarketplaceCache = function(){
 };
 
 async function renderMarketplace(initialTab = 'products', targetPostId, options){
-  let validStores = window._cachedStores;
-  let allProducts = window._cachedProducts;
+  let validStores = window._cachedStores || [];
+  let allProducts = window._cachedProducts || [];
 
-  if(options?.forceRefresh || !validStores || !allProducts || (Date.now() - _lastMarketplaceFetchTime >= MARKETPLACE_CACHE_TTL)){
-    const [storesSnap, productsSnap] = await Promise.all([
-      getDocs(query(collection(db,'stores'),limit(100))),
-      getDocs(query(collection(db,'products'),limit(200)))
-    ]);
-    validStores = storesSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s => {
-      if(s.status === 'taken_down' || s.reviewStatus === 'taken_down' || s.status === 'rejected' || s.reviewStatus === 'rejected') {
-        return currentUser && (isAdmin || s.ownerId === currentUser.uid);
+  const doFetchMarketplace = async () => {
+    try {
+      const fetchPromise = Promise.all([
+        getDocs(query(collection(db,'stores'),limit(100))),
+        getDocs(query(collection(db,'products'),limit(200)))
+      ]);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Marketplace query timeout')), 3000));
+      const [storesSnap, productsSnap] = await Promise.race([fetchPromise, timeoutPromise]);
+      validStores = storesSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s => {
+        if(s.status === 'taken_down' || s.reviewStatus === 'taken_down' || s.status === 'rejected' || s.reviewStatus === 'rejected') {
+          return currentUser && (isAdmin || s.ownerId === currentUser.uid);
+        }
+        if(s.status === 'pending_review' || s.reviewStatus === 'pending') {
+          return currentUser && (isAdmin || s.ownerId === currentUser.uid);
+        }
+        return s.status === 'approved' || s.reviewStatus === 'approved';
+      });
+      allProducts = productsSnap.docs.map(d=>({id:d.id,...d.data()})).filter(p => {
+        if(p.status === 'taken_down' || p.reviewStatus === 'taken_down' || p.status === 'rejected' || p.reviewStatus === 'rejected') {
+          return currentUser && (isAdmin || p.sellerId === currentUser.uid);
+        }
+        if(p.status === 'pending_review' || p.reviewStatus === 'pending') {
+          return currentUser && (isAdmin || p.sellerId === currentUser.uid);
+        }
+        return true;
+      });
+      window._cachedStores = validStores;
+      window._cachedProducts = allProducts;
+      _lastMarketplaceFetchTime = Date.now();
+      try { localStorage.setItem('sf_cached_stores', JSON.stringify(validStores.slice(0, 50))); } catch (_) {}
+      try { localStorage.setItem('sf_cached_products', JSON.stringify(allProducts.slice(0, 100))); } catch (_) {}
+      validStores.forEach(s => {
+        allStores.set(s.id, s);
+        if(s.ownerId) allStores.set(s.ownerId, s);
+      });
+    } catch (err) {
+      console.warn('Marketplace query fallback notice:', err);
+    }
+  };
+
+  const hasCache = Array.isArray(validStores) && Array.isArray(allProducts) && (validStores.length > 0 || allProducts.length > 0);
+  if (hasCache && !options?.forceRefresh && (Date.now() - _lastMarketplaceFetchTime < MARKETPLACE_CACHE_TTL)) {
+    // Fresh cache available: 0ms render
+  } else if (hasCache && !options?.forceRefresh && !options?.skipBackground) {
+    // Stale cache: Render instantly now, update asynchronously in background
+    doFetchMarketplace().then(() => {
+      if ((currentPage === 'marketplace' || currentPage === 'products') && !document.querySelector('.modal-backdrop')) {
+        renderMarketplace(initialTab, targetPostId, { ...(options || {}), skipBackground: true });
       }
-      if(s.status === 'pending_review' || s.reviewStatus === 'pending') {
-        return currentUser && (isAdmin || s.ownerId === currentUser.uid);
-      }
-      return s.status === 'approved' || s.reviewStatus === 'approved';
     });
-    allProducts = productsSnap.docs.map(d=>({id:d.id,...d.data()})).filter(p => {
-      if(p.status === 'taken_down' || p.reviewStatus === 'taken_down' || p.status === 'rejected' || p.reviewStatus === 'rejected') {
-        return currentUser && (isAdmin || p.sellerId === currentUser.uid);
-      }
-      if(p.status === 'pending_review' || p.reviewStatus === 'pending') {
-        return currentUser && (isAdmin || p.sellerId === currentUser.uid);
-      }
-      return true;
-    });
-    window._cachedStores = validStores;
-    window._cachedProducts = allProducts;
-    _lastMarketplaceFetchTime = Date.now();
+  } else {
+    await doFetchMarketplace();
   }
   validStores.forEach(s => {
     allStores.set(s.id, s);
@@ -12734,37 +12800,39 @@ function openProductModal(p=null){
       const prodId = isEdit ? p.id : docRef.id;
 
       // Authoritative product content moderation with Gemini 3.8 Flash
-      try {
-        const token = currentUser ? await currentUser.getIdToken() : '';
-        const modRes = await fetch('/api/moderation/inspect-product', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-          },
-          body: JSON.stringify({
-            productId: prodId,
-            name,
-            category,
-            description,
-            imageUrl,
-            price,
-            stock
-          })
-        });
+      if(!isAdmin){
+        try {
+          const token = currentUser ? await currentUser.getIdToken() : '';
+          const modRes = await fetch('/api/moderation/inspect-product', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({
+              productId: prodId,
+              name,
+              category,
+              description,
+              imageUrl,
+              price,
+              stock
+            })
+          });
 
-        if(modRes.ok) {
-          const modData = await modRes.json();
-          if(modData.verdict === 'VIOLATION') {
-            toast(`Product was flagged by Gemini 3.8 Flash and hidden for manual review: ${modData.evalResult?.reason || 'Safety policy violation'}`, 'error');
-            closeModal();
-            if(currentPage === 'admin') renderAdmin();
-            else navigate('products');
-            return;
+          if(modRes.ok) {
+            const modData = await modRes.json();
+            if(modData.verdict === 'VIOLATION') {
+              toast(`Product was flagged by Gemini 3.8 Flash and hidden for manual review: ${modData.evalResult?.reason || 'Safety policy violation'}`, 'error');
+              closeModal();
+              if(currentPage === 'admin') renderAdmin();
+              else navigate('products');
+              return;
+            }
           }
+        } catch(modErr) {
+          console.warn('Product moderation inspect notice:', modErr);
         }
-      } catch(modErr) {
-        console.warn('Product moderation inspect notice:', modErr);
       }
 
       closeModal();
@@ -14388,7 +14456,21 @@ async function renderStore(forceEdit = false){
               </div>
             </div>
 
-            <!-- Mandatory Government-Issued ID & Fraud Legal Terms (Law of Ghana) -->
+            <!-- Government-Issued ID & Fraud Legal Terms (Law of Ghana) -->
+            ${isAdmin ? `
+              <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2 mt-4">
+                <div class="flex items-center justify-between border-b border-amber-500/20 pb-2">
+                  <div class="flex items-center gap-2 font-black text-amber-300 text-xs sm:text-sm">
+                    <span>🛡️</span>
+                    <span>Administrator Storefront</span>
+                  </div>
+                  <span class="text-[10px] font-bold bg-amber-950 text-amber-300 border border-amber-800 px-2 py-0.5 rounded-full">AUTO-APPROVED</span>
+                </div>
+                <p class="text-xs text-zinc-300 leading-relaxed">
+                  As platform administrator, identity verification and Ghana Card review checks are automatically bypassed and permanently approved. Your store, listings, and updates publish immediately.
+                </p>
+              </div>
+            ` : `
             <div class="p-4 rounded-2xl bg-[#121216] border border-amber-500/40 space-y-3 mt-4">
               <div class="flex items-center justify-between border-b border-[#242430] pb-2">
                 <div class="flex items-center gap-2 font-black text-amber-300 text-xs sm:text-sm">
@@ -14505,6 +14587,7 @@ async function renderStore(forceEdit = false){
                 </label>
               </div>
             </div>
+            `}
 
             <div class="pt-4 border-t border-[#262626] flex flex-wrap items-center justify-between gap-3">
               <div class="flex items-center gap-2">
@@ -14894,27 +14977,27 @@ async function renderStore(forceEdit = false){
         const wa = $('storeWhatsApp').value.replace(/\D/g, '');
         if(wa && wa.length < 10) throw Error('Enter a valid WhatsApp number (at least 10 digits).');
 
-        const ghanaCardName = $('storeGhanaCardName')?.value.trim();
-        if(!ghanaCardName || ghanaCardName.length < 3) throw Error('Please enter your full legal name as printed on your Ghana Card.');
+        let ghanaCardName = $('storeGhanaCardName')?.value?.trim() || '';
+        let ghanaCardDob = $('storeGhanaCardDob')?.value?.trim() || '';
+        let ghanaCardNum = $('storeGhanaCardNum')?.value?.trim() || '';
+        const ghanaCardFrontFile = $('storeGhanaCardFrontFile')?.files?.[0];
+        const ghanaCardBackFile = $('storeGhanaCardBackFile')?.files?.[0];
 
-        const ghanaCardDob = $('storeGhanaCardDob')?.value.trim();
-        if(!ghanaCardDob) throw Error('Please select your Date of Birth as printed on your Ghana Card.');
+        if(!isAdmin){
+          if(!ghanaCardName || ghanaCardName.length < 3) throw Error('Please enter your full legal name as printed on your Ghana Card.');
+          if(!ghanaCardDob) throw Error('Please select your Date of Birth as printed on your Ghana Card.');
+          if(!ghanaCardNum || ghanaCardNum.length < 8) throw Error('Please enter a valid Ghana Card ID number (e.g. GHA-123456789-0).');
 
-        const ghanaCardNum = $('storeGhanaCardNum')?.value.trim();
-        if(!ghanaCardNum || ghanaCardNum.length < 8) throw Error('Please enter a valid Ghana Card ID number (e.g. GHA-123456789-0).');
+          if(!ghanaCardFrontFile && !existingFront){
+            throw Error('Please provide the front picture of your Ghana Card (mandatory by Ghanaian regulations).');
+          }
+          if(!ghanaCardBackFile && !existingBack){
+            throw Error('Please provide the back picture of your Ghana Card (mandatory by Ghanaian regulations).');
+          }
 
-        const ghanaCardFrontFile = $('storeGhanaCardFrontFile')?.files[0];
-        const ghanaCardBackFile = $('storeGhanaCardBackFile')?.files[0];
-
-        if(!ghanaCardFrontFile && !existingFront){
-          throw Error('Please provide the front picture of your Ghana Card (mandatory by Ghanaian regulations).');
-        }
-        if(!ghanaCardBackFile && !existingBack){
-          throw Error('Please provide the back picture of your Ghana Card (mandatory by Ghanaian regulations).');
-        }
-
-        if(!$('storeFraudTerms')?.checked){
-          throw Error('You must agree to the Seller Anti-Fraud Terms and comply with the Laws of Ghana before opening/saving your store.');
+          if(!$('storeFraudTerms')?.checked){
+            throw Error('You must agree to the Seller Anti-Fraud Terms and comply with the Laws of Ghana before opening/saving your store.');
+          }
         }
 
         const bannerFile = $('storeBannerFile')?.files[0];
@@ -16223,21 +16306,23 @@ async function openCheckout(){
     return;
   }
 
-  loading('Checking identity verification status…');
   let uData = {};
-  try {
-    const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
-    if(snapshotExists(userSnap)) uData = userSnap.data() || {};
-  } catch(e) {
-    console.warn('Error reading buyer user record:', e);
-  } finally {
-    ready();
+  if(!isAdmin){
+    loading('Checking identity verification status…');
+    try {
+      const userSnap = await getDoc(doc(db, 'users', currentUser.uid));
+      if(snapshotExists(userSnap)) uData = userSnap.data() || {};
+    } catch(e) {
+      console.warn('Error reading buyer user record:', e);
+    } finally {
+      ready();
+    }
   }
 
   const hasCardNumber = !!(uData.ghanaCardNumber || uData.ghanaCardMasked || uData.ghanaCardNum);
   const hasFrontDoc = !!(uData.ghanaCardFrontPath || uData.ghanaCardFrontUrl || uData.ghanaCardFront);
   const hasBackDoc = !!(uData.ghanaCardBackPath || uData.ghanaCardBackUrl || uData.ghanaCardBack);
-  const isVerifiedBuyer = hasCardNumber && hasFrontDoc && hasBackDoc;
+  const isVerifiedBuyer = isAdmin || (hasCardNumber && hasFrontDoc && hasBackDoc);
 
   if(!isVerifiedBuyer){
     modal(`
@@ -16866,7 +16951,20 @@ async function renderSettings(){
           <div class="bg-black/30 rounded-xl p-3 text-sm">✓ Trust badge</div>
         </div>
       </div>
-      ${p.verified?`<div class="mt-5 bg-[#10251a] border border-green-800 p-4 rounded-xl">You are verified <span class="verified-badge ml-1">✓</span><div class="muted text-sm mt-1">Your blue SellerFlow badge may appear beside your seller name.</div></div>`:`<div class="mt-5"><p class="muted text-sm">${p.verificationStatus==='pending'?'Your verification is under review.':'Verification is optional for browsing, but required for seller publishing and helps customers trust your account.'}</p>${p.verificationStatus!=='pending'?button('Start Ghana Card verification','startVerification','mt-4 bg-gold text-black'):''}</div>`}
+      ${isAdmin ? `
+        <div class="mt-5 bg-[#10251a] border border-green-800 p-4 rounded-xl">
+          <div class="font-bold text-emerald-400 flex items-center gap-2">
+            <span>🛡️</span>
+            <span>Administrator Account</span>
+            <span class="verified-badge ml-1">✓</span>
+          </div>
+          <div class="muted text-sm mt-1">Platform administrator account. Identity verification and Ghana Card review checks are automatically approved with zero restrictions.</div>
+        </div>
+      ` : p.verified ? `
+        <div class="mt-5 bg-[#10251a] border border-green-800 p-4 rounded-xl">You are verified <span class="verified-badge ml-1">✓</span><div class="muted text-sm mt-1">Your blue SellerFlow badge may appear beside your seller name.</div></div>
+      ` : `
+        <div class="mt-5"><p class="muted text-sm">${p.verificationStatus==='pending'?'Your verification is under review.':'Verification is optional for browsing, but required for seller publishing and helps customers trust your account.'}</p>${p.verificationStatus!=='pending'?button('Start Ghana Card verification','startVerification','mt-4 bg-gold text-black'):''}</div>
+      `}
     </section>
   </div>
   
@@ -17075,6 +17173,13 @@ async function openChangePasswordModal() {
 
 function openVerificationModal(options = {}){
   const opts = typeof options === 'string' ? { purpose: options } : (options || {});
+  if (isAdmin || (typeof isUserAdminEmail === 'function' && isUserAdminEmail(currentUser?.email))) {
+    toast('Admin account: Identity verification and review checks are automatically approved.', 'success');
+    if (typeof opts?.onSuccess === 'function') {
+      try { opts.onSuccess(); } catch (_) {}
+    }
+    return;
+  }
   window._verificationSuccessCb = opts.onSuccess || null;
   const v = currentProfile || {};
   const isBuyer = opts.purpose === 'buyer';
@@ -19283,6 +19388,45 @@ async function startUser(u){
     if(snapshotExists(snap))currentProfile=snap.data();
   }catch(e){console.warn('Profile load skipped; authentication remains valid.',e)}
   if(currentProfile?.role === 'admin') isAdmin = true;
+
+  // Real-time live login & activity sync
+  const liveLoginSync = {
+    isOnline: true,
+    lastLoginAt: serverTimestamp(),
+    lastActive: serverTimestamp(),
+    lastSeen: serverTimestamp()
+  };
+  updateDoc(doc(db, 'users', u.uid), liveLoginSync).catch(()=>{});
+  updateDoc(doc(db, 'publicProfiles', u.uid), {
+    isOnline: true,
+    lastLoginAt: serverTimestamp(),
+    lastActive: serverTimestamp()
+  }).catch(()=>{});
+
+  // Background activity heartbeat
+  if (!window._sfPresenceHeartbeat) {
+    window._sfPresenceHeartbeat = setInterval(() => {
+      if (currentUser?.uid) {
+        updateDoc(doc(db, 'users', currentUser.uid), {
+          isOnline: true,
+          lastActive: serverTimestamp()
+        }).catch(()=>{});
+        updateDoc(doc(db, 'publicProfiles', currentUser.uid), {
+          isOnline: true,
+          lastActive: serverTimestamp()
+        }).catch(()=>{});
+      }
+    }, 45000);
+    window.addEventListener('beforeunload', () => {
+      if (currentUser?.uid) {
+        updateDoc(doc(db, 'users', currentUser.uid), {
+          isOnline: false,
+          lastSeen: serverTimestamp()
+        }).catch(()=>{});
+      }
+    });
+  }
+
   if(currentProfile && !currentProfile.avatarRemoved && (!currentProfile.avatarUrl || !currentProfile.avatarUrl.trim() || isDefaultProfilePic(currentProfile.avatarUrl))){
     let localPic = '';
     try { localPic = localStorage.getItem('sf_user_avatar_' + u.uid) || ''; } catch(_) {}
@@ -19299,28 +19443,38 @@ async function startUser(u){
       ...currentProfile,
       verified:true,
       verificationStatus:'approved',
+      reviewStatus:'approved',
       role:'admin',
+      isAdmin:true,
+      hasGhanaCard:true,
+      ghanaCardVerified:true,
       hasBusinessCert:true,
       businessVerified:true,
       businessCertificateStatus:'approved'
     };
     if (typeof u.getIdToken === 'function') {
-      await u.getIdToken(true).catch(() => {});
+      u.getIdToken().catch(() => {});
     }
     updateDoc(doc(db,'users',u.uid),{
       verified:true,
       role:'admin',
       isAdmin:true,
+      hasGhanaCard:true,
+      ghanaCardVerified:true,
       hasBusinessCert:true,
       businessVerified:true,
-      verificationStatus:'approved'
+      verificationStatus:'approved',
+      reviewStatus:'approved'
     }).catch(()=>{});
     updateDoc(doc(db,'publicProfiles',u.uid),{
       verified:true,
       role:'admin',
       isAdmin:true,
+      hasGhanaCard:true,
+      ghanaCardVerified:true,
       hasBusinessCert:true,
-      businessVerified:true
+      businessVerified:true,
+      verificationStatus:'approved'
     }).catch(()=>{});
     setDoc(doc(db, 'admins', u.uid), { uid: u.uid, email: u.email, role: 'admin', updatedAt: serverTimestamp() }, { merge: true }).catch(()=>{});
   }
@@ -19337,22 +19491,33 @@ async function startUser(u){
         currentProfile.role = 'admin';
         currentProfile.isAdmin = true;
         currentProfile.verified = true;
+        currentProfile.verificationStatus = 'approved';
+        currentProfile.reviewStatus = 'approved';
+        currentProfile.hasGhanaCard = true;
+        currentProfile.ghanaCardVerified = true;
+        currentProfile.hasBusinessCert = true;
+        currentProfile.businessVerified = true;
       }
       if (typeof u.getIdToken === 'function') {
-        await u.getIdToken(true).catch(() => {});
+        u.getIdToken().catch(() => {});
       }
       updateDoc(doc(db,'users',u.uid),{
         verified:true,
         role:'admin',
         isAdmin:true,
+        hasGhanaCard:true,
+        ghanaCardVerified:true,
         hasBusinessCert:true,
         businessVerified:true,
-        verificationStatus:'approved'
+        verificationStatus:'approved',
+        reviewStatus:'approved'
       }).catch(()=>{});
       updateDoc(doc(db,'publicProfiles',u.uid),{
         verified:true,
         role:'admin',
         isAdmin:true,
+        hasGhanaCard:true,
+        ghanaCardVerified:true,
         hasBusinessCert:true,
         businessVerified:true
       }).catch(()=>{});
@@ -19533,7 +19698,7 @@ let _sfAuthInitResolver = null;
 window._sfWaitForAuthInit = () => new Promise(async (resolve) => {
   if (typeof auth !== 'undefined' && auth?.currentUser) {
     if (typeof isUserAdminEmail === 'function' && isUserAdminEmail(auth.currentUser.email)) {
-      try { await auth.currentUser.getIdToken(true); } catch (_) {}
+      try { auth.currentUser.getIdToken().catch(() => {}); } catch (_) {}
     }
     return resolve(auth.currentUser);
   }
@@ -19561,7 +19726,7 @@ window._sfWaitForAuthInit = () => new Promise(async (resolve) => {
       }
       if (auth.currentUser) {
         if (typeof isUserAdminEmail === 'function' && isUserAdminEmail(auth.currentUser.email)) {
-          try { await auth.currentUser.getIdToken(true); } catch (_) {}
+          try { auth.currentUser.getIdToken().catch(() => {}); } catch (_) {}
         }
         return resolve(auth.currentUser);
       }
@@ -19629,7 +19794,7 @@ async function init(){
         if (!resolved) {
           resolved = true;
           if (u && typeof isUserAdminEmail === 'function' && isUserAdminEmail(u.email) && typeof u.getIdToken === 'function') {
-            try { await u.getIdToken(true); } catch (_) {}
+            try { u.getIdToken().catch(() => {}); } catch (_) {}
           }
           resolve(u);
         }
@@ -20409,6 +20574,21 @@ init();
 
   /* Centralized AI post publishing executor: Powered by Gemini 3.8 Flash */
   async function executeSellerFlowAiPostPublish(postData, uploadFile, videoElement){
+    if (isAdmin || (typeof isUserAdminEmail === 'function' && isUserAdminEmail(currentUser?.email))) {
+      postData.status = 'published';
+      postData.reviewStatus = 'approved';
+      postData.safeContent = true;
+      postData.publishedAt = serverTimestamp();
+      const ref = await addDoc(collection(db, 'posts'), postData);
+      if(window.invalidateRankedFeedCache) window.invalidateRankedFeedCache();
+      return {
+        ref,
+        verdict: 'SAFE',
+        evalResult: { verdict: 'SAFE', reason: 'Administrator post automatically approved and published live.', confidence: 1.0 },
+        copyrightResult: null
+      };
+    }
+
     // Enforce initial non-public status: client can only create hidden/under_review
     postData.status = 'hidden';
     postData.reviewStatus = 'under_review';
@@ -27156,6 +27336,10 @@ init();
           <span>🚩 Reports</span>
           <span class="admin-tab-count ${reports.size ? 'bg-rose-950 text-rose-300' : ''}">${reports.size}</span>
         </button>
+        <button class="admin-tab ${initialTab === 'restoration' ? 'active' : ''}" data-admin-tab="restoration">
+          <span>🔄 Restoration Hub</span>
+          <span class="admin-tab-count ${takenDownPosts.length + takenDownStores.length + takenDownProducts.length + takenDownJobsEvents.length ? 'bg-rose-950 text-rose-300 border border-rose-800' : ''}">${takenDownPosts.length + takenDownStores.length + takenDownProducts.length + takenDownJobsEvents.length}</span>
+        </button>
         <button class="admin-tab ${initialTab === 'frauds' ? 'active' : ''}" data-admin-tab="frauds">
           <span>🚨 Reported Frauds</span>
           <span class="admin-tab-count ${fraudSnap.size ? 'bg-rose-950 text-rose-300 border border-rose-800' : ''}">${fraudSnap.size}</span>
@@ -27180,8 +27364,7 @@ init();
 
     function setAdminTab(tabName, subOption){
       // Support legacy sub-route redirects
-      if(tabName === 'restoration'){ tabName = 'posts'; subOption = 'restoration'; }
-      else if(tabName === 'review'){ tabName = 'posts'; subOption = 'review'; }
+      if(tabName === 'review'){ tabName = 'posts'; subOption = 'review'; }
       else if(tabName === 'live'){ tabName = 'posts'; subOption = 'live'; }
       else if(tabName === 'pending'){ tabName = 'ghana_cards'; subOption = 'pending'; }
 
@@ -27189,6 +27372,7 @@ init();
       document.querySelectorAll('[data-admin-tab]').forEach(t => t.classList.toggle('active', t.dataset.adminTab === tabName));
 
       if(tabName === 'overview') sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts, fraudSnap, allGhanaCardRecords, pendingReviewOrders, allOrderDocs);
+      else if(tabName === 'restoration') sfAdminRestorationHub(takenDownPosts, takenDownProducts, takenDownStores, takenDownJobsEvents, subOption);
       else if(tabName === 'ghana_cards') sfAdminGhanaCardsTab(allGhanaCardRecords, users, kycSnap, subOption);
       else if(tabName === 'orders') sfAdminOrdersReviewTab(allOrderDocs, pendingReviewOrders, approvedOrders, cancelledOrders, subOption);
       else if(tabName === 'users') sfAdminUsers(users, pending, subOption);
@@ -27216,7 +27400,7 @@ init();
     if($('dashCardProducts')) $('dashCardProducts').onclick = () => setAdminTab('products');
     if($('dashCardReports')) $('dashCardReports').onclick = () => setAdminTab('reports');
     if($('dashCardFrauds')) $('dashCardFrauds').onclick = () => setAdminTab('frauds');
-    if($('dashCardRestoration')) $('dashCardRestoration').onclick = () => setAdminTab('posts', 'restoration');
+    if($('dashCardRestoration')) $('dashCardRestoration').onclick = () => setAdminTab('restoration');
     if($('dashCardJobsEvents')) $('dashCardJobsEvents').onclick = () => setAdminTab('jobs_events');
 
     setAdminTab(initialTab);
@@ -28032,9 +28216,278 @@ init();
     renderActivePostsList();
   }
 
+  // Authoritative Platform Restoration Hub
+  function sfAdminRestorationHub(takenDownPosts = [], takenDownProducts = [], takenDownStores = [], takenDownJobsEvents = [], initialSubTab = 'all'){
+    const postsList = Array.isArray(takenDownPosts) ? takenDownPosts : [];
+    const prodsList = Array.isArray(takenDownProducts) ? takenDownProducts : [];
+    const storesList = Array.isArray(takenDownStores) ? takenDownStores : [];
+    const jobsEventsList = Array.isArray(takenDownJobsEvents) ? takenDownJobsEvents : [];
+    
+    let activeSubTab = initialSubTab || 'all';
+    const totalCount = postsList.length + prodsList.length + storesList.length + jobsEventsList.length;
+
+    $('adminWorkspace').innerHTML = `
+      <div class="space-y-5">
+        <!-- Restoration Hub Header -->
+        <div class="card p-5 border border-[#2b2b2b]">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2.5">
+                <span class="text-2xl">🔄</span>
+                <h2 class="text-xl font-black text-white">Central Restoration Hub</h2>
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${totalCount ? 'bg-rose-950 text-rose-300 border border-rose-800' : 'bg-zinc-800 text-zinc-300 border border-zinc-700'}">${totalCount} Archived Items</span>
+              </div>
+              <p class="muted text-xs sm:text-sm mt-1">Safely stores all taken-down posts, marketplace products, vendor storefronts, and jobs/events for future review, restoration, or permanent deletion.</p>
+            </div>
+            <button id="restorationBackOverview" class="border border-[#444] hover:border-gold rounded-xl px-4 py-2 text-xs font-bold text-white transition self-start sm:self-auto">
+              ← Back to Overview
+            </button>
+          </div>
+
+          <!-- Quick Metrics Strip -->
+          <div class="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-[#222]">
+            <span class="text-xs font-bold px-3 py-1 rounded-xl ${postsList.length ? 'bg-rose-950/80 text-rose-300 border border-rose-800/80' : 'bg-zinc-800 text-zinc-400'}">🎬 ${postsList.length} Posts & Reels</span>
+            <span class="text-xs font-bold px-3 py-1 rounded-xl ${prodsList.length ? 'bg-rose-950/80 text-rose-300 border border-rose-800/80' : 'bg-zinc-800 text-zinc-400'}">🛍️ ${prodsList.length} Products</span>
+            <span class="text-xs font-bold px-3 py-1 rounded-xl ${storesList.length ? 'bg-rose-950/80 text-rose-300 border border-rose-800/80' : 'bg-zinc-800 text-zinc-400'}">🏪 ${storesList.length} Storefronts</span>
+            <span class="text-xs font-bold px-3 py-1 rounded-xl ${jobsEventsList.length ? 'bg-rose-950/80 text-rose-300 border border-rose-800/80' : 'bg-zinc-800 text-zinc-400'}">💼 ${jobsEventsList.length} Jobs & Events</span>
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-1.5 p-1 rounded-2xl bg-[#121212] border border-[#292929] w-full sm:w-auto overflow-x-auto scrollbar-none" id="restorationSubTabs">
+            <button type="button" class="admin-subtab ${activeSubTab === 'all' ? 'active' : ''}" data-resto-subtab="all">
+              <span>🔄 All Content</span>
+              <span class="ml-1 text-[11px] px-1.5 py-0.2 rounded bg-black/40">${totalCount}</span>
+            </button>
+            <button type="button" class="admin-subtab ${activeSubTab === 'posts' ? 'active' : ''}" data-resto-subtab="posts">
+              <span>🎬 Posts (${postsList.length})</span>
+            </button>
+            <button type="button" class="admin-subtab ${activeSubTab === 'products' ? 'active' : ''}" data-resto-subtab="products">
+              <span>🛍️ Products (${prodsList.length})</span>
+            </button>
+            <button type="button" class="admin-subtab ${activeSubTab === 'stores' ? 'active' : ''}" data-resto-subtab="stores">
+              <span>🏪 Stores (${storesList.length})</span>
+            </button>
+            <button type="button" class="admin-subtab ${activeSubTab === 'jobs_events' ? 'active' : ''}" data-resto-subtab="jobs_events">
+              <span>💼 Jobs/Events (${jobsEventsList.length})</span>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <input id="restorationSearchInput" type="text" placeholder="Search title, ID, creator, reason..." class="p-2.5 rounded-xl bg-[#191919] border border-[#333] text-xs flex-1 sm:w-64 text-white">
+          </div>
+        </div>
+
+        <!-- Restoration Content Container -->
+        <div id="restorationListContainer" class="space-y-4"></div>
+      </div>
+    `;
+
+    if($('restorationBackOverview')) $('restorationBackOverview').onclick = () => window.setAdminTab ? window.setAdminTab('overview') : renderAdmin();
+
+    function renderRestorationList(){
+      const container = $('restorationListContainer');
+      if(!container) return;
+      const q = ($('restorationSearchInput')?.value || '').toLowerCase().trim();
+
+      let items = [];
+      if(activeSubTab === 'all' || activeSubTab === 'posts'){
+        postsList.forEach(p => items.push({ type: 'post', id: p.id, data: p.data || p }));
+      }
+      if(activeSubTab === 'all' || activeSubTab === 'products'){
+        prodsList.forEach(p => items.push({ type: 'product', id: p.id, data: p }));
+      }
+      if(activeSubTab === 'all' || activeSubTab === 'stores'){
+        storesList.forEach(s => items.push({ type: 'store', id: s.id, data: s }));
+      }
+      if(activeSubTab === 'all' || activeSubTab === 'jobs_events'){
+        jobsEventsList.forEach(j => items.push({ type: j.type === 'event' || j.date ? 'event' : 'job', id: j.id, data: j }));
+      }
+
+      if(q){
+        items = items.filter(item => {
+          const d = item.data || {};
+          const text = `${item.id} ${d.name || ''} ${d.title || ''} ${d.text || ''} ${d.description || ''} ${d.takedownReason || ''} ${d.sellerId || ''} ${d.ownerId || ''}`.toLowerCase();
+          return text.includes(q);
+        });
+      }
+
+      if(!items.length){
+        container.innerHTML = `
+          <div class="p-12 text-center muted border border-[#2b2b2b] rounded-2xl bg-[#121212]">
+            <div class="text-3xl mb-2">✨</div>
+            <h3 class="text-base font-bold text-white">No archived content in this view</h3>
+            <p class="text-xs mt-1 text-zinc-400">All content is active or no items match your search filter.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = items.map(item => {
+        if(item.type === 'post') {
+          return renderAdminPostItem(item.id, item.data, 'restoration');
+        }
+        if(item.type === 'product') {
+          return `
+            <div class="p-4 rounded-2xl border border-[#2b2b2b] bg-[#141414] flex flex-col sm:flex-row gap-4 items-start justify-between">
+              <div class="flex flex-col sm:flex-row gap-3 min-w-0 flex-1">
+                ${item.data.imageUrl || item.data.image ? `
+                  <img src="${esc(item.data.imageUrl || item.data.image)}" class="w-20 h-20 rounded-xl object-cover border border-[#262626] shrink-0" onerror="this.src='/icons/icon-192x192.png'">
+                ` : `<div class="w-20 h-20 rounded-xl bg-zinc-900 border border-[#262626] flex items-center justify-center text-2xl shrink-0">🛍️</div>`}
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800">🛍️ Taken Down Product</span>
+                    <span class="text-xs font-bold text-gold">GH₵ ${Number(item.data.price || 0).toFixed(2)}</span>
+                  </div>
+                  <h4 class="font-bold text-sm text-white truncate">${esc(item.data.name || 'Product Listing')}</h4>
+                  <p class="text-xs text-zinc-300 mt-1 line-clamp-2">${esc(item.data.description || 'No description.')}</p>
+                  ${item.data.takedownReason ? `
+                    <div class="mt-2 text-xs p-2 rounded-lg bg-rose-950/40 border border-rose-900/60 text-rose-300">
+                      <b>Takedown Reason:</b> ${esc(item.data.takedownReason)}
+                    </div>
+                  ` : ''}
+                  <div class="text-[10px] font-mono text-zinc-500 mt-1">ID: ${esc(item.id)} | Seller: ${esc(item.data.sellerId || '—')}</div>
+                </div>
+              </div>
+              <div class="flex sm:flex-col gap-2 shrink-0 w-full sm:w-40 pt-3 sm:pt-0 border-t sm:border-t-0 border-[#222]">
+                <button type="button" data-admin-restore-product="${esc(item.id)}" class="flex-1 bg-gold text-black rounded-xl py-2 px-3 font-black text-xs flex items-center justify-center gap-1">
+                  <span>🔄</span><span>Restore</span>
+                </button>
+                <button type="button" data-admin-delete-product="${esc(item.id)}" class="flex-1 border border-red-900/60 bg-red-950/30 text-red-400 rounded-xl py-2 px-3 font-bold text-xs flex items-center justify-center gap-1">
+                  <span>🗑️</span><span>Delete</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }
+        if(item.type === 'store') {
+          return `
+            <div class="p-4 rounded-2xl border border-[#2b2b2b] bg-[#141414] flex flex-col sm:flex-row gap-4 items-start justify-between">
+              <div class="flex flex-col sm:flex-row gap-3 min-w-0 flex-1">
+                ${item.data.logoUrl ? `
+                  <img src="${esc(item.data.logoUrl)}" class="w-16 h-16 rounded-full object-cover border border-[#262626] shrink-0" onerror="this.src='/icons/icon-192x192.png'">
+                ` : `<div class="w-16 h-16 rounded-full bg-zinc-900 border border-[#262626] flex items-center justify-center text-2xl shrink-0">🏪</div>`}
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800">🏪 Taken Down Store</span>
+                  </div>
+                  <h4 class="font-bold text-sm text-white truncate">${esc(item.data.name || 'Storefront')}</h4>
+                  <p class="text-xs text-zinc-300 mt-1 line-clamp-2">${esc(item.data.description || 'No description.')}</p>
+                  ${item.data.takedownReason ? `
+                    <div class="mt-2 text-xs p-2 rounded-lg bg-rose-950/40 border border-rose-900/60 text-rose-300">
+                      <b>Takedown Reason:</b> ${esc(item.data.takedownReason)}
+                    </div>
+                  ` : ''}
+                  <div class="text-[10px] font-mono text-zinc-500 mt-1">ID: ${esc(item.id)} | Owner: ${esc(item.data.ownerId || '—')}</div>
+                </div>
+              </div>
+              <div class="flex sm:flex-col gap-2 shrink-0 w-full sm:w-40 pt-3 sm:pt-0 border-t sm:border-t-0 border-[#222]">
+                <button type="button" data-admin-restore-store="${esc(item.id)}" class="flex-1 bg-gold text-black rounded-xl py-2 px-3 font-black text-xs flex items-center justify-center gap-1">
+                  <span>🔄</span><span>Restore</span>
+                </button>
+                <button type="button" data-admin-delete-store="${esc(item.id)}" class="flex-1 border border-red-900/60 bg-red-950/30 text-red-400 rounded-xl py-2 px-3 font-bold text-xs flex items-center justify-center gap-1">
+                  <span>🗑️</span><span>Delete</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }
+        // Job or event
+        return `
+          <div class="p-4 rounded-2xl border border-[#2b2b2b] bg-[#141414] flex flex-col sm:flex-row gap-4 items-start justify-between">
+            <div class="flex flex-col sm:flex-row gap-3 min-w-0 flex-1">
+              <div class="w-14 h-14 rounded-xl bg-zinc-900 border border-[#262626] flex items-center justify-center text-2xl shrink-0">${item.type === 'event' ? '🎟️' : '💼'}</div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800">${item.type === 'event' ? '🎟️ Taken Down Event' : '💼 Taken Down Job'}</span>
+                </div>
+                <h4 class="font-bold text-sm text-white truncate">${esc(item.data.title || item.data.name || 'Listing')}</h4>
+                <p class="text-xs text-zinc-300 mt-1 line-clamp-2">${esc(item.data.description || 'No description.')}</p>
+                ${item.data.takedownReason ? `
+                  <div class="mt-2 text-xs p-2 rounded-lg bg-rose-950/40 border border-rose-900/60 text-rose-300">
+                    <b>Takedown Reason:</b> ${esc(item.data.takedownReason)}
+                  </div>
+                ` : ''}
+                <div class="text-[10px] font-mono text-zinc-500 mt-1">ID: ${esc(item.id)}</div>
+              </div>
+            </div>
+            <div class="flex sm:flex-col gap-2 shrink-0 w-full sm:w-40 pt-3 sm:pt-0 border-t sm:border-t-0 border-[#222]">
+              <button type="button" onclick="adminRestoreJobEvent('${esc(item.id)}', '${item.type}')" class="flex-1 bg-gold text-black rounded-xl py-2 px-3 font-black text-xs flex items-center justify-center gap-1">
+                <span>🔄</span><span>Restore</span>
+              </button>
+              <button type="button" onclick="adminDeleteJobEvent('${esc(item.id)}', '${item.type}')" class="flex-1 border border-red-900/60 bg-red-950/30 text-red-400 rounded-xl py-2 px-3 font-bold text-xs flex items-center justify-center gap-1">
+                <span>🗑️</span><span>Delete</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      autoWarmAdminMedia(container);
+      bindAdminControls();
+    }
+
+    document.querySelectorAll('[data-resto-subtab]').forEach(btn => {
+      btn.onclick = () => {
+        activeSubTab = btn.dataset.restoSubtab;
+        document.querySelectorAll('[data-resto-subtab]').forEach(b => b.classList.toggle('active', b === btn));
+        renderRestorationList();
+      };
+    });
+
+    $('restorationSearchInput')?.addEventListener('input', renderRestorationList);
+    renderRestorationList();
+  }
+  window.sfAdminRestorationHub = sfAdminRestorationHub;
+
+  async function adminRestoreJobEvent(id, type){
+    try {
+      loading(`Restoring ${type}…`);
+      const coll = type === 'event' ? 'events' : 'jobs';
+      await updateDoc(doc(db, coll, id), {
+        status: 'published',
+        reviewStatus: 'approved',
+        restoredAt: serverTimestamp(),
+        restoredBy: currentUser?.uid || 'admin'
+      });
+      toast(`${type === 'event' ? 'Event' : 'Job'} restored successfully`, 'success');
+      if(currentPage === 'admin' && typeof renderAdmin === 'function') renderAdmin();
+    } catch(e) {
+      toast(errMsg(e), 'error');
+    } finally {
+      ready();
+    }
+  }
+  window.adminRestoreJobEvent = adminRestoreJobEvent;
+
+  async function adminDeleteJobEvent(id, type){
+    const ok = await customConfirm({
+      title: `Delete ${type === 'event' ? 'Event' : 'Job'}?`,
+      message: `Permanently delete this ${type} from the platform? This action cannot be undone.`,
+      confirmText: 'Delete Permanently',
+      cancelText: 'Cancel',
+      type: 'danger',
+      icon: '🗑️'
+    });
+    if(!ok) return;
+    try {
+      loading(`Deleting ${type}…`);
+      const coll = type === 'event' ? 'events' : 'jobs';
+      await deleteDoc(doc(db, coll, id));
+      toast(`${type === 'event' ? 'Event' : 'Job'} deleted permanently`, 'info');
+      if(currentPage === 'admin' && typeof renderAdmin === 'function') renderAdmin();
+    } catch(e) {
+      toast(errMsg(e), 'error');
+    } finally {
+      ready();
+    }
+  }
+  window.adminDeleteJobEvent = adminDeleteJobEvent;
+
   // Backwards compatibility aliases
   function sfAdminRestoration(takenDownPosts){
-    sfAdminPosts(null, null, null, takenDownPosts, 'restoration');
+    sfAdminRestorationHub(takenDownPosts);
   }
   function sfAdminLive(livePosts){
     sfAdminPosts(null, livePosts, null, null, 'live');

@@ -28,6 +28,7 @@ const state = {
   isAdmin: false,
   activeTab: 'dashboard',
   refreshing: false,
+  hasInitialLoad: false,
   data: {
     users: [],
     stores: [],
@@ -45,6 +46,278 @@ const state = {
   activeKycItem: null,
   activePostItem: null
 };
+
+// Real-time live listener state
+let realtimeUnsubscribers = [];
+let debounceRenderTimer = null;
+const rawUsersMap = new Map();
+const rawProfilesMap = new Map();
+const rawPostsMap = new Map();
+const rawAdminReviewsMap = new Map();
+const rawSecurityReviewsMap = new Map();
+
+function teardownRealtimeListeners() {
+  realtimeUnsubscribers.forEach(unsub => {
+    try { if (typeof unsub === 'function') unsub(); } catch (_) {}
+  });
+  realtimeUnsubscribers = [];
+}
+
+function scheduleLiveRender() {
+  if (debounceRenderTimer) clearTimeout(debounceRenderTimer);
+  debounceRenderTimer = setTimeout(() => {
+    updateBadges();
+    renderCurrentTab();
+
+    const lastSync = document.getElementById('lastSyncedTime');
+    if (lastSync) {
+      lastSync.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span>Synced Live: ${new Date().toLocaleTimeString()}`;
+    }
+
+    const liveHeaderBadge = document.getElementById('headerLiveUsersCount');
+    if (liveHeaderBadge) {
+      const onlineCount = getOnlineUsersCount();
+      liveHeaderBadge.innerHTML = `· <strong class="text-emerald-300 font-bold">${onlineCount}</strong> online`;
+    }
+  }, 60);
+}
+
+function isUserOnline(u) {
+  if (!u) return false;
+  if (u.isOnline === true) return true;
+  const now = Date.now();
+  const last = u.lastActive?.toMillis ? u.lastActive.toMillis() :
+               u.lastLoginAt?.toMillis ? u.lastLoginAt.toMillis() :
+               new Date(u.lastActive || u.lastLoginAt || u.updatedAt || 0).getTime();
+  return (now - last) < (5 * 60 * 1000);
+}
+
+function getOnlineUsersCount() {
+  return state.data.users.filter(isUserOnline).length;
+}
+
+function getUserActivityLabel(u) {
+  if (isUserOnline(u)) {
+    return '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Online Now</span>';
+  }
+  const last = u.lastActive?.toMillis ? u.lastActive.toMillis() :
+               u.lastLoginAt?.toMillis ? u.lastLoginAt.toMillis() :
+               new Date(u.lastActive || u.lastLoginAt || 0).getTime();
+  if (!last || isNaN(last)) return '<span class="text-zinc-500 text-[10px]">Offline</span>';
+  const diffMinutes = Math.floor((Date.now() - last) / (60 * 1000));
+  if (diffMinutes < 60) {
+    return `<span class="text-amber-400 text-[10px] font-medium">Active ${diffMinutes}m ago</span>`;
+  }
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) {
+    return `<span class="text-zinc-400 text-[10px]">Active ${diffHours}h ago</span>`;
+  }
+  return `<span class="text-zinc-500 text-[10px]">Last active ${formatDate(u.lastActive || u.lastLoginAt)}</span>`;
+}
+
+function rebuildUnifiedUsers() {
+  const merged = new Map();
+  rawProfilesMap.forEach((val, key) => merged.set(key, { ...val }));
+  rawUsersMap.forEach((val, key) => {
+    const prev = merged.get(key) || {};
+    merged.set(key, { ...prev, ...val });
+  });
+  state.data.users = Array.from(merged.values());
+}
+
+function rebuildUnifiedPosts() {
+  const postMap = new Map();
+  rawPostsMap.forEach((val, key) => postMap.set(key, { ...val }));
+  rawAdminReviewsMap.forEach((rev) => {
+    if (rev.action === 'takedown' && rev.targetId && rev.postSnapshot && !postMap.has(rev.targetId)) {
+      postMap.set(rev.targetId, {
+        id: rev.targetId,
+        ...rev.postSnapshot,
+        status: 'taken_down',
+        reviewStatus: 'removed',
+        takedownReason: rev.reason || 'Taken down by Security Team',
+        removedAt: rev.timestamp || null
+      });
+    }
+  });
+  state.data.posts = Array.from(postMap.values());
+}
+
+function rebuildAuditLogs() {
+  const logs = [...rawSecurityReviewsMap.values(), ...rawAdminReviewsMap.values()];
+  logs.sort((a, b) => {
+    const ta = a.timestamp?.toMillis ? a.timestamp.toMillis() : (new Date(a.timestamp || 0).getTime());
+    const tb = b.timestamp?.toMillis ? b.timestamp.toMillis() : (new Date(b.timestamp || 0).getTime());
+    return tb - ta;
+  });
+  state.data.auditLogs = logs;
+}
+
+function initRealtimeListeners() {
+  if (!state.isAdmin) return;
+  teardownRealtimeListeners();
+  
+  const serializeDoc = (d) => ({ id: d.id, ...d.data() });
+
+  const safeListen = (query, onNext, label = '') => {
+    try {
+      const unsub = query.onSnapshot(
+        snapshot => {
+          onNext(snapshot);
+          scheduleLiveRender();
+        },
+        err => {
+          console.warn(`[Live Sync] ${label} listener error:`, err);
+        }
+      );
+      realtimeUnsubscribers.push(unsub);
+    } catch (e) {
+      console.warn(`[Live Sync] Failed to attach listener for ${label}:`, e);
+    }
+  };
+
+  // 1. Users live listener (Real-time sync on login and online status)
+  safeListen(db.collection('users').limit(400), snapshot => {
+    snapshot.docChanges().forEach(change => {
+      const doc = change.doc;
+      const data = { id: doc.id, uid: doc.id, ...doc.data() };
+      if (change.type === 'removed') {
+        rawUsersMap.delete(doc.id);
+      } else {
+        if (state.hasInitialLoad && (change.type === 'added' || (change.type === 'modified' && data.isOnline))) {
+          const name = data.name || data.username || data.email || 'User';
+          const loginMillis = data.lastLoginAt?.toMillis ? data.lastLoginAt.toMillis() : (new Date(data.lastLoginAt || 0).getTime());
+          if (Date.now() - loginMillis < 45000) {
+            showToast(`🟢 ${name} is live on SellerFlow`, 'info');
+          }
+        }
+        rawUsersMap.set(doc.id, data);
+      }
+    });
+    rebuildUnifiedUsers();
+  }, 'users');
+
+  // 2. Public Profiles live listener
+  safeListen(db.collection('publicProfiles').limit(400), snapshot => {
+    snapshot.docChanges().forEach(change => {
+      const doc = change.doc;
+      if (change.type === 'removed') {
+        rawProfilesMap.delete(doc.id);
+      } else {
+        rawProfilesMap.set(doc.id, { id: doc.id, uid: doc.id, ...doc.data() });
+      }
+    });
+    rebuildUnifiedUsers();
+  }, 'publicProfiles');
+
+  // 3. Stores live listener
+  safeListen(db.collection('stores').limit(400), snapshot => {
+    state.data.stores = snapshot.docs.map(serializeDoc);
+  }, 'stores');
+
+  // 4. Products live listener
+  safeListen(db.collection('products').limit(400), snapshot => {
+    state.data.products = snapshot.docs.map(serializeDoc);
+  }, 'products');
+
+  // 5. Posts live listener
+  safeListen(db.collection('posts').limit(300), snapshot => {
+    snapshot.docChanges().forEach(change => {
+      const doc = change.doc;
+      if (change.type === 'removed') {
+        rawPostsMap.delete(doc.id);
+      } else {
+        rawPostsMap.set(doc.id, serializeDoc(doc));
+      }
+    });
+    rebuildUnifiedPosts();
+  }, 'posts');
+
+  // 6. Orders live listener
+  safeListen(db.collection('orders').limit(400), snapshot => {
+    if (state.hasInitialLoad) {
+      snapshot.docChanges().forEach(change => {
+        if (change.type === 'added') {
+          const ord = change.doc.data();
+          showToast(`💳 New order received: GH₵${Number(ord.total || 0).toFixed(2)}`, 'success');
+        }
+      });
+    }
+    state.data.orders = snapshot.docs.map(serializeDoc);
+  }, 'orders');
+
+  // 7. KYC Records live listener
+  safeListen(db.collection('buyerKycRecords').limit(400), snapshot => {
+    if (state.hasInitialLoad) {
+      snapshot.docChanges().forEach(change => {
+        if (change.type === 'added') {
+          showToast(`🇬🇭 New Ghana Card / KYC verification submitted`, 'info');
+        }
+      });
+    }
+    state.data.buyerKycRecords = snapshot.docs.map(d => {
+      const doc = serializeDoc(d);
+      const rawPin = doc.ghanaCardNumber || doc.ghanaCardPin || '';
+      const masked = doc.ghanaCardMasked || (rawPin ? maskGhanaCard(rawPin) : '—');
+      return {
+        ...doc,
+        ghanaCardNumber: masked,
+        ghanaCardMasked: masked
+      };
+    });
+  }, 'buyerKycRecords');
+
+  // 8. Scam Reports live listener
+  safeListen(db.collection('scamReports').limit(200), snapshot => {
+    state.data.scamReports = snapshot.docs.map(serializeDoc);
+  }, 'scamReports');
+
+  // 9. Fraud Reports live listener
+  safeListen(db.collection('fraudReports').limit(200), snapshot => {
+    state.data.fraudReports = snapshot.docs.map(serializeDoc);
+  }, 'fraudReports');
+
+  // 10. Jobs live listener
+  safeListen(db.collection('jobs').limit(300), snapshot => {
+    state.data.jobs = snapshot.docs.map(serializeDoc);
+  }, 'jobs');
+
+  // 11. Events live listener
+  safeListen(db.collection('events').limit(300), snapshot => {
+    state.data.events = snapshot.docs.map(serializeDoc);
+  }, 'events');
+
+  // 12. Admin Reviews (Takedowns, Restorations, Audits)
+  safeListen(db.collection('adminReviews').limit(100), snapshot => {
+    snapshot.docChanges().forEach(change => {
+      const doc = change.doc;
+      if (change.type === 'removed') {
+        rawAdminReviewsMap.delete(doc.id);
+      } else {
+        rawAdminReviewsMap.set(doc.id, { id: doc.id, ...doc.data(), source: 'adminReviews' });
+      }
+    });
+    rebuildUnifiedPosts();
+    rebuildAuditLogs();
+  }, 'adminReviews');
+
+  // 13. Security Reviews
+  safeListen(db.collection('securityReviews').limit(100), snapshot => {
+    snapshot.docChanges().forEach(change => {
+      const doc = change.doc;
+      if (change.type === 'removed') {
+        rawSecurityReviewsMap.delete(doc.id);
+      } else {
+        rawSecurityReviewsMap.set(doc.id, { id: doc.id, ...doc.data(), source: 'securityReviews' });
+      }
+    });
+    rebuildAuditLogs();
+  }, 'securityReviews');
+
+  setTimeout(() => {
+    state.hasInitialLoad = true;
+  }, 1200);
+}
 
 // 3. UI Helper Utilities
 function showToast(message, type = 'info') {
@@ -133,11 +406,11 @@ window.closePostModal = function() {
 };
 
 // 5. Authentication & Authorization Lifecycle
-const ADMIN_EMAILS = ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com'];
+const ADMIN_EMAILS = ['gideondreams3325@gmail.com'];
 function isAuthorizedAdminEmail(email) {
   if (!email) return false;
   const em = String(email).toLowerCase().trim();
-  return em === 'gideondreams3325@gmail.com' || em === 'gfappiah3325@gmail.com' || ADMIN_EMAILS.includes(em);
+  return em === 'gideondreams3325@gmail.com' || ADMIN_EMAILS.includes(em);
 }
 
 function maskGhanaCard(val) {
@@ -155,6 +428,7 @@ auth.onAuthStateChanged(async (user) => {
   const loginAlert = document.getElementById('loginAlert');
 
   if (!user) {
+    teardownRealtimeListeners();
     state.currentUser = null;
     state.currentIdToken = null;
     state.isAdmin = false;
@@ -173,6 +447,7 @@ auth.onAuthStateChanged(async (user) => {
 
     if (!isAdmin) {
       console.warn('[Admin Gate] Non-admin user access attempt:', user.email);
+      teardownRealtimeListeners();
       await auth.signOut();
       if (loginAlert) {
         loginAlert.className = 'mb-4 p-3.5 rounded-xl text-xs font-medium border bg-rose-500/10 border-rose-500/30 text-rose-300 block';
@@ -195,6 +470,9 @@ auth.onAuthStateChanged(async (user) => {
     loginScreen?.classList.add('hidden');
     adminShell?.classList.remove('hidden');
 
+    // Initialize real-time live listeners for instant live syncing
+    initRealtimeListeners();
+
     // Populate administrative data directly through Firebase Web SDK
     await fetchAdminData();
 
@@ -205,6 +483,7 @@ auth.onAuthStateChanged(async (user) => {
 
   } catch (err) {
     console.error('Admin Auth Check Error:', err);
+    teardownRealtimeListeners();
     await auth.signOut();
     if (loginAlert) {
       loginAlert.className = 'mb-4 p-3.5 rounded-xl text-xs font-medium border bg-rose-500/10 border-rose-500/30 text-rose-300 block';
@@ -263,6 +542,12 @@ async function fetchAdminData(force = false) {
       db.collection('adminReviews').where('action', '==', 'takedown').limit(100).get().catch(() => ({ docs: [] }))
     ]);
 
+    // Populate raw caches for real-time live sync
+    (usersSnap.docs || []).forEach(d => rawUsersMap.set(d.id, serializeDoc(d)));
+    (publicProfilesSnap.docs || []).forEach(d => rawProfilesMap.set(d.id, serializeDoc(d)));
+    (postsSnap.docs || []).forEach(d => rawPostsMap.set(d.id, serializeDoc(d)));
+    (adminReviewsSnap.docs || []).forEach(d => rawAdminReviewsMap.set(d.id, { id: d.id, ...d.data(), source: 'adminReviews' }));
+
     // Build unified posts list (merging archived reviews if any)
     const postMap = new Map();
     (postsSnap.docs || []).forEach(d => {
@@ -316,7 +601,13 @@ async function fetchAdminData(force = false) {
     };
 
     const lastSync = document.getElementById('lastSyncedTime');
-    if (lastSync) lastSync.textContent = `Synced: ${new Date().toLocaleTimeString()}`;
+    if (lastSync) lastSync.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span>Synced Live: ${new Date().toLocaleTimeString()}`;
+
+    const liveHeaderBadge = document.getElementById('headerLiveUsersCount');
+    if (liveHeaderBadge) {
+      const onlineCount = getOnlineUsersCount();
+      liveHeaderBadge.innerHTML = `· <strong class="text-emerald-300 font-bold">${onlineCount}</strong> online`;
+    }
 
     renderCurrentTab();
     await fetchAuditLogs();
@@ -475,6 +766,7 @@ function updateBadges() {
 // 8. TAB 1: RENDER DASHBOARD
 function renderDashboard() {
   const totalUsers = state.data.users.length;
+  const onlineUsers = getOnlineUsersCount();
   const sellers = state.data.users.filter(u => u.role === 'seller').length;
   const activeSellers = state.data.stores.filter(s => s.status === 'approved' || !s.status).length;
   const stores = state.data.stores.length;
@@ -487,7 +779,10 @@ function renderDashboard() {
                          state.data.products.filter(pr => pr.status === 'taken_down').length +
                          state.data.stores.filter(st => st.status === 'taken_down').length;
 
-  document.getElementById('kpiTotalUsers').textContent = totalUsers;
+  const kpiUsersEl = document.getElementById('kpiTotalUsers');
+  if (kpiUsersEl) {
+    kpiUsersEl.innerHTML = `<span>${totalUsers}</span> ${onlineUsers > 0 ? `<span class="text-xs font-bold text-emerald-400 font-sans ml-1.5 inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>${onlineUsers} online</span>` : ''}`;
+  }
   document.getElementById('kpiTotalSellers').textContent = sellers;
   document.getElementById('kpiActiveSellers').textContent = activeSellers;
   document.getElementById('kpiStores').textContent = stores;
@@ -604,6 +899,7 @@ function renderUsersTable() {
       if (status !== filterKyc) return false;
     }
     if (filterStatus) {
+      if (filterStatus === 'online' && !isUserOnline(u)) return false;
       if (filterStatus === 'suspended' && !u.suspended) return false;
       if (filterStatus === 'blocked' && !u.blocked) return false;
       if (filterStatus === 'active' && (u.suspended || u.blocked)) return false;
@@ -612,7 +908,7 @@ function renderUsersTable() {
   });
 
   const countEl = document.getElementById('userResultsCount');
-  if (countEl) countEl.textContent = `Showing ${filtered.length} of ${state.data.users.length} users`;
+  if (countEl) countEl.textContent = `Showing ${filtered.length} of ${state.data.users.length} users (${getOnlineUsersCount()} online)`;
 
   const tbody = document.getElementById('usersTableBody');
   if (!tbody) return;
@@ -626,6 +922,9 @@ function renderUsersTable() {
     const isSuspended = !!u.suspended;
     const isBlocked = !!u.blocked;
     const isVerified = !!u.verified || u.verificationStatus === 'approved';
+    const online = isUserOnline(u);
+    const activityTag = getUserActivityLabel(u);
+    const lastLoginText = u.lastLoginAt ? `<div class="text-[10px] text-zinc-400 mt-0.5">Last login: ${formatDate(u.lastLoginAt)}</div>` : '';
 
     let accountBadge = '<span class="badge badge-success">Active</span>';
     if (isBlocked) {
@@ -647,11 +946,15 @@ function renderUsersTable() {
       <tr>
         <td>
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-[#27272a] border border-[#3f3f46] flex items-center justify-center font-bold text-xs text-[#f5b942]">
+            <div class="relative w-8 h-8 rounded-full bg-[#27272a] border border-[#3f3f46] flex items-center justify-center font-bold text-xs text-[#f5b942]">
               ${escapeHtml((u.name || u.username || 'U')[0].toUpperCase())}
+              ${online ? `<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-[#141414] animate-pulse" title="Online now"></span>` : ''}
             </div>
             <div>
-              <div class="font-bold text-white text-xs">${escapeHtml(u.name || 'Unnamed')}</div>
+              <div class="font-bold text-white text-xs flex items-center gap-1.5">
+                <span>${escapeHtml(u.name || 'Unnamed')}</span>
+                ${online ? `<span class="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-extrabold uppercase">Live</span>` : ''}
+              </div>
               <div class="text-[11px] text-zinc-400">@${escapeHtml(u.username || 'user')}</div>
             </div>
           </div>
@@ -666,7 +969,15 @@ function renderUsersTable() {
           </span>
         </td>
         <td>${kycBadge}</td>
-        <td>${accountBadge}</td>
+        <td>
+          <div class="space-y-1">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              ${accountBadge}
+              ${activityTag}
+            </div>
+            ${lastLoginText}
+          </div>
+        </td>
         <td class="text-xs text-zinc-400">${formatDate(u.createdAt)}</td>
         <td class="text-right">
           <div class="flex items-center justify-end gap-1.5">
@@ -1134,6 +1445,7 @@ function renderModerationPosts() {
           <button onclick="inspectPostDetails('${p.id}')" class="btn btn-secondary btn-sm flex-1">Inspect</button>
           ${isTakenDown ? `
             <button onclick="handlePostRestore('${p.id}')" class="btn btn-success btn-sm flex-1">Restore</button>
+            <button onclick="handlePostPermanentDelete('${p.id}')" class="btn btn-danger btn-sm px-2" title="Permanently Delete">🗑️</button>
           ` : `
             <button onclick="handlePostTakedown('${p.id}')" class="btn btn-danger btn-sm flex-1">Take Down</button>
           `}
@@ -1260,6 +1572,69 @@ window.handlePostRestore = function(postId) {
         });
 
         showToast('Post restored to live feed successfully', 'success');
+        closeConfirmModal();
+        await fetchAdminData();
+      } catch (err) {
+        showToast(`Failed: ${err.message}`, 'error');
+      }
+    }
+  });
+};
+
+window.handlePostPermanentDelete = function(postId) {
+  openConfirmModal({
+    action: 'delete',
+    title: `Permanently Delete Post: ${postId}`,
+    prompt: 'Are you sure you want to permanently delete this post? This action cannot be undone and will purge the content from the database.',
+    destructive: true,
+    btnText: 'Delete Permanently',
+    onExecute: async (reason) => {
+      try {
+        await db.collection('posts').doc(postId).delete();
+        await db.collection('adminReviews').doc(`takedown_post_${postId}`).delete().catch(() => {});
+        showToast('Post permanently deleted', 'success');
+        closeConfirmModal();
+        await fetchAdminData();
+      } catch (err) {
+        showToast(`Failed: ${err.message}`, 'error');
+      }
+    }
+  });
+};
+
+window.handleProductPermanentDelete = function(productId) {
+  openConfirmModal({
+    action: 'delete',
+    title: `Permanently Delete Product: ${productId}`,
+    prompt: 'Are you sure you want to permanently delete this product? This action cannot be undone.',
+    destructive: true,
+    btnText: 'Delete Permanently',
+    onExecute: async (reason) => {
+      try {
+        await db.collection('products').doc(productId).delete();
+        await db.collection('adminReviews').doc(`takedown_product_${productId}`).delete().catch(() => {});
+        showToast('Product permanently deleted', 'success');
+        closeConfirmModal();
+        await fetchAdminData();
+      } catch (err) {
+        showToast(`Failed: ${err.message}`, 'error');
+      }
+    }
+  });
+};
+
+window.handleStorePermanentDelete = function(storeId) {
+  openConfirmModal({
+    action: 'delete',
+    title: `Permanently Delete Store: ${storeId}`,
+    prompt: 'Are you sure you want to permanently delete this storefront? This action cannot be undone.',
+    destructive: true,
+    btnText: 'Delete Permanently',
+    onExecute: async (reason) => {
+      try {
+        await db.collection('stores').doc(storeId).delete();
+        await db.collection('adminReviews').doc(`takedown_store_${storeId}`).delete().catch(() => {});
+        showToast('Store permanently deleted', 'success');
         closeConfirmModal();
         await fetchAdminData();
       } catch (err) {
