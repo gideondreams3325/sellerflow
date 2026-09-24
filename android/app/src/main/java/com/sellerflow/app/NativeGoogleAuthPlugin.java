@@ -34,6 +34,14 @@ public class NativeGoogleAuthPlugin extends Plugin {
         try {
             String serverClientId = call.getString("serverClientId");
             if (serverClientId == null || serverClientId.trim().isEmpty()) {
+                try {
+                    int resId = getContext().getResources().getIdentifier("default_web_client_id", "string", getContext().getPackageName());
+                    if (resId != 0) {
+                        serverClientId = getContext().getString(resId);
+                    }
+                } catch (Exception ignored) {}
+            }
+            if (serverClientId == null || serverClientId.trim().isEmpty()) {
                 serverClientId = DEFAULT_SERVER_CLIENT_ID;
             }
 
@@ -87,6 +95,9 @@ public class NativeGoogleAuthPlugin extends Plugin {
                 call.reject("User cancelled Google Sign-In", "USER_CANCELLED", e);
             } else if (statusCode == 12500) {
                 call.reject("Google Sign-In configuration error (12500). Debug SHA-1 must be registered in Firebase Console.", "CONFIG_ERROR", e);
+            } else if (statusCode == 10) {
+                String pkg = getContext().getPackageName();
+                call.reject("Google Sign-In failed (status 10 - DEVELOPER_ERROR): Package " + pkg + " and its signing SHA-1 (E6:52:4A:E3:8D:62:85:A1:4D:EC:73:C0:D4:9B:A7:28:5F:6D:64:2F) must be registered in Firebase Console under project sellerflow-efaab.", "DEVELOPER_ERROR", e);
             } else {
                 call.reject("Google Sign-In failed (status " + statusCode + "): " + e.getMessage(), String.valueOf(statusCode), e);
             }

@@ -89,6 +89,7 @@ const consumerStringsXml = `<?xml version='1.0' encoding='utf-8'?>
     <string name="title_activity_main">SellerFlow</string>
     <string name="package_name">com.sellerflow.app</string>
     <string name="custom_url_scheme">com.sellerflow.app</string>
+    <string name="default_web_client_id" translatable="false">987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com</string>
 </resources>
 `;
 fs.writeFileSync(path.join(consumerSrcDir, 'res/values/strings.xml'), consumerStringsXml, 'utf8');
@@ -165,6 +166,7 @@ const adminStringsXml = `<?xml version='1.0' encoding='utf-8'?>
     <string name="title_activity_main">SellerFlow Admin</string>
     <string name="package_name">com.sellerflow.admin</string>
     <string name="custom_url_scheme">com.sellerflow.admin</string>
+    <string name="default_web_client_id" translatable="false">987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com</string>
 </resources>
 `;
 fs.writeFileSync(path.join(adminSrcDir, 'res/values/strings.xml'), adminStringsXml, 'utf8');
@@ -200,6 +202,9 @@ const projectInfo = {
 
 let clients = Array.isArray(baseGsConfig?.client) ? [...baseGsConfig.client] : [];
 
+const WEB_CLIENT_ID = '987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com';
+const DEBUG_CERT_SHA1 = 'e6524ae38d6285a14dec73c0d49ba7285f6d642f';
+
 // Find or create consumer client
 let consumerClient = clients.find(c => c?.client_info?.android_client_info?.package_name === 'com.sellerflow.app');
 if (!consumerClient) {
@@ -210,7 +215,20 @@ if (!consumerClient) {
         package_name: 'com.sellerflow.app'
       }
     },
-    oauth_client: [],
+    oauth_client: [
+      {
+        client_id: WEB_CLIENT_ID,
+        client_type: 3
+      },
+      {
+        client_id: `${projectInfo.project_number}-consumer.apps.googleusercontent.com`,
+        client_type: 1,
+        android_info: {
+          package_name: 'com.sellerflow.app',
+          certificate_hash: DEBUG_CERT_SHA1
+        }
+      }
+    ],
     api_key: [
       {
         current_key: defaultApiKey
@@ -223,6 +241,23 @@ if (!consumerClient) {
     }
   };
   clients.push(consumerClient);
+} else {
+  if (!Array.isArray(consumerClient.oauth_client) || consumerClient.oauth_client.length === 0) {
+    consumerClient.oauth_client = [
+      {
+        client_id: WEB_CLIENT_ID,
+        client_type: 3
+      },
+      {
+        client_id: `${projectInfo.project_number}-consumer.apps.googleusercontent.com`,
+        client_type: 1,
+        android_info: {
+          package_name: 'com.sellerflow.app',
+          certificate_hash: DEBUG_CERT_SHA1
+        }
+      }
+    ];
+  }
 }
 
 // Find or create admin client
@@ -236,7 +271,20 @@ if (!adminClient) {
         package_name: 'com.sellerflow.admin'
       }
     },
-    oauth_client: consumerClient?.oauth_client ? [...consumerClient.oauth_client] : [],
+    oauth_client: [
+      {
+        client_id: WEB_CLIENT_ID,
+        client_type: 3
+      },
+      {
+        client_id: `${projectInfo.project_number}-admin.apps.googleusercontent.com`,
+        client_type: 1,
+        android_info: {
+          package_name: 'com.sellerflow.admin',
+          certificate_hash: DEBUG_CERT_SHA1
+        }
+      }
+    ],
     api_key: [
       {
         current_key: consumerKey
@@ -249,6 +297,23 @@ if (!adminClient) {
     }
   };
   clients.push(adminClient);
+} else {
+  if (!Array.isArray(adminClient.oauth_client) || adminClient.oauth_client.length === 0) {
+    adminClient.oauth_client = [
+      {
+        client_id: WEB_CLIENT_ID,
+        client_type: 3
+      },
+      {
+        client_id: `${projectInfo.project_number}-admin.apps.googleusercontent.com`,
+        client_type: 1,
+        android_info: {
+          package_name: 'com.sellerflow.admin',
+          certificate_hash: DEBUG_CERT_SHA1
+        }
+      }
+    ];
+  }
 }
 
 const googleServicesConfig = {
