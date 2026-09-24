@@ -121,9 +121,9 @@
             </div>
           </div>
 
-          <a id="oauthOpenBtn" href="com.sellerflow.app://oauth-callback" style="display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#fcd46a 0%,#f5b942 55%,#d48612 100%);color:#080808;font-weight:800;font-size:15px;padding:14px 24px;border-radius:14px;text-decoration:none;box-shadow:0 6px 22px rgba(245,185,66,0.35);transition:transform 0.15s ease,filter 0.15s ease;width:100%;box-sizing:border-box;">
-            <span>Open SellerFlow App</span>
-            <span style="font-size:16px;">→</span>
+          <a id="oauthOpenBtn" href="javascript:void(0)" style="display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#fcd46a 0%,#f5b942 55%,#d48612 100%);color:#080808;font-weight:800;font-size:15px;padding:14px 24px;border-radius:14px;text-decoration:none;box-shadow:0 6px 22px rgba(245,185,66,0.35);transition:transform 0.15s ease,filter 0.15s ease;width:100%;box-sizing:border-box;opacity:0.85;">
+            <span id="oauthBtnSpinner" style="width:14px;height:14px;border:2px solid #000;border-top-color:transparent;border-radius:50%;animation:sf_spin 0.8s linear infinite;display:inline-block;"></span>
+            <span id="oauthBtnText">Authenticating with Google…</span>
           </a>
 
           <a id="oauthWebFallback" href="/" style="display:inline-block;margin-top:12px;font-size:12px;color:#71717a;text-decoration:none;transition:color 0.15s ease;">
@@ -1795,6 +1795,13 @@ async function initCapacitorHandlers() {
           if (!photoURL && urlStr.includes('photo_url=')) {
             photoURL = urlStr.split('photo_url=')[1].split('&')[0].split('#')[0];
             try { photoURL = decodeURIComponent(photoURL); } catch(e) {}
+          }
+          
+          const hasAnyAuthParam = Boolean(oauthIdToken || oauthAccessToken || customToken || idToken || accessToken || firebaseToken || refreshToken || uid || email);
+          if (!hasAnyAuthParam) {
+            console.log('App opened with default scheme without auth params:', urlStr);
+            if (typeof ready === 'function') ready();
+            return;
           }
           
           let signedIn = false;
@@ -19191,7 +19198,21 @@ $('changeEmailBtn')?.addEventListener('click',async()=>{
   currentUser=null;
   showAuth('login');
 });
-$('googleBtn')?.addEventListener('click',async()=>{try{if(authMode==='register'){if(!$('termsAccept')?.checked)throw Error('Please read and agree to the Terms & Conditions before creating your account.');await ensureTerms()}await triggerGoogleSignIn()}catch(e){toast(errMsg(e),'error')}finally{ready()}});
+$('googleBtn')?.addEventListener('click',async()=>{
+  try {
+    if ($('authError')) $('authError').textContent = '';
+    if (authMode==='register') {
+      if (!$('termsAccept')?.checked) throw Error('Please read and agree to the Terms & Conditions before creating your account.');
+      await ensureTerms();
+    }
+    await triggerGoogleSignIn();
+  } catch(e) {
+    if ($('authError')) $('authError').textContent = errMsg(e);
+    toast(errMsg(e),'error');
+  } finally {
+    ready();
+  }
+});
 $('resetBtn')?.addEventListener('click',async()=>{const email=$('authEmail')?.value.trim();if(!email)return toast('Enter your email first','error');try{await sendPasswordResetEmail(auth,email);toast('Password reset email sent','success')}catch(e){toast(errMsg(e),'error')}});
 let bootingUid=null;
 async function startUser(u){

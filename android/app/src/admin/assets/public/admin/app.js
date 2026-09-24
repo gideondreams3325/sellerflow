@@ -1969,6 +1969,12 @@ async function initAdminCapacitorHandlers() {
           const accessToken = params.get('access_token') || params.get('oauth_access_token') || '';
           const email = params.get('email') || '';
 
+          const hasAnyAuthParam = Boolean(customToken || firebaseToken || oauthIdToken || accessToken || email);
+          if (!hasAnyAuthParam) {
+            console.log('Admin app opened without auth params:', urlStr);
+            return;
+          }
+
           let signedIn = false;
           let lastError = '';
 

@@ -1384,7 +1384,15 @@ async function handleOAuthCallbackPage() {
     }
     const authInst = firebase.auth();
 
-    // 1. If explicitly starting the flow (?start=google), start Firebase Google OAuth redirect
+    // 1. Consume redirect result from Firebase Auth FIRST (when returning from Google OAuth)
+    let redirectRes = null;
+    try {
+      redirectRes = await authInst.getRedirectResult();
+      console.log('OAuth redirectResult:', redirectRes);
+    } catch (rErr) {
+      console.warn('getRedirectResult warning:', rErr);
+    }
+
     const searchParams = new URLSearchParams(window.location.search || '');
     const isStart = searchParams.get('start') === 'google';
     const targetParam = searchParams.get('target') || '';
@@ -1403,10 +1411,20 @@ async function handleOAuthCallbackPage() {
       } catch(_) {}
     }
 
-    if (isStart) {
+    // 2. Only initiate signInWithRedirect if there is NO active redirect result, NO current user, and start=google was requested
+    if (isStart && !redirectRes?.user && !authInst.currentUser) {
       if (document.getElementById('oauthStatusTitle')) document.getElementById('oauthStatusTitle').textContent = 'Continue to SellerFlow';
       updateStatus('Connecting to Google Account Chooser…');
       
+      // Sanitize URL before redirecting to avoid looping when redirected back
+      try {
+        const cleanSearch = new URLSearchParams(window.location.search || '');
+        cleanSearch.delete('start');
+        const cleanQuery = cleanSearch.toString();
+        const cleanUrl = window.location.pathname + (cleanQuery ? '?' + cleanQuery : '');
+        window.history.replaceState({}, document.title, cleanUrl);
+      } catch (_) {}
+
       const provider = new firebase.auth.GoogleAuthProvider();
       if (typeof provider.setCustomParameters === 'function') {
         provider.setCustomParameters({ prompt: 'select_account' });
@@ -1417,15 +1435,6 @@ async function handleOAuthCallbackPage() {
 
     if (document.getElementById('oauthStatusTitle')) document.getElementById('oauthStatusTitle').textContent = 'Welcome Back to SellerFlow';
     updateStatus('Verifying sign-in credentials…');
-
-    // 2. Consume redirect result from Firebase Auth when returning from Google OAuth
-    let redirectRes = null;
-    try {
-      redirectRes = await authInst.getRedirectResult();
-      console.log('OAuth redirectResult:', redirectRes);
-    } catch (rErr) {
-      console.warn('getRedirectResult warning:', rErr);
-    }
 
     // 3. Extract tokens from all available surfaces
     const rawHash = (window.location.hash || '').replace(/^#/, '');
