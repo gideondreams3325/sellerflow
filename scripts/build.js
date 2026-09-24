@@ -162,4 +162,11 @@ if (fs.existsSync(androidPublicDir)) {
   } catch (_) {}
 }
 
+const androidConsumerPublicDir = path.resolve('android/app/src/consumer/assets/public');
+if (fs.existsSync(androidConsumerPublicDir)) {
+  try {
+    fs.cpSync(distDir, androidConsumerPublicDir, { recursive: true });
+  } catch (_) {}
+}
+
 console.log(`Build complete: ${copiedCount} assets ready in dist/`);

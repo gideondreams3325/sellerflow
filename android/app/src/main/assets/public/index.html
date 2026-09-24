@@ -60,7 +60,9 @@
     // Check if tokens already present in URL
     const hash = window.location.hash || '';
     if (hash && (hash.includes('id_token=') || hash.includes('access_token=') || hash.includes('custom_token=') || hash.includes('firebase_token=') || hash.includes('refresh_token=') || hash.includes('oauth_id_token=') || hash.includes('uid='))) {
-      const redirectTarget = 'com.sellerflow.app://oauth-callback' + hash;
+      const isTargetAdmin = window.location.search.includes('target=admin') || window.location.search.includes('com.sellerflow.admin') || hash.includes('target=admin');
+      const targetScheme = isTargetAdmin ? 'com.sellerflow.admin' : 'com.sellerflow.app';
+      const redirectTarget = targetScheme + '://oauth-callback' + hash;
       console.log('Immediate OAuth callback redirect:', redirectTarget);
       window.location.href = redirectTarget;
     }
@@ -119,9 +121,9 @@
             </div>
           </div>
 
-          <a id="oauthOpenBtn" href="com.sellerflow.app://oauth-callback" style="display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#fcd46a 0%,#f5b942 55%,#d48612 100%);color:#080808;font-weight:800;font-size:15px;padding:14px 24px;border-radius:14px;text-decoration:none;box-shadow:0 6px 22px rgba(245,185,66,0.35);transition:transform 0.15s ease,filter 0.15s ease;width:100%;box-sizing:border-box;">
-            <span>Open SellerFlow App</span>
-            <span style="font-size:16px;">→</span>
+          <a id="oauthOpenBtn" href="javascript:void(0)" style="display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#fcd46a 0%,#f5b942 55%,#d48612 100%);color:#080808;font-weight:800;font-size:15px;padding:14px 24px;border-radius:14px;text-decoration:none;box-shadow:0 6px 22px rgba(245,185,66,0.35);transition:transform 0.15s ease,filter 0.15s ease;width:100%;box-sizing:border-box;opacity:0.85;">
+            <span id="oauthBtnSpinner" style="width:14px;height:14px;border:2px solid #000;border-top-color:transparent;border-radius:50%;animation:sf_spin 0.8s linear infinite;display:inline-block;"></span>
+            <span id="oauthBtnText">Authenticating with Google…</span>
           </a>
 
           <a id="oauthWebFallback" href="/" style="display:inline-block;margin-top:12px;font-size:12px;color:#71717a;text-decoration:none;transition:color 0.15s ease;">
@@ -143,8 +145,11 @@
       `;
       if (document.body) {
         document.body.appendChild(overlay);
+      } else if (document.documentElement) {
+        document.documentElement.appendChild(overlay);
       }
     };
+    window.renderOAuthOverlay = renderOverlay;
 
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', renderOverlay);
@@ -1369,9 +1374,29 @@ async function handleCapacitorGoogleSignIn() {
 
 async function handleOAuthCallbackPage() {
   console.log('Initiating SellerFlow OAuth callback resolution...');
-  const statusMsg = document.getElementById('oauthStatusMsg');
-  const openBtn = document.getElementById('oauthOpenBtn');
-  const updateStatus = (t) => { if (statusMsg) statusMsg.textContent = t; };
+  if (typeof window.renderOAuthOverlay === 'function') {
+    try { window.renderOAuthOverlay(); } catch (_) {}
+  }
+
+  const updateStatus = (t) => {
+    const el = document.getElementById('oauthStatusMsg');
+    if (el) el.textContent = t;
+  };
+
+  const setButtonState = ({ text, href, onclick, showSpinner = false, enabled = true }) => {
+    const btn = document.getElementById('oauthOpenBtn');
+    const spinner = document.getElementById('oauthBtnSpinner');
+    const btnTxt = document.getElementById('oauthBtnText');
+    if (spinner) spinner.style.display = showSpinner ? 'inline-block' : 'none';
+    if (btnTxt && text) btnTxt.textContent = text;
+    if (btn) {
+      btn.style.opacity = enabled ? '1' : '0.85';
+      btn.style.cursor = enabled ? 'pointer' : 'default';
+      btn.style.pointerEvents = enabled ? 'auto' : 'none';
+      if (href) btn.href = href;
+      if (onclick) btn.onclick = onclick;
+    }
+  };
 
   try {
     if (typeof waitForFirebase === 'function') {
@@ -1382,17 +1407,48 @@ async function handleOAuthCallbackPage() {
     }
     const authInst = firebase.auth();
 
-    // 1. If explicitly starting the flow (?start=google), start Firebase Google OAuth redirect
+    // 1. Consume redirect result from Firebase Auth FIRST (when returning from Google OAuth)
+    let redirectRes = null;
+    try {
+      redirectRes = await authInst.getRedirectResult();
+      console.log('OAuth redirectResult:', redirectRes);
+    } catch (rErr) {
+      console.warn('getRedirectResult warning:', rErr);
+    }
+
     const searchParams = new URLSearchParams(window.location.search || '');
     const isStart = searchParams.get('start') === 'google';
+    const targetParam = searchParams.get('target') || '';
+    const pkgParam = searchParams.get('package') || '';
 
-    if (isStart) {
+    if (targetParam) {
+      try {
+        sessionStorage.setItem('sf_oauth_target', targetParam);
+        localStorage.setItem('sf_oauth_target', targetParam);
+      } catch(_) {}
+    }
+    if (pkgParam) {
+      try {
+        sessionStorage.setItem('sf_oauth_package', pkgParam);
+        localStorage.setItem('sf_oauth_package', pkgParam);
+      } catch(_) {}
+    }
+
+    // 2. If explicitly starting Google Sign-In and NOT returning from a completed redirect
+    if (isStart && !redirectRes?.user) {
       if (document.getElementById('oauthStatusTitle')) document.getElementById('oauthStatusTitle').textContent = 'Continue to SellerFlow';
       updateStatus('Connecting to Google Account Chooser…');
+      setButtonState({ text: 'Opening Google Sign-In…', showSpinner: true, enabled: false });
+
+      // Sanitize URL before redirecting to avoid looping when returning from Google
       try {
-        window.history.replaceState({}, document.title, window.location.pathname);
+        const cleanSearch = new URLSearchParams(window.location.search || '');
+        cleanSearch.delete('start');
+        const cleanQuery = cleanSearch.toString();
+        const cleanUrl = window.location.pathname + (cleanQuery ? '?' + cleanQuery : '');
+        window.history.replaceState({}, document.title, cleanUrl);
       } catch (_) {}
-      
+
       const provider = new firebase.auth.GoogleAuthProvider();
       if (typeof provider.setCustomParameters === 'function') {
         provider.setCustomParameters({ prompt: 'select_account' });
@@ -1403,15 +1459,6 @@ async function handleOAuthCallbackPage() {
 
     if (document.getElementById('oauthStatusTitle')) document.getElementById('oauthStatusTitle').textContent = 'Welcome Back to SellerFlow';
     updateStatus('Verifying sign-in credentials…');
-
-    // 2. Consume redirect result from Firebase Auth when returning from Google OAuth
-    let redirectRes = null;
-    try {
-      redirectRes = await authInst.getRedirectResult();
-      console.log('OAuth redirectResult:', redirectRes);
-    } catch (rErr) {
-      console.warn('getRedirectResult warning:', rErr);
-    }
 
     // 3. Extract tokens from all available surfaces
     const rawHash = (window.location.hash || '').replace(/^#/, '');
@@ -1430,7 +1477,6 @@ async function handleOAuthCallbackPage() {
       if (redirectRes.user) {
         user = redirectRes.user;
       }
-      // Method A: credentialFromResult
       try {
         if (firebase.auth.GoogleAuthProvider && typeof firebase.auth.GoogleAuthProvider.credentialFromResult === 'function') {
           const cred = firebase.auth.GoogleAuthProvider.credentialFromResult(redirectRes);
@@ -1442,12 +1488,10 @@ async function handleOAuthCallbackPage() {
       } catch (cErr) {
         console.warn('credentialFromResult warning:', cErr);
       }
-      // Method B: direct credential
       if (redirectRes.credential) {
         if (!oauthIdToken && redirectRes.credential.idToken) oauthIdToken = redirectRes.credential.idToken;
         if (!oauthAccessToken && redirectRes.credential.accessToken) oauthAccessToken = redirectRes.credential.accessToken;
       }
-      // Method C: _tokenResponse on redirect result or user delegate
       const tr = redirectRes._tokenResponse || (redirectRes.user && redirectRes.user._delegate && redirectRes.user._delegate._tokenResponse);
       if (tr) {
         if (!oauthIdToken && tr.oauthIdToken) oauthIdToken = tr.oauthIdToken;
@@ -1458,7 +1502,7 @@ async function handleOAuthCallbackPage() {
       }
     }
 
-    // Fallback: active currentUser
+    // Fallback: active currentUser or auth state listener
     if (!user) {
       user = authInst.currentUser;
     }
@@ -1467,13 +1511,14 @@ async function handleOAuthCallbackPage() {
         const unsub = authInst.onAuthStateChanged((u) => {
           if (u) { unsub(); resolve(u); }
         });
-        setTimeout(() => { unsub(); resolve(null); }, 2500);
+        setTimeout(() => { unsub(); resolve(authInst.currentUser || null); }, 2500);
       });
     }
 
     if (user) {
       try {
-        if (!firebaseToken) firebaseToken = await user.getIdToken(true);
+        if (!firebaseToken) firebaseToken = await user.getIdToken(true).catch(() => user.getIdToken(false));
+        if (!idToken) idToken = firebaseToken;
       } catch (_) {}
       if (!refreshToken && user.refreshToken) refreshToken = user.refreshToken;
       if (!refreshToken && user._delegate && user._delegate.refreshToken) refreshToken = user._delegate.refreshToken;
@@ -1486,15 +1531,19 @@ async function handleOAuthCallbackPage() {
       }
     }
 
-    // Attempt to mint customToken for seamless Android signInWithCustomToken
+    // Attempt fast customToken minting with timeout so it never blocks redirection
     let customToken = '';
     if (firebaseToken) {
       try {
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timer = controller ? setTimeout(() => controller.abort(), 1500) : null;
         const exRes = await fetch('/api/auth/custom-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idToken: firebaseToken })
+          body: JSON.stringify({ idToken: firebaseToken }),
+          signal: controller ? controller.signal : undefined
         });
+        if (timer) clearTimeout(timer);
         if (exRes.ok) {
           const exData = await exRes.json();
           if (exData && exData.success && exData.customToken) {
@@ -1502,12 +1551,12 @@ async function handleOAuthCallbackPage() {
           }
         }
       } catch (exErr) {
-        console.warn('Custom token exchange warning:', exErr);
+        console.warn('Custom token exchange skipped or timed out:', exErr);
       }
     }
 
     // Fallback: localStorage cached credentials
-    if (!oauthIdToken && !idToken && !accessToken) {
+    if (!oauthIdToken && !idToken && !accessToken && !firebaseToken) {
       try {
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
@@ -1528,11 +1577,48 @@ async function handleOAuthCallbackPage() {
       } catch (_) {}
     }
 
+    // Determine target package ID and web fallback destination
+    let targetPackage = queryParams.get('package') || '';
+    if (!targetPackage) {
+      try {
+        targetPackage = sessionStorage.getItem('sf_oauth_package') || localStorage.getItem('sf_oauth_package') || '';
+      } catch(_) {}
+    }
+    const isTargetAdmin = queryParams.get('target') === 'admin' || (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('sf_oauth_target') === 'admin') || (typeof localStorage !== 'undefined' && localStorage.getItem('sf_oauth_target') === 'admin');
+    if (!targetPackage) {
+      targetPackage = isTargetAdmin ? 'com.sellerflow.admin' : 'com.sellerflow.app';
+    }
+
+    const webFallbackEl = document.getElementById('oauthWebFallback');
+    if (webFallbackEl) {
+      webFallbackEl.href = isTargetAdmin ? '/admin' : '/';
+    }
+
     // 4. Construct deep link payload for Android ONLY if valid credentials exist
     if (!oauthIdToken && !idToken && !accessToken && !firebaseToken && !refreshToken && (!user || !user.uid)) {
       console.warn('No valid OAuth credentials found on callback resolution.');
-      updateStatus('Sign-in was not completed. Please return to SellerFlow and try again.');
-      if (openBtn) openBtn.style.display = 'none';
+      updateStatus('Sign-in waiting for completion. Tap below to complete sign-in:');
+      setButtonState({
+        text: 'Sign In with Google',
+        href: '#',
+        showSpinner: false,
+        enabled: true,
+        onclick: async (e) => {
+          e.preventDefault();
+          try {
+            setButtonState({ text: 'Opening Google Sign-In…', showSpinner: true, enabled: false });
+            const prov = new firebase.auth.GoogleAuthProvider();
+            prov.setCustomParameters({ prompt: 'select_account' });
+            const pRes = await authInst.signInWithPopup(prov);
+            if (pRes && pRes.user) {
+              window.location.reload();
+            }
+          } catch(popErr) {
+            setButtonState({ text: 'Retry Google Sign-In', showSpinner: false, enabled: true });
+            alert('Sign-in error: ' + (popErr.message || popErr));
+          }
+        }
+      });
       return;
     }
 
@@ -1561,32 +1647,38 @@ async function handleOAuthCallbackPage() {
     if (!payload) {
       console.warn('Constructed OAuth deep-link payload is empty. Aborting redirection.');
       updateStatus('Sign-in credentials missing. Please try again.');
+      setButtonState({ text: 'Retry Google Sign-In', showSpinner: false, enabled: true });
       return;
     }
 
-    const customSchemeUri = 'com.sellerflow.app://oauth-callback#' + payload;
-    const intentUri = 'intent://oauth-callback#' + payload + '#Intent;scheme=com.sellerflow.app;package=com.sellerflow.app;end';
+    const customSchemeUri = `${targetPackage}://oauth-callback#${payload}`;
+    const intentUri = `intent://oauth-callback#${payload}#Intent;scheme=${targetPackage};package=${targetPackage};end`;
 
     console.log('Redirecting to Android app:', customSchemeUri);
     if (document.getElementById('oauthStatusTitle')) document.getElementById('oauthStatusTitle').textContent = 'Sign-In Verified';
     if (document.getElementById('oauthSyncStep')) {
       document.getElementById('oauthSyncStep').innerHTML = `
         <span style="font-size:14px;color:#34d399;">✓</span>
-        <span style="font-weight:600;color:#34d399;">Authentication Complete · Returning to Feed</span>
+        <span style="font-weight:600;color:#34d399;">Authentication Complete · Returning to App</span>
       `;
     }
-    updateStatus('Sign-in verified! Returning you to SellerFlow…');
+    updateStatus('Sign-in verified! Tap below if not redirected automatically:');
 
-    if (openBtn) {
-      openBtn.href = customSchemeUri;
-      openBtn.onclick = () => {
+    const appNameText = isTargetAdmin ? 'Open SellerFlow Admin' : 'Open SellerFlow App';
+    setButtonState({
+      text: appNameText,
+      href: customSchemeUri,
+      showSpinner: false,
+      enabled: true,
+      onclick: (e) => {
+        e.preventDefault();
         window.location.href = customSchemeUri;
-        setTimeout(() => { window.location.href = intentUri; }, 450);
-      };
-    }
+        setTimeout(() => { window.location.href = intentUri; }, 400);
+      }
+    });
 
     // Automatic triggers to return to native app
-    window.location.href = customSchemeUri;
+    try { window.location.href = customSchemeUri; } catch (_) {}
     setTimeout(() => {
       try { window.location.replace(customSchemeUri); } catch (_) {}
     }, 350);
@@ -1596,7 +1688,17 @@ async function handleOAuthCallbackPage() {
 
   } catch (err) {
     console.error('Error handling OAuth callback page:', err);
-    updateStatus('Sign-in notice: ' + (err.message || err) + '. Tap Open SellerFlow App above to continue.');
+    updateStatus('Sign-in notice: ' + (err.message || err) + '. Tap below to retry:');
+    setButtonState({
+      text: 'Retry Sign-In',
+      href: '#',
+      showSpinner: false,
+      enabled: true,
+      onclick: (e) => {
+        e.preventDefault();
+        window.location.reload();
+      }
+    });
   }
 }
 
@@ -1755,6 +1857,13 @@ async function initCapacitorHandlers() {
           if (!photoURL && urlStr.includes('photo_url=')) {
             photoURL = urlStr.split('photo_url=')[1].split('&')[0].split('#')[0];
             try { photoURL = decodeURIComponent(photoURL); } catch(e) {}
+          }
+          
+          const hasAnyAuthParam = Boolean(oauthIdToken || oauthAccessToken || customToken || idToken || accessToken || firebaseToken || refreshToken || uid || email);
+          if (!hasAnyAuthParam) {
+            console.log('App opened with default scheme without auth params:', urlStr);
+            if (typeof ready === 'function') ready();
+            return;
           }
           
           let signedIn = false;
@@ -1968,9 +2077,9 @@ async function initCapacitorHandlers() {
             ready();
             console.warn('Could not authenticate with deep link payload:', urlStr);
             if ($('authError')) {
-              $('authError').textContent = lastAuthError ? ('Sign-in issue: ' + lastAuthError) : 'Google sign-in could not be verified. Please try again.';
+              $('authError').textContent = lastAuthError ? ('Sign-in issue: ' + lastAuthError) : 'Google sign-in was not completed. Please try again or sign in with email/password.';
             }
-            toast(lastAuthError ? ('Sign-in issue: ' + lastAuthError) : 'Could not verify sign-in. Please try again.', 'error');
+            toast(lastAuthError ? ('Sign-in issue: ' + lastAuthError) : 'Sign-in was not completed. Please try again.', 'info');
           }
         } catch (err) {
           console.error('Failed to complete deep-link login:', err);
@@ -19151,7 +19260,21 @@ $('changeEmailBtn')?.addEventListener('click',async()=>{
   currentUser=null;
   showAuth('login');
 });
-$('googleBtn')?.addEventListener('click',async()=>{try{if(authMode==='register'){if(!$('termsAccept')?.checked)throw Error('Please read and agree to the Terms & Conditions before creating your account.');await ensureTerms()}await triggerGoogleSignIn()}catch(e){toast(errMsg(e),'error')}finally{ready()}});
+$('googleBtn')?.addEventListener('click',async()=>{
+  try {
+    if ($('authError')) $('authError').textContent = '';
+    if (authMode==='register') {
+      if (!$('termsAccept')?.checked) throw Error('Please read and agree to the Terms & Conditions before creating your account.');
+      await ensureTerms();
+    }
+    await triggerGoogleSignIn();
+  } catch(e) {
+    if ($('authError')) $('authError').textContent = errMsg(e);
+    toast(errMsg(e),'error');
+  } finally {
+    ready();
+  }
+});
 $('resetBtn')?.addEventListener('click',async()=>{const email=$('authEmail')?.value.trim();if(!email)return toast('Enter your email first','error');try{await sendPasswordResetEmail(auth,email);toast('Password reset email sent','success')}catch(e){toast(errMsg(e),'error')}});
 let bootingUid=null;
 async function startUser(u){

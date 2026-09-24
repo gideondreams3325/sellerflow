@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SellerFlow Admin — Platform Management & Security Portal</title>
+  <meta name="description" content="Authoritative administrative dashboard and security moderation portal for SellerFlow Ghana.">
+  <link rel="icon" href="/android/app/src/main/assets/public/icon.svg" type="image/svg+xml">
+  <!-- Tailwind CSS & Inter Font -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: '#0d0d0d',
+            surface: '#141414',
+            surfaceElevated: '#1a1a1a',
+            surfaceBorder: '#262626',
+            gold: '#f5b942',
+            goldHover: '#e0a331',
+            goldGlow: 'rgba(245, 185, 66, 0.25)'
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="/admin/admin.css">
+  <!-- Firebase SDK Compat for seamless browser integration -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-[#0d0d0d] text-zinc-100 antialiased selection:bg-gold selection:text-black">
+
+  <!-- Application Shell Root -->
+  <div id="adminApp" class="min-h-screen flex flex-col">
+
+    <!-- Screen 1: Admin Authentication Gate -->
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0a] p-4">
+      <div class="w-full max-w-md bg-[#141414] border border-[#262626] rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+        <!-- Top accent banner -->
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-[#f5b942] to-amber-600"></div>
+
+        <div class="text-center mb-6">
+          <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#f5b942] text-black font-black text-2xl shadow-[0_0_20px_rgba(245,185,66,0.3)] mb-4">
+            SF
+          </div>
+          <h1 class="text-2xl font-black tracking-tight text-white">SELLER FLOW ADMIN</h1>
+          <p class="text-xs text-zinc-400 mt-1 uppercase tracking-wider font-semibold">Security & Administrative Operations</p>
+          <div class="inline-flex items-center gap-2 mt-3 px-3 py-1 rounded-full bg-[#1e1e1e] border border-[#333] text-[11px] text-zinc-300">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Production Project: <strong class="text-white">sellerflow-efaab</strong></span>
+          </div>
+        </div>
+
+        <!-- Alert messages -->
+        <div id="loginAlert" class="hidden mb-4 p-3.5 rounded-xl text-xs font-medium border"></div>
+
+        <!-- Credentials Form -->
+        <form id="adminLoginForm" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">Administrator Email</label>
+            <input type="email" id="adminEmailInput" required placeholder="admin@sellerflow.com" 
+              class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0d0d] border border-[#262626] text-white text-sm focus:border-[#f5b942] focus:outline-none transition">
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-bold text-zinc-300 uppercase tracking-wider">Password</label>
+            </div>
+            <input type="password" id="adminPasswordInput" required placeholder="••••••••••••" 
+              class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0d0d] border border-[#262626] text-white text-sm focus:border-[#f5b942] focus:outline-none transition">
+          </div>
+
+          <button type="submit" id="adminLoginBtn" 
+            class="w-full py-3 px-4 rounded-xl bg-[#f5b942] hover:bg-[#e0a331] text-black font-extrabold text-sm transition shadow-lg flex items-center justify-center gap-2">
+            <span id="loginBtnText">Sign In to Admin Portal</span>
+            <span id="loginSpinner" class="hidden animate-spin inline-block w-4 h-4 border-2 border-black border-t-transparent rounded-full"></span>
+          </button>
+        </form>
+
+        <div class="relative my-6 text-center">
+          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-[#262626]"></div></div>
+          <span class="relative bg-[#141414] px-3 text-[11px] font-bold uppercase text-zinc-500">Or Authorized Provider</span>
+        </div>
+
+        <button type="button" id="adminGoogleLoginBtn" 
+          class="w-full py-2.5 px-4 rounded-xl bg-[#1c1c1c] hover:bg-[#262626] border border-[#333] text-white font-bold text-sm transition flex items-center justify-center gap-3">
+          <svg class="w-4 h-4" viewBox="0 0 24 24">
+            <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/>
+            <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.9z"/>
+            <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3 0-.8.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15.2c0 2.8.7 5.5 1.9 7.8l3.7-2.9z"/>
+            <path fill="#34A853" d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16.5C3.7 20.2 7.5 23.5 12 23.5z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <!-- Security Notice -->
+        <div class="mt-6 p-3 rounded-xl bg-[#0d0d0d] border border-[#222] text-[11px] text-zinc-400 text-center">
+          <p class="font-semibold text-zinc-300">🛡️ Server-Side Authorization Enforced</p>
+          <p class="mt-0.5 text-zinc-500">Access is strictly restricted to authorized SellerFlow administrators. Non-admin accounts will be automatically rejected.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 2: Authorized Admin Dashboard Shell (Initially Hidden) -->
+    <div id="adminShell" class="hidden min-h-screen flex bg-[#0d0d0d]">
+
+      <!-- Mobile Backdrop Overlay -->
+      <div id="sidebarBackdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-30 hidden lg:hidden"></div>
+
+      <!-- Navigation Sidebar -->
+      <aside id="adminSidebar" class="w-64 bg-[#111111] border-r border-[#262626] flex flex-col fixed top-0 bottom-0 left-0 z-40 transition-transform -translate-x-full lg:translate-x-0">
+        <!-- Brand Header -->
+        <div class="p-5 border-b border-[#262626] flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-[#f5b942] text-black font-black text-lg flex items-center justify-center shadow-[0_0_12px_rgba(245,185,66,0.3)]">
+              SF
+            </div>
+            <div>
+              <div class="text-sm font-black text-white tracking-wide">SELLER FLOW</div>
+              <div class="text-[10px] font-bold text-[#f5b942] tracking-wider uppercase">ADMIN PORTAL</div>
+            </div>
+          </div>
+          <button type="button" id="closeSidebarBtn" class="lg:hidden text-zinc-400 hover:text-white p-1">
+            ✕
+          </button>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 p-3 space-y-1 overflow-y-auto" id="adminNavList">
+          <div class="px-3 pt-2 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Core Operations</div>
+          
+          <a href="#dashboard" data-tab="dashboard" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition active">
+            <span class="text-base">📊</span>
+            <span>Dashboard</span>
+          </a>
+
+          <a href="#users" data-tab="users" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+            <span class="text-base">👥</span>
+            <span>Users & Accounts</span>
+            <span id="badgeUsersCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-[#222] text-zinc-400 font-mono">0</span>
+          </a>
+
+          <a href="#stores" data-tab="stores" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+            <span class="text-base">🏬</span>
+            <span>Stores</span>
+            <span id="badgeStoresCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-[#222] text-zinc-400 font-mono">0</span>
+          </a>
+
+          <a href="#products" data-tab="products" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+            <span class="text-base">📦</span>
+            <span>Products</span>
+            <span id="badgeProductsCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-[#222] text-zinc-400 font-mono">0</span>
+          </a>
+
+          <a href="#orders" data-tab="orders" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+            <span class="text-base">💳</span>
+            <span>Orders Oversight</span>
+            <span id="badgeOrdersCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-[#222] text-zinc-400 font-mono">0</span>
+          </a>
+
+          <div class="px-3 pt-4 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Security & Trust</div>
+
+          <a href="#verifications" data-tab="verifications" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+            <span class="text-base">🇬🇭</span>
+            <span>Ghana Card / KYC</span>
+            <span id="badgePendingKyc" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">0</span>
+          </a>
+
+          <a href="#moderation" data-tab="moderation" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+            <span class="text-base">🛡️</span>
+            <span>Content Moderation</span>
+            <span id="badgeFlaggedPosts" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold">0</span>
+          </a>
+
+          <a href="#reports" data-tab="reports" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+            <span class="text-base">🚨</span>
+            <span>Reports Desk</span>
+            <span id="badgePendingReports" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold">0</span>
+          </a>
+
+          <div class="px-3 pt-4 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Platform Ecosystem</div>
+
+          <a href="#jobs" data-tab="jobs" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+            <span class="text-base">💼</span>
+            <span>Jobs</span>
+            <span id="badgeJobsCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-[#222] text-zinc-400 font-mono">0</span>
+          </a>
+
+          <a href="#events" data-tab="events" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+            <span class="text-base">🎟️</span>
+            <span>Events</span>
+            <span id="badgeEventsCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-[#222] text-zinc-400 font-mono">0</span>
+          </a>
+
+          <div class="px-3 pt-4 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Governance</div>
+
+          <a href="#audit" data-tab="audit" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+            <span class="text-base">📜</span>
+            <span>Audit Logs</span>
+          </a>
+
+          <a href="#settings" data-tab="settings" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+            <span class="text-base">⚙️</span>
+            <span>Admin Roles & System</span>
+          </a>
+        </nav>
+
+        <!-- Admin Profile & Logout Footer -->
+        <div class="p-3.5 border-t border-[#262626] bg-[#0c0c0c]">
+          <div class="flex items-center gap-3 mb-2.5 px-1">
+            <div id="adminAvatarLetter" class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 text-[#f5b942] font-black text-xs flex items-center justify-center">
+              A
+            </div>
+            <div class="flex-1 min-w-0">
+              <div id="adminUserEmail" class="text-xs font-bold text-white truncate">admin@sellerflow.com</div>
+              <div class="text-[10px] font-bold text-[#f5b942] flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>Authorized Admin</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" id="adminLogoutBtn" 
+            class="w-full py-2 px-3 rounded-lg bg-[#1a1a1a] hover:bg-rose-900/30 hover:border-rose-700/50 border border-[#2a2a2a] text-zinc-300 hover:text-rose-300 text-xs font-bold transition flex items-center justify-center gap-2">
+            <span>🚪</span>
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Layout Body -->
+      <div class="flex-1 lg:ml-64 flex flex-col min-w-0">
+
+        <!-- Top Header Bar -->
+        <header class="h-16 bg-[#111111]/90 backdrop-blur border-b border-[#262626] sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button type="button" id="openSidebarBtn" class="lg:hidden p-2 rounded-lg bg-[#1a1a1a] border border-[#333] text-zinc-300">
+              ☰
+            </button>
+            <div>
+              <h2 id="currentSectionTitle" class="text-base sm:text-lg font-black text-white">Dashboard Overview</h2>
+              <div class="text-[11px] text-zinc-400 hidden sm:block">Live synchronization with Firebase project sellerflow-efaab</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button type="button" id="globalRefreshBtn" 
+              class="px-3 py-1.5 rounded-xl bg-[#1c1c1c] hover:bg-[#262626] border border-[#333] text-zinc-200 text-xs font-bold transition flex items-center gap-1.5">
+              <span id="refreshIcon">🔄</span>
+              <span class="hidden sm:inline">Refresh Data</span>
+            </button>
+
+            <a href="/" target="_blank" 
+              class="px-3 py-1.5 rounded-xl bg-[#1c1c1c] hover:bg-[#262626] border border-[#333] text-zinc-300 text-xs font-bold transition flex items-center gap-1.5">
+              <span>📱</span>
+              <span class="hidden sm:inline">View User App</span>
+            </a>
+          </div>
+        </header>
+
+        <!-- Main Dynamic Content Container -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
+
+          <!-- TAB 1: DASHBOARD OVERVIEW -->
+          <section id="tab-dashboard" class="admin-tab-pane space-y-6">
+            <!-- Executive KPI Cards (10 required cards) -->
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Platform Health & Metrics</h3>
+                <span id="lastSyncedTime" class="text-[11px] text-zinc-500 font-mono">Syncing...</span>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+                <!-- Card 1: Total Users -->
+                <div class="stat-card">
+                  <div class="stat-card-header">
+                    <span class="stat-label">Total Users</span>
+                    <span class="stat-icon">👥</span>
+                  </div>
+                  <div class="stat-value" id="kpiTotalUsers">-</div>
+                  <div class="stat-footer">Registered accounts</div>
+                </div>
+
+                <!-- Card 2: Sellers -->
+                <div class="stat-card">
+                  <div class="stat-card-header">
+                    <span class="stat-label">Sellers</span>
+                    <span class="stat-icon">🏪</span>
+                  </div>
+                  <div class="stat-value text-amber-400" id="kpiTotalSellers">-</div>
+                  <div class="stat-footer">Creator & seller roles</div>
+                </div>
+
+                <!-- Card 3: Active Sellers -->
+                <div class="stat-card">
+                  <div class="stat-card-header">
+                    <span class="stat-label">Active Sellers</span>
+                    <span class="stat-icon">⚡</span>
+                  </div>
+                  <div class="stat-value text-emerald-400" id="kpiActiveSellers">-</div>
+                  <div class="stat-footer">With live listings</div>
+                </div>
+
+                <!-- Card 4: Stores -->
+                <div class="stat-card">
+                  <div class="stat-card-header">
+                    <span class="stat-label">Stores</span>
+                    <span class="stat-icon">🏬</span>
+                  </div>
+                  <div class="stat-value" id="kpiStores">-</div>
+                  <div class="stat-footer">Vendor storefronts</div>
+                </div>
+
+                <!-- Card 5: Products -->
+                <div class="stat-card">
+                  <div class="stat-card-header">
+                    <span class="stat-label">Products</span>
+                    <span class="stat-icon">📦</span>
+                  </div>
+                  <div class="stat-value" id="kpiProducts">-</div>
+                  <div class="stat-footer">Marketplace inventory</div>
+                </div>
+
+                <!-- Card 6: Posts -->
+                <div class="stat-card">
+                  <div class="stat-card-header">
+                    <span class="stat-label">Posts</span>
+                    <span class="stat-icon">🎬</span>
+                  </div>
+                  <div class="stat-value" id="kpiPosts">-</div>
+                  <div class="stat-footer">Reels & video content</div>
+                </div>
+
+                <!-- Card 7: Orders -->
+                <div class="stat-card">
+                  <div class="stat-card-header">
+                    <span class="stat-label">Orders</span>
+                    <span class="stat-icon">💳</span>
+                  </div>
+                  <div class="stat-value text-blue-400" id="kpiOrders">-</div>
+                  <div class="stat-footer">Commerce purchases</div>
+                </div>
+
+                <!-- Card 8: Pending KYC -->
+                <div class="stat-card border-amber-500/30 bg-amber-500/5">
+                  <div class="stat-card-header">
+                    <span class="stat-label text-amber-400">Pending KYC</span>
+                    <span class="stat-icon">🇬🇭</span>
+                  </div>
+                  <div class="stat-value text-amber-400" id="kpiPendingKyc">-</div>
+                  <div class="stat-footer highlight">Requires admin audit</div>
+                </div>
+
+                <!-- Card 9: Pending Reports -->
+                <div class="stat-card border-rose-500/30 bg-rose-500/5">
+                  <div class="stat-card-header">
+                    <span class="stat-label text-rose-400">Pending Reports</span>
+                    <span class="stat-icon">🚨</span>
+                  </div>
+                  <div class="stat-value text-rose-400" id="kpiPendingReports">-</div>
+                  <div class="stat-footer text-rose-400">Scam & fraud queue</div>
+                </div>
+
+                <!-- Card 10: Taken-down Content -->
+                <div class="stat-card border-zinc-700">
+                  <div class="stat-card-header">
+                    <span class="stat-label">Taken-Down</span>
+                    <span class="stat-icon">🛑</span>
+                  </div>
+                  <div class="stat-value text-zinc-400" id="kpiTakenDown">-</div>
+                  <div class="stat-footer">Safety removed items</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Action Shortcuts -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="bg-[#141414] border border-[#262626] rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <div class="text-sm font-bold text-white">Ghana Card Verification Desk</div>
+                  <div class="text-xs text-zinc-400 mt-0.5">Review seller identity documents and liveness checks</div>
+                </div>
+                <button type="button" onclick="window.location.hash = '#verifications'" class="btn btn-primary btn-sm">
+                  Review Queue
+                </button>
+              </div>
+
+              <div class="bg-[#141414] border border-[#262626] rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <div class="text-sm font-bold text-white">Content Moderation Queue</div>
+                  <div class="text-xs text-zinc-400 mt-0.5">Gemini 3.8 Flash flags and copyright muted items</div>
+                </div>
+                <button type="button" onclick="window.location.hash = '#moderation'" class="btn btn-secondary btn-sm">
+                  Inspect Posts
+                </button>
+              </div>
+
+              <div class="bg-[#141414] border border-[#262626] rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <div class="text-sm font-bold text-white">Scam & Fraud Reports</div>
+                  <div class="text-xs text-zinc-400 mt-0.5">Triage community safety and buyer disputes</div>
+                </div>
+                <button type="button" onclick="window.location.hash = '#reports'" class="btn btn-danger btn-sm">
+                  Handle Reports
+                </button>
+              </div>
+            </div>
+
+            <!-- Dashboard 5 Live Feeds -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              
+              <!-- Feed 1: Recent Reports -->
+              <div class="table-card">
+                <div class="p-4 border-b border-[#262626] flex items-center justify-between">
+                  <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                    <span>🚨</span> Recent Scam & Fraud Reports
+                  </h4>
+                  <a href="#reports" class="text-xs text-[#f5b942] hover:underline font-semibold">View All</a>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Type</th>
+                        <th>Target</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="recentReportsTableBody">
+                      <tr><td colspan="5" class="text-center text-zinc-500 py-6">No recent reports pending</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Feed 2: Recent KYC Requests -->
+              <div class="table-card">
+                <div class="p-4 border-b border-[#262626] flex items-center justify-between">
+                  <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                    <span>🇬🇭</span> Recent Ghana Card Submissions
+                  </h4>
+                  <a href="#verifications" class="text-xs text-[#f5b942] hover:underline font-semibold">View All</a>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Applicant</th>
+                        <th>Ghana Card PIN</th>
+                        <th>Liveness</th>
+                        <th>Status</th>
+                        <th>Review</th>
+                      </tr>
+                    </thead>
+                    <tbody id="recentKycTableBody">
+                      <tr><td colspan="5" class="text-center text-zinc-500 py-6">No recent KYC submissions</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Feed 3: Recent Moderation Actions -->
+              <div class="table-card">
+                <div class="p-4 border-b border-[#262626] flex items-center justify-between">
+                  <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                    <span>🛡️</span> AI & Moderator Content Actions
+                  </h4>
+                  <a href="#moderation" class="text-xs text-[#f5b942] hover:underline font-semibold">View All</a>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Post / Target</th>
+                        <th>Verdict / Rule</th>
+                        <th>Action</th>
+                        <th>Confidence</th>
+                        <th>Time</th>
+                      </tr>
+                    </thead>
+                    <tbody id="recentModerationTableBody">
+                      <tr><td colspan="5" class="text-center text-zinc-500 py-6">No moderation actions recorded</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Feed 4: Recent Commerce Orders -->
+              <div class="table-card">
+                <div class="p-4 border-b border-[#262626] flex items-center justify-between">
+                  <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                    <span>💳</span> Recent Commerce Orders
+                  </h4>
+                  <a href="#orders" class="text-xs text-[#f5b942] hover:underline font-semibold">View All</a>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Order ID</th>
+                        <th>Buyer</th>
+                        <th>Total</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="recentOrdersTableBody">
+                      <tr><td colspan="5" class="text-center text-zinc-500 py-6">No orders recorded yet</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- TAB 2: USER MANAGEMENT -->
+          <section id="tab-users" class="admin-tab-pane hidden space-y-4">
+            <div class="section-header">
+              <div>
+                <h3 class="section-title"><span>👥</span> User Account Management</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Manage registered accounts, view KYC verification status, manage suspensions and blocks.</p>
+              </div>
+              <div class="section-actions">
+                <span id="userResultsCount" class="text-xs text-zinc-400 font-mono">Loading users...</span>
+              </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filter-bar">
+              <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="userSearchInput" placeholder="Search by name, username, email, phone, UID..." class="search-input">
+              </div>
+
+              <select id="userFilterRole" class="select-filter">
+                <option value="">All Roles</option>
+                <option value="seller">Sellers Only</option>
+                <option value="user">Regular Users</option>
+                <option value="admin">Administrators</option>
+              </select>
+
+              <select id="userFilterKyc" class="select-filter">
+                <option value="">All Verification</option>
+                <option value="approved">Verified (Badge)</option>
+                <option value="pending">Pending KYC</option>
+                <option value="rejected">Rejected KYC</option>
+                <option value="none">Unverified</option>
+              </select>
+
+              <select id="userFilterStatus" class="select-filter">
+                <option value="">All Account Status</option>
+                <option value="active">Active Accounts</option>
+                <option value="suspended">Suspended</option>
+                <option value="blocked">Blocked</option>
+              </select>
+            </div>
+
+            <!-- Users Table -->
+            <div class="table-card">
+              <div class="overflow-x-auto">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>User Profile</th>
+                      <th>Email & Phone</th>
+                      <th>Role</th>
+                      <th>KYC Status</th>
+                      <th>Account Status</th>
+                      <th>Created</th>
+                      <th class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="usersTableBody">
+                    <tr><td colspan="7" class="text-center py-8 text-zinc-500">Loading user accounts...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 3: STORE MANAGEMENT -->
+          <section id="tab-stores" class="admin-tab-pane hidden space-y-4">
+            <div class="section-header">
+              <div>
+                <h3 class="section-title"><span>🏬</span> Storefront Directory</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Monitor merchant storefronts, product catalogs, and storefront compliance.</p>
+              </div>
+              <div class="section-actions">
+                <span id="storeResultsCount" class="text-xs text-zinc-400 font-mono">Loading stores...</span>
+              </div>
+            </div>
+
+            <!-- Filter -->
+            <div class="filter-bar">
+              <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="storeSearchInput" placeholder="Search store name, location, owner..." class="search-input">
+              </div>
+
+              <select id="storeFilterStatus" class="select-filter">
+                <option value="">All Store Statuses</option>
+                <option value="approved">Active / Approved</option>
+                <option value="pending_review">Pending Review</option>
+                <option value="taken_down">Taken Down / Suspended</option>
+              </select>
+            </div>
+
+            <div class="table-card">
+              <div class="overflow-x-auto">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Storefront</th>
+                      <th>Owner / Seller</th>
+                      <th>Location & Phone</th>
+                      <th>Products</th>
+                      <th>Status</th>
+                      <th class="text-right">Administrative Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="storesTableBody">
+                    <tr><td colspan="6" class="text-center py-8 text-zinc-500">Loading stores...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 4: PRODUCT MANAGEMENT -->
+          <section id="tab-products" class="admin-tab-pane hidden space-y-4">
+            <div class="section-header">
+              <div>
+                <h3 class="section-title"><span>📦</span> Marketplace Products</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Audit listings, enforce marketplace standards, and take down prohibited inventory.</p>
+              </div>
+              <div class="section-actions">
+                <span id="productResultsCount" class="text-xs text-zinc-400 font-mono">Loading products...</span>
+              </div>
+            </div>
+
+            <div class="filter-bar">
+              <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="productSearchInput" placeholder="Search product title, seller, category..." class="search-input">
+              </div>
+
+              <select id="productFilterCategory" class="select-filter">
+                <option value="">All Categories</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Fashion">Fashion</option>
+                <option value="Beauty">Beauty & Cosmetics</option>
+                <option value="Food">Food & Groceries</option>
+                <option value="Home">Home & Living</option>
+                <option value="Services">Services</option>
+              </select>
+
+              <select id="productFilterStatus" class="select-filter">
+                <option value="">All Statuses</option>
+                <option value="approved">Approved & Live</option>
+                <option value="pending_review">Pending Review</option>
+                <option value="taken_down">Taken Down</option>
+                <option value="violation">Policy Violation</option>
+              </select>
+            </div>
+
+            <div class="table-card">
+              <div class="overflow-x-auto">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Category</th>
+                      <th>Price</th>
+                      <th>Stock</th>
+                      <th>Seller</th>
+                      <th>Status</th>
+                      <th class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="productsTableBody">
+                    <tr><td colspan="7" class="text-center py-8 text-zinc-500">Loading products...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 5: CONTENT MODERATION (POSTS & MEDIA) -->
+          <section id="tab-moderation" class="admin-tab-pane hidden space-y-4">
+            <div class="section-header">
+              <div>
+                <h3 class="section-title"><span>🛡️</span> Content Moderation & Restoration Hub</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Inspect reels, AI safety policy detections (Gemini 3.8 Flash), and automated copyright muting.</p>
+              </div>
+              <div class="section-actions">
+                <span id="moderationCount" class="text-xs text-zinc-400 font-mono">0 items in queue</span>
+              </div>
+            </div>
+
+            <!-- Sub-tab Pills -->
+            <div class="flex items-center gap-2 border-b border-[#262626] pb-3 overflow-x-auto">
+              <button type="button" data-mod-filter="all" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#f5b942] text-black">
+                All Posts
+              </button>
+              <button type="button" data-mod-filter="pending" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e1e1e] text-zinc-300 hover:bg-[#262626]">
+                Pending Review
+              </button>
+              <button type="button" data-mod-filter="ai_flagged" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e1e1e] text-zinc-300 hover:bg-[#262626]">
+                AI Flagged (Gemini)
+              </button>
+              <button type="button" data-mod-filter="copyright" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e1e1e] text-zinc-300 hover:bg-[#262626]">
+                Copyright Muted 🔇
+              </button>
+              <button type="button" data-mod-filter="taken_down" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e1e1e] text-zinc-300 hover:bg-[#262626]">
+                Taken Down / Archived
+              </button>
+            </div>
+
+            <!-- Posts Moderation Grid -->
+            <div id="moderationPostsContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div class="col-span-full text-center py-12 text-zinc-500">Loading posts for moderation...</div>
+            </div>
+          </section>
+
+          <!-- TAB 6: GHANA CARD / KYC VERIFICATION CENTER -->
+          <section id="tab-verifications" class="admin-tab-pane hidden space-y-4">
+            <div class="section-header">
+              <div>
+                <h3 class="section-title"><span>🇬🇭</span> Ghana Card & KYC Verification Center</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Authoritative Ghana National Identity card auditing with biometric live selfie liveness challenges.</p>
+              </div>
+              <div class="section-actions">
+                <span id="kycQueueStatus" class="text-xs text-amber-400 font-bold">0 Pending</span>
+              </div>
+            </div>
+
+            <!-- Filter -->
+            <div class="filter-bar">
+              <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="kycSearchInput" placeholder="Search applicant name, Ghana Card PIN..." class="search-input">
+              </div>
+
+              <select id="kycFilterStatus" class="select-filter">
+                <option value="pending">Pending Review Only</option>
+                <option value="approved">Approved / Verified</option>
+                <option value="rejected">Rejected</option>
+                <option value="all">All Records</option>
+              </select>
+            </div>
+
+            <div class="table-card">
+              <div class="overflow-x-auto">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Applicant Name</th>
+                      <th>Ghana Card PIN</th>
+                      <th>Liveness Check</th>
+                      <th>Submitted Date</th>
+                      <th>Audit Status</th>
+                      <th class="text-right">Inspection & Decision</th>
+                    </tr>
+                  </thead>
+                  <tbody id="kycTableBody">
+                    <tr><td colspan="6" class="text-center py-8 text-zinc-500">Loading KYC verification submissions...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 7: REPORTS DESK -->
+          <section id="tab-reports" class="admin-tab-pane hidden space-y-4">
+            <div class="section-header">
+              <div>
+                <h3 class="section-title"><span>🚨</span> Community Safety & Scam Reports</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Unified triage of community abuse complaints, fraud claims, and advance-fee scam warnings.</p>
+              </div>
+              <div class="section-actions">
+                <span id="reportsQueueCount" class="text-xs text-rose-400 font-mono">0 pending reports</span>
+              </div>
+            </div>
+
+            <div class="filter-bar">
+              <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="reportSearchInput" placeholder="Search reason, target ID, reporter..." class="search-input">
+              </div>
+
+              <select id="reportFilterStatus" class="select-filter">
+                <option value="pending">Pending Reports</option>
+                <option value="investigating">Under Investigation</option>
+                <option value="resolved">Resolved</option>
+                <option value="dismissed">Dismissed</option>
+                <option value="all">All Reports</option>
+              </select>
+
+              <select id="reportFilterType" class="select-filter">
+                <option value="all">All Sources (Scam & Fraud)</option>
+                <option value="scam">Scam Reports</option>
+                <option value="fraud">Fraud Reports</option>
+              </select>
+            </div>
+
+            <div class="table-card">
+              <div class="overflow-x-auto">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Report Type</th>
+                      <th>Reported Entity</th>
+                      <th>Reporter</th>
+                      <th>Allegation / Reason</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reportsTableBody">
+                    <tr><td colspan="7" class="text-center py-8 text-zinc-500">Loading reports desk...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 8: ORDERS OVERSIGHT -->
+          <section id="tab-orders" class="admin-tab-pane hidden space-y-4">
+            <div class="section-header">
+              <div>
+                <h3 class="section-title"><span>💳</span> Commerce Orders Oversight</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Monitor transaction fulfillment, cash on delivery, and mobile money security checks.</p>
+              </div>
+              <div class="section-actions">
+                <span id="ordersTotalVolume" class="text-xs text-zinc-300 font-mono">Total: GH₵0.00</span>
+              </div>
+            </div>
+
+            <div class="filter-bar">
+              <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="orderSearchInput" placeholder="Search order ID, buyer name, phone..." class="search-input">
+              </div>
+
+              <select id="orderFilterStatus" class="select-filter">
+                <option value="all">All Orders</option>
+                <option value="pending">Pending Confirmation</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="processing">Processing / In Transit</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+
+            <div class="table-card">
+              <div class="overflow-x-auto">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Buyer Details</th>
+                      <th>Items Summary</th>
+                      <th>Total (GHS)</th>
+                      <th>Payment</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th class="text-right">Details</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ordersTableBody">
+                    <tr><td colspan="8" class="text-center py-8 text-zinc-500">Loading orders...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 9: JOBS MANAGEMENT -->
+          <section id="tab-jobs" class="admin-tab-pane hidden space-y-4">
+            <div class="section-header">
+              <div>
+                <h3 class="section-title"><span>💼</span> Ghanaian Employment Listings</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Authoritative security moderation for job postings with advance-fee scam detection.</p>
+              </div>
+            </div>
+
+            <div class="table-card">
+              <div class="overflow-x-auto">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Job Title & Company</th>
+                      <th>Location / Region</th>
+                      <th>Employment & Salary</th>
+                      <th>Creator</th>
+                      <th>Status</th>
+                      <th class="text-right">Security Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="jobsTableBody">
+                    <tr><td colspan="6" class="text-center py-8 text-zinc-500">Loading jobs...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 10: EVENTS MANAGEMENT -->
+          <section id="tab-events" class="admin-tab-pane hidden space-y-4">
+            <div class="section-header">
+              <div>
+                <h3 class="section-title"><span>🎟️</span> Ghanaian Events & Expos</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Authoritative moderation for community events, expos, and workshops.</p>
+              </div>
+            </div>
+
+            <div class="table-card">
+              <div class="overflow-x-auto">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Event Title & Organizer</th>
+                      <th>Venue & Region</th>
+                      <th>Date & Time</th>
+                      <th>Ticket Pricing</th>
+                      <th>Status</th>
+                      <th class="text-right">Security Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="eventsTableBody">
+                    <tr><td colspan="6" class="text-center py-8 text-zinc-500">Loading events...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 11: AUDIT LOGS -->
+          <section id="tab-audit" class="admin-tab-pane hidden space-y-4">
+            <div class="section-header">
+              <div>
+                <h3 class="section-title"><span>📜</span> Immutable Security & Administrative Audit Logs</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Read-only tamper-proof ledger of all moderation, takedown, KYC, and security interventions.</p>
+              </div>
+            </div>
+
+            <div class="filter-bar">
+              <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="auditSearchInput" placeholder="Filter by admin UID, target ID, reason..." class="search-input">
+              </div>
+
+              <select id="auditFilterAction" class="select-filter">
+                <option value="all">All Actions</option>
+                <option value="takedown">Takedowns</option>
+                <option value="restore">Restorations</option>
+                <option value="suspend">User Suspensions</option>
+                <option value="block">User Blocks</option>
+                <option value="approve">Approvals</option>
+                <option value="reject">Rejections</option>
+              </select>
+            </div>
+
+            <div class="table-card">
+              <div class="overflow-x-auto">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Timestamp</th>
+                      <th>Administrator</th>
+                      <th>Action Type</th>
+                      <th>Target Entity</th>
+                      <th>Reason & Justification</th>
+                    </tr>
+                  </thead>
+                  <tbody id="auditLogsTableBody">
+                    <tr><td colspan="5" class="text-center py-8 text-zinc-500">Loading immutable audit logs...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 12: SETTINGS & ROLES -->
+          <section id="tab-settings" class="admin-tab-pane hidden space-y-6">
+            <div class="section-header">
+              <div>
+                <h3 class="section-title"><span>⚙️</span> Administrator Roles & System Configuration</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">System status, environment diagnostics, and administrator clearance registry.</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Card 1: Backend Connection -->
+              <div class="bg-[#141414] border border-[#262626] rounded-xl p-6 space-y-4">
+                <h4 class="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Firebase Backend Connection
+                </h4>
+                <div class="space-y-2.5 text-xs">
+                  <div class="flex justify-between py-1.5 border-b border-[#222]">
+                    <span class="text-zinc-400">Firebase Project ID</span>
+                    <span class="font-mono font-bold text-white">sellerflow-efaab</span>
+                  </div>
+                  <div class="flex justify-between py-1.5 border-b border-[#222]">
+                    <span class="text-zinc-400">Database Engine</span>
+                    <span class="font-mono text-zinc-300">Cloud Firestore + Realtime DB</span>
+                  </div>
+                  <div class="flex justify-between py-1.5 border-b border-[#222]">
+                    <span class="text-zinc-400">Storage Bucket</span>
+                    <span class="font-mono text-zinc-300">sellerflow-efaab.firebasestorage.app</span>
+                  </div>
+                  <div class="flex justify-between py-1.5 border-b border-[#222]">
+                    <span class="text-zinc-400">AI Safety Evaluator</span>
+                    <span class="font-bold text-amber-400">Gemini 3.8 Flash (Multimodal)</span>
+                  </div>
+                  <div class="flex justify-between py-1.5">
+                    <span class="text-zinc-400">Active Admin Session</span>
+                    <span id="settingsCurrentEmail" class="font-mono text-emerald-400 font-bold">Verifying...</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 2: Admin Roles Architecture -->
+              <div class="bg-[#141414] border border-[#262626] rounded-xl p-6 space-y-4">
+                <h4 class="text-sm font-black text-white uppercase tracking-wider">
+                  Role Clearance Architecture
+                </h4>
+                <div class="space-y-3 text-xs text-zinc-300">
+                  <div class="p-3 rounded-lg bg-[#1a1a1a] border border-[#333]">
+                    <div class="font-bold text-[#f5b942] mb-1">SUPER_ADMIN</div>
+                    <p class="text-zinc-400">Full platform clearance: user suspension, post & store takedown, KYC badge issuance, and security override.</p>
+                  </div>
+                  <div class="p-3 rounded-lg bg-[#1a1a1a] border border-[#333]">
+                    <div class="font-bold text-blue-400 mb-1">SECURITY_OFFICER</div>
+                    <p class="text-zinc-400">Authoritative content takedown, copyright dispute resolution, and anti-scam report triage.</p>
+                  </div>
+                  <div class="p-3 rounded-lg bg-[#1a1a1a] border border-[#333]">
+                    <div class="font-bold text-emerald-400 mb-1">KYC_COMPLIANCE_REVIEWER</div>
+                    <p class="text-zinc-400">Statutory Ghana National Identity card and biometric liveness review.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </main>
+      </div>
+    </div>
+
+    <!-- REUSABLE MODALS -->
+
+    <!-- Modal 1: Confirmation Action Dialog (for Suspend, Block, Takedown, Restore) -->
+    <div id="confirmActionModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 id="confirmModalTitle" class="modal-title">Confirm Administrative Action</h4>
+          <button type="button" class="modal-close-btn" onclick="closeConfirmModal()">✕</button>
+        </div>
+        <div class="modal-body space-y-4">
+          <p id="confirmModalPrompt" class="text-sm text-zinc-300">Are you sure you want to proceed with this administrative action?</p>
+          
+          <!-- Optional Duration selector for suspensions -->
+          <div id="durationSelectWrapper" class="hidden">
+            <label class="block text-xs font-bold text-zinc-400 uppercase mb-1">Suspension Period</label>
+            <select id="confirmDurationSelect" class="w-full select-filter">
+              <option value="1">24 Hours (Temporary Warning)</option>
+              <option value="7" selected>7 Days (Standard Policy Violation)</option>
+              <option value="30">30 Days (Repeated Safety Breach)</option>
+              <option value="0">Indefinite (Pending Complete Investigation)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-zinc-400 uppercase mb-1">
+              Administrative Reason & Compliance Justification <span class="text-rose-400">*</span>
+            </label>
+            <textarea id="confirmReasonInput" rows="3" required placeholder="State exact policy clause, violation reason, or justification for the audit log..."
+              class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0d0d] border border-[#333] text-white text-xs focus:border-[#f5b942] focus:outline-none"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+          <button type="button" id="confirmExecuteBtn" class="btn btn-primary">Execute Action</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 2: Ghana Card / KYC Document Inspector -->
+    <div id="kycInspectorModal" class="modal-overlay">
+      <div class="modal-content max-w-2xl">
+        <div class="modal-header">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">🇬🇭</span>
+            <div>
+              <h4 id="kycModalApplicantName" class="modal-title">Ghana Card Verification Inspection</h4>
+              <div id="kycModalPin" class="text-xs font-mono text-[#f5b942]">GHA-XXXXXXXXX-X</div>
+            </div>
+          </div>
+          <button type="button" class="modal-close-btn" onclick="closeKycModal()">✕</button>
+        </div>
+        <div class="modal-body space-y-4">
+          <!-- Document Images Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-2.5 text-center">
+              <div class="text-[11px] font-bold text-zinc-400 mb-2 uppercase">Card Front</div>
+              <div id="kycFrontContainer" class="aspect-[1.58/1] bg-[#1a1a1a] rounded-lg overflow-hidden flex items-center justify-center border border-[#333]">
+                <span class="text-xs text-zinc-500">No front image</span>
+              </div>
+            </div>
+
+            <div class="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-2.5 text-center">
+              <div class="text-[11px] font-bold text-zinc-400 mb-2 uppercase">Card Back</div>
+              <div id="kycBackContainer" class="aspect-[1.58/1] bg-[#1a1a1a] rounded-lg overflow-hidden flex items-center justify-center border border-[#333]">
+                <span class="text-xs text-zinc-500">No back image</span>
+              </div>
+            </div>
+
+            <div class="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-2.5 text-center">
+              <div class="text-[11px] font-bold text-zinc-400 mb-2 uppercase">Live Selfie</div>
+              <div id="kycSelfieContainer" class="aspect-square bg-[#1a1a1a] rounded-lg overflow-hidden flex items-center justify-center border border-[#333]">
+                <span class="text-xs text-zinc-500">No selfie</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Metadata & Liveness Details -->
+          <div class="p-3.5 bg-[#0f0f0f] border border-[#262626] rounded-xl space-y-2 text-xs">
+            <div class="flex justify-between">
+              <span class="text-zinc-400">Date of Birth</span>
+              <span id="kycModalDob" class="font-bold text-white">-</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-zinc-400">Biometric Liveness Challenge</span>
+              <span id="kycModalLiveness" class="font-bold text-emerald-400">COMPLETED (5 head poses)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-zinc-400">Duplicate PIN Check</span>
+              <span class="font-bold text-emerald-400">PASS (Unique SHA-256 Card Hash)</span>
+            </div>
+          </div>
+
+          <!-- Rejection Instructions (Hidden by default, shown when clicking Reject) -->
+          <div id="kycRejectOptions" class="hidden space-y-2 border-t border-[#262626] pt-3">
+            <label class="block text-xs font-bold text-rose-400 uppercase">Reason for Non-Approval</label>
+            <input type="text" id="kycRejectReasonInput" placeholder="e.g. Card photo too blurry, name does not match card..."
+              class="w-full px-3 py-2 rounded-lg bg-[#0d0d0d] border border-rose-900/50 text-white text-xs">
+            <label class="block text-[11px] font-bold text-zinc-400 uppercase">Actionable Correction Instructions for User</label>
+            <input type="text" id="kycCorrectionInstructionsInput" placeholder="e.g. Please re-upload a clear, uncropped photo of your official Ghana Card..."
+              class="w-full px-3 py-2 rounded-lg bg-[#0d0d0d] border border-[#333] text-white text-xs">
+          </div>
+        </div>
+        <div class="modal-footer justify-between">
+          <div class="flex gap-2">
+            <button type="button" id="kycRejectToggleBtn" class="btn btn-danger btn-sm">Reject / Request Info</button>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeKycModal()">Close</button>
+            <button type="button" id="kycApproveBtn" class="btn btn-success btn-sm">Approve & Issue Badge</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 3: Post & Media Lightbox Inspector -->
+    <div id="postInspectorModal" class="modal-overlay">
+      <div class="modal-content max-w-xl">
+        <div class="modal-header">
+          <h4 class="modal-title">Post Content Inspection</h4>
+          <button type="button" class="modal-close-btn" onclick="closePostModal()">✕</button>
+        </div>
+        <div class="modal-body space-y-4">
+          <div id="postModalMediaContainer" class="max-h-96 rounded-xl bg-black overflow-hidden flex items-center justify-center border border-[#262626]">
+          </div>
+          <div class="p-3 bg-[#0d0d0d] rounded-xl border border-[#222] text-xs space-y-2">
+            <div>
+              <span class="text-zinc-400 font-bold uppercase text-[10px]">Caption / Content:</span>
+              <p id="postModalText" class="text-zinc-200 mt-0.5 whitespace-pre-wrap"></p>
+            </div>
+            <div class="flex justify-between border-t border-[#222] pt-2">
+              <span class="text-zinc-400">Creator UID:</span>
+              <span id="postModalSellerId" class="font-mono text-zinc-300"></span>
+            </div>
+            <div id="postModalAiWrap" class="border-t border-[#222] pt-2 hidden">
+              <span class="text-rose-400 font-bold">AI Safety Finding:</span>
+              <p id="postModalAiFinding" class="text-zinc-300 mt-0.5"></p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closePostModal()">Close</button>
+          <button type="button" id="postModalActionBtn" class="btn btn-danger btn-sm">Take Down Post</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+  </div>
+
+  <!-- Admin Application Core Logic -->
+  <script src="/admin/app.js"></script>
+</body>
+</html>
