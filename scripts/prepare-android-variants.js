@@ -163,52 +163,90 @@ const adminStringsXml = `<?xml version='1.0' encoding='utf-8'?>
 fs.writeFileSync(path.join(adminSrcDir, 'res/values/strings.xml'), adminStringsXml, 'utf8');
 
 // 4. Generate google-services.json for dual variants
-const googleServicesConfig = {
-  project_info: {
-    project_number: '987175352360',
-    project_id: 'sellerflow-efaab',
-    storage_bucket: 'sellerflow-efaab.firebasestorage.app'
-  },
-  client: [
-    {
-      client_info: {
-        mobilesdk_app_id: '1:987175352360:android:9f58f9d0e4985553c61d1d',
-        android_client_info: {
-          package_name: 'com.sellerflow.app'
-        }
-      },
-      oauth_client: [],
-      api_key: [
-        {
-          current_key: 'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk'
-        }
-      ],
-      services: {
-        appinvite_service: {
-          other_platform_oauth_client: []
-        }
+let baseGsConfig = null;
+
+if (process.env.GOOGLE_SERVICES_JSON && process.env.GOOGLE_SERVICES_JSON.trim().startsWith('{')) {
+  try {
+    baseGsConfig = JSON.parse(process.env.GOOGLE_SERVICES_JSON.trim());
+  } catch (e) {
+    console.warn('Note: Could not parse GOOGLE_SERVICES_JSON environment variable, using default config.');
+  }
+} else {
+  const existingGsPath = path.join(androidAppDir, 'google-services.json');
+  if (fs.existsSync(existingGsPath)) {
+    try {
+      baseGsConfig = JSON.parse(fs.readFileSync(existingGsPath, 'utf8'));
+    } catch (e) {}
+  }
+}
+
+const defaultProjectNumber = '987175352360';
+const defaultProjectId = 'sellerflow-efaab';
+const defaultStorageBucket = 'sellerflow-efaab.firebasestorage.app';
+const defaultApiKey = 'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk';
+
+const projectInfo = {
+  project_number: baseGsConfig?.project_info?.project_number || defaultProjectNumber,
+  project_id: baseGsConfig?.project_info?.project_id || defaultProjectId,
+  storage_bucket: baseGsConfig?.project_info?.storage_bucket || defaultStorageBucket
+};
+
+let clients = Array.isArray(baseGsConfig?.client) ? [...baseGsConfig.client] : [];
+
+// Find or create consumer client
+let consumerClient = clients.find(c => c?.client_info?.android_client_info?.package_name === 'com.sellerflow.app');
+if (!consumerClient) {
+  consumerClient = {
+    client_info: {
+      mobilesdk_app_id: `1:${projectInfo.project_number}:android:9f58f9d0e4985553c61d1d`,
+      android_client_info: {
+        package_name: 'com.sellerflow.app'
       }
     },
-    {
-      client_info: {
-        mobilesdk_app_id: '1:987175352360:android:9f58f9d0e4985553c61d1e',
-        android_client_info: {
-          package_name: 'com.sellerflow.admin'
-        }
-      },
-      oauth_client: [],
-      api_key: [
-        {
-          current_key: 'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk'
-        }
-      ],
-      services: {
-        appinvite_service: {
-          other_platform_oauth_client: []
-        }
+    oauth_client: [],
+    api_key: [
+      {
+        current_key: defaultApiKey
+      }
+    ],
+    services: {
+      appinvite_service: {
+        other_platform_oauth_client: []
       }
     }
-  ],
+  };
+  clients.push(consumerClient);
+}
+
+// Find or create admin client
+let adminClient = clients.find(c => c?.client_info?.android_client_info?.package_name === 'com.sellerflow.admin');
+if (!adminClient) {
+  const consumerKey = consumerClient?.api_key?.[0]?.current_key || defaultApiKey;
+  adminClient = {
+    client_info: {
+      mobilesdk_app_id: `1:${projectInfo.project_number}:android:9f58f9d0e4985553c61d1e`,
+      android_client_info: {
+        package_name: 'com.sellerflow.admin'
+      }
+    },
+    oauth_client: consumerClient?.oauth_client ? [...consumerClient.oauth_client] : [],
+    api_key: [
+      {
+        current_key: consumerKey
+      }
+    ],
+    services: {
+      appinvite_service: {
+        other_platform_oauth_client: []
+      }
+    }
+  };
+  clients.push(adminClient);
+}
+
+const googleServicesConfig = {
+  project_info: projectInfo,
+  client: clients,
   configuration_version: '1'
 };
 
