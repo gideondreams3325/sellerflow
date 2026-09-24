@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">2026 SELLER FLOW.INC Admin</string>
+    <string name="title_activity_main">2026 SELLER FLOW.INC Admin</string>
+    <string name="package_name">com.sellerflow.admin</string>
+    <string name="custom_url_scheme">com.sellerflow.admin</string>
+</resources>

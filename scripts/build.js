@@ -128,22 +128,26 @@ if (fs.existsSync(uploadsDir)) {
   } catch (_) {}
 }
 
-// Bundle SellerFlow Admin standalone application into dist/admin
+// Bundle SellerFlow Admin standalone application into dist/admin and admin/dist
 const adminDir = path.resolve('admin');
 const distAdminDir = path.join(distDir, 'admin');
+const adminDistDir = path.join(adminDir, 'dist');
 if (fs.existsSync(adminDir)) {
   try {
     if (!fs.existsSync(distAdminDir)) fs.mkdirSync(distAdminDir, { recursive: true });
+    if (!fs.existsSync(adminDistDir)) fs.mkdirSync(adminDistDir, { recursive: true });
     for (const f of ['index.html', 'admin.css', 'app.js', 'package.json', '_redirects']) {
       const srcF = path.join(adminDir, f);
       if (fs.existsSync(srcF)) {
         fs.copyFileSync(srcF, path.join(distAdminDir, f));
+        fs.copyFileSync(srcF, path.join(adminDistDir, f));
         copiedCount++;
       }
     }
     const adminAssets = path.join(adminDir, 'assets');
     if (fs.existsSync(adminAssets)) {
       fs.cpSync(adminAssets, path.join(distAdminDir, 'assets'), { recursive: true });
+      fs.cpSync(adminAssets, path.join(adminDistDir, 'assets'), { recursive: true });
       copiedCount++;
     }
   } catch (adminErr) {

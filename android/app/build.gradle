@@ -35,6 +35,30 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    flavorDimensions "variant"
+    productFlavors {
+        consumer {
+            dimension "variant"
+            applicationId "com.sellerflow.app"
+        }
+        admin {
+            dimension "variant"
+            applicationId "com.sellerflow.admin"
+        }
+    }
+    sourceSets {
+        main {
+            assets.srcDirs = []
+        }
+        consumer {
+            assets.srcDirs = ['src/consumer/assets']
+            res.srcDirs = ['src/consumer/res']
+        }
+        admin {
+            assets.srcDirs = ['src/admin/assets']
+            res.srcDirs = ['src/admin/res']
+        }
+    }
 }
 
 repositories {
