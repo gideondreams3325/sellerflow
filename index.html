@@ -1411,12 +1411,16 @@ async function handleOAuthCallbackPage() {
       } catch(_) {}
     }
 
-    // 2. Only initiate signInWithRedirect if there is NO active redirect result, NO current user, and start=google was requested
-    if (isStart && !redirectRes?.user && !authInst.currentUser) {
+    // 2. If explicitly starting Google Sign-In and NOT returning from a completed redirect
+    if (isStart && !redirectRes?.user) {
       if (document.getElementById('oauthStatusTitle')) document.getElementById('oauthStatusTitle').textContent = 'Continue to SellerFlow';
       updateStatus('Connecting to Google Account Chooser…');
       
-      // Sanitize URL before redirecting to avoid looping when redirected back
+      try {
+        await authInst.signOut().catch(() => {});
+      } catch (_) {}
+
+      // Sanitize URL before redirecting to avoid looping when returning from Google
       try {
         const cleanSearch = new URLSearchParams(window.location.search || '');
         cleanSearch.delete('start');
