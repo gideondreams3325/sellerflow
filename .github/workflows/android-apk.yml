@@ -36,7 +36,7 @@ jobs:
 
       - name: 6. Verify Google Services Configuration
         run: |
-          test -s android/app/google-services.json
+          test -s android/app/google-services.json || { echo "❌ android/app/google-services.json is missing or empty!"; exit 1; }
           echo "✅ Unified google-services.json verified."
 
       - name: 7. Set up Java JDK 21

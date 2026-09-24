@@ -45,10 +45,8 @@ jobs:
 
       - name: 6. Verify Google Services JSON
         run: |
-          test -s android/app/google-services.json
-          test -s android/app/src/consumer/google-services.json
-          test -s android/app/src/admin/google-services.json
-          echo "✅ google-services.json verified."
+          test -s android/app/google-services.json || { echo "❌ android/app/google-services.json is missing or empty!"; exit 1; }
+          echo "✅ Unified google-services.json verified."
 
       - name: 7. Set up Java JDK 21
         uses: actions/setup-java@v4
@@ -69,27 +67,18 @@ jobs:
         run: |
           ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: 11. Package and Verify Debug APKs
+      - name: 11. Package and Verify Debug APK
         run: |
           node scripts/package-apks.js
-          test -s "SellerFlow-Debug.apk" || { echo "❌ SellerFlow-Debug.apk missing!"; exit 1; }
-          test -s "SellerFlow-Admin-Debug.apk" || { echo "❌ SellerFlow-Admin-Debug.apk missing!"; exit 1; }
-          echo "✅ Both APKs verified:"
-          ls -lh SellerFlow-Debug.apk SellerFlow-Admin-Debug.apk
+          test -s "SellerFlow-debug.apk" || { echo "❌ SellerFlow-debug.apk missing!"; exit 1; }
+          echo "✅ Unified APK verified:"
+          ls -lh SellerFlow-debug.apk
 
-      - name: 12. Upload Consumer Debug APK Artifact
+      - name: 12. Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SellerFlow-Debug
-          path: SellerFlow-Debug.apk
-          if-no-files-found: error
-          retention-days: 30
-
-      - name: 13. Upload Admin Debug APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: SellerFlow-Admin-Debug
-          path: SellerFlow-Admin-Debug.apk
+          name: SellerFlow-debug
+          path: SellerFlow-debug.apk
           if-no-files-found: error
           retention-days: 30
 
