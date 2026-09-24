@@ -1,5 +1,6 @@
 package com.sellerflow.app;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.webkit.CookieManager;
 import android.webkit.WebSettings;
@@ -28,6 +29,17 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        try {
+            if (getBridge() != null) {
+                getBridge().onNewIntent(intent);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    @Override
     public void onPause() {
         super.onPause();
         try {
@@ -43,3 +55,4 @@ public class MainActivity extends BridgeActivity {
         } catch (Exception ignored) {}
     }
 }
+

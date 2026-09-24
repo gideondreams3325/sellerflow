@@ -60,7 +60,9 @@
     // Check if tokens already present in URL
     const hash = window.location.hash || '';
     if (hash && (hash.includes('id_token=') || hash.includes('access_token=') || hash.includes('custom_token=') || hash.includes('firebase_token=') || hash.includes('refresh_token=') || hash.includes('oauth_id_token=') || hash.includes('uid='))) {
-      const redirectTarget = 'com.sellerflow.app://oauth-callback' + hash;
+      const isTargetAdmin = window.location.search.includes('target=admin') || window.location.search.includes('com.sellerflow.admin') || hash.includes('target=admin');
+      const targetScheme = isTargetAdmin ? 'com.sellerflow.admin' : 'com.sellerflow.app';
+      const redirectTarget = targetScheme + '://oauth-callback' + hash;
       console.log('Immediate OAuth callback redirect:', redirectTarget);
       window.location.href = redirectTarget;
     }
@@ -1385,13 +1387,25 @@ async function handleOAuthCallbackPage() {
     // 1. If explicitly starting the flow (?start=google), start Firebase Google OAuth redirect
     const searchParams = new URLSearchParams(window.location.search || '');
     const isStart = searchParams.get('start') === 'google';
+    const targetParam = searchParams.get('target') || '';
+    const pkgParam = searchParams.get('package') || '';
+
+    if (targetParam) {
+      try {
+        sessionStorage.setItem('sf_oauth_target', targetParam);
+        localStorage.setItem('sf_oauth_target', targetParam);
+      } catch(_) {}
+    }
+    if (pkgParam) {
+      try {
+        sessionStorage.setItem('sf_oauth_package', pkgParam);
+        localStorage.setItem('sf_oauth_package', pkgParam);
+      } catch(_) {}
+    }
 
     if (isStart) {
       if (document.getElementById('oauthStatusTitle')) document.getElementById('oauthStatusTitle').textContent = 'Continue to SellerFlow';
       updateStatus('Connecting to Google Account Chooser…');
-      try {
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } catch (_) {}
       
       const provider = new firebase.auth.GoogleAuthProvider();
       if (typeof provider.setCustomParameters === 'function') {
@@ -1430,7 +1444,6 @@ async function handleOAuthCallbackPage() {
       if (redirectRes.user) {
         user = redirectRes.user;
       }
-      // Method A: credentialFromResult
       try {
         if (firebase.auth.GoogleAuthProvider && typeof firebase.auth.GoogleAuthProvider.credentialFromResult === 'function') {
           const cred = firebase.auth.GoogleAuthProvider.credentialFromResult(redirectRes);
@@ -1442,12 +1455,10 @@ async function handleOAuthCallbackPage() {
       } catch (cErr) {
         console.warn('credentialFromResult warning:', cErr);
       }
-      // Method B: direct credential
       if (redirectRes.credential) {
         if (!oauthIdToken && redirectRes.credential.idToken) oauthIdToken = redirectRes.credential.idToken;
         if (!oauthAccessToken && redirectRes.credential.accessToken) oauthAccessToken = redirectRes.credential.accessToken;
       }
-      // Method C: _tokenResponse on redirect result or user delegate
       const tr = redirectRes._tokenResponse || (redirectRes.user && redirectRes.user._delegate && redirectRes.user._delegate._tokenResponse);
       if (tr) {
         if (!oauthIdToken && tr.oauthIdToken) oauthIdToken = tr.oauthIdToken;
@@ -1458,7 +1469,7 @@ async function handleOAuthCallbackPage() {
       }
     }
 
-    // Fallback: active currentUser
+    // Fallback: active currentUser or auth state listener
     if (!user) {
       user = authInst.currentUser;
     }
@@ -1467,13 +1478,14 @@ async function handleOAuthCallbackPage() {
         const unsub = authInst.onAuthStateChanged((u) => {
           if (u) { unsub(); resolve(u); }
         });
-        setTimeout(() => { unsub(); resolve(null); }, 2500);
+        setTimeout(() => { unsub(); resolve(authInst.currentUser || null); }, 2500);
       });
     }
 
     if (user) {
       try {
         if (!firebaseToken) firebaseToken = await user.getIdToken(true);
+        if (!idToken) idToken = firebaseToken;
       } catch (_) {}
       if (!refreshToken && user.refreshToken) refreshToken = user.refreshToken;
       if (!refreshToken && user._delegate && user._delegate.refreshToken) refreshToken = user._delegate.refreshToken;
@@ -1507,7 +1519,7 @@ async function handleOAuthCallbackPage() {
     }
 
     // Fallback: localStorage cached credentials
-    if (!oauthIdToken && !idToken && !accessToken) {
+    if (!oauthIdToken && !idToken && !accessToken && !firebaseToken) {
       try {
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
@@ -1528,11 +1540,39 @@ async function handleOAuthCallbackPage() {
       } catch (_) {}
     }
 
+    // Determine target package ID
+    let targetPackage = queryParams.get('package') || '';
+    if (!targetPackage) {
+      try {
+        targetPackage = sessionStorage.getItem('sf_oauth_package') || localStorage.getItem('sf_oauth_package') || '';
+      } catch(_) {}
+    }
+    if (!targetPackage) {
+      const isTargetAdmin = queryParams.get('target') === 'admin' || (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('sf_oauth_target') === 'admin') || (typeof localStorage !== 'undefined' && localStorage.getItem('sf_oauth_target') === 'admin');
+      targetPackage = isTargetAdmin ? 'com.sellerflow.admin' : 'com.sellerflow.app';
+    }
+
     // 4. Construct deep link payload for Android ONLY if valid credentials exist
     if (!oauthIdToken && !idToken && !accessToken && !firebaseToken && !refreshToken && (!user || !user.uid)) {
       console.warn('No valid OAuth credentials found on callback resolution.');
-      updateStatus('Sign-in was not completed. Please return to SellerFlow and try again.');
-      if (openBtn) openBtn.style.display = 'none';
+      updateStatus('Sign-in waiting for completion. Tap below to finish sign-in:');
+      if (openBtn) {
+        openBtn.textContent = 'Sign In with Google';
+        openBtn.href = '#';
+        openBtn.onclick = async (e) => {
+          e.preventDefault();
+          try {
+            const prov = new firebase.auth.GoogleAuthProvider();
+            prov.setCustomParameters({ prompt: 'select_account' });
+            const pRes = await authInst.signInWithPopup(prov);
+            if (pRes && pRes.user) {
+              window.location.reload();
+            }
+          } catch(popErr) {
+            alert('Sign-in error: ' + popErr.message);
+          }
+        };
+      }
       return;
     }
 
@@ -1564,15 +1604,15 @@ async function handleOAuthCallbackPage() {
       return;
     }
 
-    const customSchemeUri = 'com.sellerflow.app://oauth-callback#' + payload;
-    const intentUri = 'intent://oauth-callback#' + payload + '#Intent;scheme=com.sellerflow.app;package=com.sellerflow.app;end';
+    const customSchemeUri = `${targetPackage}://oauth-callback#${payload}`;
+    const intentUri = `intent://oauth-callback#${payload}#Intent;scheme=${targetPackage};package=${targetPackage};end`;
 
     console.log('Redirecting to Android app:', customSchemeUri);
     if (document.getElementById('oauthStatusTitle')) document.getElementById('oauthStatusTitle').textContent = 'Sign-In Verified';
     if (document.getElementById('oauthSyncStep')) {
       document.getElementById('oauthSyncStep').innerHTML = `
         <span style="font-size:14px;color:#34d399;">✓</span>
-        <span style="font-weight:600;color:#34d399;">Authentication Complete · Returning to Feed</span>
+        <span style="font-weight:600;color:#34d399;">Authentication Complete · Returning to App</span>
       `;
     }
     updateStatus('Sign-in verified! Returning you to SellerFlow…');
@@ -1968,9 +2008,9 @@ async function initCapacitorHandlers() {
             ready();
             console.warn('Could not authenticate with deep link payload:', urlStr);
             if ($('authError')) {
-              $('authError').textContent = lastAuthError ? ('Sign-in issue: ' + lastAuthError) : 'Google sign-in could not be verified. Please try again.';
+              $('authError').textContent = lastAuthError ? ('Sign-in issue: ' + lastAuthError) : 'Google sign-in was not completed. Please try again or sign in with email/password.';
             }
-            toast(lastAuthError ? ('Sign-in issue: ' + lastAuthError) : 'Could not verify sign-in. Please try again.', 'error');
+            toast(lastAuthError ? ('Sign-in issue: ' + lastAuthError) : 'Sign-in was not completed. Please try again.', 'info');
           }
         } catch (err) {
           console.error('Failed to complete deep-link login:', err);
