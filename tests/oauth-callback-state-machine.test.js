@@ -48,10 +48,10 @@ assert(indexHtml.includes("text: 'Sign In with Google'"), 'Fallback state must d
 assert(indexHtml.includes("prov.setCustomParameters({ prompt: 'select_account' })"), 'Interactive sign-in must prompt select_account');
 console.log('✓ Test 8: Responsive fallback allows user to complete sign-in without getting stuck');
 
-// 9. Verify Admin routing separation
+// 9. Verify unified package routing and web routing
 assert(indexHtml.includes("const isTargetAdmin = queryParams.get('target') === 'admin'"), 'Target admin query checked');
-assert(indexHtml.includes("targetPackage = isTargetAdmin ? 'com.sellerflow.admin' : 'com.sellerflow.app'"), 'Package ID routes based on target');
+assert(indexHtml.includes("targetPackage = 'com.sellerflow.app'"), 'Package ID is unified under com.sellerflow.app');
 assert(indexHtml.includes("webFallbackEl.href = isTargetAdmin ? '/admin' : '/'"), 'Web fallback routes correctly');
-console.log('✓ Test 9: Consumer vs Admin package and web routing separation verified');
+console.log('✓ Test 9: Unified package and web routing separation verified');
 
 console.log('--- All OAuth Callback State Machine Tests Passed Successfully ---');

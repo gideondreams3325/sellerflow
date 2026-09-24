@@ -1,11 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 
-console.log('Preparing Android Consumer and Admin variants...');
+console.log('Preparing Android application assets for SellerFlow (com.sellerflow.app)...');
 
 const rootDir = process.cwd();
 const distDir = path.join(rootDir, 'dist');
-const adminDistDir = path.join(rootDir, 'admin/dist');
 
 // 1. Ensure builds exist
 if (!fs.existsSync(distDir)) {
@@ -13,45 +12,33 @@ if (!fs.existsSync(distDir)) {
 }
 
 const androidAppDir = path.join(rootDir, 'android/app');
-const consumerSrcDir = path.join(androidAppDir, 'src/consumer');
-const adminSrcDir = path.join(androidAppDir, 'src/admin');
+const mainAssetsDir = path.join(androidAppDir, 'src/main/assets');
+const mainResDir = path.join(androidAppDir, 'src/main/res/values');
+const mainPublicDir = path.join(mainAssetsDir, 'public');
 
 // Ensure directories
-fs.mkdirSync(path.join(consumerSrcDir, 'assets/public'), { recursive: true });
-fs.mkdirSync(path.join(consumerSrcDir, 'res/values'), { recursive: true });
-fs.mkdirSync(path.join(adminSrcDir, 'assets/public/admin'), { recursive: true });
-fs.mkdirSync(path.join(adminSrcDir, 'res/values'), { recursive: true });
+fs.mkdirSync(mainPublicDir, { recursive: true });
+fs.mkdirSync(mainResDir, { recursive: true });
 
-// 2. Prepare Consumer Assets
-console.log('Packaging Consumer assets...');
-// Copy dist files except admin
-const distFiles = fs.readdirSync(distDir);
-for (const file of distFiles) {
-  if (file === 'admin') continue; // Isolate consumer from admin
-  const src = path.join(distDir, file);
-  const dest = path.join(consumerSrcDir, 'assets/public', file);
-  if (fs.statSync(src).isDirectory()) {
-    fs.cpSync(src, dest, { recursive: true });
-  } else {
-    fs.copyFileSync(src, dest);
-  }
+// Clean obsolete variant dirs if they exist
+const consumerSrcDir = path.join(androidAppDir, 'src/consumer');
+const adminSrcDir = path.join(androidAppDir, 'src/admin');
+try {
+  if (fs.existsSync(consumerSrcDir)) fs.rmSync(consumerSrcDir, { recursive: true, force: true });
+  if (fs.existsSync(adminSrcDir)) fs.rmSync(adminSrcDir, { recursive: true, force: true });
+} catch (_) {}
+
+// 2. Package all web assets into android/app/src/main/assets/public
+console.log('Packaging web assets into Android main assets...');
+fs.cpSync(distDir, mainPublicDir, { recursive: true });
+
+// 3. Ensure capacitor plugins and config
+const rootCapPlugins = path.join(rootDir, 'android/app/src/main/assets/capacitor.plugins.json');
+if (!fs.existsSync(rootCapPlugins)) {
+  fs.writeFileSync(rootCapPlugins, '[]', 'utf8');
 }
 
-// Copy capacitor runtime files
-const mainAssetsDir = path.join(androidAppDir, 'src/main/assets');
-if (fs.existsSync(path.join(mainAssetsDir, 'capacitor.plugins.json'))) {
-  fs.copyFileSync(
-    path.join(mainAssetsDir, 'capacitor.plugins.json'),
-    path.join(consumerSrcDir, 'assets/capacitor.plugins.json')
-  );
-  fs.copyFileSync(
-    path.join(mainAssetsDir, 'capacitor.plugins.json'),
-    path.join(adminSrcDir, 'assets/capacitor.plugins.json')
-  );
-}
-
-// Consumer capacitor.config.json
-const consumerCapConfig = {
+const capConfig = {
   appId: 'com.sellerflow.app',
   appName: 'SellerFlow',
   webDir: 'dist',
@@ -76,102 +63,30 @@ const consumerCapConfig = {
     }
   }
 };
+
 fs.writeFileSync(
-  path.join(consumerSrcDir, 'assets/capacitor.config.json'),
-  JSON.stringify(consumerCapConfig, null, 2),
+  path.join(mainAssetsDir, 'capacitor.config.json'),
+  JSON.stringify(capConfig, null, 2),
+  'utf8'
+);
+fs.writeFileSync(
+  path.join(rootDir, 'capacitor.config.json'),
+  JSON.stringify(capConfig, null, 2),
   'utf8'
 );
 
-// Consumer strings.xml
-const consumerStringsXml = `<?xml version='1.0' encoding='utf-8'?>
+// 4. Strings.xml
+const stringsXml = `<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">SellerFlow</string>
     <string name="title_activity_main">SellerFlow</string>
     <string name="package_name">com.sellerflow.app</string>
     <string name="custom_url_scheme">com.sellerflow.app</string>
-    <string name="default_web_client_id" translatable="false">987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com</string>
 </resources>
 `;
-fs.writeFileSync(path.join(consumerSrcDir, 'res/values/strings.xml'), consumerStringsXml, 'utf8');
+fs.writeFileSync(path.join(mainResDir, 'strings.xml'), stringsXml, 'utf8');
 
-// 3. Prepare Admin Assets
-console.log('Packaging Admin assets...');
-const adminDir = path.join(rootDir, 'admin');
-const adminPublicDir = path.join(adminSrcDir, 'assets/public');
-
-// Copy admin standalone files into root of public/ (so it loads as primary entry point)
-const adminFiles = ['index.html', 'admin.css', 'app.js', 'package.json', '_redirects'];
-for (const f of adminFiles) {
-  const src = path.join(adminDir, f);
-  if (fs.existsSync(src)) {
-    // Copy to root of public/
-    fs.copyFileSync(src, path.join(adminPublicDir, f));
-    // Also copy to public/admin/ so /admin/ deep-links and assets resolve
-    fs.copyFileSync(src, path.join(adminPublicDir, 'admin', f));
-  }
-}
-
-// Copy capacitor.js runtime to Admin
-const capacitorJsSrc = path.join(rootDir, 'capacitor.js');
-if (fs.existsSync(capacitorJsSrc)) {
-  fs.copyFileSync(capacitorJsSrc, path.join(adminPublicDir, 'capacitor.js'));
-  fs.copyFileSync(capacitorJsSrc, path.join(adminPublicDir, 'admin', 'capacitor.js'));
-}
-
-// Copy branding icons to Admin
-const brandingAssets = ['icon.svg', 'nav-emblem.svg', 'logo-full.svg', 'default-avatar.svg', 'apple-touch-icon.png'];
-for (const b of brandingAssets) {
-  const src = path.join(rootDir, b);
-  if (fs.existsSync(src)) {
-    fs.copyFileSync(src, path.join(adminPublicDir, b));
-  }
-}
-
-// Admin capacitor.config.json
-const adminCapConfig = {
-  appId: 'com.sellerflow.admin',
-  appName: 'SellerFlow Admin',
-  webDir: 'dist',
-  bundledWebRuntime: false,
-  server: {
-    androidScheme: 'https',
-    cleartext: true
-  },
-  android: {
-    allowMixedContent: true,
-    captureInput: true,
-    webContentsDebuggingEnabled: false
-  },
-  plugins: {
-    SplashScreen: {
-      launchShowDuration: 500,
-      launchAutoHide: true,
-      backgroundColor: '#0d0d0d',
-      androidSplashResourceName: 'splash',
-      splashFullScreen: true,
-      splashImmersive: true
-    }
-  }
-};
-fs.writeFileSync(
-  path.join(adminSrcDir, 'assets/capacitor.config.json'),
-  JSON.stringify(adminCapConfig, null, 2),
-  'utf8'
-);
-
-// Admin strings.xml
-const adminStringsXml = `<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">SellerFlow Admin</string>
-    <string name="title_activity_main">SellerFlow Admin</string>
-    <string name="package_name">com.sellerflow.admin</string>
-    <string name="custom_url_scheme">com.sellerflow.admin</string>
-    <string name="default_web_client_id" translatable="false">987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com</string>
-</resources>
-`;
-fs.writeFileSync(path.join(adminSrcDir, 'res/values/strings.xml'), adminStringsXml, 'utf8');
-
-// 4. Generate google-services.json for dual variants
+// 5. Generate google-services.json for com.sellerflow.app
 let baseGsConfig = null;
 
 if (process.env.GOOGLE_SERVICES_JSON && process.env.GOOGLE_SERVICES_JSON.trim().startsWith('{')) {
@@ -201,11 +116,8 @@ const projectInfo = {
 };
 
 let clients = Array.isArray(baseGsConfig?.client) ? [...baseGsConfig.client] : [];
-
-const WEB_CLIENT_ID = '987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com';
 const DEBUG_CERT_SHA1 = 'e6524ae38d6285a14dec73c0d49ba7285f6d642f';
 
-// Find or create consumer client
 let consumerClient = clients.find(c => c?.client_info?.android_client_info?.package_name === 'com.sellerflow.app');
 if (!consumerClient) {
   consumerClient = {
@@ -215,20 +127,7 @@ if (!consumerClient) {
         package_name: 'com.sellerflow.app'
       }
     },
-    oauth_client: [
-      {
-        client_id: WEB_CLIENT_ID,
-        client_type: 3
-      },
-      {
-        client_id: `${projectInfo.project_number}-consumer.apps.googleusercontent.com`,
-        client_type: 1,
-        android_info: {
-          package_name: 'com.sellerflow.app',
-          certificate_hash: DEBUG_CERT_SHA1
-        }
-      }
-    ],
+    oauth_client: [],
     api_key: [
       {
         current_key: defaultApiKey
@@ -240,80 +139,9 @@ if (!consumerClient) {
       }
     }
   };
-  clients.push(consumerClient);
+  clients = [consumerClient];
 } else {
-  if (!Array.isArray(consumerClient.oauth_client) || consumerClient.oauth_client.length === 0) {
-    consumerClient.oauth_client = [
-      {
-        client_id: WEB_CLIENT_ID,
-        client_type: 3
-      },
-      {
-        client_id: `${projectInfo.project_number}-consumer.apps.googleusercontent.com`,
-        client_type: 1,
-        android_info: {
-          package_name: 'com.sellerflow.app',
-          certificate_hash: DEBUG_CERT_SHA1
-        }
-      }
-    ];
-  }
-}
-
-// Find or create admin client
-let adminClient = clients.find(c => c?.client_info?.android_client_info?.package_name === 'com.sellerflow.admin');
-if (!adminClient) {
-  const consumerKey = consumerClient?.api_key?.[0]?.current_key || defaultApiKey;
-  adminClient = {
-    client_info: {
-      mobilesdk_app_id: `1:${projectInfo.project_number}:android:9f58f9d0e4985553c61d1e`,
-      android_client_info: {
-        package_name: 'com.sellerflow.admin'
-      }
-    },
-    oauth_client: [
-      {
-        client_id: WEB_CLIENT_ID,
-        client_type: 3
-      },
-      {
-        client_id: `${projectInfo.project_number}-admin.apps.googleusercontent.com`,
-        client_type: 1,
-        android_info: {
-          package_name: 'com.sellerflow.admin',
-          certificate_hash: DEBUG_CERT_SHA1
-        }
-      }
-    ],
-    api_key: [
-      {
-        current_key: consumerKey
-      }
-    ],
-    services: {
-      appinvite_service: {
-        other_platform_oauth_client: []
-      }
-    }
-  };
-  clients.push(adminClient);
-} else {
-  if (!Array.isArray(adminClient.oauth_client) || adminClient.oauth_client.length === 0) {
-    adminClient.oauth_client = [
-      {
-        client_id: WEB_CLIENT_ID,
-        client_type: 3
-      },
-      {
-        client_id: `${projectInfo.project_number}-admin.apps.googleusercontent.com`,
-        client_type: 1,
-        android_info: {
-          package_name: 'com.sellerflow.admin',
-          certificate_hash: DEBUG_CERT_SHA1
-        }
-      }
-    ];
-  }
+  clients = [consumerClient];
 }
 
 const googleServicesConfig = {
@@ -324,9 +152,8 @@ const googleServicesConfig = {
 
 const gsJsonStr = JSON.stringify(googleServicesConfig, null, 2);
 fs.writeFileSync(path.join(androidAppDir, 'google-services.json'), gsJsonStr, 'utf8');
-fs.writeFileSync(path.join(consumerSrcDir, 'google-services.json'), gsJsonStr, 'utf8');
-fs.writeFileSync(path.join(adminSrcDir, 'google-services.json'), gsJsonStr, 'utf8');
 
-console.log('✅ Android variants successfully prepared:');
-console.log('   - Consumer (com.sellerflow.app): "SellerFlow"');
-console.log('   - Admin (com.sellerflow.admin): "SellerFlow Admin"');
+console.log('✅ Android unified app successfully prepared:');
+console.log('   - Application ID: com.sellerflow.app');
+console.log('   - App Name: "SellerFlow"');
+console.log('   - Entry points: / (Consumer Marketplace & Experience) and /admin (Protected Admin Control Center)');

@@ -35,28 +35,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    flavorDimensions "variant"
-    productFlavors {
-        consumer {
-            dimension "variant"
-            applicationId "com.sellerflow.app"
-        }
-        admin {
-            dimension "variant"
-            applicationId "com.sellerflow.admin"
-        }
-    }
     sourceSets {
         main {
-            assets.srcDirs = []
-        }
-        consumer {
-            assets.srcDirs = ['src/consumer/assets']
-            res.srcDirs = ['src/consumer/res']
-        }
-        admin {
-            assets.srcDirs = ['src/admin/assets']
-            res.srcDirs = ['src/admin/res']
+            assets.srcDirs = ['src/main/assets']
+            res.srcDirs = ['src/main/res']
         }
     }
 }
@@ -73,7 +55,6 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
-    implementation 'com.google.android.gms:play-services-auth:21.0.0'
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
