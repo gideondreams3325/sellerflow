@@ -65,17 +65,17 @@ jobs:
           node scripts/package-apks.js
           
           # Strict verification
-          test -s "SellerFlow-Consumer-Debug.apk" || { echo "❌ SellerFlow-Consumer-Debug.apk missing!"; exit 1; }
+          test -s "SellerFlow-Debug.apk" || { echo "❌ SellerFlow-Debug.apk missing!"; exit 1; }
           test -s "SellerFlow-Admin-Debug.apk" || { echo "❌ SellerFlow-Admin-Debug.apk missing!"; exit 1; }
           
           echo "✅ Both APKs verified successfully on disk:"
-          ls -lh SellerFlow-Consumer-Debug.apk SellerFlow-Admin-Debug.apk
+          ls -lh SellerFlow-Debug.apk SellerFlow-Admin-Debug.apk
 
       - name: 12. Upload Consumer Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SellerFlow-Consumer-Debug
-          path: SellerFlow-Consumer-Debug.apk
+          name: SellerFlow-Debug
+          path: SellerFlow-Debug.apk
           if-no-files-found: error
           retention-days: 30
 

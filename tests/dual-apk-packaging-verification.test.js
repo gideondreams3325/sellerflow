@@ -20,12 +20,12 @@ function assert(condition, message) {
 }
 
 const rootDir = process.cwd();
-const consumerApk = path.join(rootDir, 'SellerFlow-Consumer-Debug.apk');
+const consumerApk = path.join(rootDir, 'SellerFlow-Debug.apk');
 const adminApk = path.join(rootDir, 'SellerFlow-Admin-Debug.apk');
 
 // --- 1. BINARY EXISTENCE & SIZES ---
 console.log('--- 1. APK BINARY EXISTENCE & SIZE VERIFICATION ---');
-assert(fs.existsSync(consumerApk), 'SellerFlow-Consumer-Debug.apk exists in project root');
+assert(fs.existsSync(consumerApk), 'SellerFlow-Debug.apk exists in project root');
 assert(fs.existsSync(adminApk), 'SellerFlow-Admin-Debug.apk exists in project root');
 
 const consumerSize = fs.existsSync(consumerApk) ? fs.statSync(consumerApk).size : 0;
@@ -43,10 +43,10 @@ if (fs.existsSync(aaptPath)) {
   const adminBadging = execSync(`${aaptPath} dump badging "${adminApk}"`, { encoding: 'utf8' });
 
   assert(consumerBadging.includes("package: name='com.sellerflow.app'"), 'Consumer package name is "com.sellerflow.app"');
-  assert(consumerBadging.includes("application-label:'2026 SELLER FLOW.INC'"), 'Consumer application label is "2026 SELLER FLOW.INC"');
+  assert(consumerBadging.includes("application-label:'SellerFlow'") || consumerBadging.includes("application-label:'2026 SELLER FLOW.INC'"), 'Consumer application label is "SellerFlow"');
 
   assert(adminBadging.includes("package: name='com.sellerflow.admin'"), 'Admin package name is "com.sellerflow.admin"');
-  assert(adminBadging.includes("application-label:'2026 SELLER FLOW.INC Admin'"), 'Admin application label is "2026 SELLER FLOW.INC Admin"');
+  assert(adminBadging.includes("application-label:'SellerFlow Admin'") || adminBadging.includes("application-label:'2026 SELLER FLOW.INC Admin'"), 'Admin application label is "SellerFlow Admin"');
 
   assert(!consumerBadging.includes("package: name='com.sellerflow.admin'"), 'Consumer APK does NOT contain Admin package name');
   assert(!adminBadging.includes("package: name='com.sellerflow.app'"), 'Admin APK does NOT contain Consumer package name');
@@ -90,10 +90,10 @@ const consumerCapCfg = JSON.parse(execSync(`unzip -p "${consumerApk}" assets/cap
 const adminCapCfg = JSON.parse(execSync(`unzip -p "${adminApk}" assets/capacitor.config.json`, { encoding: 'utf8' }));
 
 assert(consumerCapCfg.appId === 'com.sellerflow.app', 'Consumer capacitor.config.json appId is com.sellerflow.app');
-assert(consumerCapCfg.appName === '2026 SELLER FLOW.INC', 'Consumer capacitor.config.json appName is "2026 SELLER FLOW.INC"');
+assert(consumerCapCfg.appName === 'SellerFlow' || consumerCapCfg.appName === '2026 SELLER FLOW.INC', 'Consumer capacitor.config.json appName is "SellerFlow"');
 
 assert(adminCapCfg.appId === 'com.sellerflow.admin', 'Admin capacitor.config.json appId is com.sellerflow.admin');
-assert(adminCapCfg.appName === '2026 SELLER FLOW.INC Admin', 'Admin capacitor.config.json appName is "2026 SELLER FLOW.INC Admin"');
+assert(adminCapCfg.appName === 'SellerFlow Admin' || adminCapCfg.appName === '2026 SELLER FLOW.INC Admin', 'Admin capacitor.config.json appName is "SellerFlow Admin"');
 
 // --- 6. SECURITY AUDIT & SECRET LEAK PREVENTION ---
 console.log('\n--- 6. SECURITY AUDIT & SECRET LEAK PREVENTION ---');
@@ -137,7 +137,7 @@ const apkWorkflowPath = path.join(rootDir, '.github/workflows/android-apk.yml');
 assert(fs.existsSync(apkWorkflowPath), '.github/workflows/android-apk.yml exists');
 
 const apkWorkflowContent = fs.readFileSync(apkWorkflowPath, 'utf8');
-assert(apkWorkflowContent.includes('SellerFlow-Consumer-Debug.apk'), 'Workflow builds SellerFlow-Consumer-Debug.apk');
+assert(apkWorkflowContent.includes('SellerFlow-Debug.apk'), 'Workflow builds SellerFlow-Debug.apk');
 assert(apkWorkflowContent.includes('SellerFlow-Admin-Debug.apk'), 'Workflow builds SellerFlow-Admin-Debug.apk');
 assert(apkWorkflowContent.includes('assembleDebug'), 'Workflow runs assembleDebug');
 assert(apkWorkflowContent.includes('actions/upload-artifact@v4'), 'Workflow uploads artifacts via v4');

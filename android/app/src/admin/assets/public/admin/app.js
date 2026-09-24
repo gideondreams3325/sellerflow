@@ -1857,17 +1857,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Google Login
   document.getElementById('adminGoogleLoginBtn')?.addEventListener('click', async () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
     const alertEl = document.getElementById('loginAlert');
+    if (alertEl) alertEl.classList.add('hidden');
+
+    if (isCapacitorNative()) {
+      try {
+        if (typeof initAdminCapacitorHandlers === 'function') {
+          await initAdminCapacitorHandlers();
+        }
+        const appBase = getAdminAppUrl();
+        const startUrl = `${appBase}/oauth-callback?start=google&target=admin&package=com.sellerflow.admin`;
+        
+        if (window.Capacitor?.Plugins?.Browser?.open) {
+          await window.Capacitor.Plugins.Browser.open({ url: startUrl });
+        } else {
+          window.location.href = startUrl;
+        }
+      } catch (capErr) {
+        console.error('Failed to launch native Google Sign-In in Admin:', capErr);
+        if (alertEl) {
+          alertEl.className = 'mb-4 p-3.5 rounded-xl text-xs font-medium border bg-rose-500/10 border-rose-500/30 text-rose-300 block';
+          alertEl.textContent = `Google Sign-In failed: ${capErr.message || capErr}`;
+        }
+      }
+      return;
+    }
+
+    const provider = new firebase.auth.GoogleAuthProvider();
+    if (typeof provider.setCustomParameters === 'function') {
+      provider.setCustomParameters({ prompt: 'select_account' });
+    }
     try {
       await auth.signInWithPopup(provider);
     } catch (err) {
       if (alertEl) {
         alertEl.className = 'mb-4 p-3.5 rounded-xl text-xs font-medium border bg-rose-500/10 border-rose-500/30 text-rose-300 block';
-        alertEl.textContent = `Google Sign-In failed: ${err.message}`;
+        if (err.code === 'auth/unauthorized-domain' || (err.message && err.message.includes('unauthorized-domain'))) {
+          const currentHost = window.location.hostname || 'aistudio.google.com';
+          alertEl.innerHTML = `<strong>Domain Not Authorized in Firebase:</strong> Domain <em>${escapeHtml(currentHost)}</em> must be added to Authorized Domains in <a href="https://console.firebase.google.com/" target="_blank" class="underline text-amber-300">Firebase Console</a> &rarr; <strong>Authentication</strong> &rarr; <strong>Settings</strong> &rarr; <strong>Authorized domains</strong>. You can also sign in with Administrator Email & Password above.`;
+        } else {
+          alertEl.textContent = `Google Sign-In failed: ${err.message}`;
+        }
       }
     }
   });
+
+  // Native Capacitor Handlers for Admin Android App
+  if (isCapacitorNative()) {
+    initAdminCapacitorHandlers();
+  }
 
   // Logout
   document.getElementById('adminLogoutBtn')?.addEventListener('click', async () => {
@@ -1875,3 +1913,126 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Signed out of admin session', 'info');
   });
 });
+
+function isCapacitorNative() {
+  if (typeof window.Capacitor !== 'undefined') {
+    if (typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) return true;
+    if (typeof window.Capacitor.getPlatform === 'function' && window.Capacitor.getPlatform() === 'android') return true;
+  }
+  const origin = window.location.origin || '';
+  if (origin.includes('capacitor://') || origin.includes('http://localhost') || origin.includes('https://localhost')) {
+    return true;
+  }
+  return false;
+}
+
+function getAdminAppUrl() {
+  const origin = window.location.origin || '';
+  if (origin && origin.startsWith('http') && !origin.includes('localhost') && !origin.includes('capacitor://') && !origin.includes('127.0.0.1') && !origin.includes('.run.app')) {
+    return origin;
+  }
+  return 'https://sellerflow-tan.vercel.app';
+}
+
+let adminCapacitorInitialized = false;
+async function initAdminCapacitorHandlers() {
+  if (adminCapacitorInitialized || typeof window.Capacitor === 'undefined') return;
+  adminCapacitorInitialized = true;
+
+  try {
+    const App = window.Capacitor.Plugins.App;
+    if (App) {
+      App.addListener('appUrlOpen', async (data) => {
+        console.log('SellerFlow Admin App opened with URL:', data?.url);
+        const urlStr = data?.url;
+        if (!urlStr) return;
+
+        try {
+          const Browser = window.Capacitor.Plugins.Browser;
+          if (Browser) {
+            await Browser.close().catch(() => {});
+          }
+
+          let raw = '';
+          if (urlStr.includes('#')) {
+            raw = urlStr.split('#')[1];
+          } else if (urlStr.includes('?')) {
+            raw = urlStr.split('?')[1];
+          } else {
+            raw = urlStr;
+          }
+
+          const params = new URLSearchParams(raw);
+          const customToken = params.get('custom_token') || '';
+          const firebaseToken = params.get('firebase_token') || params.get('id_token') || '';
+          const oauthIdToken = params.get('oauth_id_token') || '';
+          const accessToken = params.get('access_token') || params.get('oauth_access_token') || '';
+          const email = params.get('email') || '';
+
+          let signedIn = false;
+          let lastError = '';
+
+          // 1. Custom token minted by server
+          if (customToken) {
+            try {
+              const res = await auth.signInWithCustomToken(customToken);
+              if (res?.user) signedIn = true;
+            } catch (cErr) {
+              lastError = cErr.message;
+            }
+          }
+
+          // 2. Google OAuth ID Token Credential
+          if (!signedIn && oauthIdToken) {
+            try {
+              const cred = firebase.auth.GoogleAuthProvider.credential(oauthIdToken, accessToken || undefined);
+              const res = await auth.signInWithCredential(cred);
+              if (res?.user) signedIn = true;
+            } catch (cErr) {
+              lastError = cErr.message;
+            }
+          }
+
+          // 3. Exchange firebaseToken with custom-token backend
+          if (!signedIn && firebaseToken) {
+            try {
+              const appBase = getAdminAppUrl();
+              const exRes = await fetch(appBase + '/api/auth/custom-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken: firebaseToken })
+              });
+              if (exRes.ok) {
+                const exData = await exRes.json();
+                if (exData?.success && exData?.customToken) {
+                  const res = await auth.signInWithCustomToken(exData.customToken);
+                  if (res?.user) signedIn = true;
+                }
+              }
+            } catch (exErr) {
+              lastError = exErr.message;
+            }
+          }
+
+          if (!signedIn && auth.currentUser) {
+            signedIn = true;
+          }
+
+          if (signedIn) {
+            showToast('Admin clearance verified', 'success');
+          } else {
+            const loginAlert = document.getElementById('loginAlert');
+            if (loginAlert) {
+              loginAlert.className = 'mb-4 p-3.5 rounded-xl text-xs font-medium border bg-rose-500/10 border-rose-500/30 text-rose-300 block';
+              loginAlert.textContent = lastError ? `Sign-in verification failed: ${lastError}` : 'Google sign-in could not be verified. Please use email & password or try again.';
+            }
+          }
+        } catch (err) {
+          console.error('Error in Admin appUrlOpen handler:', err);
+        }
+      });
+    }
+  } catch (e) {
+    console.warn('Admin Capacitor listener registration skipped:', e);
+  }
+}

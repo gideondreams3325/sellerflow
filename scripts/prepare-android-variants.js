@@ -53,7 +53,7 @@ if (fs.existsSync(path.join(mainAssetsDir, 'capacitor.plugins.json'))) {
 // Consumer capacitor.config.json
 const consumerCapConfig = {
   appId: 'com.sellerflow.app',
-  appName: '2026 SELLER FLOW.INC',
+  appName: 'SellerFlow',
   webDir: 'dist',
   bundledWebRuntime: false,
   server: {
@@ -85,8 +85,8 @@ fs.writeFileSync(
 // Consumer strings.xml
 const consumerStringsXml = `<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">2026 SELLER FLOW.INC</string>
-    <string name="title_activity_main">2026 SELLER FLOW.INC</string>
+    <string name="app_name">SellerFlow</string>
+    <string name="title_activity_main">SellerFlow</string>
     <string name="package_name">com.sellerflow.app</string>
     <string name="custom_url_scheme">com.sellerflow.app</string>
 </resources>
@@ -122,7 +122,7 @@ for (const b of brandingAssets) {
 // Admin capacitor.config.json
 const adminCapConfig = {
   appId: 'com.sellerflow.admin',
-  appName: '2026 SELLER FLOW.INC Admin',
+  appName: 'SellerFlow Admin',
   webDir: 'dist',
   bundledWebRuntime: false,
   server: {
@@ -154,8 +154,8 @@ fs.writeFileSync(
 // Admin strings.xml
 const adminStringsXml = `<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">2026 SELLER FLOW.INC Admin</string>
-    <string name="title_activity_main">2026 SELLER FLOW.INC Admin</string>
+    <string name="app_name">SellerFlow Admin</string>
+    <string name="title_activity_main">SellerFlow Admin</string>
     <string name="package_name">com.sellerflow.admin</string>
     <string name="custom_url_scheme">com.sellerflow.admin</string>
 </resources>
@@ -256,5 +256,5 @@ fs.writeFileSync(path.join(consumerSrcDir, 'google-services.json'), gsJsonStr, '
 fs.writeFileSync(path.join(adminSrcDir, 'google-services.json'), gsJsonStr, 'utf8');
 
 console.log('✅ Android variants successfully prepared:');
-console.log('   - Consumer (com.sellerflow.app): "2026 SELLER FLOW.INC"');
-console.log('   - Admin (com.sellerflow.admin): "2026 SELLER FLOW.INC Admin"');
+console.log('   - Consumer (com.sellerflow.app): "SellerFlow"');
+console.log('   - Admin (com.sellerflow.admin): "SellerFlow Admin"');

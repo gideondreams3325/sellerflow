@@ -1,6 +1,6 @@
 {
   "appId": "com.sellerflow.app",
-  "appName": "2026 SELLER FLOW.INC",
+  "appName": "SellerFlow",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {

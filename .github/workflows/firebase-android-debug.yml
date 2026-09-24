@@ -72,16 +72,16 @@ jobs:
       - name: 11. Package and Verify Debug APKs
         run: |
           node scripts/package-apks.js
-          test -s "SellerFlow-Consumer-Debug.apk" || { echo "❌ SellerFlow-Consumer-Debug.apk missing!"; exit 1; }
+          test -s "SellerFlow-Debug.apk" || { echo "❌ SellerFlow-Debug.apk missing!"; exit 1; }
           test -s "SellerFlow-Admin-Debug.apk" || { echo "❌ SellerFlow-Admin-Debug.apk missing!"; exit 1; }
           echo "✅ Both APKs verified:"
-          ls -lh SellerFlow-Consumer-Debug.apk SellerFlow-Admin-Debug.apk
+          ls -lh SellerFlow-Debug.apk SellerFlow-Admin-Debug.apk
 
       - name: 12. Upload Consumer Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SellerFlow-Consumer-Debug
-          path: SellerFlow-Consumer-Debug.apk
+          name: SellerFlow-Debug
+          path: SellerFlow-Debug.apk
           if-no-files-found: error
           retention-days: 30
 
@@ -101,7 +101,7 @@ jobs:
           FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID || '1:987175352360:android:9f58f9d0e4985553c61d1d' }}
           INPUT_TESTERS: ${{ github.event.inputs.testers }}
           SECRET_TESTERS: ${{ secrets.TESTERS }}
-          RELEASE_NOTES: ${{ github.event.inputs.release_notes || 'SellerFlow Android Debug Build - 2026 SELLER FLOW.INC' }}
+          RELEASE_NOTES: ${{ github.event.inputs.release_notes || 'SellerFlow Android Debug Build - SellerFlow' }}
         run: |
           TESTERS="${INPUT_TESTERS:-$SECRET_TESTERS}"
           
@@ -129,7 +129,7 @@ jobs:
             EXTRA_ARGS="--testers $TESTERS"
           fi
           
-          npx --yes firebase-tools appdistribution:distribute "SellerFlow-Consumer-Debug.apk" \
+          npx --yes firebase-tools appdistribution:distribute "SellerFlow-Debug.apk" \
             --app "$FIREBASE_APP_ID" \
             --release-notes "$RELEASE_NOTES" \
             $EXTRA_ARGS \
