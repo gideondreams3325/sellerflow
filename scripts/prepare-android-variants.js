@@ -110,6 +110,13 @@ for (const f of adminFiles) {
   }
 }
 
+// Copy capacitor.js runtime to Admin
+const capacitorJsSrc = path.join(rootDir, 'capacitor.js');
+if (fs.existsSync(capacitorJsSrc)) {
+  fs.copyFileSync(capacitorJsSrc, path.join(adminPublicDir, 'capacitor.js'));
+  fs.copyFileSync(capacitorJsSrc, path.join(adminPublicDir, 'admin', 'capacitor.js'));
+}
+
 // Copy branding icons to Admin
 const brandingAssets = ['icon.svg', 'nav-emblem.svg', 'logo-full.svg', 'default-avatar.svg', 'apple-touch-icon.png'];
 for (const b of brandingAssets) {

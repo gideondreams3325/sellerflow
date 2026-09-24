@@ -1343,32 +1343,50 @@ window.__sfBackendUrl = (typeof getAppUrl === 'function') ? getAppUrl() : 'https
 })();
 
 async function handleCapacitorGoogleSignIn() {
-  if (typeof initCapacitorHandlers === 'function') {
-    try { await initCapacitorHandlers(); } catch (_) {}
-  }
-  const callbackUrl = getOAuthCallbackUrl();
-  const startUrl = callbackUrl + (callbackUrl.includes('?') ? '&' : '?') + 'start=google';
-  
-  console.log('Launching external Google sign-in flow via:', startUrl);
-  loading('Opening Google sign-in…');
-  
-  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser && typeof window.Capacitor.Plugins.Browser.open === 'function') {
-    try {
-      window.Capacitor.Plugins.Browser.addListener('browserFinished', () => {
-        if (typeof ready === 'function') ready();
-        if ((typeof auth !== 'undefined' && auth.currentUser) || currentUser || localStorage.getItem('sf_active_user_session')) {
-          hide($('authPage'));
-          showApp();
-          if (typeof navigate === 'function') navigate('feed');
-        }
-      }).catch(() => {});
-    } catch (_) {}
-    await window.Capacitor.Plugins.Browser.open({ url: startUrl });
-  } else if (!isCapacitorNative()) {
-    window.location.href = startUrl;
-  } else {
+  loading('Connecting with Google…');
+  try {
+    const NativeAuth = window.Capacitor?.Plugins?.NativeGoogleAuth || (window.Capacitor?.registerPlugin ? window.Capacitor.registerPlugin('NativeGoogleAuth') : null);
+    if (!NativeAuth) {
+      throw new Error('Native Google Authentication plugin not available on this device');
+    }
+
+    const serverClientId = '987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com';
+    const authResult = await NativeAuth.signIn({ serverClientId });
+
+    if (!authResult || !authResult.idToken) {
+      throw new Error('No identity token received from Google Sign-In');
+    }
+
+    // Convert native Google ID token to Firebase GoogleAuthProvider credential
+    const credential = firebase.auth.GoogleAuthProvider.credential(authResult.idToken);
+    
+    // Sign into Firebase Auth - preserves existing UID, profile and data
+    const userCredential = await auth.signInWithCredential(credential);
+    const user = userCredential.user;
+
+    console.log('Native Android Google Sign-In succeeded for user:', user.uid);
     ready();
-    toast('Unable to launch system browser for authentication.', 'error');
+    
+    // Smooth transition to app shell
+    if (typeof hide === 'function' && $('authPage')) {
+      hide($('authPage'));
+    }
+    if (typeof showApp === 'function') {
+      showApp();
+    }
+    if (typeof navigate === 'function') {
+      await navigate('feed');
+    }
+    return user;
+  } catch (err) {
+    ready();
+    if (err?.code === 'USER_CANCELLED' || err?.message?.includes('cancelled')) {
+      console.log('User dismissed Google account chooser');
+      return null;
+    }
+    console.error('Native Google Sign-In error:', err);
+    toast(err.message || 'Google Sign-In failed', 'error');
+    throw err;
   }
 }
 
@@ -19443,6 +19461,12 @@ async function logoutUser(){
   try{
     if (typeof removeCurrentDevicePushToken === 'function') {
       await removeCurrentDevicePushToken().catch(() => {});
+    }
+    if (typeof isCapacitorNative === 'function' && isCapacitorNative()) {
+      const NativeAuth = window.Capacitor?.Plugins?.NativeGoogleAuth || (window.Capacitor?.registerPlugin ? window.Capacitor.registerPlugin('NativeGoogleAuth') : null);
+      if (NativeAuth && typeof NativeAuth.signOut === 'function') {
+        await NativeAuth.signOut().catch(() => {});
+      }
     }
     if(auth) await signOut(auth);
   }catch(e){

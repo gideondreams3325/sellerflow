@@ -144,6 +144,12 @@ if (fs.existsSync(adminDir)) {
         copiedCount++;
       }
     }
+    const capJs = path.resolve('capacitor.js');
+    if (fs.existsSync(capJs)) {
+      fs.copyFileSync(capJs, path.join(distAdminDir, 'capacitor.js'));
+      fs.copyFileSync(capJs, path.join(adminDistDir, 'capacitor.js'));
+      copiedCount += 2;
+    }
     const adminAssets = path.join(adminDir, 'assets');
     if (fs.existsSync(adminAssets)) {
       fs.cpSync(adminAssets, path.join(distAdminDir, 'assets'), { recursive: true });

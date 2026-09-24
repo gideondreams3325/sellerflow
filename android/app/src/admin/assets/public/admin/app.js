@@ -1862,19 +1862,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (isCapacitorNative()) {
       try {
-        if (typeof initAdminCapacitorHandlers === 'function') {
-          await initAdminCapacitorHandlers();
+        const NativeAuth = window.Capacitor?.Plugins?.NativeGoogleAuth || (window.Capacitor?.registerPlugin ? window.Capacitor.registerPlugin('NativeGoogleAuth') : null);
+        if (!NativeAuth) {
+          throw new Error('Native Google Authentication plugin not available on this device');
         }
-        const appBase = getAdminAppUrl();
-        const startUrl = `${appBase}/oauth-callback?start=google&target=admin&package=com.sellerflow.admin`;
+
+        const serverClientId = '987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com';
+        const authResult = await NativeAuth.signIn({ serverClientId });
+
+        if (!authResult || !authResult.idToken) {
+          throw new Error('No identity token received from Google');
+        }
+
+        // Convert native Google ID token to Firebase credential
+        const credential = firebase.auth.GoogleAuthProvider.credential(authResult.idToken);
         
-        if (window.Capacitor?.Plugins?.Browser?.open) {
-          await window.Capacitor.Plugins.Browser.open({ url: startUrl });
-        } else {
-          window.location.href = startUrl;
-        }
+        // Sign into Firebase Auth - onAuthStateChanged will enforce admin RBAC check
+        await auth.signInWithCredential(credential);
       } catch (capErr) {
-        console.error('Failed to launch native Google Sign-In in Admin:', capErr);
+        if (capErr?.code === 'USER_CANCELLED' || capErr?.message?.includes('cancelled')) {
+          console.log('User dismissed Google account chooser in Admin');
+          return;
+        }
+        console.error('Failed to authenticate with native Google in Admin:', capErr);
         if (alertEl) {
           alertEl.className = 'mb-4 p-3.5 rounded-xl text-xs font-medium border bg-rose-500/10 border-rose-500/30 text-rose-300 block';
           alertEl.textContent = `Google Sign-In failed: ${capErr.message || capErr}`;
@@ -1909,8 +1919,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Logout
   document.getElementById('adminLogoutBtn')?.addEventListener('click', async () => {
-    await auth.signOut();
-    showToast('Signed out of admin session', 'info');
+    try {
+      if (isCapacitorNative()) {
+        const NativeAuth = window.Capacitor?.Plugins?.NativeGoogleAuth || (window.Capacitor?.registerPlugin ? window.Capacitor.registerPlugin('NativeGoogleAuth') : null);
+        if (NativeAuth && typeof NativeAuth.signOut === 'function') {
+          await NativeAuth.signOut().catch(() => {});
+        }
+      }
+      await auth.signOut();
+      showToast('Signed out of admin session', 'info');
+    } catch (e) {
+      console.warn('Admin logout notice:', e);
+    }
   });
 });
 

@@ -10,5 +10,9 @@
 	{
 		"pkg": "@capacitor/push-notifications",
 		"classpath": "com.capacitorjs.plugins.pushnotifications.PushNotificationsPlugin"
+	},
+	{
+		"pkg": "sellerflow-native-google-auth",
+		"classpath": "com.sellerflow.app.NativeGoogleAuthPlugin"
 	}
 ]
