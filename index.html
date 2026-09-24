@@ -198,11 +198,13 @@
 <style>
 *{box-sizing:border-box}
 html,body{width:100%;max-width:100%;height:100%;height:100dvh;margin:0;padding:0;overflow:hidden!important;overscroll-behavior:none!important;-webkit-overflow-scrolling:touch}
-body{position:fixed;inset:0;background:#080808;color:#f5f5f5;font-family:'Plus Jakarta Sans',system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+body{position:fixed;inset:0;background:#080808;color:#f5f5f5;font-family:'Plus Jakarta Sans',system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeSpeed}
 h1,h2,h3,h4,.brand-font,#brandBtn{font-family:'Outfit','Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em}
 #landing,#authPage{position:fixed;inset:0;width:100%;height:100%;height:100dvh;max-height:100dvh;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
 #authPage.keyboard-active{align-items:flex-start!important;justify-content:flex-start!important;padding-top:32px!important;padding-bottom:340px!important}
-img,video,iframe,canvas,svg{max-width:100%}video,img{box-sizing:border-box}button,input,textarea,select{font:inherit;max-width:100%}button:disabled{opacity:.5;cursor:not-allowed}
+img,video,iframe,canvas,svg{max-width:100%}video,img{box-sizing:border-box}button,input,textarea,select,[contenteditable="true"]{font:inherit;max-width:100%;text-rendering:auto!important;font-variant-ligatures:none!important;-webkit-font-feature-settings:normal!important;font-feature-settings:normal!important;letter-spacing:normal!important}
+input,textarea{-webkit-user-modify:read-write-plaintext-only}
+button:disabled{opacity:.5;cursor:not-allowed}
 body,input,textarea,select,.card,.reel-content,.chat-bubble,.sf-stat-card,.sf-user-row{overflow-wrap:anywhere;word-break:break-word}
 button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-nav-badge,#brandBtn,#headerLoginBtn,#headerRegisterBtn,#feedLoginBtn,#feedRegisterBtn,#openFeedUpload,#feedPrevBtn,#feedNextBtn,.sf-search-btn{white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important}
 .flex-1{min-width:0}.gold{color:#f5b942}.bg-gold{background:#f5b942;color:#080808}.border-gold{border-color:#f5b942}.card{background:#121212;border:1px solid #242424;border-radius:18px;min-width:0}.muted{color:#a1a1aa}.hide{display:none!important}
@@ -810,78 +812,104 @@ body[data-device-type="tablet"] {
   .receipt-no-print{display:none!important}
 }
 
-/* COMPREHENSIVE LIGHT THEME OVERRIDES */
+/* COMPREHENSIVE MODERN LIGHT & DARK THEME ENGINE */
 html.light-theme {
-  --bg-primary: #f9f9fa;
+  --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
-  --border-color: #e4e4e7;
-  --text-primary: #18181b;
-  --text-muted: #71717a;
+  --border-color: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --gold-accent: #d97706;
 }
 html.light-theme body {
-  background: #f9f9fa !important;
-  color: #18181b !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
 }
 html.light-theme header {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border-color: #e4e4e7 !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04) !important;
 }
 html.light-theme .card,
 html.light-theme .modal-card,
 html.light-theme #authPage > .card {
   background: #ffffff !important;
-  border-color: #e4e4e7 !important;
-  color: #18181b !important;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 8px -1px rgba(0, 0, 0, 0.03) !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 8px -1px rgba(15, 23, 42, 0.03) !important;
 }
 html.light-theme .muted,
 html.light-theme .text-zinc-500,
 html.light-theme .text-zinc-400 {
-  color: #71717a !important;
+  color: #64748b !important;
+}
+html.light-theme .text-zinc-300,
+html.light-theme .text-zinc-200 {
+  color: #334155 !important;
 }
 html.light-theme .text-white {
-  color: #18181b !important;
+  color: #0f172a !important;
 }
 html.light-theme .bg-[#080808],
 html.light-theme .bg-[#0c0c0c],
 html.light-theme .bg-black {
-  background-color: #f9f9fa !important;
+  background-color: #f8fafc !important;
 }
 html.light-theme .bg-[#121212],
 html.light-theme .bg-[#141414],
 html.light-theme .bg-[#151515],
+html.light-theme .bg-[#161616],
+html.light-theme .bg-[#181818],
 html.light-theme .bg-[#191919],
 html.light-theme .bg-[#1a1a1a],
-html.light-theme .bg-zinc-900 {
-  background-color: #f4f4f5 !important;
+html.light-theme .bg-[#1b1b1b],
+html.light-theme .bg-[#121215],
+html.light-theme .bg-[#141418],
+html.light-theme .bg-[#16161d],
+html.light-theme .bg-[#181822],
+html.light-theme .bg-[#1a1a24],
+html.light-theme .bg-zinc-900,
+html.light-theme .bg-zinc-800 {
+  background-color: #f1f5f9 !important;
 }
 html.light-theme .border-[#242424],
+html.light-theme .border-[#262626],
 html.light-theme .border-[#292929],
+html.light-theme .border-[#2b2b2b],
+html.light-theme .border-[#2c2c2c],
 html.light-theme .border-[#333],
 html.light-theme .border-[#343434],
 html.light-theme .border-[#383838],
+html.light-theme .border-[#444],
 html.light-theme .border-zinc-800,
 html.light-theme .border-zinc-700 {
-  border-color: #e4e4e7 !important;
+  border-color: #e2e8f0 !important;
 }
 html.light-theme input,
 html.light-theme textarea,
 html.light-theme select {
   background: #ffffff !important;
-  border-color: #d4d4d8 !important;
-  color: #18181b !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+html.light-theme input:focus,
+html.light-theme textarea:focus,
+html.light-theme select:focus {
+  border-color: #f5b942 !important;
+  box-shadow: 0 0 0 3px rgba(245, 185, 66, 0.18) !important;
 }
 html.light-theme input::placeholder,
 html.light-theme textarea::placeholder {
-  color: #a1a1aa !important;
+  color: #94a3b8 !important;
 }
 html.light-theme .navbtn {
-  color: #71717a !important;
+  color: #64748b !important;
 }
 html.light-theme .navbtn:hover {
-  color: #18181b !important;
-  background: rgba(0, 0, 0, 0.04) !important;
+  color: #0f172a !important;
+  background: rgba(15, 23, 42, 0.04) !important;
 }
 html.light-theme .navbtn.active {
   color: #d97706 !important;
@@ -899,26 +927,27 @@ html.light-theme .text-gold {
 }
 html.light-theme .svg-icon,
 html.light-theme svg path {
-  stroke: #18181b;
+  stroke: #0f172a;
 }
 html.light-theme #mobileMenu svg {
-  color: #18181b !important;
+  color: #0f172a !important;
 }
 html.light-theme #mobileMenu svg path {
-  stroke: #18181b !important;
+  stroke: #0f172a !important;
 }
 html.light-theme .sf-drawer-backdrop {
-  background: rgba(0, 0, 0, 0.4) !important;
+  background: rgba(15, 23, 42, 0.45) !important;
 }
 html.light-theme #mobileNav {
   background: #ffffff !important;
-  border-right: 1px solid #e4e4e7 !important;
+  border-right: 1px solid #e2e8f0 !important;
+  box-shadow: 12px 0 40px rgba(15, 23, 42, 0.12) !important;
 }
 html.light-theme #mobileNav .navbtn {
-  color: #18181b !important;
+  color: #0f172a !important;
 }
 html.light-theme #mobileNav .navbtn:hover {
-  background: rgba(0, 0, 0, 0.05) !important;
+  background: rgba(15, 23, 42, 0.04) !important;
 }
 html.light-theme #mobileNav .navbtn.active {
   color: #d97706 !important;
@@ -933,48 +962,51 @@ html.light-theme .policy-hero .muted {
   color: #b45309 !important;
 }
 html.light-theme .policy-hero .bg-black\/30 {
-  background: rgba(255, 255, 255, 0.6) !important;
+  background: rgba(255, 255, 255, 0.75) !important;
   border: 1px solid rgba(217, 119, 6, 0.2) !important;
 }
 html.light-theme .admin-tab {
-  background: #f4f4f5 !important;
-  border-color: #e4e4e7 !important;
-  color: #71717a !important;
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #64748b !important;
 }
 html.light-theme .admin-tab.active {
   background: #ffffff !important;
   border-color: #d97706 !important;
   color: #d97706 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
 }
 html.light-theme .market-filter {
-  background: #f4f4f5 !important;
-  border-color: #e4e4e7 !important;
-  color: #71717a !important;
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #64748b !important;
 }
 html.light-theme .market-filter.active {
   background: #f5b942 !important;
   color: #080808 !important;
   border-color: #f5b942 !important;
+  box-shadow: 0 2px 8px rgba(245, 185, 66, 0.3) !important;
 }
-html.light-theme .bg-amber-950\/30 {
-  background: rgba(254, 243, 199, 0.8) !important;
+html.light-theme .bg-amber-950\/30,
+html.light-theme .bg-amber-950\/20,
+html.light-theme .bg-amber-950\/15 {
+  background: rgba(254, 243, 199, 0.85) !important;
   border-color: #fde68a !important;
   color: #92400e !important;
 }
-html.light-theme .text-amber-300 {
+html.light-theme .text-amber-300,
+html.light-theme .text-amber-400 {
   color: #b45309 !important;
 }
-html.light-theme .bg-[#10251a] {
+html.light-theme .bg-[#10251a],
+html.light-theme .bg-green-950,
+html.light-theme .bg-emerald-950 {
   background: #f0fdf4 !important;
   border-color: #bbf7d0 !important;
   color: #15803d !important;
 }
-html.light-theme .bg-green-950 {
-  background: #f0fdf4 !important;
-  color: #15803d !important;
-  border-color: #bbf7d0 !important;
-}
-html.light-theme .bg-red-950 {
+html.light-theme .bg-red-950,
+html.light-theme .bg-rose-950 {
   background: #fef2f2 !important;
   color: #b91c1c !important;
   border-color: #fca5a5 !important;
@@ -984,37 +1016,27 @@ html.light-theme .bg-amber-950 {
   color: #b45309 !important;
   border-color: #fde68a !important;
 }
-html.light-theme .text-green-400 {
+html.light-theme .text-green-400,
+html.light-theme .text-emerald-400 {
   color: #166534 !important;
 }
-html.light-theme .text-red-400 {
+html.light-theme .text-red-400,
+html.light-theme .text-rose-400 {
   color: #991b1b !important;
 }
-html.light-theme .text-amber-300 {
-  color: #92400e !important;
-}
-html.light-theme .bg-sky-950 {
+html.light-theme .bg-sky-950,
+html.light-theme .bg-blue-950 {
   background: #f0f9ff !important;
   color: #0369a1 !important;
   border-color: #bae6fd !important;
 }
-html.light-theme .text-sky-300 {
+html.light-theme .text-sky-300,
+html.light-theme .text-blue-400 {
   color: #075985 !important;
-}
-html.light-theme .bg-zinc-900 {
-  background: #f4f4f5 !important;
-  color: #71717a !important;
-  border-color: #e4e4e7 !important;
-}
-html.light-theme .border-[#444] {
-  border-color: #d4d4d8 !important;
-}
-html.light-theme .text-zinc-200 {
-  color: #27272a !important;
 }
 html.light-theme .bg-[#141416], html.light-theme .border-[#222225], html.light-theme .bg-[#1a1a1e] {
   background-color: #ffffff !important;
-  border-color: #e4e4e7 !important;
+  border-color: #e2e8f0 !important;
 }
 html.light-theme #devVerificationSandboxNotice {
   background-color: #fffbeb !important;
@@ -1022,61 +1044,65 @@ html.light-theme #devVerificationSandboxNotice {
   color: #92400e !important;
 }
 html.light-theme .settings-item {
-  border-color: #e4e4e7 !important;
-  color: #18181b !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
 }
 html.light-theme .settings-item:hover {
-  background-color: rgba(0, 0, 0, 0.02) !important;
+  background-color: rgba(15, 23, 42, 0.02) !important;
 }
 html.light-theme #settingsThemeSegment {
-  background-color: #f4f4f5 !important;
-  border-color: #e4e4e7 !important;
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
 }
 html.light-theme .sf-stat-card,
-html.light-theme .sf-user-row {
+html.light-theme .sf-user-row,
+html.light-theme .sf-dash-card {
   background-color: #ffffff !important;
-  border-color: #e4e4e7 !important;
-  color: #18181b !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
 }
 html.light-theme .terms-box {
-  background-color: #f4f4f5 !important;
-  border-color: #e4e4e7 !important;
-  color: #27272a !important;
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
 }
 html.light-theme .feed-top-bar {
-  background-color: rgba(249, 249, 250, 0.95) !important;
-  border-color: #e4e4e7 !important;
+  background-color: rgba(248, 250, 252, 0.95) !important;
+  border-color: #e2e8f0 !important;
 }
 html.light-theme .feed-top-bar h1 {
-  color: #18181b !important;
+  color: #0f172a !important;
 }
-html.light-theme .chat-bubble.from-other {
-  background-color: #f4f4f5 !important;
-  border-color: #e4e4e7 !important;
-  color: #18181b !important;
+html.light-theme .chat-bubble.from-other,
+html.light-theme .chat-them {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
 }
-html.light-theme .chat-bubble.from-me {
+html.light-theme .chat-bubble.from-me,
+html.light-theme .chat-me {
   background-color: #f5b942 !important;
   color: #080808 !important;
 }
 html.light-theme .sf-search-btn {
-  background-color: #f4f4f5 !important;
-  border-color: #e4e4e7 !important;
-  color: #71717a !important;
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
 }
 html.light-theme table {
-  color: #18181b !important;
+  color: #0f172a !important;
 }
 html.light-theme th {
-  background-color: #f4f4f5 !important;
-  color: #71717a !important;
-  border-color: #e4e4e7 !important;
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
 }
 html.light-theme td {
-  border-color: #f4f4f5 !important;
+  border-color: #f1f5f9 !important;
 }
 html.light-theme .border-b {
-  border-color: #e4e4e7 !important;
+  border-color: #e2e8f0 !important;
 }
 #page {
   animation: sfPageTransition 0.14s cubic-bezier(0.16, 1, 0.3, 1);
@@ -6886,6 +6912,14 @@ function setNav(){
   if(typeof updateOrdersBadge==='function') updateOrdersBadge(pCount);
 }
 window.setNav = setNav;
+
+function updateAppLanguageUI(){
+  setNav();
+  if(typeof renderPage === 'function' && typeof currentPage !== 'undefined' && currentPage){
+    renderPage(currentPage);
+  }
+}
+window.updateAppLanguageUI = updateAppLanguageUI;
 
 function _handleMobileNavTapOutside(e){
   const nav = $('mobileNav');
@@ -27099,10 +27133,14 @@ init();
     $('page').innerHTML = `
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <div class="flex items-center gap-2.5">
+          <div class="flex items-center gap-2.5 flex-wrap">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
             <h1 class="text-2xl sm:text-3xl font-black text-white">Security Team Portal</h1>
             <span class="text-[11px] font-bold bg-gold/15 text-gold border border-gold/30 px-2.5 py-0.5 rounded-full">SECURITY & COMPLIANCE</span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-[10.5px] font-bold shadow-sm">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <span>LIVE SYNC ACTIVE</span>
+            </span>
           </div>
           <p class="muted text-xs sm:text-sm mt-1">Platform management: user directories, Ghana Card KYC records, order security verification, store & product review, and community safety.</p>
         </div>
@@ -27404,6 +27442,60 @@ init();
     if($('dashCardJobsEvents')) $('dashCardJobsEvents').onclick = () => setAdminTab('jobs_events');
 
     setAdminTab(initialTab);
+
+    // Establish dynamic real-time Firestore listeners for immediate live updates on users logging in and dashboard data
+    if (!window._sfAdminUnsubs) window._sfAdminUnsubs = [];
+    window._sfAdminUnsubs.forEach(unsub => { try { if (typeof unsub === 'function') unsub(); } catch (_) {} });
+    window._sfAdminUnsubs = [];
+
+    let _adminLiveRefreshTimeout = null;
+    const triggerLiveAdminRefresh = () => {
+      if (currentPage !== 'admin' || !isAdmin) return;
+      if (_adminLiveRefreshTimeout) clearTimeout(_adminLiveRefreshTimeout);
+      _adminLiveRefreshTimeout = setTimeout(() => {
+        if (currentPage === 'admin' && isAdmin) {
+          renderAdmin();
+        }
+      }, 450);
+    };
+
+    try {
+      if (typeof onSnapshot === 'function' && typeof collection === 'function') {
+        // 1. Live Users & Logins / Presence listener
+        const unsubsUsers = onSnapshot(query(collection(db, 'users'), limit(300)), () => triggerLiveAdminRefresh(), err => console.warn('Live users sync notice:', err));
+        window._sfAdminUnsubs.push(unsubsUsers);
+
+        // 2. Live Public Profiles listener
+        const unsubsProfiles = onSnapshot(query(collection(db, 'publicProfiles'), limit(300)), () => triggerLiveAdminRefresh(), err => console.warn('Live profiles sync notice:', err));
+        window._sfAdminUnsubs.push(unsubsProfiles);
+
+        // 3. Live Orders Security listener
+        const unsubsOrders = onSnapshot(query(collection(db, 'orders'), limit(100)), () => triggerLiveAdminRefresh(), err => console.warn('Live orders sync notice:', err));
+        window._sfAdminUnsubs.push(unsubsOrders);
+
+        // 4. Live Buyer KYC Records listener
+        const unsubsKyc = onSnapshot(query(collection(db, 'buyerKycRecords'), limit(100)), () => triggerLiveAdminRefresh(), err => console.warn('Live KYC sync notice:', err));
+        window._sfAdminUnsubs.push(unsubsKyc);
+
+        // 5. Live Posts & Reels listener
+        const unsubsPosts = onSnapshot(query(collection(db, 'posts'), limit(150)), () => triggerLiveAdminRefresh(), err => console.warn('Live posts sync notice:', err));
+        window._sfAdminUnsubs.push(unsubsPosts);
+
+        // 6. Live Stores listener
+        const unsubsStores = onSnapshot(query(collection(db, 'stores'), limit(150)), () => triggerLiveAdminRefresh(), err => console.warn('Live stores sync notice:', err));
+        window._sfAdminUnsubs.push(unsubsStores);
+
+        // 7. Live Products listener
+        const unsubsProducts = onSnapshot(query(collection(db, 'products'), limit(150)), () => triggerLiveAdminRefresh(), err => console.warn('Live products sync notice:', err));
+        window._sfAdminUnsubs.push(unsubsProducts);
+
+        // 8. Live Fraud Reports listener
+        const unsubsFraud = onSnapshot(query(collection(db, 'fraudReports'), limit(100)), () => triggerLiveAdminRefresh(), err => console.warn('Live fraud sync notice:', err));
+        window._sfAdminUnsubs.push(unsubsFraud);
+      }
+    } catch (listenerErr) {
+      console.warn('Real-time admin sync listeners registration notice:', listenerErr);
+    }
   };
 
   function sfAdminOverview(users, posts, pending, reviewPosts, livePosts, takenDownPosts, reports, termData, storesSnap, productsSnap, liveStores, pendingStores, takenDownStores, liveProducts, pendingProducts, takenDownProducts, fraudSnap, allGhanaCardRecords = [], pendingReviewOrders = [], allOrderDocs = []){
