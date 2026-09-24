@@ -1887,7 +1887,26 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Failed to authenticate with native Google in Admin:', capErr);
         if (alertEl) {
           alertEl.className = 'mb-4 p-3.5 rounded-xl text-xs font-medium border bg-rose-500/10 border-rose-500/30 text-rose-300 block';
-          alertEl.textContent = `Google Sign-In failed: ${capErr.message || capErr}`;
+          const errMsg = capErr?.message || String(capErr);
+          if (errMsg.includes('status 10') || capErr?.code === 'DEVELOPER_ERROR') {
+            alertEl.innerHTML = `
+              <div class="font-bold text-rose-200 mb-1 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span>Action Required: Register SHA-1 in Firebase</span>
+              </div>
+              <p class="text-[11px] text-zinc-300 mb-2 leading-relaxed">
+                Google Play Services requires your Android app certificate fingerprint to be added to Firebase project <strong>sellerflow-efaab</strong>.
+              </p>
+              <div class="bg-black/60 p-2.5 rounded-lg border border-white/10 font-mono text-[10px] text-amber-300 break-all select-all mb-2">
+                E6:52:4A:E3:8D:62:85:A1:4D:EC:73:C0:D4:9B:A7:28:5F:6D:64:2F
+              </div>
+              <div class="text-[10px] text-zinc-400">
+                Firebase Console &rarr; Project Settings &rarr; Your apps &rarr; <strong>com.sellerflow.admin</strong> &rarr; Add fingerprint
+              </div>
+            `;
+          } else {
+            alertEl.textContent = `Google Sign-In failed: ${errMsg}`;
+          }
         }
       }
       return;
