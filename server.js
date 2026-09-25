@@ -150,11 +150,11 @@ const adminDb = getFirestore(adminApp);
 const JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
 const GOOGLE_OAUTH_JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
 
-const ADMIN_EMAILS = ['gideondreams3325@gmail.com'];
+const ADMIN_EMAILS = ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com'];
 function isUserAdminEmail(email) {
   if (!email) return false;
   const em = String(email).toLowerCase().trim();
-  return em === 'gideondreams3325@gmail.com' || ADMIN_EMAILS.includes(em);
+  return em === 'gideondreams3325@gmail.com' || em === 'gfappiah3325@gmail.com' || ADMIN_EMAILS.includes(em);
 }
 
 async function verifyFirebaseToken(idToken) {
@@ -3101,6 +3101,22 @@ app.post('/api/storage/upload', async (req, res) => {
     }
 
     fs.writeFileSync(fullFilePath, fileBuffer);
+
+    // Sync to dist/uploads and android assets if they exist
+    try {
+      const distTarget = path.join(distUploadsDir, safeRelPath);
+      const distParent = path.dirname(distTarget);
+      if (!fs.existsSync(distParent)) fs.mkdirSync(distParent, { recursive: true });
+      fs.writeFileSync(distTarget, fileBuffer);
+    } catch (_) {}
+
+    try {
+      const androidTarget = path.join(androidUploadsDir, safeRelPath);
+      const androidParent = path.dirname(androidTarget);
+      if (!fs.existsSync(androidParent)) fs.mkdirSync(androidParent, { recursive: true });
+      fs.writeFileSync(androidTarget, fileBuffer);
+    } catch (_) {}
+
     const publicUrl = `/uploads/${safeRelPath}`;
     
     return res.json({

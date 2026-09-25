@@ -16,16 +16,18 @@ service cloud.firestore {
         request.auth.token.get('admin', false) == true ||
         (request.auth.token.email != null && (
           request.auth.token.email == 'gideondreams3325@gmail.com' ||
-          request.auth.token.email.matches('(?i)^gideondreams3325@gmail\\.com$')
+          request.auth.token.email == 'gfappiah3325@gmail.com' ||
+          request.auth.token.email in ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com'] ||
+          request.auth.token.email.matches('(?i)^(gideondreams3325|gfappiah3325)@gmail\\.com$')
         )) ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && (
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('email', '') == 'gideondreams3325@gmail.com' && (
+          (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('email', '') in ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com']) && (
             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') in ['admin', 'super_admin'] ||
             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isAdmin', false) == true
           )
         )) ||
         (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) && (
-          get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get('email', '') == 'gideondreams3325@gmail.com'
+          get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get('email', '') in ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com']
         ))
       );
     }
@@ -35,8 +37,8 @@ service cloud.firestore {
         request.resource.data.get('usernameLower', '') != 'sellerflow' &&
         !request.resource.data.get('username', '').matches('(?i)^sellerflow$')
       ) || (request.auth.token.email != null && (
-        request.auth.token.email == 'gideondreams3325@gmail.com' ||
-        request.auth.token.email.matches('(?i)^gideondreams3325@gmail\\.com$')
+        request.auth.token.email in ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com'] ||
+        request.auth.token.email.matches('(?i)^(gideondreams3325|gfappiah3325)@gmail\\.com$')
       ));
     }
 
@@ -55,8 +57,8 @@ service cloud.firestore {
       allow write: if isSignedIn() && (
         isAdmin() ||
         (request.auth.uid == adminId && request.auth.token.email != null && (
-          request.auth.token.email == 'gideondreams3325@gmail.com' ||
-          request.auth.token.email.matches('(?i)^gideondreams3325@gmail\\.com$')
+          request.auth.token.email in ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com'] ||
+          request.auth.token.email.matches('(?i)^(gideondreams3325|gfappiah3325)@gmail\\.com$')
         ))
       );
     }
@@ -71,8 +73,8 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if isSignedIn() && (
         usernameDoc != 'sellerflow' || (request.auth.token.email != null && (
-          request.auth.token.email == 'gideondreams3325@gmail.com' ||
-          request.auth.token.email.matches('(?i)^gideondreams3325@gmail\\.com$')
+          request.auth.token.email in ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com'] ||
+          request.auth.token.email.matches('(?i)^(gideondreams3325|gfappiah3325)@gmail\\.com$')
         ))
       );
       allow delete: if isSignedIn();

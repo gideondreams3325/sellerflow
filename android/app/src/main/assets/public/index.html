@@ -3121,11 +3121,11 @@ function snapshotExists(snap){return !!snap && (typeof snap.exists==='function' 
 
 const firebaseConfig={apiKey:'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk',authDomain:'sellerflow-efaab.firebaseapp.com',databaseURL:'https://sellerflow-efaab-default-rtdb.firebaseio.com',projectId:'sellerflow-efaab',storageBucket:'sellerflow-efaab.firebasestorage.app',messagingSenderId:'987175352360',appId:'1:987175352360:web:53e44304aaf11b98c61d1d'};
 window.firebaseConfig = firebaseConfig;
-const ADMIN_EMAILS=['gideondreams3325@gmail.com'];
+const ADMIN_EMAILS=['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com'];
 const isUserAdminEmail=(email)=>{
   if(!email) return false;
   const em = String(email).toLowerCase().trim();
-  return em === 'gideondreams3325@gmail.com' || ADMIN_EMAILS.includes(em);
+  return em === 'gideondreams3325@gmail.com' || em === 'gfappiah3325@gmail.com' || ADMIN_EMAILS.includes(em);
 };
 window.ADMIN_EMAILS = ADMIN_EMAILS;
 window.isUserAdminEmail = isUserAdminEmail;
@@ -4917,7 +4917,28 @@ async function universalStorageUpload(file, path, maxMB = 250) {
     }
   }
 
-  // 3. Fallback: JSON base64 upload (/api/storage/upload) to get a compact public URL (/uploads/...)
+  // 3. Direct streaming upload to /api/storage/upload using resolved API URL
+  const uploadApiUrl = (typeof getSfApiUrl === 'function') ? getSfApiUrl('/api/storage/upload') : '/api/storage/upload';
+  try {
+    const rawResp = await fetch(uploadApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': file.type || 'application/octet-stream',
+        'x-file-path': encodeURIComponent(path)
+      },
+      body: file
+    });
+    if (rawResp.ok) {
+      const data = await rawResp.json();
+      if (data.success && data.url) {
+        return { url: data.url, path: data.path || path };
+      }
+    }
+  } catch (rawErr) {
+    console.warn('Direct stream upload notice, trying JSON base64 fallback:', rawErr);
+  }
+
+  // 3b. Fallback: JSON base64 upload (/api/storage/upload) to get a compact public URL (/uploads/...)
   let base64Data = '';
   try {
     base64Data = await fileToBase64(file);
@@ -4927,7 +4948,7 @@ async function universalStorageUpload(file, path, maxMB = 250) {
 
   if (base64Data) {
     try {
-      const resp = await fetch('/api/storage/upload', {
+      const resp = await fetch(uploadApiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -21825,9 +21846,13 @@ init();
       const raw = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => {
         if(!p.sellerId) return false;
         if(isPostRemovedBySecurity(p)) return false;
-        if(p.status !== 'published' && p.status !== 'approved') return false;
-        if(p.status === 'hidden' || p.reviewStatus === 'violation') return false;
-        if(!isSafePost(p)) return false;
+        const isMine = currentUser && currentUser.uid === p.sellerId;
+        const isViewerAdmin = isAdmin || (typeof isUserAdminEmail === 'function' && isUserAdminEmail(currentUser?.email));
+        if(!isMine && !isViewerAdmin){
+          if(p.status !== 'published' && p.status !== 'approved') return false;
+          if(p.status === 'hidden' || p.reviewStatus === 'violation') return false;
+          if(!isSafePost(p)) return false;
+        }
 
         const privacy = p.privacy || 'public';
         if(privacy === 'private'){
@@ -27337,7 +27362,7 @@ init();
 
     const u = auth?.currentUser || currentUser || (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
     const em = (u && u.email) ? u.email.toLowerCase().trim() : '';
-    const isOwnerAdmin = (typeof isUserAdminEmail === 'function' && em) ? isUserAdminEmail(em) : (em === 'gideondreams3325@gmail.com');
+    const isOwnerAdmin = (typeof isUserAdminEmail === 'function' && em) ? isUserAdminEmail(em) : (em === 'gideondreams3325@gmail.com' || em === 'gfappiah3325@gmail.com' || ADMIN_EMAILS.includes(em));
     if (isOwnerAdmin) {
       isAdmin = true;
       window.isAdmin = true;
@@ -27355,7 +27380,7 @@ init();
       }
     }
     if(!isAdmin){
-      $('page').innerHTML = pageTitle('Access denied', 'Only the authorized administrator gideondreams3325@gmail.com has permission to manage the SellerFlow Security Portal.');
+      $('page').innerHTML = pageTitle('Access denied', 'Only the authorized administrators have permission to manage the SellerFlow Security Portal.');
       return;
     }
 
@@ -27986,58 +28011,63 @@ init();
 
     setAdminTab(initialTab);
 
-    // Establish dynamic real-time Firestore listeners for immediate live updates on users logging in and dashboard data
-    if (!window._sfAdminUnsubs) window._sfAdminUnsubs = [];
-    window._sfAdminUnsubs.forEach(unsub => { try { if (typeof unsub === 'function') unsub(); } catch (_) {} });
-    window._sfAdminUnsubs = [];
+    // Establish dynamic real-time Firestore listeners for background updates without causing recursive render loops
+    if (!window._sfAdminListenersRegistered) {
+      window._sfAdminListenersRegistered = true;
+      if (!window._sfAdminUnsubs) window._sfAdminUnsubs = [];
 
-    let _adminLiveRefreshTimeout = null;
-    const triggerLiveAdminRefresh = () => {
-      if (currentPage !== 'admin' || !isAdmin) return;
-      if (_adminLiveRefreshTimeout) clearTimeout(_adminLiveRefreshTimeout);
-      _adminLiveRefreshTimeout = setTimeout(() => {
-        if (currentPage === 'admin' && isAdmin) {
-          renderAdmin();
+      let _adminLiveRefreshTimeout = null;
+      let _isInitialListenerCycle = true;
+      setTimeout(() => { _isInitialListenerCycle = false; }, 3000);
+
+      const triggerLiveAdminRefresh = () => {
+        if (_isInitialListenerCycle) return;
+        if (currentPage !== 'admin' || !isAdmin) return;
+        if (_adminLiveRefreshTimeout) clearTimeout(_adminLiveRefreshTimeout);
+        _adminLiveRefreshTimeout = setTimeout(() => {
+          if (currentPage === 'admin' && isAdmin) {
+            renderAdmin();
+          }
+        }, 4000);
+      };
+
+      try {
+        if (typeof onSnapshot === 'function' && typeof collection === 'function') {
+          // 1. Live Users & Presence listener
+          const unsubsUsers = onSnapshot(query(collection(db, 'users'), limit(300)), () => triggerLiveAdminRefresh(), err => console.warn('Live users sync notice:', err));
+          window._sfAdminUnsubs.push(unsubsUsers);
+
+          // 2. Live Public Profiles listener
+          const unsubsProfiles = onSnapshot(query(collection(db, 'publicProfiles'), limit(300)), () => triggerLiveAdminRefresh(), err => console.warn('Live profiles sync notice:', err));
+          window._sfAdminUnsubs.push(unsubsProfiles);
+
+          // 3. Live Orders Security listener
+          const unsubsOrders = onSnapshot(query(collection(db, 'orders'), limit(100)), () => triggerLiveAdminRefresh(), err => console.warn('Live orders sync notice:', err));
+          window._sfAdminUnsubs.push(unsubsOrders);
+
+          // 4. Live Buyer KYC Records listener
+          const unsubsKyc = onSnapshot(query(collection(db, 'buyerKycRecords'), limit(100)), () => triggerLiveAdminRefresh(), err => console.warn('Live KYC sync notice:', err));
+          window._sfAdminUnsubs.push(unsubsKyc);
+
+          // 5. Live Posts & Reels listener
+          const unsubsPosts = onSnapshot(query(collection(db, 'posts'), limit(150)), () => triggerLiveAdminRefresh(), err => console.warn('Live posts sync notice:', err));
+          window._sfAdminUnsubs.push(unsubsPosts);
+
+          // 6. Live Stores listener
+          const unsubsStores = onSnapshot(query(collection(db, 'stores'), limit(150)), () => triggerLiveAdminRefresh(), err => console.warn('Live stores sync notice:', err));
+          window._sfAdminUnsubs.push(unsubsStores);
+
+          // 7. Live Products listener
+          const unsubsProducts = onSnapshot(query(collection(db, 'products'), limit(150)), () => triggerLiveAdminRefresh(), err => console.warn('Live products sync notice:', err));
+          window._sfAdminUnsubs.push(unsubsProducts);
+
+          // 8. Live Fraud Reports listener
+          const unsubsFraud = onSnapshot(query(collection(db, 'fraudReports'), limit(100)), () => triggerLiveAdminRefresh(), err => console.warn('Live fraud sync notice:', err));
+          window._sfAdminUnsubs.push(unsubsFraud);
         }
-      }, 450);
-    };
-
-    try {
-      if (typeof onSnapshot === 'function' && typeof collection === 'function') {
-        // 1. Live Users & Logins / Presence listener
-        const unsubsUsers = onSnapshot(query(collection(db, 'users'), limit(300)), () => triggerLiveAdminRefresh(), err => console.warn('Live users sync notice:', err));
-        window._sfAdminUnsubs.push(unsubsUsers);
-
-        // 2. Live Public Profiles listener
-        const unsubsProfiles = onSnapshot(query(collection(db, 'publicProfiles'), limit(300)), () => triggerLiveAdminRefresh(), err => console.warn('Live profiles sync notice:', err));
-        window._sfAdminUnsubs.push(unsubsProfiles);
-
-        // 3. Live Orders Security listener
-        const unsubsOrders = onSnapshot(query(collection(db, 'orders'), limit(100)), () => triggerLiveAdminRefresh(), err => console.warn('Live orders sync notice:', err));
-        window._sfAdminUnsubs.push(unsubsOrders);
-
-        // 4. Live Buyer KYC Records listener
-        const unsubsKyc = onSnapshot(query(collection(db, 'buyerKycRecords'), limit(100)), () => triggerLiveAdminRefresh(), err => console.warn('Live KYC sync notice:', err));
-        window._sfAdminUnsubs.push(unsubsKyc);
-
-        // 5. Live Posts & Reels listener
-        const unsubsPosts = onSnapshot(query(collection(db, 'posts'), limit(150)), () => triggerLiveAdminRefresh(), err => console.warn('Live posts sync notice:', err));
-        window._sfAdminUnsubs.push(unsubsPosts);
-
-        // 6. Live Stores listener
-        const unsubsStores = onSnapshot(query(collection(db, 'stores'), limit(150)), () => triggerLiveAdminRefresh(), err => console.warn('Live stores sync notice:', err));
-        window._sfAdminUnsubs.push(unsubsStores);
-
-        // 7. Live Products listener
-        const unsubsProducts = onSnapshot(query(collection(db, 'products'), limit(150)), () => triggerLiveAdminRefresh(), err => console.warn('Live products sync notice:', err));
-        window._sfAdminUnsubs.push(unsubsProducts);
-
-        // 8. Live Fraud Reports listener
-        const unsubsFraud = onSnapshot(query(collection(db, 'fraudReports'), limit(100)), () => triggerLiveAdminRefresh(), err => console.warn('Live fraud sync notice:', err));
-        window._sfAdminUnsubs.push(unsubsFraud);
+      } catch (listenerErr) {
+        console.warn('Real-time admin sync listeners registration notice:', listenerErr);
       }
-    } catch (listenerErr) {
-      console.warn('Real-time admin sync listeners registration notice:', listenerErr);
     }
   };
 

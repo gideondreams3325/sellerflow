@@ -406,11 +406,11 @@ window.closePostModal = function() {
 };
 
 // 5. Authentication & Authorization Lifecycle
-const ADMIN_EMAILS = ['gideondreams3325@gmail.com'];
+const ADMIN_EMAILS = ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com'];
 function isAuthorizedAdminEmail(email) {
   if (!email) return false;
   const em = String(email).toLowerCase().trim();
-  return em === 'gideondreams3325@gmail.com' || ADMIN_EMAILS.includes(em);
+  return em === 'gideondreams3325@gmail.com' || em === 'gfappiah3325@gmail.com' || ADMIN_EMAILS.includes(em);
 }
 
 function maskGhanaCard(val) {
@@ -448,10 +448,12 @@ auth.onAuthStateChanged(async (user) => {
     if (!isAdmin) {
       console.warn('[Admin Gate] Non-admin user access attempt:', user.email);
       teardownRealtimeListeners();
-      await auth.signOut();
+      state.isAdmin = false;
+      adminShell?.classList.add('hidden');
+      loginScreen?.classList.remove('hidden');
       if (loginAlert) {
         loginAlert.className = 'mb-4 p-3.5 rounded-xl text-xs font-medium border bg-rose-500/10 border-rose-500/30 text-rose-300 block';
-        loginAlert.innerHTML = `<strong>Access Denied:</strong> Account <em>${escapeHtml(user.email)}</em> does not possess administrative clearance. Only authorized administrators (e.g. gideondreams3325@gmail.com) can access SellerFlow Admin.`;
+        loginAlert.innerHTML = `<strong>Access Denied:</strong> Account <em>${escapeHtml(user.email)}</em> does not possess administrative clearance.<div class="mt-3"><a href="/" class="btn btn-secondary btn-sm inline-block">Return to SellerFlow App</a></div>`;
       }
       return;
     }
