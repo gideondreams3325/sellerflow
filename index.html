@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="referrer" content="no-referrer">
 <script>
 // Early Theme Loader to prevent flashes of dark background in light mode
@@ -178,7 +178,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Cinzel:wght@600;700;800&family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Poppins:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alexandria:wght@400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Bitter:ital,wght@0,400;0,700;1,400&family=Bungee&family=Cairo:wght@400;600;700;800&family=Caveat:wght@400;600;700&family=Cinzel:wght@400;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Dancing+Script:wght@500;600;700&family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Lato:ital,wght@0,400;0,700;1,400&family=Lexend:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Manrope:wght@400;500;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Sans+Arabic:wght@400;600;700&family=Noto+Sans+Bengali:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Hebrew:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&family=Noto+Sans+KR:wght@400;600;700&family=Noto+Sans+SC:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600;700&family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Oswald:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Pacifico&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Raleway:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Righteous&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Rubik:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@500;600;700;800&family=Ubuntu:ital,wght@0,400;0,500;0,700;1,400&family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <!-- Firebase Compat is used here for broad Android/WebView compatibility. -->
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js" crossorigin="anonymous"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js" crossorigin="anonymous"></script>
@@ -196,19 +196,27 @@
 <script src="/jobs-events.js?v=2.1.0"></script>
 <script>tailwind.config={theme:{extend:{colors:{gold:'#f5b942'}}}}</script>
 <style>
+:root {
+  --sf-font-fallback: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, system-ui, "Noto Sans", "Noto Sans Arabic", "Noto Sans Devanagari", "Noto Sans Hebrew", "Noto Sans SC", "Noto Sans TC", "Noto Sans JP", "Noto Sans KR", "Noto Sans Thai", "Noto Sans Bengali", "Noto Sans Tamil", "Noto Sans Ethiopic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+  --sf-font-primary: var(--sf-user-font, 'Plus Jakarta Sans'), var(--sf-font-fallback);
+  --sf-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", "Fira Code", monospace;
+  --sf-font-serif: 'Playfair Display', Georgia, "Times New Roman", "Noto Serif", serif;
+}
 *{box-sizing:border-box}
 html,body{width:100%;max-width:100%;height:100%;height:100dvh;margin:0;padding:0;overflow:hidden!important;overscroll-behavior:none!important;-webkit-overflow-scrolling:touch}
-body{position:fixed;inset:0;background:#080808;color:#f5f5f5;font-family:'Plus Jakarta Sans',system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeSpeed}
-h1,h2,h3,h4,.brand-font,#brandBtn{font-family:'Outfit','Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em}
+body{position:fixed;inset:0;background:#080808;color:#f5f5f5;font-family:var(--sf-font-primary);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+h1,h2,h3,h4,.brand-font,#brandBtn{font-family:'Outfit',var(--sf-font-primary);letter-spacing:-0.02em}
 #landing,#authPage{position:fixed;inset:0;width:100%;height:100%;height:100dvh;max-height:100dvh;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
 #authPage.keyboard-active{align-items:flex-start!important;justify-content:flex-start!important;padding-top:32px!important;padding-bottom:340px!important}
 img,video,iframe,canvas,svg{max-width:100%}video,img{box-sizing:border-box}
 button,input,textarea,select,[contenteditable="true"]{max-width:100%;letter-spacing:normal!important}
-input,textarea,select{
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif!important;
-  font-variant-ligatures:none!important;
-  -webkit-font-feature-settings:"liga" 0,"calt" 0!important;
-  font-feature-settings:"liga" 0,"calt" 0!important;
+input,textarea,select,[contenteditable="true"]{
+  font-family:inherit;
+  unicode-bidi:plaintext;
+  text-align:start;
+  font-variant-ligatures:normal!important;
+  -webkit-font-feature-settings:normal!important;
+  font-feature-settings:normal!important;
   text-rendering:auto!important;
   -webkit-user-select:text!important;
   user-select:text!important;
@@ -218,6 +226,12 @@ input,textarea,select{
   caret-color:#f5b942!important;
   opacity:1!important;
   visibility:visible!important;
+}
+@media screen and (max-width: 768px) {
+  /* Prevent mobile web auto-zoom when tapping inputs */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
 }
 input{
   word-break:normal!important;
@@ -241,7 +255,11 @@ textarea:-webkit-autofill{
 }
 html.light-theme input,
 html.light-theme textarea,
-html.light-theme select{
+html.light-theme select,
+input.bg-white,
+textarea.bg-white,
+select.bg-white,
+.is-light-input{
   color:#0f172a!important;
   caret-color:#d97706!important;
 }
@@ -254,6 +272,14 @@ html.light-theme textarea:-webkit-autofill{
   -webkit-box-shadow:0 0 0 1000px #ffffff inset!important;
   box-shadow:0 0 0 1000px #ffffff inset!important;
   caret-color:#d97706!important;
+}
+/* Virtual keyboard viewport responsiveness on mobile/touch screens */
+body.virtual-keyboard-open #authPage,
+body.virtual-keyboard-open .modal-card,
+body.virtual-keyboard-open .modal,
+body.virtual-keyboard-open #page {
+  padding-bottom: min(45vh, 320px) !important;
+  scroll-padding-bottom: 240px !important;
 }
 #authUsername, #profileUsername, #sfEditUsername{
   padding-left:2.5rem!important;
@@ -8717,7 +8743,11 @@ function setupReelPlayback(targetPostId){
 
   const handleFeedKeyNav = (e) => {
     if(currentPage !== 'feed') return;
-    if(['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+    if(e.isComposing || e.keyCode === 229) return;
+    const target = e.target;
+    const activeEl = document.activeElement;
+    if((target && (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable || target.closest?.('input, textarea, select, [contenteditable="true"]'))) ||
+       (activeEl && (['INPUT', 'TEXTAREA', 'SELECT'].includes(activeEl.tagName) || activeEl.isContentEditable || activeEl.closest?.('input, textarea, select, [contenteditable="true"]')))) return;
     if(document.querySelector('#modalRoot:not(:empty) .modal')) return;
     if(e.key === 'ArrowDown' || e.key === 'j' || e.key === 'PageDown'){
       e.preventDefault();
@@ -10519,36 +10549,121 @@ function renderStorePreviewContent(storeId, store, p, products){
    SELLERFLOW STOREFRONT THEME CUSTOMIZER ENGINE
    ========================================================================== */
 const SF_STORE_FONT_OPTIONS = [
-  { id: 'Plus Jakarta Sans', name: 'Plus Jakarta Sans', category: 'Clean & Modern (Default)', family: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif" },
-  { id: 'Outfit', name: 'Outfit', category: 'Sleek & Premium Brand', family: "'Outfit', -apple-system, BlinkMacSystemFont, sans-serif" },
-  { id: 'Poppins', name: 'Poppins', category: 'Geometric & Friendly', family: "'Poppins', sans-serif" },
-  { id: 'Montserrat', name: 'Montserrat', category: 'Bold Retail & Commerce', family: "'Montserrat', sans-serif" },
+  // Clean & Modern Sans-Serif
+  { id: 'Plus Jakarta Sans', name: 'Plus Jakarta Sans', category: 'Clean & Modern (Default)', family: "'Plus Jakarta Sans', var(--sf-font-fallback)" },
+  { id: 'Inter', name: 'Inter', category: 'Ultra-Clean Neutral Sans', family: "'Inter', var(--sf-font-fallback)" },
+  { id: 'Outfit', name: 'Outfit', category: 'Sleek & Premium Brand', family: "'Outfit', var(--sf-font-fallback)" },
+  { id: 'DM Sans', name: 'DM Sans', category: 'Crisp Minimalist Modern', family: "'DM Sans', var(--sf-font-fallback)" },
+  { id: 'Poppins', name: 'Poppins', category: 'Geometric & Friendly', family: "'Poppins', var(--sf-font-fallback)" },
+  { id: 'Montserrat', name: 'Montserrat', category: 'Bold Retail & Commerce', family: "'Montserrat', var(--sf-font-fallback)" },
+  { id: 'Work Sans', name: 'Work Sans', category: 'Grotesque Retail Sans', family: "'Work Sans', var(--sf-font-fallback)" },
+  { id: 'Nunito', name: 'Nunito', category: 'Soft Rounded Sans', family: "'Nunito', var(--sf-font-fallback)" },
+  { id: 'Rubik', name: 'Rubik', category: 'Soft Geometric Sans', family: "'Rubik', var(--sf-font-fallback)" },
+  { id: 'Raleway', name: 'Raleway', category: 'Elegant Modern Sans', family: "'Raleway', var(--sf-font-fallback)" },
+  { id: 'Space Grotesk', name: 'Space Grotesk', category: 'Trendy & Tech Streetwear', family: "'Space Grotesk', var(--sf-font-fallback)" },
+  { id: 'Syne', name: 'Syne', category: 'Fashion & Distinctive Art', family: "'Syne', var(--sf-font-fallback)" },
+  { id: 'Roboto', name: 'Roboto', category: 'Modern Global Standard', family: "'Roboto', var(--sf-font-fallback)" },
+  { id: 'Lato', name: 'Lato', category: 'Warm Corporate Sans', family: "'Lato', var(--sf-font-fallback)" },
+  { id: 'Open Sans', name: 'Open Sans', category: 'Universal Legibility', family: "'Open Sans', var(--sf-font-fallback)" },
+  { id: 'Ubuntu', name: 'Ubuntu', category: 'Distinctive Modern Rounded', family: "'Ubuntu', var(--sf-font-fallback)" },
+  { id: 'Lexend', name: 'Lexend', category: 'High-Speed Reading Sans', family: "'Lexend', var(--sf-font-fallback)" },
+  { id: 'Manrope', name: 'Manrope', category: 'Geometric Tech Sans', family: "'Manrope', var(--sf-font-fallback)" },
+
+  // Luxury & Editorial Serif
   { id: 'Playfair Display', name: 'Playfair Display', category: 'Luxury Editorial Serif', family: "'Playfair Display', Georgia, serif" },
-  { id: 'Cinzel', name: 'Cinzel', category: 'High-End Boutique Serif', family: "'Cinzel', Times New Roman, serif" },
-  { id: 'Space Grotesk', name: 'Space Grotesk', category: 'Trendy & Tech Streetwear', family: "'Space Grotesk', sans-serif" },
-  { id: 'Syne', name: 'Syne', category: 'Fashion & Distinctive Art', family: "'Syne', sans-serif" },
-  { id: 'DM Sans', name: 'DM Sans', category: 'Crisp Minimalist Modern', family: "'DM Sans', sans-serif" },
-  { id: 'Inter', name: 'Inter', category: 'Ultra-Clean Neutral', family: "'Inter', sans-serif" },
+  { id: 'Cinzel', name: 'Cinzel', category: 'High-End Boutique Serif', family: "'Cinzel', 'Times New Roman', serif" },
   { id: 'Cormorant Garamond', name: 'Cormorant Garamond', category: 'Classic Heritage Serif', family: "'Cormorant Garamond', Georgia, serif" },
-  { id: 'Caveat', name: 'Caveat', category: 'Handcrafted & Artisanal', family: "'Caveat', cursive, sans-serif" }
+  { id: 'Lora', name: 'Lora', category: 'Contemporary Book Serif', family: "'Lora', Georgia, serif" },
+  { id: 'Merriweather', name: 'Merriweather', category: 'Warm Readable Serif', family: "'Merriweather', Georgia, serif" },
+  { id: 'Noto Serif', name: 'Noto Serif', category: 'Universal Multi-Language Serif', family: "'Noto Serif', Georgia, serif" },
+  { id: 'Bitter', name: 'Bitter', category: 'Editorial Contemporary Slab', family: "'Bitter', Georgia, serif" },
+
+  // Trendy Display & Streetwear
+  { id: 'Bebas Neue', name: 'Bebas Neue', category: 'Bold Punchy Display', family: "'Bebas Neue', Impact, sans-serif" },
+  { id: 'Abril Fatface', name: 'Abril Fatface', category: 'Dramatic High-Contrast', family: "'Abril Fatface', cursive, serif" },
+  { id: 'Bungee', name: 'Bungee', category: 'Chunky Urban Signage', family: "'Bungee', Impact, sans-serif" },
+  { id: 'Righteous', name: 'Righteous', category: 'Retro Futuristic Display', family: "'Righteous', cursive, sans-serif" },
+  { id: 'Oswald', name: 'Oswald', category: 'Condensed Athletic Gothic', family: "'Oswald', Impact, sans-serif" },
+
+  // Monospace & Engineering
+  { id: 'JetBrains Mono', name: 'JetBrains Mono', category: 'Clean Tech Monospace', family: "'JetBrains Mono', monospace" },
+  { id: 'Fira Code', name: 'Fira Code', category: 'Programmer Monospace', family: "'Fira Code', monospace" },
+
+  // Handcrafted & Artisanal Script
+  { id: 'Caveat', name: 'Caveat', category: 'Handcrafted & Artisanal', family: "'Caveat', cursive, sans-serif" },
+  { id: 'Dancing Script', name: 'Dancing Script', category: 'Graceful Calligraphy', family: "'Dancing Script', cursive, sans-serif" },
+  { id: 'Pacifico', name: 'Pacifico', category: 'Fun Beach Casual Script', family: "'Pacifico', cursive, sans-serif" },
+
+  // Global & Multi-Language
+  { id: 'Noto Sans', name: 'Noto Sans', category: 'Global Multi-Language (All Scripts)', family: "'Noto Sans', var(--sf-font-fallback)" },
+  { id: 'Cairo', name: 'Cairo', category: 'Modern Arabic & Latin', family: "'Cairo', 'Noto Sans Arabic', var(--sf-font-fallback)" },
+  { id: 'Alexandria', name: 'Alexandria', category: 'Geometric Arabic & English', family: "'Alexandria', 'Noto Sans Arabic', var(--sf-font-fallback)" },
+  { id: 'Amiri', name: 'Amiri', category: 'Classical Naskh Arabic', family: "'Amiri', 'Noto Sans Arabic', serif" },
+  { id: 'Noto Sans Arabic', name: 'Noto Sans Arabic', category: 'Arabic, Persian & Urdu', family: "'Noto Sans Arabic', var(--sf-font-fallback)" },
+  { id: 'Noto Sans Devanagari', name: 'Noto Sans Devanagari', category: 'Hindi, Sanskrit & Marathi', family: "'Noto Sans Devanagari', var(--sf-font-fallback)" },
+  { id: 'Noto Sans Hebrew', name: 'Noto Sans Hebrew', category: 'Hebrew & Jewish Scripts', family: "'Noto Sans Hebrew', var(--sf-font-fallback)" },
+  { id: 'Noto Sans SC', name: 'Noto Sans SC', category: 'Simplified Chinese (简体中文)', family: "'Noto Sans SC', var(--sf-font-fallback)" },
+  { id: 'Noto Sans JP', name: 'Noto Sans JP', category: 'Japanese (日本語)', family: "'Noto Sans JP', var(--sf-font-fallback)" },
+  { id: 'Noto Sans KR', name: 'Noto Sans KR', category: 'Korean (한국어)', family: "'Noto Sans KR', var(--sf-font-fallback)" },
+  { id: 'Noto Sans Thai', name: 'Noto Sans Thai', category: 'Thai (ภาษาไทย)', family: "'Noto Sans Thai', var(--sf-font-fallback)" },
+  { id: 'Noto Sans Bengali', name: 'Noto Sans Bengali', category: 'Bengali & Assamese', family: "'Noto Sans Bengali', var(--sf-font-fallback)" },
+  { id: 'System Default', name: 'System Default', category: 'Native Device Font (San Francisco / Roboto)', family: "var(--sf-font-fallback)" },
+
+  // User Custom Font
+  { id: '__custom__', name: '✏️ Custom Font… (Type Any Google / System Font)', category: 'User Custom Font', family: "var(--sf-font-fallback)" }
 ];
 
-const _sfLoadedFonts = new Set(['Plus Jakarta Sans', 'Outfit']);
+const _sfLoadedFonts = new Set(['Plus Jakarta Sans', 'Outfit', 'Inter', 'DM Sans', 'Poppins', 'Montserrat', 'Playfair Display', 'Cinzel', 'Cormorant Garamond', 'Space Grotesk', 'Syne', 'Caveat', 'Work Sans', 'Nunito', 'Rubik', 'Raleway', 'Lora', 'Merriweather', 'Noto Serif', 'Bebas Neue', 'Abril Fatface', 'JetBrains Mono', 'Fira Code', 'Dancing Script', 'Pacifico', 'Noto Sans', 'Cairo', 'Alexandria', 'Amiri', 'Noto Sans Arabic', 'Noto Sans Devanagari', 'Noto Sans Hebrew', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans SC', 'Noto Sans Thai', 'Noto Sans Bengali', 'Roboto', 'Lato', 'Open Sans', 'Ubuntu', 'Lexend', 'Manrope', 'Bitter', 'Bungee', 'Righteous', 'Oswald']);
+
 function ensureGoogleFontLoaded(fontId) {
-  if (!fontId || _sfLoadedFonts.has(fontId)) return;
-  _sfLoadedFonts.add(fontId);
+  if (!fontId || typeof fontId !== 'string') return;
+  const cleanFont = fontId.trim().replace(/^['"]+|['"]+$/g, '');
+  if (!cleanFont || cleanFont === '__custom__') return;
+  
+  const systemFonts = ['system default', 'system-ui', '-apple-system', 'blinkmacsystemfont', 'segoe ui', 'roboto', 'helvetica neue', 'arial', 'sans-serif', 'serif', 'monospace', 'cursive', 'fantasy', 'georgia', 'times new roman', 'courier new', 'verdana', 'tahoma', 'trebuchet ms', 'impact'];
+  if (systemFonts.includes(cleanFont.toLowerCase())) return;
+
+  if (_sfLoadedFonts.has(cleanFont)) return;
+  _sfLoadedFonts.add(cleanFont);
   try {
-    const formatted = encodeURIComponent(fontId).replace(/%20/g, '+');
-    const linkId = 'gfont-' + fontId.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const formatted = encodeURIComponent(cleanFont).replace(/%20/g, '+');
+    const linkId = 'gfont-' + cleanFont.toLowerCase().replace(/[^a-z0-9]/g, '-');
     if (!document.getElementById(linkId)) {
       const link = document.createElement('link');
       link.id = linkId;
       link.rel = 'stylesheet';
-      link.href = `https://fonts.googleapis.com/css2?family=${formatted}:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap`;
+      link.href = `https://fonts.googleapis.com/css2?family=${formatted}:wght@300;400;500;600;700;800&display=swap`;
+      link.onerror = () => {
+        link.href = `https://fonts.googleapis.com/css2?family=${formatted}&display=swap`;
+      };
       document.head.appendChild(link);
     }
   } catch (_) {}
 }
+
+function applyAppFont(fontFamily) {
+  if (!fontFamily) return;
+  const clean = fontFamily.trim().replace(/^['"]+|['"]+$/g, '');
+  if (!clean) return;
+  ensureGoogleFontLoaded(clean);
+  const fontVal = clean.toLowerCase() === 'system default'
+    ? 'var(--sf-font-fallback)'
+    : `'${clean}', var(--sf-font-fallback)`;
+  document.documentElement.style.setProperty('--sf-user-font', `'${clean}'`);
+  try {
+    localStorage.setItem('sf_app_font', clean);
+  } catch (_) {}
+}
+window.applyAppFont = applyAppFont;
+window.ensureGoogleFontLoaded = ensureGoogleFontLoaded;
+
+// Immediately restore saved user app font preference
+try {
+  const savedAppFont = localStorage.getItem('sf_app_font');
+  if (savedAppFont) {
+    applyAppFont(savedAppFont);
+  }
+} catch (_) {}
 
 const SF_STORE_THEME_PRESETS = [
   {
@@ -10733,10 +10848,24 @@ function generateStoreCssVars(rawTheme) {
   const badgeBg = hexToRgba(primary, 0.15);
   const badgeBorder = hexToRgba(primary, 0.35);
 
-  const fontOption = SF_STORE_FONT_OPTIONS.find(f => f.id === theme.fontFamily) || SF_STORE_FONT_OPTIONS[0];
-  const fontVal = fontOption.family;
-  if (typeof ensureGoogleFontLoaded === 'function') {
-    ensureGoogleFontLoaded(fontOption.id);
+  const rawFont = theme.fontFamily || 'Plus Jakarta Sans';
+  const fontOption = SF_STORE_FONT_OPTIONS.find(f => f.id === rawFont);
+  let fontVal = "var(--sf-font-fallback)";
+  if (fontOption && fontOption.id !== '__custom__') {
+    fontVal = fontOption.family;
+    if (typeof ensureGoogleFontLoaded === 'function') {
+      ensureGoogleFontLoaded(fontOption.id);
+    }
+  } else if (rawFont && rawFont !== '__custom__') {
+    fontVal = `'${rawFont}', var(--sf-font-fallback)`;
+    if (typeof ensureGoogleFontLoaded === 'function') {
+      ensureGoogleFontLoaded(rawFont);
+    }
+  } else {
+    fontVal = "'Plus Jakarta Sans', var(--sf-font-fallback)";
+    if (typeof ensureGoogleFontLoaded === 'function') {
+      ensureGoogleFontLoaded('Plus Jakarta Sans');
+    }
   }
 
   return [
@@ -10878,7 +11007,7 @@ function openStoreThemeCustomizerModal(storeId, currentTheme, onSavedCallback) {
             <div class="sm:col-span-2">
               <select id="inputCustomFont" class="w-full p-2.5 text-xs font-medium rounded-xl bg-[#181822] border border-[#353545] focus:border-gold text-white cursor-pointer transition">
                 ${SF_STORE_FONT_OPTIONS.map(f => `
-                  <option value="${f.id}" ${workingTheme.fontFamily === f.id ? 'selected' : ''} style="font-family: ${f.family}">
+                  <option value="${f.id}" ${(workingTheme.fontFamily === f.id || (f.id === '__custom__' && !SF_STORE_FONT_OPTIONS.some(x => x.id === workingTheme.fontFamily))) ? 'selected' : ''} style="font-family: ${f.family}">
                     ${f.name} — ${f.category}
                   </option>
                 `).join('')}
@@ -10886,6 +11015,13 @@ function openStoreThemeCustomizerModal(storeId, currentTheme, onSavedCallback) {
             </div>
             <div class="text-[11px] text-zinc-400 leading-tight">
               Updates your store name, banners, product titles, and prices via dynamic CSS typography variables.
+            </div>
+          </div>
+          <div id="themeCustomFontInputRow" class="${(!SF_STORE_FONT_OPTIONS.some(x => x.id === workingTheme.fontFamily && x.id !== '__custom__') || workingTheme.fontFamily === '__custom__') ? '' : 'hidden'} mt-2 p-2.5 bg-[#171720] border border-[#2c2c3c] rounded-xl space-y-1">
+            <label class="text-[11px] font-bold text-zinc-300 block">Type Any Custom Google Font / System Font Name:</label>
+            <div class="flex items-center gap-2">
+              <input type="text" id="inputCustomFontManual" value="${esc(SF_STORE_FONT_OPTIONS.some(x => x.id === workingTheme.fontFamily && x.id !== '__custom__') ? '' : (workingTheme.fontFamily === '__custom__' ? '' : (workingTheme.fontFamily || '')))}" placeholder="e.g. Cairo, Oswald, Amiri, Ubuntu, Bitter, Cinzel Decorative..." class="w-full p-2 text-xs rounded-lg bg-[#111116] border border-[#3a3a4c] focus:border-gold text-white">
+              <button type="button" id="applyCustomFontManualBtn" class="px-3 py-2 bg-gold text-black rounded-lg text-xs font-bold whitespace-nowrap hover:brightness-110">Apply</button>
             </div>
           </div>
         </div>
@@ -10955,6 +11091,21 @@ function openStoreThemeCustomizerModal(storeId, currentTheme, onSavedCallback) {
     // Font Selection Dropdown
     $('inputCustomFont')?.addEventListener('change', (e) => {
       const chosenFont = e.target.value;
+      if (chosenFont === '__custom__') {
+        $('themeCustomFontInputRow')?.classList.remove('hidden');
+        const manual = $('inputCustomFontManual')?.value.trim();
+        if (manual) {
+          workingTheme.fontFamily = manual;
+          workingTheme.presetId = 'custom';
+          ensureGoogleFontLoaded(manual);
+          const sampleBadge = $('themeFontSampleBadge');
+          if (sampleBadge) sampleBadge.style.fontFamily = `'${manual}', var(--sf-font-fallback)`;
+          updateLivePreview();
+        }
+        $('inputCustomFontManual')?.focus();
+        return;
+      }
+      $('themeCustomFontInputRow')?.classList.add('hidden');
       workingTheme.fontFamily = chosenFont;
       workingTheme.presetId = 'custom';
       if (typeof ensureGoogleFontLoaded === 'function') {
@@ -10967,6 +11118,21 @@ function openStoreThemeCustomizerModal(storeId, currentTheme, onSavedCallback) {
       }
       updateLivePreview();
     });
+
+    const handleCustomFontManual = () => {
+      const manual = $('inputCustomFontManual')?.value.trim();
+      if (!manual) return;
+      workingTheme.fontFamily = manual;
+      workingTheme.presetId = 'custom';
+      ensureGoogleFontLoaded(manual);
+      const sampleBadge = $('themeFontSampleBadge');
+      if (sampleBadge) {
+        sampleBadge.style.fontFamily = `'${manual}', var(--sf-font-fallback)`;
+      }
+      updateLivePreview();
+    };
+    $('applyCustomFontManualBtn')?.addEventListener('click', handleCustomFontManual);
+    $('inputCustomFontManual')?.addEventListener('input', handleCustomFontManual);
 
     // Presets Click
     document.querySelectorAll('[data-theme-preset-id]').forEach(btn => {
@@ -14399,11 +14565,14 @@ async function renderStore(forceEdit = false){
               </div>
               <select id="storeThemeFont" class="w-full p-2 text-xs rounded-lg bg-[#181818] border border-[#333] focus:border-gold text-white min-w-0">
                 ${SF_STORE_FONT_OPTIONS.map(f => `
-                  <option value="${f.id}" ${(store.theme?.fontFamily === f.id || (!store.theme?.fontFamily && f.id === 'Plus Jakarta Sans')) ? 'selected' : ''} style="font-family: ${f.family}">
+                  <option value="${f.id}" ${(store.theme?.fontFamily === f.id || (!store.theme?.fontFamily && f.id === 'Plus Jakarta Sans') || (f.id === '__custom__' && store.theme?.fontFamily && !SF_STORE_FONT_OPTIONS.some(x => x.id === store.theme?.fontFamily))) ? 'selected' : ''} style="font-family: ${f.family}">
                     ${f.name} (${f.category})
                   </option>
                 `).join('')}
               </select>
+              <div id="storeThemeFontCustomWrap" class="${(store.theme?.fontFamily && !SF_STORE_FONT_OPTIONS.some(x => x.id === store.theme?.fontFamily && x.id !== '__custom__')) ? '' : 'hidden'} mt-2">
+                <input type="text" id="storeThemeFontCustomInput" value="${esc((store.theme?.fontFamily && !SF_STORE_FONT_OPTIONS.some(x => x.id === store.theme?.fontFamily && x.id !== '__custom__')) ? store.theme?.fontFamily : '')}" placeholder="Type any Google Font name (e.g. Cairo, Oswald, Amiri...)" class="w-full p-2 text-xs rounded-lg bg-[#111116] border border-[#333] focus:border-gold text-white">
+              </div>
             </div>
           </div>
 
@@ -14836,7 +15005,13 @@ async function renderStore(forceEdit = false){
       const primary = $('storeThemePrimary')?.value || '#f5b942';
       const accent = $('storeThemeAccent')?.value || '#d97706';
       const radius = $('storeThemeRadius')?.value || '18px';
-      const fontFamily = $('storeThemeFont')?.value || 'Plus Jakarta Sans';
+      let fontFamily = $('storeThemeFont')?.value || 'Plus Jakarta Sans';
+      if (fontFamily === '__custom__') {
+        $('storeThemeFontCustomWrap')?.classList.remove('hidden');
+        fontFamily = $('storeThemeFontCustomInput')?.value.trim() || 'Plus Jakarta Sans';
+      } else {
+        $('storeThemeFontCustomWrap')?.classList.add('hidden');
+      }
       const themeObj = {
         primaryColor: primary,
         accentColor: accent,
@@ -14877,6 +15052,7 @@ async function renderStore(forceEdit = false){
 
     $('storeThemeRadius')?.addEventListener('change', () => updateFormThemePreview());
     $('storeThemeFont')?.addEventListener('change', () => updateFormThemePreview());
+    $('storeThemeFontCustomInput')?.addEventListener('input', () => updateFormThemePreview());
 
     document.querySelectorAll('[data-form-preset]').forEach(b => {
       b.onclick = () => {
@@ -15131,7 +15307,10 @@ async function renderStore(forceEdit = false){
         const primaryColor = $('storeThemePrimary')?.value || '#f5b942';
         const accentColor = $('storeThemeAccent')?.value || '#d97706';
         const borderRadius = $('storeThemeRadius')?.value || '18px';
-        const fontFamily = $('storeThemeFont')?.value || 'Plus Jakarta Sans';
+        let fontFamily = $('storeThemeFont')?.value || 'Plus Jakarta Sans';
+        if (fontFamily === '__custom__') {
+          fontFamily = $('storeThemeFontCustomInput')?.value.trim() || 'Plus Jakarta Sans';
+        }
         const theme = {
           primaryColor,
           accentColor,
@@ -16955,6 +17134,14 @@ async function renderSettings(){
             </button>
           </div>
         </div>
+        <div class="settings-item border-b border-[#292929]">
+          <div class="text-2xl">🔤</div>
+          <div class="flex-1">
+            <b>App Typography & Font</b>
+            <p class="muted text-sm">Active: <span class="text-gold font-semibold">${esc(localStorage.getItem('sf_app_font') || 'Plus Jakarta Sans (Default)')}</span> — Supports all fonts and world languages.</p>
+          </div>
+          ${button('Change Font', 'changeAppFontBtn', 'border border-[#444] bg-transparent text-white')}
+        </div>
         <div class="settings-item">
           <div class="text-2xl">📜</div>
           <div class="flex-1">
@@ -17046,6 +17233,7 @@ async function renderSettings(){
     toast(`Theme changed to ${getCurrentTheme() === 'light' ? 'Light' : 'Dark'} Mode`, 'info', 1500);
   });
   $('changeLanguageBtn')?.addEventListener('click', () => { if(typeof openLanguageSelectorModal === 'function') openLanguageSelectorModal(); });
+  $('changeAppFontBtn')?.addEventListener('click', () => openAppFontSelectorModal());
   if($('readTerms')) $('readTerms').onclick=()=>showTermsModal(false);
   $('deleteAccountBtn')?.addEventListener('click', () => triggerAccountDeletionFlow());
   $('startVerification')?.addEventListener('click',openVerificationModal);
@@ -17053,6 +17241,115 @@ async function renderSettings(){
   $('changeEmailBtn')?.addEventListener('click', () => openChangeEmailModal());
   $('changePasswordBtn')?.addEventListener('click', () => openChangePasswordModal());
 }
+
+function openAppFontSelectorModal() {
+  const currentSaved = localStorage.getItem('sf_app_font') || 'Plus Jakarta Sans';
+  const isPreset = SF_STORE_FONT_OPTIONS.some(f => f.id === currentSaved && f.id !== '__custom__');
+  
+  modal(`
+    <div class="space-y-4 max-w-lg mx-auto">
+      <div class="flex items-center gap-3 pb-3 border-b border-[#292929]">
+        <div class="w-10 h-10 rounded-xl bg-gold/15 border border-gold/30 flex items-center justify-center text-xl shrink-0">🔤</div>
+        <div>
+          <h2 class="text-xl font-bold text-white">App Typography & Fonts</h2>
+          <p class="muted text-xs">Customize the SellerFlow application font to any world font or language script.</p>
+        </div>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-[#14141a] border border-[#282836] space-y-2.5">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-bold text-zinc-300">Choose Font Family</label>
+          <span id="appFontModalSample" class="text-xs px-2.5 py-1 rounded-md bg-[#1d1d26] border border-[#3a3a4c] text-gold font-semibold transition" style="font-family: '${esc(currentSaved)}', var(--sf-font-fallback)">
+            Sample: Aa Bb 123 🇬🇭
+          </span>
+        </div>
+
+        <select id="appFontModalSelect" class="w-full p-2.5 text-xs font-medium rounded-xl bg-[#1c1c24] border border-[#383848] focus:border-gold text-white cursor-pointer transition">
+          ${SF_STORE_FONT_OPTIONS.map(f => `
+            <option value="${f.id}" ${(f.id === currentSaved || (!isPreset && f.id === '__custom__')) ? 'selected' : ''} style="font-family: ${f.family}">
+              ${f.name} — ${f.category}
+            </option>
+          `).join('')}
+        </select>
+
+        <div id="appFontModalCustomWrap" class="${isPreset ? 'hidden' : ''} pt-2 space-y-1.5">
+          <label class="text-[11px] font-semibold text-zinc-300 block">Type Any Google Font or System Font Name:</label>
+          <div class="flex items-center gap-2">
+            <input type="text" id="appFontModalCustomInput" value="${esc(isPreset ? '' : currentSaved)}" placeholder="e.g. Cairo, Oswald, Amiri, Ubuntu, Bitter..." class="w-full p-2 text-xs rounded-lg bg-[#111116] border border-[#383848] focus:border-gold text-white">
+            <button type="button" id="appFontModalCustomPreviewBtn" class="px-3 py-2 bg-gold/20 hover:bg-gold/30 text-gold rounded-lg text-xs font-bold whitespace-nowrap">Preview</button>
+          </div>
+          <p class="text-[10px] text-zinc-400">Supports all 1,500+ Google Fonts and native device system fonts.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-3 border-t border-[#292929]">
+        <button type="button" id="resetAppFontDefaultBtn" class="text-xs text-zinc-400 hover:text-white underline font-medium">
+          Reset to Plus Jakarta Sans
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" data-close-modal class="border border-[#444] px-4 py-2 rounded-xl text-xs font-bold text-zinc-300">
+            Cancel
+          </button>
+          <button type="button" id="saveAppFontModalBtn" class="bg-gold text-black hover:brightness-110 px-5 py-2 rounded-xl text-xs font-extrabold shadow-md transition">
+            Apply Font
+          </button>
+        </div>
+      </div>
+    </div>
+  `);
+
+  let selectedFont = currentSaved;
+
+  const updatePreview = (fontName) => {
+    selectedFont = fontName;
+    ensureGoogleFontLoaded(fontName);
+    const sample = $('appFontModalSample');
+    if (sample) {
+      sample.style.fontFamily = `'${fontName}', var(--sf-font-fallback)`;
+    }
+  };
+
+  $('appFontModalSelect')?.addEventListener('change', (e) => {
+    const val = e.target.value;
+    if (val === '__custom__') {
+      $('appFontModalCustomWrap')?.classList.remove('hidden');
+      const manual = $('appFontModalCustomInput')?.value.trim() || 'Cairo';
+      updatePreview(manual);
+    } else {
+      $('appFontModalCustomWrap')?.classList.add('hidden');
+      updatePreview(val);
+    }
+  });
+
+  $('appFontModalCustomPreviewBtn')?.addEventListener('click', () => {
+    const manual = $('appFontModalCustomInput')?.value.trim();
+    if (manual) updatePreview(manual);
+  });
+
+  $('appFontModalCustomInput')?.addEventListener('input', (e) => {
+    const manual = e.target.value.trim();
+    if (manual) updatePreview(manual);
+  });
+
+  $('resetAppFontDefaultBtn')?.addEventListener('click', () => {
+    applyAppFont('Plus Jakarta Sans');
+    closeModal();
+    toast('App font reset to Plus Jakarta Sans', 'info');
+    if (typeof currentPage !== 'undefined' && currentPage === 'settings') renderSettings();
+  });
+
+  $('saveAppFontModalBtn')?.addEventListener('click', () => {
+    let fontToSave = selectedFont;
+    if ($('appFontModalSelect')?.value === '__custom__') {
+      fontToSave = $('appFontModalCustomInput')?.value.trim() || selectedFont;
+    }
+    applyAppFont(fontToSave);
+    closeModal();
+    toast(`App font updated to "${fontToSave}"`, 'success');
+    if (typeof currentPage !== 'undefined' && currentPage === 'settings') renderSettings();
+  });
+}
+window.openAppFontSelectorModal = openAppFontSelectorModal;
 
 async function openChangeEmailModal() {
   if (!currentUser) return toast('You must be signed in to change your email.', 'error');
@@ -18958,10 +19255,16 @@ window.addEventListener('focus', function(){
 
 // Hardware & keyboard physical navigation support for Windows, Mac & Linux
 window.addEventListener('keydown', function(e){
-  const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+  // Check if keyboard is in IME composition mode (Japanese, Chinese, Korean, accents, etc.)
+  if (e.isComposing || e.keyCode === 229) return;
+
+  const target = e.target;
+  const activeEl = document.activeElement;
+  const isInput = (target && (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable || target.closest?.('input, textarea, select, [contenteditable="true"]'))) ||
+                  (activeEl && (['INPUT', 'TEXTAREA', 'SELECT'].includes(activeEl.tagName) || activeEl.isContentEditable || activeEl.closest?.('input, textarea, select, [contenteditable="true"]')));
 
   // Physical Back Shortcuts (Alt+Left, Cmd+[, or Backspace outside inputs)
-  if ((e.altKey && e.key === 'ArrowLeft') || (!isInput && e.key === 'Backspace') || (e.metaKey && e.key === '[')) {
+  if (!isInput && ((e.altKey && e.key === 'ArrowLeft') || e.key === 'Backspace' || (e.metaKey && e.key === '['))) {
     e.preventDefault();
     handleAppBack();
     return;
@@ -19698,60 +20001,132 @@ async function waitForFirebase(maxMs=6000){
 
 function setupAuthInputRepaintFix() {
   const container = document.getElementById('authPage');
-  if (!container) return;
-  const inputs = container.querySelectorAll('input');
-  
-  let blurTimeout = null;
+  if (container) {
+    const inputs = container.querySelectorAll('input');
+    let blurTimeout = null;
 
-  inputs.forEach(input => {
-    // Dynamic keyboard-active CSS layout toggles & smooth positioning
-    input.addEventListener('focus', () => {
-      if (blurTimeout) {
-        clearTimeout(blurTimeout);
-        blurTimeout = null;
-      }
-      container.classList.add('keyboard-active');
-      
-      setTimeout(() => {
-        input.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      }, 180);
-    });
-
-    input.addEventListener('blur', () => {
-      blurTimeout = setTimeout(() => {
-        if (!container.contains(document.activeElement) || document.activeElement.tagName !== 'INPUT') {
-          container.classList.remove('keyboard-active');
+    inputs.forEach(input => {
+      // Dynamic keyboard-active CSS layout toggles & smooth positioning
+      input.addEventListener('focus', () => {
+        if (blurTimeout) {
+          clearTimeout(blurTimeout);
+          blurTimeout = null;
         }
-      }, 150);
-    });
-  });
+        container.classList.add('keyboard-active');
+        
+        setTimeout(() => {
+          input.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }, 180);
+      });
 
-  // Password visibility reveal toggle listeners
-  const togglePassBtn = document.getElementById('toggleAuthPassword');
-  const passInput = document.getElementById('authPassword');
-  if (togglePassBtn && passInput) {
-    togglePassBtn.onclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const isPass = passInput.type === 'password';
-      passInput.type = isPass ? 'text' : 'password';
-      togglePassBtn.textContent = isPass ? '🙈' : '👁️';
-      togglePassBtn.setAttribute('title', isPass ? 'Hide password' : 'Show password');
-    };
+      input.addEventListener('blur', () => {
+        blurTimeout = setTimeout(() => {
+          if (!container.contains(document.activeElement) || document.activeElement.tagName !== 'INPUT') {
+            container.classList.remove('keyboard-active');
+          }
+        }, 150);
+      });
+    });
+
+    // Password visibility reveal toggle listeners
+    const togglePassBtn = document.getElementById('toggleAuthPassword');
+    const passInput = document.getElementById('authPassword');
+    if (togglePassBtn && passInput) {
+      togglePassBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const isPass = passInput.type === 'password';
+        passInput.type = isPass ? 'text' : 'password';
+        togglePassBtn.textContent = isPass ? '🙈' : '👁️';
+        togglePassBtn.setAttribute('title', isPass ? 'Hide password' : 'Show password');
+      };
+    }
+    const toggleConfirmBtn = document.getElementById('toggleAuthConfirmPassword');
+    const confirmInput = document.getElementById('authConfirmPassword');
+    if (toggleConfirmBtn && confirmInput) {
+      toggleConfirmBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const isPass = confirmInput.type === 'password';
+        confirmInput.type = isPass ? 'text' : 'password';
+        toggleConfirmBtn.textContent = isPass ? '🙈' : '👁️';
+        toggleConfirmBtn.setAttribute('title', isPass ? 'Hide password' : 'Show password');
+      };
+    }
   }
-  const toggleConfirmBtn = document.getElementById('toggleAuthConfirmPassword');
-  const confirmInput = document.getElementById('authConfirmPassword');
-  if (toggleConfirmBtn && confirmInput) {
-    toggleConfirmBtn.onclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const isPass = confirmInput.type === 'password';
-      confirmInput.type = isPass ? 'text' : 'password';
-      toggleConfirmBtn.textContent = isPass ? '🙈' : '👁️';
-      toggleConfirmBtn.setAttribute('title', isPass ? 'Hide password' : 'Show password');
-    };
-  }
+
+  // Universal Keyboard & Multi-Language Input Engine
+  initUniversalKeyboardEngine();
 }
+
+function initUniversalKeyboardEngine() {
+  if (window._sfUniversalKeyboardInitialized) return;
+  window._sfUniversalKeyboardInitialized = true;
+
+  // 1. Tag all inputs with dir="auto" for natural LTR/RTL international typing
+  function ensureInputDirection(root = document) {
+    try {
+      const inputs = root.querySelectorAll('input, textarea');
+      inputs.forEach(el => {
+        if (!el.hasAttribute('dir')) el.setAttribute('dir', 'auto');
+        if (!el.hasAttribute('enterkeyhint') && el.tagName === 'INPUT') {
+          const type = el.type || 'text';
+          if (type === 'search') el.setAttribute('enterkeyhint', 'search');
+          else if (type === 'email' || type === 'password') el.setAttribute('enterkeyhint', 'go');
+          else if (el.closest('form')) el.setAttribute('enterkeyhint', 'next');
+        }
+      });
+    } catch (_) {}
+  }
+  ensureInputDirection();
+
+  try {
+    const observer = new MutationObserver(mutations => {
+      for (const m of mutations) {
+        if (m.addedNodes.length) {
+          m.addedNodes.forEach(node => {
+            if (node.nodeType === 1) ensureInputDirection(node);
+          });
+        }
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  } catch (_) {}
+
+  // 2. Mobile Visual Viewport keyboard handler
+  if (window.visualViewport) {
+    const handleViewport = () => {
+      const active = document.activeElement;
+      const isInput = active && (['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName) || active.isContentEditable);
+      const isKeyboardActive = window.innerHeight - window.visualViewport.height > 140;
+
+      document.body.classList.toggle('virtual-keyboard-open', isKeyboardActive);
+
+      if (isKeyboardActive && isInput) {
+        setTimeout(() => {
+          try {
+            active.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+          } catch (_) {}
+        }, 100);
+      }
+    };
+    window.visualViewport.addEventListener('resize', handleViewport);
+    window.visualViewport.addEventListener('scroll', handleViewport);
+  }
+
+  // 3. Smooth focus positioning for all inputs in modals, carts, and forms
+  document.addEventListener('focusin', (e) => {
+    const target = e.target;
+    if (target && (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable)) {
+      setTimeout(() => {
+        try {
+          target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        } catch (_) {}
+      }, 160);
+    }
+  });
+}
+window.initUniversalKeyboardEngine = initUniversalKeyboardEngine;
 
 // Global Authentication Lifecycle States
 window.SELLERFLOW_AUTH_STATE = 'AUTH_INITIALIZING';
