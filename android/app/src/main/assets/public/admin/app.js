@@ -2201,6 +2201,18 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Email/Password Login
+  const toggleAdminPassBtn = document.getElementById('toggleAdminPassword');
+  const adminPassInput = document.getElementById('adminPasswordInput');
+  if (toggleAdminPassBtn && adminPassInput) {
+    toggleAdminPassBtn.onclick = (e) => {
+      e.preventDefault();
+      const isPass = adminPassInput.type === 'password';
+      adminPassInput.type = isPass ? 'text' : 'password';
+      toggleAdminPassBtn.textContent = isPass ? '🙈' : '👁️';
+      toggleAdminPassBtn.setAttribute('title', isPass ? 'Hide password' : 'Show password');
+    };
+  }
+
   document.getElementById('adminLoginForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('adminEmailInput')?.value.trim();

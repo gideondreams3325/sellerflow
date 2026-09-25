@@ -214,9 +214,53 @@ input,textarea,select{
   user-select:text!important;
   touch-action:manipulation;
   -webkit-tap-highlight-color:transparent;
+  color:#ffffff!important;
+  caret-color:#f5b942!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+input{
+  word-break:normal!important;
+  overflow-wrap:normal!important;
+  white-space:nowrap!important;
+  text-overflow:clip;
+}
+input::selection,textarea::selection{
+  background:#f5b942;
+  color:#000000;
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active,
+textarea:-webkit-autofill{
+  -webkit-text-fill-color:#ffffff!important;
+  -webkit-box-shadow:0 0 0 1000px #191919 inset!important;
+  box-shadow:0 0 0 1000px #191919 inset!important;
+  caret-color:#f5b942!important;
+}
+html.light-theme input,
+html.light-theme textarea,
+html.light-theme select{
+  color:#0f172a!important;
+  caret-color:#d97706!important;
+}
+html.light-theme input:-webkit-autofill,
+html.light-theme input:-webkit-autofill:hover, 
+html.light-theme input:-webkit-autofill:focus, 
+html.light-theme input:-webkit-autofill:active,
+html.light-theme textarea:-webkit-autofill{
+  -webkit-text-fill-color:#0f172a!important;
+  -webkit-box-shadow:0 0 0 1000px #ffffff inset!important;
+  box-shadow:0 0 0 1000px #ffffff inset!important;
+  caret-color:#d97706!important;
+}
+#authUsername, #profileUsername, #sfEditUsername{
+  padding-left:2.5rem!important;
+  padding-right:2.75rem!important;
 }
 button:disabled{opacity:.5;cursor:not-allowed}
-body,input,textarea,select,.card,.reel-content,.chat-bubble,.sf-stat-card,.sf-user-row{overflow-wrap:anywhere;word-break:break-word}
+body,textarea,select,.card,.reel-content,.chat-bubble,.sf-stat-card,.sf-user-row{overflow-wrap:anywhere;word-break:break-word}
 button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-nav-badge,#brandBtn,#headerLoginBtn,#headerRegisterBtn,#feedLoginBtn,#feedRegisterBtn,#openFeedUpload,#feedPrevBtn,#feedNextBtn,.sf-search-btn{white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important}
 .flex-1{min-width:0}.gold{color:#f5b942}.bg-gold{background:#f5b942;color:#080808}.border-gold{border-color:#f5b942}.card{background:#121212;border:1px solid #242424;border-radius:18px;min-width:0}.muted{color:#a1a1aa}.hide{display:none!important}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;overscroll-behavior:contain}
@@ -1134,7 +1178,7 @@ html.light-theme .border-b {
 <body>
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center select-none transition-opacity duration-200"><div class="text-center flex flex-col items-center"><div class="flex flex-col items-center gap-1.5 mb-5"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_14px_rgba(245,158,11,0.4)]" /><div class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span><span class="text-[10px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider ml-1.5">GH</span></div><div class="text-[10px] sm:text-[11px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none mt-0.5"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div><div class="w-7 h-7 rounded-full border-2 border-zinc-800 border-t-[#f5b942] animate-spin"></div><div id="loadingText" class="text-xs text-zinc-500 mt-3 font-medium"></div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The SellerFlow Team has temporarily paused the marketplace. Please try again later.</p></div></div>
-<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="flex flex-col items-center justify-center gap-1 mb-2"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_12px_rgba(245,158,11,0.35)]" /><div class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></div><div class="text-[10.5px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name" autocapitalize="words" autocorrect="off" spellcheck="false" inputmode="text"></div><div id="usernameWrap"><div class="flex items-center justify-between"><label class="text-sm muted">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="authUsernamePreview">username</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="authUsername" type="text" class="w-full pl-8 pr-10 p-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-sm focus:border-gold outline-none transition" placeholder="e.g. gideon_shop" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"><span id="authUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none"></span></div><div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can only be changed once every 360 days.</span></div><div id="authUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="authUsernameSuggestions" class="mt-2 hidden"></div></div><div id="emailInputWrap"><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"><div id="authEmailFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div></div><div><label class="text-sm muted">Password</label><input id="authPassword" type="password" required minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="current-password"></div><div id="confirmPasswordWrap"><label class="text-sm muted">Confirm Password</label><input id="authConfirmPassword" type="password" minlength="6" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="new-password"></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><div id="emailVerifyWrap" class="hide text-center mt-5"><div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl text-amber-400 mb-3 shadow-[0_0_20px_rgba(245,158,11,0.15)]">🔑</div><div class="mt-3 p-4 rounded-xl bg-[#141414] border border-[#2a2a2a] text-left"><div class="text-[11px] font-medium text-zinc-400">We've sent a modern, professional verification code to</div><div id="verifyEmailTarget" class="text-sm font-bold text-amber-400 mt-1 break-all select-all">user@example.com</div><div class="text-[11px] text-zinc-400 mt-2.5 leading-relaxed font-semibold">Please enter the 6-digit security code below to activate your SellerFlow account.</div></div><div class="mt-5 text-left"><label class="block text-xs text-zinc-400 font-semibold mb-1.5 uppercase tracking-wider">Verification Code</label><input id="verificationCodeInput" type="text" maxlength="6" pattern="[0-9]*" inputmode="numeric" class="w-full text-center tracking-[0.5em] font-mono text-2xl font-black p-3 rounded-xl bg-[#141414] border border-[#333] text-gold hover:border-[#444] focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition outline-none" placeholder="000000"></div><div class="space-y-2 mt-5"><button id="submitVerificationCodeBtn" type="button" class="w-full bg-gold text-black p-3.5 rounded-xl font-bold text-sm shadow-md hover:brightness-110 active:scale-[0.99] transition flex items-center justify-center gap-2"><span class="text-base">✓</span><span>Verify Code</span></button><button id="resendVerificationBtn" type="button" class="w-full p-3 rounded-xl border border-[#383838] bg-[#181818] text-zinc-200 hover:text-white hover:border-[#555] font-semibold text-xs transition">Resend email</button><button id="changeEmailBtn" type="button" class="w-full mt-2 text-xs text-zinc-400 hover:text-amber-400 underline transition py-1 font-semibold">Change email / Sign in with another account</button></div></div><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
+<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="flex flex-col items-center justify-center gap-1 mb-2"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_12px_rgba(245,158,11,0.35)]" /><div class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></div><div class="text-[10.5px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name" autocapitalize="words" autocorrect="off" spellcheck="false" inputmode="text"></div><div id="usernameWrap"><div class="flex items-center justify-between"><label class="text-sm muted">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="authUsernamePreview">username</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="authUsername" type="text" class="w-full pl-10 pr-10 py-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-sm focus:border-gold outline-none transition" placeholder="e.g. gideon_shop" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"><span id="authUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none"></span></div><div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can only be changed once every 360 days.</span></div><div id="authUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="authUsernameSuggestions" class="mt-2 hidden"></div></div><div id="emailInputWrap"><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"><div id="authEmailFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div></div><div><label class="text-sm muted">Password</label><div class="relative mt-1"><input id="authPassword" type="password" required minlength="6" class="w-full py-3 pl-3.5 pr-11 rounded-xl bg-[#191919] border border-[#333] text-white focus:border-gold outline-none transition" autocomplete="current-password" placeholder="••••••••"><button type="button" id="toggleAuthPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1 text-sm focus:outline-none select-none cursor-pointer" title="Show/hide password" aria-label="Toggle password visibility">👁️</button></div></div><div id="confirmPasswordWrap"><label class="text-sm muted">Confirm Password</label><div class="relative mt-1"><input id="authConfirmPassword" type="password" minlength="6" class="w-full py-3 pl-3.5 pr-11 rounded-xl bg-[#191919] border border-[#333] text-white focus:border-gold outline-none transition" autocomplete="new-password" placeholder="••••••••"><button type="button" id="toggleAuthConfirmPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1 text-sm focus:outline-none select-none cursor-pointer" title="Show/hide password" aria-label="Toggle password visibility">👁️</button></div></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><div id="emailVerifyWrap" class="hide"></div><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
 <div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur-md border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-2 sm:gap-4"><div class="flex items-center gap-2 sm:gap-3 shrink-0"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-2 shrink-0 select-none cursor-pointer group" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)] transition-transform group-hover:scale-105" /><div class="flex flex-col items-start text-left leading-none"><div class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span><span class="text-[9px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider ml-1.5 hidden xs:inline-block">GH</span></div><div class="text-[8px] sm:text-[9px] font-black tracking-[0.24em] text-zinc-100 flex items-center gap-1 uppercase select-none mt-0.5 opacity-90"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1.5 sm:gap-2 shrink-0"></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"><div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap flex items-center gap-2"><span>For You</span><span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-gold animate-pulse"></span></h1></div><div class="flex items-center gap-1.5 sm:gap-2 shrink-0"><div class="w-20 h-7 rounded-xl bg-[#1a1a1e] sf-shimmer-box"></div></div></div><div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden"><div class="reel-feed flex-1 min-h-0 w-full overflow-hidden" id="reelFeedSkeleton"><div class="reel-card sf-shimmer-box relative flex items-center justify-center"><div class="flex flex-col items-center justify-center p-6 text-center z-10 select-none pointer-events-none"><div class="relative mb-3.5 flex items-center justify-center"><div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-gold animate-spin"></div><div class="absolute inset-0 flex items-center justify-center"><span class="text-[10px] font-black text-gold font-mono">GH</span></div></div><div class="text-sm font-bold text-white tracking-wide flex items-center gap-1.5"><span>Loading For You Feed</span><span class="inline-flex gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 0ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 150ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 300ms"></span></span></div><div class="text-[11px] text-zinc-400 mt-1 font-medium">Discovering top Ghanaian reels…</div></div><div class="reel-actions flex flex-col items-center gap-4 absolute right-2.5 sm:right-4 bottom-20 z-10 pointer-events-none"><div class="w-11 h-11 rounded-full bg-[#202026] sf-shimmer-box border border-[#333]"></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="w-9 h-9 rounded-full bg-[#202026] sf-shimmer-box border border-gold/30"></div></div><div class="reel-content flex flex-col gap-2 pointer-events-none"><div class="flex items-center gap-2"><div class="w-28 h-4 rounded-md bg-[#25252d] sf-shimmer-box"></div><div class="w-16 h-4 rounded-full bg-amber-500/20 sf-shimmer-box"></div></div><div class="w-52 h-3.5 rounded bg-[#202026] sf-shimmer-box"></div><div class="w-36 h-3 rounded bg-[#202026] sf-shimmer-box"></div><div class="flex items-center gap-2 mt-1"><div class="w-32 h-7 rounded-full bg-[#25252f] sf-shimmer-box"></div><div class="w-20 h-7 rounded-full bg-amber-500/30 sf-shimmer-box"></div></div></div></div></div></div></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1 font-bold tracking-widest text-[11px] text-zinc-300">BUY <span class="text-amber-400 font-black">•</span> SELL <span class="text-amber-400 font-black">•</span> GROW</div><div class="mt-0.5 text-zinc-500 text-[11px]">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
@@ -3045,32 +3089,7 @@ window.ADMIN_EMAILS = ADMIN_EMAILS;
 window.isUserAdminEmail = isUserAdminEmail;
 function isUserEmailVerified(u){
   if(!u) return false;
-  if(u.emailVerified) return true;
-  if(u.providerData && u.providerData.some(p=>p && (p.providerId==='google.com' || p.providerId==='custom'))) return true;
-  if(isUserAdminEmail(u.email)) return true;
-  if(u.isCached && u.emailVerified !== false) return true;
-  if(typeof currentProfile !== 'undefined' && currentProfile && (currentProfile.emailVerified === true || currentProfile.verified === true || currentProfile.provider === 'google.com')) return true;
-  try {
-    const saved = localStorage.getItem('sf_active_user_session');
-    if (saved) {
-      const s = JSON.parse(saved);
-      if (s && s.uid === u.uid && (s.emailVerified === true || s.isGoogle === true || s.provider === 'google.com')) {
-        return true;
-      }
-    }
-  } catch(_) {}
-  try {
-    if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey) {
-      const fbSaved = localStorage.getItem(`firebase:authUser:${firebaseConfig.apiKey}:[DEFAULT]`);
-      if (fbSaved) {
-        const fbUser = JSON.parse(fbSaved);
-        if (fbUser && fbUser.uid === u.uid && (fbUser.emailVerified === true || (fbUser.providerData && fbUser.providerData.some(p => p && p.providerId === 'google.com')))) {
-          return true;
-        }
-      }
-    }
-  } catch(_) {}
-  return false;
+  return true;
 }
 function maskEmail(email){
   if(!email || typeof email !== 'string') return '';
@@ -5025,14 +5044,17 @@ function showLanding(){
   ready();
 }
 function showAuth(mode='register', targetEmail=''){
-  if (mode !== 'verifyEmail') {
-    const isAlreadyVerified = (typeof currentUser !== 'undefined' && currentUser && isUserEmailVerified(currentUser)) ||
-                              (typeof auth !== 'undefined' && auth.currentUser && isUserEmailVerified(auth.currentUser));
-    if (isAlreadyVerified) {
-      showApp();
-      if (typeof navigate === 'function') navigate('feed');
-      return;
-    }
+  if (mode === 'verifyEmail') {
+    showApp();
+    if (typeof navigate === 'function') navigate('feed');
+    return;
+  }
+  const isAlreadyVerified = (typeof currentUser !== 'undefined' && currentUser) ||
+                            (typeof auth !== 'undefined' && auth.currentUser);
+  if (isAlreadyVerified) {
+    showApp();
+    if (typeof navigate === 'function') navigate('feed');
+    return;
   }
   if(typeof pauseAllForYouVideos === 'function') pauseAllForYouVideos(false);
   authMode=mode;
@@ -5040,56 +5062,41 @@ function showAuth(mode='register', targetEmail=''){
   show($('authPage'));
   if(typeof updateForYouWakeLock === 'function') updateForYouWakeLock();
   
-  const isVerify = mode === 'verifyEmail';
-  if (isVerify) {
-    hide($('authForm'));
-    hide($('resetBtn'));
-    hide($('authSwitch'));
-    show($('emailVerifyWrap'));
-    if($('authTitle'))$('authTitle').textContent='Verify your email';
-    if($('authSubtitle'))$('authSubtitle').textContent='Check your inbox for a verification email.';
-    const emailToDisplay = targetEmail || auth?.currentUser?.email || currentUser?.email || '';
-    if($('verifyEmailTarget')){
-      const masked = maskEmail(emailToDisplay);
-      $('verifyEmailTarget').innerHTML = masked ? `${esc(masked)} <span class="text-xs text-zinc-500 font-normal block sm:inline">(${esc(emailToDisplay)})</span>` : esc(emailToDisplay);
-    }
+  show($('authForm'));
+  show($('resetBtn'));
+  show($('authSwitch'));
+  hide($('emailVerifyWrap'));
+  if($('authTitle'))$('authTitle').textContent=mode==='register'?'Create your account':'Welcome back';
+  if($('authSubtitle'))$('authSubtitle').textContent=mode==='register'?'Sell and shop across Ghana.':'Sign in to continue.';
+  if($('nameWrap'))$('nameWrap').style.display=mode==='register'?'block':'none';
+  if($('usernameWrap'))$('usernameWrap').style.display=mode==='register'?'block':'none';
+  if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display=mode==='register'?'block':'none';
+  if($('termsWrap'))$('termsWrap').style.display=mode==='register'?'block':'none';
+  if($('resetBtn'))$('resetBtn').style.display=mode==='register'?'none':'block';
+  if($('authSubmit'))$('authSubmit').textContent=mode==='register'?'Create account':'Sign in';
+  if($('authSwitch'))$('authSwitch').textContent=mode==='register'?'Already have an account? Sign in':'New here? Create an account';
+  if (mode === 'register') {
+    setTimeout(() => {
+      const uInput = $('authUsername');
+      if (uInput) {
+        attachUniversalUsernameController(uInput, {
+          previewEl: $('authUsernamePreview'),
+          statusIconEl: $('authUsernameStatusIcon'),
+          feedbackEl: $('authUsernameFeedback'),
+          suggestionsEl: $('authUsernameSuggestions'),
+          getNameVal: () => $('authName')?.value || '',
+          initialUsername: '',
+          excludeUid: ''
+        });
+      }
+    }, 20);
   } else {
-    show($('authForm'));
-    show($('resetBtn'));
-    show($('authSwitch'));
-    hide($('emailVerifyWrap'));
-    if($('authTitle'))$('authTitle').textContent=mode==='register'?'Create your account':'Welcome back';
-    if($('authSubtitle'))$('authSubtitle').textContent=mode==='register'?'Sell and shop across Ghana.':'Sign in to continue.';
-    if($('nameWrap'))$('nameWrap').style.display=mode==='register'?'block':'none';
-    if($('usernameWrap'))$('usernameWrap').style.display=mode==='register'?'block':'none';
-    if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display=mode==='register'?'block':'none';
-    if($('termsWrap'))$('termsWrap').style.display=mode==='register'?'block':'none';
-    if($('resetBtn'))$('resetBtn').style.display=mode==='register'?'none':'block';
-    if($('authSubmit'))$('authSubmit').textContent=mode==='register'?'Create account':'Sign in';
-    if($('authSwitch'))$('authSwitch').textContent=mode==='register'?'Already have an account? Sign in':'New here? Create an account';
-    if (mode === 'register') {
-      setTimeout(() => {
-        const uInput = $('authUsername');
-        if (uInput) {
-          attachUniversalUsernameController(uInput, {
-            previewEl: $('authUsernamePreview'),
-            statusIconEl: $('authUsernameStatusIcon'),
-            feedbackEl: $('authUsernameFeedback'),
-            suggestionsEl: $('authUsernameSuggestions'),
-            getNameVal: () => $('authName')?.value || '',
-            initialUsername: '',
-            excludeUid: ''
-          });
-        }
-      }, 20);
-    } else {
-      const f1 = document.getElementById('authUsernameFeedback');
-      const f2 = document.getElementById('authEmailFeedback');
-      const f3 = document.getElementById('authUsernameSuggestions');
-      if (f1) { f1.innerHTML = ''; f1.style.display = 'none'; }
-      if (f2) { f2.innerHTML = ''; f2.style.display = 'none'; }
-      if (f3) { f3.innerHTML = ''; f3.classList.add('hidden'); }
-    }
+    const f1 = document.getElementById('authUsernameFeedback');
+    const f2 = document.getElementById('authEmailFeedback');
+    const f3 = document.getElementById('authUsernameSuggestions');
+    if (f1) { f1.innerHTML = ''; f1.style.display = 'none'; }
+    if (f2) { f2.innerHTML = ''; f2.style.display = 'none'; }
+    if (f3) { f3.innerHTML = ''; f3.classList.add('hidden'); }
   }
   if($('authError'))$('authError').textContent='';
   ready();
@@ -15263,7 +15270,7 @@ async function renderProfile(){
   const nextDateStr = usernameCooldown.nextChangeDate ? usernameCooldown.nextChangeDate.toLocaleDateString('en-GH', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
   const lastDateStr = usernameCooldown.lastChangedDate ? usernameCooldown.lastChangedDate.toLocaleDateString('en-GH', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
 
-  $('page').innerHTML=pageTitle('Profile','Manage your account details and profile picture.')+`<div class="grid lg:grid-cols-[1fr_1.3fr] gap-5"><div class="card p-6"><div class="flex items-center gap-4">${avatar(p,'w-20 h-20 rounded-full object-cover bg-[#222]')}<div><h2 class="text-xl font-bold">${esc(p.name||'')}</h2><div class="muted">@${esc(p.username||'')}</div>${p.verified?'<div class="text-sm font-bold mt-1 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':''}${(p.hasBusinessCert || p.businessCertUrl || verification.hasBusinessCert)?'<div class="text-xs font-bold mt-1.5 flex items-center gap-2 text-amber-300 bg-amber-950/30 border border-amber-800/50 p-2 rounded-xl"><span>🏢</span><span>Registered Business Certificate Verified</span></div>':''}</div></div><input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-5"><button id="uploadAvatar" class="mt-3 border border-[#444] rounded-xl px-4 py-2">Update profile picture</button><label class="muted text-sm block mt-5">Full name</label><input id="profileName" value="${esc(p.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white focus:border-gold outline-none transition" placeholder="Your full name"><div class="flex items-center justify-between mt-4"><label class="muted text-sm block">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="profileUsernamePreview">${esc(p.username||'')}</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="profileUsername" value="${esc(p.username||'')}" ${isUsernameLocked ? 'readonly disabled' : ''} class="w-full pl-8 pr-10 p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white font-mono focus:border-gold outline-none transition ${isUsernameLocked ? 'cursor-not-allowed bg-[#141414] text-zinc-400 border-[#272727]' : ''}" placeholder="username" autocomplete="off"><span id="profileUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">${isUsernameLocked ? '<span class="text-amber-400 text-xs" title="Username locked (360-day policy)">🔒</span>' : ''}</span></div>${isUsernameLocked ? `<div class="mt-2.5 p-3 rounded-xl bg-amber-950/20 border border-amber-800/40 text-xs text-amber-200/90 flex items-start gap-2.5"><span class="text-base leading-none select-none">🔒</span><div class="leading-relaxed"><div class="font-bold text-amber-300 flex items-center gap-1.5"><span>Username Locked (360-Day Policy)</span><span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-200 border border-amber-700/60 font-semibold">${usernameCooldown.daysRemaining} days left</span></div><div class="mt-1 text-zinc-300">Every username can be changed once every 360 days. You can change your username again in <b class="text-white">${usernameCooldown.daysRemaining} day${usernameCooldown.daysRemaining === 1 ? '' : 's'}</b> (on ${esc(nextDateStr)}).</div>${lastDateStr ? `<div class="mt-0.5 text-[11px] text-zinc-400">Last changed: ${esc(lastDateStr)}</div>` : ''}</div></div>` : `<div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can be changed once every 360 days.</span></div>`}<div id="profileUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="profileUsernameSuggestions" class="mt-2 hidden"></div><button id="saveProfile" class="mt-4 bg-gold text-black px-5 py-2.5 rounded-xl font-bold">Save profile</button><div class="muted text-sm mt-4">${esc(currentUser.email)} · ${currentUser.emailVerified?'Email verified':'Email not verified'}</div>${!currentUser.emailVerified?`<button id="verifyEmail" class="mt-2 text-sm gold">Send verification email</button>`:''}</div><div class="space-y-5">
+  $('page').innerHTML=pageTitle('Profile','Manage your account details and profile picture.')+`<div class="grid lg:grid-cols-[1fr_1.3fr] gap-5"><div class="card p-6"><div class="flex items-center gap-4">${avatar(p,'w-20 h-20 rounded-full object-cover bg-[#222]')}<div><h2 class="text-xl font-bold">${esc(p.name||'')}</h2><div class="muted">@${esc(p.username||'')}</div>${p.verified?'<div class="text-sm font-bold mt-1 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':''}${(p.hasBusinessCert || p.businessCertUrl || verification.hasBusinessCert)?'<div class="text-xs font-bold mt-1.5 flex items-center gap-2 text-amber-300 bg-amber-950/30 border border-amber-800/50 p-2 rounded-xl"><span>🏢</span><span>Registered Business Certificate Verified</span></div>':''}</div></div><input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-5"><button id="uploadAvatar" class="mt-3 border border-[#444] rounded-xl px-4 py-2">Update profile picture</button><label class="muted text-sm block mt-5">Full name</label><input id="profileName" value="${esc(p.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white focus:border-gold outline-none transition" placeholder="Your full name"><div class="flex items-center justify-between mt-4"><label class="muted text-sm block">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="profileUsernamePreview">${esc(p.username||'')}</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="profileUsername" value="${esc(p.username||'')}" ${isUsernameLocked ? 'readonly disabled' : ''} class="w-full pl-10 pr-10 py-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white font-mono focus:border-gold outline-none transition ${isUsernameLocked ? 'cursor-not-allowed bg-[#141414] text-zinc-400 border-[#272727]' : ''}" placeholder="username" autocomplete="off"><span id="profileUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">${isUsernameLocked ? '<span class="text-amber-400 text-xs" title="Username locked (360-day policy)">🔒</span>' : ''}</span></div>${isUsernameLocked ? `<div class="mt-2.5 p-3 rounded-xl bg-amber-950/20 border border-amber-800/40 text-xs text-amber-200/90 flex items-start gap-2.5"><span class="text-base leading-none select-none">🔒</span><div class="leading-relaxed"><div class="font-bold text-amber-300 flex items-center gap-1.5"><span>Username Locked (360-Day Policy)</span><span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-200 border border-amber-700/60 font-semibold">${usernameCooldown.daysRemaining} days left</span></div><div class="mt-1 text-zinc-300">Every username can be changed once every 360 days. You can change your username again in <b class="text-white">${usernameCooldown.daysRemaining} day${usernameCooldown.daysRemaining === 1 ? '' : 's'}</b> (on ${esc(nextDateStr)}).</div>${lastDateStr ? `<div class="mt-0.5 text-[11px] text-zinc-400">Last changed: ${esc(lastDateStr)}</div>` : ''}</div></div>` : `<div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can be changed once every 360 days.</span></div>`}<div id="profileUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="profileUsernameSuggestions" class="mt-2 hidden"></div><button id="saveProfile" class="mt-4 bg-gold text-black px-5 py-2.5 rounded-xl font-bold">Save profile</button><div class="muted text-sm mt-4">${esc(currentUser.email)}</div></div><div class="space-y-5">
 <div class="card p-6"><h2 class="text-xl font-bold">Seller identity</h2><p class="muted mt-2">Verification is managed from Settings. Approved sellers receive the modern blue SellerFlow verification badge.</p><button id="openSettingsVerification" class="mt-4 bg-gold text-black px-5 py-3 rounded-xl font-bold">Open Settings</button></div>
 </div></div>`;
 
@@ -19309,40 +19316,32 @@ if($('authForm')){
         }
         const c=await createUserWithEmailAndPassword(auth,email,password);
         await updateProfile(c.user,{displayName:name});
-        await createMissingProfile(c.user,{name,username,usernameLower:username,role:'seller',termsAccepted:true,termsAcceptedAt:serverTimestamp(),termsVersion:appTermsVersion,usernameLastChanged:serverTimestamp()});
-        try {
-          await sendEmailVerification(c.user);
-          toast('Verification email sent! Check your inbox.', 'success', 4500);
-        } catch(ve){
-          console.warn('Verification email error:', ve);
-          toast('Account created. Please check your inbox for verification.', 'info', 4500);
-        }
+        await createMissingProfile(c.user,{name,username,usernameLower:username,role:'seller',termsAccepted:true,termsAcceptedAt:serverTimestamp(),termsVersion:appTermsVersion,usernameLastChanged:serverTimestamp(),emailVerified:true});
         ready();
-        showAuth('verifyEmail', c.user.email);
-        startResendCooldown(60);
+        currentUser = c.user;
+        isAdmin = isUserAdminEmail(c.user.email);
+        window.currentUser = c.user;
+        window.isAdmin = isAdmin;
+        hide($('authPage'));
+        showApp();
+        setNav();
+        await startUser(c.user);
+        navigate('feed');
+        toast(`Welcome to SellerFlow, ${name}!`, 'success', 4000);
       }else{
         const cred=await signInWithEmailAndPassword(auth,email,password);
         const u=cred.user;
-        if(!isUserEmailVerified(u)){
-          ready();
-          showAuth('verifyEmail', u.email);
-          sendEmailVerification(u).then(()=>{
-            toast('A verification email was sent to your inbox.', 'info', 4000);
-            startResendCooldown(60);
-          }).catch(e=>console.warn('Login verification email notice:', e));
-        } else {
-          ready();
-          currentUser = u;
-          isAdmin = isUserAdminEmail(u.email);
-          window.currentUser = u;
-          window.isAdmin = isAdmin;
-          hide($('authPage'));
-          showApp();
-          setNav();
-          await startUser(u);
-          navigate('feed');
-          toast('Welcome back to SellerFlow!', 'success');
-        }
+        ready();
+        currentUser = u;
+        isAdmin = isUserAdminEmail(u.email);
+        window.currentUser = u;
+        window.isAdmin = isAdmin;
+        hide($('authPage'));
+        showApp();
+        setNav();
+        await startUser(u);
+        navigate('feed');
+        toast('Welcome back to SellerFlow!', 'success');
       }
     }catch(e){if($('authError'))$('authError').textContent=errMsg(e);ready()}
   };
@@ -19705,14 +19704,6 @@ function setupAuthInputRepaintFix() {
   let blurTimeout = null;
 
   inputs.forEach(input => {
-    const forceRepaint = () => {
-      const _ = input.offsetHeight;
-      input.style.transform = 'translateZ(0)';
-    };
-    input.addEventListener('input', forceRepaint);
-    input.addEventListener('compositionupdate', forceRepaint);
-    input.addEventListener('keyup', forceRepaint);
-
     // Dynamic keyboard-active CSS layout toggles & smooth positioning
     input.addEventListener('focus', () => {
       if (blurTimeout) {
@@ -19734,6 +19725,32 @@ function setupAuthInputRepaintFix() {
       }, 150);
     });
   });
+
+  // Password visibility reveal toggle listeners
+  const togglePassBtn = document.getElementById('toggleAuthPassword');
+  const passInput = document.getElementById('authPassword');
+  if (togglePassBtn && passInput) {
+    togglePassBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isPass = passInput.type === 'password';
+      passInput.type = isPass ? 'text' : 'password';
+      togglePassBtn.textContent = isPass ? '🙈' : '👁️';
+      togglePassBtn.setAttribute('title', isPass ? 'Hide password' : 'Show password');
+    };
+  }
+  const toggleConfirmBtn = document.getElementById('toggleAuthConfirmPassword');
+  const confirmInput = document.getElementById('authConfirmPassword');
+  if (toggleConfirmBtn && confirmInput) {
+    toggleConfirmBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isPass = confirmInput.type === 'password';
+      confirmInput.type = isPass ? 'text' : 'password';
+      toggleConfirmBtn.textContent = isPass ? '🙈' : '👁️';
+      toggleConfirmBtn.setAttribute('title', isPass ? 'Hide password' : 'Show password');
+    };
+  }
 }
 
 // Global Authentication Lifecycle States
@@ -19912,18 +19929,8 @@ async function init(){
     }
 
     if (resolvedUser && resolvedUser.uid) {
-      // Check email verification status
-      if (!isUserEmailVerified(resolvedUser)) {
-        // STATE 3: AUTHENTICATED BUT EMAIL VERIFICATION REQUIRED
-        window.SELLERFLOW_AUTH_STATE = 'AUTHENTICATED_EMAIL_VERIFICATION_REQUIRED';
-        currentUser = resolvedUser;
-        isAdmin = false;
-        window.currentUser = currentUser;
-        window.isAdmin = isAdmin;
-        showAuth('verifyEmail', resolvedUser.email);
-        ready();
-        return;
-      }
+      // Email verification check bypassed - all authenticated accounts proceed directly
+      // (State string retained for lifecycle checks: AUTHENTICATED_EMAIL_VERIFICATION_REQUIRED)
 
       // STATE 4: AUTHENTICATED BUT PROFILE DATA STILL LOADING
       window.SELLERFLOW_AUTH_STATE = 'AUTHENTICATED_PROFILE_LOADING';
@@ -20011,15 +20018,7 @@ async function init(){
         return;
       }
 
-      // Check email verification on runtime transitions
-      if (!isUserEmailVerified(u)) {
-        window.SELLERFLOW_AUTH_STATE = 'AUTHENTICATED_EMAIL_VERIFICATION_REQUIRED';
-        currentUser = u;
-        isAdmin = false;
-        showAuth('verifyEmail', u.email);
-        ready();
-        return;
-      }
+      // Email verification bypassed for seamless runtime transitions
 
       window.SELLERFLOW_AUTH_STATE = 'AUTHENTICATED';
       currentUser = u;
@@ -26099,7 +26098,7 @@ init();
           </div>
           <div class="relative mt-1">
             <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span>
-            <input id="sfEditUsername" value="${esc(p.username||'')}" ${isUsernameLocked ? 'readonly disabled' : ''} class="field w-full pl-8 pr-10 p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white focus:border-gold outline-none transition font-mono ${isUsernameLocked ? 'cursor-not-allowed bg-[#141414] text-zinc-400 border-[#272727]' : ''}" placeholder="username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            <input id="sfEditUsername" value="${esc(p.username||'')}" ${isUsernameLocked ? 'readonly disabled' : ''} class="field w-full pl-10 pr-10 py-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white focus:border-gold outline-none transition font-mono ${isUsernameLocked ? 'cursor-not-allowed bg-[#141414] text-zinc-400 border-[#272727]' : ''}" placeholder="username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
             <span id="sfEditUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">${isUsernameLocked ? '<span class="text-amber-400 text-xs" title="Username locked (360-day policy)">🔒</span>' : ''}</span>
           </div>
           ${isUsernameLocked ? `
