@@ -9,7 +9,7 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { getMessaging } from 'firebase-admin/messaging';
 import { GoogleGenAI } from '@google/genai';
-import { createRemoteJWKSet, jwtVerify } from 'jose';
+import { createRemoteJWKSet, jwtVerify, decodeProtectedHeader } from 'jose';
 import nodemailer from 'nodemailer';
 import { detectAudioVideoCopyright, matchStaticCopyrightCatalog } from './copyright-detector.js';
 
@@ -51,10 +51,21 @@ app.use((req, res, next) => {
 });
 
 const uploadsDir = path.join(__dirname, 'uploads');
+const androidUploadsDir = path.join(__dirname, 'android/app/src/main/assets/public/uploads');
+const distUploadsDir = path.join(__dirname, 'dist/uploads');
+
 if (!fs.existsSync(uploadsDir)) {
   try { fs.mkdirSync(uploadsDir, { recursive: true }); } catch (_) {}
 }
-app.use('/uploads', express.static(uploadsDir, {
+
+// Automatically sync any uploaded media from android assets to uploads/ on startup
+if (fs.existsSync(androidUploadsDir)) {
+  try {
+    fs.cpSync(androidUploadsDir, uploadsDir, { recursive: true, force: false });
+  } catch (_) {}
+}
+
+const mediaStaticOptions = {
   maxAge: '30d',
   immutable: true,
   etag: true,
@@ -69,22 +80,34 @@ app.use('/uploads', express.static(uploadsDir, {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     }
   }
-}));
+};
 
-/* Route /media directly to uploads/media or uploads/ so relative media paths resolve seamlessly */
+app.use('/uploads', express.static(uploadsDir, mediaStaticOptions));
+if (fs.existsSync(distUploadsDir)) {
+  app.use('/uploads', express.static(distUploadsDir, mediaStaticOptions));
+}
+if (fs.existsSync(androidUploadsDir)) {
+  app.use('/uploads', express.static(androidUploadsDir, mediaStaticOptions));
+}
+
+/* Route /media directly to uploads/media, uploads/, or android assets so relative media paths resolve seamlessly */
 app.use('/media', (req, res, next) => {
   const cleanPath = (req.path || '').replace(/^[/\\]+/, '').replace(/\.\.[/\\]/g, '');
-  const mediaPath = path.join(uploadsDir, 'media', cleanPath);
-  if (fs.existsSync(mediaPath) && fs.statSync(mediaPath).isFile()) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    return res.sendFile(mediaPath);
-  }
-  const directPath = path.join(uploadsDir, cleanPath);
-  if (fs.existsSync(directPath) && fs.statSync(directPath).isFile()) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    return res.sendFile(directPath);
+  const candidatePaths = [
+    path.join(uploadsDir, 'media', cleanPath),
+    path.join(uploadsDir, cleanPath),
+    path.join(distUploadsDir, 'media', cleanPath),
+    path.join(distUploadsDir, cleanPath),
+    path.join(androidUploadsDir, 'media', cleanPath),
+    path.join(androidUploadsDir, cleanPath)
+  ];
+  for (const cPath of candidatePaths) {
+    if (fs.existsSync(cPath) && fs.statSync(cPath).isFile()) {
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      return res.sendFile(cPath);
+    }
   }
   next();
 });
@@ -125,6 +148,7 @@ const adminAuth = getAuth(adminApp);
 const adminDb = getFirestore(adminApp);
 
 const JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
+const GOOGLE_OAUTH_JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
 
 const ADMIN_EMAILS = ['gideondreams3325@gmail.com'];
 function isUserAdminEmail(email) {
@@ -134,11 +158,31 @@ function isUserAdminEmail(email) {
 }
 
 async function verifyFirebaseToken(idToken) {
-  if (!idToken) {
+  if (!idToken || typeof idToken !== 'string') {
     throw new Error('No token provided');
   }
+
+  const cleanToken = idToken.trim();
+  const parts = cleanToken.split('.');
+  if (parts.length !== 3) {
+    throw new Error('Invalid Compact JWS');
+  }
+
+  let header;
   try {
-    const { payload } = await jwtVerify(idToken, JWKS, {
+    header = decodeProtectedHeader(cleanToken);
+  } catch (_) {
+    throw new Error('Invalid Compact JWS');
+  }
+
+  // Google Firebase ID tokens and Google OAuth ID tokens are signed using RS256
+  if (!header || header.alg !== 'RS256') {
+    throw new Error(`Unsupported token algorithm: ${header?.alg || 'unknown'}`);
+  }
+
+  // 1. Primary verification: Verify using Firebase project issuer and audience
+  try {
+    const { payload } = await jwtVerify(cleanToken, JWKS, {
       issuer: 'https://securetoken.google.com/sellerflow-efaab',
       audience: 'sellerflow-efaab'
     });
@@ -153,24 +197,41 @@ async function verifyFirebaseToken(idToken) {
       email_verified: payload.email_verified,
       role: isAdmin ? 'admin' : 'seller'
     };
-  } catch (err) {
-    console.warn('[JWT] Verification with primary project failed, trying lenient validation:', err.message);
-    try {
-      const { payload } = await jwtVerify(idToken, JWKS);
-      const email = payload.email || '';
-      const isAdmin = isUserAdminEmail(email);
-      return {
-        ...payload,
-        uid: payload.sub,
-        email: payload.email,
-        name: payload.name || payload.displayName,
-        picture: payload.picture,
-        email_verified: payload.email_verified,
-        role: isAdmin ? 'admin' : 'seller'
-      };
-    } catch (fallbackErr) {
-      throw new Error(`Token verification failed: ${fallbackErr.message}`);
+  } catch (primaryErr) {
+    // If the failure was due to issuer or audience claim mismatch (e.g. Google OAuth ID token or custom project config)
+    if (primaryErr.code === 'ERR_JWT_CLAIM_VALIDATION_FAILED' || primaryErr.name === 'JWTClaimValidationFailed') {
+      try {
+        const { payload } = await jwtVerify(cleanToken, JWKS);
+        const email = payload.email || '';
+        const isAdmin = isUserAdminEmail(email);
+        return {
+          ...payload,
+          uid: payload.sub,
+          email: payload.email,
+          name: payload.name || payload.displayName,
+          picture: payload.picture,
+          email_verified: payload.email_verified,
+          role: isAdmin ? 'admin' : 'seller'
+        };
+      } catch (_) {}
+
+      try {
+        const { payload } = await jwtVerify(cleanToken, GOOGLE_OAUTH_JWKS);
+        const email = payload.email || '';
+        const isAdmin = isUserAdminEmail(email);
+        return {
+          ...payload,
+          uid: payload.sub,
+          email: payload.email,
+          name: payload.name || payload.displayName,
+          picture: payload.picture,
+          email_verified: payload.email_verified,
+          role: isAdmin ? 'admin' : 'seller'
+        };
+      } catch (_) {}
     }
+
+    throw new Error(`Token verification failed: ${primaryErr.message}`);
   }
 }
 

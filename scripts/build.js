@@ -118,13 +118,37 @@ if (fs.existsSync(srcDir)) {
   } catch (_) {}
 }
 
-// Copy uploads directory to dist/uploads
+// Copy uploads directory to dist/uploads and synchronize with android assets
 const uploadsDir = path.resolve('uploads');
 const distUploadsDir = path.join(distDir, 'uploads');
+const androidUploadsDir = path.resolve('android/app/src/main/assets/public/uploads');
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+if (!fs.existsSync(distUploadsDir)) {
+  fs.mkdirSync(distUploadsDir, { recursive: true });
+}
+
+// 1. Pull any existing uploads from android assets into root uploads
+if (fs.existsSync(androidUploadsDir)) {
+  try {
+    fs.cpSync(androidUploadsDir, uploadsDir, { recursive: true });
+  } catch (_) {}
+}
+
+// 2. Push all uploads to dist/uploads
 if (fs.existsSync(uploadsDir)) {
   try {
     fs.cpSync(uploadsDir, distUploadsDir, { recursive: true });
     copiedCount++;
+  } catch (_) {}
+}
+
+// 3. Mirror all uploads back to android assets
+if (fs.existsSync(uploadsDir) && fs.existsSync(path.resolve('android/app/src/main/assets/public'))) {
+  try {
+    fs.cpSync(uploadsDir, androidUploadsDir, { recursive: true });
   } catch (_) {}
 }
 
