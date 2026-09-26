@@ -15728,6 +15728,7 @@ async function validateGhanaCardAndStartLiveness(){
 
     const existingFront = currentProfile?.ghanaCardFrontPath;
     const existingBack = currentProfile?.ghanaCardBackPath;
+    const existingSelfie = currentProfile?.selfieStoragePath || currentProfile?.selfiePath;
 
     if(!rawNum) throw Error('Please enter your Ghana Card PIN / number.');
     if(!front && !existingFront) throw Error('Please upload a clear front photo of your Ghana Card.');
@@ -15751,6 +15752,20 @@ async function validateGhanaCardAndStartLiveness(){
       maskedCard: n.slice(0,3)+'-*****'+(n.slice(-4)||'')
     };
 
+    // If modal selfie was captured directly, finalize with it
+    if (window._modalVerificationSelfieBlob) {
+      const selfieBlob = window._modalVerificationSelfieBlob;
+      const selfieBase64 = window._modalVerificationSelfieBase64;
+      const livenessResult = {
+        status: 'COMPLETED',
+        completedAt: new Date().toISOString(),
+        movements: ['LOOK_FORWARD']
+      };
+      await finalizeIdentityVerification(kycData, selfieBlob, selfieBase64, livenessResult);
+      return;
+    }
+
+    // If not captured in modal yet and no existing selfie, open the full live selfie & liveness screen
     startLivenessChallenge(kycData);
   }catch(e){
     toast(errMsg(e),'error');
@@ -16529,19 +16544,21 @@ async function finalizeIdentityVerification(kycData, selfieBlob, selfieBase64, l
       const data = await res.json();
       if (res.ok && data.success) {
         if (data.verdict === 'VERIFIED') {
-          toast('🎉 Identity and live selfie verified by Gemini 3.8 Flash! Verification badge active.', 'success');
+          toast('🎉 Ghana Card and selfie successfully verified.', 'success');
         } else if (data.verdict === 'REVIEW') {
-          toast('Ghana Card details and live selfie stored securely for Security Team review.', 'info');
+          toast('Verification submitted and under review by SellerFlow administrators.', 'info');
         } else {
-          toast(data.message || 'Verification submitted and recorded for Security Team review.', 'success');
+          toast(data.message || 'Verification submitted and recorded for review.', 'success');
         }
       } else {
         if (data.verdict === 'DUPLICATE_REJECTED' || data.duplicate) {
           toast(data.error || 'Duplicate Ghana Card: This card is already registered on another account.', 'error');
         } else if (data.verdict === 'CORRECTION_REQUIRED') {
           toast(data.error || 'Please submit correct info matching your official card.', 'error');
+        } else if (data.verdict === 'REJECTED') {
+          toast(data.error || data.reason || 'Verification rejected: Please check that card details and selfie match.', 'error');
         } else {
-          toast(data.error || data.message || 'Verification submitted for Security Team review.', 'info');
+          toast(data.error || data.message || 'Verification submitted and under review by SellerFlow administrators.', 'info');
         }
       }
     } catch (callErr) {
@@ -17788,9 +17805,86 @@ function openVerificationModal(options = {}){
           </div>
         </div>
 
+        <!-- Live Selfie Section -->
+        <div class="p-3.5 rounded-xl bg-[#141416] border border-[#2b2b32] space-y-2.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-gold"></span> Live selfie *
+            </label>
+            <span id="selfieStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700">
+              Required
+            </span>
+          </div>
+          
+          <p class="text-[11px] text-zinc-400 leading-relaxed">
+            Take a live selfie to help protect your account and allow authorized SellerFlow administrators to confirm the verification belongs to you.
+          </p>
+
+          <!-- Camera Stream & Preview Area -->
+          <div id="modalSelfieArea" class="relative rounded-xl bg-black border border-[#333] overflow-hidden flex flex-col items-center justify-center min-h-[160px] p-2">
+            <!-- Idle / Not Started State -->
+            <div id="selfieIdleState" class="flex flex-col items-center justify-center p-4 text-center space-y-2">
+              <div class="w-12 h-12 rounded-full bg-zinc-900 border border-gold/40 flex items-center justify-center text-xl">🤳</div>
+              <p class="text-xs text-zinc-300 font-medium">Front-facing camera required</p>
+              <p class="text-[10px] text-zinc-500 max-w-xs">No existing gallery photos permitted. Only live camera capture is accepted.</p>
+              <button type="button" id="startModalCameraBtn" class="mt-1 bg-gold text-black font-bold px-4 py-2 rounded-xl text-xs hover:brightness-110 flex items-center gap-1.5 transition">
+                <span>📷</span>
+                <span>Start Camera</span>
+              </button>
+            </div>
+
+            <!-- Active Camera State (Hidden Initially) -->
+            <div id="selfieActiveState" class="hidden w-full flex flex-col items-center relative">
+              <div class="relative w-full max-w-[280px] aspect-[4/3] rounded-lg overflow-hidden bg-black border border-gold/60">
+                <video id="modalSelfieVideo" autoplay playsinline muted class="w-full h-full object-cover transform -scale-x-100"></video>
+                <div class="absolute inset-0 pointer-events-none flex items-center justify-center p-2">
+                  <div class="w-36 h-44 rounded-[50%/60%] border-2 border-dashed border-gold/80"></div>
+                </div>
+              </div>
+              <div class="mt-2.5 flex items-center gap-2">
+                <button type="button" id="captureModalSelfieBtn" class="bg-emerald-500 text-black font-extrabold px-4 py-1.5 rounded-xl text-xs hover:bg-emerald-400 flex items-center gap-1.5 shadow transition">
+                  <span>📸</span>
+                  <span>Capture Selfie</span>
+                </button>
+                <button type="button" id="stopModalCameraBtn" class="border border-[#444] text-zinc-400 hover:text-white px-3 py-1.5 rounded-xl text-xs transition">
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+            <!-- Captured Preview State (Hidden Initially) -->
+            <div id="selfieCapturedState" class="hidden w-full flex items-center gap-3 p-2 bg-[#121215] rounded-lg">
+              <div class="w-20 h-24 rounded-lg bg-black border border-emerald-500/80 overflow-hidden shrink-0">
+                <img id="modalSelfiePreviewImg" class="w-full h-full object-cover" alt="Captured Selfie">
+              </div>
+              <div class="space-y-1 text-xs">
+                <div class="flex items-center gap-1 text-emerald-400 font-bold text-[11px]">
+                  <span>✓</span> <span>Live Selfie Captured</span>
+                </div>
+                <p class="text-[10px] text-zinc-400">Captured from device front camera.</p>
+                <button type="button" id="retakeModalSelfieBtn" class="border border-[#444] hover:bg-[#222] text-zinc-300 px-2.5 py-1 rounded-lg text-[10.5px] font-medium flex items-center gap-1 mt-1 transition">
+                  <span>🔄</span> Retake Selfie
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Privacy & Authorized Administrator Access Notice -->
+          <div class="text-[10px] text-zinc-400 bg-[#0f1110] border border-emerald-950/80 rounded-lg p-2 flex items-start gap-1.5">
+            <span class="text-emerald-400">🔒</span>
+            <span>Your selfie is stored in private storage, linked to this verification record, and accessible only to authorized SellerFlow administrators for security and verification checks.</span>
+          </div>
+        </div>
+
         <div class="text-[11px] text-zinc-400 bg-[#121214] rounded-xl p-3 border border-[#242428] flex items-start gap-2">
           <span class="text-base text-gold shrink-0">💡</span>
           <span>Ensure all 4 corners of the card are visible, text is crisp and readable, and there is no glare. Maximum file size 10MB each.</span>
+        </div>
+
+        <!-- Statutory & Platform Disclaimer -->
+        <div class="p-2.5 rounded-xl bg-[#171410] border border-amber-900/40 text-[10.5px] text-zinc-400 flex items-start gap-2">
+          <span class="text-amber-400 shrink-0 text-sm">ℹ️</span>
+          <span>Automated verification check performed for platform security and dispute prevention. This is not an official NIA (National Identification Authority) direct verification.</span>
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#262626]">
@@ -17850,8 +17944,119 @@ function openVerificationModal(options = {}){
     cardInput.value = val;
   });
 
-  if($('cancelVerification')) $('cancelVerification').onclick = closeModal;
-  if($('submitVerification')) $('submitVerification').onclick = submitVerification;
+  // Live Selfie Modal Camera Stream & Capture Logic
+  window._modalVerificationSelfieBlob = null;
+  window._modalVerificationSelfieBase64 = null;
+  let modalCameraStream = null;
+
+  const startCamBtn = $('startModalCameraBtn');
+  const captureCamBtn = $('captureModalSelfieBtn');
+  const stopCamBtn = $('stopModalCameraBtn');
+  const retakeCamBtn = $('retakeModalSelfieBtn');
+  const selfieVideo = $('modalSelfieVideo');
+  const idleState = $('selfieIdleState');
+  const activeState = $('selfieActiveState');
+  const capturedState = $('selfieCapturedState');
+  const selfiePreviewImg = $('modalSelfiePreviewImg');
+  const selfieBadge = $('selfieStatusBadge');
+
+  function stopModalCamera() {
+    if (modalCameraStream) {
+      try {
+        modalCameraStream.getTracks().forEach(t => t.stop());
+      } catch (_) {}
+      modalCameraStream = null;
+    }
+  }
+
+  async function startModalCamera() {
+    try {
+      stopModalCamera();
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera access is not supported on this browser or device. A live selfie is required.');
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+        audio: false
+      });
+      modalCameraStream = stream;
+      if (selfieVideo) {
+        selfieVideo.srcObject = stream;
+        await selfieVideo.play();
+      }
+      if (idleState) idleState.classList.add('hidden');
+      if (capturedState) capturedState.classList.add('hidden');
+      if (activeState) activeState.classList.remove('hidden');
+      if (selfieBadge) {
+        selfieBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-700';
+        selfieBadge.textContent = 'Camera Active';
+      }
+    } catch (err) {
+      console.error('Camera access error:', err);
+      toast('Camera access denied or unavailable. Please grant camera permission to take your live selfie.', 'error');
+      if (selfieBadge) {
+        selfieBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-950 text-red-300 border border-red-700';
+        selfieBadge.textContent = 'Camera Denied';
+      }
+    }
+  }
+
+  function captureModalSelfie() {
+    if (!selfieVideo || !modalCameraStream) return;
+    try {
+      const snapCanvas = document.createElement('canvas');
+      const w = selfieVideo.videoWidth || 640;
+      const h = selfieVideo.videoHeight || 480;
+      snapCanvas.width = w;
+      snapCanvas.height = h;
+      const ctx = snapCanvas.getContext('2d');
+      // Mirror horizontally so preview matches natural user reflection
+      ctx.translate(w, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(selfieVideo, 0, 0, w, h);
+
+      snapCanvas.toBlob((blob) => {
+        window._modalVerificationSelfieBlob = blob;
+        window._modalVerificationSelfieBase64 = snapCanvas.toDataURL('image/jpeg', 0.88);
+        if (selfiePreviewImg) selfiePreviewImg.src = window._modalVerificationSelfieBase64;
+
+        stopModalCamera();
+        if (activeState) activeState.classList.add('hidden');
+        if (idleState) idleState.classList.add('hidden');
+        if (capturedState) capturedState.classList.remove('hidden');
+        if (selfieBadge) {
+          selfieBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-700';
+          selfieBadge.textContent = '✓ Captured';
+        }
+        playLivenessChime(true);
+      }, 'image/jpeg', 0.88);
+    } catch (capErr) {
+      console.error('Capture error:', capErr);
+      toast('Failed to capture selfie photo. Please try again.', 'error');
+    }
+  }
+
+  startCamBtn?.addEventListener('click', startModalCamera);
+  captureCamBtn?.addEventListener('click', captureModalSelfie);
+  stopCamBtn?.addEventListener('click', () => {
+    stopModalCamera();
+    if (activeState) activeState.classList.add('hidden');
+    if (idleState) idleState.classList.remove('hidden');
+    if (selfieBadge) {
+      selfieBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700';
+      selfieBadge.textContent = 'Required';
+    }
+  });
+  retakeCamBtn?.addEventListener('click', startModalCamera);
+
+  if($('cancelVerification')) $('cancelVerification').onclick = () => {
+    stopModalCamera();
+    closeModal();
+  };
+  if($('submitVerification')) $('submitVerification').onclick = () => {
+    stopModalCamera();
+    submitVerification();
+  };
 }
 
 let swRegistration = null;

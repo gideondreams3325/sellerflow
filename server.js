@@ -1231,11 +1231,12 @@ app.post('/api/moderation/inspect-product', async (req, res) => {
 });
 
 /**
- * Server-Side Authoritative Ghana Card Verification with Gemini 3.8 Flash & Duplicate Detection
+ * Server-Side Authoritative Ghana Card Verification with Gemini 3.8 Flash, Live Selfie & Duplicate Detection
  * Enforces:
  * 1. Format validation (GHA-XXXXXXXXX-X) - if invalid, instructs user to submit correct info
- * 2. Duplicate card check across all accounts in Firestore
- * 3. Gemini 3.8 Flash verification of identity details and document authenticity
+ * 2. Mandatory live selfie capture check & tenant storage boundary isolation
+ * 3. Duplicate card check across all accounts in Firestore
+ * 4. Gemini 3.8 Flash verification of identity details, facial comparison, and document authenticity
  */
 app.post('/api/verification/verify-ghana-card', async (req, res) => {
   try {
@@ -1277,22 +1278,59 @@ app.post('/api/verification/verify-ghana-card', async (req, res) => {
       selfieBase64
     } = req.body || {};
 
-    // 2. Format validation check
+    // 2. Mandatory live selfie & document path security validation
+    if (!selfiePath && !selfieBase64) {
+      return res.status(400).json({
+        success: false,
+        verdict: 'REJECTED',
+        error: 'Bad Request: Live selfie is required for identity verification'
+      });
+    }
+
+    if (!frontPath || !backPath) {
+      return res.status(400).json({
+        success: false,
+        verdict: 'REJECTED',
+        error: 'Bad Request: Both front and back Ghana Card document paths are required'
+      });
+    }
+
+    // Path traversal guard
+    const pathsToCheck = [frontPath, backPath, selfiePath].filter(Boolean);
+    for (const p of pathsToCheck) {
+      if (typeof p !== 'string' || p.includes('..') || p.includes('//')) {
+        return res.status(403).json({
+          success: false,
+          verdict: 'REJECTED',
+          error: 'Forbidden: Path traversal or invalid character sequence detected in document paths'
+        });
+      }
+      const expectedPrefix = `verification/${callerUid}/`;
+      if (!p.startsWith(expectedPrefix)) {
+        return res.status(403).json({
+          success: false,
+          verdict: 'REJECTED',
+          error: 'Forbidden: You can only verify identity documents from your own private storage directory'
+        });
+      }
+    }
+
+    // 3. Format validation check
     const normalized = normalizeGhanaCard(ghanaCardNumber || '');
     if (!normalized || !validateGhanaCardFormat(normalized)) {
       return res.status(400).json({
         success: false,
-        verdict: 'CORRECTION_REQUIRED',
-        error: 'Invalid Ghana Card number format. Please enter your valid Ghana Card PIN in the format GHA-XXXXXXXXX-X (e.g. GHA-123456789-0). Please submit correct info.',
+        verdict: 'REJECTED',
+        error: 'Invalid Ghana Card number format. Please enter your valid Ghana Card PIN in the format GHA-XXXXXXXXX-X (e.g. GHA-123456789-0).',
         actionRequired: 'Submit correct Ghana Card PIN in the official statutory format GHA-XXXXXXXXX-X'
       });
     }
 
-    // 3. Cryptographic hash for duplicate card detection
+    // 4. Cryptographic hash for duplicate card detection
     const cardHash = hashGhanaCard(normalized);
     const maskedCard = maskGhanaCard(normalized);
 
-    // 4. Duplicate Ghana Card Check across Firestore accounts
+    // 5. Duplicate Ghana Card Check across Firestore accounts
     try {
       const [byHash, byNumber] = await Promise.all([
         adminDb.collection('users').where('ghanaCardHash', '==', cardHash).get(),
@@ -1302,7 +1340,6 @@ app.post('/api/verification/verify-ghana-card', async (req, res) => {
       const duplicateDocs = [...byHash.docs, ...byNumber.docs].filter(d => d.id !== callerUid);
 
       if (duplicateDocs.length > 0) {
-        const existingUser = duplicateDocs[0].data() || {};
         console.warn(`Duplicate Ghana Card detected: ${maskedCard} already belongs to user ${duplicateDocs[0].id}`);
         
         // Log duplicate attempt for security auditing
@@ -1318,56 +1355,55 @@ app.post('/api/verification/verify-ghana-card', async (req, res) => {
 
         return res.status(409).json({
           success: false,
-          verdict: 'DUPLICATE_REJECTED',
-          error: `Duplicate Ghana Card detected: This Ghana Card (${maskedCard}) is already associated with another SellerFlow account. Each Ghana Card can only be used by one seller. Please submit your own valid official Ghana Card.`,
-          duplicate: true,
-          actionRequired: 'Please submit your own unique, official Ghana Card.'
+          verdict: 'REVIEW',
+          error: `Duplicate Ghana Card detected: This Ghana Card is already associated with another SellerFlow account. Submission queued for review.`,
+          duplicate: true
         });
       }
     } catch (dupErr) {
       console.warn('Firestore duplicate check notice:', dupErr.message);
     }
 
-    // 5. Gemini 3.8 Flash AI Identity & Document Verification
+    // 6. Gemini 3.8 Flash AI Identity & Document Verification
     const ai = getGeminiClient();
     let geminiVerdict = 'VERIFIED';
-    let geminiMessage = 'Ghana Card details and live selfie liveness verified successfully.';
-    let geminiCorrectionInstructions = '';
+    let geminiMessage = 'Your identity verification was completed successfully.';
     let isAuthentic = true;
     let confidence = 0.95;
 
     if (ai) {
       try {
-        const prompt = `You are the official Ghana Card & Liveness Identity Verification AI (powered by Gemini 3.8 Flash) for SellerFlow Ghana.
-Evaluate this Ghana National Identity Card (Ghana Card) + Live Selfie Liveness challenge application against official standards.
+        const prompt = `You are the authoritative Ghana Card & Live Selfie Identity Verification AI for SellerFlow Ghana.
+Evaluate this Ghana National Identity Card + Live Selfie verification submission against official standards.
 
 Application Details:
 - Applicant Full Name: "${fullName || ''}"
 - Date of Birth: "${dateOfBirth || 'Provided'}"
 - Submitted Ghana Card PIN: "${normalized}"
-- Front Document Path: "${frontPath || 'Provided'}"
-- Back Document Path: "${backPath || 'Provided'}"
+- Front Document Path: "${frontPath}"
+- Back Document Path: "${backPath}"
 - Live Selfie Storage Path: "${selfiePath || 'Provided'}"
 - Liveness Challenge Status: "${livenessStatus}"
 - Liveness Head Movements: ${JSON.stringify(livenessMovements)}
 
-Verify the following:
-1. Is the Ghana Card PIN "${normalized}" structured as a valid official Ghana Card PIN (GHA-XXXXXXXXX-X)?
-2. Does the applicant's name "${fullName || ''}" match standard Ghanaian naming structure?
-3. Are the submitted credentials legitimate and free from obvious forgery, placeholder text, or fake numbers (e.g. GHA-000000000-0)?
-4. Has the user completed the required 5-step live head-pose challenge?
-5. If there are discrepancies or issues, provide clear, polite instructions telling the person to submit correct info.
+Verify:
+1. Is the Ghana Card PIN format valid (GHA-XXXXXXXXX-X)?
+2. Does the name match standard Ghanaian naming patterns?
+3. Are the submitted credentials legitimate and free from forgery?
+4. Facial match: Does the live selfie appear to match the Ghana Card document?
+   - If confident match -> VERIFIED
+   - If uncertain or low lighting -> REVIEW
+   - If clear mismatch -> REJECTED
 
 Respond strictly in JSON format:
 {
   "valid": boolean,
-  "verdict": "VERIFIED" | "CORRECTION_REQUIRED" | "REVIEW" | "REJECTED",
+  "verdict": "VERIFIED" | "REVIEW" | "REJECTED",
   "confidence": number,
   "nameMatches": boolean,
   "isAuthentic": boolean,
-  "livenessVerified": boolean,
-  "userMessage": string,
-  "correctionInstructions": string
+  "selfieMatch": boolean,
+  "userMessage": string
 }`;
 
         const result = await callGeminiWithResilience({
@@ -1382,9 +1418,7 @@ Respond strictly in JSON format:
 
         if (result && result.text) {
           const parsed = JSON.parse(result.text.trim());
-          geminiVerdict = parsed.verdict || (parsed.valid ? 'VERIFIED' : 'CORRECTION_REQUIRED');
-          geminiMessage = parsed.userMessage || 'Ghana Card verification evaluated.';
-          geminiCorrectionInstructions = parsed.correctionInstructions || '';
+          geminiVerdict = parsed.verdict || (parsed.valid ? 'VERIFIED' : 'REVIEW');
           isAuthentic = parsed.isAuthentic !== false;
           confidence = parsed.confidence || 0.92;
         }
@@ -1394,7 +1428,7 @@ Respond strictly in JSON format:
     }
 
     const verificationRecordId = `verif_${callerUid}`;
-    const mappedStatus = geminiVerdict === 'VERIFIED' ? 'VERIFIED' : (geminiVerdict === 'REJECTED' || geminiVerdict === 'CORRECTION_REQUIRED' ? 'REJECTED' : 'PENDING');
+    const mappedStatus = geminiVerdict === 'VERIFIED' ? 'VERIFIED' : (geminiVerdict === 'REJECTED' ? 'REJECTED' : 'REVIEW');
 
     // Archive comprehensive private identity verification record
     try {
@@ -1415,15 +1449,13 @@ Respond strictly in JSON format:
         livenessChallengeCompletedTimestamp: livenessCompletedAt || new Date().toISOString(),
         livenessMovements: livenessMovements,
         verificationStatus: mappedStatus,
-        verificationMethod: 'ghana_card_plus_liveness_challenge',
+        verificationMethod: 'ghana_card_plus_live_selfie',
         verificationSubmissionTimestamp: FieldValue.serverTimestamp(),
         submittedAt: FieldValue.serverTimestamp(),
         verifiedAt: geminiVerdict === 'VERIFIED' ? FieldValue.serverTimestamp() : null,
-        rejectionReason: geminiVerdict === 'CORRECTION_REQUIRED' || geminiVerdict === 'REJECTED' ? geminiMessage : '',
         auditMetadata: {
           userAgent: req.headers['user-agent'] || 'unknown',
           ip: req.ip || req.headers['x-forwarded-for'] || 'client',
-          geminiModel: 'gemini-3.8-flash',
           confidence,
           disclaimer: 'Automated verification check performed for platform security. This is not an official NIA (National Identification Authority) verification.'
         }
@@ -1444,36 +1476,34 @@ Respond strictly in JSON format:
         ghanaCardFrontPath: frontPath || '',
         ghanaCardBackPath: backPath || '',
         selfiePath: selfiePath || '',
+        selfieStoragePath: selfiePath || '',
         livenessStatus: livenessStatus || 'COMPLETED',
-        verificationStatus: geminiVerdict === 'VERIFIED' ? 'approved' : (geminiVerdict === 'REJECTED' || geminiVerdict === 'CORRECTION_REQUIRED' ? 'rejected' : 'pending'),
+        verificationStatus: geminiVerdict === 'VERIFIED' ? 'approved' : (geminiVerdict === 'REJECTED' ? 'rejected' : 'pending'),
         verified: geminiVerdict === 'VERIFIED',
         submittedAt: FieldValue.serverTimestamp(),
         lastUpdatedAt: FieldValue.serverTimestamp(),
         verifiedBy: geminiVerdict === 'VERIFIED' ? 'gemini-3.8-flash' : 'pending_security_team',
-        rejectionReason: geminiVerdict === 'CORRECTION_REQUIRED' || geminiVerdict === 'REJECTED' ? geminiMessage : '',
-        source: 'sellerflow_identity_and_liveness_verification',
-        notes: geminiVerdict === 'VERIFIED' ? 'Identity & Live Selfie Liveness verified with Gemini 3.8 Flash' : 'Identity verification recorded. Accessible strictly to the SellerFlow Security Team.'
+        source: 'sellerflow_identity_and_live_selfie_verification',
+        notes: geminiVerdict === 'VERIFIED' ? 'Identity & Live Selfie verified' : 'Identity verification recorded for Security Team review.'
       }, { merge: true });
     } catch (vaultErr) {
       console.warn('buyerKycRecords archival notice:', vaultErr.message);
     }
 
-    // 6. Handle Verification Outcomes
-    if (geminiVerdict === 'CORRECTION_REQUIRED' || geminiVerdict === 'REJECTED') {
+    // 7. Handle Verification Outcomes
+    if (geminiVerdict === 'REJECTED') {
       await adminDb.collection('users').doc(callerUid).set({
         ghanaCardMasked: maskedCard,
         verificationStatus: 'rejected',
         verified: false,
-        rejectionReason: geminiMessage,
-        correctionInstructions: geminiCorrectionInstructions,
         verificationReviewedAt: FieldValue.serverTimestamp()
       }, { merge: true });
 
       return res.json({
         success: false,
-        verdict: 'CORRECTION_REQUIRED',
-        error: `${geminiMessage} Please submit correct info to complete your seller verification.`,
-        correctionInstructions: geminiCorrectionInstructions || 'Please ensure your full legal name matches the card and clear unedited photos of both sides of your official Ghana Card and live selfie are uploaded.'
+        verdict: 'REJECTED',
+        error: 'Your verification could not be completed. Please review the information and try again.',
+        message: 'Your verification could not be completed. Please review the information and try again.'
       });
     }
 
@@ -1501,9 +1531,9 @@ Respond strictly in JSON format:
       await adminDb.collection('notifications').doc(`verif_appr_${callerUid}`).set({
         recipientId: callerUid,
         userId: callerUid,
-        senderName: 'SellerFlow Security & Verification AI',
+        senderName: 'SellerFlow Security & Verification Desk',
         title: '🎉 Seller Verification Approved',
-        message: 'Your Ghana Card identity verification and live selfie liveness check have been approved by Gemini 3.8 Flash. Your blue SellerFlow verification badge is now active on your store and products.',
+        message: 'Your Ghana Card and live selfie verification was completed successfully. Your blue SellerFlow verification badge is now active.',
         type: 'verification_approved',
         fromAdmin: true,
         read: false,
@@ -1514,12 +1544,11 @@ Respond strictly in JSON format:
         success: true,
         verdict: 'VERIFIED',
         maskedCard,
-        livenessStatus: 'COMPLETED',
-        message: 'Identity and live selfie liveness verified successfully by Gemini 3.8 Flash! Your blue SellerFlow verification badge is now active.'
+        message: 'Your identity verification was completed successfully.'
       });
     }
 
-    // Default to pending review
+    // Default to pending review (REVIEW)
     await adminDb.collection('users').doc(callerUid).set({
       ghanaCardMasked: maskedCard,
       ghanaCardHash: cardHash,
@@ -1538,8 +1567,7 @@ Respond strictly in JSON format:
       success: true,
       verdict: 'REVIEW',
       maskedCard,
-      livenessStatus: 'COMPLETED',
-      message: 'Your Ghana Card and live selfie check have been submitted securely and queued for Security Team review.'
+      message: 'Your verification has been submitted for additional review.'
     });
 
   } catch (err) {
@@ -1547,8 +1575,105 @@ Respond strictly in JSON format:
     return res.status(500).json({
       success: false,
       verdict: 'REVIEW',
-      error: 'An unexpected error occurred during verification. Please try again or contact support.'
+      error: 'Your verification has been submitted for additional review.'
     });
+  }
+});
+
+/**
+ * Server-Side Secure Admin Media Viewer for Verification Documents & Selfies
+ * Strictly restricted to authenticated SellerFlow Administrators.
+ * Streams private files or generates short-lived signed URLs without making storage public.
+ */
+app.get('/api/admin/verification-media', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.split('Bearer ')[1].trim() : (req.query.token || '');
+    if (!token) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing admin authorization token' });
+    }
+
+    let decodedToken;
+    try {
+      decodedToken = await verifyFirebaseToken(token);
+    } catch (authErr) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid or expired token' });
+    }
+
+    const callerUid = decodedToken.uid;
+    let isAdmin = isUserAdminEmail(decodedToken.email) || decodedToken.admin === true || decodedToken.role === 'admin';
+    if (!isAdmin) {
+      try {
+        const userDoc = await adminDb.collection('users').doc(callerUid).get();
+        const userData = userDoc.data() || {};
+        isAdmin = isUserAdminEmail(userData.email) || userData.role === 'admin' || userData.isAdmin === true;
+      } catch (_) {}
+    }
+
+    if (!isAdmin) {
+      return res.status(403).json({ success: false, error: 'Forbidden: Admin authorization required to access verification media' });
+    }
+
+    let rawPath = req.query.path || '';
+    if (!rawPath) {
+      return res.status(400).json({ success: false, error: 'Missing path parameter' });
+    }
+
+    try { rawPath = decodeURIComponent(rawPath); } catch (_) {}
+
+    // Security checks: must be in verification/ directory, no path traversal
+    if (rawPath.includes('..') || rawPath.includes('//')) {
+      return res.status(400).json({ success: false, error: 'Bad Request: Path traversal detected' });
+    }
+
+    const cleanPath = rawPath.replace(/^ghana-card-documents\//, '').replace(/^\/+/, '');
+    if (!cleanPath.startsWith('verification/')) {
+      return res.status(403).json({ success: false, error: 'Forbidden: Only verification documents can be accessed' });
+    }
+
+    // Check local uploads cache first
+    const localPath = path.join(uploadsDir, cleanPath);
+    if (fs.existsSync(localPath) && fs.statSync(localPath).isFile()) {
+      const ext = path.extname(localPath).toLowerCase();
+      const mimeTypes = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.webp': 'image/webp',
+        '.pdf': 'application/pdf'
+      };
+      res.setHeader('Content-Type', mimeTypes[ext] || 'image/jpeg');
+      res.setHeader('Cache-Control', 'private, no-cache, no-store');
+      return res.sendFile(localPath);
+    }
+
+    // Stream from Supabase Private Storage with service credentials
+    const supaBase = process.env.SUPABASE_URL || 'https://vvpwntehstjbccarqqzp.supabase.co';
+    const supaKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || '';
+    const supaBucket = process.env.SUPABASE_BUCKET || process.env.SUPABASE_STORAGE_BUCKET || 'ghana-card-documents';
+
+    if (supaKey) {
+      const targetUrl = `${supaBase}/storage/v1/object/${supaBucket}/${cleanPath}`;
+      const upstream = await fetch(targetUrl, {
+        headers: {
+          apikey: supaKey,
+          Authorization: `Bearer ${supaKey}`
+        }
+      });
+
+      if (upstream.ok) {
+        const contentType = upstream.headers.get('content-type') || 'image/jpeg';
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Cache-Control', 'private, no-cache, no-store');
+        const buffer = Buffer.from(await upstream.arrayBuffer());
+        return res.send(buffer);
+      }
+    }
+
+    return res.status(404).json({ success: false, error: 'Verification document not found' });
+  } catch (err) {
+    console.error('Admin verification media retrieval error:', err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 

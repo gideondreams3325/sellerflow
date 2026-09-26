@@ -28,6 +28,7 @@ const SUPABASE_SERVICE_ROLE_KEY = (typeof Deno !== 'undefined' ? (Deno.env.get('
 const SUPABASE_STORAGE_BUCKET = (typeof Deno !== 'undefined' ? Deno.env.get('SUPABASE_STORAGE_BUCKET') : (typeof process !== 'undefined' ? process.env.SUPABASE_STORAGE_BUCKET : '')) || 'ghana-card-documents';
 
 const GEMINI_API_KEY = (typeof Deno !== 'undefined' ? Deno.env.get('GEMINI_API_KEY') : (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '')) || '';
+const SOURCEID_API_KEY = (typeof Deno !== 'undefined' ? (Deno.env.get('SOURCEID_API_KEY') || Deno.env.get('SOURCE_ID_KEY')) : (typeof process !== 'undefined' ? (process.env.SOURCEID_API_KEY || process.env.SOURCE_ID_KEY) : '')) || '';
 
 const FIREBASE_PROJECT_ID = (typeof Deno !== 'undefined' ? Deno.env.get('FIREBASE_PROJECT_ID') : (typeof process !== 'undefined' ? process.env.FIREBASE_PROJECT_ID : '')) || 'sellerflow-efaab';
 const GOOGLE_JWKS_URL = 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com';
@@ -102,14 +103,24 @@ export async function hashGhanaCard(normalizedCardNumber: string): Promise<strin
  * - Must belong strictly to caller's private verification folder (verification/${callerUid}/...)
  * - Blocks path traversal attacks (..) and invalid sequences
  * - Enforces allowed image / document file extensions
+ * - Enforces presence and security of live selfie photo
  */
-export function verifyDocumentPaths(callerUid: string, frontPath: string, backPath: string): { valid: boolean; error?: string } {
+export function verifyDocumentPaths(callerUid: string, frontPath: string, backPath: string, selfiePath?: string): { valid: boolean; error?: string } {
   if (!callerUid || typeof callerUid !== 'string') {
     return { valid: false, error: 'Unauthorized: Missing authenticated caller UID' };
   }
 
   if (!frontPath || typeof frontPath !== 'string' || !backPath || typeof backPath !== 'string') {
     return { valid: false, error: 'Bad Request: Both front and back Ghana Card document paths are required' };
+  }
+
+  if (selfiePath !== undefined) {
+    if (!selfiePath || typeof selfiePath !== 'string') {
+      return { valid: false, error: 'Bad Request: Live selfie document path is required for identity verification' };
+    }
+    if (selfiePath.includes('..') || selfiePath.includes('//')) {
+      return { valid: false, error: 'Forbidden: Path traversal or invalid character sequence detected in selfie path' };
+    }
   }
 
   // Path traversal guard
@@ -123,6 +134,10 @@ export function verifyDocumentPaths(callerUid: string, frontPath: string, backPa
     return { valid: false, error: 'Forbidden: You can only verify identity documents from your own private storage directory' };
   }
 
+  if (selfiePath && !selfiePath.startsWith(expectedPrefix)) {
+    return { valid: false, error: 'Forbidden: You can only verify identity documents from your own private storage directory' };
+  }
+
   // Allowed file extensions
   const allowedExts = ['.jpg', '.jpeg', '.png', '.webp', '.pdf'];
   const frontExt = frontPath.slice(frontPath.lastIndexOf('.')).toLowerCase();
@@ -130,6 +145,13 @@ export function verifyDocumentPaths(callerUid: string, frontPath: string, backPa
 
   if (!allowedExts.includes(frontExt) || !allowedExts.includes(backExt)) {
     return { valid: false, error: 'Unsupported document file type. Allowed extensions: .jpg, .jpeg, .png, .webp, .pdf' };
+  }
+
+  if (selfiePath) {
+    const selfieExt = selfiePath.slice(selfiePath.lastIndexOf('.')).toLowerCase();
+    if (!allowedExts.includes(selfieExt)) {
+      return { valid: false, error: 'Unsupported selfie file type. Allowed extensions: .jpg, .jpeg, .png, .webp, .pdf' };
+    }
   }
 
   return { valid: true };
@@ -191,6 +213,11 @@ export interface VerificationEvaluationInput {
   aiOcrConfidence?: number;
   aiOcrAvailable: boolean;
   aiOcrNotes?: string;
+  selfieProvided?: boolean;
+  selfieMatch?: boolean;
+  selfieConfidence?: number;
+  selfieReviewReason?: string;
+  livenessProven?: boolean;
 }
 
 export interface VerificationVerdict {
@@ -203,14 +230,15 @@ export interface VerificationVerdict {
     cardNumberMatch: boolean;
     nameMatch: boolean;
     integrityCheckPassed: boolean;
+    selfieCheckPassed: boolean;
   };
 }
 
 /**
  * Pure evaluation engine for Ghana Card verification:
- * - VERIFIED: Passed all automated format, duplicate, OCR number, name, and authenticity checks
- * - REVIEW: Unclear, inconsistent, duplicate detected, missing AI service, or requires human admin review
- * - REJECTED: Invalid format, confirmed tampering/forgery, or blatant card number mismatch
+ * - VERIFIED: Passed all automated format, duplicate, OCR number, name, live selfie, and authenticity checks
+ * - REVIEW: Unclear, inconsistent, duplicate detected, missing AI service, uncertain selfie match, or requires human admin review
+ * - REJECTED: Invalid format, confirmed tampering/forgery, blatant card number mismatch, missing selfie, or clear face mismatch
  */
 export function evaluateGhanaCardVerification(input: VerificationEvaluationInput): VerificationVerdict {
   const normSubmitted = normalizeGhanaCard(input.submittedCardNumber);
@@ -227,7 +255,25 @@ export function evaluateGhanaCardVerification(input: VerificationEvaluationInput
         duplicateCheckPassed: !input.isDuplicate,
         cardNumberMatch: false,
         nameMatch: false,
-        integrityCheckPassed: false
+        integrityCheckPassed: false,
+        selfieCheckPassed: input.selfieProvided !== false
+      }
+    };
+  }
+
+  // 1b. Missing mandatory live selfie -> REJECTED
+  if (input.selfieProvided === false) {
+    return {
+      verdict: 'REJECTED',
+      reason: 'Live selfie is mandatory. Please capture a live selfie from your device camera.',
+      confidence: 0.99,
+      checks: {
+        formatValid: true,
+        duplicateCheckPassed: !input.isDuplicate,
+        cardNumberMatch: false,
+        nameMatch: false,
+        integrityCheckPassed: false,
+        selfieCheckPassed: false
       }
     };
   }
@@ -243,7 +289,8 @@ export function evaluateGhanaCardVerification(input: VerificationEvaluationInput
         duplicateCheckPassed: false,
         cardNumberMatch: false,
         nameMatch: false,
-        integrityCheckPassed: true
+        integrityCheckPassed: true,
+        selfieCheckPassed: input.selfieProvided !== false
       }
     };
   }
@@ -259,12 +306,30 @@ export function evaluateGhanaCardVerification(input: VerificationEvaluationInput
         duplicateCheckPassed: true,
         cardNumberMatch: false,
         nameMatch: false,
-        integrityCheckPassed: false
+        integrityCheckPassed: false,
+        selfieCheckPassed: input.selfieProvided !== false
       }
     };
   }
 
-  // 4. If AI/OCR was unavailable or could not process card images -> REVIEW (fail-closed, requires admin review)
+  // 4. Clear face / identity mismatch between live selfie and Ghana Card portrait -> REJECTED
+  if (input.selfieMatch === false && (input.selfieConfidence || 0) >= 0.80) {
+    return {
+      verdict: 'REJECTED',
+      reason: 'Identity mismatch: The live selfie does not match the portrait on the submitted Ghana Card.',
+      confidence: 0.95,
+      checks: {
+        formatValid: true,
+        duplicateCheckPassed: true,
+        cardNumberMatch: true,
+        nameMatch: true,
+        integrityCheckPassed: true,
+        selfieCheckPassed: false
+      }
+    };
+  }
+
+  // 5. If AI/OCR was unavailable or could not process card images -> REVIEW (fail-closed, requires admin review)
   if (!input.aiOcrAvailable) {
     return {
       verdict: 'REVIEW',
@@ -275,12 +340,13 @@ export function evaluateGhanaCardVerification(input: VerificationEvaluationInput
         duplicateCheckPassed: true,
         cardNumberMatch: false,
         nameMatch: false,
-        integrityCheckPassed: true
+        integrityCheckPassed: true,
+        selfieCheckPassed: input.selfieProvided !== false
       }
     };
   }
 
-  // 5. Card number comparison (if extracted by OCR)
+  // 6. Card number comparison (if extracted by OCR)
   let cardNumberMatch = false;
   if (input.extractedCardNumber) {
     const normExtracted = normalizeGhanaCard(input.extractedCardNumber);
@@ -297,13 +363,14 @@ export function evaluateGhanaCardVerification(input: VerificationEvaluationInput
           duplicateCheckPassed: true,
           cardNumberMatch: false,
           nameMatch: false,
-          integrityCheckPassed: true
+          integrityCheckPassed: true,
+          selfieCheckPassed: input.selfieProvided !== false
         }
       };
     }
   }
 
-  // 6. Name comparison (if extracted by OCR)
+  // 7. Name comparison (if extracted by OCR)
   let nameMatch = false;
   let nameMatchConfidence = 0;
   if (input.extractedName && input.submittedName) {
@@ -322,30 +389,53 @@ export function evaluateGhanaCardVerification(input: VerificationEvaluationInput
           duplicateCheckPassed: true,
           cardNumberMatch,
           nameMatch: false,
-          integrityCheckPassed: true
+          integrityCheckPassed: true,
+          selfieCheckPassed: input.selfieProvided !== false
         }
       };
     }
   }
 
-  // 7. Full automated pass: Card number matches, name matches, high AI confidence, legitimate physical card
+  // 8. Selfie facial comparison quality / uncertainty check:
+  // If selfie match is uncertain or confidence is low, send to REVIEW (never auto reject solely on poor quality/uncertainty)
+  const isSelfieConfidentMatch = input.selfieMatch === true && (input.selfieConfidence || 0) >= 0.70;
+  const isSelfieUncertain = input.selfieMatch === false || (input.selfieConfidence !== undefined && input.selfieConfidence < 0.70);
+
+  if (isSelfieUncertain && (input.selfieConfidence || 0) < 0.80) {
+    return {
+      verdict: 'REVIEW',
+      reason: input.selfieReviewReason || 'Live selfie comparison is uncertain due to lighting or resolution. Queued for administrator review.',
+      confidence: 0.65,
+      checks: {
+        formatValid: true,
+        duplicateCheckPassed: true,
+        cardNumberMatch,
+        nameMatch,
+        integrityCheckPassed: input.isCardLegitimate !== false,
+        selfieCheckPassed: false
+      }
+    };
+  }
+
+  // 9. Full automated pass: Card number matches, name matches, high AI confidence, legitimate physical card, matching selfie
   const overallConfidence = input.aiOcrConfidence || 0;
-  if (cardNumberMatch && nameMatch && nameMatchConfidence >= 0.75 && input.isCardLegitimate !== false && overallConfidence >= 0.80) {
+  if (cardNumberMatch && nameMatch && nameMatchConfidence >= 0.75 && input.isCardLegitimate !== false && overallConfidence >= 0.80 && (isSelfieConfidentMatch || input.selfieMatch !== false)) {
     return {
       verdict: 'VERIFIED',
-      reason: 'Passed automated Ghana Card security, OCR matching, and duplication checks.',
+      reason: 'Passed automated Ghana Card security, OCR matching, live selfie comparison, and duplication checks.',
       confidence: Math.min(overallConfidence, 0.96),
       checks: {
         formatValid: true,
         duplicateCheckPassed: true,
         cardNumberMatch: true,
         nameMatch: true,
-        integrityCheckPassed: true
+        integrityCheckPassed: true,
+        selfieCheckPassed: true
       }
     };
   }
 
-  // 8. Uncertain case, partial match, or lower confidence -> REVIEW (Requirement 14: "Keep uncertain cases as REVIEW")
+  // 10. Uncertain case, partial match, or lower confidence -> REVIEW (Requirement 14: "Keep uncertain cases as REVIEW")
   return {
     verdict: 'REVIEW',
     reason: input.aiOcrNotes || 'Verification requires manual human review due to partial document match or image clarity.',
@@ -355,7 +445,8 @@ export function evaluateGhanaCardVerification(input: VerificationEvaluationInput
       duplicateCheckPassed: true,
       cardNumberMatch,
       nameMatch,
-      integrityCheckPassed: input.isCardLegitimate !== false
+      integrityCheckPassed: input.isCardLegitimate !== false,
+      selfieCheckPassed: isSelfieConfidentMatch
     }
   };
 }
@@ -475,18 +566,22 @@ function bufferToBase64(buffer: ArrayBuffer): string {
 }
 
 /**
- * Analyzes Ghana Card images using Google Gemini Vision AI.
- * Extracts card number, legal name, physical document markers, and forgery indicators.
+ * Analyzes Ghana Card images and live selfie using Google Gemini Vision AI.
+ * Extracts card number, legal name, physical document markers, forgery indicators,
+ * and performs facial comparison between the card photo and the live selfie.
  */
 async function analyzeCardWithGemini(
   front: { buffer: ArrayBuffer; contentType: string },
   back: { buffer: ArrayBuffer; contentType: string },
-  apiKey: string
+  apiKey: string,
+  selfie?: { buffer: ArrayBuffer; contentType: string } | null
 ): Promise<{
   extractedCardNumber: string | null;
   extractedName: string | null;
   isCardLegitimate: boolean;
   isForgedOrTampered: boolean;
+  selfieMatch?: boolean;
+  selfieConfidence?: number;
   confidence: number;
   notes: string;
 } | null> {
@@ -495,9 +590,11 @@ async function analyzeCardWithGemini(
   try {
     const frontBase64 = bufferToBase64(front.buffer);
     const backBase64 = bufferToBase64(back.buffer);
+    const selfieBase64 = selfie ? bufferToBase64(selfie.buffer) : null;
 
-    const prompt = `You are an automated document analysis engine for Ghana National Identity Cards (Ghana Card).
-Examine the provided front and back card images carefully.
+    const parts: any[] = [];
+    let prompt = `You are an automated document analysis and facial comparison engine for Ghana National Identity Cards (Ghana Card).
+Examine the provided card images carefully.
 Extract the following information:
 1. The Ghana Card PIN number (Format: GHA-XXXXXXXXX-X, where X are digits/characters).
 2. The full legal name printed on the card.
@@ -507,7 +604,17 @@ Extract the following information:
    - ECOWAS logo
    - Hologram / guilloche background pattern
    - Date of birth / expiry
-4. Check for signs of forgery, digital alteration, fake card templates, screen-recaptures of a monitor, or sample/specimen cards.
+4. Check for signs of forgery, digital alteration, fake card templates, screen-recaptures of a monitor, or sample/specimen cards.`;
+
+    if (selfieBase64) {
+      prompt += `
+5. Facial comparison: Compare the portrait on the front of the Ghana Card with the provided live selfie photo.
+   - If they clearly belong to the same person, set "selfieMatch": true with high "selfieConfidence" (>= 0.85).
+   - If they are clearly different people, set "selfieMatch": false with high "selfieConfidence" (>= 0.85).
+   - If lighting, angle, or resolution makes it uncertain, set "selfieMatch": false with lower "selfieConfidence" (< 0.70).`;
+    }
+
+    prompt += `
 
 Respond strictly in JSON format matching this schema:
 {
@@ -515,9 +622,34 @@ Respond strictly in JSON format matching this schema:
   "extractedName": "FIRST MIDDLE LAST" or null,
   "isCardLegitimate": true or false,
   "isForgedOrTampered": true or false,
+  "selfieMatch": true or false,
+  "selfieConfidence": 0.0 to 1.0,
   "confidence": 0.0 to 1.0,
   "notes": "short assessment"
 }`;
+
+    parts.push({ text: prompt });
+    parts.push({
+      inlineData: {
+        mimeType: front.contentType.includes('pdf') ? 'application/pdf' : front.contentType,
+        data: frontBase64
+      }
+    });
+    parts.push({
+      inlineData: {
+        mimeType: back.contentType.includes('pdf') ? 'application/pdf' : back.contentType,
+        data: backBase64
+      }
+    });
+
+    if (selfie && selfieBase64) {
+      parts.push({
+        inlineData: {
+          mimeType: selfie.contentType.includes('pdf') ? 'application/pdf' : selfie.contentType,
+          data: selfieBase64
+        }
+      });
+    }
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
@@ -525,25 +657,7 @@ Respond strictly in JSON format matching this schema:
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              { text: prompt },
-              {
-                inlineData: {
-                  mimeType: front.contentType.includes('pdf') ? 'application/pdf' : front.contentType,
-                  data: frontBase64
-                }
-              },
-              {
-                inlineData: {
-                  mimeType: back.contentType.includes('pdf') ? 'application/pdf' : back.contentType,
-                  data: backBase64
-                }
-              }
-            ]
-          }
-        ],
+        contents: [{ parts }],
         generationConfig: {
           temperature: 0.1,
           responseMimeType: 'application/json'
@@ -566,6 +680,8 @@ Respond strictly in JSON format matching this schema:
       extractedName: parsed.extractedName || null,
       isCardLegitimate: parsed.isCardLegitimate !== false,
       isForgedOrTampered: parsed.isForgedOrTampered === true,
+      selfieMatch: parsed.selfieMatch,
+      selfieConfidence: typeof parsed.selfieConfidence === 'number' ? parsed.selfieConfidence : undefined,
       confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.85,
       notes: parsed.notes || 'AI document analysis completed.'
     };
@@ -620,9 +736,12 @@ async function storeVerificationMetadataSupabase(
     cardMasked: string;
     frontPath: string;
     backPath: string;
+    selfiePath?: string;
     status: 'VERIFIED' | 'REVIEW' | 'REJECTED';
     reviewReason?: string;
     automatedPassed: boolean;
+    selfieConfidence?: number;
+    selfieVerificationStatus?: string;
   },
   serviceKey: string
 ): Promise<void> {
@@ -643,6 +762,10 @@ async function storeVerificationMetadataSupabase(
         card_masked: metadata.cardMasked,
         front_storage_path: metadata.frontPath,
         back_storage_path: metadata.backPath,
+        selfie_storage_path: metadata.selfiePath || null,
+        selfie_captured_at: metadata.selfiePath ? new Date().toISOString() : null,
+        selfie_verification_status: metadata.selfieVerificationStatus || (metadata.status === 'VERIFIED' ? 'PASSED' : metadata.status),
+        selfie_confidence: metadata.selfieConfidence || null,
         status: metadata.status,
         review_reason: metadata.reviewReason || null,
         automated_check_passed: metadata.automatedPassed,
@@ -769,6 +892,7 @@ async function syncFirestoreUserRecord(
   cardHash: string,
   frontPath: string,
   backPath: string,
+  selfiePath: string,
   reason: string
 ): Promise<void> {
   const sa = getServiceAccount();
@@ -783,7 +907,7 @@ async function syncFirestoreUserRecord(
     const verified = verdict === 'VERIFIED';
 
     // 1. Update users document
-    const userUpdateUrl = `${firestoreBase}/users/${encodeURIComponent(callerUid)}?updateMask.fieldPaths=ghanaCardMasked&updateMask.fieldPaths=ghanaCardHash&updateMask.fieldPaths=ghanaCardFrontPath&updateMask.fieldPaths=ghanaCardBackPath&updateMask.fieldPaths=verificationStatus&updateMask.fieldPaths=verified&updateMask.fieldPaths=verificationVerdict&updateMask.fieldPaths=verificationReviewedAt&updateMask.fieldPaths=verificationReviewNotes`;
+    const userUpdateUrl = `${firestoreBase}/users/${encodeURIComponent(callerUid)}?updateMask.fieldPaths=ghanaCardMasked&updateMask.fieldPaths=ghanaCardHash&updateMask.fieldPaths=ghanaCardFrontPath&updateMask.fieldPaths=ghanaCardBackPath&updateMask.fieldPaths=selfieStoragePath&updateMask.fieldPaths=verificationStatus&updateMask.fieldPaths=verified&updateMask.fieldPaths=verificationVerdict&updateMask.fieldPaths=verificationReviewedAt&updateMask.fieldPaths=verificationReviewNotes`;
 
     await fetch(userUpdateUrl, {
       method: 'PATCH',
@@ -797,6 +921,7 @@ async function syncFirestoreUserRecord(
           ghanaCardHash: cardHash,
           ghanaCardFrontPath: frontPath,
           ghanaCardBackPath: backPath,
+          selfieStoragePath: selfiePath || null,
           verificationStatus,
           verified,
           verificationVerdict: verdict,
@@ -839,9 +964,9 @@ async function syncFirestoreUserRecord(
             ? 'Identity Review In Progress'
             : 'Identity Verification Update',
           message: verdict === 'VERIFIED'
-            ? 'Your identity documents passed automated verification checks. Your blue SellerFlow verification badge is now active.'
+            ? 'Your identity documents and live selfie passed automated verification checks. Your blue SellerFlow verification badge is now active.'
             : verdict === 'REVIEW'
-            ? 'Your identity documents have been submitted securely and are queued for administrator review.'
+            ? 'Your identity documents and live selfie have been submitted securely and are queued for administrator review.'
             : `Your verification submission could not be verified automatically: ${reason}. Please review your details and try again.`,
           fromAdmin: true,
           read: false,
@@ -919,11 +1044,21 @@ export async function handleVerifyGhanaCard(req: Request): Promise<Response> {
 
     const frontPath = body.frontPath || body.cardFrontPath || body.ghanaCardFrontPath;
     const backPath = body.backPath || body.cardBackPath || body.ghanaCardBackPath;
+    const selfiePath = body.selfiePath || body.cardSelfiePath || body.ghanaCardSelfiePath || body.selfieStoragePath;
     const ghanaCardRaw = body.ghanaCardNumber || body.ghanaCard || body.idNumber || '';
     const fullName = body.fullName || body.name || '';
 
     // 3. Verify document paths and ownership (Tenant isolation)
-    const pathCheck = verifyDocumentPaths(callerUid, frontPath, backPath);
+    if (!selfiePath) {
+      return new Response(JSON.stringify({
+        error: 'Bad Request: Live selfie document path is required for identity verification'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const pathCheck = verifyDocumentPaths(callerUid, frontPath, backPath, selfiePath);
     if (!pathCheck.valid) {
       const status = pathCheck.error?.startsWith('Forbidden') ? 403 : 400;
       return new Response(JSON.stringify({ error: pathCheck.error }), {
@@ -940,17 +1075,20 @@ export async function handleVerifyGhanaCard(req: Request): Promise<Response> {
     // 5. Check for duplicate Ghana Card hash across accounts
     const dupCheck = await checkDuplicateCardHash(cardHash, callerUid, SUPABASE_SERVICE_ROLE_KEY);
 
-    // 6. Download private documents server-side for AI/OCR analysis
+    // 6. Download private documents server-side for AI/OCR & facial analysis
     let frontDoc: { buffer: ArrayBuffer; contentType: string } | null = null;
     let backDoc: { buffer: ArrayBuffer; contentType: string } | null = null;
+    let selfieDoc: { buffer: ArrayBuffer; contentType: string } | null = null;
 
     if (SUPABASE_SERVICE_ROLE_KEY) {
-      const [f, b] = await Promise.all([
+      const [f, b, s] = await Promise.all([
         fetchPrivateDocument(frontPath, SUPABASE_SERVICE_ROLE_KEY),
-        fetchPrivateDocument(backPath, SUPABASE_SERVICE_ROLE_KEY)
+        fetchPrivateDocument(backPath, SUPABASE_SERVICE_ROLE_KEY),
+        fetchPrivateDocument(selfiePath, SUPABASE_SERVICE_ROLE_KEY)
       ]);
       frontDoc = f;
       backDoc = b;
+      selfieDoc = s;
     }
 
     // 7. Perform AI/OCR Analysis if documents and Gemini API key are available
@@ -959,13 +1097,15 @@ export async function handleVerifyGhanaCard(req: Request): Promise<Response> {
       extractedName: string | null;
       isCardLegitimate: boolean;
       isForgedOrTampered: boolean;
+      selfieMatch?: boolean;
+      selfieConfidence?: number;
       confidence: number;
       notes: string;
     } | null = null;
 
     let aiOcrAvailable = false;
     if (frontDoc && backDoc && GEMINI_API_KEY) {
-      aiOcrResult = await analyzeCardWithGemini(frontDoc, backDoc, GEMINI_API_KEY);
+      aiOcrResult = await analyzeCardWithGemini(frontDoc, backDoc, GEMINI_API_KEY, selfieDoc);
       if (aiOcrResult) {
         aiOcrAvailable = true;
       }
@@ -983,7 +1123,10 @@ export async function handleVerifyGhanaCard(req: Request): Promise<Response> {
       isForgedOrTampered: aiOcrResult?.isForgedOrTampered,
       aiOcrConfidence: aiOcrResult?.confidence,
       aiOcrAvailable,
-      aiOcrNotes: aiOcrResult?.notes
+      aiOcrNotes: aiOcrResult?.notes,
+      selfieProvided: !!selfiePath,
+      selfieMatch: aiOcrResult?.selfieMatch,
+      selfieConfidence: aiOcrResult?.selfieConfidence
     });
 
     const verdict = evaluation.verdict;
@@ -995,9 +1138,12 @@ export async function handleVerifyGhanaCard(req: Request): Promise<Response> {
       cardMasked: maskedCard,
       frontPath,
       backPath,
+      selfiePath,
       status: verdict,
       reviewReason: verdict === 'REVIEW' ? evaluation.reason : undefined,
-      automatedPassed: verdict === 'VERIFIED'
+      automatedPassed: verdict === 'VERIFIED',
+      selfieConfidence: aiOcrResult?.selfieConfidence,
+      selfieVerificationStatus: verdict === 'VERIFIED' ? 'MATCHED' : verdict
     }, SUPABASE_SERVICE_ROLE_KEY);
 
     // 10. Sync with Firestore user record
@@ -1008,20 +1154,26 @@ export async function handleVerifyGhanaCard(req: Request): Promise<Response> {
       cardHash,
       frontPath,
       backPath,
+      selfiePath,
       evaluation.reason
     );
 
     // 11. Return safe, sanitized response
-    // NEVER expose raw card numbers, storage URLs, image blobs, or internal service keys
+    // User response messages:
+    // VERIFIED: "Your identity verification was completed successfully."
+    // REVIEW: "Your verification has been submitted for additional review."
+    // REJECTED: "Your verification could not be completed. Please review the information and try again."
+    const userMessage = verdict === 'VERIFIED'
+      ? 'Your identity verification was completed successfully.'
+      : verdict === 'REVIEW'
+      ? 'Your verification has been submitted for additional review.'
+      : 'Your verification could not be completed. Please review the information and try again.';
+
     return new Response(JSON.stringify({
       success: true,
       verdict,
       status: verdict,
-      message: verdict === 'VERIFIED'
-        ? 'Identity verification approved. Your blue SellerFlow verification badge is now active.'
-        : verdict === 'REVIEW'
-        ? 'Identity documents submitted securely and are queued for administrator review.'
-        : `Identity verification could not be approved: ${evaluation.reason}`,
+      message: userMessage,
       disclaimer: OFFICIAL_NIA_DISCLAIMER
     }), {
       status: 200,
