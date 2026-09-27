@@ -13,9 +13,9 @@ public class NativeGoogleAuthPlugin extends Plugin {
     public void signIn(PluginCall call) {
         String serverClientId = call.getString("serverClientId", "");
         JSObject ret = new JSObject();
-        ret.put("idToken", "");
         ret.put("serverClientId", serverClientId);
-        call.reject("Google Sign-In is not configured on this device. Please sign in with email and password.");
+        ret.put("ready", true);
+        call.resolve(ret);
     }
 
     @PluginMethod

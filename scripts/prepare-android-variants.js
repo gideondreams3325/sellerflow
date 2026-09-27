@@ -119,6 +119,22 @@ let clients = Array.isArray(baseGsConfig?.client) ? [...baseGsConfig.client] : [
 const DEBUG_CERT_SHA1 = 'e6524ae38d6285a14dec73c0d49ba7285f6d642f';
 
 let consumerClient = clients.find(c => c?.client_info?.android_client_info?.package_name === 'com.sellerflow.app');
+const webClientId = '987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com';
+const defaultOAuthClients = [
+  {
+    client_id: webClientId,
+    client_type: 3
+  },
+  {
+    client_id: `987175352360-${projectInfo.project_id}.apps.googleusercontent.com`,
+    client_type: 1,
+    android_info: {
+      package_name: 'com.sellerflow.app',
+      certificate_hash: DEBUG_CERT_SHA1
+    }
+  }
+];
+
 if (!consumerClient) {
   consumerClient = {
     client_info: {
@@ -127,7 +143,7 @@ if (!consumerClient) {
         package_name: 'com.sellerflow.app'
       }
     },
-    oauth_client: [],
+    oauth_client: defaultOAuthClients,
     api_key: [
       {
         current_key: defaultApiKey
@@ -141,6 +157,9 @@ if (!consumerClient) {
   };
   clients = [consumerClient];
 } else {
+  if (!consumerClient.oauth_client || consumerClient.oauth_client.length === 0) {
+    consumerClient.oauth_client = defaultOAuthClients;
+  }
   clients = [consumerClient];
 }
 

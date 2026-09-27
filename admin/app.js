@@ -2410,27 +2410,34 @@ document.addEventListener('DOMContentLoaded', () => {
           const serverClientId = '987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com';
           const authResult = await NativeAuth.signIn({ serverClientId });
 
-          if (!authResult || !authResult.idToken) {
-            throw new Error('No identity token received from Google');
+          if (authResult && authResult.idToken) {
+            // Convert native Google ID token to Firebase credential
+            const credential = firebase.auth.GoogleAuthProvider.credential(authResult.idToken);
+            
+            // Sign into Firebase Auth - onAuthStateChanged will enforce admin RBAC check
+            await auth.signInWithCredential(credential);
+            return;
           }
-
-          // Convert native Google ID token to Firebase credential
-          const credential = firebase.auth.GoogleAuthProvider.credential(authResult.idToken);
-          
-          // Sign into Firebase Auth - onAuthStateChanged will enforce admin RBAC check
-          await auth.signInWithCredential(credential);
-          return;
         } catch (capErr) {
           if (capErr?.code === 'USER_CANCELLED' || capErr?.message?.includes('cancelled')) {
             console.log('User dismissed Google account chooser in Admin');
             return;
           }
-          console.warn('Failed to authenticate with native Google in Admin:', capErr);
-          if (alertEl) {
-            alertEl.className = 'mb-4 p-3.5 rounded-xl text-xs font-medium border bg-amber-500/10 border-amber-500/30 text-amber-300 block';
-            alertEl.textContent = 'Please sign in with your Administrator Email & Password above.';
-          }
+          console.warn('Native Google Auth token not returned in admin, proceeding with browser OAuth:', capErr);
+        }
+      }
+
+      if (window.Capacitor?.Plugins?.Browser?.open) {
+        try {
+          const origin = window.location.origin || 'https://sellerflow-tan.vercel.app';
+          const callbackUrl = (origin && origin.startsWith('http') && !origin.includes('localhost') && !origin.includes('capacitor://'))
+            ? origin + '/oauth-callback'
+            : 'https://sellerflow-tan.vercel.app/oauth-callback';
+          const startUrl = callbackUrl + (callbackUrl.includes('?') ? '&' : '?') + 'start=google&target=admin';
+          await window.Capacitor.Plugins.Browser.open({ url: startUrl });
           return;
+        } catch (browserErr) {
+          console.warn('Browser open notice in admin:', browserErr);
         }
       }
 

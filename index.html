@@ -1474,45 +1474,82 @@ async function handleCapacitorGoogleSignIn() {
     const NativeAuth = window.Capacitor?.Plugins?.NativeGoogleAuth || (isAvailable && window.Capacitor?.registerPlugin ? window.Capacitor.registerPlugin('NativeGoogleAuth') : null);
 
     if (NativeAuth && isAvailable) {
-      const serverClientId = '987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com';
-      const authResult = await NativeAuth.signIn({ serverClientId });
+      try {
+        const serverClientId = '987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com';
+        const authResult = await NativeAuth.signIn({ serverClientId });
 
-      if (authResult && authResult.idToken) {
-        // Convert native Google ID token to Firebase GoogleAuthProvider credential
-        const credential = firebase.auth.GoogleAuthProvider.credential(authResult.idToken);
-        
-        // Sign into Firebase Auth - preserves existing UID, profile and data
-        const userCredential = await auth.signInWithCredential(credential);
-        const user = userCredential.user;
+        if (authResult && authResult.idToken) {
+          // Convert native Google ID token to Firebase GoogleAuthProvider credential
+          const credential = firebase.auth.GoogleAuthProvider.credential(authResult.idToken);
+          
+          // Sign into Firebase Auth - preserves existing UID, profile and data
+          const userCredential = await auth.signInWithCredential(credential);
+          const user = userCredential.user;
 
-        console.log('Native Android Google Sign-In succeeded for user:', user.uid);
-        ready();
-        
-        // Smooth transition to app shell
-        if (typeof hide === 'function' && $('authPage')) {
-          hide($('authPage'));
+          console.log('Native Android Google Sign-In succeeded for user:', user.uid);
+          ready();
+          
+          // Smooth transition to app shell
+          if (typeof hide === 'function' && $('authPage')) {
+            hide($('authPage'));
+          }
+          if (typeof showApp === 'function') {
+            showApp();
+          }
+          if (typeof navigate === 'function') {
+            await navigate('feed');
+          }
+          return user;
         }
-        if (typeof showApp === 'function') {
-          showApp();
+      } catch (nativeErr) {
+        if (nativeErr?.code === 'USER_CANCELLED' || nativeErr?.message?.includes('cancelled')) {
+          ready();
+          console.log('User dismissed Google account chooser');
+          return null;
         }
-        if (typeof navigate === 'function') {
-          await navigate('feed');
-        }
-        return user;
+        console.warn('Native Google Auth token not returned, proceeding with secure browser OAuth:', nativeErr);
       }
     }
 
+    // Secure Capacitor Browser OAuth flow with deep link return
+    const callbackUrl = (typeof getOAuthCallbackUrl === 'function') ? getOAuthCallbackUrl() : 'https://sellerflow-tan.vercel.app/oauth-callback';
+    const startUrl = callbackUrl + (callbackUrl.includes('?') ? '&' : '?') + 'start=google';
+    console.log('Launching Google sign-in flow via:', startUrl);
+
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser && typeof window.Capacitor.Plugins.Browser.open === 'function') {
+      try {
+        window.Capacitor.Plugins.Browser.addListener('browserFinished', () => {
+          if (typeof ready === 'function') ready();
+          if ((typeof auth !== 'undefined' && auth.currentUser) || currentUser || localStorage.getItem('sf_active_user_session')) {
+            if (typeof hide === 'function' && $('authPage')) hide($('authPage'));
+            if (typeof showApp === 'function') showApp();
+            if (typeof navigate === 'function') navigate('feed');
+          }
+        }).catch(() => {});
+      } catch (_) {}
+      await window.Capacitor.Plugins.Browser.open({ url: startUrl });
+      return;
+    }
+
+    // Standard web fallback for non-native browsers
+    const provider = new firebase.auth.GoogleAuthProvider();
+    if (typeof provider.setCustomParameters === 'function') {
+      provider.setCustomParameters({ prompt: 'select_account' });
+    }
+    const result = await auth.signInWithPopup(provider);
     ready();
-    toast('Please sign in or create your account using your email and password.', 'info', 4500);
-    return null;
+    if (typeof hide === 'function' && $('authPage')) hide($('authPage'));
+    if (typeof showApp === 'function') showApp();
+    if (typeof navigate === 'function') navigate('feed');
+    return result.user;
   } catch (err) {
     ready();
-    if (err?.code === 'USER_CANCELLED' || err?.message?.includes('cancelled')) {
+    if (err?.code === 'USER_CANCELLED' || err?.message?.includes('cancelled') || err?.code === 'auth/popup-closed-by-user') {
       console.log('User dismissed Google account chooser');
       return null;
     }
-    console.warn('Native Google Sign-In notice:', err?.message || err);
-    toast(err?.message || 'Please sign in with email and password.', 'info', 4500);
+    console.error('Google Sign-In error:', err);
+    toast(err?.message || 'Google Sign-In failed. Please try again.', 'error', 4500);
     return null;
   }
 }
