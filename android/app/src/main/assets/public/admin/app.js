@@ -1678,26 +1678,30 @@ function renderKycTable() {
   tbody.innerHTML = filtered.map(k => {
     const isApproved = k.verificationStatus === 'approved' || k.verificationStatus === 'VERIFIED';
     const isRejected = k.verificationStatus === 'rejected' || k.verificationStatus === 'REJECTED';
+    const hasSelfie = !!(k.selfieStoragePath || k.selfiePath);
 
     return `
       <tr>
         <td>
-          <div class="font-bold text-white text-xs">${escapeHtml(k.fullName || 'Applicant')}</div>
-          <div class="text-[11px] text-zinc-400 font-mono">UID: ${(k.uid || k.id || '').substring(0, 12)}...</div>
+          <div class="font-bold text-white text-xs">${escapeHtml(k.fullName || k.name || 'Applicant')}</div>
+          <div class="text-[11px] text-zinc-400 font-mono">${escapeHtml(k.email || k.userEmail || 'UID: ' + ((k.uid || k.id || '').substring(0, 10)) + '...')}</div>
         </td>
         <td class="font-mono text-xs text-[#f5b942]">
           ${escapeHtml(k.ghanaCardMasked || (k.ghanaCardNumber ? `GHA-${k.ghanaCardNumber.substring(4, 7)}***-X` : 'GHA-***'))}
         </td>
         <td>
-          <span class="badge badge-success text-[10px]">Biometric Pass</span>
+          <span class="badge ${hasSelfie ? 'badge-success' : 'badge-warning'} text-[10px]">
+            ${hasSelfie ? '✓ Live Selfie' : 'Pending Selfie'}
+          </span>
         </td>
-        <td class="text-xs text-zinc-400">${formatDate(k.submittedAt)}</td>
+        <td class="text-xs text-zinc-400">${formatDate(k.submittedAt || k.createdAt)}</td>
         <td>
           <span class="badge ${isApproved ? 'badge-success' : isRejected ? 'badge-danger' : 'badge-warning'}">
             ${escapeHtml(k.verificationStatus || 'pending')}
           </span>
         </td>
-        <td class="text-right">
+        <td class="text-right flex items-center justify-end gap-1.5">
+          ${hasSelfie ? `<button onclick="viewVerificationSelfie('${k.uid || k.id}')" class="btn btn-secondary btn-sm" title="View verification selfie">🤳 Selfie</button>` : ''}
           <button onclick="inspectKyc('${k.uid || k.id}')" class="btn btn-primary btn-sm">Inspect & Audit</button>
         </td>
       </tr>
@@ -1705,37 +1709,68 @@ function renderKycTable() {
   }).join('');
 }
 
-window.inspectKyc = function(userId) {
+window.viewVerificationSelfie = async function(userId) {
+  const item = state.data.buyerKycRecords.find(k => (k.uid || k.id) === userId);
+  if (!item) return;
+  const selfiePath = item.selfieStoragePath || item.selfiePath;
+  if (!selfiePath) {
+    showToast('No verification selfie on file for this user.', 'info');
+    return;
+  }
+  inspectKyc(userId);
+  const selfieTab = document.getElementById('kycSelfieContainer');
+  if (selfieTab) {
+    selfieTab.scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
+window.inspectKyc = async function(userId) {
   const item = state.data.buyerKycRecords.find(k => (k.uid || k.id) === userId);
   if (!item) return;
   state.activeKycItem = item;
 
   const modal = document.getElementById('kycInspectorModal');
   const nameEl = document.getElementById('kycModalApplicantName');
+  const emailEl = document.getElementById('kycModalApplicantEmail');
   const pinEl = document.getElementById('kycModalPin');
   const dobEl = document.getElementById('kycModalDob');
   const frontContainer = document.getElementById('kycFrontContainer');
   const backContainer = document.getElementById('kycBackContainer');
   const selfieContainer = document.getElementById('kycSelfieContainer');
+  const fullPersonContainer = document.getElementById('kycFullPersonContainer');
+  const fullBody1Container = document.getElementById('kycFullBody1Container');
+  const fullBody2Container = document.getElementById('kycFullBody2Container');
+  const fullBody3Container = document.getElementById('kycFullBody3Container');
 
-  if (nameEl) nameEl.textContent = item.fullName || 'Applicant';
+  if (nameEl) nameEl.textContent = item.fullName || item.name || 'Applicant';
+  if (emailEl) emailEl.textContent = item.email || item.userEmail || `UID: ${item.uid || item.id}`;
   if (pinEl) pinEl.textContent = item.ghanaCardMasked || item.ghanaCardNumber || 'GHA-XXXXXXXXX-X';
-  if (dobEl) dobEl.textContent = item.dateOfBirth || '1990-01-01';
+  if (dobEl) dobEl.textContent = item.dateOfBirth || item.dob || '—';
 
-  // Secure Document Renderers
-  const renderDocImage = (container, path) => {
+  // Secure Server-Side Authorized Document & Live Selfie Renderers
+  const renderDocImage = async (container, path, label = 'Document') => {
     if (!container) return;
     if (path) {
-      const src = path.startsWith('http') || path.startsWith('/') ? path : `/uploads/${path}`;
-      container.innerHTML = `<img src="${escapeHtml(src)}" class="w-full h-full object-contain">`;
+      container.innerHTML = '<span class="text-xs text-zinc-400 animate-pulse">Loading secure media…</span>';
+      try {
+        const token = state.currentUser ? await state.currentUser.getIdToken() : '';
+        const secureSrc = `/api/admin/verification-media?path=${encodeURIComponent(path)}&token=${encodeURIComponent(token)}`;
+        container.innerHTML = `<img src="${secureSrc}" class="w-full h-full object-contain" alt="${label}" onerror="this.onerror=null;this.parentElement.innerHTML='<span class=\\'text-xs text-zinc-500\\'>Document unavailable</span>';">`;
+      } catch (_) {
+        container.innerHTML = `<img src="/uploads/${escapeHtml(path)}" class="w-full h-full object-contain" alt="${label}">`;
+      }
     } else {
-      container.innerHTML = '<span class="text-zinc-600 text-xs">Document not provided</span>';
+      container.innerHTML = `<span class="text-zinc-600 text-xs">${label} not provided</span>`;
     }
   };
 
-  renderDocImage(frontContainer, item.ghanaCardFrontPath || item.frontPath);
-  renderDocImage(backContainer, item.ghanaCardBackPath || item.backPath);
-  renderDocImage(selfieContainer, item.selfieStoragePath || item.selfiePath);
+  renderDocImage(frontContainer, item.ghanaCardFrontPath || item.frontPath, 'Card Front');
+  renderDocImage(backContainer, item.ghanaCardBackPath || item.backPath, 'Card Back');
+  renderDocImage(selfieContainer, item.selfieStoragePath || item.selfiePath, 'Live Verification Selfie');
+  renderDocImage(fullPersonContainer, item.selfieFullStoragePath || item.fullPersonStoragePath || item.fullPersonPath, 'Full Person Picture');
+  renderDocImage(fullBody1Container, item.fullBody1StoragePath || (item.fullBodyPhotos && item.fullBodyPhotos[0]), 'Full Body Front (Phone Library)');
+  renderDocImage(fullBody2Container, item.fullBody2StoragePath || (item.fullBodyPhotos && item.fullBodyPhotos[1]), 'Full Body Left (Phone Library)');
+  renderDocImage(fullBody3Container, item.fullBody3StoragePath || (item.fullBodyPhotos && item.fullBodyPhotos[2]), 'Full Body Right (Phone Library)');
 
   // Wire decision buttons
   const approveBtn = document.getElementById('kycApproveBtn');
@@ -1767,43 +1802,52 @@ window.inspectKyc = function(userId) {
 async function executeKycDecision(userId, action, reason = '', correctionInstructions = '') {
   try {
     const isApprove = action === 'approve';
-    const statusVal = isApprove ? 'approved' : 'rejected';
+    const token = state.currentUser ? await state.currentUser.getIdToken() : '';
 
-    const kycUpdates = {
-      verificationStatus: statusVal,
-      status: statusVal,
-      reviewedBy: state.currentUser?.email || 'admin',
-      reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    if (!isApprove) {
-      kycUpdates.rejectionReason = reason || 'Statutory criteria not met';
-      kycUpdates.correctionInstructions = correctionInstructions || '';
+    if (token) {
+      const res = await fetch('/api/admin/kyc-action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          userId,
+          action,
+          reason,
+          correctionInstructions
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Server error processing verification decision');
+      }
+    } else {
+      const statusVal = isApprove ? 'approved' : 'rejected';
+      const kycUpdates = {
+        verificationStatus: statusVal,
+        status: statusVal === 'approved' ? 'VERIFIED' : 'REJECTED',
+        accountVerified: isApprove,
+        reviewedBy: state.currentUser?.email || 'admin',
+        reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if (!isApprove) {
+        kycUpdates.rejectionReason = reason || 'Criteria not met';
+        kycUpdates.correctionInstructions = correctionInstructions || '';
+      }
+
+      await Promise.all([
+        db.collection('buyerKycRecords').doc(userId).set(kycUpdates, { merge: true }),
+        db.collection('users').doc(userId).set({
+          accountVerified: isApprove,
+          accountVerificationStatus: isApprove ? 'VERIFIED' : 'REJECTED',
+          verificationStatus: statusVal,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true })
+      ]);
     }
 
-    const userUpdates = {
-      isVerifiedSeller: isApprove,
-      verificationStatus: statusVal,
-      kycStatus: statusVal,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    await Promise.all([
-      db.collection('buyerKycRecords').doc(userId).set(kycUpdates, { merge: true }),
-      db.collection('users').doc(userId).set(userUpdates, { merge: true }),
-      db.collection('publicProfiles').doc(userId).set({ isVerifiedSeller: isApprove, verified: isApprove, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true })
-    ]);
-
-    await db.collection('securityReviews').add({
-      action: `kyc_${action}`,
-      targetType: 'buyerKyc',
-      targetId: userId,
-      reason: reason || (isApprove ? 'Ghana Card identity verified' : 'KYC verification rejected'),
-      adminEmail: state.currentUser?.email || 'admin',
-      adminUid: state.currentUser?.uid || '',
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    showToast(isApprove ? 'KYC application approved: Vendor verified' : 'KYC application rejected', 'success');
+    showToast(isApprove ? 'Account verification approved successfully' : 'Account verification rejected', 'success');
     closeKycModal();
     await fetchAdminData();
   } catch (err) {

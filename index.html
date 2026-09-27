@@ -1220,7 +1220,7 @@ html.light-theme .border-b {
 <body>
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center select-none transition-opacity duration-200"><div class="text-center flex flex-col items-center"><div class="flex flex-col items-center gap-1.5 mb-5"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_14px_rgba(245,158,11,0.4)]" /><div class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span><span class="text-[10px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider ml-1.5">GH</span></div><div class="text-[10px] sm:text-[11px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none mt-0.5"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div><div class="w-7 h-7 rounded-full border-2 border-zinc-800 border-t-[#f5b942] animate-spin"></div><div id="loadingText" class="text-xs text-zinc-500 mt-3 font-medium"></div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The SellerFlow Team has temporarily paused the marketplace. Please try again later.</p></div></div>
-<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="flex flex-col items-center justify-center gap-1 mb-2"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_12px_rgba(245,158,11,0.35)]" /><div class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></div><div class="text-[10.5px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><form id="authForm" class="space-y-3 mt-6"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name" autocapitalize="words" autocorrect="off" spellcheck="false" inputmode="text"></div><div id="usernameWrap"><div class="flex items-center justify-between"><label class="text-sm muted">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="authUsernamePreview">username</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="authUsername" type="text" class="w-full pl-10 pr-10 py-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-sm focus:border-gold outline-none transition" placeholder="e.g. gideon_shop" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"><span id="authUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none"></span></div><div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can only be changed once every 360 days.</span></div><div id="authUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="authUsernameSuggestions" class="mt-2 hidden"></div></div><div id="emailInputWrap"><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"><div id="authEmailFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div></div><div><label class="text-sm muted">Password</label><div class="relative mt-1"><input id="authPassword" type="password" required minlength="6" class="w-full py-3 pl-3.5 pr-11 rounded-xl bg-[#191919] border border-[#333] text-white focus:border-gold outline-none transition" autocomplete="current-password" placeholder="••••••••"><button type="button" id="toggleAuthPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1 text-sm focus:outline-none select-none cursor-pointer" title="Show/hide password" aria-label="Toggle password visibility">👁️</button></div></div><div id="confirmPasswordWrap"><label class="text-sm muted">Confirm Password</label><div class="relative mt-1"><input id="authConfirmPassword" type="password" minlength="6" class="w-full py-3 pl-3.5 pr-11 rounded-xl bg-[#191919] border border-[#333] text-white focus:border-gold outline-none transition" autocomplete="new-password" placeholder="••••••••"><button type="button" id="toggleAuthConfirmPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1 text-sm focus:outline-none select-none cursor-pointer" title="Show/hide password" aria-label="Toggle password visibility">👁️</button></div></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><div id="emailVerifyWrap" class="hide"></div><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
+<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="flex flex-col items-center justify-center gap-1 mb-2"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_12px_rgba(245,158,11,0.35)]" /><div class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></div><div class="text-[10.5px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><div class="mt-5"><button type="button" id="googleAuthBtn" class="w-full py-3 px-4 rounded-xl bg-[#1b1b1b] hover:bg-[#252525] border border-[#383838] hover:border-zinc-400 text-white font-bold text-sm flex items-center justify-center gap-3 transition shadow-sm active:scale-98"><svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg><span id="googleAuthBtnText">Sign up with Google</span></button><div class="flex items-center my-4"><div class="flex-grow border-t border-zinc-800"></div><span class="px-3 text-[11px] text-zinc-500 font-bold uppercase tracking-wider">Or continue with email</span><div class="flex-grow border-t border-zinc-800"></div></div></div><form id="authForm" class="space-y-3 mt-2"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name" autocapitalize="words" autocorrect="off" spellcheck="false" inputmode="text"></div><div id="usernameWrap"><div class="flex items-center justify-between"><label class="text-sm muted">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="authUsernamePreview">username</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="authUsername" type="text" class="w-full pl-10 pr-10 py-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-sm focus:border-gold outline-none transition" placeholder="e.g. gideon_shop" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"><span id="authUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none"></span></div><div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can only be changed once every 360 days.</span></div><div id="authUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="authUsernameSuggestions" class="mt-2 hidden"></div></div><div id="emailInputWrap"><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"><div id="authEmailFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div></div><div><label class="text-sm muted">Password</label><div class="relative mt-1"><input id="authPassword" type="password" required minlength="6" class="w-full py-3 pl-3.5 pr-11 rounded-xl bg-[#191919] border border-[#333] text-white focus:border-gold outline-none transition" autocomplete="current-password" placeholder="••••••••"><button type="button" id="toggleAuthPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1 text-sm focus:outline-none select-none cursor-pointer" title="Show/hide password" aria-label="Toggle password visibility">👁️</button></div></div><div id="confirmPasswordWrap"><label class="text-sm muted">Confirm Password</label><div class="relative mt-1"><input id="authConfirmPassword" type="password" minlength="6" class="w-full py-3 pl-3.5 pr-11 rounded-xl bg-[#191919] border border-[#333] text-white focus:border-gold outline-none transition" autocomplete="new-password" placeholder="••••••••"><button type="button" id="toggleAuthConfirmPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1 text-sm focus:outline-none select-none cursor-pointer" title="Show/hide password" aria-label="Toggle password visibility">👁️</button></div></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><div id="emailVerifyWrap" class="hide"></div><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
 <div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur-md border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-2 sm:gap-4"><div class="flex items-center gap-2 sm:gap-3 shrink-0"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-2 shrink-0 select-none cursor-pointer group" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)] transition-transform group-hover:scale-105" /><div class="flex flex-col items-start text-left leading-none"><div class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span><span class="text-[9px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider ml-1.5 hidden xs:inline-block">GH</span></div><div class="text-[8px] sm:text-[9px] font-black tracking-[0.24em] text-zinc-100 flex items-center gap-1 uppercase select-none mt-0.5 opacity-90"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1.5 sm:gap-2 shrink-0"></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"><div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap flex items-center gap-2"><span>For You</span><span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-gold animate-pulse"></span></h1></div><div class="flex items-center gap-1.5 sm:gap-2 shrink-0"><div class="w-20 h-7 rounded-xl bg-[#1a1a1e] sf-shimmer-box"></div></div></div><div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden"><div class="reel-feed flex-1 min-h-0 w-full overflow-hidden" id="reelFeedSkeleton"><div class="reel-card sf-shimmer-box relative flex items-center justify-center"><div class="flex flex-col items-center justify-center p-6 text-center z-10 select-none pointer-events-none"><div class="relative mb-3.5 flex items-center justify-center"><div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-gold animate-spin"></div><div class="absolute inset-0 flex items-center justify-center"><span class="text-[10px] font-black text-gold font-mono">GH</span></div></div><div class="text-sm font-bold text-white tracking-wide flex items-center gap-1.5"><span>Loading For You Feed</span><span class="inline-flex gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 0ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 150ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 300ms"></span></span></div><div class="text-[11px] text-zinc-400 mt-1 font-medium">Discovering top Ghanaian reels…</div></div><div class="reel-actions flex flex-col items-center gap-4 absolute right-2.5 sm:right-4 bottom-20 z-10 pointer-events-none"><div class="w-11 h-11 rounded-full bg-[#202026] sf-shimmer-box border border-[#333]"></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="w-9 h-9 rounded-full bg-[#202026] sf-shimmer-box border border-gold/30"></div></div><div class="reel-content flex flex-col gap-2 pointer-events-none"><div class="flex items-center gap-2"><div class="w-28 h-4 rounded-md bg-[#25252d] sf-shimmer-box"></div><div class="w-16 h-4 rounded-full bg-amber-500/20 sf-shimmer-box"></div></div><div class="w-52 h-3.5 rounded bg-[#202026] sf-shimmer-box"></div><div class="w-36 h-3 rounded bg-[#202026] sf-shimmer-box"></div><div class="flex items-center gap-2 mt-1"><div class="w-32 h-7 rounded-full bg-[#25252f] sf-shimmer-box"></div><div class="w-20 h-7 rounded-full bg-amber-500/30 sf-shimmer-box"></div></div></div></div></div></div></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1 font-bold tracking-widest text-[11px] text-zinc-300">BUY <span class="text-amber-400 font-black">•</span> SELL <span class="text-amber-400 font-black">•</span> GROW</div><div class="mt-0.5 text-zinc-500 text-[11px]">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
@@ -5111,11 +5111,28 @@ function showAuthPrompt(actionMessage = 'interact on SellerFlow'){
         Sign in or create an account to ${esc(actionMessage)}.
       </p>
       <div class="space-y-2.5 mt-6 max-w-sm mx-auto">
+        <!-- Google Sign In / Sign Up -->
+        <button type="button" id="authPromptGoogle" class="w-full py-3.5 px-4 bg-white hover:bg-zinc-100 text-zinc-900 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-3 transition active:scale-98">
+          <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <div class="flex items-center my-3">
+          <div class="flex-grow border-t border-zinc-800"></div>
+          <span class="px-2.5 text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Or continue with</span>
+          <div class="flex-grow border-t border-zinc-800"></div>
+        </div>
+
         <button type="button" id="authPromptRegister" class="w-full py-3.5 px-4 bg-gold text-black rounded-xl font-bold text-sm hover:brightness-110 shadow-lg shadow-gold/20 flex items-center justify-center gap-2 transition active:scale-98">
-          Create free account
+          Create free account (Email)
         </button>
         <button type="button" id="authPromptLogin" class="w-full py-3 px-4 bg-[#1b1b1b] hover:bg-[#252525] border border-[#383838] text-white rounded-xl font-bold text-sm transition active:scale-98">
-          Sign in
+          Sign in with Email
         </button>
       </div>
       <div class="mt-4">
@@ -5125,6 +5142,7 @@ function showAuthPrompt(actionMessage = 'interact on SellerFlow'){
       </div>
     </div>
   `);
+  $('authPromptGoogle')?.addEventListener('click', () => { closeModal(); triggerGoogleSignIn(); });
   $('authPromptRegister')?.addEventListener('click', ()=>{ closeModal(); showAuth('register'); });
   $('authPromptLogin')?.addEventListener('click', ()=>{ closeModal(); showAuth('login'); });
 }
@@ -5161,6 +5179,8 @@ function showAuth(mode='register', targetEmail=''){
   hide($('emailVerifyWrap'));
   if($('authTitle'))$('authTitle').textContent=mode==='register'?'Create your account':'Welcome back';
   if($('authSubtitle'))$('authSubtitle').textContent=mode==='register'?'Sell and shop across Ghana.':'Sign in to continue.';
+  if($('googleAuthBtnText'))$('googleAuthBtnText').textContent=mode==='register'?'Sign up with Google':'Sign in with Google';
+  if($('googleAuthBtn'))$('googleAuthBtn').onclick=()=>triggerGoogleSignIn();
   if($('nameWrap'))$('nameWrap').style.display=mode==='register'?'block':'none';
   if($('usernameWrap'))$('usernameWrap').style.display=mode==='register'?'block':'none';
   if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display=mode==='register'?'block':'none';
@@ -6983,6 +7003,10 @@ function setNav(){
               <span>🔑</span>
               <span>${esc(typeof t === 'function' ? t('nav_signin_register', 'Sign In / Register Account') : 'Sign In / Register Account')}</span>
             </button>
+            <button type="button" id="mobileGoogleAuthBtn" class="w-full p-2.5 rounded-xl bg-white hover:bg-zinc-100 text-zinc-900 font-bold text-xs shadow-md transition mt-1 flex items-center justify-center gap-2.5">
+              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+              <span>Continue with Google</span>
+            </button>
           ` : `
             <button type="button" id="mobileLogout" class="w-full p-2 rounded-xl text-rose-400 bg-rose-950/20 hover:bg-rose-950/40 border border-rose-900/40 font-bold text-xs flex items-center justify-center gap-2 transition" data-mobile-logout="1">
               <span>🚪</span>
@@ -7004,6 +7028,7 @@ function setNav(){
     $('mobileReportFraudBtn')?.addEventListener('click', () => { closeMobileNav(); if(typeof openReportFraudModal==='function') openReportFraudModal(); });
     $('mobileLogout')?.addEventListener('click', () => { closeMobileNav(); logoutUser(); });
     $('mobileAuthBtn')?.addEventListener('click', () => { closeMobileNav(); showAuth('register'); });
+    $('mobileGoogleAuthBtn')?.addEventListener('click', () => { closeMobileNav(); triggerGoogleSignIn(); });
     $('mobileNavUserCard')?.addEventListener('click', (e) => {
       e.stopPropagation();
       closeMobileNav();
@@ -15719,41 +15744,40 @@ async function saveProfile(){
     ready();
   }
 }
+function sfIsVerifiedBadgeActive(u) {
+  if (!u) return false;
+  if (u.role === 'admin' || u.isAdmin === true) return true;
+  const isPro = (u.subscription === 'PRO' || u.plan === 'PRO' || u.isPro === true);
+  const isAccountVerified = (u.accountVerificationStatus === 'VERIFIED' || u.accountVerified === true || u.verificationStatus === 'approved');
+  return isPro && isAccountVerified;
+}
+window.sfIsVerifiedBadgeActive = sfIsVerifiedBadgeActive;
+
 async function validateGhanaCardAndStartLiveness(){
   try{
-    const rawNum=$('ghanaCard')?.value.trim() || '';
-    const legalName=$('cardLegalName')?.value.trim() || currentProfile?.name || currentUser?.displayName || 'Applicant';
-    const frontInput=$('cardFront'), backInput=$('cardBack');
-    const front=frontInput?.files?.[0], back=backInput?.files?.[0];
+    const legalName = $('cardLegalName')?.value.trim() || currentProfile?.name || currentUser?.displayName || 'SellerFlow Member';
+    const phone = $('cardPhone')?.value.trim() || currentProfile?.phone || '';
+    const email = currentUser?.email || currentProfile?.email || '';
 
-    const existingFront = currentProfile?.ghanaCardFrontPath;
-    const existingBack = currentProfile?.ghanaCardBackPath;
     const existingSelfie = currentProfile?.selfieStoragePath || currentProfile?.selfiePath;
 
-    if(!rawNum) throw Error('Please enter your Ghana Card PIN / number.');
-    if(!front && !existingFront) throw Error('Please upload a clear front photo of your Ghana Card.');
-    if(!back && !existingBack) throw Error('Please upload a clear back photo of your Ghana Card.');
-
-    const n = rawNum.toUpperCase().replace(/\s+/g, '');
-    if(!/^GHA-[A-Z0-9]{9}-[A-Z0-9]$/i.test(n) && !/^GHA[A-Z0-9]{10}$/i.test(n)){
-      throw Error('Invalid Ghana Card format. Please enter your valid PIN in the format GHA-XXXXXXXXX-X (e.g. GHA-123456789-0).');
-    }
-
-    if(front) validFile(front,['image/jpeg','image/png','image/webp','application/pdf'],10);
-    if(back) validFile(back,['image/jpeg','image/png','image/webp','application/pdf'],10);
-
     const kycData = {
-      n,
       legalName,
-      frontFile: front || null,
-      backFile: back || null,
-      existingFront: existingFront || '',
-      existingBack: existingBack || '',
-      maskedCard: n.slice(0,3)+'-*****'+(n.slice(-4)||'')
+      email,
+      phone,
+      existingSelfie: existingSelfie || '',
+      maskedCard: 'SF-VERIFIED',
+      fullBodyUploads: window._modalFullBodyUploads || {}
     };
 
-    // If modal selfie was captured directly, finalize with it
+    // If modal selfie was captured directly, check that 3 separated full body phone library pictures are uploaded
     if (window._modalVerificationSelfieBlob) {
+      const fb = window._modalFullBodyUploads || {};
+      const fbCount = [1, 2, 3].filter(i => !!fb[i]?.base64).length;
+      if (fbCount < 3) {
+        toast('Please upload all 3 separated full-body pictures from your phone library before completing verification.', 'error');
+        return;
+      }
       const selfieBlob = window._modalVerificationSelfieBlob;
       const selfieBase64 = window._modalVerificationSelfieBase64;
       const livenessResult = {
@@ -15801,11 +15825,10 @@ function playLivenessChime(success = true) {
 }
 
 const LIVENESS_STEPS = [
-  { id: 'LOOK_FORWARD', targetPose: 'FORWARD', title: 'LOOK FORWARD', desc: 'Center your face in the oval and look straight into the camera', icon: '👀' },
-  { id: 'TURN_HEAD_UP', targetPose: 'UP', title: 'TURN YOUR HEAD UP', desc: 'Slowly tilt your head upwards while staying in frame', icon: '👆' },
-  { id: 'TURN_HEAD_DOWN', targetPose: 'DOWN', title: 'TURN YOUR HEAD DOWN', desc: 'Slowly tilt your head downwards towards the floor', icon: '👇' },
-  { id: 'TURN_HEAD_LEFT', targetPose: 'LEFT', title: 'TURN YOUR HEAD LEFT', desc: 'Smoothly turn your head towards your left side', icon: '👈' },
-  { id: 'TURN_HEAD_RIGHT', targetPose: 'RIGHT', title: 'TURN YOUR HEAD RIGHT', desc: 'Smoothly turn your head towards your right side', icon: '👉' }
+  { id: 'FRONT', targetPose: 'FORWARD', title: 'FRONT PICTURE', desc: 'Position face centered in oval and look straight into camera', icon: '👤', angleName: 'Front' },
+  { id: 'LEFT', targetPose: 'LEFT', title: 'LEFT SIDE PICTURE', desc: 'Slowly turn your head towards your left side', icon: '👈', angleName: 'Left Side' },
+  { id: 'RIGHT', targetPose: 'RIGHT', title: 'RIGHT SIDE PICTURE', desc: 'Slowly turn your head towards your right side', icon: '👉', angleName: 'Right Side' },
+  { id: 'FULL_PERSON', targetPose: 'FULL_PERSON', title: 'FULL PERSON PICTURE', desc: 'Step back slightly so your upper body / full person is visible', icon: '🧍', angleName: 'Full Person' }
 ];
 
 let activeLivenessStream = null;
@@ -15836,31 +15859,31 @@ function startLivenessChallenge(kycData) {
             🤳
           </div>
           <div>
-            <h2 class="text-base sm:text-lg font-black text-white">Live Identity & Liveness Check</h2>
-            <p class="muted text-[11px]">SellerFlow Security & Biometric Presence Verification</p>
+            <h2 class="text-base sm:text-lg font-black text-white">Live Verification Auto-Capture</h2>
+            <p class="muted text-[11px]">Auto-captures Front, Left, Right & Full Person pictures</p>
           </div>
         </div>
         <button type="button" id="closeLivenessBtn" class="w-7 h-7 rounded-full bg-[#1e1e1e] hover:bg-[#2c2c2c] text-zinc-400 hover:text-white flex items-center justify-center text-xs">✕</button>
       </div>
 
-      <!-- Security Guidance Notice -->
+      <!-- Hands-Free Guidance Notice -->
       <div class="p-3 rounded-xl bg-[#131715] border border-emerald-900/50 text-[11px] text-zinc-300 flex items-start gap-2.5">
-        <span class="text-base text-emerald-400 shrink-0">🛡️</span>
+        <span class="text-base text-emerald-400 shrink-0">⚡</span>
         <div class="space-y-0.5">
-          <span class="font-bold text-emerald-300 block">Live Security Challenge</span>
+          <span class="font-bold text-emerald-300 block">Multi-Angle & Full Person Comparison</span>
           <p class="text-zinc-400 text-[10.5px] leading-relaxed">
-            Follow the 5 on-screen head movement prompts. This ensures you are physically present and protects your Ghana Card from unauthorized use.
+            Position for each angle (<b>Front</b>, <b>Left</b>, <b>Right</b>, and <b>Full Person</b>). The camera <b>auto-captures</b> once positioned well so both close-up and full person views are compared.
           </p>
         </div>
       </div>
 
-      <!-- Live Camera Container with Oval Guide -->
-      <div class="relative w-full aspect-[4/5] sm:aspect-square max-h-[360px] rounded-2xl bg-black border-2 border-[#2b2b36] overflow-hidden flex items-center justify-center shadow-2xl">
+      <!-- Live Camera Container with Dynamic Guide -->
+      <div class="relative w-full aspect-[4/5] sm:aspect-square max-h-[350px] rounded-2xl bg-black border-2 border-[#2b2b36] overflow-hidden flex items-center justify-center shadow-2xl">
         <!-- Video Feed (Mirrored) -->
         <video id="livenessVideo" autoplay playsinline muted class="w-full h-full object-cover transform -scale-x-100"></video>
         <canvas id="livenessCanvas" class="absolute inset-0 w-full h-full pointer-events-none transform -scale-x-100"></canvas>
 
-        <!-- Overlay Oval Guide -->
+        <!-- Dynamic Overlay Guide (Oval for face, portrait box for full person) -->
         <div id="livenessOvalGuide" class="absolute inset-0 pointer-events-none flex items-center justify-center p-6">
           <div id="ovalBorder" class="w-52 sm:w-60 h-64 sm:h-72 rounded-[50%/60%] border-4 border-dashed border-gold/70 transition-all duration-300 relative flex items-center justify-center">
             <!-- Crosshair markers -->
@@ -15872,57 +15895,61 @@ function startLivenessChallenge(kycData) {
         </div>
 
         <!-- Camera Status / Face Status Pill -->
-        <div class="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none">
+        <div class="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none z-20">
           <div id="livenessFaceStatus" class="px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md border border-zinc-700 text-[10.5px] font-bold text-zinc-300 flex items-center gap-1.5 shadow-md">
             <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
             <span id="livenessFaceStatusText">Initializing camera…</span>
           </div>
           <div id="livenessStepBadge" class="px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md border border-gold/50 text-[10.5px] font-black text-gold shadow-md">
-            Step 1 of 5
+            Step 1 of 4
           </div>
         </div>
 
         <!-- Prominent Instruction Banner -->
-        <div class="absolute bottom-3 left-3 right-3 pointer-events-none">
+        <div class="absolute bottom-3 left-3 right-3 z-20 pointer-events-auto">
           <div id="livenessInstructionCard" class="p-3 rounded-xl bg-black/85 backdrop-blur-md border border-gold/60 text-center shadow-xl transition-all">
             <div class="flex items-center justify-center gap-2 mb-0.5">
-              <span id="livenessActionIcon" class="text-lg">👀</span>
-              <span id="livenessActionTitle" class="text-sm font-black text-gold tracking-wide uppercase">LOOK FORWARD</span>
+              <span id="livenessActionIcon" class="text-lg">👤</span>
+              <span id="livenessActionTitle" class="text-sm font-black text-gold tracking-wide uppercase">FRONT PICTURE</span>
             </div>
-            <p id="livenessActionDesc" class="text-[11px] text-zinc-300 font-medium">Center your face in the oval and look straight into the camera</p>
+            <p id="livenessActionDesc" class="text-[11px] text-zinc-300 font-medium">Position face centered in oval and look straight into camera</p>
             
-            <!-- Hold Progress Ring / Bar -->
+            <!-- Hold Progress Bar -->
             <div class="w-full bg-zinc-800/90 h-2 rounded-full mt-2 overflow-hidden border border-zinc-700">
               <div id="livenessHoldBar" class="bg-gradient-to-r from-amber-400 to-emerald-400 h-full rounded-full transition-all duration-75 w-0"></div>
             </div>
+
+            <!-- Manual quick capture button for Full Person Step -->
+            <button type="button" id="snapNowBtn" class="mt-2 w-full py-1.5 px-3 rounded-lg bg-gold hover:brightness-110 text-black font-extrabold text-xs shadow hidden transition flex items-center justify-center gap-1.5 pointer-events-auto">
+              <span>📸</span> Capture Full Person Now
+            </button>
           </div>
         </div>
 
-        <!-- Final Selfie Countdown Overlay (Hidden Initially) -->
-        <div id="selfieCountdownOverlay" class="absolute inset-0 bg-black/75 backdrop-blur-sm flex flex-col items-center justify-center text-center p-4 hidden z-20">
-          <div class="text-5xl font-black text-gold animate-bounce mb-2" id="countdownNumber">3</div>
-          <h3 class="text-base font-black text-white">Hold Still & Look Forward</h3>
-          <p class="text-xs text-zinc-300 mt-1">Capturing your official verification selfie photo…</p>
-        </div>
+        <!-- Auto-Capture Flash Overlay -->
+        <div id="selfieFlashOverlay" class="absolute inset-0 bg-white/90 transition-opacity duration-200 opacity-0 pointer-events-none z-30"></div>
       </div>
 
-      <!-- Step dots progress -->
-      <div class="flex items-center justify-between gap-1 px-2 pt-1">
+      <!-- 4-Angle Photo Strip with Full Person -->
+      <div class="grid grid-cols-4 gap-1.5 pt-1">
         ${LIVENESS_STEPS.map((s, idx) => `
-          <div class="flex-1 flex flex-col items-center gap-1">
-            <div id="stepDot_${idx}" class="w-full h-1.5 rounded-full ${idx === 0 ? 'bg-gold' : 'bg-zinc-800'} transition-all duration-300"></div>
-            <span class="text-[9px] font-bold ${idx === 0 ? 'text-gold' : 'text-zinc-500'} uppercase truncate">${idx + 1}. ${s.title.replace('TURN YOUR HEAD ', '')}</span>
+          <div class="flex flex-col items-center gap-1">
+            <div id="angleThumb_${s.id}" class="w-full aspect-[3/4] max-h-20 rounded-xl bg-[#141418] border border-zinc-700 flex flex-col items-center justify-center overflow-hidden relative shadow-inner transition-all">
+              <span class="text-sm text-zinc-500">${s.icon}</span>
+              <span class="text-[8px] text-zinc-500 mt-0.5 font-medium truncate px-0.5">Waiting</span>
+            </div>
+            <span id="angleLabel_${s.id}" class="text-[9px] font-bold ${idx === 0 ? 'text-gold' : 'text-zinc-400'} uppercase truncate">${s.angleName}</span>
           </div>
         `).join('')}
       </div>
 
       <!-- Bottom controls -->
       <div class="flex items-center justify-between gap-2 pt-2 border-t border-[#262626]">
-        <button type="button" id="cancelLivenessBtn" class="px-4 py-2.5 rounded-xl border border-[#444] hover:bg-[#222] text-xs font-bold text-zinc-300 transition">
-          ← Back to Documents
+        <button type="button" id="cancelLivenessBtn" class="px-4 py-2 rounded-xl border border-[#444] hover:bg-[#222] text-xs font-bold text-zinc-300 transition">
+          Cancel
         </button>
-        <button type="button" id="retryCameraBtn" class="px-4 py-2.5 rounded-xl border border-gold/40 text-gold hover:bg-gold/10 text-xs font-bold transition flex items-center gap-1.5 hidden">
-          <span>🔄</span> Reset Challenge
+        <button type="button" id="retryCameraBtn" class="px-4 py-2 rounded-xl border border-gold/40 text-gold hover:bg-gold/10 text-xs font-bold transition flex items-center gap-1.5 hidden">
+          <span>🔄</span> Reset
         </button>
       </div>
     </div>
@@ -15954,18 +15981,19 @@ async function initLivenessDetection(kycData) {
   const actionTitle = $('livenessActionTitle');
   const actionDesc = $('livenessActionDesc');
   const holdBar = $('livenessHoldBar');
+  const snapNowBtn = $('snapNowBtn');
   const retryBtn = $('retryCameraBtn');
+  const flashOverlay = $('selfieFlashOverlay');
 
   if (!video || !canvas) return;
 
   let currentStepIndex = 0;
   let continuousFramesInPose = 0;
-  const REQUIRED_CONSECUTIVE_FRAMES = 15; // ~500-750ms of stable pose
+  const REQUIRED_CONSECUTIVE_FRAMES = 14; // ~450-600ms of stable pose
   const completedMovements = [];
+  const capturedPhotos = {}; // maps 'FRONT', 'LEFT', 'RIGHT', 'FULL_PERSON' -> { blob, base64 }
   let isChallengeCompleted = false;
-  let isFinalPhotoPhase = false;
-  let finalPhotoHoldFrames = 0;
-  const REQUIRED_PHOTO_FRAMES = 20; // ~600-800ms of centered forward pose for photo
+  let isCapturingSnap = false;
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -15980,26 +16008,22 @@ async function initLivenessDetection(kycData) {
     video.srcObject = stream;
     await video.play();
 
-    faceStatusText.textContent = 'Camera ready. Align face.';
+    if (faceStatusText) faceStatusText.textContent = 'Camera ready. Align face in oval.';
   } catch (camErr) {
     console.error('Liveness camera access error:', camErr);
-    faceStatusText.textContent = '⚠️ Camera access denied or unavailable.';
-    faceStatusPill.className = 'px-2.5 py-1 rounded-full bg-red-950 border border-red-800 text-[10.5px] font-bold text-red-300';
-    actionTitle.textContent = 'CAMERA PERMISSION REQUIRED';
-    actionDesc.textContent = 'Please enable camera permissions in your browser or Android settings to complete live verification.';
+    if (faceStatusText) faceStatusText.textContent = '⚠️ Camera access denied or unavailable.';
+    if (faceStatusPill) faceStatusPill.className = 'px-2.5 py-1 rounded-full bg-red-950 border border-red-800 text-[10.5px] font-bold text-red-300';
+    if (actionTitle) actionTitle.textContent = 'CAMERA PERMISSION REQUIRED';
+    if (actionDesc) actionDesc.textContent = 'Please enable camera permissions in your browser or Android settings to complete live verification.';
     if (retryBtn) retryBtn.classList.remove('hidden');
     return;
   }
-
-  // Setup optical fallback canvas context for real-time luminance ellipse & landmark tracking
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
   // Optional MediaPipe FaceMesh
   let faceMeshInstance = null;
   let latestMeshLandmarks = null;
   let meshFaceCount = 0;
 
-  // On-demand loader for MediaPipe FaceMesh (lazy-loaded so initial page load is fast)
   if (typeof window.FaceMesh !== 'function' && !window._sfLoadingMediaPipe) {
     window._sfLoadingMediaPipe = true;
     try {
@@ -16040,10 +16064,77 @@ async function initLivenessDetection(kycData) {
 
   let lastFrameTime = performance.now();
 
+  async function snapAnglePhoto(stepId) {
+    if (isCapturingSnap) return;
+    isCapturingSnap = true;
+
+    try {
+      // Trigger white camera flash animation
+      if (flashOverlay) {
+        flashOverlay.style.opacity = '0.9';
+        setTimeout(() => { if (flashOverlay) flashOverlay.style.opacity = '0'; }, 180);
+      }
+
+      playLivenessChime(true);
+      if (navigator.vibrate) navigator.vibrate([60]);
+
+      // Freeze frame and render high-res photo to offscreen canvas
+      const snapCanvas = document.createElement('canvas');
+      const w = video.videoWidth || 640;
+      const h = video.videoHeight || 480;
+      snapCanvas.width = w;
+      snapCanvas.height = h;
+      const snapCtx = snapCanvas.getContext('2d');
+      // Mirror image horizontally to match preview naturally
+      snapCtx.translate(w, 0);
+      snapCtx.scale(-1, 1);
+      snapCtx.drawImage(video, 0, 0, w, h);
+
+      await new Promise(resolve => {
+        snapCanvas.toBlob((blob) => {
+          const base64 = snapCanvas.toDataURL('image/jpeg', 0.88);
+          capturedPhotos[stepId] = { blob, base64 };
+
+          // Update thumbnail in photo strip
+          const thumb = $(`angleThumb_${stepId}`);
+          if (thumb) {
+            thumb.innerHTML = `
+              <img src="${base64}" class="w-full h-full object-cover">
+              <span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-emerald-500 text-black text-[9px] font-black flex items-center justify-center shadow-md">✓</span>
+            `;
+            thumb.className = 'w-full aspect-[3/4] max-h-20 rounded-xl bg-black border-2 border-emerald-400 overflow-hidden relative shadow-md';
+          }
+          const label = $(`angleLabel_${stepId}`);
+          if (label) label.className = 'text-[9px] font-bold text-emerald-400 uppercase truncate';
+
+          resolve();
+        }, 'image/jpeg', 0.88);
+      });
+    } catch (e) {
+      console.warn('Angle photo capture error:', e);
+    } finally {
+      isCapturingSnap = false;
+    }
+  }
+
+  // Quick snap button for step 4
+  if (snapNowBtn) {
+    snapNowBtn.onclick = async () => {
+      if (currentStepIndex === 3 && !isCapturingSnap) {
+        const currentTarget = LIVENESS_STEPS[currentStepIndex];
+        completedMovements.push(currentTarget.id);
+        await snapAnglePhoto(currentTarget.id);
+        isChallengeCompleted = true;
+        stopLivenessCamera();
+        showLivenessConfirmationPreview(kycData, capturedPhotos, completedMovements);
+      }
+    };
+  }
+
   async function processVideoFrame() {
     if (!activeLivenessStream || isChallengeCompleted) return;
 
-    if (video.readyState >= 2) {
+    if (video.readyState >= 2 && !isCapturingSnap) {
       canvas.width = video.videoWidth || 640;
       canvas.height = video.videoHeight || 480;
 
@@ -16057,30 +16148,28 @@ async function initLivenessDetection(kycData) {
 
       // Detect face and head pose
       let detectedFaceCount = 0;
-      let headPose = 'UNKNOWN'; // 'FORWARD', 'UP', 'DOWN', 'LEFT', 'RIGHT', 'TRANSITION'
+      let headPose = 'UNKNOWN'; // 'FORWARD', 'LEFT', 'RIGHT', 'UP', 'DOWN', 'FULL_PERSON', 'TRANSITION'
 
       if (latestMeshLandmarks && meshFaceCount === 1) {
         detectedFaceCount = 1;
         const lm = latestMeshLandmarks;
-        // Nose tip: 1, Left cheek/ear: 234, Right cheek/ear: 454
-        // Left eye outer: 33, Right eye outer: 263, Chin bottom: 152, Top Forehead: 10
         const noseX = lm[1].x, noseY = lm[1].y;
         const leftCheekX = lm[234].x, rightCheekX = lm[454].x;
         const eyeY = (lm[33].y + lm[263].y) / 2;
         const chinY = lm[152].y;
 
-        // Yaw calculation (mirrored selfie video)
         const dl = Math.abs(noseX - leftCheekX);
         const dr = Math.abs(noseX - rightCheekX);
         const totalX = dl + dr || 0.001;
         const yawRatio = dl / totalX;
 
-        // Pitch calculation
         const upperFace = Math.abs(noseY - eyeY);
         const lowerFace = Math.abs(chinY - noseY) || 0.001;
         const pitchRatio = upperFace / (upperFace + lowerFace);
 
-        if (yawRatio < 0.36) {
+        if (currentStepIndex === 3) {
+          headPose = 'FULL_PERSON';
+        } else if (yawRatio < 0.36) {
           headPose = 'RIGHT';
         } else if (yawRatio > 0.64) {
           headPose = 'LEFT';
@@ -16088,7 +16177,7 @@ async function initLivenessDetection(kycData) {
           headPose = 'UP';
         } else if (pitchRatio > 0.66) {
           headPose = 'DOWN';
-        } else if (yawRatio >= 0.42 && yawRatio <= 0.58 && pitchRatio >= 0.38 && pitchRatio <= 0.62) {
+        } else if (yawRatio >= 0.40 && yawRatio <= 0.60 && pitchRatio >= 0.36 && pitchRatio <= 0.64) {
           headPose = 'FORWARD';
         } else {
           headPose = 'TRANSITION';
@@ -16098,32 +16187,36 @@ async function initLivenessDetection(kycData) {
           const faces = await nativeDetector.detect(video);
           detectedFaceCount = faces.length;
           if (detectedFaceCount === 1) {
-            const f = faces[0];
-            const landmarks = f.landmarks || [];
-            const nose = landmarks.find(l => l.type === 'nose');
-            const eyes = landmarks.filter(l => l.type === 'eye');
-            if (nose && eyes.length >= 2) {
-              const eyeCenterX = (eyes[0].location.x + eyes[1].location.x) / 2;
-              const eyeCenterY = (eyes[0].location.y + eyes[1].location.y) / 2;
-              const eyeSpan = Math.abs(eyes[1].location.x - eyes[0].location.x) || 1;
-              const dx = (nose.location.x - eyeCenterX) / eyeSpan;
-              const dy = (nose.location.y - eyeCenterY) / (f.boundingBox.height || 1);
-              if (dx < -0.20) headPose = 'RIGHT';
-              else if (dx > 0.20) headPose = 'LEFT';
-              else if (dy < 0.18) headPose = 'UP';
-              else if (dy > 0.44) headPose = 'DOWN';
-              else if (Math.abs(dx) <= 0.12 && dy >= 0.24 && dy <= 0.42) headPose = 'FORWARD';
-              else headPose = 'TRANSITION';
+            if (currentStepIndex === 3) {
+              headPose = 'FULL_PERSON';
             } else {
-              headPose = 'FORWARD';
+              const f = faces[0];
+              const landmarks = f.landmarks || [];
+              const nose = landmarks.find(l => l.type === 'nose');
+              const eyes = landmarks.filter(l => l.type === 'eye');
+              if (nose && eyes.length >= 2) {
+                const eyeCenterX = (eyes[0].location.x + eyes[1].location.x) / 2;
+                const eyeCenterY = (eyes[0].location.y + eyes[1].location.y) / 2;
+                const eyeSpan = Math.abs(eyes[1].location.x - eyes[0].location.x) || 1;
+                const dx = (nose.location.x - eyeCenterX) / eyeSpan;
+                const dy = (nose.location.y - eyeCenterY) / (f.boundingBox.height || 1);
+                if (dx < -0.18) headPose = 'RIGHT';
+                else if (dx > 0.18) headPose = 'LEFT';
+                else if (dy < 0.18) headPose = 'UP';
+                else if (dy > 0.44) headPose = 'DOWN';
+                else if (Math.abs(dx) <= 0.12 && dy >= 0.22 && dy <= 0.44) headPose = 'FORWARD';
+                else headPose = 'TRANSITION';
+              } else {
+                headPose = 'FORWARD';
+              }
             }
           }
         } catch (_) {
           detectedFaceCount = 1;
-          headPose = 'FORWARD';
+          headPose = currentStepIndex === 3 ? 'FULL_PERSON' : 'FORWARD';
         }
       } else {
-        // High-reliability fast optical skin & luminance centroid fallback
+        // Optical luminance & skin centroid detection
         const sampleCanvas = document.createElement('canvas');
         sampleCanvas.width = 160;
         sampleCanvas.height = 120;
@@ -16148,148 +16241,102 @@ async function initLivenessDetection(kycData) {
             }
           }
         }
-        if (skinCount < 120) {
+        if (skinCount < 100) {
           detectedFaceCount = 0;
           headPose = 'UNKNOWN';
         } else {
           detectedFaceCount = 1;
-          const cx = sumX / skinCount;
-          const cy = sumY / skinCount;
-          const horizRatio = (cx - 80) / 40;
-          const vertRatio = (cy - 60) / 30;
-          const lumHoriz = (rightLum - leftLum) / ((leftLum + rightLum) || 1);
-          const lumVert = (topLum - bottomLum) / ((topLum + bottomLum) || 1);
+          if (currentStepIndex === 3) {
+            headPose = 'FULL_PERSON';
+          } else {
+            const cx = sumX / skinCount;
+            const cy = sumY / skinCount;
+            const horizRatio = (cx - 80) / 40;
+            const vertRatio = (cy - 60) / 30;
+            const lumHoriz = (rightLum - leftLum) / ((leftLum + rightLum) || 1);
+            const lumVert = (topLum - bottomLum) / ((topLum + bottomLum) || 1);
 
-          if (horizRatio > 0.22 || lumHoriz > 0.22) headPose = 'LEFT';
-          else if (horizRatio < -0.22 || lumHoriz < -0.22) headPose = 'RIGHT';
-          else if (vertRatio < -0.20 || lumVert > 0.20) headPose = 'UP';
-          else if (vertRatio > 0.20 || lumVert < -0.20) headPose = 'DOWN';
-          else if (Math.abs(horizRatio) <= 0.14 && Math.abs(vertRatio) <= 0.14) headPose = 'FORWARD';
-          else headPose = 'TRANSITION';
+            if (horizRatio > 0.20 || lumHoriz > 0.20) headPose = 'LEFT';
+            else if (horizRatio < -0.20 || lumHoriz < -0.20) headPose = 'RIGHT';
+            else if (vertRatio < -0.20 || lumVert > 0.20) headPose = 'UP';
+            else if (vertRatio > 0.20 || lumVert < -0.20) headPose = 'DOWN';
+            else if (Math.abs(horizRatio) <= 0.14 && Math.abs(vertRatio) <= 0.14) headPose = 'FORWARD';
+            else headPose = 'TRANSITION';
+          }
         }
       }
 
-      // UI Face Counting & Oval Highlighting
-      if (detectedFaceCount === 0) {
-        faceStatusText.textContent = '⚠️ No face detected. Align inside oval.';
-        faceStatusPill.className = 'px-2.5 py-1 rounded-full bg-red-950/90 border border-red-700 text-[10.5px] font-bold text-red-300';
-        ovalBorder.className = 'w-52 sm:w-60 h-64 sm:h-72 rounded-[50%/60%] border-4 border-dashed border-red-500/80 transition-all duration-300 relative flex items-center justify-center';
+      // UI Guidance & Dynamic Guides
+      const currentTarget = LIVENESS_STEPS[currentStepIndex];
+      const isFullPersonStep = (currentTarget.id === 'FULL_PERSON');
+
+      if (detectedFaceCount === 0 && !isFullPersonStep) {
+        if (faceStatusText) faceStatusText.textContent = '⚠️ No face detected. Align inside oval.';
+        if (faceStatusPill) faceStatusPill.className = 'px-2.5 py-1 rounded-full bg-red-950/90 border border-red-700 text-[10.5px] font-bold text-red-300';
+        if (ovalBorder) ovalBorder.className = 'w-52 sm:w-60 h-64 sm:h-72 rounded-[50%/60%] border-4 border-dashed border-red-500/80 transition-all duration-300 relative flex items-center justify-center';
         continuousFramesInPose = Math.max(0, continuousFramesInPose - 2);
-        finalPhotoHoldFrames = Math.max(0, finalPhotoHoldFrames - 2);
-        const overlay = $('selfieCountdownOverlay');
-        if (overlay) overlay.classList.add('hidden');
+        if (holdBar) holdBar.style.width = '0%';
       } else if (detectedFaceCount > 1) {
-        faceStatusText.textContent = '⚠️ Multiple faces detected. Ensure only you are in frame.';
-        faceStatusPill.className = 'px-2.5 py-1 rounded-full bg-amber-950/90 border border-amber-700 text-[10.5px] font-bold text-amber-300';
-        ovalBorder.className = 'w-52 sm:w-60 h-64 sm:h-72 rounded-[50%/60%] border-4 border-dashed border-amber-500/80 transition-all duration-300 relative flex items-center justify-center';
+        if (faceStatusText) faceStatusText.textContent = '⚠️ Multiple faces detected. Ensure only you are in frame.';
+        if (faceStatusPill) faceStatusPill.className = 'px-2.5 py-1 rounded-full bg-amber-950/90 border border-amber-700 text-[10.5px] font-bold text-amber-300';
+        if (ovalBorder) ovalBorder.className = isFullPersonStep ? 'w-56 sm:w-64 h-72 sm:h-80 rounded-2xl border-4 border-dashed border-amber-500/80 transition-all duration-300 relative flex items-center justify-center' : 'w-52 sm:w-60 h-64 sm:h-72 rounded-[50%/60%] border-4 border-dashed border-amber-500/80 transition-all duration-300 relative flex items-center justify-center';
         continuousFramesInPose = Math.max(0, continuousFramesInPose - 2);
-        finalPhotoHoldFrames = Math.max(0, finalPhotoHoldFrames - 2);
-        const overlay = $('selfieCountdownOverlay');
-        if (overlay) overlay.classList.add('hidden');
-      } else if (isFinalPhotoPhase) {
-        // FINAL STEP: Verify strictly that user is looking FORWARD before and during selfie capture
-        const isLookingForward = (headPose === 'FORWARD');
-        const overlay = $('selfieCountdownOverlay');
-        const countNum = $('countdownNumber');
-
-        if (isLookingForward) {
-          finalPhotoHoldFrames++;
-          faceStatusText.textContent = '✓ Looking forward! Holding steady for photo…';
-          faceStatusPill.className = 'px-2.5 py-1 rounded-full bg-emerald-950/90 border border-emerald-700 text-[10.5px] font-bold text-emerald-300';
-          ovalBorder.className = 'w-52 sm:w-60 h-64 sm:h-72 rounded-[50%/60%] border-4 border-emerald-400/90 shadow-[0_0_20px_rgba(52,211,153,0.3)] transition-all duration-300 relative flex items-center justify-center';
-
-          if (overlay) overlay.classList.remove('hidden');
-
-          const remainingCountdown = Math.max(1, Math.ceil((REQUIRED_PHOTO_FRAMES - finalPhotoHoldFrames) / 7));
-          if (countNum) countNum.textContent = remainingCountdown;
-
-          const holdPercent = Math.min(100, Math.round((finalPhotoHoldFrames / REQUIRED_PHOTO_FRAMES) * 100));
-          if (holdBar) holdBar.style.width = `${holdPercent}%`;
-
-          if (finalPhotoHoldFrames >= REQUIRED_PHOTO_FRAMES) {
-            isChallengeCompleted = true;
-            playLivenessChime(true);
-            if (navigator.vibrate) navigator.vibrate([60]);
-
-            // Freeze frame and draw high-res photo to offscreen canvas
-            const snapCanvas = document.createElement('canvas');
-            const w = video.videoWidth || 640;
-            const h = video.videoHeight || 480;
-            snapCanvas.width = w;
-            snapCanvas.height = h;
-            const snapCtx = snapCanvas.getContext('2d');
-            snapCtx.translate(w, 0);
-            snapCtx.scale(-1, 1);
-            snapCtx.drawImage(video, 0, 0, w, h);
-
-            snapCanvas.toBlob((blob) => {
-              const selfieBase64 = snapCanvas.toDataURL('image/jpeg', 0.88);
-              stopLivenessCamera();
-              showLivenessConfirmationPreview(kycData, blob, selfieBase64, completedMovements);
-            }, 'image/jpeg', 0.88);
-            return;
-          }
-        } else {
-          finalPhotoHoldFrames = Math.max(0, finalPhotoHoldFrames - 2);
-          if (overlay) overlay.classList.add('hidden');
-          faceStatusText.textContent = `Pose: ${headPose} · Center face looking forward for photo`;
-          faceStatusPill.className = 'px-2.5 py-1 rounded-full bg-zinc-800/90 border border-zinc-700 text-[10.5px] font-bold text-zinc-300';
-          ovalBorder.className = 'w-52 sm:w-60 h-64 sm:h-72 rounded-[50%/60%] border-4 border-gold/70 transition-all duration-300 relative flex items-center justify-center';
-          if (holdBar) holdBar.style.width = '0%';
-        }
+        if (holdBar) holdBar.style.width = '0%';
       } else {
-        const currentTarget = LIVENESS_STEPS[currentStepIndex];
-        const isPoseMatched = (headPose === currentTarget.targetPose);
+        const isPoseMatched = isFullPersonStep ? (detectedFaceCount >= 1 || headPose === 'FULL_PERSON') : (headPose === currentTarget.targetPose);
 
         if (isPoseMatched) {
           continuousFramesInPose++;
-          faceStatusText.textContent = `✓ ${currentTarget.title} detected! Hold steady…`;
-          faceStatusPill.className = 'px-2.5 py-1 rounded-full bg-emerald-950/90 border border-emerald-700 text-[10.5px] font-bold text-emerald-300';
-          ovalBorder.className = 'w-52 sm:w-60 h-64 sm:h-72 rounded-[50%/60%] border-4 border-emerald-400/90 shadow-[0_0_20px_rgba(52,211,153,0.3)] transition-all duration-300 relative flex items-center justify-center';
+          if (faceStatusText) faceStatusText.textContent = isFullPersonStep ? '✓ Full person positioned well! Hold steady…' : `✓ ${currentTarget.title} positioned well! Hold steady…`;
+          if (faceStatusPill) faceStatusPill.className = 'px-2.5 py-1 rounded-full bg-emerald-950/90 border border-emerald-700 text-[10.5px] font-bold text-emerald-300';
+          if (ovalBorder) {
+            ovalBorder.className = isFullPersonStep
+              ? 'w-56 sm:w-64 h-72 sm:h-80 rounded-2xl border-4 border-emerald-400 shadow-[0_0_25px_rgba(52,211,153,0.4)] transition-all duration-300 relative flex items-center justify-center'
+              : 'w-52 sm:w-60 h-64 sm:h-72 rounded-[50%/60%] border-4 border-emerald-400 shadow-[0_0_25px_rgba(52,211,153,0.4)] transition-all duration-300 relative flex items-center justify-center';
+          }
         } else {
           continuousFramesInPose = Math.max(0, continuousFramesInPose - 2);
-          if (headPose === 'FORWARD') {
-            faceStatusText.textContent = `Aligning… please ${currentTarget.title.toLowerCase()}`;
-          } else {
-            faceStatusText.textContent = `Pose: ${headPose} · Target: ${currentTarget.targetPose}`;
+          if (faceStatusText) faceStatusText.textContent = `Aligning… please ${currentTarget.title.toLowerCase()}`;
+          if (faceStatusPill) faceStatusPill.className = 'px-2.5 py-1 rounded-full bg-zinc-800/90 border border-zinc-700 text-[10.5px] font-bold text-zinc-300';
+          if (ovalBorder) {
+            ovalBorder.className = isFullPersonStep
+              ? 'w-56 sm:w-64 h-72 sm:h-80 rounded-2xl border-4 border-gold/70 transition-all duration-300 relative flex items-center justify-center'
+              : 'w-52 sm:w-60 h-64 sm:h-72 rounded-[50%/60%] border-4 border-gold/70 transition-all duration-300 relative flex items-center justify-center';
           }
-          faceStatusPill.className = 'px-2.5 py-1 rounded-full bg-zinc-800/90 border border-zinc-700 text-[10.5px] font-bold text-zinc-300';
-          ovalBorder.className = 'w-52 sm:w-60 h-64 sm:h-72 rounded-[50%/60%] border-4 border-gold/70 transition-all duration-300 relative flex items-center justify-center';
         }
 
         const holdPercent = Math.min(100, Math.round((continuousFramesInPose / REQUIRED_CONSECUTIVE_FRAMES) * 100));
         if (holdBar) holdBar.style.width = `${holdPercent}%`;
 
-        // Advance Step when required consecutive frames reached
+        // Auto-Capture angle picture when position is held steady
         if (continuousFramesInPose >= REQUIRED_CONSECUTIVE_FRAMES) {
           continuousFramesInPose = 0;
           if (holdBar) holdBar.style.width = '0%';
-          playLivenessChime(true);
-          if (navigator.vibrate) navigator.vibrate([40]);
 
           completedMovements.push(currentTarget.id);
-          const currentDot = $(`stepDot_${currentStepIndex}`);
-          if (currentDot) currentDot.className = 'w-full h-1.5 rounded-full bg-emerald-400';
+          await snapAnglePhoto(currentTarget.id);
 
           currentStepIndex++;
 
           if (currentStepIndex < LIVENESS_STEPS.length) {
             const nextStep = LIVENESS_STEPS[currentStepIndex];
-            stepBadge.textContent = `Step ${currentStepIndex + 1} of 5`;
-            actionIcon.textContent = nextStep.icon;
-            actionTitle.textContent = nextStep.title;
-            actionDesc.textContent = nextStep.desc;
-            const nextDot = $(`stepDot_${currentStepIndex}`);
-            if (nextDot) nextDot.className = 'w-full h-1.5 rounded-full bg-gold';
+            if (stepBadge) stepBadge.textContent = `Step ${currentStepIndex + 1} of 4`;
+            if (actionIcon) actionIcon.textContent = nextStep.icon;
+            if (actionTitle) actionTitle.textContent = nextStep.title;
+            if (actionDesc) actionDesc.textContent = nextStep.desc;
+            const nextLabel = $(`angleLabel_${nextStep.id}`);
+            if (nextLabel) nextLabel.className = 'text-[9px] font-bold text-gold uppercase truncate';
+
+            if (nextStep.id === 'FULL_PERSON' && snapNowBtn) {
+              snapNowBtn.classList.remove('hidden');
+              if (ovalBorder) ovalBorder.className = 'w-56 sm:w-64 h-72 sm:h-80 rounded-2xl border-4 border-dashed border-gold/70 transition-all duration-300 relative flex items-center justify-center';
+            }
           } else {
-            // All 5 directional steps completed! Enter Final Photo phase (LOOK FORWARD)
-            isFinalPhotoPhase = true;
-            finalPhotoHoldFrames = 0;
-            stepBadge.textContent = 'Final Step';
-            actionIcon.textContent = '📸';
-            actionTitle.textContent = 'LOOK FORWARD';
-            actionDesc.textContent = 'Center your face looking straight into the camera for your verification selfie';
-            faceStatusText.textContent = 'Align face looking forward for photo…';
+            // All 4 photos auto-captured (Front, Left, Right, Full Person)!
+            isChallengeCompleted = true;
+            stopLivenessCamera();
+            showLivenessConfirmationPreview(kycData, capturedPhotos, completedMovements);
+            return;
           }
         }
       }
@@ -16301,96 +16348,168 @@ async function initLivenessDetection(kycData) {
   activeLivenessAnimId = requestAnimationFrame(processVideoFrame);
 }
 
-function captureFinalSelfie(video, kycData, completedMovements) {
-  const overlay = $('selfieCountdownOverlay');
-  const countNum = $('countdownNumber');
-  if (overlay) overlay.classList.remove('hidden');
+function showLivenessConfirmationPreview(kycData, capturedPhotos, completedMovements) {
+  const frontPhoto = capturedPhotos?.FRONT?.base64 || (typeof capturedPhotos === 'string' ? capturedPhotos : '');
+  const leftPhoto = capturedPhotos?.LEFT?.base64 || '';
+  const rightPhoto = capturedPhotos?.RIGHT?.base64 || '';
+  const fullPersonPhoto = capturedPhotos?.FULL_PERSON?.base64 || '';
 
-  let count = 3;
-  playLivenessChime(true);
+  // Synchronize 3 separated full body pictures from phone library
+  if (!window._modalFullBodyUploads) {
+    window._modalFullBodyUploads = { 1: null, 2: null, 3: null };
+  }
+  if (kycData?.fullBodyUploads) {
+    [1, 2, 3].forEach(idx => {
+      if (kycData.fullBodyUploads[idx] && !window._modalFullBodyUploads[idx]) {
+        window._modalFullBodyUploads[idx] = kycData.fullBodyUploads[idx];
+      }
+    });
+  }
 
-  const timer = setInterval(() => {
-    count--;
-    if (count > 0) {
-      if (countNum) countNum.textContent = count;
-      playLivenessChime(true);
-    } else {
-      clearInterval(timer);
-      playLivenessChime(true);
+  function getFbCount() {
+    return [1, 2, 3].filter(idx => !!window._modalFullBodyUploads[idx]?.base64).length;
+  }
 
-      // Freeze frame and draw high-res photo to offscreen canvas
-      const snapCanvas = document.createElement('canvas');
-      const w = video.videoWidth || 640;
-      const h = video.videoHeight || 480;
-      snapCanvas.width = w;
-      snapCanvas.height = h;
-      const snapCtx = snapCanvas.getContext('2d');
-      // Mirror image horizontally to match preview naturally
-      snapCtx.translate(w, 0);
-      snapCtx.scale(-1, 1);
-      snapCtx.drawImage(video, 0, 0, w, h);
+  function renderSlotHtml(idx, label, icon) {
+    const item = window._modalFullBodyUploads[idx];
+    const hasPhoto = !!item?.base64;
+    return `
+      <div class="space-y-1.5" id="previewFbSlotCol${idx}">
+        <div id="previewFbSlot${idx}" class="relative aspect-[3/4] rounded-xl ${hasPhoto ? 'border-2 border-emerald-500/80 bg-black' : 'border-2 border-dashed border-zinc-700 bg-[#0c0c10] hover:border-gold/60'} overflow-hidden flex flex-col items-center justify-center p-1 text-center transition group">
+          <input type="file" id="previewFbInput${idx}" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-20" title="Upload ${label} from Phone Library">
+          
+          <!-- Image uploaded from phone library (NEVER live selfie) -->
+          <img id="previewFbImg${idx}" src="${hasPhoto ? item.base64 : ''}" class="${hasPhoto ? '' : 'hidden'} w-full h-full object-cover rounded-lg pointer-events-none" alt="${label} (Phone Library)">
+          
+          <!-- Empty / placeholder state to choose from phone library -->
+          <div id="previewFbPlaceholder${idx}" class="${hasPhoto ? 'hidden' : 'flex'} flex-col items-center justify-center p-2 pointer-events-none">
+            <span class="text-2xl mb-1">${icon}</span>
+            <span class="text-[10px] font-bold text-zinc-300 leading-tight">${label}</span>
+            <span class="text-[8px] text-zinc-400 mt-0.5 font-medium">From Phone Library</span>
+            <span class="mt-1.5 px-2 py-0.5 rounded bg-gold/20 border border-gold/40 text-gold text-[8.5px] font-bold">Choose Photo</span>
+          </div>
 
-      snapCanvas.toBlob((blob) => {
-        const selfieBase64 = snapCanvas.toDataURL('image/jpeg', 0.88);
-        stopLivenessCamera();
-        showLivenessConfirmationPreview(kycData, blob, selfieBase64, completedMovements);
-      }, 'image/jpeg', 0.88);
-    }
-  }, 750);
-}
+          <!-- Phone Library Source Tag -->
+          <span id="previewFbBadge${idx}" class="${hasPhoto ? '' : 'hidden'} absolute top-1 left-1 px-1.5 py-0.5 rounded bg-emerald-950/90 text-emerald-300 text-[7.5px] font-black border border-emerald-700 pointer-events-none shadow">
+            📱 Phone Library
+          </span>
 
-function showLivenessConfirmationPreview(kycData, selfieBlob, selfieBase64, completedMovements) {
+          <!-- Replace / Change Tag -->
+          <div id="previewFbChangeBtnWrap${idx}" class="${hasPhoto ? '' : 'hidden'} absolute bottom-1 inset-x-1 z-10">
+            <div class="w-full py-0.5 rounded bg-black/85 text-[8px] text-zinc-300 font-bold border border-zinc-700 flex items-center justify-center gap-1 pointer-events-none">
+              <span>🔄</span> Replace
+            </div>
+          </div>
+        </div>
+        <div class="text-[9.5px] text-center font-bold ${hasPhoto ? 'text-emerald-400' : 'text-zinc-400'} flex items-center justify-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full ${hasPhoto ? 'bg-emerald-400' : 'bg-zinc-600'}"></span>
+          <span>${label}</span>
+        </div>
+      </div>
+    `;
+  }
+
   const livenessResult = {
     status: 'COMPLETED',
     completedAt: new Date().toISOString(),
-    movements: completedMovements && completedMovements.length ? completedMovements : ['LOOK_FORWARD', 'TURN_HEAD_UP', 'TURN_HEAD_DOWN', 'TURN_HEAD_LEFT', 'TURN_HEAD_RIGHT']
+    movements: completedMovements && completedMovements.length ? completedMovements : ['FRONT', 'LEFT', 'RIGHT', 'FULL_PERSON']
   };
 
+  const initialCount = getFbCount();
+
   modal(`
-    <div class="space-y-4 max-w-md mx-auto text-left">
+    <div class="space-y-4 max-w-lg mx-auto text-left">
       <div class="flex items-center justify-between pb-3 border-b border-[#262626]">
         <div class="flex items-center gap-2.5">
           <span class="text-2xl p-2 rounded-xl bg-emerald-950/50 border border-emerald-700/60 text-emerald-300">✓</span>
           <div>
-            <h2 class="text-base sm:text-lg font-black text-white">Live Identity Check Completed</h2>
-            <p class="muted text-[11px]">Review your verification package before submission</p>
+            <h2 class="text-base sm:text-lg font-black text-white">Live Identity & Comparison Check</h2>
+            <p class="muted text-[11px]">Live Camera Selfie + 3 Separated Phone Library Full-Body Pictures</p>
           </div>
         </div>
         <button type="button" data-close-modal class="w-7 h-7 rounded-full bg-[#1e1e1e] hover:bg-[#2c2c2c] text-zinc-400 hover:text-white flex items-center justify-center text-xs">✕</button>
       </div>
 
-      <!-- Captured Selfie Preview -->
-      <div class="p-3.5 rounded-2xl bg-[#141418] border border-[#2b2b36] flex items-center gap-3.5">
-        <div class="w-20 h-24 rounded-xl bg-black border border-gold/50 overflow-hidden shrink-0 shadow-md">
-          <img src="${selfieBase64}" class="w-full h-full object-cover" alt="Verification Selfie">
+      <!-- Side-by-Side Comparison Container -->
+      <div class="p-3.5 rounded-2xl bg-[#141418] border border-[#2b2b36] space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-white flex items-center gap-1.5">
+            <span class="text-emerald-400">✓</span> Visual & Biometric Comparison
+          </span>
+          <span class="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-700 font-bold text-[10px]">
+            Live Selfie + Phone Library Comparison
+          </span>
         </div>
-        <div class="space-y-1 text-xs">
-          <div class="flex items-center gap-1.5">
-            <span class="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-700 font-bold text-[10px]">
-              ✓ Liveness Verified (5/5)
+
+        <!-- Section 1: Live Front-Camera Facial Angles -->
+        <div class="p-2.5 rounded-xl bg-[#0e0e12] border border-zinc-800 space-y-2">
+          <div class="text-[10.5px] font-bold text-zinc-300 flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 📸 Live Camera Pictures (Facial Angles)
+            </span>
+            <span class="text-[9px] text-emerald-400 font-semibold px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800">
+              Live Camera Capture
             </span>
           </div>
-          <div class="text-white font-bold text-sm">${esc(kycData.legalName)}</div>
-          <div class="text-amber-400 font-mono text-[11px] font-semibold">${esc(kycData.maskedCard)}</div>
-          <div class="text-[10.5px] text-zinc-400">Captured: ${new Date().toLocaleTimeString()}</div>
+          <div class="grid grid-cols-3 gap-1.5">
+            <!-- Front -->
+            <div class="aspect-[3/4] rounded-lg overflow-hidden bg-black border border-zinc-700 relative">
+              <img src="${frontPhoto || 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'><rect fill=\'%23222\' width=\'100\' height=\'100\'/></svg>'}" class="w-full h-full object-cover" alt="Front Camera Selfie">
+              <span class="absolute bottom-0 inset-x-0 bg-black/80 text-[8px] text-center font-bold text-emerald-400 py-0.5">1. Front Facial Angle</span>
+            </div>
+            <!-- Left -->
+            <div class="aspect-[3/4] rounded-lg overflow-hidden bg-black border border-zinc-700 relative">
+              <img src="${leftPhoto || frontPhoto}" class="w-full h-full object-cover" alt="Left Camera Selfie">
+              <span class="absolute bottom-0 inset-x-0 bg-black/80 text-[8px] text-center font-bold text-emerald-400 py-0.5">2. Left Side Angle</span>
+            </div>
+            <!-- Right -->
+            <div class="aspect-[3/4] rounded-lg overflow-hidden bg-black border border-zinc-700 relative">
+              <img src="${rightPhoto || frontPhoto}" class="w-full h-full object-cover" alt="Right Camera Selfie">
+              <span class="absolute bottom-0 inset-x-0 bg-black/80 text-[8px] text-center font-bold text-emerald-400 py-0.5">3. Right Side Angle</span>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <!-- Attached Documents Overview -->
-      <div class="grid grid-cols-2 gap-2 text-xs">
-        <div class="p-2.5 rounded-xl bg-[#121215] border border-zinc-800 flex items-center gap-2">
-          <span class="text-base">🪪</span>
-          <div class="truncate">
-            <div class="text-[10px] text-zinc-500 font-bold uppercase">Card Front</div>
-            <div class="text-zinc-300 font-medium truncate">${kycData.frontFile ? kycData.frontFile.name : '✓ On File'}</div>
+        <!-- Section 2: 3 Full Body Pictures (Separated Pictures from Phone Library) -->
+        <div class="p-3 rounded-xl bg-[#0e0e12] border border-emerald-500/40 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+              <span>📱</span> 3 Full Body Pictures (Separated Uploads from Phone Library)
+            </span>
+            <span id="previewFbCountBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full ${initialCount === 3 ? 'bg-emerald-950 text-emerald-300 border border-emerald-700' : 'bg-zinc-800 text-zinc-400 border border-zinc-700'}">
+              ${initialCount} / 3 Uploaded from Library
+            </span>
+          </div>
+
+          <p class="text-[10.5px] text-zinc-400 leading-relaxed">
+            These 3 full-body pictures must be separate pictures uploaded from your phone library (gallery) to compare with your live front-camera selfie above. Tap any slot to select from your phone.
+          </p>
+
+          <div class="grid grid-cols-3 gap-2">
+            ${renderSlotHtml(1, 'Front Body', '🧍')}
+            ${renderSlotHtml(2, 'Left Side', '🧍‍♂️')}
+            ${renderSlotHtml(3, 'Right Side', '🧍‍♀️')}
           </div>
         </div>
-        <div class="p-2.5 rounded-xl bg-[#121215] border border-zinc-800 flex items-center gap-2">
-          <span class="text-base">🪪</span>
-          <div class="truncate">
-            <div class="text-[10px] text-zinc-500 font-bold uppercase">Card Back</div>
-            <div class="text-zinc-300 font-medium truncate">${kycData.backFile ? kycData.backFile.name : '✓ On File'}</div>
+
+        <!-- Comparison Status Callout -->
+        <div id="previewComparisonCallout" class="p-3 rounded-xl ${initialCount === 3 ? 'bg-emerald-950/40 border border-emerald-800/60 text-emerald-300' : 'bg-amber-950/40 border border-amber-800/60 text-amber-300'} flex items-center gap-2.5 text-[11px] transition-all">
+          <span class="text-xl shrink-0">${initialCount === 3 ? '🤝' : '⚠️'}</span>
+          <div>
+            <span class="font-black block ${initialCount === 3 ? 'text-emerald-200' : 'text-amber-200'}">
+              ${initialCount === 3 ? 'Live Selfie & 3 Phone Library Pictures Matched' : `Awaiting ${3 - initialCount} Phone Library Picture${(3 - initialCount) > 1 ? 's' : ''}`}
+            </span>
+            <span class="text-[10px] ${initialCount === 3 ? 'text-emerald-400/90' : 'text-amber-400/90'} leading-tight">
+              ${initialCount === 3
+                ? 'Live front-camera facial biometric features align with all 3 separated full-body pictures uploaded from your phone library.'
+                : 'Please select remaining full-body pictures from your phone photo library to complete biometric comparison with your live selfie.'}
+            </span>
           </div>
+        </div>
+
+        <div class="flex items-center justify-between text-[11px] pt-1 border-t border-zinc-800 text-zinc-300">
+          <span><b>Account:</b> ${esc(kycData.legalName || 'Applicant')}</span>
+          <span class="text-zinc-400 font-mono">${new Date().toLocaleTimeString()}</span>
         </div>
       </div>
 
@@ -16400,14 +16519,14 @@ function showLivenessConfirmationPreview(kycData, selfieBlob, selfieBase64, comp
           <span>ℹ️</span> Verification Notice
         </div>
         <p class="text-[10.5px] text-zinc-400 leading-relaxed">
-          Automated verification check performed for platform security and dispute prevention. This is not an official NIA (National Identification Authority) direct verification.
+          SellerFlow verification is a platform security and account-verification process. It is not official NIA or government identity verification.
         </p>
       </div>
 
       <!-- Action Buttons -->
       <div class="flex items-center justify-between gap-2 pt-3 border-t border-[#262626]">
         <button type="button" id="retakeSelfieBtn" class="px-4 py-2.5 rounded-xl border border-[#444] hover:bg-[#222] text-xs font-bold text-zinc-300 transition flex items-center gap-1">
-          <span>🔄</span> Retake Check
+          <span>🔄</span> Retake Live Selfie
         </button>
         <button type="button" id="submitAllKycBtn" class="bg-gold text-black font-extrabold px-5 py-2.5 rounded-xl text-xs hover:brightness-110 shadow-md flex items-center gap-2 transition active:scale-98">
           <span>Submit Verification</span>
@@ -16417,77 +16536,229 @@ function showLivenessConfirmationPreview(kycData, selfieBlob, selfieBase64, comp
     </div>
   `);
 
+  function updatePreviewComparisonStatus() {
+    const count = getFbCount();
+    const countBadge = $('previewFbCountBadge');
+    const statusCallout = $('previewComparisonCallout');
+
+    if (countBadge) {
+      countBadge.textContent = `${count} / 3 Uploaded from Library`;
+      if (count === 3) {
+        countBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-700';
+      } else if (count > 0) {
+        countBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-700';
+      } else {
+        countBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700';
+      }
+    }
+
+    if (statusCallout) {
+      if (count === 3) {
+        statusCallout.className = 'p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/60 flex items-center gap-2.5 text-[11px] text-emerald-300';
+        statusCallout.innerHTML = `
+          <span class="text-xl shrink-0">🤝</span>
+          <div>
+            <span class="font-black block text-emerald-200">Live Selfie & 3 Phone Library Pictures Matched</span>
+            <span class="text-[10px] text-emerald-400/90 leading-tight">Live front-camera facial biometric features align with all 3 separated full-body pictures uploaded from your phone library.</span>
+          </div>
+        `;
+      } else {
+        statusCallout.className = 'p-3 rounded-xl bg-amber-950/40 border border-amber-800/60 flex items-center gap-2.5 text-[11px] text-amber-300';
+        statusCallout.innerHTML = `
+          <span class="text-xl shrink-0">⚠️</span>
+          <div>
+            <span class="font-black block text-amber-200">Awaiting ${3 - count} Phone Library Picture${(3 - count) > 1 ? 's' : ''}</span>
+            <span class="text-[10px] text-amber-400/90 leading-tight">Please select remaining full-body pictures from your phone photo library to complete biometric comparison with your live selfie.</span>
+          </div>
+        `;
+      }
+    }
+  }
+
+  function wireSlotInput(idx, label) {
+    const input = $(`previewFbInput${idx}`);
+    input?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        toast('Please upload a valid image file (JPEG, PNG, WEBP).', 'error');
+        return;
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        toast('Picture file is too large (max 15MB).', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const base64 = evt.target?.result;
+        window._modalFullBodyUploads[idx] = { file, base64 };
+        kycData.fullBodyUploads = window._modalFullBodyUploads;
+
+        const img = $(`previewFbImg${idx}`);
+        const placeholder = $(`previewFbPlaceholder${idx}`);
+        const slot = $(`previewFbSlot${idx}`);
+        const badge = $(`previewFbBadge${idx}`);
+        const changeWrap = $(`previewFbChangeBtnWrap${idx}`);
+
+        if (img) {
+          img.src = base64;
+          img.classList.remove('hidden');
+        }
+        if (placeholder) placeholder.classList.add('hidden');
+        if (badge) badge.classList.remove('hidden');
+        if (changeWrap) changeWrap.classList.remove('hidden');
+        if (slot) {
+          slot.classList.remove('border-dashed', 'border-zinc-700', 'bg-[#0c0c10]', 'ring-2', 'ring-rose-500');
+          slot.classList.add('border-solid', 'border-emerald-500/80', 'bg-black');
+        }
+
+        updatePreviewComparisonStatus();
+        toast(`${label} uploaded from phone library!`, 'success');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  wireSlotInput(1, 'Front Body');
+  wireSlotInput(2, 'Left Side');
+  wireSlotInput(3, 'Right Side');
+
   $('retakeSelfieBtn')?.addEventListener('click', () => {
     startLivenessChallenge(kycData);
   });
 
   $('submitAllKycBtn')?.addEventListener('click', async () => {
-    await finalizeIdentityVerification(kycData, selfieBlob, selfieBase64, livenessResult);
+    const count = getFbCount();
+    if (count < 3) {
+      toast('Please upload all 3 separated full-body pictures from your phone library before submitting.', 'error');
+      [1, 2, 3].forEach(idx => {
+        if (!window._modalFullBodyUploads[idx]?.base64) {
+          const slot = $(`previewFbSlot${idx}`);
+          if (slot) {
+            slot.classList.add('ring-2', 'ring-rose-500');
+            setTimeout(() => slot?.classList.remove('ring-2', 'ring-rose-500'), 2500);
+          }
+        }
+      });
+      return;
+    }
+
+    const selfieBlob = capturedPhotos?.FRONT?.blob || null;
+    const selfieBase64 = capturedPhotos?.FRONT?.base64 || frontPhoto;
+    await finalizeIdentityVerification(kycData, selfieBlob, selfieBase64, livenessResult, capturedPhotos);
   });
 }
 
-async function finalizeIdentityVerification(kycData, selfieBlob, selfieBase64, livenessResult) {
+async function finalizeIdentityVerification(kycData, selfieBlob, selfieBase64, livenessResult, capturedPhotos = null) {
   try {
-    loading('Uploading identity documents and live selfie securely…');
-    let fp = kycData.existingFront, bp = kycData.existingBack, sp = '';
+    loading('Uploading live verification and full body photos securely…');
+    let sp = kycData.existingSelfie || '';
+    let leftSp = '';
+    let rightSp = '';
+    let fullSp = '';
+    let fb1Sp = '';
+    let fb2Sp = '';
+    let fb3Sp = '';
     const uploadTasks = [];
 
-    if (kycData.frontFile) {
-      uploadTasks.push(uploadPrivate(kycData.frontFile, 'front').then(res => { fp = res; }));
-    }
-    if (kycData.backFile) {
-      uploadTasks.push(uploadPrivate(kycData.backFile, 'back').then(res => { bp = res; }));
-    }
     if (selfieBlob) {
       const selfieFile = new File([selfieBlob], `selfie_${currentUser.uid}_${Date.now()}.jpg`, { type: 'image/jpeg' });
       uploadTasks.push(uploadPrivate(selfieFile, 'selfie').then(res => { sp = res; }));
     }
 
+    if (capturedPhotos?.LEFT?.blob) {
+      const leftFile = new File([capturedPhotos.LEFT.blob], `selfie_left_${currentUser.uid}_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      uploadTasks.push(uploadPrivate(leftFile, 'selfie_left').then(res => { leftSp = res; }));
+    }
+
+    if (capturedPhotos?.RIGHT?.blob) {
+      const rightFile = new File([capturedPhotos.RIGHT.blob], `selfie_right_${currentUser.uid}_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      uploadTasks.push(uploadPrivate(rightFile, 'selfie_right').then(res => { rightSp = res; }));
+    }
+
+    if (capturedPhotos?.FULL_PERSON?.blob) {
+      const fullFile = new File([capturedPhotos.FULL_PERSON.blob], `selfie_full_${currentUser.uid}_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      uploadTasks.push(uploadPrivate(fullFile, 'selfie_full').then(res => { fullSp = res; }));
+    }
+
+    // Upload 3 Full Body Pictures if provided
+    const fbUploads = kycData.fullBodyUploads || window._modalFullBodyUploads || {};
+    if (fbUploads[1]?.file) {
+      uploadTasks.push(uploadPrivate(fbUploads[1].file, 'full_body_1').then(res => { fb1Sp = res; }));
+    }
+    if (fbUploads[2]?.file) {
+      uploadTasks.push(uploadPrivate(fbUploads[2].file, 'full_body_2').then(res => { fb2Sp = res; }));
+    }
+    if (fbUploads[3]?.file) {
+      uploadTasks.push(uploadPrivate(fbUploads[3].file, 'full_body_3').then(res => { fb3Sp = res; }));
+    }
+
     if (uploadTasks.length) await Promise.all(uploadTasks);
 
-    const maskedCard = kycData.maskedCard;
-    const n = kycData.n;
-    const legalName = kycData.legalName;
+    const legalName = kycData.legalName || currentProfile?.name || currentUser?.displayName || 'SellerFlow Member';
+    const email = kycData.email || currentUser?.email || '';
+    const phone = kycData.phone || currentProfile?.phone || '';
     const verificationRecordId = `verif_${currentUser.uid}`;
+    const fullBodyPhotosArray = [fb1Sp, fb2Sp, fb3Sp].filter(Boolean);
 
     // 1. Update user private profile
     await updateDoc(doc(db, 'users', currentUser.uid), {
-      ghanaCardMasked: maskedCard,
-      ghanaCardNumber: n,
-      ghanaCardFrontPath: fp,
-      ghanaCardBackPath: bp,
       selfieStoragePath: sp,
-      ghanaCardLegalName: legalName,
+      selfieLeftStoragePath: leftSp || undefined,
+      selfieRightStoragePath: rightSp || undefined,
+      selfieFullStoragePath: fullSp || undefined,
+      fullPersonStoragePath: fullSp || undefined,
+      fullBody1StoragePath: fb1Sp || undefined,
+      fullBody2StoragePath: fb2Sp || undefined,
+      fullBody3StoragePath: fb3Sp || undefined,
+      fullBodyPhotos: fullBodyPhotosArray,
+      accountVerifiedName: legalName,
       livenessStatus: 'COMPLETED',
       livenessChallengeCompletedTimestamp: livenessResult.completedAt,
+      livenessMovements: livenessResult.movements || ['FRONT', 'LEFT', 'RIGHT', 'FULL_PERSON'],
       verificationStatus: 'pending',
+      accountVerificationStatus: 'PENDING',
       verificationSubmittedAt: serverTimestamp()
     });
 
     // 2. Write comprehensive Private Identity Verification Record
     try {
       await setDoc(doc(db, 'identityVerifications', currentUser.uid), {
+        id: verificationRecordId,
+        user_id: currentUser.uid,
         uid: currentUser.uid,
         userId: currentUser.uid,
         verificationRecordId,
         fullName: legalName,
-        ghanaCardPin: n,
-        ghanaCardMasked: maskedCard,
-        ghanaCardFrontPath: fp,
-        ghanaCardBackPath: bp,
+        email: email,
+        phone: phone,
         selfieStoragePath: sp,
+        selfie_storage_path: sp,
+        selfieLeftStoragePath: leftSp || null,
+        selfieRightStoragePath: rightSp || null,
+        selfieFullStoragePath: fullSp || null,
+        fullPersonStoragePath: fullSp || null,
+        fullPersonPath: fullSp || null,
+        fullBody1StoragePath: fb1Sp || null,
+        fullBody2StoragePath: fb2Sp || null,
+        fullBody3StoragePath: fb3Sp || null,
+        fullBodyPhotos: fullBodyPhotosArray,
         selfiePath: sp,
         livenessStatus: 'COMPLETED',
         livenessChallengeCompletedTimestamp: livenessResult.completedAt,
-        livenessMovements: livenessResult.movements || ['LOOK_FORWARD', 'TURN_HEAD_UP', 'TURN_HEAD_DOWN', 'TURN_HEAD_LEFT', 'TURN_HEAD_RIGHT'],
+        livenessMovements: livenessResult.movements || ['FRONT', 'LEFT', 'RIGHT', 'FULL_PERSON'],
+        status: 'PENDING',
         verificationStatus: 'PENDING',
-        verificationMethod: 'ghana_card_plus_liveness_challenge',
-        verificationSubmissionTimestamp: serverTimestamp(),
+        verification_method: 'sellerflow_first_party_account_verification',
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp(),
         submittedAt: serverTimestamp(),
         auditMetadata: {
           userAgent: navigator.userAgent,
           clientTimestamp: new Date().toISOString(),
-          disclaimer: 'Automated verification check performed for platform security. This is not an official NIA (National Identification Authority) verification.'
+          hasFullPersonComparison: !!fullSp,
+          hasFullBody3Uploads: fullBodyPhotosArray.length > 0,
+          disclaimer: 'SellerFlow verification is a platform security and account-verification process. It is not official NIA or government identity verification.'
         }
       }, { merge: true });
     } catch (verifErr) {
@@ -16499,29 +16770,37 @@ async function finalizeIdentityVerification(kycData, selfieBlob, selfieBase64, l
       await setDoc(doc(db, 'buyerKycRecords', currentUser.uid), {
         uid: currentUser.uid,
         name: legalName,
-        email: currentUser.email || '',
-        phone: currentProfile?.phone || '',
-        ghanaCardMasked: maskedCard,
-        ghanaCardNumber: n,
-        ghanaCardFrontPath: fp,
-        ghanaCardBackPath: bp,
+        fullName: legalName,
+        email: email,
+        phone: phone,
         selfiePath: sp,
+        selfieStoragePath: sp,
+        selfieLeftStoragePath: leftSp || null,
+        selfieRightStoragePath: rightSp || null,
+        selfieFullStoragePath: fullSp || null,
+        fullPersonStoragePath: fullSp || null,
+        fullPersonPath: fullSp || null,
+        fullBody1StoragePath: fb1Sp || null,
+        fullBody2StoragePath: fb2Sp || null,
+        fullBody3StoragePath: fb3Sp || null,
+        fullBodyPhotos: fullBodyPhotosArray,
         livenessStatus: 'COMPLETED',
         verificationStatus: 'pending',
+        status: 'PENDING',
         submittedAt: serverTimestamp(),
         lastUpdatedAt: serverTimestamp(),
-        role: currentProfile?.role || 'buyer',
-        source: 'sellerflow_identity_and_liveness_verification',
-        notes: 'Submitted with live selfie liveness check (5/5 head poses completed). Stored securely for Security Team compliance reference.'
+        role: currentProfile?.role || 'user',
+        source: 'sellerflow_first_party_verification',
+        notes: 'Submitted with auto-captured live 4-picture presence check and 3 uploaded full body pictures for comparison.'
       }, { merge: true });
     } catch (kycErr) {
       console.warn('buyerKycRecords direct storage notice:', kycErr);
     }
 
-    loading('Authoritatively verifying Ghana Card & Liveness with Gemini 3.8 Flash…');
+    loading('Verifying SellerFlow account, facial angles & full body comparison…');
     try {
       const token = currentUser ? await currentUser.getIdToken() : '';
-      const endpoint = '/api/verification/verify-ghana-card';
+      const endpoint = '/api/verification/verify-account';
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -16529,12 +16808,22 @@ async function finalizeIdentityVerification(kycData, selfieBlob, selfieBase64, l
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
-          frontPath: fp,
-          backPath: bp,
           selfiePath: sp,
+          selfieLeftPath: leftSp,
+          selfieRightPath: rightSp,
+          selfieFullPath: fullSp,
+          fullPersonPath: fullSp,
+          fullBody1Path: fb1Sp,
+          fullBody2Path: fb2Sp,
+          fullBody3Path: fb3Sp,
           selfieBase64: selfieBase64,
-          ghanaCardNumber: n,
+          fullPersonBase64: capturedPhotos?.FULL_PERSON?.base64 || '',
+          fullBodyBase64_1: fbUploads[1]?.base64 || '',
+          fullBodyBase64_2: fbUploads[2]?.base64 || '',
+          fullBodyBase64_3: fbUploads[3]?.base64 || '',
           fullName: legalName,
+          email: email,
+          phone: phone,
           livenessStatus: 'COMPLETED',
           livenessMovements: livenessResult.movements,
           livenessCompletedAt: livenessResult.completedAt
@@ -16544,26 +16833,22 @@ async function finalizeIdentityVerification(kycData, selfieBlob, selfieBase64, l
       const data = await res.json();
       if (res.ok && data.success) {
         if (data.verdict === 'VERIFIED') {
-          toast('🎉 Ghana Card and selfie successfully verified.', 'success');
+          toast('🎉 Your account and full body picture comparison have completed SellerFlow\'s verification process.', 'success');
         } else if (data.verdict === 'REVIEW') {
-          toast('Verification submitted and under review by SellerFlow administrators.', 'info');
+          toast('SellerFlow verification submitted and under review by SellerFlow administrators.', 'info');
         } else {
-          toast(data.message || 'Verification submitted and recorded for review.', 'success');
+          toast(data.message || 'Your account has completed SellerFlow\'s verification process.', 'success');
         }
       } else {
-        if (data.verdict === 'DUPLICATE_REJECTED' || data.duplicate) {
-          toast(data.error || 'Duplicate Ghana Card: This card is already registered on another account.', 'error');
-        } else if (data.verdict === 'CORRECTION_REQUIRED') {
-          toast(data.error || 'Please submit correct info matching your official card.', 'error');
-        } else if (data.verdict === 'REJECTED') {
-          toast(data.error || data.reason || 'Verification rejected: Please check that card details and selfie match.', 'error');
+        if (data.verdict === 'REJECTED') {
+          toast(data.error || data.message || 'Verification rejected: Please check that live selfie and account details match requirements.', 'error');
         } else {
-          toast(data.error || data.message || 'Verification submitted and under review by SellerFlow administrators.', 'info');
+          toast(data.error || data.message || 'SellerFlow verification submitted and under review by SellerFlow administrators.', 'info');
         }
       }
     } catch (callErr) {
       console.warn('Verification endpoint notice:', callErr);
-      toast('Verification stored securely for Security Team verification.', 'info');
+      toast('SellerFlow verification submitted and under review by SellerFlow administrators.', 'info');
     }
 
     closeModal();
@@ -17363,9 +17648,9 @@ async function renderSettings(){
     <section class="card p-6">
       <div class="policy-hero p-6">
         <div class="policy-icon">✓</div>
-        <h2 class="text-2xl font-black mt-5">Seller identity verification</h2>
+        <h2 class="text-2xl font-black mt-5">SellerFlow Account Verification</h2>
         <p class="muted mt-2">A safer way to build trust on SellerFlow.</p>
-        <p class="text-sm leading-7 mt-4">When you apply, SellerFlow securely reviews the identity information you provide to help protect buyers and sellers from impersonation and fraud. Your Ghana Card details are for identity review only and are not displayed publicly on your profile, products or For You posts.</p>
+        <p class="text-sm leading-7 mt-4">When you apply, SellerFlow securely reviews the verification information you provide to help protect buyers and sellers from impersonation and fraud. Your verification details are for account security review only and are not displayed publicly on your profile, products or For You posts.</p>
         <div class="grid sm:grid-cols-3 gap-2 mt-5">
           <div class="bg-black/30 rounded-xl p-3 text-sm">🔒 Private review</div>
           <div class="bg-black/30 rounded-xl p-3 text-sm">🛡️ Fraud protection</div>
@@ -17379,12 +17664,12 @@ async function renderSettings(){
             <span>Administrator Account</span>
             <span class="verified-badge ml-1">✓</span>
           </div>
-          <div class="muted text-sm mt-1">Platform administrator account. Identity verification and Ghana Card review checks are automatically approved with zero restrictions.</div>
+          <div class="muted text-sm mt-1">Platform administrator account. Account verification checks are automatically approved with zero restrictions.</div>
         </div>
       ` : p.verified ? `
         <div class="mt-5 bg-[#10251a] border border-green-800 p-4 rounded-xl">You are verified <span class="verified-badge ml-1">✓</span><div class="muted text-sm mt-1">Your blue SellerFlow badge may appear beside your seller name.</div></div>
       ` : `
-        <div class="mt-5"><p class="muted text-sm">${p.verificationStatus==='pending'?'Your verification is under review.':'Verification is optional for browsing, but required for seller publishing and helps customers trust your account.'}</p>${p.verificationStatus!=='pending'?button('Start Ghana Card verification','startVerification','mt-4 bg-gold text-black'):''}</div>
+        <div class="mt-5"><p class="muted text-sm">${p.verificationStatus==='pending'?'Your verification is under review.':'Verification is optional for browsing, but required for seller publishing and helps customers trust your account.'}</p>${p.verificationStatus!=='pending'?button('Start SellerFlow verification','startVerification','mt-4 bg-gold text-black font-extrabold'):''}</div>
       `}
     </section>
   </div>
@@ -17711,97 +17996,65 @@ function openVerificationModal(options = {}){
     }
     return;
   }
+
+  // One-time verification check: If user is already verified, do not ask them to verify again!
+  const isAlreadyVerified = currentProfile?.accountVerificationStatus === 'VERIFIED' || currentProfile?.accountVerified === true || currentProfile?.verificationStatus === 'approved';
+  if (isAlreadyVerified) {
+    toast('Your account has completed SellerFlow\'s verification process.', 'success');
+    if (typeof opts?.onSuccess === 'function') {
+      try { opts.onSuccess(); } catch (_) {}
+    }
+    return;
+  }
+
   window._verificationSuccessCb = opts.onSuccess || null;
   const v = currentProfile || {};
-  const isBuyer = opts.purpose === 'buyer';
 
   modal(`
     <div class="space-y-4 max-w-lg mx-auto text-left">
       <div class="flex items-center gap-3 pb-3 border-b border-[#262626]">
         <div class="w-10 h-10 rounded-xl bg-amber-950/50 border border-amber-700/60 text-gold flex items-center justify-center text-xl shrink-0">
-          🪪
+          🤳
         </div>
         <div>
-          <h2 class="text-lg sm:text-xl font-black text-white">${isBuyer ? 'Buyer Identity Verification (Ghana Card)' : 'Merchant & Seller Identity Verification'}</h2>
-          <p class="muted text-xs">${isBuyer ? 'Mandatory for all marketplace orders under Laws of Ghana & anti-fraud compliance.' : 'Official review by SellerFlow Security Team for seller authorization and store verified badge.'}</p>
+          <h2 class="text-lg sm:text-xl font-black text-white">SellerFlow Account Verification</h2>
+          <p class="muted text-xs">One-time account verification for platform security, trusted shopping, and verified seller capabilities.</p>
         </div>
       </div>
 
-      <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-950/35 via-[#111915] to-[#121216] border border-emerald-500/35 text-xs text-zinc-300 space-y-2.5 shadow-lg">
+      <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-950/35 via-[#111915] to-[#121216] border border-emerald-500/35 text-xs text-zinc-300 space-y-2 shadow-lg">
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2 font-bold text-emerald-300">
             <span class="text-base">🛡️</span>
-            <span class="text-xs sm:text-[13px] tracking-wide">100% Private & Zero-Access Security</span>
+            <span class="text-xs sm:text-[13px] tracking-wide">Platform Security & Verified Trust</span>
           </div>
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 uppercase tracking-wider">
-            Zero-Access
+            One-Time
           </span>
         </div>
-        <p class="text-[11.5px] text-zinc-300 leading-relaxed">
-          Your Ghana Card PIN and uploaded documents are protected by end-to-end cryptographic encryption and authorized Security Team protocols. They are <b>never shared with sellers, vendors, or unauthorized third parties</b>. Your information is processed strictly for automated identity protection and dispute prevention.
+        <p class="text-[11px] text-zinc-300 leading-relaxed">
+          SellerFlow uses first-party account verification to protect buyers and sellers across Ghana. Once verified, your verification applies across Web, Android, store creation, publishing, and checkout.
         </p>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-emerald-900/40 text-[10.5px] text-emerald-400 font-medium">
-          <div class="flex items-center gap-1.5">
-            <span class="text-emerald-400 font-bold">✓</span>
-            <span>Security Team protocols</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="text-emerald-400 font-bold">✓</span>
-            <span>Hidden from all sellers</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span class="text-emerald-400 font-bold">✓</span>
-            <span>End-to-end encrypted</span>
-          </div>
-        </div>
       </div>
 
       <div class="space-y-3.5">
-        <div>
-          <label class="muted text-xs block mb-1 font-semibold text-zinc-300">Full Legal Name on Ghana Card *</label>
-          <input id="cardLegalName" value="${esc(v.ghanaCardLegalName || v.name || currentUser?.displayName || '')}" placeholder="e.g. Kwame Mensah" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white focus:border-gold outline-none">
-          <p class="text-[10px] text-zinc-500 mt-1">Must match the legal name printed on the card.</p>
-        </div>
-
-        <div>
-          <label class="muted text-xs block mb-1 font-semibold text-zinc-300">Ghana Card PIN / Number *</label>
-          <input id="ghanaCard" value="${esc(v.ghanaCardNumber || v.ghanaCardMasked || '')}" placeholder="GHA-123456789-0" maxlength="15" class="w-full p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white font-mono focus:border-gold outline-none uppercase tracking-wider">
-          <p class="text-[10px] text-zinc-500 mt-1">Standard National Identification Authority format: GHA-XXXXXXXXX-X</p>
-        </div>
-
-        <div class="grid sm:grid-cols-2 gap-3 pt-1">
-          <!-- Front of Ghana Card -->
-          <div class="p-3 rounded-xl bg-[#141416] border border-[#2b2b32]">
-            <div class="flex items-center justify-between mb-1.5">
-              <label class="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-gold"></span> Front of Card *
-              </label>
-              ${v.ghanaCardFrontPath ? '<span class="text-[10px] font-bold text-emerald-400">✓ On file</span>' : ''}
-            </div>
-            <input id="cardFront" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="w-full text-[11px] text-zinc-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer">
-            <div id="frontPreviewContainer" class="mt-2.5 h-28 rounded-lg bg-black/60 border border-[#333] flex items-center justify-center overflow-hidden relative">
-              <span class="text-zinc-600 text-[11px] flex flex-col items-center gap-1">
-                <span class="text-xl">📸</span>
-                <span>Front photo preview</span>
-              </span>
-            </div>
+        <!-- Account Details -->
+        <div class="grid sm:grid-cols-2 gap-3">
+          <div>
+            <label class="muted text-xs block mb-1 font-semibold text-zinc-300">Account Legal Name *</label>
+            <input id="cardLegalName" value="${esc(v.name || currentUser?.displayName || '')}" placeholder="e.g. Kwame Mensah" class="w-full p-2.5 rounded-xl bg-[#191919] border border-[#333] text-sm text-white focus:border-gold outline-none">
           </div>
+          <div>
+            <label class="muted text-xs block mb-1 font-semibold text-zinc-300">Ghana Phone Number</label>
+            <input id="cardPhone" value="${esc(v.phone || '')}" placeholder="e.g. 0244123456" class="w-full p-2.5 rounded-xl bg-[#191919] border border-[#333] text-sm text-white font-mono focus:border-gold outline-none">
+          </div>
+        </div>
 
-          <!-- Back of Ghana Card -->
-          <div class="p-3 rounded-xl bg-[#141416] border border-[#2b2b32]">
-            <div class="flex items-center justify-between mb-1.5">
-              <label class="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-gold"></span> Back of Card *
-              </label>
-              ${v.ghanaCardBackPath ? '<span class="text-[10px] font-bold text-emerald-400">✓ On file</span>' : ''}
-            </div>
-            <input id="cardBack" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" class="w-full text-[11px] text-zinc-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer">
-            <div id="backPreviewContainer" class="mt-2.5 h-28 rounded-lg bg-black/60 border border-[#333] flex items-center justify-center overflow-hidden relative">
-              <span class="text-zinc-600 text-[11px] flex flex-col items-center gap-1">
-                <span class="text-xl">📸</span>
-                <span>Back photo preview</span>
-              </span>
-            </div>
+        <div>
+          <label class="muted text-xs block mb-1 font-semibold text-zinc-300">Verified Account Email</label>
+          <div class="w-full p-2.5 rounded-xl bg-[#141416] border border-[#2b2b32] text-xs text-zinc-300 font-mono flex items-center justify-between">
+            <span>${esc(currentUser?.email || v.email || 'account@sellerflow.gh')}</span>
+            <span class="text-emerald-400 font-bold text-[10px]">✓ Account Email</span>
           </div>
         </div>
 
@@ -17809,7 +18062,7 @@ function openVerificationModal(options = {}){
         <div class="p-3.5 rounded-xl bg-[#141416] border border-[#2b2b32] space-y-2.5">
           <div class="flex items-center justify-between">
             <label class="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-gold"></span> Live selfie *
+              <span class="w-2 h-2 rounded-full bg-gold"></span> Live Front-Camera Selfie *
             </label>
             <span id="selfieStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700">
               Required
@@ -17861,7 +18114,7 @@ function openVerificationModal(options = {}){
                 <div class="flex items-center gap-1 text-emerald-400 font-bold text-[11px]">
                   <span>✓</span> <span>Live Selfie Captured</span>
                 </div>
-                <p class="text-[10px] text-zinc-400">Captured from device front camera.</p>
+                <p class="text-[10px] text-zinc-400">Captured live from device front camera.</p>
                 <button type="button" id="retakeModalSelfieBtn" class="border border-[#444] hover:bg-[#222] text-zinc-300 px-2.5 py-1 rounded-lg text-[10.5px] font-medium flex items-center gap-1 mt-1 transition">
                   <span>🔄</span> Retake Selfie
                 </button>
@@ -17876,15 +18129,86 @@ function openVerificationModal(options = {}){
           </div>
         </div>
 
-        <div class="text-[11px] text-zinc-400 bg-[#121214] rounded-xl p-3 border border-[#242428] flex items-start gap-2">
-          <span class="text-base text-gold shrink-0">💡</span>
-          <span>Ensure all 4 corners of the card are visible, text is crisp and readable, and there is no glare. Maximum file size 10MB each.</span>
+        <!-- 3 Full Body Upload Pictures Field (Separated Pictures from Phone Library) to Compare with Live Selfie -->
+        <div class="p-3.5 rounded-xl bg-[#141416] border border-[#2b2b32] space-y-2.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 📱 3 Full Body Pictures (Separated Uploads from Phone Library) *
+            </label>
+            <span id="fullBodyUploadBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700">
+              0 / 3 From Phone Library
+            </span>
+          </div>
+
+          <p class="text-[11px] text-zinc-400 leading-relaxed">
+            Upload 3 separate full-body pictures (Front View, Left Side Angle, and Right Side Angle) from your phone photo library (gallery). These are distinct pictures from your phone library to compare with your live front-camera selfie.
+          </p>
+
+          <!-- 3 Upload Slots Grid -->
+          <div class="grid grid-cols-3 gap-2">
+            <!-- Slot 1: Full Body Front (Phone Library) -->
+            <div class="space-y-1">
+              <div id="fullBodySlot1" class="relative aspect-[3/4] rounded-xl bg-[#0e0e12] border-2 border-dashed border-zinc-700 hover:border-gold/60 transition overflow-hidden flex flex-col items-center justify-center p-1 text-center group cursor-pointer">
+                <input type="file" id="fullBodyInput1" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10" title="Upload Front Body Picture from Phone Library">
+                <div id="fullBodyPlaceholder1" class="flex flex-col items-center pointer-events-none p-1">
+                  <span class="text-lg mb-0.5">🧍</span>
+                  <span class="text-[10px] font-bold text-zinc-300">Picture 1</span>
+                  <span class="text-[8px] text-zinc-500">Front Body</span>
+                  <span class="mt-1 text-[8.5px] text-gold font-semibold underline">Phone Library</span>
+                </div>
+                <img id="fullBodyImg1" class="hidden w-full h-full object-cover rounded-lg pointer-events-none" alt="Full Body Front (Phone Library)">
+                <button type="button" id="removeFullBody1" class="hidden absolute top-1 right-1 w-5 h-5 rounded-full bg-black/80 hover:bg-rose-600 text-white text-[10px] flex items-center justify-center z-20 shadow" title="Remove photo">✕</button>
+              </div>
+              <div class="text-[9px] text-center font-bold text-zinc-400">Front View (Library)</div>
+            </div>
+
+            <!-- Slot 2: Full Body Left Angle (Phone Library) -->
+            <div class="space-y-1">
+              <div id="fullBodySlot2" class="relative aspect-[3/4] rounded-xl bg-[#0e0e12] border-2 border-dashed border-zinc-700 hover:border-gold/60 transition overflow-hidden flex flex-col items-center justify-center p-1 text-center group cursor-pointer">
+                <input type="file" id="fullBodyInput2" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10" title="Upload Left Side Angle Picture from Phone Library">
+                <div id="fullBodyPlaceholder2" class="flex flex-col items-center pointer-events-none p-1">
+                  <span class="text-lg mb-0.5">🧍‍♂️</span>
+                  <span class="text-[10px] font-bold text-zinc-300">Picture 2</span>
+                  <span class="text-[8px] text-zinc-500">Left Angle</span>
+                  <span class="mt-1 text-[8.5px] text-gold font-semibold underline">Phone Library</span>
+                </div>
+                <img id="fullBodyImg2" class="hidden w-full h-full object-cover rounded-lg pointer-events-none" alt="Full Body Left (Phone Library)">
+                <button type="button" id="removeFullBody2" class="hidden absolute top-1 right-1 w-5 h-5 rounded-full bg-black/80 hover:bg-rose-600 text-white text-[10px] flex items-center justify-center z-20 shadow" title="Remove photo">✕</button>
+              </div>
+              <div class="text-[9px] text-center font-bold text-zinc-400">Left Side (Library)</div>
+            </div>
+
+            <!-- Slot 3: Full Body Right Angle (Phone Library) -->
+            <div class="space-y-1">
+              <div id="fullBodySlot3" class="relative aspect-[3/4] rounded-xl bg-[#0e0e12] border-2 border-dashed border-zinc-700 hover:border-gold/60 transition overflow-hidden flex flex-col items-center justify-center p-1 text-center group cursor-pointer">
+                <input type="file" id="fullBodyInput3" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10" title="Upload Right Side Angle Picture from Phone Library">
+                <div id="fullBodyPlaceholder3" class="flex flex-col items-center pointer-events-none p-1">
+                  <span class="text-lg mb-0.5">🧍‍♀️</span>
+                  <span class="text-[10px] font-bold text-zinc-300">Picture 3</span>
+                  <span class="text-[8px] text-zinc-500">Right Angle</span>
+                  <span class="mt-1 text-[8.5px] text-gold font-semibold underline">Phone Library</span>
+                </div>
+                <img id="fullBodyImg3" class="hidden w-full h-full object-cover rounded-lg pointer-events-none" alt="Full Body Right (Phone Library)">
+                <button type="button" id="removeFullBody3" class="hidden absolute top-1 right-1 w-5 h-5 rounded-full bg-black/80 hover:bg-rose-600 text-white text-[10px] flex items-center justify-center z-20 shadow" title="Remove photo">✕</button>
+              </div>
+              <div class="text-[9px] text-center font-bold text-zinc-400">Right Side (Library)</div>
+            </div>
+          </div>
+
+          <!-- Comparison Status Bar -->
+          <div id="fullBodyCompareBar" class="p-2 rounded-lg bg-[#0e0e12] border border-zinc-800 text-[10.5px] text-zinc-300 flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <span class="text-sm">🔄</span>
+              <span class="font-medium text-zinc-400">Comparison Status:</span>
+            </span>
+            <span id="fullBodyCompareStatusText" class="font-bold text-amber-400">Awaiting Live Selfie & Phone Library Uploads</span>
+          </div>
         </div>
 
         <!-- Statutory & Platform Disclaimer -->
         <div class="p-2.5 rounded-xl bg-[#171410] border border-amber-900/40 text-[10.5px] text-zinc-400 flex items-start gap-2">
           <span class="text-amber-400 shrink-0 text-sm">ℹ️</span>
-          <span>Automated verification check performed for platform security and dispute prevention. This is not an official NIA (National Identification Authority) direct verification.</span>
+          <span>SellerFlow verification is a platform security and account-verification process. It is not official NIA or government identity verification.</span>
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#262626]">
@@ -17892,7 +18216,7 @@ function openVerificationModal(options = {}){
             Cancel
           </button>
           <button type="button" id="submitVerification" class="bg-gold text-black font-extrabold px-5 py-2.5 rounded-xl text-xs hover:brightness-110 shadow-md flex items-center gap-2 transition active:scale-98">
-            <span>Verify & Continue</span>
+            <span>Complete Verification</span>
             <span>→</span>
           </button>
         </div>
@@ -17900,54 +18224,101 @@ function openVerificationModal(options = {}){
     </div>
   `);
 
-  // Wire up live image previews
-  const frontInput = $('cardFront');
-  const backInput = $('cardBack');
-  const frontBox = $('frontPreviewContainer');
-  const backBox = $('backPreviewContainer');
-  const cardInput = $('ghanaCard');
-
-  // Load existing preview if already on file
-  if(v.ghanaCardFrontPath && typeof loadGhanaCardDocumentPreview === 'function'){
-    loadGhanaCardDocumentPreview(v.ghanaCardFrontPath).then(u => {
-      if(u && frontBox) frontBox.innerHTML = `<img src="${esc(u)}" class="w-full h-full object-contain" alt="Front on file">`;
-    });
-  }
-  if(v.ghanaCardBackPath && typeof loadGhanaCardDocumentPreview === 'function'){
-    loadGhanaCardDocumentPreview(v.ghanaCardBackPath).then(u => {
-      if(u && backBox) backBox.innerHTML = `<img src="${esc(u)}" class="w-full h-full object-contain" alt="Back on file">`;
-    });
-  }
-
-  frontInput?.addEventListener('change', () => {
-    const f = frontInput.files?.[0];
-    if(f && f.type.startsWith('image/')){
-      const objUrl = URL.createObjectURL(f);
-      frontBox.innerHTML = `<img src="${objUrl}" class="w-full h-full object-contain rounded" alt="Front preview">`;
-    }
-  });
-
-  backInput?.addEventListener('change', () => {
-    const f = backInput.files?.[0];
-    if(f && f.type.startsWith('image/')){
-      const objUrl = URL.createObjectURL(f);
-      backBox.innerHTML = `<img src="${objUrl}" class="w-full h-full object-contain rounded" alt="Back preview">`;
-    }
-  });
-
-  // Auto-format Ghana Card PIN
-  cardInput?.addEventListener('input', () => {
-    let val = cardInput.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
-    if(val.startsWith('GHA') && !val.startsWith('GHA-') && val.length > 3){
-      val = 'GHA-' + val.slice(3);
-    }
-    cardInput.value = val;
-  });
-
   // Live Selfie Modal Camera Stream & Capture Logic
   window._modalVerificationSelfieBlob = null;
   window._modalVerificationSelfieBase64 = null;
+  window._modalFullBodyUploads = { 1: null, 2: null, 3: null };
   let modalCameraStream = null;
+
+  function updateFullBodyUploadStatus() {
+    const count = [1, 2, 3].filter(i => !!window._modalFullBodyUploads[i]).length;
+    const badge = $('fullBodyUploadBadge');
+    const statusText = $('fullBodyCompareStatusText');
+    const hasLiveSelfie = !!(window._modalVerificationSelfieBase64 || window._modalVerificationSelfieBlob);
+
+    if (badge) {
+      badge.textContent = `${count} / 3 From Phone Library`;
+      if (count === 3) {
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-700';
+      } else if (count > 0) {
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-700';
+      } else {
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700';
+      }
+    }
+
+    if (statusText) {
+      if (count > 0 && hasLiveSelfie) {
+        statusText.className = 'font-bold text-emerald-400';
+        statusText.textContent = `✓ Ready: Comparing Live Selfie with ${count} Phone Library Picture${count > 1 ? 's' : ''}`;
+      } else if (count > 0) {
+        statusText.className = 'font-bold text-amber-400';
+        statusText.textContent = `${count} Phone Library Picture${count > 1 ? 's' : ''} Ready · Capture Live Selfie to Compare`;
+      } else if (hasLiveSelfie) {
+        statusText.className = 'font-bold text-amber-400';
+        statusText.textContent = 'Live Selfie Captured · Upload 3 Full Body Pictures from Phone Library';
+      } else {
+        statusText.className = 'font-bold text-zinc-400';
+        statusText.textContent = 'Awaiting Live Selfie & Phone Library Uploads';
+      }
+    }
+  }
+
+  // Wire up 3 Full Body Upload Picture Slots
+  [1, 2, 3].forEach(idx => {
+    const input = $(`fullBodyInput${idx}`);
+    const img = $(`fullBodyImg${idx}`);
+    const placeholder = $(`fullBodyPlaceholder${idx}`);
+    const slot = $(`fullBodySlot${idx}`);
+    const removeBtn = $(`removeFullBody${idx}`);
+
+    input?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        toast('Please upload a valid image file (JPEG, PNG, WEBP).', 'error');
+        return;
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        toast('Picture file is too large (max 15MB).', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const base64 = evt.target?.result;
+        window._modalFullBodyUploads[idx] = { file, base64 };
+        if (img) {
+          img.src = base64;
+          img.classList.remove('hidden');
+        }
+        if (placeholder) placeholder.classList.add('hidden');
+        if (slot) {
+          slot.classList.remove('border-dashed', 'border-zinc-700');
+          slot.classList.add('border-solid', 'border-emerald-500/70');
+        }
+        if (removeBtn) removeBtn.classList.remove('hidden');
+        updateFullBodyUploadStatus();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    removeBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window._modalFullBodyUploads[idx] = null;
+      if (input) input.value = '';
+      if (img) {
+        img.src = '';
+        img.classList.add('hidden');
+      }
+      if (placeholder) placeholder.classList.remove('hidden');
+      if (slot) {
+        slot.classList.add('border-dashed', 'border-zinc-700');
+        slot.classList.remove('border-solid', 'border-emerald-500/70');
+      }
+      if (removeBtn) removeBtn.classList.add('hidden');
+      updateFullBodyUploadStatus();
+    });
+  });
 
   const startCamBtn = $('startModalCameraBtn');
   const captureCamBtn = $('captureModalSelfieBtn');
@@ -18029,6 +18400,7 @@ function openVerificationModal(options = {}){
           selfieBadge.textContent = '✓ Captured';
         }
         playLivenessChime(true);
+        updateFullBodyUploadStatus();
       }, 'image/jpeg', 0.88);
     } catch (capErr) {
       console.error('Capture error:', capErr);
@@ -18036,7 +18408,13 @@ function openVerificationModal(options = {}){
     }
   }
 
-  startCamBtn?.addEventListener('click', startModalCamera);
+  startCamBtn?.addEventListener('click', () => {
+    stopModalCamera();
+    const legalName = $('cardLegalName')?.value.trim() || currentProfile?.name || currentUser?.displayName || 'Applicant';
+    const phone = $('cardPhone')?.value.trim() || currentProfile?.phone || '';
+    const email = currentUser?.email || currentProfile?.email || '';
+    startLivenessChallenge({ legalName, phone, email, maskedCard: 'SF-VERIFIED', fullBodyUploads: window._modalFullBodyUploads });
+  });
   captureCamBtn?.addEventListener('click', captureModalSelfie);
   stopCamBtn?.addEventListener('click', () => {
     stopModalCamera();
@@ -18757,11 +19135,19 @@ async function viewVerificationRecord(uid){
     const frontPath = merged.ghanaCardFrontPath || uData.ghanaCardFrontPath || '';
     const backPath = merged.ghanaCardBackPath || uData.ghanaCardBackPath || '';
     const selfiePath = merged.selfieStoragePath || merged.selfiePath || uData.selfieStoragePath || '';
+    const fullPersonPath = merged.selfieFullStoragePath || merged.fullPersonStoragePath || merged.fullPersonPath || uData.selfieFullStoragePath || uData.fullPersonStoragePath || '';
+    const fb1Path = merged.fullBody1StoragePath || (merged.fullBodyPhotos && merged.fullBodyPhotos[0]) || uData.fullBody1StoragePath || '';
+    const fb2Path = merged.fullBody2StoragePath || (merged.fullBodyPhotos && merged.fullBodyPhotos[1]) || uData.fullBody2StoragePath || '';
+    const fb3Path = merged.fullBody3StoragePath || (merged.fullBodyPhotos && merged.fullBodyPhotos[2]) || uData.fullBody3StoragePath || '';
 
-    const [frontUrl, backUrl, selfieUrl] = await Promise.all([
+    const [frontUrl, backUrl, selfieUrl, fullPersonUrl, fb1Url, fb2Url, fb3Url] = await Promise.all([
       loadGhanaCardDocumentPreview(frontPath),
       loadGhanaCardDocumentPreview(backPath),
-      loadGhanaCardDocumentPreview(selfiePath)
+      loadGhanaCardDocumentPreview(selfiePath),
+      loadGhanaCardDocumentPreview(fullPersonPath),
+      loadGhanaCardDocumentPreview(fb1Path),
+      loadGhanaCardDocumentPreview(fb2Path),
+      loadGhanaCardDocumentPreview(fb3Path)
     ]);
 
     const fullPin = merged.ghanaCardPin || merged.ghanaCardNumber || uData.ghanaCardNumber || '';
@@ -18780,8 +19166,8 @@ async function viewVerificationRecord(uid){
         <div class="flex items-center gap-2.5">
           <span class="text-2xl p-2 rounded-xl bg-amber-950/40 border border-amber-800 text-gold">🪪</span>
           <div>
-            <h2 class="text-lg sm:text-xl font-black text-white">Ghana Card & Live Selfie KYC Dossier</h2>
-            <p class="muted text-xs">Official Security Team vault record for legal & compliance verification.</p>
+            <h2 class="text-lg sm:text-xl font-black text-white">SellerFlow Verification & Biometric Dossier</h2>
+            <p class="muted text-xs">Official Security Team vault record for facial & full person comparison.</p>
           </div>
         </div>
         <button type="button" data-close-modal class="w-8 h-8 rounded-full bg-[#1e1e1e] hover:bg-[#2c2c2c] text-zinc-400 hover:text-white flex items-center justify-center text-sm" title="Close">✕</button>
@@ -18816,26 +19202,39 @@ async function viewVerificationRecord(uid){
         </div>
       </div>
 
-      <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <!-- Biometric Comparison Cards Grid (Facial Selfie, Full Person, Front Card, Back Card) -->
+      <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <!-- Live Selfie Frame -->
-        <div class="p-3 rounded-xl bg-[#121215] border border-[#272730] flex flex-col">
+        <div class="p-3 rounded-xl bg-[#121215] border border-emerald-500/40 flex flex-col">
           <div class="flex items-center justify-between mb-2">
             <span class="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> LIVE SELFIE</span>
             ${selfieUrl ? `<button type="button" class="text-[10px] text-gold hover:underline font-semibold" data-enlarge-card="${esc(selfieUrl)}" data-card-title="Live Selfie - ${esc(applicantName)}">Enlarge ↗</button>` : ''}
           </div>
-          <div class="w-full h-44 sm:h-48 rounded-xl bg-black/60 border border-[#333] overflow-hidden flex items-center justify-center relative flex-1">
+          <div class="w-full h-40 rounded-xl bg-black/60 border border-[#333] overflow-hidden flex items-center justify-center relative flex-1">
             ${selfieUrl ? `<img src="${esc(selfieUrl)}" class="w-full h-full object-cover cursor-pointer hover:opacity-95" alt="Live Selfie" data-enlarge-card="${esc(selfieUrl)}" data-card-title="Live Selfie - ${esc(applicantName)}">` : `<div class="text-center p-3 text-zinc-500 text-xs"><div class="text-xl mb-1">🤳</div>Selfie not recorded</div>`}
           </div>
-          <div class="mt-2 text-[10px] text-emerald-400 font-semibold text-center">✓ 5 Head Poses Verified</div>
+          <div class="mt-2 text-[10px] text-emerald-400 font-semibold text-center">✓ Close-Up Angle</div>
+        </div>
+
+        <!-- Full Person Picture Frame for Comparison -->
+        <div class="p-3 rounded-xl bg-[#121215] border border-gold/40 flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold text-gold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-gold"></span> FULL PERSON</span>
+            ${fullPersonUrl ? `<button type="button" class="text-[10px] text-gold hover:underline font-semibold" data-enlarge-card="${esc(fullPersonUrl)}" data-card-title="Full Person Picture - ${esc(applicantName)}">Enlarge ↗</button>` : ''}
+          </div>
+          <div class="w-full h-40 rounded-xl bg-black/60 border border-[#333] overflow-hidden flex items-center justify-center relative flex-1">
+            ${fullPersonUrl ? `<img src="${esc(fullPersonUrl)}" class="w-full h-full object-cover cursor-pointer hover:opacity-95" alt="Full Person" data-enlarge-card="${esc(fullPersonUrl)}" data-card-title="Full Person Picture - ${esc(applicantName)}">` : `<div class="text-center p-3 text-zinc-500 text-xs"><div class="text-xl mb-1">🧍</div>Full body not recorded</div>`}
+          </div>
+          <div class="mt-2 text-[10px] text-gold font-semibold text-center">✓ Side-by-Side Comparison</div>
         </div>
 
         <!-- Front of Ghana Card -->
         <div class="p-3 rounded-xl bg-[#121215] border border-[#272730] flex flex-col">
           <div class="flex items-center justify-between mb-2">
-            <span class="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-gold"></span> CARD FRONT</span>
+            <span class="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-zinc-400"></span> CARD FRONT</span>
             ${frontUrl ? `<button type="button" class="text-[10px] text-gold hover:underline font-semibold" data-enlarge-card="${esc(frontUrl)}" data-card-title="Front of Ghana Card - ${esc(applicantName)}">Enlarge ↗</button>` : ''}
           </div>
-          <div class="w-full h-44 sm:h-48 rounded-xl bg-black/60 border border-[#333] overflow-hidden flex items-center justify-center relative flex-1">
+          <div class="w-full h-40 rounded-xl bg-black/60 border border-[#333] overflow-hidden flex items-center justify-center relative flex-1">
             ${frontUrl ? `<img src="${esc(frontUrl)}" class="w-full h-full object-contain cursor-pointer hover:opacity-95" alt="Ghana Card Front" data-enlarge-card="${esc(frontUrl)}" data-card-title="Front of Ghana Card - ${esc(applicantName)}">` : `<div class="text-center p-3 text-zinc-500 text-xs"><div class="text-xl mb-1">📄</div>Front not uploaded</div>`}
           </div>
           <div class="mt-2 text-[10px] text-zinc-400 font-medium text-center">Photo & PIN Match</div>
@@ -18844,13 +19243,57 @@ async function viewVerificationRecord(uid){
         <!-- Back of Ghana Card -->
         <div class="p-3 rounded-xl bg-[#121215] border border-[#272730] flex flex-col">
           <div class="flex items-center justify-between mb-2">
-            <span class="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-gold"></span> CARD BACK</span>
+            <span class="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-zinc-400"></span> CARD BACK</span>
             ${backUrl ? `<button type="button" class="text-[10px] text-gold hover:underline font-semibold" data-enlarge-card="${esc(backUrl)}" data-card-title="Back of Ghana Card - ${esc(applicantName)}">Enlarge ↗</button>` : ''}
           </div>
-          <div class="w-full h-44 sm:h-48 rounded-xl bg-black/60 border border-[#333] overflow-hidden flex items-center justify-center relative flex-1">
+          <div class="w-full h-40 rounded-xl bg-black/60 border border-[#333] overflow-hidden flex items-center justify-center relative flex-1">
             ${backUrl ? `<img src="${esc(backUrl)}" class="w-full h-full object-contain cursor-pointer hover:opacity-95" alt="Ghana Card Back" data-enlarge-card="${esc(backUrl)}" data-card-title="Back of Ghana Card - ${esc(applicantName)}">` : `<div class="text-center p-3 text-zinc-500 text-xs"><div class="text-xl mb-1">📄</div>Back not uploaded</div>`}
           </div>
           <div class="mt-2 text-[10px] text-zinc-400 font-medium text-center">Barcode & Format</div>
+        </div>
+      </div>
+
+      <!-- 3 Full Body Uploaded Pictures (Separated from Phone Library) for Live Selfie Comparison -->
+      <div class="mt-4 p-3.5 rounded-xl bg-[#121216] border border-emerald-500/30 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+            <span>📱</span> 3 Full Body Pictures (Separated Pictures Uploaded from Phone Library)
+          </span>
+          <span class="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px] font-bold">
+            📱 Phone Library Uploads
+          </span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <!-- Body 1 -->
+          <div class="p-2.5 rounded-xl bg-[#0d0d10] border border-zinc-800 text-center flex flex-col">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] font-bold text-zinc-300 uppercase">1. Front Body (Library)</span>
+              ${fb1Url ? `<button type="button" class="text-[9px] text-gold hover:underline font-semibold" data-enlarge-card="${esc(fb1Url)}" data-card-title="Full Body Front (Phone Library) - ${esc(applicantName)}">Enlarge ↗</button>` : ''}
+            </div>
+            <div class="w-full h-36 rounded-lg bg-black/60 border border-[#2e2e36] overflow-hidden flex items-center justify-center relative flex-1">
+              ${fb1Url ? `<img src="${esc(fb1Url)}" class="w-full h-full object-cover cursor-pointer hover:opacity-95" alt="Full Body Front (Phone Library)" data-enlarge-card="${esc(fb1Url)}" data-card-title="Full Body Front (Phone Library) - ${esc(applicantName)}">` : `<div class="text-center p-2 text-zinc-500 text-[10px]"><div class="text-lg mb-0.5">🧍</div>Front body not uploaded from library</div>`}
+            </div>
+          </div>
+          <!-- Body 2 -->
+          <div class="p-2.5 rounded-xl bg-[#0d0d10] border border-zinc-800 text-center flex flex-col">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] font-bold text-zinc-300 uppercase">2. Left Angle (Library)</span>
+              ${fb2Url ? `<button type="button" class="text-[9px] text-gold hover:underline font-semibold" data-enlarge-card="${esc(fb2Url)}" data-card-title="Full Body Left (Phone Library) - ${esc(applicantName)}">Enlarge ↗</button>` : ''}
+            </div>
+            <div class="w-full h-36 rounded-lg bg-black/60 border border-[#2e2e36] overflow-hidden flex items-center justify-center relative flex-1">
+              ${fb2Url ? `<img src="${esc(fb2Url)}" class="w-full h-full object-cover cursor-pointer hover:opacity-95" alt="Full Body Left (Phone Library)" data-enlarge-card="${esc(fb2Url)}" data-card-title="Full Body Left (Phone Library) - ${esc(applicantName)}">` : `<div class="text-center p-2 text-zinc-500 text-[10px]"><div class="text-lg mb-0.5">🧍‍♂️</div>Left angle not uploaded from library</div>`}
+            </div>
+          </div>
+          <!-- Body 3 -->
+          <div class="p-2.5 rounded-xl bg-[#0d0d10] border border-zinc-800 text-center flex flex-col">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] font-bold text-zinc-300 uppercase">3. Right Angle (Library)</span>
+              ${fb3Url ? `<button type="button" class="text-[9px] text-gold hover:underline font-semibold" data-enlarge-card="${esc(fb3Url)}" data-card-title="Full Body Right (Phone Library) - ${esc(applicantName)}">Enlarge ↗</button>` : ''}
+            </div>
+            <div class="w-full h-36 rounded-lg bg-black/60 border border-[#2e2e36] overflow-hidden flex items-center justify-center relative flex-1">
+              ${fb3Url ? `<img src="${esc(fb3Url)}" class="w-full h-full object-cover cursor-pointer hover:opacity-95" alt="Full Body Right (Phone Library)" data-enlarge-card="${esc(fb3Url)}" data-card-title="Full Body Right (Phone Library) - ${esc(applicantName)}">` : `<div class="text-center p-2 text-zinc-500 text-[10px]"><div class="text-lg mb-0.5">🧍‍♀️</div>Right angle not uploaded from library</div>`}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -19752,7 +20195,7 @@ $('mobileMenu')?.addEventListener('click',()=>{
     closeMobileNav();
   }
 });
-$('headerLoginBtn')?.addEventListener('click',()=>showAuth('register'));
+$('headerLoginBtn')?.addEventListener('click',()=>showAuth('login'));
 $('headerRegisterBtn')?.addEventListener('click',()=>showAuth('register'));
 $('landingLogin')?.addEventListener('click',()=>showAuth('login'));
 $('heroLogin')?.addEventListener('click',()=>showAuth('login'));

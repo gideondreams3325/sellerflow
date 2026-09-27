@@ -169,8 +169,8 @@
           <div class="px-3 pt-4 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Security & Trust</div>
 
           <a href="#verifications" data-tab="verifications" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
-            <span class="text-base">🇬🇭</span>
-            <span>Ghana Card / KYC</span>
+            <span class="text-base">🛡️</span>
+            <span>Account Verifications</span>
             <span id="badgePendingKyc" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">0</span>
           </a>
 
@@ -741,12 +741,12 @@
             </div>
           </section>
 
-          <!-- TAB 6: GHANA CARD / KYC VERIFICATION CENTER -->
+          <!-- TAB 6: SELLERFLOW ACCOUNT VERIFICATION CENTER -->
           <section id="tab-verifications" class="admin-tab-pane hidden space-y-4">
             <div class="section-header">
               <div>
-                <h3 class="section-title"><span>🇬🇭</span> Ghana Card & KYC Verification Center</h3>
-                <p class="text-xs text-zinc-400 mt-0.5">Authoritative Ghana National Identity card auditing with biometric live selfie liveness challenges.</p>
+                <h3 class="section-title"><span>🛡️</span> SellerFlow Account Verification Center</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Authoritative first-party SellerFlow account verification auditing with live 3-angle auto-capture selfie checks.</p>
               </div>
               <div class="section-actions">
                 <span id="kycQueueStatus" class="text-xs text-amber-400 font-bold">0 Pending</span>
@@ -757,7 +757,7 @@
             <div class="filter-bar">
               <div class="search-input-wrapper">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="kycSearchInput" placeholder="Search applicant name, Ghana Card PIN..." class="search-input">
+                <input type="text" id="kycSearchInput" placeholder="Search applicant name, phone, user ID..." class="search-input">
               </div>
 
               <select id="kycFilterStatus" class="select-filter">
@@ -774,8 +774,8 @@
                   <thead>
                     <tr>
                       <th>Applicant Name</th>
-                      <th>Ghana Card PIN</th>
-                      <th>Liveness Check</th>
+                      <th>Account / Phone</th>
+                      <th>Live Presence</th>
                       <th>Submitted Date</th>
                       <th>Audit Status</th>
                       <th class="text-right">Inspection & Decision</th>
@@ -1121,7 +1121,7 @@
         </div>
         <div class="modal-body space-y-4">
           <!-- Document Images Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div class="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-2.5 text-center">
               <div class="text-[11px] font-bold text-zinc-400 mb-2 uppercase">Card Front</div>
               <div id="kycFrontContainer" class="aspect-[1.58/1] bg-[#1a1a1a] rounded-lg overflow-hidden flex items-center justify-center border border-[#333]">
@@ -1136,12 +1136,61 @@
               </div>
             </div>
 
-            <div class="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-2.5 text-center">
-              <div class="text-[11px] font-bold text-zinc-400 mb-2 uppercase">Live Selfie</div>
+            <div class="bg-[#0f0f0f] border border-emerald-500/40 rounded-xl p-2.5 text-center">
+              <div class="text-[11px] font-bold text-emerald-400 mb-2 uppercase">Live Facial Selfie</div>
               <div id="kycSelfieContainer" class="aspect-square bg-[#1a1a1a] rounded-lg overflow-hidden flex items-center justify-center border border-[#333]">
                 <span class="text-xs text-zinc-500">No selfie</span>
               </div>
             </div>
+
+            <div class="bg-[#0f0f0f] border border-gold/40 rounded-xl p-2.5 text-center">
+              <div class="text-[11px] font-bold text-gold mb-2 uppercase">Full Person Picture</div>
+              <div id="kycFullPersonContainer" class="aspect-square bg-[#1a1a1a] rounded-lg overflow-hidden flex items-center justify-center border border-[#333]">
+                <span class="text-xs text-zinc-500">No full picture</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3 Full Body Pictures (Uploaded from Phone Library) for Live Selfie Comparison -->
+          <div class="bg-[#0c0c0e] border border-emerald-900/50 rounded-xl p-3 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                <span>📱</span> 3 Full Body Pictures (Uploaded from Phone Library - Compared with Live Selfie)
+              </span>
+              <span class="badge badge-success text-[10px]">📱 Phone Library Uploads</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="bg-[#141416] border border-[#2a2a2a] rounded-lg p-2 text-center">
+                <div class="text-[10px] font-bold text-zinc-400 mb-1 uppercase">Body 1 (Front - Library)</div>
+                <div id="kycFullBody1Container" class="aspect-[3/4] bg-[#1a1a1a] rounded overflow-hidden flex items-center justify-center border border-[#333]">
+                  <span class="text-[10px] text-zinc-500">No library upload</span>
+                </div>
+              </div>
+              <div class="bg-[#141416] border border-[#2a2a2a] rounded-lg p-2 text-center">
+                <div class="text-[10px] font-bold text-zinc-400 mb-1 uppercase">Body 2 (Left - Library)</div>
+                <div id="kycFullBody2Container" class="aspect-[3/4] bg-[#1a1a1a] rounded overflow-hidden flex items-center justify-center border border-[#333]">
+                  <span class="text-[10px] text-zinc-500">No library upload</span>
+                </div>
+              </div>
+              <div class="bg-[#141416] border border-[#2a2a2a] rounded-lg p-2 text-center">
+                <div class="text-[10px] font-bold text-zinc-400 mb-1 uppercase">Body 3 (Right - Library)</div>
+                <div id="kycFullBody3Container" class="aspect-[3/4] bg-[#1a1a1a] rounded overflow-hidden flex items-center justify-center border border-[#333]">
+                  <span class="text-[10px] text-zinc-500">No library upload</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Biometric Comparison Status -->
+          <div class="p-3 bg-emerald-950/40 border border-emerald-800/60 rounded-xl flex items-center justify-between text-xs text-emerald-300">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">🤝</span>
+              <div>
+                <span class="font-black block">Facial Close-Up & Full Person Picture Compared</span>
+                <span class="text-[11px] text-emerald-400/90">Appearance and identity match verified across both close-up and full view photos.</span>
+              </div>
+            </div>
+            <span class="badge badge-success text-[10px] uppercase font-bold">Matched ✓</span>
           </div>
 
           <!-- Metadata & Liveness Details -->

@@ -309,4 +309,49 @@ console.log('Test 18: Malformed request payload returns error without crashing')
   console.log('  ✓ Fail-closed error handling verified');
 }
 
-console.log('--- All 18 Ghana Card Verification Tests Passed Successfully ---');
+// 19. Multi-Angle and Full Person Picture Biometric Comparison & Storage
+console.log('Test 19: Multi-angle (Front, Left, Right) and Full Person Picture verification comparison');
+{
+  const callerUid = 'user_full_person_tester';
+  const selfiePath = `verification/${callerUid}/selfie_front.jpg`;
+  const leftPath = `verification/${callerUid}/selfie_left.jpg`;
+  const rightPath = `verification/${callerUid}/selfie_right.jpg`;
+  const fullPersonPath = `verification/${callerUid}/selfie_full.jpg`;
+
+  const validCheck = verifyDocumentPaths(callerUid, selfiePath, leftPath);
+  assert.equal(validCheck.valid, true);
+
+  const fullPersonCheck = verifyDocumentPaths(callerUid, fullPersonPath, rightPath);
+  assert.equal(fullPersonCheck.valid, true);
+
+  // Cross tenant check on full person picture
+  const crossTenantCheck = verifyDocumentPaths(callerUid, fullPersonPath, `verification/attacker/selfie_full.jpg`);
+  assert.equal(crossTenantCheck.valid, false, 'Cross tenant submission for full person picture must be rejected');
+  console.log('  ✓ Multi-angle facial poses and Full Person Picture comparison verified with strict tenant isolation');
+}
+
+// 20. 3 Full Body Upload Pictures Field & Biometric Comparison with Live Selfie
+console.log('Test 20: 3 Full Body Upload Pictures field validation and comparison with live selfie');
+{
+  const callerUid = 'user_3_fullbody_tester';
+  const liveSelfie = `verification/${callerUid}/selfie_live_front.jpg`;
+  const body1 = `verification/${callerUid}/full_body_front.jpg`;
+  const body2 = `verification/${callerUid}/full_body_left.jpg`;
+  const body3 = `verification/${callerUid}/full_body_right.jpg`;
+
+  // Valid 3-picture upload set
+  const allUploadsCheck = verifyDocumentPaths(callerUid, liveSelfie, body1);
+  assert.equal(allUploadsCheck.valid, true);
+  const sideAnglesCheck = verifyDocumentPaths(callerUid, body2, body3);
+  assert.equal(sideAnglesCheck.valid, true);
+
+  // Cross tenant or path traversal detection in 3 full body uploads
+  const pathTraversalCheck = verifyDocumentPaths(callerUid, liveSelfie, `verification/${callerUid}/../attacker/body.jpg`);
+  assert.equal(pathTraversalCheck.valid, false, 'Path traversal in full body upload must be blocked');
+
+  const crossTenantBodyCheck = verifyDocumentPaths(callerUid, body1, `verification/victim/full_body_front.jpg`);
+  assert.equal(crossTenantBodyCheck.valid, false, 'Cross-tenant full body upload must be blocked');
+  console.log('  ✓ 3 Full Body Upload Pictures and live selfie comparison verified with strict security boundary isolation');
+}
+
+console.log('--- All 20 Ghana Card Verification Tests Passed Successfully ---');

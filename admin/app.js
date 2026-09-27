@@ -1737,6 +1737,10 @@ window.inspectKyc = async function(userId) {
   const frontContainer = document.getElementById('kycFrontContainer');
   const backContainer = document.getElementById('kycBackContainer');
   const selfieContainer = document.getElementById('kycSelfieContainer');
+  const fullPersonContainer = document.getElementById('kycFullPersonContainer');
+  const fullBody1Container = document.getElementById('kycFullBody1Container');
+  const fullBody2Container = document.getElementById('kycFullBody2Container');
+  const fullBody3Container = document.getElementById('kycFullBody3Container');
 
   if (nameEl) nameEl.textContent = item.fullName || item.name || 'Applicant';
   if (emailEl) emailEl.textContent = item.email || item.userEmail || `UID: ${item.uid || item.id}`;
@@ -1763,6 +1767,10 @@ window.inspectKyc = async function(userId) {
   renderDocImage(frontContainer, item.ghanaCardFrontPath || item.frontPath, 'Card Front');
   renderDocImage(backContainer, item.ghanaCardBackPath || item.backPath, 'Card Back');
   renderDocImage(selfieContainer, item.selfieStoragePath || item.selfiePath, 'Live Verification Selfie');
+  renderDocImage(fullPersonContainer, item.selfieFullStoragePath || item.fullPersonStoragePath || item.fullPersonPath, 'Full Person Picture');
+  renderDocImage(fullBody1Container, item.fullBody1StoragePath || (item.fullBodyPhotos && item.fullBodyPhotos[0]), 'Full Body Front (Phone Library)');
+  renderDocImage(fullBody2Container, item.fullBody2StoragePath || (item.fullBodyPhotos && item.fullBodyPhotos[1]), 'Full Body Left (Phone Library)');
+  renderDocImage(fullBody3Container, item.fullBody3StoragePath || (item.fullBodyPhotos && item.fullBodyPhotos[2]), 'Full Body Right (Phone Library)');
 
   // Wire decision buttons
   const approveBtn = document.getElementById('kycApproveBtn');
@@ -1794,43 +1802,52 @@ window.inspectKyc = async function(userId) {
 async function executeKycDecision(userId, action, reason = '', correctionInstructions = '') {
   try {
     const isApprove = action === 'approve';
-    const statusVal = isApprove ? 'approved' : 'rejected';
+    const token = state.currentUser ? await state.currentUser.getIdToken() : '';
 
-    const kycUpdates = {
-      verificationStatus: statusVal,
-      status: statusVal,
-      reviewedBy: state.currentUser?.email || 'admin',
-      reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    if (!isApprove) {
-      kycUpdates.rejectionReason = reason || 'Statutory criteria not met';
-      kycUpdates.correctionInstructions = correctionInstructions || '';
+    if (token) {
+      const res = await fetch('/api/admin/kyc-action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          userId,
+          action,
+          reason,
+          correctionInstructions
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Server error processing verification decision');
+      }
+    } else {
+      const statusVal = isApprove ? 'approved' : 'rejected';
+      const kycUpdates = {
+        verificationStatus: statusVal,
+        status: statusVal === 'approved' ? 'VERIFIED' : 'REJECTED',
+        accountVerified: isApprove,
+        reviewedBy: state.currentUser?.email || 'admin',
+        reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if (!isApprove) {
+        kycUpdates.rejectionReason = reason || 'Criteria not met';
+        kycUpdates.correctionInstructions = correctionInstructions || '';
+      }
+
+      await Promise.all([
+        db.collection('buyerKycRecords').doc(userId).set(kycUpdates, { merge: true }),
+        db.collection('users').doc(userId).set({
+          accountVerified: isApprove,
+          accountVerificationStatus: isApprove ? 'VERIFIED' : 'REJECTED',
+          verificationStatus: statusVal,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true })
+      ]);
     }
 
-    const userUpdates = {
-      isVerifiedSeller: isApprove,
-      verificationStatus: statusVal,
-      kycStatus: statusVal,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    await Promise.all([
-      db.collection('buyerKycRecords').doc(userId).set(kycUpdates, { merge: true }),
-      db.collection('users').doc(userId).set(userUpdates, { merge: true }),
-      db.collection('publicProfiles').doc(userId).set({ isVerifiedSeller: isApprove, verified: isApprove, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true })
-    ]);
-
-    await db.collection('securityReviews').add({
-      action: `kyc_${action}`,
-      targetType: 'buyerKyc',
-      targetId: userId,
-      reason: reason || (isApprove ? 'Ghana Card identity verified' : 'KYC verification rejected'),
-      adminEmail: state.currentUser?.email || 'admin',
-      adminUid: state.currentUser?.uid || '',
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    showToast(isApprove ? 'KYC application approved: Vendor verified' : 'KYC application rejected', 'success');
+    showToast(isApprove ? 'Account verification approved successfully' : 'Account verification rejected', 'success');
     closeKycModal();
     await fetchAdminData();
   } catch (err) {

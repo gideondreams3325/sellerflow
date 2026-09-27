@@ -637,7 +637,7 @@ function openIdentityRequiredModal(actionType = 'participate') {
       <div class="text-center space-y-1.5">
         <h3 class="text-lg font-black text-amber-300">Verified Account Required</h3>
         <p class="text-xs text-zinc-300 leading-relaxed">
-          Only verified accounts can ${_esc(actionType)} on SellerFlow. Please complete your <b>Ghana Card identity verification</b> to apply for jobs and register for events.
+          Only verified accounts can ${_esc(actionType)} on SellerFlow. Please complete your <b>SellerFlow account verification</b> to apply for jobs and register for events.
         </p>
       </div>
       <div class="p-3.5 rounded-2xl bg-[#12121a] border border-[#2a2a3c] text-xs text-zinc-400 space-y-2">
@@ -645,7 +645,7 @@ function openIdentityRequiredModal(actionType = 'participate') {
           <span class="text-amber-400 font-bold">✓</span> <span>Anti-fraud protection for applicants & attendees</span>
         </div>
         <div class="flex items-center gap-2 text-zinc-300">
-          <span class="text-amber-400 font-bold">✓</span> <span>Encrypted Ghana Card KYC (Act 843 compliant)</span>
+          <span class="text-amber-400 font-bold">✓</span> <span>Encrypted First-Party Verification & Live Presence Check</span>
         </div>
         <div class="flex items-center gap-2 text-zinc-300">
           <span class="text-amber-400 font-bold">✓</span> <span>Official SellerFlow Verified badge on profile</span>

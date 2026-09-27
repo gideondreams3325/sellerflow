@@ -1231,14 +1231,17 @@ app.post('/api/moderation/inspect-product', async (req, res) => {
 });
 
 /**
- * Server-Side Authoritative Ghana Card Verification with Gemini 3.8 Flash, Live Selfie & Duplicate Detection
- * Enforces:
- * 1. Format validation (GHA-XXXXXXXXX-X) - if invalid, instructs user to submit correct info
- * 2. Mandatory live selfie capture check & tenant storage boundary isolation
- * 3. Duplicate card check across all accounts in Firestore
- * 4. Gemini 3.8 Flash verification of identity details, facial comparison, and document authenticity
+ * Server-Side Authoritative SellerFlow First-Party Account Verification
+ * Features:
+ * 1. Authoritative caller authentication (fail-closed token validation)
+ * 2. Mandatory live front-camera selfie capture (no gallery upload)
+ * 3. Strict tenant isolation (verification/${callerUid}/...) & path traversal prevention
+ * 4. First-party liveness challenge & facial presence evaluation via Gemini Vision AI
+ * 5. One-time verification record attached to account across Web and Android
+ * 6. Pro Verified Badge enforcement: Badge requires subscription = 'PRO' AND account verification = 'VERIFIED'
+ * 7. Safe verdict handling: VERIFIED | REVIEW | REJECTED with platform security disclaimer
  */
-app.post('/api/verification/verify-ghana-card', async (req, res) => {
+const handleVerificationRequest = async (req, res) => {
   try {
     // 1. Authenticate caller
     const authHeader = req.headers.authorization || '';
@@ -1246,7 +1249,7 @@ app.post('/api/verification/verify-ghana-card', async (req, res) => {
       return res.status(401).json({
         success: false,
         verdict: 'REJECTED',
-        error: 'Unauthorized: Missing or malformed Firebase ID token'
+        error: 'Unauthorized: Missing or malformed authentication token'
       });
     }
 
@@ -1258,7 +1261,7 @@ app.post('/api/verification/verify-ghana-card', async (req, res) => {
       return res.status(401).json({
         success: false,
         verdict: 'REJECTED',
-        error: 'Unauthorized: Invalid or expired Firebase ID token'
+        error: 'Unauthorized: Invalid or expired authentication token'
       });
     }
 
@@ -1266,37 +1269,43 @@ app.post('/api/verification/verify-ghana-card', async (req, res) => {
     const {
       ghanaCardNumber,
       fullName,
+      email,
+      phone,
       dateOfBirth,
       frontPath,
       backPath,
       selfiePath,
+      selfieLeftPath,
+      selfieRightPath,
+      selfieFullPath,
+      fullPersonPath,
+      fullBody1Path,
+      fullBody2Path,
+      fullBody3Path,
+      verificationSessionId = `sf_verif_${Date.now()}`,
       livenessStatus = 'COMPLETED',
-      livenessMovements = ['LOOK_FORWARD', 'TURN_HEAD_UP', 'TURN_HEAD_DOWN', 'TURN_HEAD_LEFT', 'TURN_HEAD_RIGHT'],
+      livenessMovements = ['FRONT', 'LEFT', 'RIGHT', 'FULL_PERSON'],
       livenessCompletedAt = new Date().toISOString(),
-      frontBase64,
-      backBase64,
-      selfieBase64
+      selfieBase64,
+      fullPersonBase64,
+      fullBodyBase64_1,
+      fullBodyBase64_2,
+      fullBodyBase64_3
     } = req.body || {};
 
-    // 2. Mandatory live selfie & document path security validation
+    const resolvedFullPersonPath = fullPersonPath || selfieFullPath || '';
+
+    // 2. Mandatory live selfie validation
     if (!selfiePath && !selfieBase64) {
       return res.status(400).json({
         success: false,
         verdict: 'REJECTED',
-        error: 'Bad Request: Live selfie is required for identity verification'
+        error: 'Bad Request: Live selfie is required for SellerFlow account verification'
       });
     }
 
-    if (!frontPath || !backPath) {
-      return res.status(400).json({
-        success: false,
-        verdict: 'REJECTED',
-        error: 'Bad Request: Both front and back Ghana Card document paths are required'
-      });
-    }
-
-    // Path traversal guard
-    const pathsToCheck = [frontPath, backPath, selfiePath].filter(Boolean);
+    // 3. Document path security & tenant boundary isolation
+    const pathsToCheck = [frontPath, backPath, selfiePath, selfieLeftPath, selfieRightPath, resolvedFullPersonPath, fullBody1Path, fullBody2Path, fullBody3Path].filter(Boolean);
     for (const p of pathsToCheck) {
       if (typeof p !== 'string' || p.includes('..') || p.includes('//')) {
         return res.status(403).json({
@@ -1310,100 +1319,107 @@ app.post('/api/verification/verify-ghana-card', async (req, res) => {
         return res.status(403).json({
           success: false,
           verdict: 'REJECTED',
-          error: 'Forbidden: You can only verify identity documents from your own private storage directory'
+          error: 'Forbidden: You can only submit verification documents from your own private storage directory'
         });
       }
     }
 
-    // 3. Format validation check
-    const normalized = normalizeGhanaCard(ghanaCardNumber || '');
-    if (!normalized || !validateGhanaCardFormat(normalized)) {
-      return res.status(400).json({
-        success: false,
-        verdict: 'REJECTED',
-        error: 'Invalid Ghana Card number format. Please enter your valid Ghana Card PIN in the format GHA-XXXXXXXXX-X (e.g. GHA-123456789-0).',
-        actionRequired: 'Submit correct Ghana Card PIN in the official statutory format GHA-XXXXXXXXX-X'
-      });
-    }
-
-    // 4. Cryptographic hash for duplicate card detection
-    const cardHash = hashGhanaCard(normalized);
-    const maskedCard = maskGhanaCard(normalized);
-
-    // 5. Duplicate Ghana Card Check across Firestore accounts
-    try {
-      const [byHash, byNumber] = await Promise.all([
-        adminDb.collection('users').where('ghanaCardHash', '==', cardHash).get(),
-        adminDb.collection('users').where('ghanaCardNumber', '==', normalized).get()
-      ]);
-
-      const duplicateDocs = [...byHash.docs, ...byNumber.docs].filter(d => d.id !== callerUid);
-
-      if (duplicateDocs.length > 0) {
-        console.warn(`Duplicate Ghana Card detected: ${maskedCard} already belongs to user ${duplicateDocs[0].id}`);
-        
-        // Log duplicate attempt for security auditing
-        await adminDb.collection('adminReviews').doc(`dup_card_${callerUid}`).set({
-          userId: callerUid,
-          applicantName: fullName || '',
-          ghanaCardMasked: maskedCard,
-          duplicateWithUserId: duplicateDocs[0].id,
-          reason: 'Duplicate Ghana Card PIN submission detected across multiple accounts.',
-          status: 'duplicate_blocked',
-          timestamp: FieldValue.serverTimestamp()
-        }, { merge: true });
-
-        return res.status(409).json({
+    // If legacy card documents were supplied in test payloads, validate format
+    let normalizedCard = '';
+    let cardHash = '';
+    let maskedCard = '';
+    if (ghanaCardNumber) {
+      normalizedCard = normalizeGhanaCard(ghanaCardNumber);
+      if (!validateGhanaCardFormat(normalizedCard)) {
+        return res.status(400).json({
           success: false,
-          verdict: 'REVIEW',
-          error: `Duplicate Ghana Card detected: This Ghana Card is already associated with another SellerFlow account. Submission queued for review.`,
-          duplicate: true
+          verdict: 'REJECTED',
+          error: 'Invalid Ghana Card number format. Please enter your valid PIN in the format GHA-XXXXXXXXX-X (e.g. GHA-123456789-0).',
+          actionRequired: 'Submit correct PIN format GHA-XXXXXXXXX-X'
         });
       }
-    } catch (dupErr) {
-      console.warn('Firestore duplicate check notice:', dupErr.message);
+      cardHash = hashGhanaCard(normalizedCard);
+      maskedCard = maskGhanaCard(normalizedCard);
+
+      // Duplicate Check across Firestore accounts
+      try {
+        const [byHash, byNumber] = await Promise.all([
+          adminDb.collection('users').where('ghanaCardHash', '==', cardHash).get(),
+          adminDb.collection('users').where('ghanaCardNumber', '==', normalizedCard).get()
+        ]);
+        const duplicateDocs = [...byHash.docs, ...byNumber.docs].filter(d => d.id !== callerUid);
+        if (duplicateDocs.length > 0) {
+          return res.status(409).json({
+            success: false,
+            verdict: 'REVIEW',
+            error: 'Duplicate verification detected: This card is already associated with another SellerFlow account. Submission queued for review.',
+            duplicate: true
+          });
+        }
+      } catch (dupErr) {
+        console.warn('Duplicate check notice:', dupErr.message);
+      }
     }
 
-    // 6. Gemini 3.8 Flash AI Identity & Document Verification
+    // 4. Fetch User Account & Current Subscription Status Server-Side
+    let userSubscription = 'FREE';
+    let userRole = 'user';
+    let currentAttemptCount = 0;
+    try {
+      const userDocSnap = await adminDb.collection('users').doc(callerUid).get();
+      if (userDocSnap.exists) {
+        const uData = userDocSnap.data() || {};
+        userSubscription = uData.subscription || uData.plan || 'FREE';
+        userRole = uData.role || 'user';
+        currentAttemptCount = uData.verificationAttemptCount || 0;
+      }
+    } catch (uErr) {
+      console.warn('User subscription fetch notice:', uErr.message);
+    }
+
+    // 5. First-Party Liveness & Facial Presence AI Evaluation
     const ai = getGeminiClient();
     let geminiVerdict = 'VERIFIED';
-    let geminiMessage = 'Your identity verification was completed successfully.';
-    let isAuthentic = true;
     let confidence = 0.95;
+    let evaluationReason = '';
 
     if (ai) {
       try {
-        const prompt = `You are the authoritative Ghana Card & Live Selfie Identity Verification AI for SellerFlow Ghana.
-Evaluate this Ghana National Identity Card + Live Selfie verification submission against official standards.
+        const prompt = `You are the authoritative First-Party Account Verification AI for SellerFlow.
+Evaluate this SellerFlow live selfie, biometric liveness, and full person picture verification submission.
 
-Application Details:
-- Applicant Full Name: "${fullName || ''}"
-- Date of Birth: "${dateOfBirth || 'Provided'}"
-- Submitted Ghana Card PIN: "${normalized}"
-- Front Document Path: "${frontPath}"
-- Back Document Path: "${backPath}"
-- Live Selfie Storage Path: "${selfiePath || 'Provided'}"
+Account Details:
+- Applicant Name: "${fullName || decodedToken.name || ''}"
+- Verified Email: "${email || decodedToken.email || ''}"
+- Phone: "${phone || 'Provided'}"
+- Live Facial Selfie Storage Path: "${selfiePath || 'Provided'}"
+- Auto-Captured Full Person Storage Path: "${resolvedFullPersonPath || 'Provided'}"
+- 3 Full Body Uploaded Comparison Pictures:
+  * Full Body Picture 1: "${fullBody1Path || 'Provided'}"
+  * Full Body Picture 2: "${fullBody2Path || 'Provided'}"
+  * Full Body Picture 3: "${fullBody3Path || 'Provided'}"
 - Liveness Challenge Status: "${livenessStatus}"
-- Liveness Head Movements: ${JSON.stringify(livenessMovements)}
+- Liveness Movements & Auto-Captured Angles: ${JSON.stringify(livenessMovements)}
 
-Verify:
-1. Is the Ghana Card PIN format valid (GHA-XXXXXXXXX-X)?
-2. Does the name match standard Ghanaian naming patterns?
-3. Are the submitted credentials legitimate and free from forgery?
-4. Facial match: Does the live selfie appear to match the Ghana Card document?
-   - If confident match -> VERIFIED
-   - If uncertain or low lighting -> REVIEW
-   - If clear mismatch -> REJECTED
+Verification & Comparison Criteria:
+1. Facial Presence: Is a clear, live front-facing facial selfie provided without obstruction or synthetic replay?
+2. Multi-Angle & 3 Full Body Photos: Were 3 full-body pictures provided for comprehensive identity and physique validation?
+3. Biometric & Visual Comparison: Compare the close-up facial features and appearance with all 3 full-body uploaded pictures to confirm all photos depict the exact same live individual in consistent attire, posture, and natural setting.
+4. Did the user successfully complete the live presence challenge (Front, Left side, Right side, Full Person)?
+5. Verdict Guidelines:
+   - Confident live match between live selfie angles and all full body pictures -> VERIFIED
+   - Low lighting, motion blur, partial frame, or pending visual confirmation -> REVIEW
+   - Obvious static photo replay, mismatched individuals between selfie and full body photos, deliberate spoof, or multiple distinct faces -> REJECTED
 
 Respond strictly in JSON format:
 {
   "valid": boolean,
   "verdict": "VERIFIED" | "REVIEW" | "REJECTED",
   "confidence": number,
-  "nameMatches": boolean,
-  "isAuthentic": boolean,
-  "selfieMatch": boolean,
-  "userMessage": string
+  "isLivePresence": boolean,
+  "faceAndFullPersonMatch": boolean,
+  "fullBodyMatch": boolean,
+  "reason": string
 }`;
 
         const result = await callGeminiWithResilience({
@@ -1419,166 +1435,232 @@ Respond strictly in JSON format:
         if (result && result.text) {
           const parsed = JSON.parse(result.text.trim());
           geminiVerdict = parsed.verdict || (parsed.valid ? 'VERIFIED' : 'REVIEW');
-          isAuthentic = parsed.isAuthentic !== false;
           confidence = parsed.confidence || 0.92;
+          evaluationReason = parsed.reason || '';
         }
       } catch (geminiErr) {
-        // Non-fatal parse issue; gracefully fall back to statutory verification rules
+        // Fallback gracefully to human administrator review if AI service is temporarily unavailable
+        console.warn('Gemini verification analysis notice:', geminiErr.message);
+        geminiVerdict = 'REVIEW';
+        evaluationReason = 'Automated AI service unavailable; routed to administrator review.';
       }
     }
 
     const verificationRecordId = `verif_${callerUid}`;
     const mappedStatus = geminiVerdict === 'VERIFIED' ? 'VERIFIED' : (geminiVerdict === 'REJECTED' ? 'REJECTED' : 'REVIEW');
+    const isPro = String(userSubscription).toUpperCase() === 'PRO';
+    const isAdminUser = userRole === 'admin';
+    const hasProVerifiedBadge = isAdminUser || (isPro && mappedStatus === 'VERIFIED');
 
-    // Archive comprehensive private identity verification record
+    const fullBodyPhotosArray = [fullBody1Path, fullBody2Path, fullBody3Path].filter(Boolean);
+
+    // 6. Archive One-Time Account Verification Record in identityVerifications
     try {
       await adminDb.collection('identityVerifications').doc(callerUid).set({
+        id: verificationRecordId,
+        user_id: callerUid,
         uid: callerUid,
         userId: callerUid,
         verificationRecordId,
-        fullName: fullName || '',
-        dateOfBirth: dateOfBirth || '',
-        ghanaCardPin: normalized,
-        ghanaCardMasked: maskedCard,
-        ghanaCardHash: cardHash,
-        ghanaCardFrontPath: frontPath || '',
-        ghanaCardBackPath: backPath || '',
+        fullName: fullName || decodedToken.name || '',
+        email: email || decodedToken.email || '',
+        phone: phone || '',
+        selfie_storage_path: selfiePath || '',
         selfieStoragePath: selfiePath || '',
+        selfieLeftStoragePath: selfieLeftPath || null,
+        selfieRightStoragePath: selfieRightPath || null,
+        selfieFullStoragePath: resolvedFullPersonPath || null,
+        fullPersonStoragePath: resolvedFullPersonPath || null,
+        fullPersonPath: resolvedFullPersonPath || null,
+        fullBody1StoragePath: fullBody1Path || null,
+        fullBody2StoragePath: fullBody2Path || null,
+        fullBody3StoragePath: fullBody3Path || null,
+        fullBodyPhotos: fullBodyPhotosArray,
         selfiePath: selfiePath || '',
         livenessStatus: livenessStatus || 'COMPLETED',
         livenessChallengeCompletedTimestamp: livenessCompletedAt || new Date().toISOString(),
         livenessMovements: livenessMovements,
+        status: mappedStatus,
         verificationStatus: mappedStatus,
-        verificationMethod: 'ghana_card_plus_live_selfie',
-        verificationSubmissionTimestamp: FieldValue.serverTimestamp(),
-        submittedAt: FieldValue.serverTimestamp(),
-        verifiedAt: geminiVerdict === 'VERIFIED' ? FieldValue.serverTimestamp() : null,
+        verification_method: 'sellerflow_first_party_account_verification',
+        verification_session_id: verificationSessionId,
+        attempt_count: currentAttemptCount + 1,
+        created_at: FieldValue.serverTimestamp(),
+        updated_at: FieldValue.serverTimestamp(),
+        verified_at: mappedStatus === 'VERIFIED' ? FieldValue.serverTimestamp() : null,
+        review_reason: mappedStatus === 'REVIEW' ? (evaluationReason || 'Under administrator review') : null,
+        confidence,
+        ghanaCardPin: normalizedCard || undefined,
+        ghanaCardMasked: maskedCard || undefined,
+        ghanaCardHash: cardHash || undefined,
+        ghanaCardFrontPath: frontPath || undefined,
+        ghanaCardBackPath: backPath || undefined,
         auditMetadata: {
           userAgent: req.headers['user-agent'] || 'unknown',
           ip: req.ip || req.headers['x-forwarded-for'] || 'client',
           confidence,
-          disclaimer: 'Automated verification check performed for platform security. This is not an official NIA (National Identification Authority) verification.'
+          hasFullPersonComparison: !!resolvedFullPersonPath,
+          fullBodyCount: fullBodyPhotosArray.length,
+          disclaimer: 'SellerFlow verification is a platform security and account-verification process. It is not official NIA or government identity verification.'
         }
       }, { merge: true });
     } catch (verifDocErr) {
       console.warn('identityVerifications document storage notice:', verifDocErr.message);
     }
 
-    // Archive in dedicated Security Team buyerKycRecords vault for compliance reference
+    // 7. Archive in dedicated Security Team buyerKycRecords vault for Admin Control Center
     try {
       await adminDb.collection('buyerKycRecords').doc(callerUid).set({
         uid: callerUid,
-        fullName: fullName || '',
-        email: decodedToken.email || '',
-        ghanaCardNumber: normalized,
-        ghanaCardMasked: maskedCard,
-        ghanaCardHash: cardHash,
-        ghanaCardFrontPath: frontPath || '',
-        ghanaCardBackPath: backPath || '',
+        fullName: fullName || decodedToken.name || '',
+        email: email || decodedToken.email || '',
+        phone: phone || '',
         selfiePath: selfiePath || '',
         selfieStoragePath: selfiePath || '',
+        selfieLeftStoragePath: selfieLeftPath || null,
+        selfieRightStoragePath: selfieRightPath || null,
+        selfieFullStoragePath: resolvedFullPersonPath || null,
+        fullPersonStoragePath: resolvedFullPersonPath || null,
+        fullPersonPath: resolvedFullPersonPath || null,
+        fullBody1StoragePath: fullBody1Path || null,
+        fullBody2StoragePath: fullBody2Path || null,
+        fullBody3StoragePath: fullBody3Path || null,
+        fullBodyPhotos: fullBodyPhotosArray,
         livenessStatus: livenessStatus || 'COMPLETED',
-        verificationStatus: geminiVerdict === 'VERIFIED' ? 'approved' : (geminiVerdict === 'REJECTED' ? 'rejected' : 'pending'),
-        verified: geminiVerdict === 'VERIFIED',
+        verificationStatus: mappedStatus === 'VERIFIED' ? 'approved' : (mappedStatus === 'REJECTED' ? 'rejected' : 'pending'),
+        status: mappedStatus,
+        verified: hasProVerifiedBadge,
+        accountVerified: mappedStatus === 'VERIFIED',
         submittedAt: FieldValue.serverTimestamp(),
         lastUpdatedAt: FieldValue.serverTimestamp(),
-        verifiedBy: geminiVerdict === 'VERIFIED' ? 'gemini-3.8-flash' : 'pending_security_team',
-        source: 'sellerflow_identity_and_live_selfie_verification',
-        notes: geminiVerdict === 'VERIFIED' ? 'Identity & Live Selfie verified' : 'Identity verification recorded for Security Team review.'
+        verifiedBy: mappedStatus === 'VERIFIED' ? 'sellerflow_live_presence_ai' : 'pending_admin_review',
+        source: 'sellerflow_first_party_verification',
+        notes: mappedStatus === 'VERIFIED' ? 'SellerFlow Account Verification, Multi-Angle Selfie & 3 Full Body Pictures verified' : 'SellerFlow account verification recorded for administrator review.',
+        ghanaCardNumber: normalizedCard || undefined,
+        ghanaCardMasked: maskedCard || undefined,
+        ghanaCardHash: cardHash || undefined,
+        ghanaCardFrontPath: frontPath || undefined,
+        ghanaCardBackPath: backPath || undefined
       }, { merge: true });
     } catch (vaultErr) {
       console.warn('buyerKycRecords archival notice:', vaultErr.message);
     }
 
-    // 7. Handle Verification Outcomes
-    if (geminiVerdict === 'REJECTED') {
-      await adminDb.collection('users').doc(callerUid).set({
-        ghanaCardMasked: maskedCard,
-        verificationStatus: 'rejected',
-        verified: false,
-        verificationReviewedAt: FieldValue.serverTimestamp()
-      }, { merge: true });
+    // 8. Update Authoritative User Profile & Public Profile
+    const userUpdates = {
+      accountVerificationStatus: mappedStatus,
+      accountVerified: mappedStatus === 'VERIFIED',
+      verificationStatus: mappedStatus === 'VERIFIED' ? 'approved' : mappedStatus.toLowerCase(),
+      verified: hasProVerifiedBadge,
+      selfieStoragePath: selfiePath || '',
+      selfieLeftStoragePath: selfieLeftPath || '',
+      selfieRightStoragePath: selfieRightPath || '',
+      selfieFullStoragePath: resolvedFullPersonPath || '',
+      fullPersonStoragePath: resolvedFullPersonPath || '',
+      fullBody1StoragePath: fullBody1Path || '',
+      fullBody2StoragePath: fullBody2Path || '',
+      fullBody3StoragePath: fullBody3Path || '',
+      fullBodyPhotos: fullBodyPhotosArray,
+      livenessStatus: livenessStatus || 'COMPLETED',
+      verificationAttemptCount: currentAttemptCount + 1,
+      lastVerificationSubmittedAt: FieldValue.serverTimestamp()
+    };
 
-      return res.json({
-        success: false,
-        verdict: 'REJECTED',
-        error: 'Your verification could not be completed. Please review the information and try again.',
-        message: 'Your verification could not be completed. Please review the information and try again.'
-      });
+    if (normalizedCard) {
+      userUpdates.ghanaCardNumber = normalizedCard;
+      userUpdates.ghanaCardMasked = maskedCard;
+      userUpdates.ghanaCardHash = cardHash;
+      userUpdates.ghanaCardFrontPath = frontPath || '';
+      userUpdates.ghanaCardBackPath = backPath || '';
     }
 
-    if (geminiVerdict === 'VERIFIED') {
-      // Authoritative verification approval
-      await adminDb.collection('users').doc(callerUid).set({
-        verified: true,
-        verificationStatus: 'approved',
-        ghanaCardNumber: normalized,
-        ghanaCardMasked: maskedCard,
-        ghanaCardHash: cardHash,
-        ghanaCardFrontPath: frontPath || '',
-        ghanaCardBackPath: backPath || '',
-        selfieStoragePath: selfiePath || '',
-        livenessStatus: 'COMPLETED',
-        verifiedBy: 'gemini-3.8-flash',
-        verificationConfidence: confidence,
-        verificationApprovedAt: FieldValue.serverTimestamp()
-      }, { merge: true });
+    if (mappedStatus === 'VERIFIED') {
+      userUpdates.verifiedAt = FieldValue.serverTimestamp();
+      userUpdates.verifiedBy = 'sellerflow_first_party_ai';
+      userUpdates.verificationConfidence = confidence;
+    }
 
-      await adminDb.collection('publicProfiles').doc(callerUid).set({
-        verified: true
-      }, { merge: true });
+    await Promise.all([
+      adminDb.collection('users').doc(callerUid).set(userUpdates, { merge: true }),
+      adminDb.collection('publicProfiles').doc(callerUid).set({
+        verified: hasProVerifiedBadge,
+        accountVerified: mappedStatus === 'VERIFIED',
+        accountVerificationStatus: mappedStatus
+      }, { merge: true })
+    ]);
 
-      await adminDb.collection('notifications').doc(`verif_appr_${callerUid}`).set({
-        recipientId: callerUid,
-        userId: callerUid,
-        senderName: 'SellerFlow Security & Verification Desk',
-        title: '🎉 Seller Verification Approved',
-        message: 'Your Ghana Card and live selfie verification was completed successfully. Your blue SellerFlow verification badge is now active.',
-        type: 'verification_approved',
-        fromAdmin: true,
-        read: false,
-        createdAt: FieldValue.serverTimestamp()
-      }, { merge: true });
+    // Send notification
+    await adminDb.collection('notifications').doc(`verif_status_${callerUid}`).set({
+      recipientId: callerUid,
+      userId: callerUid,
+      senderName: 'SellerFlow Security & Verification Desk',
+      title: mappedStatus === 'VERIFIED'
+        ? '🎉 SellerFlow Account Verified'
+        : mappedStatus === 'REVIEW'
+        ? 'Verification Under Review'
+        : 'Verification Update',
+      message: mappedStatus === 'VERIFIED'
+        ? 'Your account has completed SellerFlow\'s verification process.'
+        : mappedStatus === 'REVIEW'
+        ? 'SellerFlow verification submitted and under review by SellerFlow administrators.'
+        : 'Verification rejected: Please check that live selfie and account details match requirements.',
+      type: 'account_verification',
+      fromAdmin: true,
+      read: false,
+      createdAt: FieldValue.serverTimestamp()
+    }, { merge: true }).catch(() => {});
 
+    // 9. Deliver Clean Client Response
+    const statutoryNotice = 'SellerFlow verification is a platform security and account-verification process. It is not official NIA or government identity verification.';
+
+    if (mappedStatus === 'VERIFIED') {
       return res.json({
         success: true,
         verdict: 'VERIFIED',
-        maskedCard,
-        message: 'Your identity verification was completed successfully.'
+        status: 'VERIFIED',
+        accountVerified: true,
+        hasVerifiedBadge: hasProVerifiedBadge,
+        message: 'Your account has completed SellerFlow\'s verification process.',
+        notice: statutoryNotice
       });
     }
 
-    // Default to pending review (REVIEW)
-    await adminDb.collection('users').doc(callerUid).set({
-      ghanaCardMasked: maskedCard,
-      ghanaCardHash: cardHash,
-      ghanaCardNumber: normalized,
-      ghanaCardFrontPath: frontPath || '',
-      ghanaCardBackPath: backPath || '',
-      selfieStoragePath: selfiePath || '',
-      livenessStatus: 'COMPLETED',
-      verificationStatus: 'pending',
-      verified: false,
-      needsAdminReview: true,
-      verificationSubmittedAt: FieldValue.serverTimestamp()
-    }, { merge: true });
+    if (mappedStatus === 'REVIEW') {
+      return res.json({
+        success: true,
+        verdict: 'REVIEW',
+        status: 'REVIEW',
+        accountVerified: false,
+        hasVerifiedBadge: false,
+        message: 'SellerFlow verification submitted and under review by SellerFlow administrators.',
+        notice: statutoryNotice
+      });
+    }
 
     return res.json({
-      success: true,
-      verdict: 'REVIEW',
-      maskedCard,
-      message: 'Your verification has been submitted for additional review.'
+      success: false,
+      verdict: 'REJECTED',
+      status: 'REJECTED',
+      accountVerified: false,
+      hasVerifiedBadge: false,
+      error: 'Verification rejected: Please check that live selfie and account details match requirements.',
+      message: 'Verification rejected: Please check that live selfie and account details match requirements.',
+      notice: statutoryNotice
     });
 
-  } catch (err) {
-    console.error('Ghana card verification endpoint error:', err);
+  } catch (error) {
+    console.error('Account verification error in server.js:', error);
     return res.status(500).json({
       success: false,
       verdict: 'REVIEW',
-      error: 'Your verification has been submitted for additional review.'
+      error: 'Server error occurred during verification. Submission recorded for review.',
+      message: 'SellerFlow verification submitted and under review by SellerFlow administrators.'
     });
   }
-});
+};
+
+app.post('/api/verification/verify-ghana-card', handleVerificationRequest);
+app.post('/api/verification/verify-account', handleVerificationRequest);
 
 /**
  * Server-Side Secure Admin Media Viewer for Verification Documents & Selfies
@@ -2415,24 +2497,47 @@ app.post('/api/admin/kyc-action', async (req, res) => {
     }
 
     if (action === 'approve') {
+      let targetUserSubscription = 'FREE';
+      let targetUserRole = 'user';
+      try {
+        const targetUserDoc = await adminDb.collection('users').doc(userId).get();
+        if (targetUserDoc.exists) {
+          const tData = targetUserDoc.data() || {};
+          targetUserSubscription = tData.subscription || tData.plan || 'FREE';
+          targetUserRole = tData.role || 'user';
+        }
+      } catch (_) {}
+
+      const isPro = String(targetUserSubscription).toUpperCase() === 'PRO';
+      const isTargetAdmin = targetUserRole === 'admin';
+      const hasBadge = isTargetAdmin || isPro;
+
       await Promise.all([
         adminDb.collection('users').doc(userId).set({
-          verified: true,
+          accountVerified: true,
+          accountVerificationStatus: 'VERIFIED',
           verificationStatus: 'approved',
+          verified: hasBadge,
           verifiedAt: FieldValue.serverTimestamp(),
           verifiedBy: callerUid
         }, { merge: true }),
         adminDb.collection('publicProfiles').doc(userId).set({
-          verified: true
+          accountVerified: true,
+          accountVerificationStatus: 'VERIFIED',
+          verified: hasBadge
         }, { merge: true }),
         adminDb.collection('buyerKycRecords').doc(userId).set({
-          verified: true,
+          accountVerified: true,
+          verified: hasBadge,
+          status: 'VERIFIED',
           verificationStatus: 'approved',
           verifiedAt: FieldValue.serverTimestamp(),
           verifiedBy: callerUid
         }, { merge: true }),
         adminDb.collection('identityVerifications').doc(userId).set({
+          status: 'VERIFIED',
           verificationStatus: 'VERIFIED',
+          verified_at: FieldValue.serverTimestamp(),
           verifiedAt: FieldValue.serverTimestamp(),
           verifiedBy: callerUid
         }, { merge: true })
@@ -2441,9 +2546,9 @@ app.post('/api/admin/kyc-action', async (req, res) => {
       await adminDb.collection('notifications').add({
         recipientId: userId,
         userId: userId,
-        senderName: 'SellerFlow Security Team',
-        title: '🎉 Ghana Card Verification Approved',
-        message: 'Your Ghana Card identity verification has been officially approved. Your verified merchant badge is now active across SellerFlow.',
+        senderName: 'SellerFlow Security & Verification Desk',
+        title: '🎉 SellerFlow Account Verification Approved',
+        message: 'Your account has completed SellerFlow\'s verification process.' + (hasBadge ? ' Your blue SellerFlow verified badge is now active.' : ''),
         type: 'verification_approved',
         fromAdmin: true,
         read: false,
@@ -2453,33 +2558,41 @@ app.post('/api/admin/kyc-action', async (req, res) => {
       await Promise.all([
         adminDb.collection('users').doc(userId).set({
           verified: false,
+          accountVerified: false,
+          accountVerificationStatus: 'REJECTED',
           verificationStatus: 'rejected',
           rejectionReason: reason || 'Submitted identity details could not be verified.',
-          correctionInstructions: correctionInstructions || 'Please re-submit your official Ghana Card with clear unedited photos.',
+          correctionInstructions: correctionInstructions || 'Please re-submit your verification selfie with a clear front-facing camera capture.',
           verificationReviewedAt: FieldValue.serverTimestamp(),
           reviewedBy: callerUid
         }, { merge: true }),
         adminDb.collection('publicProfiles').doc(userId).set({
-          verified: false
+          verified: false,
+          accountVerified: false,
+          accountVerificationStatus: 'REJECTED'
         }, { merge: true }),
         adminDb.collection('buyerKycRecords').doc(userId).set({
           verified: false,
+          accountVerified: false,
+          status: 'REJECTED',
           verificationStatus: 'rejected',
-          rejectionReason: reason || 'Rejected by Security Team review',
+          rejectionReason: reason || 'Rejected by administrator review',
           lastUpdatedAt: FieldValue.serverTimestamp()
         }, { merge: true }),
         adminDb.collection('identityVerifications').doc(userId).set({
+          status: 'REJECTED',
           verificationStatus: 'REJECTED',
-          rejectionReason: reason || 'Rejected by Security Team review'
+          review_reason: reason || 'Rejected by administrator review',
+          rejectionReason: reason || 'Rejected by administrator review'
         }, { merge: true })
       ]);
 
       await adminDb.collection('notifications').add({
         recipientId: userId,
         userId: userId,
-        senderName: 'SellerFlow Security Team',
-        title: '⚠️ Ghana Card Verification Update',
-        message: `Your Ghana Card verification was not approved: ${reason || 'Details could not be verified'}. ${correctionInstructions ? `Action required: ${correctionInstructions}` : 'Please submit correct details.'}`,
+        senderName: 'SellerFlow Security & Verification Desk',
+        title: '⚠️ SellerFlow Account Verification Update',
+        message: `Your SellerFlow account verification was not approved: ${reason || 'Details could not be verified'}. ${correctionInstructions ? `Action required: ${correctionInstructions}` : 'Please submit a clear live selfie.'}`,
         type: 'verification_rejected',
         fromAdmin: true,
         read: false,
