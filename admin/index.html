@@ -708,8 +708,8 @@
           <section id="tab-moderation" class="admin-tab-pane hidden space-y-4">
             <div class="section-header">
               <div>
-                <h3 class="section-title"><span>🛡️</span> Content Moderation & Restoration Hub</h3>
-                <p class="text-xs text-zinc-400 mt-0.5">Inspect reels, AI safety policy detections (Gemini 3.8 Flash), and automated copyright muting.</p>
+                <h3 class="section-title"><span>🛡️</span> Security Team Desk & For You Moderation</h3>
+                <p class="text-xs text-zinc-400 mt-0.5">Posts go live immediately on the For You feed upon user upload and are queued on this Security Desk for review. If any post violates For You rules, take it down immediately.</p>
               </div>
               <div class="section-actions">
                 <span id="moderationCount" class="text-xs text-zinc-400 font-mono">0 items in queue</span>
@@ -718,7 +718,10 @@
 
             <!-- Sub-tab Pills -->
             <div class="flex items-center gap-2 border-b border-[#262626] pb-3 overflow-x-auto">
-              <button type="button" data-mod-filter="all" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#f5b942] text-black">
+              <button type="button" data-mod-filter="security_desk" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#f5b942] text-black flex items-center gap-1.5">
+                <span>🛡️</span> Security Desk (Live on For You)
+              </button>
+              <button type="button" data-mod-filter="all" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e1e1e] text-zinc-300 hover:bg-[#262626]">
                 All Posts
               </button>
               <button type="button" data-mod-filter="pending" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e1e1e] text-zinc-300 hover:bg-[#262626]">
@@ -731,7 +734,7 @@
                 Copyright Muted 🔇
               </button>
               <button type="button" data-mod-filter="taken_down" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e1e1e] text-zinc-300 hover:bg-[#262626]">
-                Taken Down / Archived
+                Taken Down / Removed 🚫
               </button>
             </div>
 
@@ -1256,9 +1259,12 @@
             </div>
           </div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer flex items-center justify-between gap-2">
           <button type="button" class="btn btn-secondary btn-sm" onclick="closePostModal()">Close</button>
-          <button type="button" id="postModalActionBtn" class="btn btn-danger btn-sm">Take Down Post</button>
+          <div class="flex items-center gap-2">
+            <button type="button" id="postModalApproveBtn" class="btn btn-success btn-sm font-bold">Approve / Keep Live ✓</button>
+            <button type="button" id="postModalActionBtn" class="btn btn-danger btn-sm font-bold">Take Down Post</button>
+          </div>
         </div>
       </div>
     </div>

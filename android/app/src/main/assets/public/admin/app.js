@@ -1355,16 +1355,21 @@ window.handleProductRestore = function(productId) {
   });
 };
 
-// 12. TAB 5: CONTENT MODERATION (POSTS & MEDIA)
-let currentModFilter = 'all';
+// 12. TAB 5: CONTENT MODERATION (POSTS & MEDIA) - SECURITY TEAM DESK
+let currentModFilter = 'security_desk';
 
 function renderModerationPosts() {
   const container = document.getElementById('moderationPostsContainer');
   if (!container) return;
 
   const filtered = state.data.posts.filter(p => {
+    if (currentModFilter === 'security_desk') {
+      return (p.status === 'published' || p.liveOnForYou) &&
+        p.status !== 'taken_down' && p.status !== 'removed' && !p.isDeleted &&
+        (p.reviewStatus === 'pending_security_review' || p.submittedToSecurityDeskAt || p.liveOnForYou || (p.status === 'published' && p.reviewStatus !== 'approved' && p.reviewStatus !== 'reviewed'));
+    }
     if (currentModFilter === 'pending') {
-      return p.reviewStatus === 'under_review' || p.reviewStatus === 'pending' || p.status === 'pending';
+      return p.reviewStatus === 'under_review' || p.reviewStatus === 'pending' || p.status === 'pending' || p.reviewStatus === 'pending_security_review';
     }
     if (currentModFilter === 'ai_flagged') {
       return p.violationDetected || p.reviewStatus === 'violation' || p.needsAdminReview;
@@ -1379,7 +1384,13 @@ function renderModerationPosts() {
   });
 
   const countEl = document.getElementById('moderationCount');
-  if (countEl) countEl.textContent = `${filtered.length} posts displayed`;
+  if (countEl) {
+    if (currentModFilter === 'security_desk') {
+      countEl.textContent = `${filtered.length} live posts on Security Desk`;
+    } else {
+      countEl.textContent = `${filtered.length} posts displayed`;
+    }
+  }
 
   if (!filtered.length) {
     container.innerHTML = '<div class="col-span-full text-center py-12 text-zinc-500">No posts in this moderation view</div>';
@@ -1390,22 +1401,36 @@ function renderModerationPosts() {
     const isTakenDown = p.status === 'taken_down' || p.status === 'hidden';
     const isAiFlag = p.violationDetected || p.reviewStatus === 'violation';
     const isCopyright = p.audioMutedByCopyright || p.copyrightDetected;
+    const isPendingSecurityReview = p.reviewStatus === 'pending_security_review' || p.submittedToSecurityDeskAt || p.liveOnForYou;
+    const isLiveOnForYou = (p.status === 'published' || p.liveOnForYou) && !isTakenDown;
 
     return `
-      <div class="bg-[#141414] border border-[#262626] rounded-xl overflow-hidden flex flex-col justify-between">
+      <div class="bg-[#141414] border border-[#262626] rounded-xl overflow-hidden flex flex-col justify-between shadow-md">
         <div class="p-4 space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="badge ${isTakenDown ? 'badge-danger' : isAiFlag ? 'badge-warning' : 'badge-success'}">
-              ${escapeHtml(p.status || 'published')}
-            </span>
-            <span class="text-[11px] text-zinc-400">${formatDate(p.createdAt)}</span>
+          <div class="flex items-center justify-between flex-wrap gap-1">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="badge ${isTakenDown ? 'badge-danger' : isLiveOnForYou ? 'badge-success' : isAiFlag ? 'badge-warning' : 'badge-neutral'}">
+                ${isTakenDown ? '🚫 Taken Down' : isLiveOnForYou ? '🟢 Live on For You' : escapeHtml(p.status || 'published')}
+              </span>
+              ${isPendingSecurityReview && !isTakenDown ? `
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                  <span>🛡️</span> Desk Review
+                </span>
+              ` : ''}
+              ${p.reviewStatus === 'approved' ? `
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  ✓ Approved
+                </span>
+              ` : ''}
+            </div>
+            <span class="text-[11px] text-zinc-400 font-mono">${formatDate(p.createdAt)}</span>
           </div>
 
           <!-- Media preview thumbnail -->
           <div class="aspect-video bg-black rounded-lg overflow-hidden flex items-center justify-center relative border border-[#222]">
             ${p.mediaUrl ? (
               p.mediaType === 'video' || (p.mediaUrl || '').endsWith('.mp4') ? `
-                <video src="${escapeHtml(p.mediaUrl)}" class="w-full h-full object-cover" muted></video>
+                <video src="${escapeHtml(p.mediaUrl)}" class="w-full h-full object-cover" muted playsinline></video>
                 <div class="absolute inset-0 flex items-center justify-center bg-black/40">
                   <span class="text-2xl">▶️</span>
                 </div>
@@ -1419,19 +1444,36 @@ function renderModerationPosts() {
                 <span>🔇</span> Audio Muted
               </div>
             ` : ''}
+            ${p.mediaType === 'video' ? `
+              <div class="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/80 text-[10px] text-zinc-300 font-bold flex items-center gap-1">
+                <span>📹</span> Video
+              </div>
+            ` : p.mediaUrl ? `
+              <div class="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/80 text-[10px] text-zinc-300 font-bold flex items-center gap-1">
+                <span>🖼️</span> Picture
+              </div>
+            ` : ''}
           </div>
 
-          <!-- Caption -->
-          <p class="text-xs text-zinc-200 line-clamp-2">${escapeHtml(p.text || 'No caption')}</p>
+          <!-- Creator & Caption -->
+          <div>
+            <div class="text-[11px] font-bold text-gold truncate">${escapeHtml(p.sellerName || p.sellerUsername || 'Creator')} (${escapeHtml(p.sellerId || '—')})</div>
+            <p class="text-xs text-zinc-200 line-clamp-2 mt-0.5">${escapeHtml(p.text || 'No caption')}</p>
+          </div>
 
-          <!-- AI Finding Notice -->
-          ${isAiFlag ? `
+          <!-- AI Finding Notice / For You Rules evaluation -->
+          ${isAiFlag || p.violationReason ? `
             <div class="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-[11px] space-y-1">
               <div class="font-bold text-rose-400 flex items-center justify-between">
-                <span>⚠️ Gemini 3.8 Flash Flag</span>
+                <span>⚠️ Gemini 3.8 Flash Rule Flag</span>
                 <span class="font-mono">${Math.round((p.violationConfidence || 0.9) * 100)}% Conf.</span>
               </div>
               <p class="text-zinc-300 text-[11px]">${escapeHtml(p.violationReason || p.violationRule || 'Policy safety threshold exceeded')}</p>
+            </div>
+          ` : isPendingSecurityReview && !isTakenDown ? `
+            <div class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] flex items-center justify-between">
+              <span class="text-amber-300 font-medium">Live on For You Feed</span>
+              <span class="text-[10px] text-zinc-400">Awaiting Desk Review</span>
             </div>
           ` : ''}
 
@@ -1444,18 +1486,49 @@ function renderModerationPosts() {
         </div>
 
         <div class="p-3 bg-[#111] border-t border-[#262626] flex items-center justify-between gap-2">
-          <button onclick="inspectPostDetails('${p.id}')" class="btn btn-secondary btn-sm flex-1">Inspect</button>
+          <button onclick="inspectPostDetails('${p.id}')" class="btn btn-secondary btn-sm">Inspect</button>
           ${isTakenDown ? `
-            <button onclick="handlePostRestore('${p.id}')" class="btn btn-success btn-sm flex-1">Restore</button>
-            <button onclick="handlePostPermanentDelete('${p.id}')" class="btn btn-danger btn-sm px-2" title="Permanently Delete">🗑️</button>
+            <button onclick="handlePostRestore('${p.id}')" class="btn btn-success btn-sm flex-1 font-bold">Restore</button>
+            <button onclick="handlePostPermanentDelete('${p.id}')" class="btn btn-danger btn-sm px-2 font-bold" title="Permanently Delete">🗑️</button>
           ` : `
-            <button onclick="handlePostTakedown('${p.id}')" class="btn btn-danger btn-sm flex-1">Take Down</button>
+            <button onclick="handlePostApprove('${p.id}')" class="btn btn-success btn-sm flex-1 font-bold" title="Confirm post complies with rules and keep live">Keep Live ✓</button>
+            <button onclick="handlePostTakedown('${p.id}')" class="btn btn-danger btn-sm flex-1 font-bold" title="Take down immediately if it violates For You rules">Take Down 🛑</button>
           `}
         </div>
       </div>
     `;
   }).join('');
 }
+
+window.handlePostApprove = async function(postId) {
+  try {
+    const post = state.data.posts.find(p => p.id === postId);
+    await db.collection('posts').doc(postId).set({
+      reviewStatus: 'approved',
+      status: 'published',
+      safeContent: true,
+      liveOnForYou: true,
+      approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      reviewedBy: state.currentUser?.email || 'security_officer',
+      reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    await db.collection('adminReviews').add({
+      action: 'approve',
+      targetType: 'post',
+      targetId: postId,
+      postSnapshot: post || null,
+      adminEmail: state.currentUser?.email || 'security_officer',
+      adminUid: state.currentUser?.uid || '',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    showToast('Post approved: Verified to comply with For You rules and kept live', 'success');
+    await fetchAdminData();
+  } catch (err) {
+    showToast(`Failed: ${err.message}`, 'error');
+  }
+};
 
 window.inspectPostDetails = function(postId) {
   const post = state.data.posts.find(p => p.id === postId);
@@ -1469,6 +1542,7 @@ window.inspectPostDetails = function(postId) {
   const aiWrap = document.getElementById('postModalAiWrap');
   const aiFinding = document.getElementById('postModalAiFinding');
   const actionBtn = document.getElementById('postModalActionBtn');
+  const approveBtn = document.getElementById('postModalApproveBtn');
 
   if (textEl) textEl.textContent = post.text || 'No caption';
   if (sellerIdEl) sellerIdEl.textContent = post.sellerId || '—';
@@ -1494,10 +1568,23 @@ window.inspectPostDetails = function(postId) {
     }
   }
 
+  const isTakenDown = post.status === 'taken_down' || post.status === 'hidden';
+
+  if (approveBtn) {
+    if (isTakenDown) {
+      approveBtn.classList.add('hidden');
+    } else {
+      approveBtn.classList.remove('hidden');
+      approveBtn.onclick = () => {
+        closePostModal();
+        handlePostApprove(post.id);
+      };
+    }
+  }
+
   if (actionBtn) {
-    const isTakenDown = post.status === 'taken_down' || post.status === 'hidden';
-    actionBtn.className = `btn ${isTakenDown ? 'btn-success' : 'btn-danger'} btn-sm`;
-    actionBtn.textContent = isTakenDown ? 'Restore Post' : 'Take Down Post';
+    actionBtn.className = `btn ${isTakenDown ? 'btn-success' : 'btn-danger'} btn-sm font-bold`;
+    actionBtn.textContent = isTakenDown ? 'Restore Post' : 'Take Down Immediately';
     actionBtn.onclick = () => {
       closePostModal();
       if (isTakenDown) handlePostRestore(post.id);
@@ -1512,18 +1599,37 @@ window.handlePostTakedown = function(postId) {
   openConfirmModal({
     action: 'takedown',
     title: `Take Down Post: ${postId}`,
-    prompt: 'Removing this post will immediately hide it from all user feeds and save an immutable copy in the Security archive.',
+    prompt: 'Taking this post down will immediately remove it from the live For You feed and user discovery if it violates For You rules, and log an audit ticket.',
     destructive: true,
-    btnText: 'Confirm Removal',
+    btnText: 'Take Down Immediately',
     onExecute: async (reason) => {
       try {
         const post = state.data.posts.find(p => p.id === postId);
 
+        // Call authoritative server-side takedown endpoint
+        try {
+          const token = state.currentUser ? await state.currentUser.getIdToken() : '';
+          await fetch('/api/admin/takedown', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({ type: 'post', id: postId, reason: reason || 'Violation of For You content safety rules' })
+          });
+        } catch (apiErr) {
+          console.warn('Server takedown API notice:', apiErr);
+        }
+
         await db.collection('posts').doc(postId).set({
           status: 'taken_down',
           reviewStatus: 'removed',
-          takedownReason: reason || 'Content policy violation',
+          safeContent: false,
+          hidden: true,
+          liveOnForYou: false,
+          takedownReason: reason || 'Violation of For You content safety rules',
           removedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          removedBy: state.currentUser?.email || 'security_officer',
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
@@ -1531,14 +1637,14 @@ window.handlePostTakedown = function(postId) {
           action: 'takedown',
           targetType: 'post',
           targetId: postId,
-          reason: reason || 'Policy violation removal',
+          reason: reason || 'Violation of For You content safety rules',
           postSnapshot: post || null,
-          adminEmail: state.currentUser?.email || 'admin',
+          adminEmail: state.currentUser?.email || 'security_officer',
           adminUid: state.currentUser?.uid || '',
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        showToast('Post taken down and logged to security archive', 'success');
+        showToast('Post taken down immediately from For You feed', 'success');
         closeConfirmModal();
         await fetchAdminData();
       } catch (err) {
