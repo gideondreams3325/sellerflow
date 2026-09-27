@@ -1467,48 +1467,53 @@ window.__sfBackendUrl = (typeof getAppUrl === 'function') ? getAppUrl() : 'https
 async function handleCapacitorGoogleSignIn() {
   loading('Connecting with Google…');
   try {
-    const NativeAuth = window.Capacitor?.Plugins?.NativeGoogleAuth || (window.Capacitor?.registerPlugin ? window.Capacitor.registerPlugin('NativeGoogleAuth') : null);
-    if (!NativeAuth) {
-      throw new Error('Native Google Authentication plugin not available on this device');
+    const isAvailable = (typeof window.Capacitor !== 'undefined' && typeof window.Capacitor.isPluginAvailable === 'function')
+      ? window.Capacitor.isPluginAvailable('NativeGoogleAuth')
+      : false;
+
+    const NativeAuth = window.Capacitor?.Plugins?.NativeGoogleAuth || (isAvailable && window.Capacitor?.registerPlugin ? window.Capacitor.registerPlugin('NativeGoogleAuth') : null);
+
+    if (NativeAuth && isAvailable) {
+      const serverClientId = '987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com';
+      const authResult = await NativeAuth.signIn({ serverClientId });
+
+      if (authResult && authResult.idToken) {
+        // Convert native Google ID token to Firebase GoogleAuthProvider credential
+        const credential = firebase.auth.GoogleAuthProvider.credential(authResult.idToken);
+        
+        // Sign into Firebase Auth - preserves existing UID, profile and data
+        const userCredential = await auth.signInWithCredential(credential);
+        const user = userCredential.user;
+
+        console.log('Native Android Google Sign-In succeeded for user:', user.uid);
+        ready();
+        
+        // Smooth transition to app shell
+        if (typeof hide === 'function' && $('authPage')) {
+          hide($('authPage'));
+        }
+        if (typeof showApp === 'function') {
+          showApp();
+        }
+        if (typeof navigate === 'function') {
+          await navigate('feed');
+        }
+        return user;
+      }
     }
 
-    const serverClientId = '987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com';
-    const authResult = await NativeAuth.signIn({ serverClientId });
-
-    if (!authResult || !authResult.idToken) {
-      throw new Error('No identity token received from Google Sign-In');
-    }
-
-    // Convert native Google ID token to Firebase GoogleAuthProvider credential
-    const credential = firebase.auth.GoogleAuthProvider.credential(authResult.idToken);
-    
-    // Sign into Firebase Auth - preserves existing UID, profile and data
-    const userCredential = await auth.signInWithCredential(credential);
-    const user = userCredential.user;
-
-    console.log('Native Android Google Sign-In succeeded for user:', user.uid);
     ready();
-    
-    // Smooth transition to app shell
-    if (typeof hide === 'function' && $('authPage')) {
-      hide($('authPage'));
-    }
-    if (typeof showApp === 'function') {
-      showApp();
-    }
-    if (typeof navigate === 'function') {
-      await navigate('feed');
-    }
-    return user;
+    toast('Please sign in or create your account using your email and password.', 'info', 4500);
+    return null;
   } catch (err) {
     ready();
     if (err?.code === 'USER_CANCELLED' || err?.message?.includes('cancelled')) {
       console.log('User dismissed Google account chooser');
       return null;
     }
-    console.error('Native Google Sign-In error:', err);
-    toast(err.message || 'Google Sign-In failed', 'error');
-    throw err;
+    console.warn('Native Google Sign-In notice:', err?.message || err);
+    toast(err?.message || 'Please sign in with email and password.', 'info', 4500);
+    return null;
   }
 }
 
@@ -20983,7 +20988,10 @@ async function logoutUser(){
       await removeCurrentDevicePushToken().catch(() => {});
     }
     if (typeof isCapacitorNative === 'function' && isCapacitorNative()) {
-      const NativeAuth = window.Capacitor?.Plugins?.NativeGoogleAuth || (window.Capacitor?.registerPlugin ? window.Capacitor.registerPlugin('NativeGoogleAuth') : null);
+      const isAvailable = (typeof window.Capacitor !== 'undefined' && typeof window.Capacitor.isPluginAvailable === 'function')
+        ? window.Capacitor.isPluginAvailable('NativeGoogleAuth')
+        : false;
+      const NativeAuth = window.Capacitor?.Plugins?.NativeGoogleAuth || (isAvailable && window.Capacitor?.registerPlugin ? window.Capacitor.registerPlugin('NativeGoogleAuth') : null);
       if (NativeAuth && typeof NativeAuth.signOut === 'function') {
         await NativeAuth.signOut().catch(() => {});
       }
