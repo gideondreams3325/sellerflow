@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="referrer" content="no-referrer">
 <script>
-// Early Theme Loader to prevent flashes of dark background in light mode
+// Early Theme Loader: White + Gold is the default and standard interface of SellerFlow
 (function() {
   const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'light') {
-    document.documentElement.classList.add('light-theme');
-  } else {
+  if (savedTheme === 'dark') {
     document.documentElement.classList.remove('light-theme');
+  } else {
+    document.documentElement.classList.add('light-theme');
   }
 })();
 
@@ -51,16 +51,16 @@
 </script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="SellerFlow">
-<meta name="theme-color" content="#080808">
+<meta name="theme-color" content="#FFFFFF">
 <meta name="application-name" content="SellerFlow">
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="alternate icon" type="image/png" href="/pwa-192x192.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="format-detection" content="telephone=no">
-<meta name="msapplication-TileColor" content="#080808">
+<meta name="msapplication-TileColor" content="#FFFFFF">
 <meta name="msapplication-tap-highlight" content="no">
 <title>SellerFlow</title>
 <meta name="description" content="Ghana's social selling marketplace where sellers build stores, publish products, share video/photo content, and manage orders.">
@@ -85,7 +85,7 @@
 <script src="capacitor.js"></script>
 <script src="/translations.js"></script>
 <script src="/jobs-events.js?v=2.1.0"></script>
-<script>tailwind.config={theme:{extend:{colors:{gold:'#f5b942'}}}}</script>
+<script>tailwind.config={theme:{extend:{colors:{gold:'#D4AF37',goldbright:'#F5B942',golddark:'#A67C00'}}}}</script>
 <style>
 :root {
   --sf-font-fallback: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, system-ui, "Noto Sans", "Noto Sans Arabic", "Noto Sans Devanagari", "Noto Sans Hebrew", "Noto Sans SC", "Noto Sans TC", "Noto Sans JP", "Noto Sans KR", "Noto Sans Thai", "Noto Sans Bengali", "Noto Sans Tamil", "Noto Sans Telugu", "Noto Sans Malayalam", "Noto Sans Kannada", "Noto Sans Gujarati", "Noto Sans Gurmukhi", "Noto Sans Sinhala", "Noto Sans Myanmar", "Noto Sans Khmer", "Noto Sans Lao", "Noto Sans Ethiopic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
@@ -258,12 +258,13 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 @keyframes sfReelActionsSlideIn{0%{opacity:0;transform:translateX(14px)}100%{opacity:1;transform:translateX(0)}}
 .reel-actions::-webkit-scrollbar{display:none}
 .reel-action-group{display:flex;flex-direction:column;align-items:center;gap:3px}
-.reel-action{width:46px;height:46px;border-radius:50%;background:rgba(18,18,22,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.16);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:transform .16s cubic-bezier(0.16,1,0.3,1),background .16s ease,border-color .16s ease,box-shadow .16s ease;cursor:pointer;padding:0;line-height:1}
-.reel-action:hover{border-color:rgba(245,185,66,.6);background:rgba(28,28,34,.88);transform:scale(1.08);box-shadow:0 6px 20px rgba(0,0,0,.65)}
+.reel-action{width:46px;height:46px;border-radius:50%;background:rgba(18,18,24,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.22);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.55);transition:transform .16s cubic-bezier(0.16,1,0.3,1),background .16s ease,border-color .16s ease,box-shadow .16s ease;cursor:pointer;padding:0;line-height:1}
+.reel-action:hover{border-color:rgba(245,185,66,.8);background:rgba(28,28,36,.92);transform:scale(1.08);box-shadow:0 6px 20px rgba(0,0,0,.65)}
 .reel-action:active{transform:scale(.92)}
 .reel-action.is-liked{background:rgba(239,68,68,.3);border-color:#ef4444;box-shadow:0 0 18px rgba(239,68,68,.5)}
 .reel-action.is-saved{background:rgba(245,185,66,.3);border-color:#f5b942;box-shadow:0 0 18px rgba(245,185,66,.5)}
-.reel-action>div,.reel-action-count{font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:750;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.9);line-height:1;margin-top:2px;letter-spacing:-.01em}
+.reel-action svg{filter:drop-shadow(0 2px 4px rgba(0,0,0,0.85))}
+.reel-action>div,.reel-action-count{font-family:'Plus Jakarta Sans',sans-serif;font-size:10.5px;font-weight:800;color:#fff!important;text-shadow:0 1px 4px rgba(0,0,0,.95),0 0 2px rgba(0,0,0,.9)!important;line-height:1;margin-top:2px;letter-spacing:-.01em;background:rgba(0,0,0,0.45);padding:1.5px 6px;border-radius:8px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 
 .reel-creator-stack{position:relative;display:flex;flex-direction:column;align-items:center;margin-bottom:6px}
 .reel-avatar-btn{width:48px;height:48px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#f5b942,rgba(255,255,255,.8));box-shadow:0 4px 14px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;transition:transform .15s;cursor:pointer}
@@ -551,11 +552,11 @@ input, textarea, select { color: #ffffff !important; }
 #brandBtn:active{transform:scale(.97)}
 .gold-gradient{background:linear-gradient(135deg,#FFF066 0%,#FFC700 45%,#F59E0B 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
-#mobileMenu,#pageSelectorBtn{width:36px;height:36px;min-width:36px;border-radius:11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#e4e4e7;display:inline-flex;align-items:center;justify-content:center;font-size:14px;padding:0;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:all .16s ease}
+#mobileMenu,#pageSelectorBtn{width:42px;height:42px;min-width:42px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#e4e4e7;display:inline-flex;align-items:center;justify-content:center;font-size:15px;padding:0;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:all .16s ease;cursor:pointer}
 @media(max-width:480px){
-  #mobileMenu,#pageSelectorBtn{width:32px;height:32px;min-width:32px;font-size:13px;border-radius:9px}
+  #mobileMenu,#pageSelectorBtn{width:40px;height:40px;min-width:40px;font-size:14px;border-radius:11px}
   #brandBtn{font-size:1.15rem!important}
-  #brandBtn img{width:28px!important;height:28px!important}
+  #brandBtn img{width:32px!important;height:32px!important}
 }
 #mobileMenu:hover,#pageSelectorBtn:hover{background:rgba(255,255,255,.1);border-color:rgba(245,185,66,.4);color:#f5b942}
 #mobileMenu:active,#pageSelectorBtn:active{transform:scale(.94)}
@@ -591,10 +592,11 @@ input, textarea, select { color: #ffffff !important; }
 #openFeedUpload:hover,#openFeedUploadEmpty:hover{filter:brightness(1.08)!important;box-shadow:0 4px 16px rgba(245,185,66,.45),inset 0 1px 0 rgba(255,255,255,.55)!important;transform:translateY(-.5px)}
 #openFeedUpload:active,#openFeedUploadEmpty:active{transform:scale(.95)}
 
-.sf-drawer-backdrop{position:fixed!important;inset:0!important;background:rgba(0,0,0,0.75)!important;backdrop-filter:blur(8px)!important;-webkit-backdrop-filter:blur(8px)!important;z-index:998!important;opacity:1!important;visibility:visible!important;transition:opacity .28s cubic-bezier(0.16,1,0.3,1),visibility .28s cubic-bezier(0.16,1,0.3,1)!important}
+.sf-drawer-backdrop{position:fixed!important;top:0!important;left:0!important;right:0!important;bottom:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;background:rgba(0,0,0,0.65)!important;backdrop-filter:blur(6px)!important;-webkit-backdrop-filter:blur(6px)!important;z-index:9998!important;opacity:1!important;visibility:visible!important;transition:opacity .25s ease,visibility .25s ease!important}
 .sf-drawer-backdrop.hide{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
-#mobileNav{position:fixed!important;top:0!important;left:0!important;bottom:0!important;width:310px!important;max-width:86vw!important;height:100vh!important;height:100dvh!important;background:#0d0d14!important;border-right:1px solid rgba(255,255,255,0.12)!important;box-shadow:15px 0 50px rgba(0,0,0,0.85)!important;z-index:999!important;display:flex!important;flex-direction:column!important;justify-content:space-between!important;overflow-y:auto!important;overflow-x:hidden!important;padding:0!important;transform:translateX(0)!important;transition:transform .32s cubic-bezier(0.16,1,0.3,1),opacity .2s ease!important;opacity:1!important}
+#mobileNav{position:fixed!important;top:0!important;left:0!important;bottom:0!important;width:320px!important;max-width:88vw!important;height:100vh!important;height:100dvh!important;background:#FFFFFF!important;background-color:#FFFFFF!important;border-right:1px solid #E6E6E6!important;box-shadow:16px 0 48px rgba(0,0,0,0.2)!important;z-index:9999!important;display:flex!important;flex-direction:column!important;justify-content:space-between!important;overflow-y:auto!important;overflow-x:hidden!important;padding:0!important;transform:translateX(0)!important;transition:transform .28s cubic-bezier(0.16,1,0.3,1),opacity .2s ease!important;opacity:1!important}
 #mobileNav.hide{transform:translateX(-100%)!important;opacity:0!important;pointer-events:none!important}
+body.sf-drawer-open{overflow:hidden!important}
 
 .btn{font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:650;letter-spacing:-.01em;border-radius:12px;transition:all .16s cubic-bezier(0.16,1,0.3,1);cursor:pointer;user-select:none}
 .btn:active{transform:scale(.97)}
@@ -800,67 +802,343 @@ body[data-device-type="tablet"] {
   .receipt-no-print{display:none!important}
 }
 
-/* COMPREHENSIVE MODERN LIGHT & DARK THEME ENGINE */
+/* ==========================================================================
+   SELLERFLOW PREMIUM WHITE + GOLD BRAND THEME ENGINE
+   Primary Background: #FFFFFF | Primary Gold: #D4AF37 | CTA Gold: #F5B942 | Dark Gold: #A67C00
+   Primary Text: #111111 | Secondary Text: #666666 | Light Backgrounds: #F8F8F8 | Borders: #E6E6E6
+   ========================================================================== */
 html.light-theme {
-  --bg-primary: #f8fafc;
-  --bg-secondary: #ffffff;
-  --border-color: #e2e8f0;
-  --text-primary: #0f172a;
-  --text-muted: #64748b;
-  --gold-accent: #d97706;
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F8F8F8;
+  --border-color: #E6E6E6;
+  --text-primary: #111111;
+  --text-muted: #666666;
+  --gold-primary: #D4AF37;
+  --gold-bright: #F5B942;
+  --gold-dark: #A67C00;
 }
 html.light-theme body {
-  background: #f8fafc !important;
-  color: #0f172a !important;
+  background: #FFFFFF !important;
+  color: #111111 !important;
 }
-html.light-theme header {
-  background: rgba(255, 255, 255, 0.96) !important;
+html.light-theme header,
+html.light-theme #appHeader {
+  background: #FFFFFF !important;
   backdrop-filter: blur(16px) !important;
   -webkit-backdrop-filter: blur(16px) !important;
-  border-color: #e2e8f0 !important;
+  border-color: #E6E6E6 !important;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04) !important;
 }
 html.light-theme .card,
 html.light-theme .modal-card,
 html.light-theme #authPage > .card {
-  background: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  color: #0f172a !important;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 8px -1px rgba(15, 23, 42, 0.03) !important;
+  background: #FFFFFF !important;
+  border-color: #E6E6E6 !important;
+  color: #111111 !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 8px -1px rgba(0, 0, 0, 0.03) !important;
 }
 html.light-theme .muted,
 html.light-theme .text-zinc-500,
-html.light-theme .text-zinc-400 {
-  color: #64748b !important;
+html.light-theme .text-zinc-400,
+html.light-theme .text-zinc-600 {
+  color: #666666 !important;
 }
 html.light-theme .text-zinc-300,
-html.light-theme .text-zinc-200 {
-  color: #334155 !important;
+html.light-theme .text-zinc-200,
+html.light-theme .text-zinc-100 {
+  color: #222222 !important;
 }
-html.light-theme .text-white {
-  color: #0f172a !important;
+
+/* Light surfaces: ensure text on white background is dark */
+html.light-theme .card h1,
+html.light-theme .card h2,
+html.light-theme .card h3,
+html.light-theme .card h4,
+html.light-theme .card b,
+html.light-theme .card strong,
+html.light-theme .modal-card h1,
+html.light-theme .modal-card h2,
+html.light-theme .modal-card h3,
+html.light-theme .modal-card b,
+html.light-theme #authPage h1,
+html.light-theme #authPage h2,
+html.light-theme #authPage p#authTitle,
+html.light-theme .card .text-white:not(.btn-dark):not(.sf-btn-dark):not(#authPromptLogin):not(#mobileSignInBtn):not(button.bg-black):not(button.bg-zinc-900):not(button.bg-rose-600):not(button.bg-red-600),
+html.light-theme .modal-card .text-white:not(.btn-dark):not(.sf-btn-dark):not(#authPromptLogin):not(#mobileSignInBtn):not(button.bg-black):not(button.bg-zinc-900):not(button.bg-rose-600):not(button.bg-red-600),
+html.light-theme #authPage .text-white:not(.btn-dark):not(.sf-btn-dark):not(#authPromptLogin):not(#mobileSignInBtn):not(button.bg-black):not(button.bg-zinc-900):not(button.bg-rose-600):not(button.bg-red-600) {
+  color: #111111 !important;
 }
-html.light-theme .bg-[#080808],
-html.light-theme .bg-[#0c0c0c],
-html.light-theme .bg-black {
-  background-color: #f8fafc !important;
+html.light-theme #brandBtn .text-white {
+  color: #111111 !important;
 }
-html.light-theme .bg-[#121212],
-html.light-theme .bg-[#141414],
-html.light-theme .bg-[#151515],
-html.light-theme .bg-[#161616],
-html.light-theme .bg-[#181818],
-html.light-theme .bg-[#191919],
-html.light-theme .bg-[#1a1a1a],
-html.light-theme .bg-[#1b1b1b],
-html.light-theme .bg-[#121215],
-html.light-theme .bg-[#141418],
-html.light-theme .bg-[#16161d],
-html.light-theme .bg-[#181822],
-html.light-theme .bg-[#1a1a24],
-html.light-theme .bg-zinc-900,
-html.light-theme .bg-zinc-800 {
-  background-color: #f1f5f9 !important;
+
+/* ==========================================================================
+   CRITICAL CONTRAST RULES:
+   1. Video overlay elements ALWAYS have pure white text (#FFFFFF)
+   2. Dark buttons (.btn-dark, .sf-btn-dark, #mobileSignInBtn, #authPromptLogin)
+      ALWAYS have #171717 background and #FFFFFF text in all themes.
+   ========================================================================== */
+html.light-theme .reel-card,
+html.light-theme .reel-card *,
+html.light-theme .reel-actions,
+html.light-theme .reel-actions *,
+html.light-theme .reel-action-count,
+html.light-theme .reel-content,
+html.light-theme .reel-content *,
+html.light-theme .reel-media-wrap,
+html.light-theme .reel-media-wrap *,
+html.light-theme .reel-sound-label,
+html.light-theme .reel-play-toggle,
+html.light-theme .feed-floating-btn,
+html.light-theme .feed-floating-btn *,
+html.light-theme .island-toast,
+html.light-theme .island-toast * {
+  color: #FFFFFF !important;
+}
+
+/* Secondary dark button: background #171717, text #FFFFFF (pure contrast) */
+.btn-dark,
+.sf-btn-dark,
+#mobileSignInBtn,
+#authPromptLogin,
+html.light-theme .btn-dark,
+html.light-theme .sf-btn-dark,
+html.light-theme #mobileSignInBtn,
+html.light-theme #authPromptLogin,
+html.light-theme button.sf-btn-dark,
+html.light-theme button.btn-dark,
+html.light-theme .modal-card #authPromptLogin,
+html.light-theme .modal-card .btn-dark,
+html.light-theme .modal-card .sf-btn-dark,
+html.light-theme #mobileNav #mobileSignInBtn {
+  background-color: #171717 !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  border: 1px solid #333333 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+}
+.btn-dark *,
+.sf-btn-dark *,
+#mobileSignInBtn *,
+#authPromptLogin *,
+html.light-theme .btn-dark *,
+html.light-theme .sf-btn-dark *,
+html.light-theme #mobileSignInBtn *,
+html.light-theme #authPromptLogin *,
+html.light-theme button.sf-btn-dark *,
+html.light-theme button.btn-dark *,
+html.light-theme .modal-card #authPromptLogin *,
+html.light-theme .modal-card .btn-dark *,
+html.light-theme .modal-card .sf-btn-dark *,
+html.light-theme #mobileNav #mobileSignInBtn * {
+  color: #FFFFFF !important;
+}
+.btn-dark:hover,
+.sf-btn-dark:hover,
+#mobileSignInBtn:hover,
+#authPromptLogin:hover,
+html.light-theme .btn-dark:hover,
+html.light-theme .sf-btn-dark:hover,
+html.light-theme #mobileSignInBtn:hover,
+html.light-theme #authPromptLogin:hover {
+  background-color: #262626 !important;
+  color: #FFFFFF !important;
+}
+
+/* Danger buttons: red background with white text */
+html.light-theme button.bg-rose-600,
+html.light-theme button.bg-rose-600 *,
+html.light-theme button.bg-red-600,
+html.light-theme button.bg-red-600 *,
+html.light-theme button.bg-red-700,
+html.light-theme button.bg-red-700 *,
+html.light-theme .btn-danger,
+html.light-theme .btn-danger * {
+  background-color: #DC2626 !important;
+  color: #FFFFFF !important;
+  border-color: #B91C1C !important;
+}
+
+/* Disabled buttons: clear readable gray text */
+html.light-theme button:disabled,
+html.light-theme button[disabled],
+html.light-theme .btn:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  color: #666666 !important;
+  border-color: #D9D9D9 !important;
+}
+
+/* Primary gold button: gold gradient, #111111 bold text */
+html.light-theme .btn-primary,
+html.light-theme .bg-gold,
+html.light-theme #authSubmit,
+html.light-theme #headerRegisterBtn,
+html.light-theme #mobileSignUpBtn,
+html.light-theme #authPromptRegister,
+html.light-theme #openFeedUpload,
+html.light-theme #openFeedUploadEmpty {
+  background: linear-gradient(135deg, #F5B942 0%, #D4AF37 100%) !important;
+  color: #111111 !important;
+  font-weight: 800 !important;
+  border: 1px solid rgba(212, 175, 55, 0.4) !important;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.28) !important;
+}
+html.light-theme .btn-primary *,
+html.light-theme .bg-gold *,
+html.light-theme #authSubmit *,
+html.light-theme #headerRegisterBtn *,
+html.light-theme #mobileSignUpBtn *,
+html.light-theme #authPromptRegister * {
+  color: #111111 !important;
+}
+
+/* Secondary white button: white background, gold border, dark text */
+html.light-theme .btn-secondary,
+html.light-theme #headerLoginBtn,
+html.light-theme #feedRefreshBtn {
+  background-color: #FFFFFF !important;
+  border: 1px solid #D4AF37 !important;
+  color: #111111 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+html.light-theme .btn-secondary:hover,
+html.light-theme #headerLoginBtn:hover,
+html.light-theme #feedRefreshBtn:hover {
+  background-color: #FFFDF5 !important;
+  border-color: #A67C00 !important;
+  color: #A67C00 !important;
+}
+
+/* Welcome Card in Side Menu / Drawer: High contrast, clearly readable */
+html.light-theme .sf-welcome-card,
+html.light-theme #mobileNav .sf-welcome-card {
+  background: #FFFDF5 !important;
+  background-image: none !important;
+  border: 1.5px solid #D4AF37 !important;
+  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.15) !important;
+}
+html.light-theme .sf-welcome-title,
+html.light-theme #mobileNav .sf-welcome-title,
+html.light-theme .sf-welcome-card p:first-child {
+  color: #111111 !important;
+  font-weight: 800 !important;
+}
+html.light-theme .sf-welcome-desc,
+html.light-theme #mobileNav .sf-welcome-desc,
+html.light-theme .sf-welcome-card p:last-child {
+  color: #333333 !important;
+  font-weight: 500 !important;
+}
+
+/* Side Menu / Drawer Actions & Buttons */
+html.light-theme .sf-drawer-item-btn,
+html.light-theme #mobileLanguageBtn,
+html.light-theme #mobileTutorialBtn,
+html.light-theme #mobileHelpSupportBtn {
+  background-color: #F8F8F8 !important;
+  border-color: #E6E6E6 !important;
+  color: #111111 !important;
+}
+html.light-theme .sf-drawer-item-btn:hover,
+html.light-theme #mobileLanguageBtn:hover,
+html.light-theme #mobileTutorialBtn:hover,
+html.light-theme #mobileHelpSupportBtn:hover {
+  background-color: #FFFFFF !important;
+  border-color: #D4AF37 !important;
+}
+html.light-theme .sf-drawer-item-btn span,
+html.light-theme #mobileLanguageBtn span,
+html.light-theme #mobileTutorialBtn span,
+html.light-theme #mobileHelpSupportBtn span {
+  color: #111111 !important;
+}
+html.light-theme .sf-drawer-accent-link,
+html.light-theme #mobileLanguageBtn .text-gold,
+html.light-theme #mobileTutorialBtn .text-gold,
+html.light-theme #mobileHelpSupportBtn .text-gold {
+  color: #A67C00 !important;
+  font-weight: 800 !important;
+}
+html.light-theme #mobileReportFraudBtn {
+  background-color: #FEF2F2 !important;
+  border-color: #FCA5A5 !important;
+  color: #B91C1C !important;
+}
+html.light-theme #mobileReportFraudBtn * {
+  color: #B91C1C !important;
+}
+html.light-theme #closeMobileNavBtn {
+  background-color: #F8F8F8 !important;
+  border-color: #E6E6E6 !important;
+  color: #111111 !important;
+}
+html.light-theme #closeMobileNavBtn:hover {
+  background-color: #FFFFFF !important;
+  border-color: #D4AF37 !important;
+  color: #A67C00 !important;
+}
+
+/* Authentication Prompt Modal (Join SellerFlow) */
+html.light-theme .sf-auth-prompt-card {
+  background-color: #FFFFFF !important;
+  color: #111111 !important;
+}
+html.light-theme .sf-auth-prompt-title {
+  color: #111111 !important;
+  font-weight: 900 !important;
+}
+html.light-theme .sf-auth-prompt-desc {
+  color: #555555 !important;
+}
+html.light-theme .sf-auth-prompt-icon {
+  background: #FFFDF5 !important;
+  border-color: #D4AF37 !important;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.25) !important;
+}
+html.light-theme .sf-auth-prompt-dismiss {
+  color: #666666 !important;
+}
+html.light-theme .sf-auth-prompt-dismiss:hover {
+  color: #111111 !important;
+}
+
+html.light-theme .gold-gradient {
+  background: linear-gradient(135deg, #D4AF37 0%, #F5B942 50%, #A67C00 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+html.light-theme div.bg-[#080808],
+html.light-theme div.bg-[#0c0c0c],
+html.light-theme div.bg-black,
+html.light-theme section.bg-[#080808],
+html.light-theme section.bg-black {
+  background-color: #FFFFFF !important;
+}
+html.light-theme div.bg-[#121212],
+html.light-theme div.bg-[#141414],
+html.light-theme div.bg-[#151515],
+html.light-theme div.bg-[#161616],
+html.light-theme div.bg-[#181818],
+html.light-theme div.bg-[#191919],
+html.light-theme div.bg-[#1a1a1a],
+html.light-theme div.bg-[#1b1b1b]:not(.sf-btn-dark):not(.btn-dark),
+html.light-theme div.bg-[#121215],
+html.light-theme div.bg-[#141418],
+html.light-theme div.bg-[#16161d],
+html.light-theme div.bg-[#181822],
+html.light-theme div.bg-[#1a1a24],
+html.light-theme div.bg-[#202020],
+html.light-theme div.bg-[#222],
+html.light-theme div.bg-zinc-900,
+html.light-theme div.bg-zinc-800,
+html.light-theme div.bg-zinc-950,
+html.light-theme section.bg-zinc-900,
+html.light-theme section.bg-zinc-800,
+html.light-theme article.bg-zinc-900,
+html.light-theme article.bg-zinc-800 {
+  background-color: #F8F8F8 !important;
 }
 html.light-theme .border-[#242424],
 html.light-theme .border-[#262626],
@@ -872,123 +1150,164 @@ html.light-theme .border-[#343434],
 html.light-theme .border-[#383838],
 html.light-theme .border-[#444],
 html.light-theme .border-zinc-800,
-html.light-theme .border-zinc-700 {
-  border-color: #e2e8f0 !important;
+html.light-theme .border-zinc-700,
+html.light-theme .border-zinc-600 {
+  border-color: #E6E6E6 !important;
 }
+
+/* Input Fields: Pure white background, dark text, visible placeholder, gold focus */
 html.light-theme input,
 html.light-theme textarea,
 html.light-theme select {
-  background: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid #D9D9D9 !important;
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
 }
 html.light-theme input:focus,
 html.light-theme textarea:focus,
 html.light-theme select:focus {
-  border-color: #f5b942 !important;
-  box-shadow: 0 0 0 3px rgba(245, 185, 66, 0.18) !important;
+  border-color: #D4AF37 !important;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.25) !important;
+  outline: none !important;
 }
 html.light-theme input::placeholder,
 html.light-theme textarea::placeholder {
-  color: #94a3b8 !important;
+  color: #777777 !important;
+  -webkit-text-fill-color: #777777 !important;
+}
+html.light-theme label {
+  color: #111111 !important;
+  font-weight: 600 !important;
+}
+html.light-theme a,
+html.light-theme a:link {
+  color: #A67C00 !important;
+}
+html.light-theme a:hover,
+html.light-theme a:active,
+html.light-theme a:focus {
+  color: #D4AF37 !important;
 }
 html.light-theme .navbtn {
-  color: #64748b !important;
+  color: #666666 !important;
 }
 html.light-theme .navbtn:hover {
-  color: #0f172a !important;
-  background: rgba(15, 23, 42, 0.04) !important;
+  color: #111111 !important;
+  background: rgba(0, 0, 0, 0.04) !important;
 }
 html.light-theme .navbtn.active {
-  color: #d97706 !important;
-  border-bottom-color: #d97706 !important;
+  color: #A67C00 !important;
+  border-bottom-color: #D4AF37 !important;
+  font-weight: 800 !important;
 }
 html.light-theme .gold {
-  color: #d97706 !important;
+  color: #A67C00 !important;
 }
 html.light-theme .bg-gold {
-  background: #f5b942 !important;
-  color: #080808 !important;
+  background: linear-gradient(135deg, #F5B942 0%, #D4AF37 100%) !important;
+  color: #111111 !important;
 }
 html.light-theme .text-gold {
-  color: #d97706 !important;
+  color: #A67C00 !important;
+}
+html.light-theme .border-gold {
+  border-color: #D4AF37 !important;
 }
 html.light-theme .svg-icon,
 html.light-theme svg path {
-  stroke: #0f172a;
+  stroke: currentColor;
 }
 html.light-theme #mobileMenu svg {
-  color: #0f172a !important;
+  color: #111111 !important;
 }
 html.light-theme #mobileMenu svg path {
-  stroke: #0f172a !important;
+  stroke: #111111 !important;
 }
 html.light-theme .sf-drawer-backdrop {
-  background: rgba(15, 23, 42, 0.45) !important;
+  background: rgba(0, 0, 0, 0.65) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  z-index: 9998 !important;
 }
 html.light-theme #mobileNav {
-  background: #ffffff !important;
-  border-right: 1px solid #e2e8f0 !important;
-  box-shadow: 12px 0 40px rgba(15, 23, 42, 0.12) !important;
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  border-right: 1px solid #E6E6E6 !important;
+  box-shadow: 16px 0 48px rgba(0, 0, 0, 0.18) !important;
+  z-index: 9999 !important;
+}
+html.light-theme #mobileNav .bg-\[\#12121a\]\/95,
+html.light-theme #mobileNav .bg-\[\#0a0a0f\],
+html.light-theme #mobileNav .bg-\[\#14141d\] {
+  background-color: #FFFFFF !important;
+  border-color: #E6E6E6 !important;
 }
 html.light-theme #mobileNav .navbtn {
-  color: #0f172a !important;
+  color: #111111 !important;
 }
 html.light-theme #mobileNav .navbtn:hover {
-  background: rgba(15, 23, 42, 0.04) !important;
+  background: rgba(0, 0, 0, 0.04) !important;
 }
 html.light-theme #mobileNav .navbtn.active {
-  color: #d97706 !important;
-  background: rgba(217, 119, 6, 0.08) !important;
+  color: #A67C00 !important;
+  background: rgba(212, 175, 55, 0.1) !important;
 }
 html.light-theme .policy-hero {
-  background: #fef3c7 !important;
-  border-color: #fde68a !important;
-  color: #92400e !important;
+  background: #FFFDF5 !important;
+  border-color: #F5E6B8 !important;
+  color: #855C00 !important;
 }
 html.light-theme .policy-hero .muted {
-  color: #b45309 !important;
+  color: #A67C00 !important;
 }
 html.light-theme .policy-hero .bg-black\/30 {
-  background: rgba(255, 255, 255, 0.75) !important;
-  border: 1px solid rgba(217, 119, 6, 0.2) !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(212, 175, 55, 0.25) !important;
 }
 html.light-theme .admin-tab {
-  background: #f1f5f9 !important;
-  border-color: #e2e8f0 !important;
-  color: #64748b !important;
+  background: #F8F8F8 !important;
+  border-color: #E6E6E6 !important;
+  color: #666666 !important;
 }
 html.light-theme .admin-tab.active {
-  background: #ffffff !important;
-  border-color: #d97706 !important;
-  color: #d97706 !important;
+  background: #FFFFFF !important;
+  border-color: #D4AF37 !important;
+  color: #A67C00 !important;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
 }
 html.light-theme .market-filter {
-  background: #f1f5f9 !important;
-  border-color: #e2e8f0 !important;
-  color: #64748b !important;
+  background: #F8F8F8 !important;
+  border-color: #E6E6E6 !important;
+  color: #666666 !important;
 }
 html.light-theme .market-filter.active {
-  background: #f5b942 !important;
-  color: #080808 !important;
-  border-color: #f5b942 !important;
-  box-shadow: 0 2px 8px rgba(245, 185, 66, 0.3) !important;
+  background: linear-gradient(135deg, #F5B942 0%, #D4AF37 100%) !important;
+  color: #111111 !important;
+  border-color: #D4AF37 !important;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3) !important;
 }
 html.light-theme .sf-quick-access-nav {
-  background: #ffffff !important;
-  border-color: #e2e8f0 !important;
+  background: #FFFFFF !important;
+  border-color: #E6E6E6 !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
 }
 html.light-theme .sf-quick-nav-btn {
-  background: #f8fafc !important;
-  color: #334155 !important;
-  border-color: #e2e8f0 !important;
+  background: #F8F8F8 !important;
+  color: #111111 !important;
+  border-color: #E6E6E6 !important;
 }
 html.light-theme .sf-quick-nav-btn:hover {
-  background: #f1f5f9 !important;
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important;
+  background: #FFFFFF !important;
+  color: #111111 !important;
+  border-color: #D4AF37 !important;
+}
+html.light-theme .sf-quick-nav-btn.active,
+html.light-theme .sf-quick-nav-btn[data-active="true"] {
+  background: #FFFFFF !important;
+  color: #A67C00 !important;
+  border: 1.5px solid #D4AF37 !important;
+  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.22) !important;
 }
 html.light-theme .bg-amber-950\/30,
 html.light-theme .bg-amber-950\/20,
@@ -999,7 +1318,7 @@ html.light-theme .bg-amber-950\/15 {
 }
 html.light-theme .text-amber-300,
 html.light-theme .text-amber-400 {
-  color: #b45309 !important;
+  color: #A67C00 !important;
 }
 html.light-theme .bg-[#10251a],
 html.light-theme .bg-green-950,
@@ -1038,8 +1357,8 @@ html.light-theme .text-blue-400 {
   color: #075985 !important;
 }
 html.light-theme .bg-[#141416], html.light-theme .border-[#222225], html.light-theme .bg-[#1a1a1e] {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
+  background-color: #FFFFFF !important;
+  border-color: #E6E6E6 !important;
 }
 html.light-theme #devVerificationSandboxNotice {
   background-color: #fffbeb !important;
@@ -1047,65 +1366,157 @@ html.light-theme #devVerificationSandboxNotice {
   color: #92400e !important;
 }
 html.light-theme .settings-item {
-  border-color: #e2e8f0 !important;
-  color: #0f172a !important;
+  border-color: #E6E6E6 !important;
+  color: #111111 !important;
 }
 html.light-theme .settings-item:hover {
-  background-color: rgba(15, 23, 42, 0.02) !important;
+  background-color: rgba(0, 0, 0, 0.02) !important;
 }
 html.light-theme #settingsThemeSegment {
-  background-color: #f1f5f9 !important;
-  border-color: #e2e8f0 !important;
+  background-color: #F8F8F8 !important;
+  border-color: #E6E6E6 !important;
 }
 html.light-theme .sf-stat-card,
 html.light-theme .sf-user-row,
 html.light-theme .sf-dash-card {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  color: #0f172a !important;
+  background-color: #FFFFFF !important;
+  border-color: #E6E6E6 !important;
+  color: #111111 !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
 }
 html.light-theme .terms-box {
-  background-color: #f8fafc !important;
-  border-color: #e2e8f0 !important;
-  color: #1e293b !important;
+  background-color: #F8F8F8 !important;
+  border-color: #E6E6E6 !important;
+  color: #333333 !important;
 }
 html.light-theme .feed-top-bar {
-  background-color: rgba(248, 250, 252, 0.95) !important;
-  border-color: #e2e8f0 !important;
+  background-color: #FFFFFF !important;
+  border-color: #E6E6E6 !important;
 }
 html.light-theme .feed-top-bar h1 {
-  color: #0f172a !important;
+  color: #111111 !important;
 }
 html.light-theme .chat-bubble.from-other,
 html.light-theme .chat-them {
-  background-color: #f1f5f9 !important;
-  border-color: #e2e8f0 !important;
-  color: #0f172a !important;
+  background-color: #F8F8F8 !important;
+  border-color: #E6E6E6 !important;
+  color: #111111 !important;
 }
 html.light-theme .chat-bubble.from-me,
 html.light-theme .chat-me {
-  background-color: #f5b942 !important;
-  color: #080808 !important;
+  background-color: #F5B942 !important;
+  color: #111111 !important;
 }
 html.light-theme .sf-search-btn {
-  background-color: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-  color: #475569 !important;
+  background-color: #F8F8F8 !important;
+  border-color: #E6E6E6 !important;
+  color: #444444 !important;
+}
+html.light-theme .sf-search-btn:hover {
+  background-color: #FFFFFF !important;
+  border-color: #D4AF37 !important;
+  color: #A67C00 !important;
 }
 html.light-theme table {
-  color: #0f172a !important;
+  color: #111111 !important;
 }
 html.light-theme th {
-  background-color: #f1f5f9 !important;
-  color: #475569 !important;
-  border-color: #e2e8f0 !important;
+  background-color: #F8F8F8 !important;
+  color: #555555 !important;
+  border-color: #E6E6E6 !important;
 }
 html.light-theme td {
-  border-color: #f1f5f9 !important;
+  border-color: #F8F8F8 !important;
 }
 html.light-theme .border-b {
-  border-color: #e2e8f0 !important;
+  border-color: #E6E6E6 !important;
+}
+html.light-theme .btn-primary,
+html.light-theme #authSubmit,
+html.light-theme #headerRegisterBtn,
+html.light-theme #openFeedUpload,
+html.light-theme #openFeedUploadEmpty {
+  background: linear-gradient(135deg, #F5B942 0%, #D4AF37 100%) !important;
+  color: #111111 !important;
+  font-weight: 800 !important;
+  border: 1px solid rgba(212, 175, 55, 0.4) !important;
+  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.28) !important;
+}
+html.light-theme .btn-secondary,
+html.light-theme #headerLoginBtn,
+html.light-theme #feedRefreshBtn {
+  background: #FFFFFF !important;
+  border: 1px solid #E6E6E6 !important;
+  color: #111111 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+html.light-theme .btn-secondary:hover,
+html.light-theme #headerLoginBtn:hover,
+html.light-theme #feedRefreshBtn:hover {
+  border-color: #D4AF37 !important;
+  color: #A67C00 !important;
+}
+html.light-theme .comment-sheet {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: #E6E6E6 !important;
+  color: #111111 !important;
+  box-shadow: 0 -20px 70px rgba(0, 0, 0, 0.15) !important;
+}
+html.light-theme .comment-sheet h2 {
+  color: #111111 !important;
+}
+html.light-theme .comment-sheet .muted {
+  color: #666666 !important;
+}
+html.light-theme #closeCommentPanel {
+  border-color: #E6E6E6 !important;
+  color: #111111 !important;
+  background: #F8F8F8 !important;
+}
+html.light-theme #closeCommentPanel:hover {
+  border-color: #D4AF37 !important;
+  color: #A67C00 !important;
+}
+html.light-theme .sf-dialog-card {
+  background: #FFFFFF !important;
+  border: 1px solid #E6E6E6 !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15) !important;
+}
+html.light-theme .sf-dialog-card h2 {
+  color: #111111 !important;
+}
+html.light-theme .sf-dialog-card p {
+  color: #555555 !important;
+}
+html.light-theme #sfDialogCancelBtn,
+html.light-theme #sfPromptCancelBtn {
+  background: #F8F8F8 !important;
+  border-color: #E6E6E6 !important;
+  color: #444444 !important;
+}
+html.light-theme #sfPromptInput {
+  background: #FFFFFF !important;
+  border-color: #E6E6E6 !important;
+  color: #111111 !important;
+}
+html.light-theme #mobileMenu,
+html.light-theme #pageSelectorBtn,
+html.light-theme #headerThemeToggle,
+html.light-theme #notificationBtn,
+html.light-theme #cartBtn,
+html.light-theme #headerProfileBtn {
+  background: #F8F8F8 !important;
+  border-color: #E6E6E6 !important;
+  color: #111111 !important;
+}
+html.light-theme #mobileMenu:hover,
+html.light-theme #pageSelectorBtn:hover,
+html.light-theme #headerThemeToggle:hover,
+html.light-theme #notificationBtn:hover,
+html.light-theme #cartBtn:hover,
+html.light-theme #headerProfileBtn:hover {
+  border-color: #D4AF37 !important;
+  color: #A67C00 !important;
 }
 #page {
   animation: sfPageTransition 0.14s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1120,6 +1531,143 @@ html.light-theme .border-b {
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
+}
+
+/* ==========================================================================
+   SELLERFLOW BOTTOM NAVIGATION BAR (JW LIBRARY FIXED DOCKED STYLE)
+   Five persistent icons with labels underneath (For You, Marketplace, Jobs, Events, Orders)
+   ========================================================================== */
+.sf-bottom-tab-bar {
+  position: relative;
+  z-index: 45;
+  width: 100%;
+  flex-shrink: 0;
+  background: rgba(10, 10, 14, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  padding-top: 5px;
+  padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  user-select: none;
+}
+
+html.light-theme .sf-bottom-tab-bar {
+  background: #FFFFFF !important;
+  border-top: 1px solid #E6E6E6 !important;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+.sf-bottom-tab-item {
+  flex: 1 1 0%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 4px 2px;
+  min-width: 0;
+  color: #94949e;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  text-decoration: none;
+}
+
+.sf-bottom-tab-item svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  transition: transform 0.16s ease, stroke 0.16s ease, color 0.16s ease;
+  flex-shrink: 0;
+}
+
+.sf-bottom-tab-item .tab-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  transition: color 0.16s ease, font-weight 0.16s ease;
+}
+
+.sf-bottom-tab-item:hover {
+  color: #f4f4f5;
+}
+
+.sf-bottom-tab-item:active {
+  transform: scale(0.92);
+}
+
+.sf-bottom-tab-item.active {
+  color: #f5b942 !important;
+}
+
+.sf-bottom-tab-item.active svg {
+  transform: translateY(-1px);
+  filter: drop-shadow(0 0 6px rgba(245, 185, 66, 0.45));
+}
+
+.sf-bottom-tab-item.active .tab-label {
+  font-weight: 800;
+  color: #f5b942 !important;
+}
+
+html.light-theme .sf-bottom-tab-item {
+  color: #666666 !important;
+}
+
+html.light-theme .sf-bottom-tab-item svg {
+  color: #666666 !important;
+  stroke: #666666 !important;
+}
+
+html.light-theme .sf-bottom-tab-item:hover {
+  color: #111111 !important;
+}
+
+html.light-theme .sf-bottom-tab-item.active {
+  color: #A67C00 !important;
+}
+
+html.light-theme .sf-bottom-tab-item.active svg {
+  color: #D4AF37 !important;
+  stroke: #D4AF37 !important;
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.45)) !important;
+}
+
+html.light-theme .sf-bottom-tab-item.active .tab-label {
+  color: #A67C00 !important;
+  font-weight: 800 !important;
+}
+
+.sf-bottom-tab-badge {
+  position: absolute;
+  top: 1px;
+  right: calc(50% - 18px);
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 9999px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+  pointer-events: none;
 }
 </style>
 </head>
@@ -1285,7 +1833,49 @@ html.light-theme .border-b {
     <div class="copyright-tag text-[11px] text-zinc-600 text-center mt-4">© 2026 POMAAH GROUP · All Rights Reserved</div>
   </div>
 </div>
-<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur-md border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-2 sm:gap-4"><div class="flex items-center gap-2 sm:gap-3 shrink-0"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-2 shrink-0 select-none cursor-pointer group" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)] transition-transform group-hover:scale-105" /><div class="flex flex-col items-start text-left leading-none"><div class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span><span class="text-[9px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider ml-1.5 hidden xs:inline-block">GH</span></div><div class="text-[8px] sm:text-[9px] font-black tracking-[0.24em] text-zinc-100 flex items-center gap-1 uppercase select-none mt-0.5 opacity-90"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1.5 sm:gap-2 shrink-0"></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"><div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap flex items-center gap-2"><span>For You</span><span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-gold animate-pulse"></span></h1></div><div class="flex items-center gap-1.5 sm:gap-2 shrink-0"><div class="w-20 h-7 rounded-xl bg-[#1a1a1e] sf-shimmer-box"></div></div></div><div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden"><div class="reel-feed flex-1 min-h-0 w-full overflow-hidden" id="reelFeedSkeleton"><div class="reel-card sf-shimmer-box relative flex items-center justify-center"><div class="flex flex-col items-center justify-center p-6 text-center z-10 select-none pointer-events-none"><div class="relative mb-3.5 flex items-center justify-center"><div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-gold animate-spin"></div><div class="absolute inset-0 flex items-center justify-center"><span class="text-[10px] font-black text-gold font-mono">GH</span></div></div><div class="text-sm font-bold text-white tracking-wide flex items-center gap-1.5"><span>Loading For You Feed</span><span class="inline-flex gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 0ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 150ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 300ms"></span></span></div><div class="text-[11px] text-zinc-400 mt-1 font-medium">Discovering top Ghanaian reels…</div></div><div class="reel-actions flex flex-col items-center gap-4 absolute right-2.5 sm:right-4 bottom-20 z-10 pointer-events-none"><div class="w-11 h-11 rounded-full bg-[#202026] sf-shimmer-box border border-[#333]"></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="w-9 h-9 rounded-full bg-[#202026] sf-shimmer-box border border-gold/30"></div></div><div class="reel-content flex flex-col gap-2 pointer-events-none"><div class="flex items-center gap-2"><div class="w-28 h-4 rounded-md bg-[#25252d] sf-shimmer-box"></div><div class="w-16 h-4 rounded-full bg-amber-500/20 sf-shimmer-box"></div></div><div class="w-52 h-3.5 rounded bg-[#202026] sf-shimmer-box"></div><div class="w-36 h-3 rounded bg-[#202026] sf-shimmer-box"></div><div class="flex items-center gap-2 mt-1"><div class="w-32 h-7 rounded-full bg-[#25252f] sf-shimmer-box"></div><div class="w-20 h-7 rounded-full bg-amber-500/30 sf-shimmer-box"></div></div></div></div></div></div></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1 font-bold tracking-widest text-[11px] text-zinc-300">BUY <span class="text-amber-400 font-black">•</span> SELL <span class="text-amber-400 font-black">•</span> GROW</div><div class="mt-0.5 text-zinc-500 text-[11px]">Ghana’s social selling marketplace.</div></footer></div></div>
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#FFFFFF] backdrop-blur-md border-b border-[#E6E6E6] shadow-sm shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-1.5 sm:gap-4"><div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0"><button id="mobileMenu" class="md:hidden w-10 h-10 -ml-1 rounded-xl hover:bg-black/5 active:scale-95 transition flex items-center justify-center text-[#111111] shrink-0 cursor-pointer" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-6 h-6 text-[#111111]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-2 sm:gap-2.5 shrink-0 select-none cursor-pointer group text-left" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-8 h-8 sm:w-9 sm:h-9 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(212,175,55,0.25)] transition-transform group-hover:scale-105" /><div class="flex flex-col items-start leading-none justify-center"><div class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font leading-none"><span class="text-[#111111]">Seller</span><span class="gold-gradient">Flow</span><span class="text-[9px] font-extrabold text-[#A67C00] bg-amber-500/15 px-1.5 py-0.5 rounded-md border border-[#D4AF37]/50 uppercase tracking-wider ml-1.5 inline-block">GH</span></div><div class="text-[8px] sm:text-[9px] font-black tracking-[0.24em] text-[#666666] flex items-center gap-1 uppercase select-none mt-1 leading-none"><span>BUY</span><span class="text-[#D4AF37] font-black">•</span><span>SELL</span><span class="text-[#D4AF37] font-black">•</span><span>GROW</span></div></div></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1 sm:gap-2 shrink-0"></div></div></header><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden" aria-hidden="true"></div><aside id="mobileNav" class="hide md:hidden" aria-label="Mobile Navigation Drawer"></aside><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"><div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#E6E6E6] shrink-0 bg-[#FFFFFF] z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-base sm:text-lg font-black tracking-tight text-[#111111] whitespace-nowrap flex items-center gap-2"><span>For You</span><span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-gold animate-pulse"></span></h1></div><div class="flex items-center gap-1.5 sm:gap-2 shrink-0"><div class="w-20 h-7 rounded-xl bg-[#F8F8F8] sf-shimmer-box"></div></div></div><div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden"><div class="reel-feed flex-1 min-h-0 w-full overflow-hidden" id="reelFeedSkeleton"><div class="reel-card sf-shimmer-box relative flex items-center justify-center"><div class="flex flex-col items-center justify-center p-6 text-center z-10 select-none pointer-events-none"><div class="relative mb-3.5 flex items-center justify-center"><div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-gold animate-spin"></div><div class="absolute inset-0 flex items-center justify-center"><span class="text-[10px] font-black text-gold font-mono">GH</span></div></div><div class="text-sm font-bold text-white tracking-wide flex items-center gap-1.5"><span>Loading For You Feed</span><span class="inline-flex gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 0ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 150ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 300ms"></span></span></div><div class="text-[11px] text-zinc-400 mt-1 font-medium">Discovering top Ghanaian reels…</div></div><div class="reel-actions flex flex-col items-center gap-4 absolute right-2.5 sm:right-4 bottom-20 z-10 pointer-events-none"><div class="w-11 h-11 rounded-full bg-[#202026] sf-shimmer-box border border-[#333]"></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="w-9 h-9 rounded-full bg-[#202026] sf-shimmer-box border border-gold/30"></div></div><div class="reel-content flex flex-col gap-2 pointer-events-none"><div class="flex items-center gap-2"><div class="w-28 h-4 rounded-md bg-[#25252d] sf-shimmer-box"></div><div class="w-16 h-4 rounded-full bg-amber-500/20 sf-shimmer-box"></div></div><div class="w-52 h-3.5 rounded bg-[#202026] sf-shimmer-box"></div><div class="w-36 h-3 rounded bg-[#202026] sf-shimmer-box"></div><div class="flex items-center gap-2 mt-1"><div class="w-32 h-7 rounded-full bg-[#25252f] sf-shimmer-box"></div><div class="w-20 h-7 rounded-full bg-amber-500/30 sf-shimmer-box"></div></div></div></div></div></div></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#E6E6E6] text-center text-xs text-[#666666]"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1 font-bold tracking-widest text-[11px] text-[#111111]">BUY <span class="text-[#D4AF37] font-black">•</span> SELL <span class="text-[#D4AF37] font-black">•</span> GROW</div><div class="mt-0.5 text-[#666666] text-[11px]">Ghana’s social selling marketplace.</div></footer></div><nav id="bottomTabBar" class="sf-bottom-tab-bar" aria-label="Bottom Navigation">
+  <button type="button" class="sf-bottom-tab-item active" data-bottom-page="feed" title="For You">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9.5z"/>
+    </svg>
+    <span class="tab-label">For You</span>
+  </button>
+  <button type="button" class="sf-bottom-tab-item" data-bottom-page="marketplace" title="Marketplace">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l1.5-5h15L21 9v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z"/>
+      <path d="M3 9h18"/>
+      <path d="M9 13a3 3 0 0 0 6 0"/>
+    </svg>
+    <span class="tab-label">Marketplace</span>
+  </button>
+  <button type="button" class="sf-bottom-tab-item" data-bottom-page="jobs" title="Jobs">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+      <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+      <path d="M12 12v.01"/>
+    </svg>
+    <span class="tab-label">Jobs</span>
+  </button>
+  <button type="button" class="sf-bottom-tab-item" data-bottom-page="events" title="Events">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+      <line x1="16" y1="2" x2="16" y2="6"/>
+      <line x1="8" y1="2" x2="8" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+      <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+    </svg>
+    <span class="tab-label">Events</span>
+  </button>
+  <button type="button" class="sf-bottom-tab-item" data-bottom-page="orders" title="Orders">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+      <line x1="12" y1="22.08" x2="12" y2="12"/>
+    </svg>
+    <span class="tab-label">Orders</span>
+    <span id="bottomBarOrdersBadge" class="sf-bottom-tab-badge hide">0</span>
+  </button>
+</nav></div>
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
 (function(){
@@ -3505,18 +4095,18 @@ function renderQuickAccessNav(activeSection = '') {
   ];
 
   return `
-    <nav class="sf-quick-access-nav w-full max-w-2xl mx-auto p-1.5 sm:p-2 rounded-2xl bg-[#12121a] border border-[#242436] shadow-md select-none" aria-label="Quick Navigation">
+    <nav class="sf-quick-access-nav w-full max-w-2xl mx-auto p-1.5 sm:p-2 rounded-2xl bg-[#FFFFFF] border border-[#E6E6E6] shadow-sm select-none" aria-label="Quick Navigation">
       <div class="grid grid-cols-4 gap-1.5 sm:gap-2">
         ${items.map(item => {
           const isActive = current === item.key || (item.key === 'marketplace' && current === 'products') || (item.key === 'feed' && (current === 'feed' || current === 'for_you'));
           return `
-            <button type="button" data-quick-dest="${item.key}" class="sf-quick-nav-btn flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl transition-all duration-150 active:scale-95 cursor-pointer min-h-[50px] sm:min-h-[56px] ${
+            <button type="button" data-quick-dest="${item.key}" data-active="${isActive ? 'true' : 'false'}" class="sf-quick-nav-btn flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl transition-all duration-150 active:scale-95 cursor-pointer min-h-[50px] sm:min-h-[56px] ${
               isActive
-                ? 'bg-gradient-to-b from-amber-500/30 to-amber-500/10 text-amber-300 border border-gold/75 shadow-[0_0_12px_rgba(245,185,66,0.3)] font-black ring-1 ring-gold/40'
-                : 'bg-[#181824] hover:bg-[#202032] text-zinc-300 hover:text-white border border-[#2b2b3d] hover:border-zinc-700 font-bold'
+                ? 'active bg-[#FFFFFF] text-[#A67C00] border-1.5 border-[#D4AF37] shadow-[0_2px_8px_rgba(212,175,55,0.25)] font-black ring-1 ring-[#D4AF37]/40'
+                : 'bg-[#F8F8F8] hover:bg-[#FFFFFF] text-[#111111] hover:text-[#111111] border border-[#E6E6E6] hover:border-[#D4AF37]/50 font-bold'
             }" title="${esc(item.label)}">
-              <span class="text-lg sm:text-xl leading-none mb-1 flex items-center justify-center">${item.icon}</span>
-              <span class="text-[10px] xs:text-[11px] sm:text-xs tracking-tight truncate w-full text-center leading-tight font-bold">${esc(item.label)}</span>
+              <span class="text-lg sm:text-xl leading-none mb-1 flex items-center justify-center ${isActive ? 'text-[#D4AF37]' : 'text-[#666666]'}">${item.icon}</span>
+              <span class="text-[10px] xs:text-[11px] sm:text-xs tracking-tight truncate w-full text-center leading-tight font-bold ${isActive ? 'text-[#A67C00]' : 'text-[#111111]'}">${esc(item.label)}</span>
             </button>
           `;
         }).join('')}
@@ -4381,20 +4971,20 @@ function formatReelCount(n){
 function showAuthPrompt(actionMessage = 'interact on SellerFlow'){
   if(typeof pauseAllForYouVideos === 'function') pauseAllForYouVideos(false);
   modal(`
-    <div class="text-center py-3 px-2">
-      <div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-[#2a1e0b] to-[#141414] border border-gold/40 flex items-center justify-center text-3xl mb-4 shadow-xl shadow-gold/10">
+    <div class="text-center py-3 px-2 sf-auth-prompt-card">
+      <div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-[#2a1e0b] to-[#141414] border border-gold/40 flex items-center justify-center text-3xl mb-4 shadow-xl shadow-gold/10 sf-auth-prompt-icon">
         ✨
       </div>
-      <h2 class="text-2xl font-black text-white tracking-tight">Join SellerFlow</h2>
-      <p class="muted text-sm mt-2 max-w-xs mx-auto leading-relaxed">
+      <h2 class="text-2xl font-black text-white tracking-tight sf-auth-prompt-title">Join SellerFlow</h2>
+      <p class="muted text-sm mt-2 max-w-xs mx-auto leading-relaxed sf-auth-prompt-desc">
         Sign in or create an account to ${esc(actionMessage)}.
       </p>
       <div class="space-y-2.5 mt-6 max-w-sm mx-auto">
         <button type="button" id="authPromptRegister" class="w-full py-3.5 px-4 bg-gold text-black rounded-xl font-bold text-sm hover:brightness-110 shadow-lg shadow-gold/20 flex items-center justify-center gap-2 transition active:scale-98">
           Create Account
         </button>
-        <button type="button" id="authPromptLogin" class="w-full py-3 px-4 bg-[#1b1b1b] hover:bg-[#252525] border border-[#383838] text-white rounded-xl font-bold text-sm transition active:scale-98">
-          Sign In with Username
+        <button type="button" id="authPromptLogin" class="sf-btn-dark w-full py-3 px-4 bg-[#171717] hover:bg-[#262626] border border-[#333333] text-white rounded-xl font-bold text-sm shadow-md transition active:scale-98 flex items-center justify-center">
+          <span class="text-white font-bold">Sign In with Username</span>
         </button>
       </div>
       <div class="mt-4">
@@ -6251,16 +6841,16 @@ function setNav(){
   if(rightActions){
     if(!currentUser){
       rightActions.innerHTML = `
-        <button id="sfGlobalSearchBtn" type="button" class="sf-search-btn" title="Search SellerFlow (⌕)">
+        <button id="sfGlobalSearchBtn" type="button" class="sf-search-btn shrink-0" title="Search SellerFlow (⌕)">
           <span>⌕</span><span class="hidden sm:inline">Search</span>
         </button>
-        <button id="headerThemeToggle" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 flex items-center justify-center text-sm transition" type="button" title="Toggle Theme">
+        <button id="headerThemeToggle" class="hidden sm:flex w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-black/5 hover:bg-black/10 active:scale-95 border border-[#E6E6E6] items-center justify-center text-xs sm:text-sm text-[#111111] transition shrink-0" type="button" title="Toggle Theme">
           ${getCurrentTheme() === 'light' ? '☀️' : '🌙'}
         </button>
-        <button type="button" id="headerLoginBtn" class="px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-300 hover:text-white hover:bg-white/5 transition whitespace-nowrap">
+        <button type="button" id="headerLoginBtn" class="sf-btn-dark px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-[#171717] hover:bg-[#262626] border border-[#333333] transition whitespace-nowrap shadow-sm min-h-[34px] flex items-center justify-center cursor-pointer">
           ${esc(typeof t === 'function' ? t('auth_btn_signin','Sign In') : 'Sign In')}
         </button>
-        <button type="button" id="headerRegisterBtn" class="bg-gold text-black px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 active:scale-95 transition shadow-sm whitespace-nowrap">
+        <button type="button" id="headerRegisterBtn" class="bg-gold text-[#111111] px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-black hover:brightness-105 active:scale-95 transition shadow-sm whitespace-nowrap min-h-[34px] flex items-center justify-center cursor-pointer">
           ${esc(typeof t === 'function' ? t('auth_btn_signup','Sign Up') : 'Sign Up')}
         </button>
       `;
@@ -6273,24 +6863,24 @@ function setNav(){
         <button id="sfGlobalSearchBtn" type="button" class="sf-search-btn shrink-0" title="Search SellerFlow (⌕)">
           <span>⌕</span><span class="hidden md:inline">Search</span>
         </button>
-        <button id="headerUploadBtn" type="button" class="hidden sm:inline-flex items-center gap-1 bg-gold text-black px-3 py-1.5 rounded-xl text-xs font-extrabold hover:brightness-110 active:scale-95 transition shadow-sm shrink-0" title="Upload Video or Photo Post">
+        <button id="headerUploadBtn" type="button" class="hidden sm:inline-flex items-center gap-1 bg-gold text-[#111111] px-3 py-1.5 rounded-xl text-xs font-black hover:brightness-105 active:scale-95 transition shadow-sm shrink-0" title="Upload Video or Photo Post">
           <span>＋</span><span>Upload</span>
         </button>
-        <button id="notificationBtn" class="bell-btn relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 flex items-center justify-center text-xs sm:text-sm text-zinc-200 hover:text-gold transition shrink-0" type="button" title="${esc(typeof t === 'function' ? t('nav_notifications','Notifications') : 'Notifications')}">
+        <button id="notificationBtn" class="bell-btn relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-black/5 hover:bg-black/10 active:scale-95 border border-[#E6E6E6] flex items-center justify-center text-xs sm:text-sm text-[#111111] hover:text-[#A67C00] transition shrink-0" type="button" title="${esc(typeof t === 'function' ? t('nav_notifications','Notifications') : 'Notifications')}">
           🔔<span id="notificationCount" class="notification-badge hide">0</span>
         </button>
-        <button id="cartBtn" class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 flex items-center justify-center text-xs sm:text-sm text-zinc-200 hover:text-gold transition shrink-0" type="button" title="Cart">
-          🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-black rounded-full min-w-4 h-4 px-1 hide">0</span>
+        <button id="cartBtn" class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-black/5 hover:bg-black/10 active:scale-95 border border-[#E6E6E6] flex items-center justify-center text-xs sm:text-sm text-[#111111] hover:text-[#A67C00] transition shrink-0" type="button" title="Cart">
+          🛒<span id="cartCount" class="absolute -top-1 -right-1 text-[10px] bg-gold text-[#111111] rounded-full min-w-4 h-4 px-1 hide font-bold">0</span>
         </button>
-        <button id="headerThemeToggle" class="hidden sm:flex w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 items-center justify-center text-xs sm:text-sm transition shrink-0" type="button" title="Toggle Theme">
+        <button id="headerThemeToggle" class="hidden sm:flex w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-black/5 hover:bg-black/10 active:scale-95 border border-[#E6E6E6] items-center justify-center text-xs sm:text-sm transition shrink-0" type="button" title="Toggle Theme">
           ${getCurrentTheme() === 'light' ? '☀️' : '🌙'}
         </button>
-        <button id="headerProfileBtn" type="button" class="flex items-center gap-1 p-0.5 sm:p-1 pr-1.5 sm:pr-2 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 text-xs font-bold text-zinc-200 transition shrink-0" title="My Profile (@${esc(currentProfile?.username || 'user')})">
-          ${avatar(currentProfile || currentUser, 'w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover border border-gold/40 bg-zinc-800')}
-          <span class="hidden xl:inline-block max-w-[80px] truncate text-[11px] font-bold text-zinc-300">${esc(currentProfile?.name || currentProfile?.username || 'Profile')}</span>
+        <button id="headerProfileBtn" type="button" class="flex items-center gap-1 p-0.5 sm:p-1 pr-1.5 sm:pr-2 rounded-full bg-black/5 hover:bg-black/10 active:scale-95 border border-[#E6E6E6] text-xs font-bold text-[#111111] transition shrink-0" title="My Profile (@${esc(currentProfile?.username || 'user')})">
+          ${avatar(currentProfile || currentUser, 'w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover border border-gold/50 bg-white')}
+          <span class="hidden xl:inline-block max-w-[80px] truncate text-[11px] font-bold text-[#111111]">${esc(currentProfile?.name || currentProfile?.username || 'Profile')}</span>
           ${currentProfile?.verified ? '<span class="verified-badge text-[8px] sm:text-[9px] !p-0.5 shrink-0">✓</span>' : ''}
         </button>
-        <button id="logoutBtn" class="hidden xl:inline-flex items-center border border-white/10 hover:border-rose-500/40 hover:bg-rose-950/20 hover:text-rose-300 rounded-xl px-2.5 py-1.5 text-xs text-zinc-400 font-medium transition shrink-0" title="Sign Out">
+        <button id="logoutBtn" class="hidden xl:inline-flex items-center border border-[#E6E6E6] hover:border-rose-400 hover:bg-rose-50 hover:text-rose-700 rounded-xl px-2.5 py-1.5 text-xs text-[#666666] font-medium transition shrink-0" title="Sign Out">
           ${esc(typeof t === 'function' ? t('nav_signout','Logout') : 'Logout')}
         </button>
       `;
@@ -6318,27 +6908,37 @@ function setNav(){
     const curLangObj = (typeof SUPPORTED_LANGUAGES !== 'undefined') ? SUPPORTED_LANGUAGES.find(l => l.code === curLangCode) : null;
 
     const userHeaderHtml = currentUser ? `
-      <button type="button" id="mobileNavUserCard" data-mobile-page="profile" class="w-full text-left p-3 rounded-2xl bg-[#181822] hover:bg-[#20202e] active:scale-[0.99] border border-[#2a2a3c] hover:border-gold/50 flex items-center gap-3 shadow-sm transition group cursor-pointer" title="View your profile">
-        ${avatar(currentProfile || currentUser, 'w-10 h-10 rounded-full object-cover shrink-0 border border-gold/40 shadow-sm bg-[#222] group-hover:border-gold transition')}
+      <button type="button" id="mobileNavUserCard" data-mobile-page="profile" class="w-full text-left p-3 rounded-2xl bg-[#F8F8F8] hover:bg-[#F2F2F2] active:scale-[0.99] border border-[#E6E6E6] hover:border-gold/60 flex items-center gap-3 shadow-sm transition group cursor-pointer" title="View your profile">
+        ${avatar(currentProfile || currentUser, 'w-10 h-10 rounded-full object-cover shrink-0 border border-gold/50 shadow-sm bg-white group-hover:border-gold transition')}
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5 flex-wrap">
-            <span class="text-xs font-black text-white group-hover:text-amber-300 transition truncate block">${esc(currentProfile?.name || currentUser.displayName || 'SellerFlow User')}</span>
+            <span class="text-xs font-black text-[#111111] group-hover:text-[#A67C00] transition truncate block">${esc(currentProfile?.name || currentUser.displayName || 'SellerFlow User')}</span>
             ${currentProfile?.verified ? '<span class="verified-badge text-[10px]">✓</span>' : ''}
           </div>
-          <div class="text-[11px] text-zinc-400 group-hover:text-zinc-300 transition truncate">@${esc(currentProfile?.username || 'user')}</div>
-          ${(isBusinessVerified(currentProfile) || isAdmin) ? '<div class="text-[10px] text-amber-300 font-bold mt-0.5 flex items-center gap-1"><span>🏢</span><span>Business Verified</span></div>' : ''}
+          <div class="text-[11px] text-[#666666] group-hover:text-[#333333] transition truncate">@${esc(currentProfile?.username || 'user')}</div>
+          ${(isBusinessVerified(currentProfile) || isAdmin) ? '<div class="text-[10px] text-[#A67C00] font-bold mt-0.5 flex items-center gap-1"><span>🏢</span><span>Business Verified</span></div>' : ''}
         </div>
-        <div class="shrink-0 flex items-center gap-1 text-[11px] font-bold text-amber-400/90 group-hover:text-amber-300 transition">
+        <div class="shrink-0 flex items-center gap-1 text-[11px] font-bold text-[#A67C00] group-hover:text-[#855C00] transition">
           <span>Profile</span>
           <span class="text-xs">→</span>
         </div>
       </button>
     ` : `
-      <div class="p-3 rounded-2xl bg-gradient-to-r from-amber-950/40 via-[#181824] to-amber-950/40 border border-gold/30 text-xs">
-        <p class="font-extrabold text-amber-200 text-xs">Welcome to SellerFlow Ghana</p>
-        <p class="text-[11px] text-zinc-400 mt-0.5">Sign in to publish products, share reels, track orders & chat live.</p>
+      <div class="sf-welcome-card p-3.5 rounded-2xl bg-[#FFFDF5] border border-[#D4AF37]/50 shadow-sm text-xs">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="w-2 h-2 rounded-full bg-gold shrink-0"></span>
+          <p class="sf-welcome-title font-black text-[#111111] text-xs">Welcome to SellerFlow Ghana</p>
+        </div>
+        <p class="sf-welcome-desc text-[11px] text-[#555555] leading-relaxed">Sign in to publish products, share reels, track orders & chat live.</p>
       </div>
     `;
+
+    let discoverPages = [
+      { key: 'marketplace', label: typeof t === 'function' ? t('nav_marketplace', 'Marketplace') : 'Marketplace', icon: '🛍️', desc: 'Browse listings & stores' },
+      { key: 'feed', label: typeof t === 'function' ? t('nav_for_you', 'For You') : 'For You', icon: '▶️', desc: 'Watch trending seller reels' },
+      { key: 'events', label: typeof t === 'function' ? t('nav_events', 'Events') : 'Events', icon: '📅', desc: 'Trade expos & meetups' },
+      { key: 'jobs', label: typeof t === 'function' ? t('nav_jobs', 'Jobs') : 'Jobs', icon: '💼', desc: 'Find or post work' }
+    ];
 
     let commercePages = [];
     if(currentUser) {
@@ -6368,22 +6968,22 @@ function setNav(){
       if(!items || !items.length) return '';
       return `
         <div class="mb-3.5">
-          <div class="px-2 text-[10px] font-black uppercase tracking-wider text-amber-400/90 mb-1.5 flex items-center justify-between">
+          <div class="px-2 text-[10px] font-black uppercase tracking-wider text-[#A67C00] mb-1.5 flex items-center justify-between">
             <span>${title}</span>
           </div>
           <div class="space-y-1">
             ${items.map(item => {
-              const isActive = currentPage === item.key;
+              const isActive = currentPage === item.key || (item.key === 'feed' && (currentPage === 'feed' || currentPage === 'for_you')) || (item.key === 'marketplace' && currentPage === 'products');
               return `
-                <button type="button" data-mobile-page="${item.key}" class="w-full px-3 py-2 rounded-xl flex items-center justify-between text-xs font-semibold transition ${isActive ? 'bg-amber-500/15 text-amber-300 font-extrabold border-l-4 border-gold shadow-sm' : 'text-zinc-300 hover:bg-[#1a1a26] hover:text-white'}">
+                <button type="button" data-mobile-page="${item.key}" class="w-full px-3 py-2 rounded-xl flex items-center justify-between text-xs font-semibold transition ${isActive ? 'bg-amber-500/15 text-[#A67C00] font-extrabold border-l-4 border-[#D4AF37] shadow-sm' : 'text-[#222222] hover:bg-[#F4F4F5] hover:text-[#111111]'}">
                   <div class="flex items-center gap-2.5 min-w-0">
                     <span class="text-base shrink-0">${item.icon}</span>
                     <div class="text-left min-w-0">
-                      <div class="truncate font-bold leading-tight">${item.label}</div>
-                      <div class="text-[10px] text-zinc-500 truncate font-normal">${item.desc}</div>
+                      <div class="truncate font-bold leading-tight ${isActive ? 'text-[#111111]' : 'text-[#222222]'}">${item.label}</div>
+                      <div class="text-[10px] ${isActive ? 'text-[#666666]' : 'text-[#777777]'} truncate font-normal">${item.desc}</div>
                     </div>
                   </div>
-                  ${item.badge ? `<span id="mobileOrdersBadge" class="orders-nav-badge shrink-0">${item.badge}</span>` : '<span class="text-zinc-600 text-xs shrink-0">›</span>'}
+                  ${item.badge ? `<span id="mobileOrdersBadge" class="orders-nav-badge shrink-0">${item.badge}</span>` : '<span class="text-[#999999] text-xs shrink-0">›</span>'}
                 </button>
               `;
             }).join('')}
@@ -6393,87 +6993,86 @@ function setNav(){
     }
 
     $('mobileNav').innerHTML = `
-      <div class="flex flex-col h-full w-full">
-        <div class="p-3.5 border-b border-[#22222e] bg-[#12121a]/95 backdrop-blur sticky top-0 z-10 space-y-2.5 shrink-0">
+      <div class="flex flex-col h-full w-full bg-white text-[#111111]">
+        <div class="p-3.5 border-b border-[#EAEAEA] bg-white sticky top-0 z-10 space-y-2.5 shrink-0">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2.5">
-              <img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-7 h-7 object-contain shrink-0 drop-shadow-[0_1px_4px_rgba(245,158,11,0.25)]" />
-              <div class="flex flex-col items-start leading-none">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-lg font-black tracking-tight flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></span>
-                  <span class="text-[10px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-full border border-amber-800/60 shadow-sm">
-                    GH
-                  </span>
+              <img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-8 h-8 object-contain shrink-0 drop-shadow-[0_2px_8px_rgba(212,175,55,0.25)]" />
+              <div class="flex flex-col items-start leading-none justify-center">
+                <div class="flex items-center font-black tracking-tight text-lg brand-font leading-none">
+                  <span class="text-[#111111]">Seller</span><span class="gold-gradient">Flow</span>
+                  <span class="text-[9px] font-extrabold text-[#A67C00] bg-amber-500/15 px-1.5 py-0.5 rounded-md border border-[#D4AF37]/50 uppercase tracking-wider ml-1.5 inline-block">GH</span>
                 </div>
-                <div class="text-[8px] font-black tracking-[0.24em] text-zinc-200 flex items-center gap-1 uppercase select-none mt-1">
-                  <span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span>
+                <div class="text-[8px] sm:text-[9px] font-black tracking-[0.24em] text-[#666666] flex items-center gap-1 uppercase select-none mt-1 leading-none">
+                  <span>BUY</span><span class="text-[#D4AF37] font-black">•</span><span>SELL</span><span class="text-[#D4AF37] font-black">•</span><span>GROW</span>
                 </div>
               </div>
             </div>
-            <button type="button" id="closeMobileNavBtn" class="w-8 h-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white flex items-center justify-center text-xs font-bold transition border border-zinc-700/60 shadow-sm" title="Close menu">
+            <button type="button" id="closeMobileNavBtn" class="w-9 h-9 rounded-xl bg-[#F4F4F5] hover:bg-[#E4E4E7] text-[#111111] flex items-center justify-center text-sm font-bold transition border border-[#E4E4E7] shadow-sm shrink-0 active:scale-95 cursor-pointer" title="Close menu" aria-label="Close menu">
               ✕
             </button>
           </div>
           ${userHeaderHtml}
         </div>
 
-        <div class="px-3 py-3 flex-1 overflow-y-auto">
-          ${renderNavGroup('Commerce & Messages', commercePages)}
+        <div class="px-3 py-3 flex-1 overflow-y-auto space-y-1">
+          ${renderNavGroup('Explore & Discover', discoverPages)}
+          ${currentUser ? renderNavGroup('Commerce & Messages', commercePages) : ''}
           ${renderNavGroup('Account & System', accountPages)}
         </div>
 
-        <div class="p-3 border-t border-[#22222e] bg-[#0a0a0f] space-y-2 shrink-0">
-          <button type="button" id="mobileLanguageBtn" class="w-full p-2.5 rounded-xl bg-[#14141d] hover:bg-[#1a1a26] border border-amber-500/30 text-amber-300 font-bold text-xs flex items-center justify-between transition shadow-sm">
-            <span class="flex items-center gap-2 min-w-0">
+        <div class="p-3.5 border-t border-[#EAEAEA] bg-white space-y-2 shrink-0">
+          <button type="button" id="mobileLanguageBtn" class="sf-drawer-item-btn w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#F8F8F8] hover:bg-[#FFFFFF] border border-[#E6E6E6] hover:border-[#D4AF37] text-[#111111] font-semibold text-xs flex items-center justify-between transition shadow-sm cursor-pointer">
+            <span class="flex items-center gap-2.5 min-w-0">
               <span class="text-base shrink-0">🇬🇭</span>
-              <span class="truncate"><span>${esc(typeof t === 'function' ? t('settings_language', 'Language') : 'Language')}:</span> <b class="text-zinc-200">${esc(curLangObj ? curLangObj.native : 'English')}</b></span>
+              <span class="truncate"><span class="text-[#666666] font-medium">${esc(typeof t === 'function' ? t('settings_language', 'Language') : 'Language')}:</span> <b class="text-[#111111] font-bold">${esc(curLangObj ? curLangObj.native : 'English')}</b></span>
             </span>
-            <span class="text-gold text-[10px] font-extrabold shrink-0 ml-2">${esc(typeof t === 'function' ? t('btn_change', 'Change') : 'Change')} →</span>
+            <span class="text-[#A67C00] text-[11px] font-extrabold shrink-0 ml-2">${esc(typeof t === 'function' ? t('btn_change', 'Change') : 'Change')} →</span>
           </button>
 
-          <button type="button" id="mobileTutorialBtn" class="w-full p-2.5 rounded-xl bg-[#14141d] hover:bg-[#1a1a26] border border-gold/30 text-gold font-bold text-xs flex items-center justify-between transition shadow-sm">
-            <span class="flex items-center gap-2">
-              <span class="text-base">🎓</span>
-              <span>${esc(typeof t === 'function' ? t('settings_tutorial', 'App Walkthrough & Tutorial') : 'App Walkthrough & Tutorial')}</span>
+          <button type="button" id="mobileTutorialBtn" class="sf-drawer-item-btn w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#F8F8F8] hover:bg-[#FFFFFF] border border-[#E6E6E6] hover:border-[#D4AF37] text-[#111111] font-semibold text-xs flex items-center justify-between transition shadow-sm cursor-pointer">
+            <span class="flex items-center gap-2.5 min-w-0">
+              <span class="text-base shrink-0">🎓</span>
+              <span class="truncate text-[#111111] font-bold">${esc(typeof t === 'function' ? t('settings_tutorial', 'App Tutorial & Feature Guide') : 'App Tutorial & Feature Guide')}</span>
             </span>
-            <span class="text-gold text-[10px] font-extrabold">Explore →</span>
+            <span class="text-[#A67C00] text-[11px] font-extrabold shrink-0 ml-2">Explore →</span>
           </button>
 
-          <button type="button" id="mobileHelpSupportBtn" class="w-full p-2.5 rounded-xl bg-[#14141d] hover:bg-[#1a1a26] border border-amber-500/30 text-amber-300 font-bold text-xs flex items-center justify-between transition shadow-sm">
-            <span class="flex items-center gap-2">
-              <span class="text-base">🎧</span>
-              <span>Help & Support Desk</span>
+          <button type="button" id="mobileHelpSupportBtn" class="sf-drawer-item-btn w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#F8F8F8] hover:bg-[#FFFFFF] border border-[#E6E6E6] hover:border-[#D4AF37] text-[#111111] font-semibold text-xs flex items-center justify-between transition shadow-sm cursor-pointer">
+            <span class="flex items-center gap-2.5 min-w-0">
+              <span class="text-base shrink-0">🎧</span>
+              <span class="truncate text-[#111111] font-bold">Help & Support Desk</span>
             </span>
-            <span class="text-gold text-[10px] font-extrabold">Contact →</span>
+            <span class="text-[#A67C00] text-[11px] font-extrabold shrink-0 ml-2">Contact →</span>
           </button>
 
-          <button type="button" id="mobileReportFraudBtn" class="w-full p-2.5 rounded-xl bg-rose-950/30 hover:bg-rose-950/50 border border-rose-800/40 text-rose-300 font-bold text-xs flex items-center justify-between transition">
-            <span class="flex items-center gap-2">
-              <span class="text-base">🚨</span>
-              <span>Report Security Fraud</span>
+          <button type="button" id="mobileReportFraudBtn" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-xs flex items-center justify-between transition shadow-sm cursor-pointer">
+            <span class="flex items-center gap-2.5 min-w-0">
+              <span class="text-base shrink-0">🚨</span>
+              <span class="truncate text-rose-700 font-bold">Report Security Fraud</span>
             </span>
-            <span class="text-rose-400 text-[10px] font-extrabold">Report →</span>
+            <span class="text-rose-700 text-[11px] font-extrabold shrink-0 ml-2">Report →</span>
           </button>
 
           ${!currentUser ? `
-            <div class="grid grid-cols-2 gap-2 mt-1">
-              <button type="button" id="mobileSignInBtn" class="w-full p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5">
-                <span>🔑</span>
-                <span>Sign In</span>
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button type="button" id="mobileSignInBtn" class="sf-btn-dark w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-[#171717] hover:bg-[#262626] border border-[#333333] text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer">
+                <span class="text-sm">🔑</span>
+                <span class="text-white font-bold">Sign In</span>
               </button>
-              <button type="button" id="mobileSignUpBtn" class="w-full p-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-gold to-yellow-500 text-black font-black text-xs shadow-md hover:brightness-110 transition flex items-center justify-center gap-1.5">
-                <span>✨</span>
-                <span>Sign Up</span>
+              <button type="button" id="mobileSignUpBtn" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-gold to-yellow-500 hover:brightness-105 border border-[#D4AF37] text-[#111111] font-black text-xs shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer">
+                <span class="text-sm">✨</span>
+                <span class="text-[#111111] font-black">Sign Up</span>
               </button>
             </div>
           ` : `
-            <button type="button" id="mobileLogout" class="w-full p-2 rounded-xl text-rose-400 bg-rose-950/20 hover:bg-rose-950/40 border border-rose-900/40 font-bold text-xs flex items-center justify-center gap-2 transition" data-mobile-logout="1">
-              <span>🚪</span>
-              <span>${esc(typeof t === 'function' ? t('nav_signout', 'Sign Out Account') : 'Sign Out Account')}</span>
+            <button type="button" id="mobileLogout" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 font-bold text-xs flex items-center justify-center gap-2 transition shadow-sm active:scale-95 cursor-pointer" data-mobile-logout="1">
+              <span class="text-base">🚪</span>
+              <span class="font-bold">${esc(typeof t === 'function' ? t('nav_signout', 'Sign Out Account') : 'Sign Out Account')}</span>
             </button>
           `}
 
-          <div class="pt-0.5 text-center text-[10px] text-zinc-500 font-medium">
+          <div class="pt-1 text-center text-[10px] text-[#888888] font-medium tracking-tight">
             © 2026 POMAAH GROUP · All Rights Reserved
           </div>
         </div>
@@ -6504,6 +7103,32 @@ function setNav(){
     });
   }
 
+  // Update fixed bottom navigation tab bar (JW Library style)
+  const bottomNav = $('bottomTabBar');
+  if(bottomNav){
+    const activePage = (currentPage === 'products' ? 'marketplace' : (currentPage === 'for_you' ? 'feed' : currentPage));
+    bottomNav.querySelectorAll('.sf-bottom-tab-item').forEach(b => {
+      const p = b.dataset.bottomPage;
+      const isAct = (p === activePage);
+      b.classList.toggle('active', isAct);
+      b.onclick = () => {
+        if(p) navigate(p);
+      };
+      b.onmouseenter = () => { if(typeof prefetchPage === 'function') prefetchPage(p); };
+      b.ontouchstart = () => { if(typeof prefetchPage === 'function') prefetchPage(p); };
+    });
+
+    const bOrdersBadge = $('bottomBarOrdersBadge');
+    if(bOrdersBadge){
+      if(pCount > 0){
+        bOrdersBadge.textContent = pCount > 99 ? '99+' : String(pCount);
+        bOrdersBadge.classList.remove('hide');
+      } else {
+        bOrdersBadge.classList.add('hide');
+      }
+    }
+  }
+
   if(typeof updateOrdersBadge==='function') updateOrdersBadge(pCount);
 }
 window.setNav = setNav;
@@ -6528,6 +7153,7 @@ function _handleMobileNavTapOutside(e){
 function closeMobileNav(){
   $('mobileNav')?.classList.add('hide');
   $('mobileNavOverlay')?.classList.add('hide');
+  document.body.classList.remove('sf-drawer-open');
   document.removeEventListener('pointerdown', _handleMobileNavTapOutside, true);
   document.removeEventListener('click', _handleMobileNavTapOutside, true);
   document.removeEventListener('touchstart', _handleMobileNavTapOutside, true);
@@ -6575,6 +7201,7 @@ function initSwipeToCloseMobileNav(){
 function openMobileNav(){
   $('mobileNav')?.classList.remove('hide');
   $('mobileNavOverlay')?.classList.remove('hide');
+  document.body.classList.add('sf-drawer-open');
   setNav();
   initSwipeToCloseMobileNav();
 
@@ -7256,27 +7883,27 @@ window.updateReelEngagementInDOM = updateReelEngagementInDOM;
 function _renderFeedHTML(feedPosts, targetPostId, options){
   const fromProfile = options?.fromProfile;
   $('page').innerHTML = `
-    <div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10">
+    <div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#E6E6E6] shrink-0 bg-[#FFFFFF] z-10">
       <div class="flex items-center gap-2 min-w-0">
-        ${fromProfile ? `<button type="button" id="feedBackProfile" class="border border-[#333] hover:border-gold px-2.5 py-1 rounded-xl text-xs font-bold mr-1 shrink-0 whitespace-nowrap">← Profile</button>` : ''}
-        <h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap">For You</h1>
-        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-400 font-semibold shrink-0" title="Real-time live engagement active">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live
+        ${fromProfile ? `<button type="button" id="feedBackProfile" class="border border-[#E6E6E6] hover:border-gold px-2.5 py-1 rounded-xl text-xs font-bold mr-1 shrink-0 whitespace-nowrap bg-white text-[#111111]">← Profile</button>` : ''}
+        <h1 class="text-base sm:text-lg font-black tracking-tight text-[#111111] whitespace-nowrap">For You</h1>
+        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-600 font-semibold shrink-0" title="Real-time live engagement active">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live
         </span>
       </div>
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-        <button type="button" id="feedRefreshBtn" class="border border-[#333] hover:border-gold px-2.5 py-1.5 rounded-xl text-xs font-bold text-zinc-300 hover:text-white bg-[#141416] flex items-center gap-1.5 transition" title="Refresh feed & engagement metrics">
+        <button type="button" id="feedRefreshBtn" class="border border-[#E6E6E6] hover:border-gold px-2.5 py-1.5 rounded-xl text-xs font-bold text-[#666666] hover:text-[#111111] bg-white flex items-center gap-1.5 transition shadow-sm" title="Refresh feed & engagement metrics">
           <span class="text-xs transition-transform inline-block" id="feedRefreshIcon">🔄</span>
           <span class="hidden sm:inline">Refresh</span>
         </button>
-        <div class="hidden sm:inline-flex items-center gap-1 bg-[#141416] p-0.5 rounded-xl border border-[#2a2a2e]" title="Scroll reels (or use ↑ / ↓ arrow keys)">
+        <div class="hidden sm:inline-flex items-center gap-1 bg-white p-0.5 rounded-xl border border-[#E6E6E6]" title="Scroll reels (or use ↑ / ↓ arrow keys)">
           <button type="button" id="feedPrevBtn" class="feed-nav-btn feed-prev-btn" title="Previous video (↑ or K)">▲</button>
           <button type="button" id="feedNextBtn" class="feed-nav-btn feed-next-btn" title="Next video (↓ or J)">▼</button>
         </div>
-        <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0 whitespace-nowrap">＋ Upload</button>
+        <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-[#111111] shrink-0 whitespace-nowrap shadow-sm">＋ Upload</button>
       </div>
     </div>
-    <div class="px-2.5 sm:px-4 py-2 shrink-0 bg-[#080808]/95 z-10 border-b border-[#242424]">
+    <div class="px-2.5 sm:px-4 py-2 shrink-0 bg-[#FFFFFF] z-10 border-b border-[#E6E6E6]">
       ${renderQuickAccessNav('feed')}
     </div>
     <div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden">
@@ -18523,7 +19150,7 @@ let ordersWatcherInitialized=false;
 function updateOrdersBadge(count){
   pendingOrdersCount=Math.max(0,Number(count)||0);
   const text=pendingOrdersCount>99?'99+':String(pendingOrdersCount);
-  const badges=document.querySelectorAll('.orders-nav-badge, #desktopOrdersBadge, #mobileOrdersBadge');
+  const badges=document.querySelectorAll('.orders-nav-badge, #desktopOrdersBadge, #mobileOrdersBadge, #bottomBarOrdersBadge, .sf-bottom-tab-badge');
   badges.forEach(b=>{
     if(!b)return;
     b.textContent=text;
