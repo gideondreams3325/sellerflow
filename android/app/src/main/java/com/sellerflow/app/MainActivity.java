@@ -21,6 +21,16 @@ public class MainActivity extends BridgeActivity {
                 settings.setAllowContentAccess(true);
                 settings.setMediaPlaybackRequiresUserGesture(false);
                 settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    try {
+                        settings.setForceDark(WebSettings.FORCE_DARK_OFF);
+                    } catch (Throwable ignored) {}
+                }
+                if (android.os.Build.VERSION.SDK_INT >= 33) {
+                    try {
+                        settings.setAlgorithmicDarkeningAllowed(false);
+                    } catch (Throwable ignored) {}
+                }
                 CookieManager cookieManager = CookieManager.getInstance();
                 cookieManager.setAcceptCookie(true);
                 cookieManager.setAcceptThirdPartyCookies(webView, true);

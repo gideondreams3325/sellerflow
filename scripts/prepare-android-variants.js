@@ -56,7 +56,7 @@ const capConfig = {
     SplashScreen: {
       launchShowDuration: 500,
       launchAutoHide: true,
-      backgroundColor: '#080808',
+      backgroundColor: '#FFFFFF',
       androidSplashResourceName: 'splash',
       splashFullScreen: true,
       splashImmersive: true
