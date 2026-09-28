@@ -86,9 +86,6 @@ for (const file of filesToCopy) {
     if (file === 'index.html') {
       let content = fs.readFileSync(srcPath, 'utf8');
       let appUrl = process.env.APP_URL || 'https://sellerflow-tan.vercel.app';
-      if (appUrl.includes('.run.app') || appUrl.includes('ais-dev-') || appUrl.includes('localhost')) {
-        appUrl = 'https://sellerflow-tan.vercel.app';
-      }
       content = content.replace(/____SELLERFLOW_APP_URL____/g, appUrl);
       fs.writeFileSync(destPath, content, 'utf8');
     } else {

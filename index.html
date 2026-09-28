@@ -97,15 +97,15 @@
 <style>
 :root {
   color-scheme: light !important;
-  --sf-font-fallback: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, system-ui, "Noto Sans", "Noto Sans Arabic", "Noto Sans Devanagari", "Noto Sans Hebrew", "Noto Sans SC", "Noto Sans TC", "Noto Sans JP", "Noto Sans KR", "Noto Sans Thai", "Noto Sans Bengali", "Noto Sans Tamil", "Noto Sans Telugu", "Noto Sans Malayalam", "Noto Sans Kannada", "Noto Sans Gujarati", "Noto Sans Gurmukhi", "Noto Sans Sinhala", "Noto Sans Myanmar", "Noto Sans Khmer", "Noto Sans Lao", "Noto Sans Ethiopic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
-  --sf-font-primary: var(--sf-user-font, 'Plus Jakarta Sans'), var(--sf-font-fallback);
+  --sf-font-fallback: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, system-ui, "Noto Sans", sans-serif;
+  --sf-font-primary: var(--sf-user-font, 'Plus Jakarta Sans'), 'Inter', var(--sf-font-fallback);
   --sf-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", "Fira Code", monospace;
   --sf-font-serif: 'Playfair Display', Georgia, "Times New Roman", "Noto Serif", serif;
   --sf-keyboard-height: 0px;
 }
-*{box-sizing:border-box}
-html,body{color-scheme:light!important;background-color:#FFFFFF!important;color:#111111!important;width:100%;max-width:100%;height:100%;height:100dvh;margin:0;padding:0;overflow:hidden!important;overscroll-behavior:none!important;-webkit-overflow-scrolling:touch}
-body{position:fixed;inset:0;background:#FFFFFF!important;color:#111111!important;font-family:var(--sf-font-primary);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+*{box-sizing:border-box;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+html,body{color-scheme:light!important;background-color:#FFFFFF!important;color:#111111!important;width:100%;max-width:100%;height:100%;height:100dvh;margin:0;padding:0;overflow:hidden!important;overscroll-behavior:none!important;-webkit-overflow-scrolling:touch;font-family:var(--sf-font-primary);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+body{position:fixed;inset:0;background:#FFFFFF!important;color:#111111!important;font-family:var(--sf-font-primary);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;font-feature-settings:"cv02","cv03","cv04","cv11"}
 h1,h2,h3,h4,.brand-font,#brandBtn{font-family:'Outfit',var(--sf-font-primary);letter-spacing:-0.02em}
 #landing,#authPage{position:fixed;inset:0;width:100%;height:100%;height:100dvh;max-height:100dvh;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
 #authPage.keyboard-active{align-items:flex-start!important;justify-content:flex-start!important;padding-top:32px!important;padding-bottom:340px!important}
@@ -575,9 +575,9 @@ input, textarea, select { color: #111111 !important; }
 .sf-search-btn:hover{background:#FFFFFF!important;border-color:#D4AF37!important;color:#A67C00!important}
 .sf-search-btn:active{transform:scale(.94)}
 
-#headerLoginBtn,#feedLoginBtn{background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.14)!important;color:#f4f4f5!important;font-family:inherit!important;font-weight:650!important;font-size:12px!important;padding:6px 13px!important;border-radius:11px!important;letter-spacing:-.01em!important;transition:all .16s cubic-bezier(0.16,1,0.3,1)!important;box-shadow:0 1px 3px rgba(0,0,0,.2)!important;flex-shrink:0!important;white-space:nowrap!important}
-#headerLoginBtn:hover,#feedLoginBtn:hover{background:rgba(255,255,255,.12)!important;border-color:rgba(245,185,66,.45)!important;color:#f5b942!important;transform:translateY(-.5px)}
-#headerLoginBtn:active,#feedLoginBtn:active{transform:scale(.95)}
+#headerLoginBtn,#feedLoginBtn{background:linear-gradient(135deg,#f7c554 0%,#f5b942 52%,#e5a428 100%)!important;border:1px solid rgba(212,175,55,0.4)!important;color:#111111!important;font-family:inherit!important;font-weight:800!important;font-size:12px!important;padding:6px 14px!important;border-radius:11px!important;letter-spacing:-.01em!important;box-shadow:0 2px 8px rgba(245,185,66,.28),inset 0 1px 0 rgba(255,255,255,.45)!important;transition:all .16s cubic-bezier(0.16,1,0.3,1)!important;flex-shrink:0!important;white-space:nowrap!important}
+#headerLoginBtn:hover,#feedLoginBtn:hover{filter:brightness(1.08)!important;box-shadow:0 4px 14px rgba(245,185,66,.42),inset 0 1px 0 rgba(255,255,255,.55)!important;transform:translateY(-.5px)}
+#headerLoginBtn:active,#feedLoginBtn:active{transform:scale(.95);filter:brightness(.96)!important}
 
 #headerRegisterBtn,#feedRegisterBtn{background:linear-gradient(135deg,#f7c554 0%,#f5b942 52%,#e5a428 100%)!important;border:1px solid rgba(255,255,255,.28)!important;color:#080808!important;font-family:inherit!important;font-weight:750!important;font-size:12px!important;padding:6px 14px!important;border-radius:11px!important;letter-spacing:-.01em!important;box-shadow:0 2px 10px rgba(245,185,66,.28),inset 0 1px 0 rgba(255,255,255,.45)!important;transition:all .16s cubic-bezier(0.16,1,0.3,1)!important;flex-shrink:0!important;white-space:nowrap!important}
 #headerRegisterBtn:hover,#feedRegisterBtn:hover{filter:brightness(1.08)!important;box-shadow:0 4px 16px rgba(245,185,66,.45),inset 0 1px 0 rgba(255,255,255,.55)!important;transform:translateY(-.5px)}
@@ -880,7 +880,7 @@ html.light-theme .modal-card b,
 html.light-theme #authPage h1,
 html.light-theme #authPage h2,
 html.light-theme #authPage p#authTitle,
-html.light-theme .text-white:not(.btn-dark):not(.sf-btn-dark):not(#authPromptLogin):not(#mobileSignInBtn):not(button.bg-black):not(button.bg-zinc-900):not(button.bg-rose-600):not(button.bg-red-600):not(button.bg-emerald-600):not(button.bg-green-600):not(.reel-card *):not(.reel-content *):not(.reel-actions *):not(.feed-floating-btn *):not(.island-toast *):not(.badge-danger):not(.badge-success):not(.order-status-badge) {
+html.light-theme .text-white:not(.btn-dark):not(.sf-btn-dark):not(button.bg-black):not(button.bg-zinc-900):not(button.bg-rose-600):not(button.bg-red-600):not(button.bg-emerald-600):not(button.bg-green-600):not(.reel-card *):not(.reel-content *):not(.reel-actions *):not(.feed-floating-btn *):not(.island-toast *):not(.badge-danger):not(.badge-success):not(.order-status-badge) {
   color: #111111 !important;
 }
 html.light-theme #brandBtn .text-white {
@@ -890,8 +890,9 @@ html.light-theme #brandBtn .text-white {
 /* ==========================================================================
    CRITICAL CONTRAST RULES:
    1. Video overlay elements ALWAYS have pure white text (#FFFFFF)
-   2. Dark buttons (.btn-dark, .sf-btn-dark, #mobileSignInBtn, #authPromptLogin)
-      ALWAYS have #171717 background and #FFFFFF text in all themes.
+   2. Dark buttons (.btn-dark, .sf-btn-dark) ALWAYS have #171717 background and #FFFFFF text.
+   3. Gold buttons (.btn-primary, .bg-gold, .sf-btn-gold, #mobileSignInBtn, #mobileSignUpBtn, #headerLoginBtn, #authPromptLogin)
+      ALWAYS have vibrant gold gradient background and high-contrast #111111 bold text.
    ========================================================================== */
 html.light-theme .reel-card,
 html.light-theme .reel-card *,
@@ -914,18 +915,12 @@ html.light-theme .island-toast * {
 /* Secondary dark button: background #171717, text #FFFFFF (pure contrast) */
 .btn-dark,
 .sf-btn-dark,
-#mobileSignInBtn,
-#authPromptLogin,
 html.light-theme .btn-dark,
 html.light-theme .sf-btn-dark,
-html.light-theme #mobileSignInBtn,
-html.light-theme #authPromptLogin,
 html.light-theme button.sf-btn-dark,
 html.light-theme button.btn-dark,
-html.light-theme .modal-card #authPromptLogin,
 html.light-theme .modal-card .btn-dark,
-html.light-theme .modal-card .sf-btn-dark,
-html.light-theme #mobileNav #mobileSignInBtn {
+html.light-theme .modal-card .sf-btn-dark {
   background-color: #171717 !important;
   background-image: none !important;
   color: #FFFFFF !important;
@@ -934,28 +929,18 @@ html.light-theme #mobileNav #mobileSignInBtn {
 }
 .btn-dark *,
 .sf-btn-dark *,
-#mobileSignInBtn *,
-#authPromptLogin *,
 html.light-theme .btn-dark *,
 html.light-theme .sf-btn-dark *,
-html.light-theme #mobileSignInBtn *,
-html.light-theme #authPromptLogin *,
 html.light-theme button.sf-btn-dark *,
 html.light-theme button.btn-dark *,
-html.light-theme .modal-card #authPromptLogin *,
 html.light-theme .modal-card .btn-dark *,
-html.light-theme .modal-card .sf-btn-dark *,
-html.light-theme #mobileNav #mobileSignInBtn * {
+html.light-theme .modal-card .sf-btn-dark * {
   color: #FFFFFF !important;
 }
 .btn-dark:hover,
 .sf-btn-dark:hover,
-#mobileSignInBtn:hover,
-#authPromptLogin:hover,
 html.light-theme .btn-dark:hover,
-html.light-theme .sf-btn-dark:hover,
-html.light-theme #mobileSignInBtn:hover,
-html.light-theme #authPromptLogin:hover {
+html.light-theme .sf-btn-dark:hover {
   background-color: #262626 !important;
   color: #FFFFFF !important;
 }
@@ -984,33 +969,77 @@ html.light-theme .btn:disabled {
   border-color: #D9D9D9 !important;
 }
 
-/* Primary gold button: gold gradient, #111111 bold text */
+/* Primary gold button & Auth buttons: gold gradient, #111111 bold text */
+.sf-btn-gold,
+#mobileSignInBtn,
+#mobileSignUpBtn,
+#headerLoginBtn,
+#headerRegisterBtn,
+#authPromptLogin,
+#authPromptRegister,
 html.light-theme .btn-primary,
 html.light-theme .bg-gold,
+html.light-theme .sf-btn-gold,
 html.light-theme #authSubmit,
 html.light-theme #headerRegisterBtn,
+html.light-theme #headerLoginBtn,
+html.light-theme #feedLoginBtn,
+html.light-theme #feedRegisterBtn,
+html.light-theme #mobileSignInBtn,
 html.light-theme #mobileSignUpBtn,
+html.light-theme #authPromptLogin,
 html.light-theme #authPromptRegister,
 html.light-theme #openFeedUpload,
 html.light-theme #openFeedUploadEmpty {
   background: linear-gradient(135deg, #F5B942 0%, #D4AF37 100%) !important;
+  background-color: #F5B942 !important;
   color: #111111 !important;
   font-weight: 800 !important;
-  border: 1px solid rgba(212, 175, 55, 0.4) !important;
+  border: 1px solid rgba(212, 175, 55, 0.45) !important;
   box-shadow: 0 2px 8px rgba(212, 175, 55, 0.28) !important;
 }
+.sf-btn-gold *,
+#mobileSignInBtn *,
+#mobileSignUpBtn *,
+#headerLoginBtn *,
+#headerRegisterBtn *,
+#authPromptLogin *,
+#authPromptRegister *,
 html.light-theme .btn-primary *,
 html.light-theme .bg-gold *,
+html.light-theme .sf-btn-gold *,
 html.light-theme #authSubmit *,
 html.light-theme #headerRegisterBtn *,
+html.light-theme #headerLoginBtn *,
+html.light-theme #feedLoginBtn *,
+html.light-theme #feedRegisterBtn *,
+html.light-theme #mobileSignInBtn *,
 html.light-theme #mobileSignUpBtn *,
+html.light-theme #authPromptLogin *,
 html.light-theme #authPromptRegister * {
   color: #111111 !important;
+  font-weight: 800 !important;
+}
+.sf-btn-gold:hover,
+#mobileSignInBtn:hover,
+#mobileSignUpBtn:hover,
+#headerLoginBtn:hover,
+#headerRegisterBtn:hover,
+#authPromptLogin:hover,
+#authPromptRegister:hover,
+html.light-theme .sf-btn-gold:hover,
+html.light-theme #mobileSignInBtn:hover,
+html.light-theme #mobileSignUpBtn:hover,
+html.light-theme #headerLoginBtn:hover,
+html.light-theme #headerRegisterBtn:hover,
+html.light-theme #authPromptLogin:hover,
+html.light-theme #authPromptRegister:hover {
+  filter: brightness(1.08) !important;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.38) !important;
 }
 
 /* Secondary white button: white background, gold border, dark text */
 html.light-theme .btn-secondary,
-html.light-theme #headerLoginBtn,
 html.light-theme #feedRefreshBtn {
   background-color: #FFFFFF !important;
   border: 1px solid #D4AF37 !important;
@@ -1019,7 +1048,6 @@ html.light-theme #feedRefreshBtn {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
 }
 html.light-theme .btn-secondary:hover,
-html.light-theme #headerLoginBtn:hover,
 html.light-theme #feedRefreshBtn:hover {
   background-color: #FFFDF5 !important;
   border-color: #A67C00 !important;
@@ -2490,14 +2518,14 @@ const signInWithPopup=(auth,provider)=>auth.signInWithPopup(provider);
 
 function getAppUrl() {
   const origin = window.location.origin || '';
-  if (origin && origin.startsWith('http') && !origin.includes('localhost') && !origin.includes('capacitor://') && !origin.includes('127.0.0.1') && !origin.includes('.run.app')) {
-    return origin;
+  if (origin && origin.startsWith('http') && !origin.includes('capacitor://') && !origin.startsWith('file:') && !origin.includes('127.0.0.1:0')) {
+    return origin.replace(/\/+$/, '');
   }
   const injectedUrl = '____SELLERFLOW_APP_URL____';
-  if (injectedUrl && injectedUrl.startsWith('http') && !injectedUrl.includes('____') && !injectedUrl.includes('.run.app') && !injectedUrl.includes('ais-dev-')) {
+  if (injectedUrl && injectedUrl.startsWith('http') && !injectedUrl.includes('____')) {
     return injectedUrl.replace(/\/+$/, '');
   }
-  if (window.SELLERFLOW_APP_URL && typeof window.SELLERFLOW_APP_URL === 'string' && window.SELLERFLOW_APP_URL.startsWith('http') && !window.SELLERFLOW_APP_URL.includes('.run.app')) {
+  if (window.SELLERFLOW_APP_URL && typeof window.SELLERFLOW_APP_URL === 'string' && window.SELLERFLOW_APP_URL.startsWith('http')) {
     return window.SELLERFLOW_APP_URL.replace(/\/+$/, '');
   }
   return 'https://sellerflow-tan.vercel.app';
@@ -2509,7 +2537,7 @@ function isCapacitorNative() {
     if (typeof window.Capacitor.getPlatform === 'function' && window.Capacitor.getPlatform() === 'android') return true;
   }
   const origin = window.location.origin || '';
-  if (origin.includes('capacitor://') || origin.includes('http://localhost') || origin.includes('https://localhost')) {
+  if (origin.includes('capacitor://') || (origin.includes('localhost') && window.location.protocol === 'file:')) {
     return true;
   }
   return false;
@@ -2519,13 +2547,13 @@ window.isCapacitorNative = isCapacitorNative;
 function getSfApiUrl(path) {
   if (!path) return '';
   const p = path.startsWith('/') ? path : '/' + path;
-  const isCapacitor = typeof isCapacitorNative === 'function' ? isCapacitorNative() : false;
-  const appBase = (typeof getAppUrl === 'function') ? getAppUrl() : 'https://sellerflow-tan.vercel.app';
-  if (isCapacitor || window.location.origin.includes('capacitor://') || window.location.origin.includes('localhost') || window.location.protocol === 'file:') {
-    const base = (window.__sfBackendUrl || appBase).replace(/\/+$/, '');
-    return base + p;
+  const isCap = typeof isCapacitorNative === 'function' ? isCapacitorNative() : false;
+  if (!isCap && window.location.protocol && window.location.protocol.startsWith('http')) {
+    return p;
   }
-  return p;
+  const appBase = (typeof getAppUrl === 'function') ? getAppUrl() : 'https://sellerflow-tan.vercel.app';
+  const base = (window.__sfBackendUrl || appBase).replace(/\/+$/, '');
+  return base + p;
 }
 window.getSfApiUrl = getSfApiUrl;
 window.__sfBackendUrl = (typeof getAppUrl === 'function') ? getAppUrl() : 'https://sellerflow-tan.vercel.app';
@@ -5403,11 +5431,11 @@ function showAuthPrompt(actionMessage = 'interact on SellerFlow'){
         Sign in or create an account to ${esc(actionMessage)}.
       </p>
       <div class="space-y-2.5 mt-6 max-w-sm mx-auto">
-        <button type="button" id="authPromptRegister" class="w-full py-3.5 px-4 bg-gold text-black rounded-xl font-bold text-sm hover:brightness-110 shadow-lg shadow-gold/20 flex items-center justify-center gap-2 transition active:scale-98">
+        <button type="button" id="authPromptRegister" class="sf-btn-gold w-full py-3.5 px-4 bg-gradient-to-r from-amber-400 via-gold to-yellow-500 text-black rounded-xl font-extrabold text-sm hover:brightness-110 shadow-lg shadow-gold/20 flex items-center justify-center gap-2 transition active:scale-98">
           Create Account
         </button>
-        <button type="button" id="authPromptLogin" class="sf-btn-dark w-full py-3 px-4 bg-[#171717] hover:bg-[#262626] border border-[#333333] text-white rounded-xl font-bold text-sm shadow-md transition active:scale-98 flex items-center justify-center">
-          <span class="text-white font-bold">Sign In with Username</span>
+        <button type="button" id="authPromptLogin" class="sf-btn-gold w-full py-3.5 px-4 bg-gradient-to-r from-amber-400 via-gold to-yellow-500 hover:brightness-105 border border-[#D4AF37] text-black rounded-xl font-extrabold text-sm shadow-md transition active:scale-98 flex items-center justify-center">
+          <span class="text-black font-extrabold">Sign In with Username</span>
         </button>
       </div>
       <div class="mt-4">
@@ -7267,10 +7295,10 @@ function setNav(){
         <button id="sfGlobalSearchBtn" type="button" class="sf-search-btn shrink-0" title="Search SellerFlow (⌕)">
           <span>⌕</span><span class="hidden sm:inline">Search</span>
         </button>
-        <button type="button" id="headerLoginBtn" class="sf-btn-dark px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-[#171717] hover:bg-[#262626] border border-[#333333] transition whitespace-nowrap shadow-sm min-h-[34px] flex items-center justify-center cursor-pointer">
+        <button type="button" id="headerLoginBtn" class="sf-btn-gold px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[#111111] bg-gradient-to-r from-amber-400 via-gold to-yellow-500 hover:brightness-105 border border-[#D4AF37] transition whitespace-nowrap shadow-sm min-h-[34px] flex items-center justify-center cursor-pointer active:scale-95">
           ${esc(typeof t === 'function' ? t('auth_btn_signin','Sign In') : 'Sign In')}
         </button>
-        <button type="button" id="headerRegisterBtn" class="bg-gold text-[#111111] px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-black hover:brightness-105 active:scale-95 transition shadow-sm whitespace-nowrap min-h-[34px] flex items-center justify-center cursor-pointer">
+        <button type="button" id="headerRegisterBtn" class="sf-btn-gold bg-gradient-to-r from-amber-400 via-gold to-yellow-500 text-[#111111] px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-black hover:brightness-105 active:scale-95 border border-[#D4AF37] transition shadow-sm whitespace-nowrap min-h-[34px] flex items-center justify-center cursor-pointer">
           ${esc(typeof t === 'function' ? t('auth_btn_signup','Sign Up') : 'Sign Up')}
         </button>
       `;
@@ -7463,13 +7491,13 @@ function setNav(){
 
           ${!currentUser ? `
             <div class="grid grid-cols-2 gap-2 pt-1">
-              <button type="button" id="mobileSignInBtn" class="sf-btn-dark w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-[#171717] hover:bg-[#262626] border border-[#333333] text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer">
+              <button type="button" id="mobileSignInBtn" class="sf-btn-gold w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-gold to-yellow-500 hover:brightness-105 border border-[#D4AF37] text-[#111111] font-black text-xs shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer">
                 <span class="text-sm">🔑</span>
-                <span class="text-white font-bold">Sign In</span>
+                <span class="text-[#111111] font-black tracking-tight">Sign In</span>
               </button>
-              <button type="button" id="mobileSignUpBtn" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-gold to-yellow-500 hover:brightness-105 border border-[#D4AF37] text-[#111111] font-black text-xs shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer">
+              <button type="button" id="mobileSignUpBtn" class="sf-btn-gold w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-gold to-yellow-500 hover:brightness-105 border border-[#D4AF37] text-[#111111] font-black text-xs shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer">
                 <span class="text-sm">✨</span>
-                <span class="text-[#111111] font-black">Sign Up</span>
+                <span class="text-[#111111] font-black tracking-tight">Sign Up</span>
               </button>
             </div>
           ` : `
@@ -21323,42 +21351,87 @@ if($('authForm')){
         if (!password) throw Error('Enter your password.');
         loading('Signing you in…');
 
-        const logRes = await fetch('/api/auth/login-username', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-        const logData = await logRes.json();
-        if (!logData.success) {
-          // Attempt client fallback lookup
-          const lookRes = await fetch('/api/auth/lookup-identifier', {
+        let loggedIn = false;
+        let authErr = null;
+
+        // 1. First attempt: Server-Side Authoritative Login
+        try {
+          const logRes = await fetch('/api/auth/login-username', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ identifier: username })
+            body: JSON.stringify({ username, password })
           });
-          const lookData = await lookRes.json();
-          if (lookData.success && lookData.authEmail) {
-            const cred = await signInWithEmailAndPassword(auth, lookData.authEmail, password);
-            const u = cred.user;
-            currentUser = u;
-            isAdmin = isUserAdminEmail(u.email);
-            window.currentUser = u;
-            window.isAdmin = isAdmin;
-            ready();
-            hide($('authPage'));
-            showApp();
-            setNav();
-            await startUser(u);
-            navigate('feed');
-            toast('Welcome back to SellerFlow!', 'success');
-            return;
+          if (logRes.ok) {
+            const logData = await logRes.json();
+            if (logData.success && logData.customToken) {
+              await auth.signInWithCustomToken(logData.customToken);
+              loggedIn = Boolean(auth.currentUser);
+            }
           }
-          throw new Error(logData.error || 'Invalid username or password.');
+        } catch (serverErr) {
+          console.warn('Server auth endpoint notice, attempting direct Firebase Auth:', serverErr?.message);
         }
 
-        if (logData.customToken) {
-          await auth.signInWithCustomToken(logData.customToken);
+        // 2. Second attempt: Direct Client-Side Firebase Auth Fallback
+        if (!loggedIn && !auth.currentUser) {
+          const uClean = usernameClean(username);
+          let candidateEmails = [];
+
+          // Try looking up registered username document from Firestore
+          try {
+            if (typeof db !== 'undefined' && db && typeof db.collection === 'function') {
+              const uSnap = await db.collection('registeredUsernames').doc(uClean).get();
+              if (uSnap && uSnap.exists) {
+                const uData = uSnap.data() || {};
+                if (uData.authEmail) candidateEmails.push(uData.authEmail);
+                if (uData.recoveryEmail) candidateEmails.push(uData.recoveryEmail);
+              }
+            }
+          } catch (_) {}
+
+          // Also check registeredEmails if username is an email address
+          if (username.includes('@')) {
+            candidateEmails.unshift(username.toLowerCase().trim());
+          }
+
+          // Candidate auth emails
+          candidateEmails.push(`${uClean}@users.sellerflow.internal`);
+          candidateEmails.push(`${uClean}@sellerflow.internal`);
+          candidateEmails.push(`${uClean}@sellerflow.com`);
+          if (uClean === 'sellerflow' || uClean === 'gideondreams' || uClean === 'admin_gideon') {
+            candidateEmails.push('gideondreams3325@gmail.com');
+            candidateEmails.push('gfappiah3325@gmail.com');
+          }
+
+          // Filter unique valid email strings
+          candidateEmails = candidateEmails.filter((em, idx, arr) => em && typeof em === 'string' && em.includes('@') && arr.indexOf(em) === idx);
+
+          let cred = null;
+          for (const em of candidateEmails) {
+            try {
+              cred = await signInWithEmailAndPassword(auth, em, password);
+              if (cred && cred.user) {
+                loggedIn = true;
+                break;
+              }
+            } catch (err) {
+              authErr = err;
+              if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                if (candidateEmails.indexOf(em) === 0 && candidateEmails.length > 2) {
+                  // If explicit email had wrong password, continue or break
+                }
+              }
+            }
+          }
+
+          if (!loggedIn && !auth.currentUser) {
+            if (authErr && (authErr.code === 'auth/wrong-password' || authErr.code === 'auth/invalid-credential' || authErr.code === 'auth/user-not-found')) {
+              throw new Error('Incorrect username or password. Please verify your credentials.');
+            }
+            throw (authErr || new Error('Incorrect username or password. Please verify your credentials.'));
+          }
         }
+
         const u = auth.currentUser;
         if (!u) throw new Error('Authentication failed. Please try again.');
         currentUser = u;

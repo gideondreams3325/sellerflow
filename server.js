@@ -3561,9 +3561,10 @@ app.post(['/api/auth/login-username', '/api/auth/login'], async (req, res) => {
 
     // Helper to authenticate against Firebase Identity Toolkit using email + password
     const verifyWithFirebase = async (emailToTry) => {
-      if (!emailToTry || !firebaseConfig.apiKey) return null;
+      const apiKey = process.env.FIREBASE_API_KEY || 'AIzaSyCyEdrUXAfgThfpStPY-Yvz8BG3LrhYuWk';
+      if (!emailToTry || !apiKey) return null;
       try {
-        const resp = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${firebaseConfig.apiKey}`, {
+        const resp = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: emailToTry, password: inputPassword, returnSecureToken: true })

@@ -2457,8 +2457,8 @@ function isCapacitorNative() {
 
 function getAdminAppUrl() {
   const origin = window.location.origin || '';
-  if (origin && origin.startsWith('http') && !origin.includes('localhost') && !origin.includes('capacitor://') && !origin.includes('127.0.0.1') && !origin.includes('.run.app')) {
-    return origin;
+  if (origin && origin.startsWith('http') && !origin.includes('capacitor://') && !origin.startsWith('file:') && !origin.includes('127.0.0.1:0')) {
+    return origin.replace(/\/+$/, '');
   }
   return 'https://sellerflow-tan.vercel.app';
 }
