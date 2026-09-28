@@ -975,6 +975,21 @@ html.light-theme .market-filter.active {
   border-color: #f5b942 !important;
   box-shadow: 0 2px 8px rgba(245, 185, 66, 0.3) !important;
 }
+html.light-theme .sf-quick-access-nav {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+html.light-theme .sf-quick-nav-btn {
+  background: #f8fafc !important;
+  color: #334155 !important;
+  border-color: #e2e8f0 !important;
+}
+html.light-theme .sf-quick-nav-btn:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
 html.light-theme .bg-amber-950\/30,
 html.light-theme .bg-amber-950\/20,
 html.light-theme .bg-amber-950\/15 {
@@ -1148,7 +1163,7 @@ html.light-theme .border-b {
       </div>
 
       <!-- Recovery Email Field (Only on Signup) -->
-      <div id="recoveryEmailWrap" class="hide">
+      <div id="recoveryEmailWrap" class="hide" aria-description="Enter your username and recovery email to receive recovery instructions">
         <div class="flex items-center justify-between">
           <label class="text-sm font-semibold text-zinc-200">Recovery Email</label>
           <span class="text-[10.5px] text-zinc-500">Private · For recovery only</span>
@@ -1161,10 +1176,32 @@ html.light-theme .border-b {
       </div>
 
       <!-- Reset Code Field (Only on Reset Password) -->
-      <div id="resetCodeWrap" class="hide">
-        <label class="text-sm font-semibold text-zinc-200">6-Digit Recovery Code</label>
-        <input id="authResetCode" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-center text-lg tracking-widest focus:border-gold outline-none transition" placeholder="123456">
-        <p class="text-[11px] text-zinc-500 mt-1">Enter the 6-digit code sent to your verified recovery email.</p>
+      <div id="resetCodeWrap" class="hide space-y-3">
+        <div id="recoverySentNotice" class="p-3 rounded-xl bg-gold/10 border border-gold/30 text-xs text-zinc-200 flex items-center gap-2.5">
+          <span class="text-base text-gold shrink-0">✉️</span>
+          <div class="leading-snug">
+            <span class="text-zinc-400">Recovery code sent to </span>
+            <span id="recoveryMaskedEmailDisplay" class="font-mono text-gold font-bold">your verified email</span>
+          </div>
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-zinc-200">6-Digit Recovery Code</label>
+          <input id="authResetCode" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-center text-lg tracking-widest focus:border-gold outline-none transition" placeholder="123456" autocomplete="one-time-code">
+          <p class="text-[11px] text-zinc-500 mt-1">Enter the 6-digit code sent to your verified recovery email.</p>
+        </div>
+        <!-- Polished Resend Code with 45s countdown rate limit -->
+        <div id="resendCodeWrap" class="flex items-center justify-between text-xs text-zinc-400 pt-1 border-t border-zinc-800/60">
+          <span>Didn't receive the code?</span>
+          <button type="button" id="resendResetCodeBtn" class="text-gold font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed transition" disabled>
+            Resend in <span id="resendCountdownSecs">45</span>s
+          </button>
+        </div>
+      </div>
+
+      <!-- Recovery Error & Try Again Notification -->
+      <div id="recoveryErrorWrap" class="hide p-3 rounded-xl bg-red-950/40 border border-red-800/60 text-xs text-red-200 flex items-center justify-between gap-2">
+        <span id="recoveryErrorMessage">Unable to send your recovery code right now. Please try again.</span>
+        <button type="button" id="recoveryTryAgainBtn" class="px-3 py-1 bg-red-800 hover:bg-red-700 text-white font-bold rounded-lg shrink-0 transition">Try Again</button>
       </div>
 
       <!-- Password Field (Login, Signup, Reset Password) -->
@@ -3442,6 +3479,52 @@ function ready(){
 }
 function pageTitle(t,sub=''){const back=currentPage&&currentPage!=='feed'?`<button type="button" class="back-page-btn" data-global-back="1">← Back</button>`:'';return `<div class="mb-6">${back}<h1 class="text-2xl md:text-3xl font-black">${esc(t)}</h1>${sub?`<p class="muted mt-1">${esc(sub)}</p>`:''}</div>`}
 function button(t,id='',cls='bg-gold text-black'){return `<button type="button" id="${id}" class="btn px-4 py-2 rounded-xl font-semibold ${cls}">${esc(t)}</button>`}
+function renderQuickAccessNav(activeSection = '') {
+  const current = activeSection || (typeof currentPage !== 'undefined' ? currentPage : '');
+  const items = [
+    {
+      key: 'marketplace',
+      label: typeof t === 'function' ? t('nav_marketplace', 'Marketplace') : 'Marketplace',
+      icon: '🛍️'
+    },
+    {
+      key: 'feed',
+      label: typeof t === 'function' ? t('nav_for_you', 'For You') : 'For You',
+      icon: '▶️'
+    },
+    {
+      key: 'events',
+      label: typeof t === 'function' ? t('nav_events', 'Events') : 'Events',
+      icon: '📅'
+    },
+    {
+      key: 'jobs',
+      label: typeof t === 'function' ? t('nav_jobs', 'Jobs') : 'Jobs',
+      icon: '💼'
+    }
+  ];
+
+  return `
+    <nav class="sf-quick-access-nav w-full max-w-2xl mx-auto p-1.5 sm:p-2 rounded-2xl bg-[#12121a] border border-[#242436] shadow-md select-none" aria-label="Quick Navigation">
+      <div class="grid grid-cols-4 gap-1.5 sm:gap-2">
+        ${items.map(item => {
+          const isActive = current === item.key || (item.key === 'marketplace' && current === 'products') || (item.key === 'feed' && (current === 'feed' || current === 'for_you'));
+          return `
+            <button type="button" data-quick-dest="${item.key}" class="sf-quick-nav-btn flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl transition-all duration-150 active:scale-95 cursor-pointer min-h-[50px] sm:min-h-[56px] ${
+              isActive
+                ? 'bg-gradient-to-b from-amber-500/30 to-amber-500/10 text-amber-300 border border-gold/75 shadow-[0_0_12px_rgba(245,185,66,0.3)] font-black ring-1 ring-gold/40'
+                : 'bg-[#181824] hover:bg-[#202032] text-zinc-300 hover:text-white border border-[#2b2b3d] hover:border-zinc-700 font-bold'
+            }" title="${esc(item.label)}">
+              <span class="text-lg sm:text-xl leading-none mb-1 flex items-center justify-center">${item.icon}</span>
+              <span class="text-[10px] xs:text-[11px] sm:text-xs tracking-tight truncate w-full text-center leading-tight font-bold">${esc(item.label)}</span>
+            </button>
+          `;
+        }).join('')}
+      </div>
+    </nav>
+  `;
+}
+window.renderQuickAccessNav = renderQuickAccessNav;
 function getOptimizedMediaUrl(url, type = 'card') {
   if (!url || typeof url !== 'string') return '';
   const trimmed = url.trim();
@@ -4326,6 +4409,46 @@ function showAuthPrompt(actionMessage = 'interact on SellerFlow'){
 }
 window.showAuthPrompt=showAuthPrompt;
 
+let resendTimerInterval = null;
+function startResendCountdown(seconds = 45) {
+  if (resendTimerInterval) clearInterval(resendTimerInterval);
+  let remaining = seconds;
+  const resendBtn = $('resendResetCodeBtn');
+  if (!resendBtn) return;
+
+  resendBtn.disabled = true;
+  resendBtn.innerHTML = `Resend in <span id="resendCountdownSecs">${remaining}</span>s`;
+
+  resendTimerInterval = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(resendTimerInterval);
+      resendTimerInterval = null;
+      resendBtn.disabled = false;
+      resendBtn.innerHTML = 'Resend Code';
+    } else {
+      const cEl = $('resendCountdownSecs');
+      if (cEl) {
+        cEl.textContent = remaining;
+      } else {
+        resendBtn.innerHTML = `Resend in <span id="resendCountdownSecs">${remaining}</span>s`;
+      }
+    }
+  }, 1000);
+}
+window.startResendCountdown = startResendCountdown;
+
+function showRecoveryError(msg = 'Unable to send your recovery code right now. Please try again.') {
+  const errWrap = $('recoveryErrorWrap');
+  const errMsg = $('recoveryErrorMessage');
+  if (errMsg) errMsg.textContent = msg;
+  if (errWrap) {
+    errWrap.classList.remove('hide');
+    errWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+window.showRecoveryError = showRecoveryError;
+
 function showLanding(){
   hide($('authPage'));
   showApp();
@@ -4354,21 +4477,55 @@ function showAuth(mode='register', targetEmail=''){
   show($('authForm'));
   hide($('emailVerifyWrap'));
   
+  const setVisible = (el, isVisible) => {
+    if (!el) return;
+    if (isVisible) {
+      el.classList.remove('hide');
+      el.style.display = 'block';
+    } else {
+      el.classList.add('hide');
+      el.style.display = 'none';
+    }
+  };
+
+  const setBtnText = (btn, text) => {
+    if (!btn) return;
+    const span = btn.querySelector('#authSubmitText') || $('authSubmitText');
+    if (span) span.textContent = text;
+    else btn.textContent = text;
+  };
+
+  const uInput = $('authUsername');
+  const pInput = $('authPassword');
+  const cpInput = $('authConfirmPassword');
+  const recEmailInput = $('authRecoveryEmail');
+  const resetCodeInput = $('authResetCode');
+
   if (mode === 'register') {
     if($('authTitle'))$('authTitle').textContent='Create your account';
     if($('authSubtitle'))$('authSubtitle').textContent='Sell and shop across Ghana.';
-    if($('authSubmit'))$('authSubmit').textContent='Create Account';
+    setBtnText($('authSubmit'), 'Create Account');
     if($('authSwitch'))$('authSwitch').textContent='Already have an account? Sign in';
-    if($('nameWrap'))$('nameWrap').style.display='block';
-    if($('usernameWrap'))$('usernameWrap').style.display='block';
-    if($('recoveryEmailWrap'))$('recoveryEmailWrap').style.display='block';
-    if($('passwordWrap'))$('passwordWrap').style.display='block';
-    if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display='block';
-    if($('termsWrap'))$('termsWrap').style.display='block';
-    if($('forgotPasswordLinkWrap'))$('forgotPasswordLinkWrap').style.display='none';
-    if($('codeVerificationWrap'))$('codeVerificationWrap').style.display='none';
+    if($('passwordLabel'))$('passwordLabel').textContent='Password';
+
+    setVisible($('nameWrap'), true);
+    setVisible($('usernameWrap'), true);
+    setVisible($('recoveryEmailWrap'), true);
+    setVisible($('passwordWrap'), true);
+    setVisible($('confirmPasswordWrap'), true);
+    setVisible($('termsWrap'), true);
+    setVisible($('resetCodeWrap'), false);
+    setVisible($('forgotPasswordLinkWrap'), false);
+    setVisible($('codeVerificationWrap'), false);
+    setVisible($('backToSignInBtn'), false);
+
+    if (uInput) uInput.required = true;
+    if (recEmailInput) recEmailInput.required = true;
+    if (pInput) pInput.required = true;
+    if (cpInput) cpInput.required = true;
+    if (resetCodeInput) { resetCodeInput.required = false; resetCodeInput.value = ''; }
+
     setTimeout(() => {
-      const uInput = $('authUsername');
       if (uInput) {
         attachUniversalUsernameController(uInput, {
           previewEl: $('authUsernamePreview'),
@@ -4383,49 +4540,109 @@ function showAuth(mode='register', targetEmail=''){
     }, 20);
   } else if (mode === 'forgot') {
     if($('authTitle'))$('authTitle').textContent='Forgot Password';
-    if($('authSubtitle'))$('authSubtitle').textContent='Enter your username and recovery email to receive recovery instructions.';
-    if($('authSubmit'))$('authSubmit').textContent='Send Recovery Instructions';
+    if($('authSubtitle'))$('authSubtitle').textContent='Enter your SellerFlow username to receive a 6-digit recovery code.';
+    setBtnText($('authSubmit'), 'Send Recovery Code');
     if($('authSwitch'))$('authSwitch').textContent='Remembered your password? Sign in';
-    if($('nameWrap'))$('nameWrap').style.display='none';
-    if($('usernameWrap'))$('usernameWrap').style.display='block';
-    if($('recoveryEmailWrap'))$('recoveryEmailWrap').style.display='block';
-    if($('passwordWrap'))$('passwordWrap').style.display='none';
-    if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display='none';
-    if($('termsWrap'))$('termsWrap').style.display='none';
-    if($('forgotPasswordLinkWrap'))$('forgotPasswordLinkWrap').style.display='none';
-    if($('codeVerificationWrap'))$('codeVerificationWrap').style.display='none';
+
+    setVisible($('nameWrap'), false);
+    setVisible($('usernameWrap'), true);
+    setVisible($('recoveryEmailWrap'), false);
+    setVisible($('passwordWrap'), false);
+    setVisible($('confirmPasswordWrap'), false);
+    setVisible($('resetCodeWrap'), false);
+    setVisible($('termsWrap'), false);
+    setVisible($('forgotPasswordLinkWrap'), false);
+    setVisible($('codeVerificationWrap'), false);
+    setVisible($('recoveryErrorWrap'), false);
+    setVisible($('backToSignInBtn'), true);
+
+    if (uInput) {
+      uInput.required = true;
+      uInput.readOnly = false;
+    }
+    if (recEmailInput) {
+      recEmailInput.required = false;
+      recEmailInput.value = '';
+    }
+    if (pInput) { pInput.required = false; pInput.value = ''; }
+    if (cpInput) { cpInput.required = false; cpInput.value = ''; }
+    if (resetCodeInput) { resetCodeInput.required = false; resetCodeInput.value = ''; }
+
+    setTimeout(() => {
+      uInput?.focus();
+    }, 50);
   } else if (mode === 'resetPassword') {
     if($('authTitle'))$('authTitle').textContent='Set New Password';
-    if($('authSubtitle'))$('authSubtitle').textContent='Enter the code sent to your recovery email and set a new password.';
-    if($('authSubmit'))$('authSubmit').textContent='Reset Password & Sign In';
+    if($('authSubtitle'))$('authSubtitle').textContent='Enter the 6-digit recovery code sent to your email and set a new password.';
+    setBtnText($('authSubmit'), 'Reset Password & Sign In');
     if($('authSwitch'))$('authSwitch').textContent='Back to Sign In';
-    if($('nameWrap'))$('nameWrap').style.display='none';
-    if($('usernameWrap'))$('usernameWrap').style.display='block';
-    if($('recoveryEmailWrap'))$('recoveryEmailWrap').style.display='none';
-    if($('passwordWrap'))$('passwordWrap').style.display='block';
-    if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display='block';
-    if($('termsWrap'))$('termsWrap').style.display='none';
-    if($('forgotPasswordLinkWrap'))$('forgotPasswordLinkWrap').style.display='none';
-    if($('codeVerificationWrap'))$('codeVerificationWrap').style.display='block';
+    if($('passwordLabel'))$('passwordLabel').textContent='New Password';
+
+    setVisible($('nameWrap'), false);
+    setVisible($('usernameWrap'), true);
+    if (uInput) {
+      uInput.required = true;
+      uInput.readOnly = true;
+    }
+    setVisible($('recoveryEmailWrap'), false);
+    setVisible($('resetCodeWrap'), true);
+    setVisible($('passwordWrap'), true);
+    setVisible($('confirmPasswordWrap'), true);
+    setVisible($('termsWrap'), false);
+    setVisible($('forgotPasswordLinkWrap'), false);
+    setVisible($('codeVerificationWrap'), false);
+    setVisible($('recoveryErrorWrap'), false);
+    setVisible($('backToSignInBtn'), true);
+
+    if (resetCodeInput) { resetCodeInput.required = true; resetCodeInput.value = ''; }
+    if (pInput) { pInput.required = true; pInput.value = ''; }
+    if (cpInput) { cpInput.required = true; cpInput.value = ''; }
+    if (recEmailInput) recEmailInput.required = false;
+
+    if (typeof startResendCountdown === 'function') {
+      startResendCountdown(45);
+    }
+
+    setTimeout(() => {
+      if (resetCodeInput && !resetCodeInput.value) {
+        resetCodeInput.focus();
+      } else {
+        pInput?.focus();
+      }
+    }, 50);
   } else {
     // Standard 'login' mode: ONLY Username and Password
     if($('authTitle'))$('authTitle').textContent='Welcome back';
     if($('authSubtitle'))$('authSubtitle').textContent='Sign in to continue.';
-    if($('authSubmit'))$('authSubmit').textContent='Sign In';
+    setBtnText($('authSubmit'), 'Sign In');
     if($('authSwitch'))$('authSwitch').textContent='New here? Create an account';
-    if($('nameWrap'))$('nameWrap').style.display='none';
-    if($('usernameWrap'))$('usernameWrap').style.display='block';
-    if($('recoveryEmailWrap'))$('recoveryEmailWrap').style.display='none';
-    if($('passwordWrap'))$('passwordWrap').style.display='block';
-    if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display='none';
-    if($('termsWrap'))$('termsWrap').style.display='none';
-    if($('forgotPasswordLinkWrap'))$('forgotPasswordLinkWrap').style.display='block';
-    if($('codeVerificationWrap'))$('codeVerificationWrap').style.display='none';
+    if($('passwordLabel'))$('passwordLabel').textContent='Password';
+
+    setVisible($('nameWrap'), false);
+    setVisible($('usernameWrap'), true);
+    setVisible($('recoveryEmailWrap'), false);
+    setVisible($('resetCodeWrap'), false);
+    setVisible($('passwordWrap'), true);
+    setVisible($('confirmPasswordWrap'), false);
+    setVisible($('termsWrap'), false);
+    setVisible($('forgotPasswordLinkWrap'), true);
+    setVisible($('codeVerificationWrap'), false);
+    setVisible($('recoveryErrorWrap'), false);
+    setVisible($('backToSignInBtn'), false);
+
+    if (uInput) {
+      uInput.required = true;
+      uInput.readOnly = false;
+    }
+    if (pInput) pInput.required = true;
+    if (recEmailInput) recEmailInput.required = false;
+    if (cpInput) { cpInput.required = false; cpInput.value = ''; }
+    if (resetCodeInput) { resetCodeInput.required = false; resetCodeInput.value = ''; }
+
     const f1 = document.getElementById('authUsernameFeedback');
     const f2 = document.getElementById('authEmailFeedback');
     const f3 = document.getElementById('authUsernameSuggestions');
     const icon = document.getElementById('authUsernameStatusIcon');
-    const uInput = document.getElementById('authUsername');
     if (f1) { f1.innerHTML = ''; f1.style.display = 'none'; }
     if (f2) { f2.innerHTML = ''; f2.style.display = 'none'; }
     if (f3) { f3.innerHTML = ''; f3.classList.add('hidden'); }
@@ -6123,13 +6340,6 @@ function setNav(){
       </div>
     `;
 
-    const discoverPages = [
-      { key: 'feed', label: typeof t === 'function' ? t('nav_for_you', 'For You') : 'For You', icon: '🎬', desc: typeof t === 'function' ? t('sub_for_you', 'Reels & Video Showcase') : 'Reels & Video Showcase' },
-      { key: 'marketplace', label: typeof t === 'function' ? t('nav_marketplace', 'Marketplace') : 'Marketplace', icon: '🛍️', desc: typeof t === 'function' ? t('sub_marketplace', 'Stores & Products Catalog') : 'Stores & Products Catalog' },
-      { key: 'jobs', label: typeof t === 'function' ? t('nav_jobs', 'Jobs & Careers') : 'Jobs & Careers', icon: '💼', desc: typeof t === 'function' ? t('sub_jobs', 'Verified Employment in Ghana') : 'Verified Employment in Ghana' },
-      { key: 'events', label: typeof t === 'function' ? t('nav_events', 'Events & Meetups') : 'Events & Meetups', icon: '🎟️', desc: typeof t === 'function' ? t('sub_events', 'Conferences, Markets & Workshops') : 'Conferences, Markets & Workshops' }
-    ];
-
     let commercePages = [];
     if(currentUser) {
       commercePages.push({ key: 'orders', label: typeof t === 'function' ? t('nav_orders', 'My Orders') : 'My Orders', icon: '📦', desc: typeof t === 'function' ? t('sub_orders', 'Tracking & Fulfillment') : 'Tracking & Fulfillment', badge: pCount > 0 ? (pCount > 99 ? '99+' : pCount) : null });
@@ -6146,6 +6356,8 @@ function setNav(){
     let accountPages = [];
     if(currentUser) {
       accountPages.push({ key: 'profile', label: typeof t === 'function' ? t('nav_profile', 'My Profile & KYC') : 'My Profile & KYC', icon: '👤', desc: typeof t === 'function' ? t('sub_profile', 'Identity & Verification') : 'Identity & Verification' });
+      accountPages.push({ key: 'settings', label: typeof t === 'function' ? t('nav_settings', 'Settings') : 'Settings', icon: '⚙️', desc: typeof t === 'function' ? t('sub_settings', 'Preferences & Legal') : 'Preferences & Legal' });
+    } else {
       accountPages.push({ key: 'settings', label: typeof t === 'function' ? t('nav_settings', 'Settings') : 'Settings', icon: '⚙️', desc: typeof t === 'function' ? t('sub_settings', 'Preferences & Legal') : 'Preferences & Legal' });
     }
     if(isAdmin) {
@@ -6206,7 +6418,6 @@ function setNav(){
         </div>
 
         <div class="px-3 py-3 flex-1 overflow-y-auto">
-          ${renderNavGroup('Discover & Shop', discoverPages)}
           ${renderNavGroup('Commerce & Messages', commercePages)}
           ${renderNavGroup('Account & System', accountPages)}
         </div>
@@ -7064,6 +7275,9 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
         </div>
         <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0 whitespace-nowrap">＋ Upload</button>
       </div>
+    </div>
+    <div class="px-2.5 sm:px-4 py-2 shrink-0 bg-[#080808]/95 z-10 border-b border-[#242424]">
+      ${renderQuickAccessNav('feed')}
     </div>
     <div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden">
       <div class="reel-feed flex-1 min-h-0 w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
@@ -8529,7 +8743,7 @@ async function renderDashboard(){
   }
   
   function _renderDashboardUI(prodsSize, ordersSize, pending, revenue){
-    $('page').innerHTML=pageTitle('Dashboard','Your SellerFlow business overview.')+`
+    $('page').innerHTML=pageTitle('Dashboard','Your SellerFlow business overview.')+renderQuickAccessNav('dashboard')+`
       <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="card p-5"><div class="muted text-sm">Products</div><div class="text-3xl font-black mt-2 text-white">${prodsSize}</div></div>
         <div class="card p-5"><div class="muted text-sm">Orders</div><div class="text-3xl font-black mt-2 text-white">${ordersSize}</div></div>
@@ -8822,6 +9036,8 @@ async function renderAnalysis(targetPostId, options){
               `).join('')}
             </div>
           </div>
+
+          ${renderQuickAccessNav('analysis')}
 
           ${isNewUser ? `
             <!-- Empty State for New Account -->
@@ -13855,6 +14071,8 @@ async function renderStore(forceEdit = false){
         </div>
       </div>
 
+      ${renderQuickAccessNav('store')}
+
       ${statusAlert}
 
       <div class="grid lg:grid-cols-[1.5fr_1fr] gap-6">
@@ -14887,7 +15105,7 @@ async function renderProfile(){
   const nextDateStr = usernameCooldown.nextChangeDate ? usernameCooldown.nextChangeDate.toLocaleDateString('en-GH', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
   const lastDateStr = usernameCooldown.lastChangedDate ? usernameCooldown.lastChangedDate.toLocaleDateString('en-GH', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
 
-  $('page').innerHTML=pageTitle('Profile','Manage your account details and profile picture.')+`<div class="grid lg:grid-cols-[1fr_1.3fr] gap-5"><div class="card p-6"><div class="flex items-center gap-4">${avatar(p,'w-20 h-20 rounded-full object-cover bg-[#222]')}<div><h2 class="text-xl font-bold">${esc(p.name||'')}</h2><div class="muted">@${esc(p.username||'')}</div>${p.verified?'<div class="text-sm font-bold mt-1 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':''}${(p.hasBusinessCert || p.businessCertUrl || verification.hasBusinessCert)?'<div class="text-xs font-bold mt-1.5 flex items-center gap-2 text-amber-300 bg-amber-950/30 border border-amber-800/50 p-2 rounded-xl"><span>🏢</span><span>Registered Business Certificate Verified</span></div>':''}</div></div><input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-5"><button id="uploadAvatar" class="mt-3 border border-[#444] rounded-xl px-4 py-2">Update profile picture</button><label class="muted text-sm block mt-5">Full name</label><input id="profileName" value="${esc(p.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white focus:border-gold outline-none transition" placeholder="Your full name"><div class="flex items-center justify-between mt-4"><label class="muted text-sm block">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="profileUsernamePreview">${esc(p.username||'')}</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="profileUsername" value="${esc(p.username||'')}" ${isUsernameLocked ? 'readonly disabled' : ''} class="w-full pl-10 pr-10 py-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white font-mono focus:border-gold outline-none transition ${isUsernameLocked ? 'cursor-not-allowed bg-[#141414] text-zinc-400 border-[#272727]' : ''}" placeholder="username" autocomplete="off"><span id="profileUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">${isUsernameLocked ? '<span class="text-amber-400 text-xs" title="Username locked (360-day policy)">🔒</span>' : ''}</span></div>${isUsernameLocked ? `<div class="mt-2.5 p-3 rounded-xl bg-amber-950/20 border border-amber-800/40 text-xs text-amber-200/90 flex items-start gap-2.5"><span class="text-base leading-none select-none">🔒</span><div class="leading-relaxed"><div class="font-bold text-amber-300 flex items-center gap-1.5"><span>Username Locked (360-Day Policy)</span><span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-200 border border-amber-700/60 font-semibold">${usernameCooldown.daysRemaining} days left</span></div><div class="mt-1 text-zinc-300">Every username can be changed once every 360 days. You can change your username again in <b class="text-white">${usernameCooldown.daysRemaining} day${usernameCooldown.daysRemaining === 1 ? '' : 's'}</b> (on ${esc(nextDateStr)}).</div>${lastDateStr ? `<div class="mt-0.5 text-[11px] text-zinc-400">Last changed: ${esc(lastDateStr)}</div>` : ''}</div></div>` : `<div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can be changed once every 360 days.</span></div>`}<div id="profileUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="profileUsernameSuggestions" class="mt-2 hidden"></div><button id="saveProfile" class="mt-4 bg-gold text-black px-5 py-2.5 rounded-xl font-bold">Save profile</button><div class="muted text-sm mt-4">${esc(currentUser.email)}</div></div><div class="space-y-5">
+  $('page').innerHTML=pageTitle('Profile','Manage your account details and profile picture.')+renderQuickAccessNav('profile')+`<div class="grid lg:grid-cols-[1fr_1.3fr] gap-5"><div class="card p-6"><div class="flex items-center gap-4">${avatar(p,'w-20 h-20 rounded-full object-cover bg-[#222]')}<div><h2 class="text-xl font-bold">${esc(p.name||'')}</h2><div class="muted">@${esc(p.username||'')}</div>${p.verified?'<div class="text-sm font-bold mt-1 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':''}${(p.hasBusinessCert || p.businessCertUrl || verification.hasBusinessCert)?'<div class="text-xs font-bold mt-1.5 flex items-center gap-2 text-amber-300 bg-amber-950/30 border border-amber-800/50 p-2 rounded-xl"><span>🏢</span><span>Registered Business Certificate Verified</span></div>':''}</div></div><input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-5"><button id="uploadAvatar" class="mt-3 border border-[#444] rounded-xl px-4 py-2">Update profile picture</button><label class="muted text-sm block mt-5">Full name</label><input id="profileName" value="${esc(p.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white focus:border-gold outline-none transition" placeholder="Your full name"><div class="flex items-center justify-between mt-4"><label class="muted text-sm block">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="profileUsernamePreview">${esc(p.username||'')}</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="profileUsername" value="${esc(p.username||'')}" ${isUsernameLocked ? 'readonly disabled' : ''} class="w-full pl-10 pr-10 py-3 rounded-xl bg-[#191919] border border-[#333] text-sm text-white font-mono focus:border-gold outline-none transition ${isUsernameLocked ? 'cursor-not-allowed bg-[#141414] text-zinc-400 border-[#272727]' : ''}" placeholder="username" autocomplete="off"><span id="profileUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">${isUsernameLocked ? '<span class="text-amber-400 text-xs" title="Username locked (360-day policy)">🔒</span>' : ''}</span></div>${isUsernameLocked ? `<div class="mt-2.5 p-3 rounded-xl bg-amber-950/20 border border-amber-800/40 text-xs text-amber-200/90 flex items-start gap-2.5"><span class="text-base leading-none select-none">🔒</span><div class="leading-relaxed"><div class="font-bold text-amber-300 flex items-center gap-1.5"><span>Username Locked (360-Day Policy)</span><span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-200 border border-amber-700/60 font-semibold">${usernameCooldown.daysRemaining} days left</span></div><div class="mt-1 text-zinc-300">Every username can be changed once every 360 days. You can change your username again in <b class="text-white">${usernameCooldown.daysRemaining} day${usernameCooldown.daysRemaining === 1 ? '' : 's'}</b> (on ${esc(nextDateStr)}).</div>${lastDateStr ? `<div class="mt-0.5 text-[11px] text-zinc-400">Last changed: ${esc(lastDateStr)}</div>` : ''}</div></div>` : `<div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can be changed once every 360 days.</span></div>`}<div id="profileUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="profileUsernameSuggestions" class="mt-2 hidden"></div><button id="saveProfile" class="mt-4 bg-gold text-black px-5 py-2.5 rounded-xl font-bold">Save profile</button><div class="muted text-sm mt-4">${esc(currentUser.email)}</div></div><div class="space-y-5">
 <div class="card p-6"><h2 class="text-xl font-bold">Seller identity</h2><p class="muted mt-2">Verification is managed from Settings. Approved sellers receive the modern blue SellerFlow verification badge.</p><button id="openSettingsVerification" class="mt-4 bg-gold text-black px-5 py-3 rounded-xl font-bold">Open Settings</button></div>
 </div></div>`;
 
@@ -19650,7 +19868,7 @@ try {
   }
 } catch(_) {}
 
-document.addEventListener('click',e=>{const seller=e.target.closest('[data-open-seller]');if(seller)openUserProfile(seller.dataset.openSeller);const nav=e.target.closest('[data-mobile-page]');if(nav)navigate(nav.dataset.mobilePage);const back=e.target.closest('[data-global-back]');if(back)handleAppBack()});
+document.addEventListener('click',e=>{const qNav=e.target.closest('[data-quick-dest]');if(qNav){e.preventDefault();const dest=qNav.dataset.quickDest;if(dest&&typeof navigate==='function')navigate(dest);return;}const seller=e.target.closest('[data-open-seller]');if(seller)openUserProfile(seller.dataset.openSeller);const nav=e.target.closest('[data-mobile-page]');if(nav)navigate(nav.dataset.mobilePage);const back=e.target.closest('[data-global-back]');if(back)handleAppBack()});
 document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>navigate(b.dataset.page));
 $('pageSelectorBtn')?.addEventListener('click',openPageSelector);
 $('mobileMenu')?.addEventListener('click',()=>{
@@ -19675,6 +19893,51 @@ $('authSwitch')?.addEventListener('click',()=>{
 $('resetBtn')?.addEventListener('click',()=>showAuth('forgot'));
 $('authForgotPasswordBtn')?.addEventListener('click',()=>showAuth('forgot'));
 $('backToSignInBtn')?.addEventListener('click',()=>showAuth('login'));
+
+$('resendResetCodeBtn')?.addEventListener('click', async () => {
+  const username = $('authUsername') ? $('authUsername').value.trim() : '';
+  const uClean = usernameClean(username);
+  if (!uClean) return;
+  const resendBtn = $('resendResetCodeBtn');
+  if (resendBtn) resendBtn.disabled = true;
+  loading('Resending recovery code…');
+
+  try {
+    const rRes = await fetch('/api/auth/resend-reset-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: uClean })
+    });
+    const rData = await rRes.json();
+    ready();
+
+    if (!rRes.ok || !rData.success) {
+      toast(rData.error || "We couldn't send a new code right now. Please try again.", 'error');
+      if (resendBtn) resendBtn.disabled = false;
+      return;
+    }
+
+    const masked = rData.maskedEmail || 'your verified recovery email';
+    if ($('recoveryMaskedEmailDisplay')) {
+      $('recoveryMaskedEmailDisplay').textContent = masked;
+    }
+    toast(rData.message || `New recovery code sent to ${masked}`, 'success');
+    if (typeof startResendCountdown === 'function') {
+      startResendCountdown(45);
+    }
+  } catch (_) {
+    ready();
+    toast("We couldn't send a new code right now. Please try again.", 'error');
+    if (resendBtn) resendBtn.disabled = false;
+  }
+});
+
+$('recoveryTryAgainBtn')?.addEventListener('click', () => {
+  const errWrap = $('recoveryErrorWrap');
+  if (errWrap) errWrap.classList.add('hide');
+  $('authForm')?.requestSubmit();
+});
+
 $('brandBtn')?.addEventListener('click',()=>navigate('feed'));
 $('cartBtn')?.addEventListener('click',()=>navigate('cart'));
 $('notificationBtn')?.addEventListener('click',()=>{
@@ -19954,57 +20217,83 @@ if($('authForm')){
         }
 
       } else if (authMode === 'forgot') {
-        const recoveryEmail = $('authRecoveryEmail') ? $('authRecoveryEmail').value.trim() : '';
-        if (!username || username.length < 3) throw Error('Enter your SellerFlow username.');
-        if (!recoveryEmail || !recoveryEmail.includes('@')) throw Error('Enter your registered recovery email.');
-        loading('Sending recovery instructions…');
-        const fRes = await fetch('/api/auth/forgot-password', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, recoveryEmail })
-        });
-        const fData = await fRes.json();
-        ready();
-        toast(fData.message || 'If this account has a verified recovery email, recovery instructions have been sent.', 'info', 6000);
-        showAuth('resetPassword');
+        const uClean = usernameClean(username);
+        if (!uClean || uClean.length < 2) throw Error('Enter your SellerFlow username.');
+        loading('Sending recovery code…');
+        hide($('recoveryErrorWrap'));
+
+        try {
+          const fRes = await fetch('/api/auth/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: uClean })
+          });
+          const fData = await fRes.json();
+          ready();
+
+          if (!fRes.ok || !fData.success) {
+            showRecoveryError(fData.error || 'Unable to send your recovery code right now. Please try again.');
+            return;
+          }
+
+          const masked = fData.maskedEmail || 'your verified recovery email';
+          if ($('recoveryMaskedEmailDisplay')) {
+            $('recoveryMaskedEmailDisplay').textContent = masked;
+          }
+          toast(fData.message || `Recovery code sent to ${masked}`, 'info', 5000);
+          showAuth('resetPassword');
+          if ($('authUsername')) {
+            $('authUsername').value = uClean;
+          }
+        } catch (fetchErr) {
+          ready();
+          showRecoveryError('Unable to send your recovery code right now. Please try again.');
+        }
 
       } else if (authMode === 'resetPassword') {
-        const code = $('authRecoveryCode') ? $('authRecoveryCode').value.trim() : '';
+        const uClean = usernameClean(username);
+        const code = ($('authResetCode') ? $('authResetCode').value.trim() : '');
         const confirmPassword = $('authConfirmPassword') ? $('authConfirmPassword').value : '';
-        if (!username || username.length < 3) throw Error('Enter your SellerFlow username.');
+        if (!uClean || uClean.length < 2) throw Error('Enter your SellerFlow username.');
         if (!code || code.length !== 6) throw Error('Enter the 6-digit recovery code.');
         if (!password || password.length < 6) throw Error('Password must be at least 6 characters.');
         if (password !== confirmPassword) throw Error('Passwords do not match.');
 
         loading('Resetting password…');
-        const rRes = await fetch('/api/auth/reset-password', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, code, newPassword: password })
-        });
-        const rData = await rRes.json();
-        if (!rData.success) {
-          throw new Error(rData.error || 'Password reset failed.');
-        }
+        try {
+          const rRes = await fetch('/api/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: uClean, code, newPassword: password })
+          });
+          const rData = await rRes.json();
+          ready();
 
-        if (rData.customToken) {
-          await auth.signInWithCustomToken(rData.customToken);
-          const user = auth.currentUser;
-          currentUser = user;
-          isAdmin = isUserAdminEmail(user?.email);
-          window.currentUser = user;
-          window.isAdmin = isAdmin;
+          if (!rRes.ok || !rData.success) {
+            throw new Error(rData.error || 'Password reset failed. Please check the code and try again.');
+          }
+
+          if (rData.customToken) {
+            await auth.signInWithCustomToken(rData.customToken);
+            const user = auth.currentUser;
+            currentUser = user;
+            isAdmin = isUserAdminEmail(user?.email);
+            window.currentUser = user;
+            window.isAdmin = isAdmin;
+            hide($('authPage'));
+            showApp();
+            setNav();
+            if (user) await startUser(user);
+            navigate('feed');
+            toast('Password reset successfully! Welcome back.', 'success', 4000);
+          } else {
+            showAuth('login');
+            if ($('authUsername')) $('authUsername').value = uClean;
+            toast('Password changed successfully! Please sign in with your username and new password.', 'success', 5000);
+          }
+        } catch (resetErr) {
           ready();
-          hide($('authPage'));
-          showApp();
-          setNav();
-          if (user) await startUser(user);
-          navigate('feed');
-          toast('Password reset successfully! Welcome back.', 'success', 4000);
-        } else {
-          ready();
-          showAuth('login');
-          toast('Password reset successfully. Sign in with your new password.', 'success', 4000);
+          throw resetErr;
         }
 
       } else {

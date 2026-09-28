@@ -349,12 +349,18 @@ const CACHE_TTL_MS = 60000; // 60s cache lifetime
 
 try {
   const localJ = localStorage.getItem('sf_cached_jobs_list');
-  if (localJ) _cachedJobs = JSON.parse(localJ);
+  if (localJ) {
+    const parsed = JSON.parse(localJ);
+    _cachedJobs = (Array.isArray(parsed) ? parsed : []).filter(j => j && !String(j.id || '').startsWith('job_seed_') && j.creatorId !== 'system_seed');
+  }
 } catch (_) {}
 
 try {
   const localE = localStorage.getItem('sf_cached_events_list');
-  if (localE) _cachedEvents = JSON.parse(localE);
+  if (localE) {
+    const parsed = JSON.parse(localE);
+    _cachedEvents = (Array.isArray(parsed) ? parsed : []).filter(e => e && !String(e.id || '').startsWith('event_seed_') && e.creatorId !== 'system_seed');
+  }
 } catch (_) {}
 
 async function prefetchJobsData() {
@@ -375,7 +381,7 @@ async function prefetchJobsData() {
         .then(data => {
           if (data && Array.isArray(data.jobs)) {
             data.jobs.forEach(j => {
-              if (j && j.id && !seenIds.has(j.id)) {
+              if (j && j.id && !seenIds.has(j.id) && !String(j.id).startsWith('job_seed_') && j.creatorId !== 'system_seed') {
                 seenIds.add(j.id);
                 jobs.push(j);
               }
@@ -390,9 +396,10 @@ async function prefetchJobsData() {
           const snap = await getJobsEventsDb().collection('jobs').where('status', '==', 'approved').limit(50).get();
           if (snap && snap.forEach) {
             snap.forEach(doc => {
-              if (!seenIds.has(doc.id)) {
+              const d = doc.data() || {};
+              if (!seenIds.has(doc.id) && !String(doc.id).startsWith('job_seed_') && d.creatorId !== 'system_seed') {
                 seenIds.add(doc.id);
-                jobs.push({ id: doc.id, ...doc.data() });
+                jobs.push({ id: doc.id, ...d });
               }
             });
           }
@@ -407,7 +414,7 @@ async function prefetchJobsData() {
   try {
     const localJobs = JSON.parse(localStorage.getItem('sf_my_posted_jobs') || '[]');
     localJobs.forEach(lj => {
-      if (lj && lj.id && !seenIds.has(lj.id) && (lj.status === 'approved' || !lj.status)) {
+      if (lj && lj.id && !seenIds.has(lj.id) && (lj.status === 'approved' || !lj.status) && !String(lj.id).startsWith('job_seed_')) {
         seenIds.add(lj.id);
         jobs.push(lj);
       }
@@ -441,7 +448,7 @@ async function prefetchEventsData() {
         .then(data => {
           if (data && Array.isArray(data.events)) {
             data.events.forEach(e => {
-              if (e && e.id && !seenIds.has(e.id)) {
+              if (e && e.id && !seenIds.has(e.id) && !String(e.id).startsWith('event_seed_') && e.creatorId !== 'system_seed') {
                 seenIds.add(e.id);
                 events.push(e);
               }
@@ -456,9 +463,10 @@ async function prefetchEventsData() {
           const snap = await getJobsEventsDb().collection('events').where('status', '==', 'approved').limit(40).get();
           if (snap && snap.forEach) {
             snap.forEach(doc => {
-              if (!seenIds.has(doc.id)) {
+              const d = doc.data() || {};
+              if (!seenIds.has(doc.id) && !String(doc.id).startsWith('event_seed_') && d.creatorId !== 'system_seed') {
                 seenIds.add(doc.id);
-                events.push({ id: doc.id, ...doc.data() });
+                events.push({ id: doc.id, ...d });
               }
             });
           }

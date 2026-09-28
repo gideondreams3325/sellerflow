@@ -4354,21 +4354,55 @@ function showAuth(mode='register', targetEmail=''){
   show($('authForm'));
   hide($('emailVerifyWrap'));
   
+  const setVisible = (el, isVisible) => {
+    if (!el) return;
+    if (isVisible) {
+      el.classList.remove('hide');
+      el.style.display = 'block';
+    } else {
+      el.classList.add('hide');
+      el.style.display = 'none';
+    }
+  };
+
+  const setBtnText = (btn, text) => {
+    if (!btn) return;
+    const span = btn.querySelector('#authSubmitText') || $('authSubmitText');
+    if (span) span.textContent = text;
+    else btn.textContent = text;
+  };
+
+  const uInput = $('authUsername');
+  const pInput = $('authPassword');
+  const cpInput = $('authConfirmPassword');
+  const recEmailInput = $('authRecoveryEmail');
+  const resetCodeInput = $('authResetCode');
+
   if (mode === 'register') {
     if($('authTitle'))$('authTitle').textContent='Create your account';
     if($('authSubtitle'))$('authSubtitle').textContent='Sell and shop across Ghana.';
-    if($('authSubmit'))$('authSubmit').textContent='Create Account';
+    setBtnText($('authSubmit'), 'Create Account');
     if($('authSwitch'))$('authSwitch').textContent='Already have an account? Sign in';
-    if($('nameWrap'))$('nameWrap').style.display='block';
-    if($('usernameWrap'))$('usernameWrap').style.display='block';
-    if($('recoveryEmailWrap'))$('recoveryEmailWrap').style.display='block';
-    if($('passwordWrap'))$('passwordWrap').style.display='block';
-    if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display='block';
-    if($('termsWrap'))$('termsWrap').style.display='block';
-    if($('forgotPasswordLinkWrap'))$('forgotPasswordLinkWrap').style.display='none';
-    if($('codeVerificationWrap'))$('codeVerificationWrap').style.display='none';
+    if($('passwordLabel'))$('passwordLabel').textContent='Password';
+
+    setVisible($('nameWrap'), true);
+    setVisible($('usernameWrap'), true);
+    setVisible($('recoveryEmailWrap'), true);
+    setVisible($('passwordWrap'), true);
+    setVisible($('confirmPasswordWrap'), true);
+    setVisible($('termsWrap'), true);
+    setVisible($('resetCodeWrap'), false);
+    setVisible($('forgotPasswordLinkWrap'), false);
+    setVisible($('codeVerificationWrap'), false);
+    setVisible($('backToSignInBtn'), false);
+
+    if (uInput) uInput.required = true;
+    if (recEmailInput) recEmailInput.required = true;
+    if (pInput) pInput.required = true;
+    if (cpInput) cpInput.required = true;
+    if (resetCodeInput) { resetCodeInput.required = false; resetCodeInput.value = ''; }
+
     setTimeout(() => {
-      const uInput = $('authUsername');
       if (uInput) {
         attachUniversalUsernameController(uInput, {
           previewEl: $('authUsernamePreview'),
@@ -4383,49 +4417,95 @@ function showAuth(mode='register', targetEmail=''){
     }, 20);
   } else if (mode === 'forgot') {
     if($('authTitle'))$('authTitle').textContent='Forgot Password';
-    if($('authSubtitle'))$('authSubtitle').textContent='Enter your username and recovery email to receive recovery instructions.';
-    if($('authSubmit'))$('authSubmit').textContent='Send Recovery Instructions';
+    if($('authSubtitle'))$('authSubtitle').textContent='Enter your username and recovery email to receive your recovery code.';
+    setBtnText($('authSubmit'), 'Send Recovery Instructions');
     if($('authSwitch'))$('authSwitch').textContent='Remembered your password? Sign in';
-    if($('nameWrap'))$('nameWrap').style.display='none';
-    if($('usernameWrap'))$('usernameWrap').style.display='block';
-    if($('recoveryEmailWrap'))$('recoveryEmailWrap').style.display='block';
-    if($('passwordWrap'))$('passwordWrap').style.display='none';
-    if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display='none';
-    if($('termsWrap'))$('termsWrap').style.display='none';
-    if($('forgotPasswordLinkWrap'))$('forgotPasswordLinkWrap').style.display='none';
-    if($('codeVerificationWrap'))$('codeVerificationWrap').style.display='none';
+
+    setVisible($('nameWrap'), false);
+    setVisible($('usernameWrap'), true);
+    setVisible($('recoveryEmailWrap'), true);
+    setVisible($('passwordWrap'), false);
+    setVisible($('confirmPasswordWrap'), false);
+    setVisible($('resetCodeWrap'), false);
+    setVisible($('termsWrap'), false);
+    setVisible($('forgotPasswordLinkWrap'), false);
+    setVisible($('codeVerificationWrap'), false);
+    setVisible($('backToSignInBtn'), true);
+
+    if (uInput) uInput.required = true;
+    if (recEmailInput) recEmailInput.required = true;
+    if (pInput) { pInput.required = false; pInput.value = ''; }
+    if (cpInput) { cpInput.required = false; cpInput.value = ''; }
+    if (resetCodeInput) { resetCodeInput.required = false; resetCodeInput.value = ''; }
+
+    setTimeout(() => {
+      if (uInput && uInput.value.trim().length >= 3) {
+        recEmailInput?.focus();
+      } else {
+        uInput?.focus();
+      }
+    }, 50);
   } else if (mode === 'resetPassword') {
     if($('authTitle'))$('authTitle').textContent='Set New Password';
-    if($('authSubtitle'))$('authSubtitle').textContent='Enter the code sent to your recovery email and set a new password.';
-    if($('authSubmit'))$('authSubmit').textContent='Reset Password & Sign In';
+    if($('authSubtitle'))$('authSubtitle').textContent='Enter the 6-digit recovery code sent to your email and set a new password.';
+    setBtnText($('authSubmit'), 'Reset Password & Sign In');
     if($('authSwitch'))$('authSwitch').textContent='Back to Sign In';
-    if($('nameWrap'))$('nameWrap').style.display='none';
-    if($('usernameWrap'))$('usernameWrap').style.display='block';
-    if($('recoveryEmailWrap'))$('recoveryEmailWrap').style.display='none';
-    if($('passwordWrap'))$('passwordWrap').style.display='block';
-    if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display='block';
-    if($('termsWrap'))$('termsWrap').style.display='none';
-    if($('forgotPasswordLinkWrap'))$('forgotPasswordLinkWrap').style.display='none';
-    if($('codeVerificationWrap'))$('codeVerificationWrap').style.display='block';
+    if($('passwordLabel'))$('passwordLabel').textContent='New Password';
+
+    setVisible($('nameWrap'), false);
+    setVisible($('usernameWrap'), true);
+    setVisible($('recoveryEmailWrap'), false);
+    setVisible($('resetCodeWrap'), true);
+    setVisible($('passwordWrap'), true);
+    setVisible($('confirmPasswordWrap'), true);
+    setVisible($('termsWrap'), false);
+    setVisible($('forgotPasswordLinkWrap'), false);
+    setVisible($('codeVerificationWrap'), false);
+    setVisible($('backToSignInBtn'), true);
+
+    if (uInput) uInput.required = true;
+    if (resetCodeInput) resetCodeInput.required = true;
+    if (pInput) { pInput.required = true; pInput.value = ''; }
+    if (cpInput) { cpInput.required = true; cpInput.value = ''; }
+    if (recEmailInput) recEmailInput.required = false;
+
+    setTimeout(() => {
+      if (resetCodeInput && !resetCodeInput.value) {
+        resetCodeInput.focus();
+      } else {
+        pInput?.focus();
+      }
+    }, 50);
   } else {
     // Standard 'login' mode: ONLY Username and Password
     if($('authTitle'))$('authTitle').textContent='Welcome back';
     if($('authSubtitle'))$('authSubtitle').textContent='Sign in to continue.';
-    if($('authSubmit'))$('authSubmit').textContent='Sign In';
+    setBtnText($('authSubmit'), 'Sign In');
     if($('authSwitch'))$('authSwitch').textContent='New here? Create an account';
-    if($('nameWrap'))$('nameWrap').style.display='none';
-    if($('usernameWrap'))$('usernameWrap').style.display='block';
-    if($('recoveryEmailWrap'))$('recoveryEmailWrap').style.display='none';
-    if($('passwordWrap'))$('passwordWrap').style.display='block';
-    if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display='none';
-    if($('termsWrap'))$('termsWrap').style.display='none';
-    if($('forgotPasswordLinkWrap'))$('forgotPasswordLinkWrap').style.display='block';
-    if($('codeVerificationWrap'))$('codeVerificationWrap').style.display='none';
+    if($('passwordLabel'))$('passwordLabel').textContent='Password';
+
+    setVisible($('nameWrap'), false);
+    setVisible($('usernameWrap'), true);
+    setVisible($('recoveryEmailWrap'), false);
+    setVisible($('resetCodeWrap'), false);
+    setVisible($('passwordWrap'), true);
+    setVisible($('confirmPasswordWrap'), false);
+    setVisible($('termsWrap'), false);
+    setVisible($('forgotPasswordLinkWrap'), true);
+    setVisible($('codeVerificationWrap'), false);
+    setVisible($('backToSignInBtn'), false);
+
+    if (uInput) uInput.required = true;
+    if (pInput) uInput.required = true;
+    if (pInput) pInput.required = true;
+    if (recEmailInput) recEmailInput.required = false;
+    if (cpInput) { cpInput.required = false; cpInput.value = ''; }
+    if (resetCodeInput) { resetCodeInput.required = false; resetCodeInput.value = ''; }
+
     const f1 = document.getElementById('authUsernameFeedback');
     const f2 = document.getElementById('authEmailFeedback');
     const f3 = document.getElementById('authUsernameSuggestions');
     const icon = document.getElementById('authUsernameStatusIcon');
-    const uInput = document.getElementById('authUsername');
     if (f1) { f1.innerHTML = ''; f1.style.display = 'none'; }
     if (f2) { f2.innerHTML = ''; f2.style.display = 'none'; }
     if (f3) { f3.innerHTML = ''; f3.classList.add('hidden'); }
@@ -19967,9 +20047,15 @@ if($('authForm')){
         ready();
         toast(fData.message || 'If this account has a verified recovery email, recovery instructions have been sent.', 'info', 6000);
         showAuth('resetPassword');
+        if ($('authUsername') && username) {
+          $('authUsername').value = username;
+        }
+        if (fData && fData.devCode && $('authResetCode')) {
+          $('authResetCode').value = fData.devCode;
+        }
 
       } else if (authMode === 'resetPassword') {
-        const code = $('authRecoveryCode') ? $('authRecoveryCode').value.trim() : '';
+        const code = ($('authResetCode') ? $('authResetCode').value.trim() : '') || ($('authRecoveryCode') ? $('authRecoveryCode').value.trim() : '');
         const confirmPassword = $('authConfirmPassword') ? $('authConfirmPassword').value : '';
         if (!username || username.length < 3) throw Error('Enter your SellerFlow username.');
         if (!code || code.length !== 6) throw Error('Enter the 6-digit recovery code.');
