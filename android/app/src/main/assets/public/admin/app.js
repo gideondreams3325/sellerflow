@@ -2390,8 +2390,20 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const logData = await logRes.json();
 
-      if (logData.success && logData.customToken) {
-        await auth.signInWithCustomToken(logData.customToken);
+      if (logData.success) {
+        if (logData.customToken) {
+          try {
+            await auth.signInWithCustomToken(logData.customToken);
+          } catch (tokErr) {
+            if (logData.authEmail || logData.email) {
+              await auth.signInWithEmailAndPassword(logData.authEmail || logData.email, password);
+            } else {
+              throw tokErr;
+            }
+          }
+        } else if (logData.authEmail || logData.email) {
+          await auth.signInWithEmailAndPassword(logData.authEmail || logData.email, password);
+        }
       } else {
         // Fallback: identifier lookup and direct credential verification
         const lookRes = await fetch('/api/auth/lookup-identifier', {

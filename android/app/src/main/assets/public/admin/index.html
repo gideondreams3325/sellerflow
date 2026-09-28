@@ -33,14 +33,14 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="capacitor.js"></script>
 </head>
-<body class="bg-[#0d0d0d] text-zinc-100 antialiased selection:bg-gold selection:text-black">
+<body class="bg-white text-gray-900 antialiased selection:bg-gold selection:text-black">
 
   <!-- Application Shell Root -->
   <div id="adminApp" class="min-h-screen flex flex-col">
 
     <!-- Screen 1: Admin Authentication Gate -->
-    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0a] p-4">
-      <div class="w-full max-w-md bg-[#141414] border border-[#262626] rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-white p-4">
+      <div class="w-full max-w-md bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
         <!-- Top accent banner -->
         <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-[#f5b942] to-amber-600"></div>
 
@@ -48,11 +48,11 @@
           <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#f5b942] text-black font-black text-2xl shadow-[0_0_20px_rgba(245,185,66,0.3)] mb-4">
             SF
           </div>
-          <h1 class="text-2xl font-black tracking-tight text-white">SELLER FLOW ADMIN</h1>
-          <p class="text-xs text-zinc-400 mt-1 uppercase tracking-wider font-semibold">Security & Administrative Operations</p>
-          <div class="inline-flex items-center gap-2 mt-3 px-3 py-1 rounded-full bg-[#1e1e1e] border border-[#333] text-[11px] text-zinc-300">
+          <h1 class="text-2xl font-black tracking-tight text-gray-900">SELLER FLOW ADMIN</h1>
+          <p class="text-xs text-gray-600 mt-1 uppercase tracking-wider font-semibold">Security & Administrative Operations</p>
+          <div class="inline-flex items-center gap-2 mt-3 px-3 py-1 rounded-full bg-gray-100 border border-gray-200 text-[11px] text-gray-700">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Production Project: <strong class="text-white">sellerflow-efaab</strong></span>
+            <span>Production Project: <strong class="text-gray-900">sellerflow-efaab</strong></span>
           </div>
         </div>
 
@@ -62,19 +62,19 @@
         <!-- Credentials Form -->
         <form id="adminLoginForm" class="space-y-4">
           <div>
-            <label class="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">Administrator Username</label>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Administrator Username</label>
             <input type="text" id="adminUsernameInput" required placeholder="e.g. gideondreams or admin_gideon" autocomplete="username"
-              class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0d0d] border border-[#262626] text-white text-sm focus:border-[#f5b942] focus:outline-none transition">
+              class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:border-[#f5b942] focus:outline-none transition">
           </div>
 
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <label class="block text-xs font-bold text-zinc-300 uppercase tracking-wider">Password</label>
+              <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Password</label>
             </div>
             <div class="relative">
               <input type="password" id="adminPasswordInput" required placeholder="••••••••••••" autocomplete="current-password"
-                class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-[#0d0d0d] border border-[#262626] text-white text-sm focus:border-[#f5b942] focus:outline-none transition">
-              <button type="button" id="toggleAdminPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs select-none p-1 focus:outline-none cursor-pointer" title="Show/hide password" aria-label="Toggle password visibility">👁️</button>
+                class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:border-[#f5b942] focus:outline-none transition">
+              <button type="button" id="toggleAdminPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900 text-xs select-none p-1 focus:outline-none cursor-pointer" title="Show/hide password" aria-label="Toggle password visibility">👁️</button>
             </div>
           </div>
 
@@ -86,125 +86,125 @@
         </form>
 
         <!-- Security Notice -->
-        <div class="mt-6 p-3 rounded-xl bg-[#0d0d0d] border border-[#222] text-[11px] text-zinc-400 text-center">
-          <p class="font-semibold text-zinc-300">🛡️ Server-Side Authorization Enforced</p>
-          <p class="mt-0.5 text-zinc-500">Access is strictly restricted to authorized SellerFlow administrators. Non-admin accounts will be automatically rejected.</p>
+        <div class="mt-6 p-3 rounded-xl bg-white border border-[#222] text-[11px] text-gray-600 text-center">
+          <p class="font-semibold text-gray-700">🛡️ Server-Side Authorization Enforced</p>
+          <p class="mt-0.5 text-gray-500">Access is strictly restricted to authorized SellerFlow administrators. Non-admin accounts will be automatically rejected.</p>
         </div>
       </div>
     </div>
 
     <!-- Screen 2: Authorized Admin Dashboard Shell (Initially Hidden) -->
-    <div id="adminShell" class="hidden min-h-screen flex bg-[#0d0d0d]">
+    <div id="adminShell" class="hidden min-h-screen flex bg-white">
 
       <!-- Mobile Backdrop Overlay -->
-      <div id="sidebarBackdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-30 hidden lg:hidden"></div>
+      <div id="sidebarBackdrop" class="fixed inset-0 bg-white backdrop-blur-sm z-30 hidden lg:hidden"></div>
 
       <!-- Navigation Sidebar -->
-      <aside id="adminSidebar" class="w-64 bg-[#111111] border-r border-[#262626] flex flex-col fixed top-0 bottom-0 left-0 z-40 transition-transform -translate-x-full lg:translate-x-0">
+      <aside id="adminSidebar" class="w-64 bg-white border-r border-gray-200 flex flex-col fixed top-0 bottom-0 left-0 z-40 transition-transform -translate-x-full lg:translate-x-0">
         <!-- Brand Header -->
-        <div class="p-5 border-b border-[#262626] flex items-center justify-between">
+        <div class="p-5 border-b border-gray-200 flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-[#f5b942] text-black font-black text-lg flex items-center justify-center shadow-[0_0_12px_rgba(245,185,66,0.3)]">
               SF
             </div>
             <div>
-              <div class="text-sm font-black text-white tracking-wide">SELLER FLOW</div>
+              <div class="text-sm font-black text-gray-900 tracking-wide">SELLER FLOW</div>
               <div class="text-[10px] font-bold text-[#f5b942] tracking-wider uppercase">ADMIN PORTAL</div>
             </div>
           </div>
-          <button type="button" id="closeSidebarBtn" class="lg:hidden text-zinc-400 hover:text-white p-1">
+          <button type="button" id="closeSidebarBtn" class="lg:hidden text-gray-600 hover:text-gray-900 p-1">
             ✕
           </button>
         </div>
 
         <!-- Navigation Links -->
         <nav class="flex-1 p-3 space-y-1 overflow-y-auto" id="adminNavList">
-          <div class="px-3 pt-2 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Core Operations</div>
+          <div class="px-3 pt-2 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-gray-500">Core Operations</div>
           
-          <a href="#dashboard" data-tab="dashboard" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition active">
+          <a href="#dashboard" data-tab="dashboard" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition active">
             <span class="text-base">📊</span>
             <span>Dashboard</span>
           </a>
 
-          <a href="#users" data-tab="users" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+          <a href="#users" data-tab="users" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition">
             <span class="text-base">👥</span>
             <span>Users & Accounts</span>
-            <span id="badgeUsersCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-[#222] text-zinc-400 font-mono">0</span>
+            <span id="badgeUsersCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-gray-100 text-gray-600 font-mono">0</span>
           </a>
 
-          <a href="#stores" data-tab="stores" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+          <a href="#stores" data-tab="stores" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition">
             <span class="text-base">🏬</span>
             <span>Stores</span>
-            <span id="badgeStoresCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-[#222] text-zinc-400 font-mono">0</span>
+            <span id="badgeStoresCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-gray-100 text-gray-600 font-mono">0</span>
           </a>
 
-          <a href="#products" data-tab="products" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+          <a href="#products" data-tab="products" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition">
             <span class="text-base">📦</span>
             <span>Products</span>
-            <span id="badgeProductsCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-[#222] text-zinc-400 font-mono">0</span>
+            <span id="badgeProductsCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-gray-100 text-gray-600 font-mono">0</span>
           </a>
 
-          <a href="#orders" data-tab="orders" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+          <a href="#orders" data-tab="orders" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition">
             <span class="text-base">💳</span>
             <span>Orders Oversight</span>
-            <span id="badgeOrdersCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-[#222] text-zinc-400 font-mono">0</span>
+            <span id="badgeOrdersCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-gray-100 text-gray-600 font-mono">0</span>
           </a>
 
-          <div class="px-3 pt-4 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Security & Trust</div>
+          <div class="px-3 pt-4 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-gray-500">Security & Trust</div>
 
-          <a href="#verifications" data-tab="verifications" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+          <a href="#verifications" data-tab="verifications" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition">
             <span class="text-base">🛡️</span>
             <span>Account Verifications</span>
             <span id="badgePendingKyc" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">0</span>
           </a>
 
-          <a href="#moderation" data-tab="moderation" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+          <a href="#moderation" data-tab="moderation" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition">
             <span class="text-base">🛡️</span>
             <span>Content Moderation</span>
             <span id="badgeFlaggedPosts" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold">0</span>
           </a>
 
-          <a href="#reports" data-tab="reports" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+          <a href="#reports" data-tab="reports" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition">
             <span class="text-base">🚨</span>
             <span>Reports Desk</span>
             <span id="badgePendingReports" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold">0</span>
           </a>
 
-          <div class="px-3 pt-4 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Platform Ecosystem</div>
+          <div class="px-3 pt-4 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-gray-500">Platform Ecosystem</div>
 
-          <a href="#jobs" data-tab="jobs" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+          <a href="#jobs" data-tab="jobs" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition">
             <span class="text-base">💼</span>
             <span>Jobs</span>
-            <span id="badgeJobsCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-[#222] text-zinc-400 font-mono">0</span>
+            <span id="badgeJobsCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-gray-100 text-gray-600 font-mono">0</span>
           </a>
 
-          <a href="#events" data-tab="events" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+          <a href="#events" data-tab="events" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition">
             <span class="text-base">🎟️</span>
             <span>Events</span>
-            <span id="badgeEventsCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-[#222] text-zinc-400 font-mono">0</span>
+            <span id="badgeEventsCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-gray-100 text-gray-600 font-mono">0</span>
           </a>
 
-          <div class="px-3 pt-4 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Governance</div>
+          <div class="px-3 pt-4 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-gray-500">Governance</div>
 
-          <a href="#audit" data-tab="audit" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+          <a href="#audit" data-tab="audit" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition">
             <span class="text-base">📜</span>
             <span>Audit Logs</span>
           </a>
 
-          <a href="#settings" data-tab="settings" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:bg-[#1a1a1a] transition">
+          <a href="#settings" data-tab="settings" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition">
             <span class="text-base">⚙️</span>
             <span>Admin Roles & System</span>
           </a>
         </nav>
 
         <!-- Admin Profile & Logout Footer -->
-        <div class="p-3.5 border-t border-[#262626] bg-[#0c0c0c]">
+        <div class="p-3.5 border-t border-gray-200 bg-[#0c0c0c]">
           <div class="flex items-center gap-3 mb-2.5 px-1">
             <div id="adminAvatarLetter" class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 text-[#f5b942] font-black text-xs flex items-center justify-center">
               A
             </div>
             <div class="flex-1 min-w-0">
-              <div id="adminUserEmail" class="text-xs font-bold text-white truncate">admin@sellerflow.com</div>
+              <div id="adminUserEmail" class="text-xs font-bold text-gray-900 truncate">admin@sellerflow.com</div>
               <div class="text-[10px] font-bold text-[#f5b942] flex items-center gap-1">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                 <span>Authorized Admin</span>
@@ -212,7 +212,7 @@
             </div>
           </div>
           <button type="button" id="adminLogoutBtn" 
-            class="w-full py-2 px-3 rounded-lg bg-[#1a1a1a] hover:bg-rose-900/30 hover:border-rose-700/50 border border-[#2a2a2a] text-zinc-300 hover:text-rose-300 text-xs font-bold transition flex items-center justify-center gap-2">
+            class="w-full py-2 px-3 rounded-lg bg-gray-50 hover:bg-rose-900/30 hover:border-rose-700/50 border border-[#2a2a2a] text-gray-700 hover:text-rose-300 text-xs font-bold transition flex items-center justify-center gap-2">
             <span>🚪</span>
             <span>Sign Out</span>
           </button>
@@ -223,14 +223,14 @@
       <div class="flex-1 lg:ml-64 flex flex-col min-w-0">
 
         <!-- Top Header Bar -->
-        <header class="h-16 bg-[#111111]/90 backdrop-blur border-b border-[#262626] sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between">
+        <header class="h-16 bg-white/90 backdrop-blur border-b border-gray-200 sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <button type="button" id="openSidebarBtn" class="lg:hidden p-2 rounded-lg bg-[#1a1a1a] border border-[#333] text-zinc-300">
+            <button type="button" id="openSidebarBtn" class="lg:hidden p-2 rounded-lg bg-gray-50 border border-gray-200 text-gray-700">
               ☰
             </button>
             <div>
-              <h2 id="currentSectionTitle" class="text-base sm:text-lg font-black text-white">Dashboard Overview</h2>
-              <div class="text-[11px] text-zinc-400 hidden sm:block">Live synchronization with Firebase project sellerflow-efaab</div>
+              <h2 id="currentSectionTitle" class="text-base sm:text-lg font-black text-gray-900">Dashboard Overview</h2>
+              <div class="text-[11px] text-gray-600 hidden sm:block">Live synchronization with Firebase project sellerflow-efaab</div>
             </div>
           </div>
 
@@ -241,17 +241,17 @@
                 <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <span>LIVE SYNC</span>
-              <span id="headerLiveUsersCount" class="text-zinc-300 font-normal">· <strong class="text-emerald-300 font-bold">0</strong> online</span>
+              <span id="headerLiveUsersCount" class="text-gray-700 font-normal">· <strong class="text-emerald-300 font-bold">0</strong> online</span>
             </div>
 
             <button type="button" id="globalRefreshBtn" 
-              class="px-3 py-1.5 rounded-xl bg-[#1c1c1c] hover:bg-[#262626] border border-[#333] text-zinc-200 text-xs font-bold transition flex items-center gap-1.5">
+              class="px-3 py-1.5 rounded-xl bg-[#1c1c1c] hover:bg-gray-200 border border-gray-200 text-gray-800 text-xs font-bold transition flex items-center gap-1.5">
               <span id="refreshIcon">🔄</span>
               <span class="hidden sm:inline">Refresh Data</span>
             </button>
 
             <a href="/" target="_blank" 
-              class="px-3 py-1.5 rounded-xl bg-[#1c1c1c] hover:bg-[#262626] border border-[#333] text-zinc-300 text-xs font-bold transition flex items-center gap-1.5">
+              class="px-3 py-1.5 rounded-xl bg-[#1c1c1c] hover:bg-gray-200 border border-gray-200 text-gray-700 text-xs font-bold transition flex items-center gap-1.5">
               <span>📱</span>
               <span class="hidden sm:inline">View User App</span>
             </a>
@@ -266,8 +266,8 @@
             <!-- Executive KPI Cards (10 required cards) -->
             <div>
               <div class="flex items-center justify-between mb-3">
-                <h3 class="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Platform Health & Metrics</h3>
-                <span id="lastSyncedTime" class="text-[11px] text-zinc-500 font-mono">Syncing...</span>
+                <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-600">Platform Health & Metrics</h3>
+                <span id="lastSyncedTime" class="text-[11px] text-gray-500 font-mono">Syncing...</span>
               </div>
               <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                 <!-- Card 1: Total Users -->
@@ -361,12 +361,12 @@
                 </div>
 
                 <!-- Card 10: Taken-down Content -->
-                <div class="stat-card border-zinc-700">
+                <div class="stat-card border-gray-200">
                   <div class="stat-card-header">
                     <span class="stat-label">Taken-Down</span>
                     <span class="stat-icon">🛑</span>
                   </div>
-                  <div class="stat-value text-zinc-400" id="kpiTakenDown">-</div>
+                  <div class="stat-value text-gray-600" id="kpiTakenDown">-</div>
                   <div class="stat-footer">Safety removed items</div>
                 </div>
               </div>
@@ -374,30 +374,30 @@
 
             <!-- Quick Action Shortcuts -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div class="bg-[#141414] border border-[#262626] rounded-xl p-4 flex items-center justify-between">
+              <div class="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between">
                 <div>
-                  <div class="text-sm font-bold text-white">Ghana Card Verification Desk</div>
-                  <div class="text-xs text-zinc-400 mt-0.5">Review seller identity documents and liveness checks</div>
+                  <div class="text-sm font-bold text-gray-900">Ghana Card Verification Desk</div>
+                  <div class="text-xs text-gray-600 mt-0.5">Review seller identity documents and liveness checks</div>
                 </div>
                 <button type="button" onclick="window.location.hash = '#verifications'" class="btn btn-primary btn-sm">
                   Review Queue
                 </button>
               </div>
 
-              <div class="bg-[#141414] border border-[#262626] rounded-xl p-4 flex items-center justify-between">
+              <div class="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between">
                 <div>
-                  <div class="text-sm font-bold text-white">Content Moderation Queue</div>
-                  <div class="text-xs text-zinc-400 mt-0.5">Gemini 3.8 Flash flags and copyright muted items</div>
+                  <div class="text-sm font-bold text-gray-900">Content Moderation Queue</div>
+                  <div class="text-xs text-gray-600 mt-0.5">Gemini 3.8 Flash flags and copyright muted items</div>
                 </div>
                 <button type="button" onclick="window.location.hash = '#moderation'" class="btn btn-secondary btn-sm">
                   Inspect Posts
                 </button>
               </div>
 
-              <div class="bg-[#141414] border border-[#262626] rounded-xl p-4 flex items-center justify-between">
+              <div class="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between">
                 <div>
-                  <div class="text-sm font-bold text-white">Scam & Fraud Reports</div>
-                  <div class="text-xs text-zinc-400 mt-0.5">Triage community safety and buyer disputes</div>
+                  <div class="text-sm font-bold text-gray-900">Scam & Fraud Reports</div>
+                  <div class="text-xs text-gray-600 mt-0.5">Triage community safety and buyer disputes</div>
                 </div>
                 <button type="button" onclick="window.location.hash = '#reports'" class="btn btn-danger btn-sm">
                   Handle Reports
@@ -410,8 +410,8 @@
               
               <!-- Feed 1: Recent Reports -->
               <div class="table-card">
-                <div class="p-4 border-b border-[#262626] flex items-center justify-between">
-                  <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                  <h4 class="text-sm font-bold text-gray-900 flex items-center gap-2">
                     <span>🚨</span> Recent Scam & Fraud Reports
                   </h4>
                   <a href="#reports" class="text-xs text-[#f5b942] hover:underline font-semibold">View All</a>
@@ -428,7 +428,7 @@
                       </tr>
                     </thead>
                     <tbody id="recentReportsTableBody">
-                      <tr><td colspan="5" class="text-center text-zinc-500 py-6">No recent reports pending</td></tr>
+                      <tr><td colspan="5" class="text-center text-gray-500 py-6">No recent reports pending</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -436,8 +436,8 @@
 
               <!-- Feed 2: Recent KYC Requests -->
               <div class="table-card">
-                <div class="p-4 border-b border-[#262626] flex items-center justify-between">
-                  <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                  <h4 class="text-sm font-bold text-gray-900 flex items-center gap-2">
                     <span>🇬🇭</span> Recent Ghana Card Submissions
                   </h4>
                   <a href="#verifications" class="text-xs text-[#f5b942] hover:underline font-semibold">View All</a>
@@ -454,7 +454,7 @@
                       </tr>
                     </thead>
                     <tbody id="recentKycTableBody">
-                      <tr><td colspan="5" class="text-center text-zinc-500 py-6">No recent KYC submissions</td></tr>
+                      <tr><td colspan="5" class="text-center text-gray-500 py-6">No recent KYC submissions</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -462,8 +462,8 @@
 
               <!-- Feed 3: Recent Moderation Actions -->
               <div class="table-card">
-                <div class="p-4 border-b border-[#262626] flex items-center justify-between">
-                  <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                  <h4 class="text-sm font-bold text-gray-900 flex items-center gap-2">
                     <span>🛡️</span> AI & Moderator Content Actions
                   </h4>
                   <a href="#moderation" class="text-xs text-[#f5b942] hover:underline font-semibold">View All</a>
@@ -480,7 +480,7 @@
                       </tr>
                     </thead>
                     <tbody id="recentModerationTableBody">
-                      <tr><td colspan="5" class="text-center text-zinc-500 py-6">No moderation actions recorded</td></tr>
+                      <tr><td colspan="5" class="text-center text-gray-500 py-6">No moderation actions recorded</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -488,8 +488,8 @@
 
               <!-- Feed 4: Recent Commerce Orders -->
               <div class="table-card">
-                <div class="p-4 border-b border-[#262626] flex items-center justify-between">
-                  <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                  <h4 class="text-sm font-bold text-gray-900 flex items-center gap-2">
                     <span>💳</span> Recent Commerce Orders
                   </h4>
                   <a href="#orders" class="text-xs text-[#f5b942] hover:underline font-semibold">View All</a>
@@ -506,7 +506,7 @@
                       </tr>
                     </thead>
                     <tbody id="recentOrdersTableBody">
-                      <tr><td colspan="5" class="text-center text-zinc-500 py-6">No orders recorded yet</td></tr>
+                      <tr><td colspan="5" class="text-center text-gray-500 py-6">No orders recorded yet</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -520,10 +520,10 @@
             <div class="section-header">
               <div>
                 <h3 class="section-title"><span>👥</span> User Account Management</h3>
-                <p class="text-xs text-zinc-400 mt-0.5">Manage registered accounts, view KYC verification status, manage suspensions and blocks.</p>
+                <p class="text-xs text-gray-600 mt-0.5">Manage registered accounts, view KYC verification status, manage suspensions and blocks.</p>
               </div>
               <div class="section-actions">
-                <span id="userResultsCount" class="text-xs text-zinc-400 font-mono">Loading users...</span>
+                <span id="userResultsCount" class="text-xs text-gray-600 font-mono">Loading users...</span>
               </div>
             </div>
 
@@ -574,7 +574,7 @@
                     </tr>
                   </thead>
                   <tbody id="usersTableBody">
-                    <tr><td colspan="7" class="text-center py-8 text-zinc-500">Loading user accounts...</td></tr>
+                    <tr><td colspan="7" class="text-center py-8 text-gray-500">Loading user accounts...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -586,10 +586,10 @@
             <div class="section-header">
               <div>
                 <h3 class="section-title"><span>🏬</span> Storefront Directory</h3>
-                <p class="text-xs text-zinc-400 mt-0.5">Monitor merchant storefronts, product catalogs, and storefront compliance.</p>
+                <p class="text-xs text-gray-600 mt-0.5">Monitor merchant storefronts, product catalogs, and storefront compliance.</p>
               </div>
               <div class="section-actions">
-                <span id="storeResultsCount" class="text-xs text-zinc-400 font-mono">Loading stores...</span>
+                <span id="storeResultsCount" class="text-xs text-gray-600 font-mono">Loading stores...</span>
               </div>
             </div>
 
@@ -622,7 +622,7 @@
                     </tr>
                   </thead>
                   <tbody id="storesTableBody">
-                    <tr><td colspan="6" class="text-center py-8 text-zinc-500">Loading stores...</td></tr>
+                    <tr><td colspan="6" class="text-center py-8 text-gray-500">Loading stores...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -634,10 +634,10 @@
             <div class="section-header">
               <div>
                 <h3 class="section-title"><span>📦</span> Marketplace Products</h3>
-                <p class="text-xs text-zinc-400 mt-0.5">Audit listings, enforce marketplace standards, and take down prohibited inventory.</p>
+                <p class="text-xs text-gray-600 mt-0.5">Audit listings, enforce marketplace standards, and take down prohibited inventory.</p>
               </div>
               <div class="section-actions">
-                <span id="productResultsCount" class="text-xs text-zinc-400 font-mono">Loading products...</span>
+                <span id="productResultsCount" class="text-xs text-gray-600 font-mono">Loading products...</span>
               </div>
             </div>
 
@@ -681,7 +681,7 @@
                     </tr>
                   </thead>
                   <tbody id="productsTableBody">
-                    <tr><td colspan="7" class="text-center py-8 text-zinc-500">Loading products...</td></tr>
+                    <tr><td colspan="7" class="text-center py-8 text-gray-500">Loading products...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -693,38 +693,38 @@
             <div class="section-header">
               <div>
                 <h3 class="section-title"><span>🛡️</span> Security Team Desk & For You Moderation</h3>
-                <p class="text-xs text-zinc-400 mt-0.5">Posts go live immediately on the For You feed upon user upload and are queued on this Security Desk for review. If any post violates For You rules, take it down immediately.</p>
+                <p class="text-xs text-gray-600 mt-0.5">Posts go live immediately on the For You feed upon user upload and are queued on this Security Desk for review. If any post violates For You rules, take it down immediately.</p>
               </div>
               <div class="section-actions">
-                <span id="moderationCount" class="text-xs text-zinc-400 font-mono">0 items in queue</span>
+                <span id="moderationCount" class="text-xs text-gray-600 font-mono">0 items in queue</span>
               </div>
             </div>
 
             <!-- Sub-tab Pills -->
-            <div class="flex items-center gap-2 border-b border-[#262626] pb-3 overflow-x-auto">
+            <div class="flex items-center gap-2 border-b border-gray-200 pb-3 overflow-x-auto">
               <button type="button" data-mod-filter="security_desk" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#f5b942] text-black flex items-center gap-1.5">
                 <span>🛡️</span> Security Desk (Live on For You)
               </button>
-              <button type="button" data-mod-filter="all" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e1e1e] text-zinc-300 hover:bg-[#262626]">
+              <button type="button" data-mod-filter="all" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200">
                 All Posts
               </button>
-              <button type="button" data-mod-filter="pending" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e1e1e] text-zinc-300 hover:bg-[#262626]">
+              <button type="button" data-mod-filter="pending" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200">
                 Pending Review
               </button>
-              <button type="button" data-mod-filter="ai_flagged" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e1e1e] text-zinc-300 hover:bg-[#262626]">
+              <button type="button" data-mod-filter="ai_flagged" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200">
                 AI Flagged (Gemini)
               </button>
-              <button type="button" data-mod-filter="copyright" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e1e1e] text-zinc-300 hover:bg-[#262626]">
+              <button type="button" data-mod-filter="copyright" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200">
                 Copyright Muted 🔇
               </button>
-              <button type="button" data-mod-filter="taken_down" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e1e1e] text-zinc-300 hover:bg-[#262626]">
+              <button type="button" data-mod-filter="taken_down" class="mod-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200">
                 Taken Down / Removed 🚫
               </button>
             </div>
 
             <!-- Posts Moderation Grid -->
             <div id="moderationPostsContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              <div class="col-span-full text-center py-12 text-zinc-500">Loading posts for moderation...</div>
+              <div class="col-span-full text-center py-12 text-gray-500">Loading posts for moderation...</div>
             </div>
           </section>
 
@@ -733,7 +733,7 @@
             <div class="section-header">
               <div>
                 <h3 class="section-title"><span>🛡️</span> SellerFlow Account Verification Center</h3>
-                <p class="text-xs text-zinc-400 mt-0.5">Authoritative first-party SellerFlow account verification auditing with live 3-angle auto-capture selfie checks.</p>
+                <p class="text-xs text-gray-600 mt-0.5">Authoritative first-party SellerFlow account verification auditing with live 3-angle auto-capture selfie checks.</p>
               </div>
               <div class="section-actions">
                 <span id="kycQueueStatus" class="text-xs text-amber-400 font-bold">0 Pending</span>
@@ -769,7 +769,7 @@
                     </tr>
                   </thead>
                   <tbody id="kycTableBody">
-                    <tr><td colspan="6" class="text-center py-8 text-zinc-500">Loading KYC verification submissions...</td></tr>
+                    <tr><td colspan="6" class="text-center py-8 text-gray-500">Loading KYC verification submissions...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -781,7 +781,7 @@
             <div class="section-header">
               <div>
                 <h3 class="section-title"><span>🚨</span> Community Safety & Scam Reports</h3>
-                <p class="text-xs text-zinc-400 mt-0.5">Unified triage of community abuse complaints, fraud claims, and advance-fee scam warnings.</p>
+                <p class="text-xs text-gray-600 mt-0.5">Unified triage of community abuse complaints, fraud claims, and advance-fee scam warnings.</p>
               </div>
               <div class="section-actions">
                 <span id="reportsQueueCount" class="text-xs text-rose-400 font-mono">0 pending reports</span>
@@ -824,7 +824,7 @@
                     </tr>
                   </thead>
                   <tbody id="reportsTableBody">
-                    <tr><td colspan="7" class="text-center py-8 text-zinc-500">Loading reports desk...</td></tr>
+                    <tr><td colspan="7" class="text-center py-8 text-gray-500">Loading reports desk...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -836,10 +836,10 @@
             <div class="section-header">
               <div>
                 <h3 class="section-title"><span>💳</span> Commerce Orders Oversight</h3>
-                <p class="text-xs text-zinc-400 mt-0.5">Monitor transaction fulfillment, cash on delivery, and mobile money security checks.</p>
+                <p class="text-xs text-gray-600 mt-0.5">Monitor transaction fulfillment, cash on delivery, and mobile money security checks.</p>
               </div>
               <div class="section-actions">
-                <span id="ordersTotalVolume" class="text-xs text-zinc-300 font-mono">Total: GH₵0.00</span>
+                <span id="ordersTotalVolume" class="text-xs text-gray-700 font-mono">Total: GH₵0.00</span>
               </div>
             </div>
 
@@ -875,7 +875,7 @@
                     </tr>
                   </thead>
                   <tbody id="ordersTableBody">
-                    <tr><td colspan="8" class="text-center py-8 text-zinc-500">Loading orders...</td></tr>
+                    <tr><td colspan="8" class="text-center py-8 text-gray-500">Loading orders...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -887,7 +887,7 @@
             <div class="section-header">
               <div>
                 <h3 class="section-title"><span>💼</span> Ghanaian Employment Listings</h3>
-                <p class="text-xs text-zinc-400 mt-0.5">Authoritative security moderation for job postings with advance-fee scam detection.</p>
+                <p class="text-xs text-gray-600 mt-0.5">Authoritative security moderation for job postings with advance-fee scam detection.</p>
               </div>
             </div>
 
@@ -905,7 +905,7 @@
                     </tr>
                   </thead>
                   <tbody id="jobsTableBody">
-                    <tr><td colspan="6" class="text-center py-8 text-zinc-500">Loading jobs...</td></tr>
+                    <tr><td colspan="6" class="text-center py-8 text-gray-500">Loading jobs...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -917,7 +917,7 @@
             <div class="section-header">
               <div>
                 <h3 class="section-title"><span>🎟️</span> Ghanaian Events & Expos</h3>
-                <p class="text-xs text-zinc-400 mt-0.5">Authoritative moderation for community events, expos, and workshops.</p>
+                <p class="text-xs text-gray-600 mt-0.5">Authoritative moderation for community events, expos, and workshops.</p>
               </div>
             </div>
 
@@ -935,7 +935,7 @@
                     </tr>
                   </thead>
                   <tbody id="eventsTableBody">
-                    <tr><td colspan="6" class="text-center py-8 text-zinc-500">Loading events...</td></tr>
+                    <tr><td colspan="6" class="text-center py-8 text-gray-500">Loading events...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -947,7 +947,7 @@
             <div class="section-header">
               <div>
                 <h3 class="section-title"><span>📜</span> Immutable Security & Administrative Audit Logs</h3>
-                <p class="text-xs text-zinc-400 mt-0.5">Read-only tamper-proof ledger of all moderation, takedown, KYC, and security interventions.</p>
+                <p class="text-xs text-gray-600 mt-0.5">Read-only tamper-proof ledger of all moderation, takedown, KYC, and security interventions.</p>
               </div>
             </div>
 
@@ -981,7 +981,7 @@
                     </tr>
                   </thead>
                   <tbody id="auditLogsTableBody">
-                    <tr><td colspan="5" class="text-center py-8 text-zinc-500">Loading immutable audit logs...</td></tr>
+                    <tr><td colspan="5" class="text-center py-8 text-gray-500">Loading immutable audit logs...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -993,58 +993,58 @@
             <div class="section-header">
               <div>
                 <h3 class="section-title"><span>⚙️</span> Administrator Roles & System Configuration</h3>
-                <p class="text-xs text-zinc-400 mt-0.5">System status, environment diagnostics, and administrator clearance registry.</p>
+                <p class="text-xs text-gray-600 mt-0.5">System status, environment diagnostics, and administrator clearance registry.</p>
               </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- Card 1: Backend Connection -->
-              <div class="bg-[#141414] border border-[#262626] rounded-xl p-6 space-y-4">
-                <h4 class="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <div class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+                <h4 class="text-sm font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
                   <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   Firebase Backend Connection
                 </h4>
                 <div class="space-y-2.5 text-xs">
                   <div class="flex justify-between py-1.5 border-b border-[#222]">
-                    <span class="text-zinc-400">Firebase Project ID</span>
-                    <span class="font-mono font-bold text-white">sellerflow-efaab</span>
+                    <span class="text-gray-600">Firebase Project ID</span>
+                    <span class="font-mono font-bold text-gray-900">sellerflow-efaab</span>
                   </div>
                   <div class="flex justify-between py-1.5 border-b border-[#222]">
-                    <span class="text-zinc-400">Database Engine</span>
-                    <span class="font-mono text-zinc-300">Cloud Firestore + Realtime DB</span>
+                    <span class="text-gray-600">Database Engine</span>
+                    <span class="font-mono text-gray-700">Cloud Firestore + Realtime DB</span>
                   </div>
                   <div class="flex justify-between py-1.5 border-b border-[#222]">
-                    <span class="text-zinc-400">Storage Bucket</span>
-                    <span class="font-mono text-zinc-300">sellerflow-efaab.firebasestorage.app</span>
+                    <span class="text-gray-600">Storage Bucket</span>
+                    <span class="font-mono text-gray-700">sellerflow-efaab.firebasestorage.app</span>
                   </div>
                   <div class="flex justify-between py-1.5 border-b border-[#222]">
-                    <span class="text-zinc-400">AI Safety Evaluator</span>
+                    <span class="text-gray-600">AI Safety Evaluator</span>
                     <span class="font-bold text-amber-400">Gemini 3.8 Flash (Multimodal)</span>
                   </div>
                   <div class="flex justify-between py-1.5">
-                    <span class="text-zinc-400">Active Admin Session</span>
+                    <span class="text-gray-600">Active Admin Session</span>
                     <span id="settingsCurrentEmail" class="font-mono text-emerald-400 font-bold">Verifying...</span>
                   </div>
                 </div>
               </div>
 
               <!-- Card 2: Admin Roles Architecture -->
-              <div class="bg-[#141414] border border-[#262626] rounded-xl p-6 space-y-4">
-                <h4 class="text-sm font-black text-white uppercase tracking-wider">
+              <div class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+                <h4 class="text-sm font-black text-gray-900 uppercase tracking-wider">
                   Role Clearance Architecture
                 </h4>
-                <div class="space-y-3 text-xs text-zinc-300">
-                  <div class="p-3 rounded-lg bg-[#1a1a1a] border border-[#333]">
+                <div class="space-y-3 text-xs text-gray-700">
+                  <div class="p-3 rounded-lg bg-gray-50 border border-gray-200">
                     <div class="font-bold text-[#f5b942] mb-1">SUPER_ADMIN</div>
-                    <p class="text-zinc-400">Full platform clearance: user suspension, post & store takedown, KYC badge issuance, and security override.</p>
+                    <p class="text-gray-600">Full platform clearance: user suspension, post & store takedown, KYC badge issuance, and security override.</p>
                   </div>
-                  <div class="p-3 rounded-lg bg-[#1a1a1a] border border-[#333]">
+                  <div class="p-3 rounded-lg bg-gray-50 border border-gray-200">
                     <div class="font-bold text-blue-400 mb-1">SECURITY_OFFICER</div>
-                    <p class="text-zinc-400">Authoritative content takedown, copyright dispute resolution, and anti-scam report triage.</p>
+                    <p class="text-gray-600">Authoritative content takedown, copyright dispute resolution, and anti-scam report triage.</p>
                   </div>
-                  <div class="p-3 rounded-lg bg-[#1a1a1a] border border-[#333]">
+                  <div class="p-3 rounded-lg bg-gray-50 border border-gray-200">
                     <div class="font-bold text-emerald-400 mb-1">KYC_COMPLIANCE_REVIEWER</div>
-                    <p class="text-zinc-400">Statutory Ghana National Identity card and biometric liveness review.</p>
+                    <p class="text-gray-600">Statutory Ghana National Identity card and biometric liveness review.</p>
                   </div>
                 </div>
               </div>
@@ -1065,11 +1065,11 @@
           <button type="button" class="modal-close-btn" onclick="closeConfirmModal()">✕</button>
         </div>
         <div class="modal-body space-y-4">
-          <p id="confirmModalPrompt" class="text-sm text-zinc-300">Are you sure you want to proceed with this administrative action?</p>
+          <p id="confirmModalPrompt" class="text-sm text-gray-700">Are you sure you want to proceed with this administrative action?</p>
           
           <!-- Optional Duration selector for suspensions -->
           <div id="durationSelectWrapper" class="hidden">
-            <label class="block text-xs font-bold text-zinc-400 uppercase mb-1">Suspension Period</label>
+            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Suspension Period</label>
             <select id="confirmDurationSelect" class="w-full select-filter">
               <option value="1">24 Hours (Temporary Warning)</option>
               <option value="7" selected>7 Days (Standard Policy Violation)</option>
@@ -1079,11 +1079,11 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-zinc-400 uppercase mb-1">
+            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">
               Administrative Reason & Compliance Justification <span class="text-rose-400">*</span>
             </label>
             <textarea id="confirmReasonInput" rows="3" required placeholder="State exact policy clause, violation reason, or justification for the audit log..."
-              class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0d0d] border border-[#333] text-white text-xs focus:border-[#f5b942] focus:outline-none"></textarea>
+              class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-900 text-xs focus:border-[#f5b942] focus:outline-none"></textarea>
           </div>
         </div>
         <div class="modal-footer">
@@ -1110,30 +1110,30 @@
           <!-- Document Images Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div class="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-2.5 text-center">
-              <div class="text-[11px] font-bold text-zinc-400 mb-2 uppercase">Card Front</div>
-              <div id="kycFrontContainer" class="aspect-[1.58/1] bg-[#1a1a1a] rounded-lg overflow-hidden flex items-center justify-center border border-[#333]">
-                <span class="text-xs text-zinc-500">No front image</span>
+              <div class="text-[11px] font-bold text-gray-600 mb-2 uppercase">Card Front</div>
+              <div id="kycFrontContainer" class="aspect-[1.58/1] bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center border border-gray-200">
+                <span class="text-xs text-gray-500">No front image</span>
               </div>
             </div>
 
             <div class="bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl p-2.5 text-center">
-              <div class="text-[11px] font-bold text-zinc-400 mb-2 uppercase">Card Back</div>
-              <div id="kycBackContainer" class="aspect-[1.58/1] bg-[#1a1a1a] rounded-lg overflow-hidden flex items-center justify-center border border-[#333]">
-                <span class="text-xs text-zinc-500">No back image</span>
+              <div class="text-[11px] font-bold text-gray-600 mb-2 uppercase">Card Back</div>
+              <div id="kycBackContainer" class="aspect-[1.58/1] bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center border border-gray-200">
+                <span class="text-xs text-gray-500">No back image</span>
               </div>
             </div>
 
             <div class="bg-[#0f0f0f] border border-emerald-500/40 rounded-xl p-2.5 text-center">
               <div class="text-[11px] font-bold text-emerald-400 mb-2 uppercase">Live Facial Selfie</div>
-              <div id="kycSelfieContainer" class="aspect-square bg-[#1a1a1a] rounded-lg overflow-hidden flex items-center justify-center border border-[#333]">
-                <span class="text-xs text-zinc-500">No selfie</span>
+              <div id="kycSelfieContainer" class="aspect-square bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center border border-gray-200">
+                <span class="text-xs text-gray-500">No selfie</span>
               </div>
             </div>
 
             <div class="bg-[#0f0f0f] border border-gold/40 rounded-xl p-2.5 text-center">
               <div class="text-[11px] font-bold text-gold mb-2 uppercase">Full Person Picture</div>
-              <div id="kycFullPersonContainer" class="aspect-square bg-[#1a1a1a] rounded-lg overflow-hidden flex items-center justify-center border border-[#333]">
-                <span class="text-xs text-zinc-500">No full picture</span>
+              <div id="kycFullPersonContainer" class="aspect-square bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center border border-gray-200">
+                <span class="text-xs text-gray-500">No full picture</span>
               </div>
             </div>
           </div>
@@ -1147,22 +1147,22 @@
               <span class="badge badge-success text-[10px]">📱 Phone Library Uploads</span>
             </div>
             <div class="grid grid-cols-3 gap-2">
-              <div class="bg-[#141416] border border-[#2a2a2a] rounded-lg p-2 text-center">
-                <div class="text-[10px] font-bold text-zinc-400 mb-1 uppercase">Body 1 (Front - Library)</div>
-                <div id="kycFullBody1Container" class="aspect-[3/4] bg-[#1a1a1a] rounded overflow-hidden flex items-center justify-center border border-[#333]">
-                  <span class="text-[10px] text-zinc-500">No library upload</span>
+              <div class="bg-white border border-[#2a2a2a] rounded-lg p-2 text-center">
+                <div class="text-[10px] font-bold text-gray-600 mb-1 uppercase">Body 1 (Front - Library)</div>
+                <div id="kycFullBody1Container" class="aspect-[3/4] bg-gray-50 rounded overflow-hidden flex items-center justify-center border border-gray-200">
+                  <span class="text-[10px] text-gray-500">No library upload</span>
                 </div>
               </div>
-              <div class="bg-[#141416] border border-[#2a2a2a] rounded-lg p-2 text-center">
-                <div class="text-[10px] font-bold text-zinc-400 mb-1 uppercase">Body 2 (Left - Library)</div>
-                <div id="kycFullBody2Container" class="aspect-[3/4] bg-[#1a1a1a] rounded overflow-hidden flex items-center justify-center border border-[#333]">
-                  <span class="text-[10px] text-zinc-500">No library upload</span>
+              <div class="bg-white border border-[#2a2a2a] rounded-lg p-2 text-center">
+                <div class="text-[10px] font-bold text-gray-600 mb-1 uppercase">Body 2 (Left - Library)</div>
+                <div id="kycFullBody2Container" class="aspect-[3/4] bg-gray-50 rounded overflow-hidden flex items-center justify-center border border-gray-200">
+                  <span class="text-[10px] text-gray-500">No library upload</span>
                 </div>
               </div>
-              <div class="bg-[#141416] border border-[#2a2a2a] rounded-lg p-2 text-center">
-                <div class="text-[10px] font-bold text-zinc-400 mb-1 uppercase">Body 3 (Right - Library)</div>
-                <div id="kycFullBody3Container" class="aspect-[3/4] bg-[#1a1a1a] rounded overflow-hidden flex items-center justify-center border border-[#333]">
-                  <span class="text-[10px] text-zinc-500">No library upload</span>
+              <div class="bg-white border border-[#2a2a2a] rounded-lg p-2 text-center">
+                <div class="text-[10px] font-bold text-gray-600 mb-1 uppercase">Body 3 (Right - Library)</div>
+                <div id="kycFullBody3Container" class="aspect-[3/4] bg-gray-50 rounded overflow-hidden flex items-center justify-center border border-gray-200">
+                  <span class="text-[10px] text-gray-500">No library upload</span>
                 </div>
               </div>
             </div>
@@ -1181,29 +1181,29 @@
           </div>
 
           <!-- Metadata & Liveness Details -->
-          <div class="p-3.5 bg-[#0f0f0f] border border-[#262626] rounded-xl space-y-2 text-xs">
+          <div class="p-3.5 bg-[#0f0f0f] border border-gray-200 rounded-xl space-y-2 text-xs">
             <div class="flex justify-between">
-              <span class="text-zinc-400">Date of Birth</span>
-              <span id="kycModalDob" class="font-bold text-white">-</span>
+              <span class="text-gray-600">Date of Birth</span>
+              <span id="kycModalDob" class="font-bold text-gray-900">-</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-zinc-400">Biometric Liveness Challenge</span>
+              <span class="text-gray-600">Biometric Liveness Challenge</span>
               <span id="kycModalLiveness" class="font-bold text-emerald-400">COMPLETED (5 head poses)</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-zinc-400">Duplicate PIN Check</span>
+              <span class="text-gray-600">Duplicate PIN Check</span>
               <span class="font-bold text-emerald-400">PASS (Unique SHA-256 Card Hash)</span>
             </div>
           </div>
 
           <!-- Rejection Instructions (Hidden by default, shown when clicking Reject) -->
-          <div id="kycRejectOptions" class="hidden space-y-2 border-t border-[#262626] pt-3">
+          <div id="kycRejectOptions" class="hidden space-y-2 border-t border-gray-200 pt-3">
             <label class="block text-xs font-bold text-rose-400 uppercase">Reason for Non-Approval</label>
             <input type="text" id="kycRejectReasonInput" placeholder="e.g. Card photo too blurry, name does not match card..."
-              class="w-full px-3 py-2 rounded-lg bg-[#0d0d0d] border border-rose-900/50 text-white text-xs">
-            <label class="block text-[11px] font-bold text-zinc-400 uppercase">Actionable Correction Instructions for User</label>
+              class="w-full px-3 py-2 rounded-lg bg-white border border-rose-900/50 text-gray-900 text-xs">
+            <label class="block text-[11px] font-bold text-gray-600 uppercase">Actionable Correction Instructions for User</label>
             <input type="text" id="kycCorrectionInstructionsInput" placeholder="e.g. Please re-upload a clear, uncropped photo of your official Ghana Card..."
-              class="w-full px-3 py-2 rounded-lg bg-[#0d0d0d] border border-[#333] text-white text-xs">
+              class="w-full px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-900 text-xs">
           </div>
         </div>
         <div class="modal-footer justify-between">
@@ -1226,20 +1226,20 @@
           <button type="button" class="modal-close-btn" onclick="closePostModal()">✕</button>
         </div>
         <div class="modal-body space-y-4">
-          <div id="postModalMediaContainer" class="max-h-96 rounded-xl bg-black overflow-hidden flex items-center justify-center border border-[#262626]">
+          <div id="postModalMediaContainer" class="max-h-96 rounded-xl bg-white overflow-hidden flex items-center justify-center border border-gray-200">
           </div>
-          <div class="p-3 bg-[#0d0d0d] rounded-xl border border-[#222] text-xs space-y-2">
+          <div class="p-3 bg-white rounded-xl border border-[#222] text-xs space-y-2">
             <div>
-              <span class="text-zinc-400 font-bold uppercase text-[10px]">Caption / Content:</span>
-              <p id="postModalText" class="text-zinc-200 mt-0.5 whitespace-pre-wrap"></p>
+              <span class="text-gray-600 font-bold uppercase text-[10px]">Caption / Content:</span>
+              <p id="postModalText" class="text-gray-800 mt-0.5 whitespace-pre-wrap"></p>
             </div>
             <div class="flex justify-between border-t border-[#222] pt-2">
-              <span class="text-zinc-400">Creator UID:</span>
-              <span id="postModalSellerId" class="font-mono text-zinc-300"></span>
+              <span class="text-gray-600">Creator UID:</span>
+              <span id="postModalSellerId" class="font-mono text-gray-700"></span>
             </div>
             <div id="postModalAiWrap" class="border-t border-[#222] pt-2 hidden">
               <span class="text-rose-400 font-bold">AI Safety Finding:</span>
-              <p id="postModalAiFinding" class="text-zinc-300 mt-0.5"></p>
+              <p id="postModalAiFinding" class="text-gray-700 mt-0.5"></p>
             </div>
           </div>
         </div>

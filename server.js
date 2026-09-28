@@ -158,6 +158,56 @@ function isUserAdminEmail(email) {
   return em === 'gideondreams3325@gmail.com' || em === 'gfappiah3325@gmail.com' || ADMIN_EMAILS.includes(em);
 }
 
+async function safeCreateCustomToken(uid, claims = {}) {
+  if (!uid) return null;
+  try {
+    if (adminAuth && typeof adminAuth.createCustomToken === 'function') {
+      return await adminAuth.createCustomToken(uid, claims);
+    }
+  } catch (err) {
+    // Fall back to local signing if signBlob or IAM restriction occurs
+  }
+
+  // Local fallback signing using service account private key if available
+  try {
+    let clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+    if (!clientEmail || !privateKey) {
+      if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        clientEmail = sa.client_email;
+        privateKey = sa.private_key;
+      }
+    }
+    if (clientEmail && privateKey) {
+      const header = { alg: 'RS256', typ: 'JWT' };
+      const payload = {
+        iss: clientEmail,
+        sub: clientEmail,
+        aud: 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit',
+        uid: uid,
+        claims: claims,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 3600
+      };
+      const base64UrlEncode = (str) => Buffer.from(str).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      const encodedHeader = base64UrlEncode(JSON.stringify(header));
+      const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+      const unsignedToken = `${encodedHeader}.${encodedPayload}`;
+
+      const formattedKey = privateKey.replace(/\\n/g, '\n');
+      const sign = crypto.createSign('RSA-SHA256');
+      sign.update(unsignedToken);
+      sign.end();
+      const signature = sign.sign(formattedKey, 'base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      return `${unsignedToken}.${signature}`;
+    }
+  } catch (_) {
+    // Silent fallback
+  }
+  return null;
+}
+
 async function verifyFirebaseToken(idToken) {
   if (!idToken || typeof idToken !== 'string') {
     throw new Error('No token provided');
@@ -2983,12 +3033,17 @@ app.post('/api/auth/custom-token', async (req, res) => {
         console.warn('Custom user claims assign notice:', claimErr.message);
       }
     }
-    const customToken = await adminAuth.createCustomToken(decoded.uid, {
-      email: emailVal,
-      email_verified: !!decoded.email_verified,
-      admin: isAdminClaim
-    });
-    return res.json({ success: true, customToken });
+    try {
+      const customToken = await adminAuth.createCustomToken(decoded.uid, {
+        email: emailVal,
+        email_verified: !!decoded.email_verified,
+        admin: isAdminClaim
+      });
+      return res.json({ success: true, customToken, uid: decoded.uid, email: emailVal, admin: isAdminClaim });
+    } catch (tokErr) {
+      console.warn('Custom token mint notice (IAM / signBlob fallback):', tokErr.message);
+      return res.json({ success: true, customToken: null, uid: decoded.uid, email: emailVal, admin: isAdminClaim });
+    }
   } catch (err) {
     console.warn('Custom token creation issue:', err.message);
     return res.status(500).json({ success: false, error: err.message });
@@ -3610,8 +3665,8 @@ app.post(['/api/auth/login-username', '/api/auth/login'], async (req, res) => {
     const targetUid = authResult.localId || account.uid;
     const isUserAdmin = isUserAdminEmail(successfulEmail) || isUserAdminEmail(account.recoveryEmail) || account.isAdmin;
 
-    // Mint authoritative Firebase custom token
-    const customToken = await adminAuth.createCustomToken(targetUid, {
+    // Mint authoritative Firebase custom token if environment supports signBlob
+    const customToken = await safeCreateCustomToken(targetUid, {
       admin: Boolean(isUserAdmin),
       username: account.username || usernameClean(inputIdentifier)
     });
@@ -3631,6 +3686,10 @@ app.post(['/api/auth/login-username', '/api/auth/login'], async (req, res) => {
     return res.json({
       success: true,
       customToken,
+      idToken: authResult.idToken,
+      refreshToken: authResult.refreshToken,
+      authEmail: successfulEmail,
+      email: successfulEmail,
       uid: targetUid,
       username: account.username || uClean,
       isAdmin: Boolean(isUserAdmin)
@@ -3889,8 +3948,8 @@ app.post(['/api/auth/register', '/api/auth/register-username'], async (req, res)
       }
     }
 
-    // Mint custom token for immediate authentication handshake
-    const customToken = await adminAuth.createCustomToken(uid, {
+    // Mint custom token for immediate authentication handshake if environment allows
+    const customToken = await safeCreateCustomToken(uid, {
       username: uClean,
       email: recEmailLower,
       admin: isAdmin
@@ -4344,7 +4403,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
       let customToken = null;
       try {
         const isAdmin = isUserAdminEmail(resetData.recoveryEmail) || uClean === 'sellerflow';
-        customToken = await adminAuth.createCustomToken(uid, {
+        customToken = await safeCreateCustomToken(uid, {
           username: uClean,
           email: resetData.recoveryEmail,
           admin: isAdmin
