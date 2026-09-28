@@ -2367,14 +2367,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('adminLoginForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('adminEmailInput')?.value.trim();
+    const rawIdentifier = document.getElementById('adminUsernameInput')?.value.trim() || '';
     const password = document.getElementById('adminPasswordInput')?.value;
     const loginBtn = document.getElementById('adminLoginBtn');
     const loginText = document.getElementById('loginBtnText');
     const loginSpinner = document.getElementById('loginSpinner');
     const alertEl = document.getElementById('loginAlert');
 
-    if (!email || !password) return;
+    if (!rawIdentifier || !password) return;
 
     if (loginBtn) loginBtn.disabled = true;
     if (loginText) loginText.textContent = 'Verifying Clearance...';
@@ -2382,7 +2382,31 @@ document.addEventListener('DOMContentLoaded', () => {
     if (alertEl) alertEl.classList.add('hidden');
 
     try {
-      await auth.signInWithEmailAndPassword(email, password);
+      // 1. Authoritative login via backend username/password endpoint
+      const logRes = await fetch('/api/auth/login-username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: rawIdentifier, password })
+      });
+      const logData = await logRes.json();
+
+      if (logData.success && logData.customToken) {
+        await auth.signInWithCustomToken(logData.customToken);
+      } else {
+        // Fallback: identifier lookup and direct credential verification
+        const lookRes = await fetch('/api/auth/lookup-identifier', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier: rawIdentifier })
+        });
+        const lookData = await lookRes.json();
+        const resolvedEmail = (lookData.success && lookData.authEmail) ? lookData.authEmail : (rawIdentifier.includes('@') ? rawIdentifier : null);
+
+        if (!resolvedEmail) {
+          throw new Error(logData.error || 'Administrator account not found.');
+        }
+        await auth.signInWithEmailAndPassword(resolvedEmail, password);
+      }
     } catch (err) {
       if (alertEl) {
         alertEl.className = 'mb-4 p-3.5 rounded-xl text-xs font-medium border bg-rose-500/10 border-rose-500/30 text-rose-300 block';
@@ -2391,79 +2415,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (loginBtn) loginBtn.disabled = false;
       if (loginText) loginText.textContent = 'Sign In to Admin Portal';
       if (loginSpinner) loginSpinner.classList.add('hidden');
-    }
-  });
-
-  // Google Login
-  document.getElementById('adminGoogleLoginBtn')?.addEventListener('click', async () => {
-    const alertEl = document.getElementById('loginAlert');
-    if (alertEl) alertEl.classList.add('hidden');
-
-    if (isCapacitorNative()) {
-      const isAvailable = (typeof window.Capacitor !== 'undefined' && typeof window.Capacitor.isPluginAvailable === 'function')
-        ? window.Capacitor.isPluginAvailable('NativeGoogleAuth')
-        : false;
-      const NativeAuth = window.Capacitor?.Plugins?.NativeGoogleAuth || (isAvailable && window.Capacitor?.registerPlugin ? window.Capacitor.registerPlugin('NativeGoogleAuth') : null);
-
-      if (NativeAuth && isAvailable) {
-        try {
-          const serverClientId = '987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com';
-          const authResult = await NativeAuth.signIn({ serverClientId });
-
-          if (authResult && authResult.idToken) {
-            // Convert native Google ID token to Firebase credential
-            const credential = firebase.auth.GoogleAuthProvider.credential(authResult.idToken);
-            
-            // Sign into Firebase Auth - onAuthStateChanged will enforce admin RBAC check
-            await auth.signInWithCredential(credential);
-            return;
-          }
-        } catch (capErr) {
-          if (capErr?.code === 'USER_CANCELLED' || capErr?.message?.includes('cancelled')) {
-            console.log('User dismissed Google account chooser in Admin');
-            return;
-          }
-          console.warn('Native Google Auth token not returned in admin, proceeding with browser OAuth:', capErr);
-        }
-      }
-
-      if (window.Capacitor?.Plugins?.Browser?.open) {
-        try {
-          const origin = window.location.origin || 'https://sellerflow-tan.vercel.app';
-          const callbackUrl = (origin && origin.startsWith('http') && !origin.includes('localhost') && !origin.includes('capacitor://'))
-            ? origin + '/oauth-callback'
-            : 'https://sellerflow-tan.vercel.app/oauth-callback';
-          const startUrl = callbackUrl + (callbackUrl.includes('?') ? '&' : '?') + 'start=google&target=admin';
-          await window.Capacitor.Plugins.Browser.open({ url: startUrl });
-          return;
-        } catch (browserErr) {
-          console.warn('Browser open notice in admin:', browserErr);
-        }
-      }
-
-      if (alertEl) {
-        alertEl.className = 'mb-4 p-3.5 rounded-xl text-xs font-medium border bg-amber-500/10 border-amber-500/30 text-amber-300 block';
-        alertEl.textContent = 'Please sign in with your Administrator Email & Password above.';
-      }
-      return;
-    }
-
-    const provider = new firebase.auth.GoogleAuthProvider();
-    if (typeof provider.setCustomParameters === 'function') {
-      provider.setCustomParameters({ prompt: 'select_account' });
-    }
-    try {
-      await auth.signInWithPopup(provider);
-    } catch (err) {
-      if (alertEl) {
-        alertEl.className = 'mb-4 p-3.5 rounded-xl text-xs font-medium border bg-rose-500/10 border-rose-500/30 text-rose-300 block';
-        if (err.code === 'auth/unauthorized-domain' || (err.message && err.message.includes('unauthorized-domain'))) {
-          const currentHost = window.location.hostname || 'aistudio.google.com';
-          alertEl.innerHTML = `<strong>Domain Not Authorized in Firebase:</strong> Domain <em>${escapeHtml(currentHost)}</em> must be added to Authorized Domains in <a href="https://console.firebase.google.com/" target="_blank" class="underline text-amber-300">Firebase Console</a> &rarr; <strong>Authentication</strong> &rarr; <strong>Settings</strong> &rarr; <strong>Authorized domains</strong>. You can also sign in with Administrator Email & Password above.`;
-        } else {
-          alertEl.textContent = `Google Sign-In failed: ${err.message}`;
-        }
-      }
     }
   });
 
@@ -2513,6 +2464,131 @@ function getAdminAppUrl() {
 }
 
 let adminCapacitorInitialized = false;
+window._sfHandledAdminOAuthFingerprints = window._sfHandledAdminOAuthFingerprints || new Set();
+
+async function processAdminOAuthDeepLink(urlStr, source) {
+  if (!urlStr || typeof urlStr !== 'string') return;
+  console.log('[Admin OAuth Receiver] Processing callback from source:', source);
+
+  try {
+    const Browser = window.Capacitor?.Plugins?.Browser;
+    if (Browser && typeof Browser.close === 'function') {
+      await Browser.close().catch(() => {});
+    }
+  } catch (_) {}
+
+  let raw = '';
+  if (urlStr.includes('#')) {
+    raw = urlStr.split('#')[1];
+    if (raw.includes('#Intent;')) raw = raw.split('#Intent;')[0];
+  } else if (urlStr.includes('?')) {
+    raw = urlStr.split('?')[1];
+    if (raw.includes('#Intent;')) raw = raw.split('#Intent;')[0];
+  } else {
+    raw = urlStr;
+  }
+
+  const params = new URLSearchParams(raw);
+  const state = params.get('state') || '';
+  const customToken = params.get('custom_token') || '';
+  const firebaseToken = params.get('firebase_token') || params.get('id_token') || '';
+  const oauthIdToken = params.get('oauth_id_token') || '';
+  const accessToken = params.get('access_token') || params.get('oauth_access_token') || '';
+  const email = params.get('email') || '';
+
+  const hasAnyAuthParam = Boolean(customToken || firebaseToken || oauthIdToken || accessToken || email);
+  if (!hasAnyAuthParam) {
+    console.log('[Admin OAuth Receiver] Opened without auth params');
+    return;
+  }
+
+  // Single-use replay protection
+  const replayFingerprint = state || (customToken ? customToken.slice(-20) : '') || (oauthIdToken ? oauthIdToken.slice(-20) : '') || (firebaseToken ? firebaseToken.slice(-20) : '') || email;
+  if (replayFingerprint && window._sfHandledAdminOAuthFingerprints.has(replayFingerprint)) {
+    console.log('[Admin OAuth Receiver] Deep link callback already processed, preventing replay');
+    return;
+  }
+  if (replayFingerprint) {
+    window._sfHandledAdminOAuthFingerprints.add(replayFingerprint);
+    if (window._sfHandledAdminOAuthFingerprints.size > 50) {
+      const first = window._sfHandledAdminOAuthFingerprints.values().next().value;
+      window._sfHandledAdminOAuthFingerprints.delete(first);
+    }
+  }
+
+  let signedIn = false;
+  let lastError = '';
+
+  // 1. Custom token minted by server
+  if (customToken) {
+    try {
+      const res = await auth.signInWithCustomToken(customToken);
+      if (res?.user) signedIn = true;
+    } catch (cErr) {
+      lastError = cErr.message;
+    }
+  }
+
+  // 2. Google OAuth ID Token Credential
+  if (!signedIn && oauthIdToken) {
+    try {
+      const cred = firebase.auth.GoogleAuthProvider.credential(oauthIdToken, accessToken || undefined);
+      const res = await auth.signInWithCredential(cred);
+      if (res?.user) signedIn = true;
+    } catch (cErr) {
+      lastError = cErr.message;
+    }
+  }
+
+  // 3. Exchange firebaseToken with custom-token backend
+  if (!signedIn && firebaseToken) {
+    try {
+      const appBase = getAdminAppUrl();
+      const exRes = await fetch(appBase + '/api/auth/custom-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: firebaseToken })
+      });
+      if (exRes.ok) {
+        const exData = await exRes.json();
+        if (exData?.success && exData?.customToken) {
+          const res = await auth.signInWithCustomToken(exData.customToken);
+          if (res?.user) signedIn = true;
+        }
+      }
+    } catch (exErr) {
+      lastError = exErr.message;
+    }
+  }
+
+  if (!signedIn && auth.currentUser) {
+    signedIn = true;
+  }
+
+  if (signedIn && auth.currentUser) {
+    // Strictly verify admin clearance
+    const userEmail = (auth.currentUser.email || '').toLowerCase().trim();
+    const isAdminUser = typeof isUserAdminEmail === 'function' ? isUserAdminEmail(userEmail) : (userEmail === 'gideondreams3325@gmail.com' || userEmail === 'gfappiah3325@gmail.com');
+    if (isAdminUser) {
+      showToast('Admin clearance verified', 'success');
+    } else {
+      console.warn('Account is not authorized for admin:', userEmail);
+      await auth.signOut().catch(() => {});
+      const loginAlert = document.getElementById('loginAlert');
+      if (loginAlert) {
+        loginAlert.className = 'mb-4 p-3.5 rounded-xl text-xs font-medium border bg-rose-500/10 border-rose-500/30 text-rose-300 block';
+        loginAlert.textContent = 'Access Denied: Account ' + userEmail + ' is not an authorized administrator.';
+      }
+    }
+  } else {
+    const loginAlert = document.getElementById('loginAlert');
+    if (loginAlert) {
+      loginAlert.className = 'mb-4 p-3.5 rounded-xl text-xs font-medium border bg-rose-500/10 border-rose-500/30 text-rose-300 block';
+      loginAlert.textContent = lastError ? `Sign-in verification failed: ${lastError}` : 'Google sign-in could not be verified. Please use email & password or try again.';
+    }
+  }
+}
+
 async function initAdminCapacitorHandlers() {
   if (adminCapacitorInitialized || typeof window.Capacitor === 'undefined') return;
   adminCapacitorInitialized = true;
@@ -2521,100 +2597,19 @@ async function initAdminCapacitorHandlers() {
     const App = window.Capacitor.Plugins.App;
     if (App) {
       App.addListener('appUrlOpen', async (data) => {
-        console.log('SellerFlow Admin App opened with URL:', data?.url);
-        const urlStr = data?.url;
-        if (!urlStr) return;
-
-        try {
-          const Browser = window.Capacitor.Plugins.Browser;
-          if (Browser) {
-            await Browser.close().catch(() => {});
-          }
-
-          let raw = '';
-          if (urlStr.includes('#')) {
-            raw = urlStr.split('#')[1];
-          } else if (urlStr.includes('?')) {
-            raw = urlStr.split('?')[1];
-          } else {
-            raw = urlStr;
-          }
-
-          const params = new URLSearchParams(raw);
-          const customToken = params.get('custom_token') || '';
-          const firebaseToken = params.get('firebase_token') || params.get('id_token') || '';
-          const oauthIdToken = params.get('oauth_id_token') || '';
-          const accessToken = params.get('access_token') || params.get('oauth_access_token') || '';
-          const email = params.get('email') || '';
-
-          const hasAnyAuthParam = Boolean(customToken || firebaseToken || oauthIdToken || accessToken || email);
-          if (!hasAnyAuthParam) {
-            console.log('Admin app opened without auth params:', urlStr);
-            return;
-          }
-
-          let signedIn = false;
-          let lastError = '';
-
-          // 1. Custom token minted by server
-          if (customToken) {
-            try {
-              const res = await auth.signInWithCustomToken(customToken);
-              if (res?.user) signedIn = true;
-            } catch (cErr) {
-              lastError = cErr.message;
-            }
-          }
-
-          // 2. Google OAuth ID Token Credential
-          if (!signedIn && oauthIdToken) {
-            try {
-              const cred = firebase.auth.GoogleAuthProvider.credential(oauthIdToken, accessToken || undefined);
-              const res = await auth.signInWithCredential(cred);
-              if (res?.user) signedIn = true;
-            } catch (cErr) {
-              lastError = cErr.message;
-            }
-          }
-
-          // 3. Exchange firebaseToken with custom-token backend
-          if (!signedIn && firebaseToken) {
-            try {
-              const appBase = getAdminAppUrl();
-              const exRes = await fetch(appBase + '/api/auth/custom-token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken: firebaseToken })
-              });
-              if (exRes.ok) {
-                const exData = await exRes.json();
-                if (exData?.success && exData?.customToken) {
-                  const res = await auth.signInWithCustomToken(exData.customToken);
-                  if (res?.user) signedIn = true;
-                }
-              }
-            } catch (exErr) {
-              lastError = exErr.message;
-            }
-          }
-
-          if (!signedIn && auth.currentUser) {
-            signedIn = true;
-          }
-
-          if (signedIn) {
-            showToast('Admin clearance verified', 'success');
-          } else {
-            const loginAlert = document.getElementById('loginAlert');
-            if (loginAlert) {
-              loginAlert.className = 'mb-4 p-3.5 rounded-xl text-xs font-medium border bg-rose-500/10 border-rose-500/30 text-rose-300 block';
-              loginAlert.textContent = lastError ? `Sign-in verification failed: ${lastError}` : 'Google sign-in could not be verified. Please use email & password or try again.';
-            }
-          }
-        } catch (err) {
-          console.error('Error in Admin appUrlOpen handler:', err);
+        if (data?.url) {
+          await processAdminOAuthDeepLink(data.url, 'warm-start');
         }
       });
+
+      if (typeof App.getLaunchUrl === 'function') {
+        try {
+          const launchData = await App.getLaunchUrl();
+          if (launchData && launchData.url) {
+            await processAdminOAuthDeepLink(launchData.url, 'cold-start');
+          }
+        } catch (_) {}
+      }
     }
   } catch (e) {
     console.warn('Admin Capacitor listener registration skipped:', e);

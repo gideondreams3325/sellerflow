@@ -48,115 +48,6 @@
     _origConsoleError.apply(console, args);
   };
 })();
-// Deep-link redirection fallback for Google/OAuth callback on web back to Android custom scheme
-(function() {
-  const isOAuth = window.location.pathname.includes('/oauth-callback') ||
-                  window.location.pathname.endsWith('/oauth-callback') ||
-                  window.location.search.includes('oauth-callback') ||
-                  window.location.hash.includes('oauth-callback');
-  if (isOAuth) {
-    window.IS_SELLERFLOW_OAUTH_CALLBACK = true;
-    
-    // Check if tokens already present in URL
-    const hash = window.location.hash || '';
-    if (hash && (hash.includes('id_token=') || hash.includes('access_token=') || hash.includes('custom_token=') || hash.includes('firebase_token=') || hash.includes('refresh_token=') || hash.includes('oauth_id_token=') || hash.includes('uid='))) {
-      const targetScheme = 'com.sellerflow.app';
-      const redirectTarget = targetScheme + '://oauth-callback' + hash;
-      console.log('Immediate OAuth callback redirect:', redirectTarget);
-      window.location.href = redirectTarget;
-    }
-    
-    // Inject style to suppress default application UI
-    const style = document.createElement('style');
-    style.id = 'oauth-callback-suppress';
-    style.textContent = '#app, #landing, #authPage, #loading { display: none !important; }';
-    if (document.head) {
-      document.head.appendChild(style);
-    } else {
-      document.addEventListener('DOMContentLoaded', () => document.head.appendChild(style));
-    }
-
-    // Render clean SellerFlow returning screen
-    const renderOverlay = () => {
-      if (document.getElementById('oauthCallbackOverlay')) return;
-      const overlay = document.createElement('div');
-      overlay.id = 'oauthCallbackOverlay';
-      overlay.style.cssText = 'position:fixed;inset:0;z-index:9999999;background:radial-gradient(circle at 50% 20%, #1c180e 0%, #0a0a0c 60%, #040405 100%);color:#f5f5f5;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;text-align:center;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;box-sizing:border-box;overflow-y:auto;';
-      overlay.innerHTML = `
-        <div style="position:relative;margin-bottom:18px;display:flex;align-items:center;justify-content:center;">
-          <div style="position:absolute;width:96px;height:96px;border-radius:50%;background:radial-gradient(circle,rgba(245,185,66,0.3) 0%,transparent 70%);animation:sf_glow 2.5s ease-in-out infinite;"></div>
-          <div style="position:relative;width:76px;height:76px;border-radius:22px;background:linear-gradient(145deg,#1f1e1a,#0d0d10);border:1.5px solid rgba(245,185,66,0.5);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 30px rgba(0,0,0,0.7),0 0 25px rgba(245,185,66,0.25);">
-            <img src="/nav-emblem.svg" alt="SellerFlow" style="width:48px;height:48px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(245,185,66,0.4));" />
-          </div>
-        </div>
-
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
-          <span style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.03em;">Seller</span><span style="font-size:26px;font-weight:900;background:linear-gradient(135deg,#ffe072 0%,#f5b942 50%,#d98218 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.03em;">Flow</span><span style="font-size:10px;font-weight:900;background:rgba(245,185,66,0.18);color:#f5b942;border:1px solid rgba(245,185,66,0.4);padding:2px 6px;border-radius:6px;letter-spacing:0.05em;text-transform:uppercase;">GH</span>
-        </div>
-        <div style="font-size:10.5px;font-weight:800;letter-spacing:0.25em;color:#d4d4d8;text-transform:uppercase;margin-bottom:22px;display:flex;align-items:center;gap:6px;">
-          <span>BUY</span><span style="color:#f5b942">•</span><span>SELL</span><span style="color:#f5b942">•</span><span>GROW</span>
-        </div>
-
-        <div style="max-width:390px;width:100%;background:rgba(20,20,24,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:24px 22px;box-shadow:0 20px 50px -10px rgba(0,0,0,0.8),0 0 0 1px rgba(245,185,66,0.1);box-sizing:border-box;">
-          <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px;">
-            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f5b942;box-shadow:0 0 10px #f5b942;animation:sf_blink 1.5s ease-in-out infinite;"></span>
-            <h1 id="oauthStatusTitle" style="font-size:18px;font-weight:800;color:#ffffff;margin:0;">Continue to SellerFlow</h1>
-          </div>
-
-          <p id="oauthStatusMsg" style="font-size:13.5px;color:#a1a1aa;line-height:1.5;margin:0 0 18px 0;">Connecting your Google account securely…</p>
-
-          <div style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:12px 14px;margin-bottom:20px;text-align:left;display:flex;flex-direction:column;gap:8px;font-size:12px;">
-            <div style="display:flex;align-items:center;gap:9px;color:#34d399;">
-              <span style="font-size:14px;">✓</span>
-              <span style="font-weight:600;">Google Identity Connected</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:9px;color:#34d399;">
-              <span style="font-size:14px;">✓</span>
-              <span style="font-weight:600;">Ghana Marketplace Security Check</span>
-            </div>
-            <div id="oauthSyncStep" style="display:flex;align-items:center;gap:9px;color:#fbbf24;">
-              <div style="width:14px;height:14px;border:2px solid #f5b942;border-top-color:transparent;border-radius:50%;animation:sf_spin 0.8s linear infinite;"></div>
-              <span style="font-weight:600;">Redirecting to SellerFlow App…</span>
-            </div>
-          </div>
-
-          <a id="oauthOpenBtn" href="javascript:void(0)" style="display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#fcd46a 0%,#f5b942 55%,#d48612 100%);color:#080808;font-weight:800;font-size:15px;padding:14px 24px;border-radius:14px;text-decoration:none;box-shadow:0 6px 22px rgba(245,185,66,0.35);transition:transform 0.15s ease,filter 0.15s ease;width:100%;box-sizing:border-box;opacity:0.85;">
-            <span id="oauthBtnSpinner" style="width:14px;height:14px;border:2px solid #000;border-top-color:transparent;border-radius:50%;animation:sf_spin 0.8s linear infinite;display:inline-block;"></span>
-            <span id="oauthBtnText">Authenticating with Google…</span>
-          </a>
-
-          <a id="oauthWebFallback" href="/" style="display:inline-block;margin-top:12px;font-size:12px;color:#71717a;text-decoration:none;transition:color 0.15s ease;">
-            Or continue in Web Browser instead
-          </a>
-        </div>
-
-        <div style="font-size:11px;color:#52525b;display:flex;align-items:center;gap:6px;margin-top:18px;">
-          <span>🔒</span>
-          <span>256-Bit SSL Encrypted · © 2026 POMAAH GROUP</span>
-        </div>
-
-        <style>
-          @keyframes sf_spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-          @keyframes sf_glow { 0%,100% { opacity:0.3; transform:scale(0.95); } 50% { opacity:0.75; transform:scale(1.08); } }
-          @keyframes sf_blink { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
-          #oauthOpenBtn:active { transform: scale(0.98); filter: brightness(0.95); }
-        </style>
-      `;
-      if (document.body) {
-        document.body.appendChild(overlay);
-      } else if (document.documentElement) {
-        document.documentElement.appendChild(overlay);
-      }
-    };
-    window.renderOAuthOverlay = renderOverlay;
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', renderOverlay);
-    } else {
-      renderOverlay();
-    }
-  }
-})();
 </script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1220,7 +1111,143 @@ html.light-theme .border-b {
 <body>
 <div id="loading" class="fixed inset-0 z-[200] bg-[#080808] flex items-center justify-center select-none transition-opacity duration-200"><div class="text-center flex flex-col items-center"><div class="flex flex-col items-center gap-1.5 mb-5"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_14px_rgba(245,158,11,0.4)]" /><div class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span><span class="text-[10px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider ml-1.5">GH</span></div><div class="text-[10px] sm:text-[11px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none mt-0.5"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div><div class="w-7 h-7 rounded-full border-2 border-zinc-800 border-t-[#f5b942] animate-spin"></div><div id="loadingText" class="text-xs text-zinc-500 mt-3 font-medium"></div></div></div>
 <div id="shutdown" class="hide fixed inset-0 z-[190] bg-black flex items-center justify-center p-6"><div class="text-center max-w-md"><div class="text-5xl mb-4">⏸️</div><h1 class="text-3xl font-bold">SellerFlow is temporarily offline</h1><p class="muted mt-3">The SellerFlow Team has temporarily paused the marketplace. Please try again later.</p></div></div>
-<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5"><div class="w-full max-w-md card p-6"><div class="text-center"><div class="flex flex-col items-center justify-center gap-1 mb-2"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_12px_rgba(245,158,11,0.35)]" /><div class="text-3xl font-black tracking-tight brand-font flex items-center"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span></div><div class="text-[10.5px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div><p id="authTitle" class="text-xl font-bold mt-4">Create your account</p><p id="authSubtitle" class="muted text-sm mt-1">Sell and shop across Ghana.</p></div><div class="mt-5"><button type="button" id="googleAuthBtn" class="w-full py-3 px-4 rounded-xl bg-[#1b1b1b] hover:bg-[#252525] border border-[#383838] hover:border-zinc-400 text-white font-bold text-sm flex items-center justify-center gap-3 transition shadow-sm active:scale-98"><svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg><span id="googleAuthBtnText">Sign up with Google</span></button><div class="flex items-center my-4"><div class="flex-grow border-t border-zinc-800"></div><span class="px-3 text-[11px] text-zinc-500 font-bold uppercase tracking-wider">Or continue with email</span><div class="flex-grow border-t border-zinc-800"></div></div></div><form id="authForm" class="space-y-3 mt-2"><div id="nameWrap"><label class="text-sm muted">Full name</label><input id="authName" type="text" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="name" autocapitalize="words" autocorrect="off" spellcheck="false" inputmode="text"></div><div id="usernameWrap"><div class="flex items-center justify-between"><label class="text-sm muted">Username</label><span class="text-[11px] text-zinc-500 font-mono">@<span id="authUsernamePreview">username</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span><input id="authUsername" type="text" class="w-full pl-10 pr-10 py-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-sm focus:border-gold outline-none transition" placeholder="e.g. gideon_shop" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false"><span id="authUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none"></span></div><div class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can only be changed once every 360 days.</span></div><div id="authUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="authUsernameSuggestions" class="mt-2 hidden"></div></div><div id="emailInputWrap"><label class="text-sm muted">Email</label><input id="authEmail" type="email" required class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white" autocomplete="email"><div id="authEmailFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div></div><div><label class="text-sm muted">Password</label><div class="relative mt-1"><input id="authPassword" type="password" required minlength="6" class="w-full py-3 pl-3.5 pr-11 rounded-xl bg-[#191919] border border-[#333] text-white focus:border-gold outline-none transition" autocomplete="current-password" placeholder="••••••••"><button type="button" id="toggleAuthPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1 text-sm focus:outline-none select-none cursor-pointer" title="Show/hide password" aria-label="Toggle password visibility">👁️</button></div></div><div id="confirmPasswordWrap"><label class="text-sm muted">Confirm Password</label><div class="relative mt-1"><input id="authConfirmPassword" type="password" minlength="6" class="w-full py-3 pl-3.5 pr-11 rounded-xl bg-[#191919] border border-[#333] text-white focus:border-gold outline-none transition" autocomplete="new-password" placeholder="••••••••"><button type="button" id="toggleAuthConfirmPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1 text-sm focus:outline-none select-none cursor-pointer" title="Show/hide password" aria-label="Toggle password visibility">👁️</button></div></div><div id="termsWrap" class="text-sm muted"><label class="flex items-start gap-2"><input id="termsAccept" type="checkbox" class="mt-1"><span>I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and understand that I must use the platform lawfully.</span></label></div><button id="authSubmit" type="submit" class="w-full bg-gold p-3 rounded-xl font-bold">Create account</button></form><div id="emailVerifyWrap" class="hide"></div><button id="resetBtn" class="w-full mt-3 text-sm muted">Forgot password?</button><button id="authSwitch" class="w-full mt-4 text-sm gold">Already have an account? Sign in</button><button id="backLanding" class="w-full mt-2 text-sm text-gold hover:underline">← Back to For You</button><div id="authError" class="text-red-400 text-sm mt-4"></div><div class="copyright-tag">© 2026 POMAAH GROUP · All Rights Reserved</div></div></div>
+<div id="authPage" class="hide min-h-screen flex items-center justify-center p-5">
+  <div class="w-full max-w-md card p-6">
+    <div class="text-center">
+      <div class="flex flex-col items-center justify-center gap-1 mb-2">
+        <img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-12 h-12 object-contain drop-shadow-[0_2px_12px_rgba(245,158,11,0.35)]" />
+        <div class="text-3xl font-black tracking-tight brand-font flex items-center">
+          <span class="text-white">Seller</span><span class="gold-gradient">Flow</span>
+        </div>
+        <div class="text-[10.5px] font-black tracking-[0.28em] text-zinc-100 flex items-center gap-1.5 uppercase select-none">
+          <span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span>
+        </div>
+      </div>
+      <p id="authTitle" class="text-xl font-bold mt-4">Welcome back</p>
+      <p id="authSubtitle" class="muted text-sm mt-1">Sign in to continue.</p>
+    </div>
+
+    <!-- Main Auth Form -->
+    <form id="authForm" class="space-y-3.5 mt-5">
+      <!-- Username Field (Always required for login, signup, forgot password) -->
+      <div id="usernameWrap">
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-semibold text-zinc-200">Username</label>
+          <span class="text-[11px] text-zinc-500 font-mono">@<span id="authUsernamePreview">username</span></span>
+        </div>
+        <div class="relative mt-1">
+          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-mono text-sm select-none pointer-events-none">@</span>
+          <input id="authUsername" type="text" required class="w-full pl-10 pr-10 py-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-sm focus:border-gold outline-none transition" placeholder="e.g. gideon_shop" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false">
+          <span id="authUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none"></span>
+        </div>
+        <div id="authUsernameCooldownNotice" class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1">
+          <span>ℹ️</span><span>Your unique public SellerFlow identity.</span>
+        </div>
+        <div id="authUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div>
+        <div id="authUsernameSuggestions" class="mt-2 hidden"></div>
+      </div>
+
+      <!-- Recovery Email Field (Only on Signup) -->
+      <div id="recoveryEmailWrap" class="hide">
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-semibold text-zinc-200">Recovery Email</label>
+          <span class="text-[10.5px] text-zinc-500">Private · For recovery only</span>
+        </div>
+        <input id="authRecoveryEmail" type="email" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white text-sm focus:border-gold outline-none transition" placeholder="you@example.com" autocomplete="email">
+        <p class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1">
+          <span>🔒</span><span>Used exclusively to recover your account if you forget your password.</span>
+        </p>
+        <div id="authEmailFeedback" class="text-xs mt-1 font-medium text-zinc-500" style="display: none;"></div>
+      </div>
+
+      <!-- Reset Code Field (Only on Reset Password) -->
+      <div id="resetCodeWrap" class="hide">
+        <label class="text-sm font-semibold text-zinc-200">6-Digit Recovery Code</label>
+        <input id="authResetCode" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*" class="w-full mt-1 p-3 rounded-xl bg-[#191919] border border-[#333] text-white font-mono text-center text-lg tracking-widest focus:border-gold outline-none transition" placeholder="123456">
+        <p class="text-[11px] text-zinc-500 mt-1">Enter the 6-digit code sent to your verified recovery email.</p>
+      </div>
+
+      <!-- Password Field (Login, Signup, Reset Password) -->
+      <div id="passwordWrap">
+        <label class="text-sm font-semibold text-zinc-200" id="passwordLabel">Password</label>
+        <div class="relative mt-1">
+          <input id="authPassword" type="password" required minlength="6" class="w-full py-3 pl-3.5 pr-11 rounded-xl bg-[#191919] border border-[#333] text-white focus:border-gold outline-none transition text-sm" autocomplete="current-password" placeholder="••••••••">
+          <button type="button" id="toggleAuthPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1 text-sm focus:outline-none select-none cursor-pointer" title="Show/hide password" aria-label="Toggle password visibility">👁️</button>
+        </div>
+      </div>
+
+      <!-- Confirm Password Field (Signup, Reset Password) -->
+      <div id="confirmPasswordWrap" class="hide">
+        <label class="text-sm font-semibold text-zinc-200">Confirm Password</label>
+        <div class="relative mt-1">
+          <input id="authConfirmPassword" type="password" minlength="6" class="w-full py-3 pl-3.5 pr-11 rounded-xl bg-[#191919] border border-[#333] text-white focus:border-gold outline-none transition text-sm" autocomplete="new-password" placeholder="••••••••">
+          <button type="button" id="toggleAuthConfirmPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1 text-sm focus:outline-none select-none cursor-pointer" title="Show/hide password" aria-label="Toggle password visibility">👁️</button>
+        </div>
+      </div>
+
+      <!-- Terms Checkbox (Signup only) -->
+      <div id="termsWrap" class="text-sm muted hide">
+        <label class="flex items-start gap-2 cursor-pointer">
+          <input id="termsAccept" type="checkbox" class="mt-1 accent-[#f5b942]">
+          <span class="text-xs leading-relaxed text-zinc-300">I agree to the SellerFlow <button type="button" id="viewSignupTerms" class="gold underline">Terms & Conditions</button> and confirm I will use the marketplace lawfully.</span>
+        </label>
+      </div>
+
+      <button id="authSubmit" type="submit" class="w-full bg-gold text-black p-3.5 rounded-xl font-extrabold text-sm shadow-md hover:brightness-110 active:scale-98 transition flex items-center justify-center gap-2">
+        <span id="authSubmitText">Sign In</span>
+      </button>
+    </form>
+
+    <!-- Email Verification Panel -->
+    <div id="emailVerifyWrap" class="hide space-y-4 mt-5 text-left">
+      <div class="p-4 rounded-xl bg-[#16161a] border border-[#2b2b34] space-y-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gold/15 border border-gold/40 text-gold flex items-center justify-center text-xl shrink-0">
+            ✉️
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Verify Recovery Email</h3>
+            <p class="text-xs text-zinc-400">Enter the 6-digit code sent to your recovery email.</p>
+          </div>
+        </div>
+
+        <div id="verifyEmailNotice" class="text-xs text-zinc-300 bg-black/40 p-2.5 rounded-lg border border-zinc-800">
+          We sent an activation code to your recovery email.
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">6-Digit Activation Code</label>
+          <input id="verificationCodeInput" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*" class="w-full p-3 rounded-xl bg-black border border-[#333] text-white font-mono text-center text-xl tracking-widest focus:border-gold outline-none" placeholder="123456">
+        </div>
+
+        <button type="button" id="submitVerificationCodeBtn" class="w-full bg-gold text-black p-3 rounded-xl font-extrabold text-sm hover:brightness-110 transition">
+          Verify & Activate Account
+        </button>
+
+        <div class="flex items-center justify-between text-xs pt-1">
+          <button type="button" id="resendVerificationBtn" class="text-gold hover:underline font-medium">
+            Resend code
+          </button>
+          <button type="button" id="changeEmailBtn" class="text-zinc-400 hover:text-white">
+            Change details
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation & Mode Switchers -->
+    <div id="forgotPasswordLinkWrap">
+      <button id="authForgotPasswordBtn" type="button" class="w-full mt-3.5 text-xs text-zinc-400 hover:text-zinc-200 transition">Forgot password?</button>
+      <button id="resetBtn" type="button" class="hide"></button>
+    </div>
+    <button id="authSwitch" type="button" class="w-full mt-3 text-sm font-bold text-gold hover:underline transition">New here? Create an account</button>
+    <button id="backToSignInBtn" class="w-full mt-2 text-sm text-gold hover:underline hide">← Back to Sign In</button>
+    <button id="backLanding" class="w-full mt-3 text-xs text-zinc-500 hover:text-zinc-300 transition">← Back to For You</button>
+
+    <div id="authError" class="text-red-400 text-xs mt-3 text-center min-h-[18px]"></div>
+    <div class="copyright-tag text-[11px] text-zinc-600 text-center mt-4">© 2026 POMAAH GROUP · All Rights Reserved</div>
+  </div>
+</div>
 <div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur-md border-b border-[#242424] shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-2 sm:gap-4"><div class="flex items-center gap-2 sm:gap-3 shrink-0"><button id="mobileMenu" class="md:hidden flex items-center justify-center shrink-0" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-2 shrink-0 select-none cursor-pointer group" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(245,158,11,0.25)] transition-transform group-hover:scale-105" /><div class="flex flex-col items-start text-left leading-none"><div class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font"><span class="text-white">Seller</span><span class="gold-gradient">Flow</span><span class="text-[9px] font-extrabold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded-md border border-amber-800/60 uppercase tracking-wider ml-1.5 hidden xs:inline-block">GH</span></div><div class="text-[8px] sm:text-[9px] font-black tracking-[0.24em] text-zinc-100 flex items-center gap-1 uppercase select-none mt-0.5 opacity-90"><span>BUY</span><span class="text-amber-400 font-black">•</span><span>SELL</span><span class="text-amber-400 font-black">•</span><span>GROW</span></div></div></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1.5 sm:gap-2 shrink-0"></div></div><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden"></div><div id="mobileNav" class="hide md:hidden"></div></header><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"><div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#242424] shrink-0 bg-[#080808]/90 z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-base sm:text-lg font-black tracking-tight text-white whitespace-nowrap flex items-center gap-2"><span>For You</span><span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-gold animate-pulse"></span></h1></div><div class="flex items-center gap-1.5 sm:gap-2 shrink-0"><div class="w-20 h-7 rounded-xl bg-[#1a1a1e] sf-shimmer-box"></div></div></div><div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden"><div class="reel-feed flex-1 min-h-0 w-full overflow-hidden" id="reelFeedSkeleton"><div class="reel-card sf-shimmer-box relative flex items-center justify-center"><div class="flex flex-col items-center justify-center p-6 text-center z-10 select-none pointer-events-none"><div class="relative mb-3.5 flex items-center justify-center"><div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-gold animate-spin"></div><div class="absolute inset-0 flex items-center justify-center"><span class="text-[10px] font-black text-gold font-mono">GH</span></div></div><div class="text-sm font-bold text-white tracking-wide flex items-center gap-1.5"><span>Loading For You Feed</span><span class="inline-flex gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 0ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 150ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 300ms"></span></span></div><div class="text-[11px] text-zinc-400 mt-1 font-medium">Discovering top Ghanaian reels…</div></div><div class="reel-actions flex flex-col items-center gap-4 absolute right-2.5 sm:right-4 bottom-20 z-10 pointer-events-none"><div class="w-11 h-11 rounded-full bg-[#202026] sf-shimmer-box border border-[#333]"></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-[#202026] sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-[#202026]"></div></div><div class="w-9 h-9 rounded-full bg-[#202026] sf-shimmer-box border border-gold/30"></div></div><div class="reel-content flex flex-col gap-2 pointer-events-none"><div class="flex items-center gap-2"><div class="w-28 h-4 rounded-md bg-[#25252d] sf-shimmer-box"></div><div class="w-16 h-4 rounded-full bg-amber-500/20 sf-shimmer-box"></div></div><div class="w-52 h-3.5 rounded bg-[#202026] sf-shimmer-box"></div><div class="w-36 h-3 rounded bg-[#202026] sf-shimmer-box"></div><div class="flex items-center gap-2 mt-1"><div class="w-32 h-7 rounded-full bg-[#25252f] sf-shimmer-box"></div><div class="w-20 h-7 rounded-full bg-amber-500/30 sf-shimmer-box"></div></div></div></div></div></div></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#242424] text-center text-xs text-zinc-500"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1 font-bold tracking-widest text-[11px] text-zinc-300">BUY <span class="text-amber-400 font-black">•</span> SELL <span class="text-amber-400 font-black">•</span> GROW</div><div class="mt-0.5 text-zinc-500 text-[11px]">Ghana’s social selling marketplace.</div></footer></div></div>
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
 <script>
@@ -1383,22 +1410,6 @@ const signInWithEmailAndPassword=(auth,email,password)=>auth.signInWithEmailAndP
 const GoogleAuthProvider=firebase.auth.GoogleAuthProvider;
 const signInWithPopup=(auth,provider)=>auth.signInWithPopup(provider);
 
-function getOAuthCallbackUrl() {
-  const origin = window.location.origin || '';
-  if (origin && origin.startsWith('http') && !origin.includes('localhost') && !origin.includes('capacitor://') && !origin.includes('127.0.0.1') && !origin.includes('.run.app')) {
-    return origin + '/oauth-callback';
-  }
-  const injectedUrl = '____SELLERFLOW_APP_URL____';
-  if (injectedUrl && injectedUrl.startsWith('http') && !injectedUrl.includes('____') && !injectedUrl.includes('.run.app') && !injectedUrl.includes('ais-dev-')) {
-    return injectedUrl.replace(/\/+$/, '') + '/oauth-callback';
-  }
-  if (window.SELLERFLOW_APP_URL && typeof window.SELLERFLOW_APP_URL === 'string' && window.SELLERFLOW_APP_URL.startsWith('http') && !window.SELLERFLOW_APP_URL.includes('.run.app')) {
-    return window.SELLERFLOW_APP_URL.replace(/\/+$/, '') + '/oauth-callback';
-  }
-  // Live production domain for SellerFlow web and mobile OAuth callback
-  return 'https://sellerflow-tan.vercel.app/oauth-callback';
-}
-
 function getAppUrl() {
   const origin = window.location.origin || '';
   if (origin && origin.startsWith('http') && !origin.includes('localhost') && !origin.includes('capacitor://') && !origin.includes('127.0.0.1') && !origin.includes('.run.app')) {
@@ -1464,426 +1475,6 @@ window.__sfBackendUrl = (typeof getAppUrl === 'function') ? getAppUrl() : 'https
   };
 })();
 
-async function handleCapacitorGoogleSignIn() {
-  loading('Connecting with Google…');
-  try {
-    const isAvailable = (typeof window.Capacitor !== 'undefined' && typeof window.Capacitor.isPluginAvailable === 'function')
-      ? window.Capacitor.isPluginAvailable('NativeGoogleAuth')
-      : false;
-
-    const NativeAuth = window.Capacitor?.Plugins?.NativeGoogleAuth || (isAvailable && window.Capacitor?.registerPlugin ? window.Capacitor.registerPlugin('NativeGoogleAuth') : null);
-
-    if (NativeAuth && isAvailable) {
-      try {
-        const serverClientId = '987175352360-1gqsf0pejqvgv9gng1pnk7n39jsgdfn1.apps.googleusercontent.com';
-        const authResult = await NativeAuth.signIn({ serverClientId });
-
-        if (authResult && authResult.idToken) {
-          // Convert native Google ID token to Firebase GoogleAuthProvider credential
-          const credential = firebase.auth.GoogleAuthProvider.credential(authResult.idToken);
-          
-          // Sign into Firebase Auth - preserves existing UID, profile and data
-          const userCredential = await auth.signInWithCredential(credential);
-          const user = userCredential.user;
-
-          console.log('Native Android Google Sign-In succeeded for user:', user.uid);
-          ready();
-          
-          // Smooth transition to app shell
-          if (typeof hide === 'function' && $('authPage')) {
-            hide($('authPage'));
-          }
-          if (typeof showApp === 'function') {
-            showApp();
-          }
-          if (typeof navigate === 'function') {
-            await navigate('feed');
-          }
-          return user;
-        }
-      } catch (nativeErr) {
-        if (nativeErr?.code === 'USER_CANCELLED' || nativeErr?.message?.includes('cancelled')) {
-          ready();
-          console.log('User dismissed Google account chooser');
-          return null;
-        }
-        console.warn('Native Google Auth token not returned, proceeding with secure browser OAuth:', nativeErr);
-      }
-    }
-
-    // Secure Capacitor Browser OAuth flow with deep link return
-    const callbackUrl = (typeof getOAuthCallbackUrl === 'function') ? getOAuthCallbackUrl() : 'https://sellerflow-tan.vercel.app/oauth-callback';
-    const startUrl = callbackUrl + (callbackUrl.includes('?') ? '&' : '?') + 'start=google';
-    console.log('Launching Google sign-in flow via:', startUrl);
-
-    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser && typeof window.Capacitor.Plugins.Browser.open === 'function') {
-      try {
-        window.Capacitor.Plugins.Browser.addListener('browserFinished', () => {
-          if (typeof ready === 'function') ready();
-          if ((typeof auth !== 'undefined' && auth.currentUser) || currentUser || localStorage.getItem('sf_active_user_session')) {
-            if (typeof hide === 'function' && $('authPage')) hide($('authPage'));
-            if (typeof showApp === 'function') showApp();
-            if (typeof navigate === 'function') navigate('feed');
-          }
-        }).catch(() => {});
-      } catch (_) {}
-      await window.Capacitor.Plugins.Browser.open({ url: startUrl });
-      return;
-    }
-
-    // Standard web fallback for non-native browsers
-    const provider = new firebase.auth.GoogleAuthProvider();
-    if (typeof provider.setCustomParameters === 'function') {
-      provider.setCustomParameters({ prompt: 'select_account' });
-    }
-    const result = await auth.signInWithPopup(provider);
-    ready();
-    if (typeof hide === 'function' && $('authPage')) hide($('authPage'));
-    if (typeof showApp === 'function') showApp();
-    if (typeof navigate === 'function') navigate('feed');
-    return result.user;
-  } catch (err) {
-    ready();
-    if (err?.code === 'USER_CANCELLED' || err?.message?.includes('cancelled') || err?.code === 'auth/popup-closed-by-user') {
-      console.log('User dismissed Google account chooser');
-      return null;
-    }
-    console.error('Google Sign-In error:', err);
-    toast(err?.message || 'Google Sign-In failed. Please try again.', 'error', 4500);
-    return null;
-  }
-}
-
-async function handleOAuthCallbackPage() {
-  console.log('Initiating SellerFlow OAuth callback resolution...');
-  if (typeof window.renderOAuthOverlay === 'function') {
-    try { window.renderOAuthOverlay(); } catch (_) {}
-  }
-
-  const updateStatus = (t) => {
-    const el = document.getElementById('oauthStatusMsg');
-    if (el) el.textContent = t;
-  };
-
-  const setButtonState = ({ text, href, onclick, showSpinner = false, enabled = true }) => {
-    const btn = document.getElementById('oauthOpenBtn');
-    const spinner = document.getElementById('oauthBtnSpinner');
-    const btnTxt = document.getElementById('oauthBtnText');
-    if (spinner) spinner.style.display = showSpinner ? 'inline-block' : 'none';
-    if (btnTxt && text) btnTxt.textContent = text;
-    if (btn) {
-      btn.style.opacity = enabled ? '1' : '0.85';
-      btn.style.cursor = enabled ? 'pointer' : 'default';
-      btn.style.pointerEvents = enabled ? 'auto' : 'none';
-      if (href) btn.href = href;
-      if (onclick) btn.onclick = onclick;
-    }
-  };
-
-  try {
-    if (typeof waitForFirebase === 'function') {
-      await waitForFirebase();
-    }
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-    const authInst = firebase.auth();
-
-    // 1. Consume redirect result from Firebase Auth FIRST (when returning from Google OAuth)
-    let redirectRes = null;
-    try {
-      redirectRes = await authInst.getRedirectResult();
-      console.log('OAuth redirectResult:', redirectRes);
-    } catch (rErr) {
-      console.warn('getRedirectResult warning:', rErr);
-    }
-
-    const searchParams = new URLSearchParams(window.location.search || '');
-    const isStart = searchParams.get('start') === 'google';
-    const targetParam = searchParams.get('target') || '';
-    const pkgParam = searchParams.get('package') || '';
-
-    if (targetParam) {
-      try {
-        sessionStorage.setItem('sf_oauth_target', targetParam);
-        localStorage.setItem('sf_oauth_target', targetParam);
-      } catch(_) {}
-    }
-    if (pkgParam) {
-      try {
-        sessionStorage.setItem('sf_oauth_package', pkgParam);
-        localStorage.setItem('sf_oauth_package', pkgParam);
-      } catch(_) {}
-    }
-
-    // 2. If explicitly starting Google Sign-In and NOT returning from a completed redirect
-    if (isStart && !redirectRes?.user) {
-      if (document.getElementById('oauthStatusTitle')) document.getElementById('oauthStatusTitle').textContent = 'Continue to SellerFlow';
-      updateStatus('Connecting to Google Account Chooser…');
-      setButtonState({ text: 'Opening Google Sign-In…', showSpinner: true, enabled: false });
-
-      // Sanitize URL before redirecting to avoid looping when returning from Google
-      try {
-        const cleanSearch = new URLSearchParams(window.location.search || '');
-        cleanSearch.delete('start');
-        const cleanQuery = cleanSearch.toString();
-        const cleanUrl = window.location.pathname + (cleanQuery ? '?' + cleanQuery : '');
-        window.history.replaceState({}, document.title, cleanUrl);
-      } catch (_) {}
-
-      const provider = new firebase.auth.GoogleAuthProvider();
-      if (typeof provider.setCustomParameters === 'function') {
-        provider.setCustomParameters({ prompt: 'select_account' });
-      }
-      await authInst.signInWithRedirect(provider);
-      return;
-    }
-
-    if (document.getElementById('oauthStatusTitle')) document.getElementById('oauthStatusTitle').textContent = 'Welcome Back to SellerFlow';
-    updateStatus('Verifying sign-in credentials…');
-
-    // 3. Extract tokens from all available surfaces
-    const rawHash = (window.location.hash || '').replace(/^#/, '');
-    const hashParams = new URLSearchParams(rawHash);
-    const queryParams = new URLSearchParams(window.location.search || '');
-
-    let oauthIdToken = hashParams.get('oauth_id_token') || queryParams.get('oauth_id_token') || hashParams.get('oauthIdToken') || queryParams.get('oauthIdToken') || '';
-    let oauthAccessToken = hashParams.get('oauth_access_token') || queryParams.get('oauth_access_token') || hashParams.get('oauthAccessToken') || queryParams.get('oauthAccessToken') || '';
-    let idToken = hashParams.get('id_token') || queryParams.get('id_token') || hashParams.get('idToken') || queryParams.get('idToken') || '';
-    let accessToken = hashParams.get('access_token') || queryParams.get('access_token') || hashParams.get('accessToken') || queryParams.get('accessToken') || '';
-    let firebaseToken = hashParams.get('firebase_token') || queryParams.get('firebase_token') || '';
-    let refreshToken = hashParams.get('refresh_token') || queryParams.get('refresh_token') || '';
-    let user = null;
-
-    if (redirectRes) {
-      if (redirectRes.user) {
-        user = redirectRes.user;
-      }
-      try {
-        if (firebase.auth.GoogleAuthProvider && typeof firebase.auth.GoogleAuthProvider.credentialFromResult === 'function') {
-          const cred = firebase.auth.GoogleAuthProvider.credentialFromResult(redirectRes);
-          if (cred) {
-            if (!oauthIdToken && cred.idToken) oauthIdToken = cred.idToken;
-            if (!oauthAccessToken && cred.accessToken) oauthAccessToken = cred.accessToken;
-          }
-        }
-      } catch (cErr) {
-        console.warn('credentialFromResult warning:', cErr);
-      }
-      if (redirectRes.credential) {
-        if (!oauthIdToken && redirectRes.credential.idToken) oauthIdToken = redirectRes.credential.idToken;
-        if (!oauthAccessToken && redirectRes.credential.accessToken) oauthAccessToken = redirectRes.credential.accessToken;
-      }
-      const tr = redirectRes._tokenResponse || (redirectRes.user && redirectRes.user._delegate && redirectRes.user._delegate._tokenResponse);
-      if (tr) {
-        if (!oauthIdToken && tr.oauthIdToken) oauthIdToken = tr.oauthIdToken;
-        if (!oauthAccessToken && tr.oauthAccessToken) oauthAccessToken = tr.oauthAccessToken;
-        if (!idToken && tr.idToken) idToken = tr.idToken;
-        if (!accessToken && tr.accessToken) accessToken = tr.accessToken;
-        if (!refreshToken && tr.refreshToken) refreshToken = tr.refreshToken;
-      }
-    }
-
-    // Fallback: active currentUser or auth state listener
-    if (!user) {
-      user = authInst.currentUser;
-    }
-    if (!user) {
-      user = await new Promise((resolve) => {
-        const unsub = authInst.onAuthStateChanged((u) => {
-          if (u) { unsub(); resolve(u); }
-        });
-        setTimeout(() => { unsub(); resolve(authInst.currentUser || null); }, 2500);
-      });
-    }
-
-    if (user) {
-      try {
-        if (!firebaseToken) firebaseToken = await user.getIdToken(true).catch(() => user.getIdToken(false));
-        if (!idToken) idToken = firebaseToken;
-      } catch (_) {}
-      if (!refreshToken && user.refreshToken) refreshToken = user.refreshToken;
-      if (!refreshToken && user._delegate && user._delegate.refreshToken) refreshToken = user._delegate.refreshToken;
-      const tr = user._delegate && user._delegate._tokenResponse;
-      if (tr) {
-        if (!oauthIdToken && tr.oauthIdToken) oauthIdToken = tr.oauthIdToken;
-        if (!oauthAccessToken && tr.oauthAccessToken) oauthAccessToken = tr.oauthAccessToken;
-        if (!idToken && tr.idToken) idToken = tr.idToken;
-        if (!refreshToken && tr.refreshToken) refreshToken = tr.refreshToken;
-      }
-    }
-
-    // Attempt fast customToken minting with timeout so it never blocks redirection
-    let customToken = '';
-    if (firebaseToken) {
-      try {
-        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-        const timer = controller ? setTimeout(() => controller.abort(), 1500) : null;
-        const exRes = await fetch('/api/auth/custom-token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idToken: firebaseToken }),
-          signal: controller ? controller.signal : undefined
-        });
-        if (timer) clearTimeout(timer);
-        if (exRes.ok) {
-          const exData = await exRes.json();
-          if (exData && exData.success && exData.customToken) {
-            customToken = exData.customToken;
-          }
-        }
-      } catch (exErr) {
-        console.warn('Custom token exchange skipped or timed out:', exErr);
-      }
-    }
-
-    // Fallback: localStorage cached credentials
-    if (!oauthIdToken && !idToken && !accessToken && !firebaseToken) {
-      try {
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.includes('firebase:authUser')) {
-            const parsed = JSON.parse(localStorage.getItem(key) || '{}');
-            const tr = parsed.stsTokenManager || parsed;
-            if (!oauthIdToken && (parsed.oauthIdToken || tr.oauthIdToken)) oauthIdToken = parsed.oauthIdToken || tr.oauthIdToken;
-            if (!oauthAccessToken && (parsed.oauthAccessToken || tr.oauthAccessToken)) oauthAccessToken = parsed.oauthAccessToken || tr.oauthAccessToken;
-            if (!idToken && (parsed.idToken || tr.idToken)) idToken = parsed.idToken || tr.idToken;
-            if (!accessToken && (parsed.accessToken || tr.accessToken)) accessToken = parsed.accessToken || tr.accessToken;
-            if (!refreshToken && (tr.refreshToken || parsed.refreshToken)) refreshToken = tr.refreshToken || parsed.refreshToken;
-            if (!firebaseToken && (tr.accessToken || parsed.accessToken)) firebaseToken = tr.accessToken || parsed.accessToken;
-            if (!user && parsed.uid) {
-              user = { uid: parsed.uid, email: parsed.email, displayName: parsed.displayName, photoURL: parsed.photoURL };
-            }
-          }
-        }
-      } catch (_) {}
-    }
-
-    // Determine target package ID and web fallback destination
-    let targetPackage = queryParams.get('package') || '';
-    if (!targetPackage) {
-      try {
-        targetPackage = sessionStorage.getItem('sf_oauth_package') || localStorage.getItem('sf_oauth_package') || '';
-      } catch(_) {}
-    }
-    const isTargetAdmin = queryParams.get('target') === 'admin' || (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('sf_oauth_target') === 'admin') || (typeof localStorage !== 'undefined' && localStorage.getItem('sf_oauth_target') === 'admin');
-    if (!targetPackage) {
-      targetPackage = 'com.sellerflow.app';
-    }
-
-    const webFallbackEl = document.getElementById('oauthWebFallback');
-    if (webFallbackEl) {
-      webFallbackEl.href = isTargetAdmin ? '/admin' : '/';
-    }
-
-    // 4. Construct deep link payload for Android ONLY if valid credentials exist
-    if (!oauthIdToken && !idToken && !accessToken && !firebaseToken && !refreshToken && (!user || !user.uid)) {
-      console.warn('No valid OAuth credentials found on callback resolution.');
-      updateStatus('Sign-in waiting for completion. Tap below to complete sign-in:');
-      setButtonState({
-        text: 'Sign In with Google',
-        href: '#',
-        showSpinner: false,
-        enabled: true,
-        onclick: async (e) => {
-          e.preventDefault();
-          try {
-            setButtonState({ text: 'Opening Google Sign-In…', showSpinner: true, enabled: false });
-            const prov = new firebase.auth.GoogleAuthProvider();
-            prov.setCustomParameters({ prompt: 'select_account' });
-            const pRes = await authInst.signInWithPopup(prov);
-            if (pRes && pRes.user) {
-              window.location.reload();
-            }
-          } catch(popErr) {
-            setButtonState({ text: 'Retry Google Sign-In', showSpinner: false, enabled: true });
-            alert('Sign-in error: ' + (popErr.message || popErr));
-          }
-        }
-      });
-      return;
-    }
-
-    const params = new URLSearchParams();
-    if (customToken) params.set('custom_token', customToken);
-    if (oauthIdToken) params.set('oauth_id_token', oauthIdToken);
-    if (oauthAccessToken) params.set('oauth_access_token', oauthAccessToken);
-    if (idToken) params.set('id_token', idToken);
-    if (accessToken) params.set('access_token', accessToken);
-    if (firebaseToken) params.set('firebase_token', firebaseToken);
-    if (refreshToken) params.set('refresh_token', refreshToken);
-    if (user && user.uid) params.set('uid', user.uid);
-    if (user && user.email) params.set('email', user.email);
-    if (user && user.displayName) params.set('display_name', user.displayName);
-    if (user && user.photoURL) params.set('photo_url', user.photoURL);
-
-    // Forward any extra parameters
-    for (const [k, v] of hashParams.entries()) {
-      if (!params.has(k)) params.set(k, v);
-    }
-    for (const [k, v] of queryParams.entries()) {
-      if (!params.has(k) && k !== 'start') params.set(k, v);
-    }
-
-    const payload = params.toString();
-    if (!payload) {
-      console.warn('Constructed OAuth deep-link payload is empty. Aborting redirection.');
-      updateStatus('Sign-in credentials missing. Please try again.');
-      setButtonState({ text: 'Retry Google Sign-In', showSpinner: false, enabled: true });
-      return;
-    }
-
-    const customSchemeUri = `${targetPackage}://oauth-callback#${payload}`;
-    const intentUri = `intent://oauth-callback#${payload}#Intent;scheme=${targetPackage};package=${targetPackage};end`;
-
-    console.log('Redirecting to Android app:', customSchemeUri);
-    if (document.getElementById('oauthStatusTitle')) document.getElementById('oauthStatusTitle').textContent = 'Sign-In Verified';
-    if (document.getElementById('oauthSyncStep')) {
-      document.getElementById('oauthSyncStep').innerHTML = `
-        <span style="font-size:14px;color:#34d399;">✓</span>
-        <span style="font-weight:600;color:#34d399;">Authentication Complete · Returning to App</span>
-      `;
-    }
-    updateStatus('Sign-in verified! Tap below if not redirected automatically:');
-
-    const appNameText = isTargetAdmin ? 'Open SellerFlow Admin' : 'Open SellerFlow App';
-    setButtonState({
-      text: appNameText,
-      href: customSchemeUri,
-      showSpinner: false,
-      enabled: true,
-      onclick: (e) => {
-        e.preventDefault();
-        window.location.href = customSchemeUri;
-        setTimeout(() => { window.location.href = intentUri; }, 400);
-      }
-    });
-
-    // Automatic triggers to return to native app
-    try { window.location.href = customSchemeUri; } catch (_) {}
-    setTimeout(() => {
-      try { window.location.replace(customSchemeUri); } catch (_) {}
-    }, 350);
-    setTimeout(() => {
-      try { window.location.href = intentUri; } catch (_) {}
-    }, 1000);
-
-  } catch (err) {
-    console.error('Error handling OAuth callback page:', err);
-    updateStatus('Sign-in notice: ' + (err.message || err) + '. Tap below to retry:');
-    setButtonState({
-      text: 'Retry Sign-In',
-      href: '#',
-      showSpinner: false,
-      enabled: true,
-      onclick: (e) => {
-        e.preventDefault();
-        window.location.reload();
-      }
-    });
-  }
-}
-
 async function initCapacitorHandlers() {
   if (typeof window.Capacitor === 'undefined') {
     console.log('Not running in Capacitor environment.');
@@ -1940,7 +1531,6 @@ async function initCapacitorHandlers() {
                   if (typeof navigate === 'function' && (!currentPage || currentPage === 'auth')) {
                     navigate('feed');
                   }
-                  // Asynchronously bind to real Firebase Auth currentUser as soon as ready
                   if (typeof auth !== 'undefined' && auth && typeof auth.authStateReady === 'function') {
                     auth.authStateReady().then(async () => {
                       if (auth.currentUser) {
@@ -1959,318 +1549,6 @@ async function initCapacitorHandlers() {
               } catch (_) {}
             }
           }
-        }
-      });
-
-      App.addListener('appUrlOpen', async (data) => {
-        console.log('SellerFlow App opened with URL:', data?.url);
-        const urlStr = data?.url;
-        if (!urlStr) return;
-        
-        try {
-          const Browser = window.Capacitor.Plugins.Browser;
-          if (Browser) {
-            await Browser.close().catch(()=>{});
-          }
-          
-          let raw = '';
-          if (urlStr.includes('#')) {
-            raw = urlStr.split('#')[1];
-          } else if (urlStr.includes('?')) {
-            raw = urlStr.split('?')[1];
-          } else {
-            raw = urlStr;
-          }
-          
-          const params = new URLSearchParams(raw);
-          let oauthIdToken = params.get('oauth_id_token') || params.get('oauthIdToken') || '';
-          let oauthAccessToken = params.get('oauth_access_token') || params.get('oauthAccessToken') || '';
-          let customToken = params.get('custom_token') || params.get('customToken') || '';
-          let idToken = params.get('id_token') || params.get('idToken') || '';
-          let accessToken = params.get('access_token') || params.get('accessToken') || '';
-          let firebaseToken = params.get('firebase_token') || params.get('firebaseToken') || '';
-          let refreshToken = params.get('refresh_token') || params.get('refreshToken') || '';
-          let uid = params.get('uid') || '';
-          let email = params.get('email') || '';
-          let displayName = params.get('display_name') || params.get('displayName') || '';
-          let photoURL = params.get('photo_url') || params.get('photoURL') || '';
-          
-          // Substring fallbacks
-          if (!oauthIdToken && urlStr.includes('oauth_id_token=')) {
-            oauthIdToken = urlStr.split('oauth_id_token=')[1].split('&')[0].split('#')[0];
-            try { oauthIdToken = decodeURIComponent(oauthIdToken); } catch(e) {}
-          }
-          if (!oauthAccessToken && urlStr.includes('oauth_access_token=')) {
-            oauthAccessToken = urlStr.split('oauth_access_token=')[1].split('&')[0].split('#')[0];
-            try { oauthAccessToken = decodeURIComponent(oauthAccessToken); } catch(e) {}
-          }
-          if (!customToken && urlStr.includes('custom_token=')) {
-            customToken = urlStr.split('custom_token=')[1].split('&')[0].split('#')[0];
-            try { customToken = decodeURIComponent(customToken); } catch(e) {}
-          }
-          if (!idToken && urlStr.includes('id_token=')) {
-            idToken = urlStr.split('id_token=')[1].split('&')[0].split('#')[0];
-            try { idToken = decodeURIComponent(idToken); } catch(e) {}
-          }
-          if (!accessToken && urlStr.includes('access_token=')) {
-            accessToken = urlStr.split('access_token=')[1].split('&')[0].split('#')[0];
-            try { accessToken = decodeURIComponent(accessToken); } catch(e) {}
-          }
-          if (!firebaseToken && urlStr.includes('firebase_token=')) {
-            firebaseToken = urlStr.split('firebase_token=')[1].split('&')[0].split('#')[0];
-            try { firebaseToken = decodeURIComponent(firebaseToken); } catch(e) {}
-          }
-          if (!refreshToken && urlStr.includes('refresh_token=')) {
-            refreshToken = urlStr.split('refresh_token=')[1].split('&')[0].split('#')[0];
-            try { refreshToken = decodeURIComponent(refreshToken); } catch(e) {}
-          }
-          if (!uid && urlStr.includes('uid=')) {
-            uid = urlStr.split('uid=')[1].split('&')[0].split('#')[0];
-            try { uid = decodeURIComponent(uid); } catch(e) {}
-          }
-          if (!email && urlStr.includes('email=')) {
-            email = urlStr.split('email=')[1].split('&')[0].split('#')[0];
-            try { email = decodeURIComponent(email); } catch(e) {}
-          }
-          if (!displayName && urlStr.includes('display_name=')) {
-            displayName = urlStr.split('display_name=')[1].split('&')[0].split('#')[0];
-            try { displayName = decodeURIComponent(displayName); } catch(e) {}
-          }
-          if (!photoURL && urlStr.includes('photo_url=')) {
-            photoURL = urlStr.split('photo_url=')[1].split('&')[0].split('#')[0];
-            try { photoURL = decodeURIComponent(photoURL); } catch(e) {}
-          }
-          
-          const hasAnyAuthParam = Boolean(oauthIdToken || oauthAccessToken || customToken || idToken || accessToken || firebaseToken || refreshToken || uid || email);
-          if (!hasAnyAuthParam) {
-            console.log('App opened with default scheme without auth params:', urlStr);
-            if (typeof ready === 'function') ready();
-            return;
-          }
-          
-          let signedIn = false;
-          let lastAuthError = '';
-          loading('Completing Google sign-in…');
-
-          // Seed LocalStorage Auth persistence for Firebase Auth SDK & SellerFlow
-          if (uid && (refreshToken || firebaseToken)) {
-            try {
-              const storageKey = `firebase:authUser:${firebaseConfig.apiKey}:[DEFAULT]`;
-              const authUserObj = {
-                uid: uid,
-                email: email,
-                displayName: displayName || (email ? email.split('@')[0] : 'SellerFlow Merchant'),
-                photoURL: photoURL || '',
-                emailVerified: true,
-                apiKey: firebaseConfig.apiKey,
-                appName: '[DEFAULT]',
-                stsTokenManager: {
-                  apiKey: firebaseConfig.apiKey,
-                  refreshToken: refreshToken || '',
-                  accessToken: firebaseToken || '',
-                  expirationTime: Date.now() + 3600000
-                }
-              };
-              localStorage.setItem(storageKey, JSON.stringify(authUserObj));
-              localStorage.setItem('sf_active_user_session', JSON.stringify({
-                uid,
-                email,
-                displayName: authUserObj.displayName,
-                photoURL,
-                emailVerified: true,
-                firebaseToken
-              }));
-            } catch (storeErr) {
-              console.warn('LocalStorage auth sync notice:', storeErr);
-            }
-          }
-
-          // Method 1: Custom Token minted by SellerFlow backend
-          if (customToken) {
-            try {
-              console.log('Attempting signInWithCustomToken...');
-              const userCred = await auth.signInWithCustomToken(customToken);
-              if (userCred && userCred.user) {
-                signedIn = true;
-                console.log('signInWithCustomToken succeeded for user:', userCred.user.uid);
-              }
-            } catch (custErr) {
-              console.warn('signInWithCustomToken error:', custErr);
-              lastAuthError = custErr.message || String(custErr);
-            }
-          }
-          
-          // Method 2: Google Auth Credential with oauthIdToken
-          const effectiveAccessToken = oauthAccessToken || accessToken;
-          if (!signedIn && oauthIdToken) {
-            try {
-              console.log('Attempting signInWithCredential with OAuth ID token...');
-              const credential = firebase.auth.GoogleAuthProvider.credential(oauthIdToken, effectiveAccessToken || undefined);
-              const userCred = await auth.signInWithCredential(credential);
-              if (userCred && userCred.user) {
-                signedIn = true;
-                console.log('signInWithCredential succeeded for user:', userCred.user.uid);
-              }
-            } catch (credErr) {
-              console.warn('signInWithCredential with OAuth ID token error:', credErr);
-              if (!lastAuthError) lastAuthError = credErr.message || String(credErr);
-            }
-          }
-          
-          // Method 3: Google Auth Credential with accessToken only
-          if (!signedIn && effectiveAccessToken) {
-            try {
-              console.log('Attempting signInWithCredential with accessToken...');
-              const credential = firebase.auth.GoogleAuthProvider.credential(null, effectiveAccessToken);
-              const userCred = await auth.signInWithCredential(credential);
-              if (userCred && userCred.user) {
-                signedIn = true;
-                console.log('signInWithCredential with accessToken succeeded for user:', userCred.user.uid);
-              }
-            } catch (accErr) {
-              console.warn('signInWithCredential with accessToken error:', accErr);
-              if (!lastAuthError) lastAuthError = accErr.message || String(accErr);
-            }
-          }
-
-          // Method 3b: Fallback with idToken if provider accepted
-          if (!signedIn && idToken && !oauthIdToken) {
-            try {
-              const credential = firebase.auth.GoogleAuthProvider.credential(idToken, effectiveAccessToken || undefined);
-              const userCred = await auth.signInWithCredential(credential);
-              if (userCred && userCred.user) {
-                signedIn = true;
-              }
-            } catch (_) {}
-          }
-
-          // Method 4: Secure token refresh via Google Identity Toolkit
-          if (!signedIn && refreshToken) {
-            try {
-              console.log('Attempting secure token refresh for Android session...');
-              const refreshRes = await fetch(`https://securetoken.googleapis.com/v1/token?key=${firebaseConfig.apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `grant_type=refresh_token&refresh_token=${encodeURIComponent(refreshToken)}`
-              });
-              if (refreshRes.ok) {
-                const rData = await refreshRes.json();
-                if (rData && rData.id_token) {
-                  firebaseToken = rData.id_token;
-                  if (rData.user_id && !uid) uid = rData.user_id;
-                  const storageKey = `firebase:authUser:${firebaseConfig.apiKey}:[DEFAULT]`;
-                  const cur = JSON.parse(localStorage.getItem(storageKey) || '{}');
-                  if (cur && cur.stsTokenManager) {
-                    cur.stsTokenManager.accessToken = rData.id_token;
-                    cur.stsTokenManager.refreshToken = rData.refresh_token || refreshToken;
-                    cur.stsTokenManager.expirationTime = Date.now() + (parseInt(rData.expires_in, 10) || 3600) * 1000;
-                    localStorage.setItem(storageKey, JSON.stringify(cur));
-                  }
-                  console.log('Secure token refresh succeeded for uid:', uid);
-                }
-              }
-            } catch (refErr) {
-              console.warn('Secure token refresh notice:', refErr);
-            }
-          }
-
-          // Method 5: Exchange firebaseToken via backend custom-token endpoint
-          if (!signedIn && firebaseToken) {
-            try {
-              console.log('Attempting custom token exchange with backend...');
-              const appBase = getAppUrl();
-              const exRes = await fetch(appBase + '/api/auth/custom-token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken: firebaseToken })
-              });
-              if (exRes.ok) {
-                const exData = await exRes.json();
-                if (exData && exData.success && exData.customToken) {
-                  const userCred = await auth.signInWithCustomToken(exData.customToken);
-                  if (userCred && userCred.user) {
-                    signedIn = true;
-                    console.log('Custom token exchange sign-in succeeded for user:', userCred.user.uid);
-                  }
-                }
-              }
-            } catch (exErr) {
-              console.warn('Firebase token exchange error on Android:', exErr);
-              if (!lastAuthError) lastAuthError = exErr.message || String(exErr);
-            }
-          }
-
-          // Method 6: Check if auth already resolved user
-          if (!signedIn && auth.currentUser) {
-            signedIn = true;
-          }
-
-          // Method 7: Initialize client session with verified account payload
-          if (!signedIn && (uid || email)) {
-            try {
-              console.log('Restoring verified user session for:', email || uid);
-              const sessionUser = {
-                uid: uid || ('user_' + Date.now()),
-                email: email || '',
-                displayName: displayName || (email ? email.split('@')[0] : 'SellerFlow Merchant'),
-                photoURL: photoURL || '',
-                emailVerified: true,
-                getIdToken: async () => firebaseToken || ''
-              };
-              currentUser = sessionUser;
-              window.currentUser = currentUser;
-              localStorage.setItem('sf_active_user_session', JSON.stringify(sessionUser));
-              signedIn = true;
-            } catch (sessErr) {
-              console.warn('Session restoration error:', sessErr);
-            }
-          }
-          
-          // CRITICAL: Guaranteed transition out of authPage and into the app feed
-          if (signedIn || auth.currentUser || currentUser) {
-            if (!currentUser && auth.currentUser) {
-              currentUser = auth.currentUser;
-            }
-            if (!currentUser && (uid || email)) {
-              currentUser = {
-                uid: uid || 'user_' + Date.now(),
-                email: email || '',
-                displayName: displayName || (email ? email.split('@')[0] : 'SellerFlow Merchant'),
-                photoURL: photoURL || '',
-                emailVerified: true,
-                getIdToken: async () => firebaseToken || ''
-              };
-            }
-            window.currentUser = currentUser;
-            isAdmin = isUserAdminEmail(currentUser?.email);
-            window.isAdmin = isAdmin;
-            hide($('authPage'));
-            showApp();
-            setNav();
-            ready();
-            if (typeof navigate === 'function') {
-              await navigate('feed');
-            }
-            if (currentUser && typeof startUser === 'function') {
-              await startUser(currentUser).catch(uErr => console.warn('startUser error:', uErr));
-            }
-            toast('Welcome back to SellerFlow!', 'success');
-          } else {
-            ready();
-            console.warn('Could not authenticate with deep link payload:', urlStr);
-            if ($('authError')) {
-              $('authError').textContent = lastAuthError ? ('Sign-in issue: ' + lastAuthError) : 'Google sign-in was not completed. Please try again or sign in with email/password.';
-            }
-            toast(lastAuthError ? ('Sign-in issue: ' + lastAuthError) : 'Sign-in was not completed. Please try again.', 'info');
-          }
-        } catch (err) {
-          console.error('Failed to complete deep-link login:', err);
-          if ($('authError')) {
-            $('authError').textContent = 'Sign-in error: ' + errMsg(err);
-          }
-          toast('Google Sign-In failed: ' + errMsg(err), 'error');
-        } finally {
-          ready();
         }
       });
     }
@@ -2878,130 +2156,6 @@ async function triggerAccountDeletionFlow() {
 
 window.openPhoneVerificationModal = openPhoneVerificationModal;
 window.triggerAccountDeletionFlow = triggerAccountDeletionFlow;
-
-const triggerGoogleSignIn = async (onSuccess, onError) => {
-  try {
-    if (typeof isCapacitorNative === 'function' ? isCapacitorNative() : (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) {
-      await handleCapacitorGoogleSignIn();
-    } else {
-      loading('Opening Google sign-in…');
-      const provider = new GoogleAuthProvider();
-      if (typeof provider.setCustomParameters === 'function') {
-        provider.setCustomParameters({ prompt: 'select_account' });
-      }
-      await signInWithPopup(auth, provider);
-      if (typeof onSuccess === 'function') await onSuccess();
-    }
-  } catch(e) {
-    if (e?.code === 'auth/unauthorized-domain' || (e?.message && e.message.includes('auth/unauthorized-domain'))) {
-      const currentHost = window.location.hostname || 'aistudio.google.com';
-      modal(`
-        <div class="space-y-4 max-w-md mx-auto text-left">
-          <div class="flex items-center gap-3 pb-3 border-b border-[#262626]">
-            <div class="w-10 h-10 rounded-xl bg-amber-950/40 border border-amber-800 text-gold flex items-center justify-center text-xl shrink-0">
-              🔑
-            </div>
-            <div>
-              <h2 class="text-lg font-black text-white">Add Domain to Firebase</h2>
-              <p class="text-xs text-zinc-400">Firebase Authorized Domains required</p>
-            </div>
-          </div>
-
-          <p class="text-xs text-zinc-300 leading-relaxed">
-            Google Sign-In is blocked by Firebase because <strong>aistudio.google.com</strong> has not been added to your authorized domains list in Firebase Console yet.
-          </p>
-
-          <div class="p-3.5 rounded-xl bg-[#141416] border border-[#2b2b30] space-y-2">
-            <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Domains to add to Firebase Console:</div>
-            <div class="flex items-center justify-between gap-2 bg-black/60 p-2 rounded-lg border border-[#333]">
-              <code class="text-xs text-gold font-mono font-bold select-all">aistudio.google.com</code>
-              <button type="button" onclick="navigator.clipboard.writeText('aistudio.google.com'); toast('Copied aistudio.google.com!', 'success');" class="bg-gold text-black text-[10px] font-bold px-2 py-1 rounded hover:brightness-110">
-                Copy
-              </button>
-            </div>
-            <div class="flex items-center justify-between gap-2 bg-black/60 p-2 rounded-lg border border-[#333]">
-              <code class="text-xs text-gold font-mono font-bold select-all">${currentHost}</code>
-              <button type="button" onclick="navigator.clipboard.writeText('${currentHost}'); toast('Copied preview domain!', 'success');" class="bg-gold text-black text-[10px] font-bold px-2 py-1 rounded hover:brightness-110">
-                Copy
-              </button>
-            </div>
-          </div>
-
-          <div class="text-[11.5px] text-zinc-400 space-y-1 bg-[#18181c] p-3 rounded-xl border border-[#262626]">
-            <div>1. Open <a href="https://console.firebase.google.com/" target="_blank" class="text-gold underline">Firebase Console</a> → <strong>Authentication</strong></div>
-            <div>2. Click the <strong>Settings</strong> tab</div>
-            <div>3. Scroll to <strong>Authorized domains</strong> → <strong>Add domain</strong></div>
-            <div>4. Paste <code>aistudio.google.com</code> and click Save!</div>
-          </div>
-
-          <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#262626]">
-            <button type="button" data-close-modal class="bg-gold text-black font-bold px-4 py-2 rounded-xl text-xs">
-              Close
-            </button>
-          </div>
-        </div>
-      `);
-      return;
-    }
-
-    if (e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request' || e?.code === 'auth/popup-blocked') {
-      const isIframe = window.self !== window.top;
-      const fullUrl = window.location.href;
-      modal(`
-        <div class="space-y-4 max-w-md mx-auto text-left">
-          <div class="flex items-center gap-3 pb-3 border-b border-[#262626]">
-            <div class="w-10 h-10 rounded-xl bg-amber-950/40 border border-amber-800 text-gold flex items-center justify-center text-xl shrink-0">
-              📱
-            </div>
-            <div>
-              <h2 class="text-lg font-black text-white">Google Sign-In Notice</h2>
-              <p class="text-xs text-zinc-400">Mobile browser popup notice</p>
-            </div>
-          </div>
-
-          <p class="text-xs text-zinc-300 leading-relaxed">
-            The Google account popup was closed or blocked by your browser. In mobile browsers (especially inside preview frames), Google popups can be dismissed automatically when switching windows.
-          </p>
-
-          <div class="space-y-2.5 p-3 rounded-xl bg-[#141416] border border-[#2a2a2e]">
-            <p class="text-xs font-bold text-gold">Two Easy Ways to Sign In:</p>
-            <div class="text-xs text-zinc-300 space-y-2">
-              <div class="p-2.5 rounded-lg bg-black/50 border border-[#333]">
-                <span class="font-bold text-white block mb-1">Option 1: Sign in with Email & Password</span>
-                <span>Type your email and password on this screen and tap <strong>Sign in</strong> (or <strong>Create account</strong>).</span>
-              </div>
-              <div class="p-2.5 rounded-lg bg-black/50 border border-[#333]">
-                <span class="font-bold text-white block mb-1">Option 2: Open in a Full Browser Tab</span>
-                <span class="block mb-2 text-zinc-400">Google Sign-In popups work natively when opened directly in a new tab:</span>
-                <a href="${fullUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-1.5 w-full bg-gold text-black font-bold py-2 px-3 rounded-lg text-xs hover:brightness-110">
-                  <span>↗️ Open App in New Tab</span>
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#262626]">
-            <button type="button" data-close-modal class="bg-[#242424] hover:bg-[#333] text-white font-semibold px-4 py-2 rounded-xl text-xs">
-              Back to Sign In
-            </button>
-          </div>
-        </div>
-      `);
-      return;
-    }
-
-    if (typeof onError === 'function') {
-      onError(e);
-    } else {
-      toast(errMsg(e),'error');
-    }
-  } finally {
-    ready();
-  }
-};
-
-function showGoogleBrandGuideModal() {}
-window.showGoogleBrandGuideModal = showGoogleBrandGuideModal;
 
 const signOut=(auth)=>auth.signOut();
 const sendPasswordResetEmail=(auth,email)=>auth.sendPasswordResetEmail(email);
@@ -5153,28 +4307,11 @@ function showAuthPrompt(actionMessage = 'interact on SellerFlow'){
         Sign in or create an account to ${esc(actionMessage)}.
       </p>
       <div class="space-y-2.5 mt-6 max-w-sm mx-auto">
-        <!-- Google Sign In / Sign Up -->
-        <button type="button" id="authPromptGoogle" class="w-full py-3.5 px-4 bg-white hover:bg-zinc-100 text-zinc-900 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-3 transition active:scale-98">
-          <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-          </svg>
-          <span>Continue with Google</span>
-        </button>
-
-        <div class="flex items-center my-3">
-          <div class="flex-grow border-t border-zinc-800"></div>
-          <span class="px-2.5 text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Or continue with</span>
-          <div class="flex-grow border-t border-zinc-800"></div>
-        </div>
-
         <button type="button" id="authPromptRegister" class="w-full py-3.5 px-4 bg-gold text-black rounded-xl font-bold text-sm hover:brightness-110 shadow-lg shadow-gold/20 flex items-center justify-center gap-2 transition active:scale-98">
-          Create free account (Email)
+          Create Account
         </button>
         <button type="button" id="authPromptLogin" class="w-full py-3 px-4 bg-[#1b1b1b] hover:bg-[#252525] border border-[#383838] text-white rounded-xl font-bold text-sm transition active:scale-98">
-          Sign in with Email
+          Sign In with Username
         </button>
       </div>
       <div class="mt-4">
@@ -5184,7 +4321,6 @@ function showAuthPrompt(actionMessage = 'interact on SellerFlow'){
       </div>
     </div>
   `);
-  $('authPromptGoogle')?.addEventListener('click', () => { closeModal(); triggerGoogleSignIn(); });
   $('authPromptRegister')?.addEventListener('click', ()=>{ closeModal(); showAuth('register'); });
   $('authPromptLogin')?.addEventListener('click', ()=>{ closeModal(); showAuth('login'); });
 }
@@ -5216,21 +4352,21 @@ function showAuth(mode='register', targetEmail=''){
   if(typeof updateForYouWakeLock === 'function') updateForYouWakeLock();
   
   show($('authForm'));
-  show($('resetBtn'));
-  show($('authSwitch'));
   hide($('emailVerifyWrap'));
-  if($('authTitle'))$('authTitle').textContent=mode==='register'?'Create your account':'Welcome back';
-  if($('authSubtitle'))$('authSubtitle').textContent=mode==='register'?'Sell and shop across Ghana.':'Sign in to continue.';
-  if($('googleAuthBtnText'))$('googleAuthBtnText').textContent=mode==='register'?'Sign up with Google':'Sign in with Google';
-  if($('googleAuthBtn'))$('googleAuthBtn').onclick=()=>triggerGoogleSignIn();
-  if($('nameWrap'))$('nameWrap').style.display=mode==='register'?'block':'none';
-  if($('usernameWrap'))$('usernameWrap').style.display=mode==='register'?'block':'none';
-  if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display=mode==='register'?'block':'none';
-  if($('termsWrap'))$('termsWrap').style.display=mode==='register'?'block':'none';
-  if($('resetBtn'))$('resetBtn').style.display=mode==='register'?'none':'block';
-  if($('authSubmit'))$('authSubmit').textContent=mode==='register'?'Create account':'Sign in';
-  if($('authSwitch'))$('authSwitch').textContent=mode==='register'?'Already have an account? Sign in':'New here? Create an account';
+  
   if (mode === 'register') {
+    if($('authTitle'))$('authTitle').textContent='Create your account';
+    if($('authSubtitle'))$('authSubtitle').textContent='Sell and shop across Ghana.';
+    if($('authSubmit'))$('authSubmit').textContent='Create Account';
+    if($('authSwitch'))$('authSwitch').textContent='Already have an account? Sign in';
+    if($('nameWrap'))$('nameWrap').style.display='block';
+    if($('usernameWrap'))$('usernameWrap').style.display='block';
+    if($('recoveryEmailWrap'))$('recoveryEmailWrap').style.display='block';
+    if($('passwordWrap'))$('passwordWrap').style.display='block';
+    if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display='block';
+    if($('termsWrap'))$('termsWrap').style.display='block';
+    if($('forgotPasswordLinkWrap'))$('forgotPasswordLinkWrap').style.display='none';
+    if($('codeVerificationWrap'))$('codeVerificationWrap').style.display='none';
     setTimeout(() => {
       const uInput = $('authUsername');
       if (uInput) {
@@ -5245,13 +4381,59 @@ function showAuth(mode='register', targetEmail=''){
         });
       }
     }, 20);
+  } else if (mode === 'forgot') {
+    if($('authTitle'))$('authTitle').textContent='Forgot Password';
+    if($('authSubtitle'))$('authSubtitle').textContent='Enter your username and recovery email to receive recovery instructions.';
+    if($('authSubmit'))$('authSubmit').textContent='Send Recovery Instructions';
+    if($('authSwitch'))$('authSwitch').textContent='Remembered your password? Sign in';
+    if($('nameWrap'))$('nameWrap').style.display='none';
+    if($('usernameWrap'))$('usernameWrap').style.display='block';
+    if($('recoveryEmailWrap'))$('recoveryEmailWrap').style.display='block';
+    if($('passwordWrap'))$('passwordWrap').style.display='none';
+    if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display='none';
+    if($('termsWrap'))$('termsWrap').style.display='none';
+    if($('forgotPasswordLinkWrap'))$('forgotPasswordLinkWrap').style.display='none';
+    if($('codeVerificationWrap'))$('codeVerificationWrap').style.display='none';
+  } else if (mode === 'resetPassword') {
+    if($('authTitle'))$('authTitle').textContent='Set New Password';
+    if($('authSubtitle'))$('authSubtitle').textContent='Enter the code sent to your recovery email and set a new password.';
+    if($('authSubmit'))$('authSubmit').textContent='Reset Password & Sign In';
+    if($('authSwitch'))$('authSwitch').textContent='Back to Sign In';
+    if($('nameWrap'))$('nameWrap').style.display='none';
+    if($('usernameWrap'))$('usernameWrap').style.display='block';
+    if($('recoveryEmailWrap'))$('recoveryEmailWrap').style.display='none';
+    if($('passwordWrap'))$('passwordWrap').style.display='block';
+    if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display='block';
+    if($('termsWrap'))$('termsWrap').style.display='none';
+    if($('forgotPasswordLinkWrap'))$('forgotPasswordLinkWrap').style.display='none';
+    if($('codeVerificationWrap'))$('codeVerificationWrap').style.display='block';
   } else {
+    // Standard 'login' mode: ONLY Username and Password
+    if($('authTitle'))$('authTitle').textContent='Welcome back';
+    if($('authSubtitle'))$('authSubtitle').textContent='Sign in to continue.';
+    if($('authSubmit'))$('authSubmit').textContent='Sign In';
+    if($('authSwitch'))$('authSwitch').textContent='New here? Create an account';
+    if($('nameWrap'))$('nameWrap').style.display='none';
+    if($('usernameWrap'))$('usernameWrap').style.display='block';
+    if($('recoveryEmailWrap'))$('recoveryEmailWrap').style.display='none';
+    if($('passwordWrap'))$('passwordWrap').style.display='block';
+    if($('confirmPasswordWrap'))$('confirmPasswordWrap').style.display='none';
+    if($('termsWrap'))$('termsWrap').style.display='none';
+    if($('forgotPasswordLinkWrap'))$('forgotPasswordLinkWrap').style.display='block';
+    if($('codeVerificationWrap'))$('codeVerificationWrap').style.display='none';
     const f1 = document.getElementById('authUsernameFeedback');
     const f2 = document.getElementById('authEmailFeedback');
     const f3 = document.getElementById('authUsernameSuggestions');
+    const icon = document.getElementById('authUsernameStatusIcon');
+    const uInput = document.getElementById('authUsername');
     if (f1) { f1.innerHTML = ''; f1.style.display = 'none'; }
     if (f2) { f2.innerHTML = ''; f2.style.display = 'none'; }
     if (f3) { f3.innerHTML = ''; f3.classList.add('hidden'); }
+    if (icon) { icon.innerHTML = '<span class="text-zinc-500 text-xs font-mono">@</span>'; }
+    if (uInput) {
+      uInput.classList.remove('border-emerald-500/80', 'border-rose-500/80', 'border-amber-500/60');
+      uInput.classList.add('border-[#333]');
+    }
   }
   if($('authError'))$('authError').textContent='';
   ready();
@@ -5652,6 +4834,28 @@ function setupUsernameFieldController({
     const raw = inputEl.value;
     const clean = usernameClean(raw);
     updatePreview(clean);
+
+    // Skip taken check and username suggestions when signing in, recovering password, or resetting password
+    const isSignInOrRecovery = (inputEl.id === 'authUsername' && (typeof authMode !== 'undefined' && (authMode === 'login' || authMode === 'forgot' || authMode === 'resetPassword'))) ||
+                               inputEl.getAttribute('data-auth-context') === 'login';
+    if(isSignInOrRecovery) {
+      activeSeq++;
+      state = { valid: true, available: true, clean, checking: false };
+      if(statusIconEl) {
+        statusIconEl.innerHTML = '<span class="text-zinc-500 text-xs font-mono">@</span>';
+      }
+      setInputBorder('normal');
+      if(feedbackEl) {
+        feedbackEl.innerHTML = '';
+        feedbackEl.style.display = 'none';
+      }
+      if(suggestionsEl) {
+        suggestionsEl.innerHTML = '';
+        suggestionsEl.classList.add('hidden');
+      }
+      onStateChange?.(state);
+      return;
+    }
 
     if(clean === currentBase) {
       activeSeq++;
@@ -7041,14 +6245,16 @@ function setNav(){
           </button>
 
           ${!currentUser ? `
-            <button type="button" id="mobileAuthBtn" class="w-full p-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-gold to-yellow-500 text-black font-black text-xs shadow-md hover:brightness-110 transition mt-1 flex items-center justify-center gap-2">
-              <span>🔑</span>
-              <span>${esc(typeof t === 'function' ? t('nav_signin_register', 'Sign In / Register Account') : 'Sign In / Register Account')}</span>
-            </button>
-            <button type="button" id="mobileGoogleAuthBtn" class="w-full p-2.5 rounded-xl bg-white hover:bg-zinc-100 text-zinc-900 font-bold text-xs shadow-md transition mt-1 flex items-center justify-center gap-2.5">
-              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-              <span>Continue with Google</span>
-            </button>
+            <div class="grid grid-cols-2 gap-2 mt-1">
+              <button type="button" id="mobileSignInBtn" class="w-full p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5">
+                <span>🔑</span>
+                <span>Sign In</span>
+              </button>
+              <button type="button" id="mobileSignUpBtn" class="w-full p-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-gold to-yellow-500 text-black font-black text-xs shadow-md hover:brightness-110 transition flex items-center justify-center gap-1.5">
+                <span>✨</span>
+                <span>Sign Up</span>
+              </button>
+            </div>
           ` : `
             <button type="button" id="mobileLogout" class="w-full p-2 rounded-xl text-rose-400 bg-rose-950/20 hover:bg-rose-950/40 border border-rose-900/40 font-bold text-xs flex items-center justify-center gap-2 transition" data-mobile-logout="1">
               <span>🚪</span>
@@ -7069,8 +6275,8 @@ function setNav(){
     $('mobileHelpSupportBtn')?.addEventListener('click', () => { closeMobileNav(); if(typeof openHelpSupportModal==='function') openHelpSupportModal(); });
     $('mobileReportFraudBtn')?.addEventListener('click', () => { closeMobileNav(); if(typeof openReportFraudModal==='function') openReportFraudModal(); });
     $('mobileLogout')?.addEventListener('click', () => { closeMobileNav(); logoutUser(); });
-    $('mobileAuthBtn')?.addEventListener('click', () => { closeMobileNav(); showAuth('register'); });
-    $('mobileGoogleAuthBtn')?.addEventListener('click', () => { closeMobileNav(); triggerGoogleSignIn(); });
+    $('mobileSignInBtn')?.addEventListener('click', () => { closeMobileNav(); showAuth('login'); });
+    $('mobileSignUpBtn')?.addEventListener('click', () => { closeMobileNav(); showAuth('register'); });
     $('mobileNavUserCard')?.addEventListener('click', (e) => {
       e.stopPropagation();
       closeMobileNav();
@@ -20461,7 +19667,14 @@ $('heroLogin')?.addEventListener('click',()=>showAuth('login'));
 $('landingRegister')?.addEventListener('click',()=>showAuth('register'));
 $('heroRegister')?.addEventListener('click',()=>showAuth('register'));
 $('backLanding')?.addEventListener('click',showLanding);
-$('authSwitch')?.addEventListener('click',()=>showAuth(authMode==='register'?'login':'register'));
+$('authSwitch')?.addEventListener('click',()=>{
+  if(authMode === 'register') showAuth('login');
+  else if(authMode === 'login') showAuth('register');
+  else showAuth('login');
+});
+$('resetBtn')?.addEventListener('click',()=>showAuth('forgot'));
+$('authForgotPasswordBtn')?.addEventListener('click',()=>showAuth('forgot'));
+$('backToSignInBtn')?.addEventListener('click',()=>showAuth('login'));
 $('brandBtn')?.addEventListener('click',()=>navigate('feed'));
 $('cartBtn')?.addEventListener('click',()=>navigate('cart'));
 $('notificationBtn')?.addEventListener('click',()=>{
@@ -20668,49 +19881,181 @@ if($('authForm')){
     e.preventDefault();
     if($('authError'))$('authError').textContent='';
     try{
-      const email=$('authEmail').value.trim(),password=$('authPassword').value;
-      if(!email||!password)throw Error('Enter your email and password.');
-      loading(authMode==='register'?'Creating your SellerFlow account…':'Signing you in…');
-      if(authMode==='register'){
+      const rawUsername = $('authUsername') ? $('authUsername').value.trim() : '';
+      const username = usernameClean(rawUsername);
+      const password = $('authPassword') ? $('authPassword').value : '';
+
+      if (authMode === 'register') {
+        const recoveryEmail = $('authRecoveryEmail') ? $('authRecoveryEmail').value.trim().toLowerCase() : '';
         const confirmPassword = $('authConfirmPassword') ? $('authConfirmPassword').value : '';
-        if(password.length<6)throw Error('Password must be at least 6 characters.');
-        if(password !== confirmPassword)throw Error('Passwords do not match. Please verify your password.');
-        const name=$('authName').value.trim(),username=usernameClean($('authUsername').value);
-        if(name.length<2)throw Error('Enter your full name.');
-        if(username.length<3)throw Error('Username must be at least 3 characters.');
-        if(username === 'sellerflow' && !isUserAdminEmail(email)) {
+        const name = $('authName') ? $('authName').value.trim() : (rawUsername || 'SellerFlow Merchant');
+
+        if (!username || username.length < 3) throw Error('Username must be at least 3 characters.');
+        if (!recoveryEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recoveryEmail)) throw Error('A valid recovery email is required.');
+        if (!password || password.length < 6) throw Error('Password must be at least 6 characters.');
+        if (password !== confirmPassword) throw Error('Passwords do not match. Please verify your password.');
+        if (username === 'sellerflow' && !isUserAdminEmail(recoveryEmail)) {
           $('authUsername')?.focus();
           throw Error('The username "sellerflow" is reserved. Please choose another username.');
         }
-        if(!$('termsAccept')?.checked)throw Error('Please read and agree to the Terms & Conditions before creating your account.');
+        if (!$('termsAccept')?.checked) throw Error('Please read and agree to the Terms & Conditions before creating your account.');
         await ensureTerms();
-        const isFree = await uniqueUsername(username, '', email);
-        if(!isFree) {
-          $('authUsername')?.focus();
-          throw Error('That username is already taken. Please choose another or select one of the suggestions.');
+
+        loading('Creating your SellerFlow account…');
+
+        // Authoritative registration via server
+        const regRes = await fetch('/api/auth/register-username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, recoveryEmail, password, name })
+        });
+        const regData = await regRes.json();
+        if (!regData.success) {
+          throw new Error(regData.error || 'Failed to create account.');
         }
-        const c=await createUserWithEmailAndPassword(auth,email,password);
-        await updateProfile(c.user,{displayName:name});
-        await createMissingProfile(c.user,{name,username,usernameLower:username,role:'seller',termsAccepted:true,termsAcceptedAt:serverTimestamp(),termsVersion:appTermsVersion,usernameLastChanged:serverTimestamp(),emailVerified:true});
+
+        // Sign in user with minted custom token
+        if (regData.customToken) {
+          await auth.signInWithCustomToken(regData.customToken);
+        } else {
+          // Fallback direct sign in
+          await signInWithEmailAndPassword(auth, recoveryEmail, password);
+        }
+
+        const user = auth.currentUser;
+        if (user) {
+          await createMissingProfile(user, {
+            name,
+            username,
+            usernameLower: username,
+            recoveryEmail,
+            role: 'seller',
+            termsAccepted: true,
+            termsAcceptedAt: serverTimestamp(),
+            termsVersion: appTermsVersion,
+            usernameLastChanged: serverTimestamp(),
+            emailVerified: true
+          });
+          currentUser = user;
+          isAdmin = isUserAdminEmail(user.email || recoveryEmail);
+          window.currentUser = user;
+          window.isAdmin = isAdmin;
+          ready();
+          hide($('authPage'));
+          showApp();
+          setNav();
+          await startUser(user);
+          navigate('feed');
+          toast(`Welcome to SellerFlow, @${username}!`, 'success', 4000);
+        } else {
+          ready();
+          showAuth('login');
+          toast('Account created! Sign in with your username and password.', 'success', 4000);
+        }
+
+      } else if (authMode === 'forgot') {
+        const recoveryEmail = $('authRecoveryEmail') ? $('authRecoveryEmail').value.trim() : '';
+        if (!username || username.length < 3) throw Error('Enter your SellerFlow username.');
+        if (!recoveryEmail || !recoveryEmail.includes('@')) throw Error('Enter your registered recovery email.');
+        loading('Sending recovery instructions…');
+        const fRes = await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, recoveryEmail })
+        });
+        const fData = await fRes.json();
         ready();
-        currentUser = c.user;
-        isAdmin = isUserAdminEmail(c.user.email);
-        window.currentUser = c.user;
-        window.isAdmin = isAdmin;
-        hide($('authPage'));
-        showApp();
-        setNav();
-        await startUser(c.user);
-        navigate('feed');
-        toast(`Welcome to SellerFlow, ${name}!`, 'success', 4000);
-      }else{
-        const cred=await signInWithEmailAndPassword(auth,email,password);
-        const u=cred.user;
-        ready();
+        toast(fData.message || 'If this account has a verified recovery email, recovery instructions have been sent.', 'info', 6000);
+        showAuth('resetPassword');
+
+      } else if (authMode === 'resetPassword') {
+        const code = $('authRecoveryCode') ? $('authRecoveryCode').value.trim() : '';
+        const confirmPassword = $('authConfirmPassword') ? $('authConfirmPassword').value : '';
+        if (!username || username.length < 3) throw Error('Enter your SellerFlow username.');
+        if (!code || code.length !== 6) throw Error('Enter the 6-digit recovery code.');
+        if (!password || password.length < 6) throw Error('Password must be at least 6 characters.');
+        if (password !== confirmPassword) throw Error('Passwords do not match.');
+
+        loading('Resetting password…');
+        const rRes = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, code, newPassword: password })
+        });
+        const rData = await rRes.json();
+        if (!rData.success) {
+          throw new Error(rData.error || 'Password reset failed.');
+        }
+
+        if (rData.customToken) {
+          await auth.signInWithCustomToken(rData.customToken);
+          const user = auth.currentUser;
+          currentUser = user;
+          isAdmin = isUserAdminEmail(user?.email);
+          window.currentUser = user;
+          window.isAdmin = isAdmin;
+          ready();
+          hide($('authPage'));
+          showApp();
+          setNav();
+          if (user) await startUser(user);
+          navigate('feed');
+          toast('Password reset successfully! Welcome back.', 'success', 4000);
+        } else {
+          ready();
+          showAuth('login');
+          toast('Password reset successfully. Sign in with your new password.', 'success', 4000);
+        }
+
+      } else {
+        // Standard 'login' mode: Username + Password ONLY
+        if (!username) throw Error('Enter your SellerFlow username.');
+        if (!password) throw Error('Enter your password.');
+        loading('Signing you in…');
+
+        const logRes = await fetch('/api/auth/login-username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const logData = await logRes.json();
+        if (!logData.success) {
+          // Attempt client fallback lookup
+          const lookRes = await fetch('/api/auth/lookup-identifier', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identifier: username })
+          });
+          const lookData = await lookRes.json();
+          if (lookData.success && lookData.authEmail) {
+            const cred = await signInWithEmailAndPassword(auth, lookData.authEmail, password);
+            const u = cred.user;
+            currentUser = u;
+            isAdmin = isUserAdminEmail(u.email);
+            window.currentUser = u;
+            window.isAdmin = isAdmin;
+            ready();
+            hide($('authPage'));
+            showApp();
+            setNav();
+            await startUser(u);
+            navigate('feed');
+            toast('Welcome back to SellerFlow!', 'success');
+            return;
+          }
+          throw new Error(logData.error || 'Invalid username or password.');
+        }
+
+        if (logData.customToken) {
+          await auth.signInWithCustomToken(logData.customToken);
+        }
+        const u = auth.currentUser;
+        if (!u) throw new Error('Authentication failed. Please try again.');
         currentUser = u;
         isAdmin = isUserAdminEmail(u.email);
         window.currentUser = u;
         window.isAdmin = isAdmin;
+        ready();
         hide($('authPage'));
         showApp();
         setNav();
@@ -21270,11 +20615,6 @@ window._sfWaitForAuthInit = () => new Promise(async (resolve) => {
 
 async function init(){
   try{
-    if (window.IS_SELLERFLOW_OAUTH_CALLBACK || (window.location.pathname && window.location.pathname.includes('/oauth-callback'))) {
-      console.log('Halting main app initialization on OAuth callback route.');
-      await handleOAuthCallbackPage();
-      return;
-    }
     setupAuthInputRepaintFix();
 
     // 1. Ensure Firebase SDK is available before mounting

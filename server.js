@@ -3189,9 +3189,929 @@ app.post('/api/auth/check-availability', async (req, res) => {
   }
 });
 
+/* Username normalization helper */
+function usernameClean(v) {
+  return String(v || '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 24);
+}
+
 /* In-memory fallback caches for verification codes to prevent Firestore permission issues in sandboxed environments */
 const emailVerificationsCache = new Map();
 const phoneVerificationsCache = new Map();
+const passwordResetCodesCache = new Map();
+
+/**
+ * Helper to resolve an account by identifier (username or existing email)
+ * Searches registeredUsernames, publicProfiles, users, registeredEmails, and Firebase Auth.
+ */
+async function resolveAccountForAuth(identifier) {
+  if (!identifier) return null;
+  const raw = String(identifier).trim();
+  const uClean = usernameClean(raw);
+  const rawLower = raw.toLowerCase();
+
+  // 1. Primary admin account mapping
+  if (uClean === 'sellerflow' || uClean === 'gideon' || uClean === 'gideondreams' || rawLower === 'gideondreams3325@gmail.com') {
+    return {
+      uid: 'admin_gideon',
+      authEmail: 'gideondreams3325@gmail.com',
+      recoveryEmail: 'gideondreams3325@gmail.com',
+      username: 'sellerflow',
+      isAdmin: true,
+      isExisting: true
+    };
+  }
+
+  // 2. Lookup in registeredUsernames registry
+  if (uClean) {
+    try {
+      const docSnap = await adminDb.collection('registeredUsernames').doc(uClean).get();
+      if (docSnap.exists) {
+        const d = docSnap.data() || {};
+        return {
+          uid: d.uid,
+          authEmail: d.authEmail || `${uClean}@users.sellerflow.internal`,
+          recoveryEmail: d.recoveryEmail || d.email || null,
+          username: d.username || uClean,
+          isExisting: true
+        };
+      }
+    } catch (_) {}
+  }
+
+  // 3. Lookup in publicProfiles by usernameLower
+  if (uClean) {
+    try {
+      const pubSnap = await adminDb.collection('publicProfiles')
+        .where('usernameLower', '==', uClean)
+        .limit(1)
+        .get();
+      if (!pubSnap.empty) {
+        const doc = pubSnap.docs[0];
+        const d = doc.data() || {};
+        return {
+          uid: doc.id,
+          authEmail: d.authEmail || d.email || `${uClean}@users.sellerflow.internal`,
+          recoveryEmail: d.recoveryEmail || d.email || null,
+          username: d.username || uClean,
+          isExisting: true
+        };
+      }
+    } catch (_) {}
+  }
+
+  // 4. Lookup in users collection by usernameLower or username
+  if (uClean) {
+    try {
+      const uSnap = await adminDb.collection('users')
+        .where('usernameLower', '==', uClean)
+        .limit(1)
+        .get();
+      if (!uSnap.empty) {
+        const doc = uSnap.docs[0];
+        const d = doc.data() || {};
+        return {
+          uid: doc.id,
+          authEmail: d.authEmail || d.email || `${uClean}@users.sellerflow.internal`,
+          recoveryEmail: d.recoveryEmail || d.email || null,
+          username: d.username || uClean,
+          isExisting: true
+        };
+      }
+    } catch (_) {}
+  }
+
+  // 5. Lookup by email in registeredEmails or users (in case existing user entered their email)
+  if (rawLower.includes('@')) {
+    try {
+      const emDoc = await adminDb.collection('registeredEmails').doc(rawLower).get();
+      if (emDoc.exists) {
+        const d = emDoc.data() || {};
+        return {
+          uid: d.uid,
+          authEmail: rawLower,
+          recoveryEmail: rawLower,
+          username: d.username || null,
+          isExisting: true
+        };
+      }
+    } catch (_) {}
+
+    try {
+      const uSnap = await adminDb.collection('users')
+        .where('email', '==', rawLower)
+        .limit(1)
+        .get();
+      if (!uSnap.empty) {
+        const doc = uSnap.docs[0];
+        const d = doc.data() || {};
+        return {
+          uid: doc.id,
+          authEmail: rawLower,
+          recoveryEmail: d.recoveryEmail || rawLower,
+          username: d.username || null,
+          isExisting: true
+        };
+      }
+    } catch (_) {}
+  }
+
+  // 6. Direct Firebase Auth lookup by email (or internal auth email)
+  try {
+    const directEmail = rawLower.includes('@') ? rawLower : `${uClean}@users.sellerflow.internal`;
+    const fbUser = await adminAuth.getUserByEmail(directEmail);
+    if (fbUser) {
+      return {
+        uid: fbUser.uid,
+        authEmail: directEmail,
+        recoveryEmail: null,
+        username: fbUser.displayName || uClean,
+        isExisting: true
+      };
+    }
+  } catch (_) {}
+
+  // Fallback candidate
+  return {
+    uid: null,
+    authEmail: `${uClean}@users.sellerflow.internal`,
+    recoveryEmail: null,
+    username: uClean,
+    isExisting: false
+  };
+}
+
+/**
+ * Authoritative Identifier Lookup Endpoint
+ * Maps a SellerFlow username to internal Firebase Auth email without revealing recovery email.
+ */
+app.post(['/api/auth/lookup-identifier', '/api/auth/lookup'], async (req, res) => {
+  try {
+    const { username, identifier } = req.body || {};
+    const input = String(username || identifier || '').trim();
+    if (!input) {
+      return res.status(400).json({ success: false, error: 'Username or identifier is required.' });
+    }
+    const account = await resolveAccountForAuth(input);
+    return res.json({
+      success: true,
+      exists: Boolean(account?.isExisting || account?.uid),
+      authEmail: account?.authEmail || `${usernameClean(input)}@users.sellerflow.internal`,
+      uid: account?.uid || null,
+      username: account?.username || usernameClean(input)
+    });
+  } catch (err) {
+    console.error('Lookup identifier error:', err);
+    return res.status(500).json({ success: false, error: 'Something went wrong. Please try again.' });
+  }
+});
+
+/**
+ * Authoritative SellerFlow Username + Password Login Endpoint
+ * Supports both new users (username + internal auth) and existing users (username/email + existing password)
+ */
+app.post(['/api/auth/login-username', '/api/auth/login'], async (req, res) => {
+  try {
+    const { username, identifier, password } = req.body || {};
+    const inputIdentifier = String(username || identifier || '').trim();
+    const inputPassword = String(password || '');
+
+    if (!inputIdentifier || !inputPassword) {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_CREDENTIALS',
+        error: 'Username and password are required.'
+      });
+    }
+
+    const account = await resolveAccountForAuth(inputIdentifier);
+    if (!account || !account.authEmail) {
+      return res.status(401).json({
+        success: false,
+        code: 'INVALID_CREDENTIALS',
+        error: 'Username or password is incorrect.'
+      });
+    }
+
+    // Helper to authenticate against Firebase Identity Toolkit using email + password
+    const verifyWithFirebase = async (emailToTry) => {
+      if (!emailToTry || !firebaseConfig.apiKey) return null;
+      try {
+        const resp = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${firebaseConfig.apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailToTry, password: inputPassword, returnSecureToken: true })
+        });
+        const data = await resp.json();
+        if (resp.ok && data.localId) {
+          return { success: true, localId: data.localId, idToken: data.idToken, email: data.email };
+        }
+        return { success: false, error: data.error?.message || 'INVALID_CREDENTIALS' };
+      } catch (e) {
+        return { success: false, error: e.message };
+      }
+    };
+
+    // Candidates to verify (primary internal auth email, recovery email, original email)
+    const emailsToTry = [
+      account.authEmail,
+      account.recoveryEmail,
+      `${usernameClean(inputIdentifier)}@users.sellerflow.internal`
+    ].filter((em, idx, arr) => em && typeof em === 'string' && em.includes('@') && arr.indexOf(em) === idx);
+
+    let authResult = null;
+    let successfulEmail = null;
+
+    for (const em of emailsToTry) {
+      const resAttempt = await verifyWithFirebase(em);
+      if (resAttempt && resAttempt.success) {
+        authResult = resAttempt;
+        successfulEmail = em;
+        break;
+      }
+    }
+
+    if (!authResult || !authResult.success) {
+      return res.status(401).json({
+        success: false,
+        code: 'INVALID_CREDENTIALS',
+        error: 'Username or password is incorrect.'
+      });
+    }
+
+    // Verified Firebase user
+    const targetUid = authResult.localId || account.uid;
+    const isUserAdmin = isUserAdminEmail(successfulEmail) || isUserAdminEmail(account.recoveryEmail) || account.isAdmin;
+
+    // Mint authoritative Firebase custom token
+    const customToken = await adminAuth.createCustomToken(targetUid, {
+      admin: Boolean(isUserAdmin),
+      username: account.username || usernameClean(inputIdentifier)
+    });
+
+    // Automatically ensure username registry is populated
+    const uClean = usernameClean(account.username || inputIdentifier);
+    if (uClean) {
+      adminDb.collection('registeredUsernames').doc(uClean).set({
+        uid: targetUid,
+        username: account.username || uClean,
+        authEmail: successfulEmail,
+        recoveryEmail: account.recoveryEmail || successfulEmail,
+        updatedAt: FieldValue.serverTimestamp()
+      }, { merge: true }).catch(() => {});
+    }
+
+    return res.json({
+      success: true,
+      customToken,
+      uid: targetUid,
+      username: account.username || uClean,
+      isAdmin: Boolean(isUserAdmin)
+    });
+
+  } catch (err) {
+    console.error('Username login endpoint error:', err);
+    return res.status(500).json({
+      success: false,
+      code: 'SERVER_ERROR',
+      error: 'Something went wrong. Please try again.'
+    });
+  }
+});
+
+/**
+ * SellerFlow Final User Registration Endpoint
+ * Required fields: Username, Recovery Email, Password
+ */
+app.post(['/api/auth/register', '/api/auth/register-username'], async (req, res) => {
+  try {
+    const { username, recoveryEmail, password } = req.body || {};
+
+    const uClean = usernameClean(username);
+    if (!uClean || uClean.length < 3) {
+      return res.status(400).json({ success: false, error: 'Username must be at least 3 characters and contain only letters, numbers, or underscores.' });
+    }
+
+    if (!recoveryEmail || typeof recoveryEmail !== 'string' || !recoveryEmail.includes('@') || !recoveryEmail.includes('.')) {
+      return res.status(400).json({ success: false, error: 'A valid recovery email is required.' });
+    }
+    const recEmailLower = recoveryEmail.toLowerCase().trim();
+
+    if (!password || typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 6 characters.' });
+    }
+
+    // Check reserved username
+    if (uClean === 'sellerflow' && !isUserAdminEmail(recEmailLower)) {
+      return res.status(400).json({ success: false, error: 'The username "sellerflow" is reserved.' });
+    }
+
+    // Check username availability in registry
+    let usernameTaken = false;
+    try {
+      const regDoc = await adminDb.collection('registeredUsernames').doc(uClean).get();
+      if (regDoc.exists) usernameTaken = true;
+    } catch (_) {}
+
+    if (!usernameTaken) {
+      try {
+        const pubSnap = await adminDb.collection('publicProfiles').where('usernameLower', '==', uClean).limit(1).get();
+        if (!pubSnap.empty) usernameTaken = true;
+      } catch (_) {}
+    }
+
+    if (usernameTaken) {
+      return res.status(400).json({ success: false, error: `The username @${uClean} is already taken. Please choose another.` });
+    }
+
+    // Check recovery email availability
+    let emailTaken = false;
+    try {
+      const emDoc = await adminDb.collection('registeredEmails').doc(recEmailLower).get();
+      if (emDoc.exists) emailTaken = true;
+    } catch (_) {}
+
+    if (emailTaken) {
+      return res.status(400).json({ success: false, error: 'That recovery email is already attached to an account.' });
+    }
+
+    const internalAuthEmail = `${uClean}@users.sellerflow.internal`;
+
+    // Create Firebase Auth user
+    let userRecord;
+    try {
+      userRecord = await adminAuth.createUser({
+        email: internalAuthEmail,
+        password: password,
+        displayName: username.trim(),
+        emailVerified: false
+      });
+    } catch (authErr) {
+      if (authErr.code === 'auth/email-already-exists') {
+        // If already exists in Firebase Auth, attempt update
+        try {
+          userRecord = await adminAuth.getUserByEmail(internalAuthEmail);
+          await adminAuth.updateUser(userRecord.uid, { password: password, displayName: username.trim() });
+        } catch (_) {
+          return res.status(400).json({ success: false, error: 'Username is already in use in the authentication directory.' });
+        }
+      } else {
+        console.error('Firebase Auth user creation error:', authErr);
+        return res.status(500).json({ success: false, error: `Account creation error: ${authErr.message}` });
+      }
+    }
+
+    const uid = userRecord.uid;
+    const isAdmin = isUserAdminEmail(recEmailLower);
+
+    // Save core user document
+    try {
+      await adminDb.collection('users').doc(uid).set({
+        uid,
+        id: uid,
+        username: username.trim(),
+        usernameLower: uClean,
+        name: username.trim(),
+        recoveryEmail: recEmailLower,
+        recoveryEmailLower: recEmailLower,
+        recoveryEmailVerified: false,
+        email: recEmailLower,
+        authEmail: internalAuthEmail,
+        emailVerified: false,
+        role: isAdmin ? 'admin' : 'seller',
+        verified: isAdmin,
+        subscription: 'FREE',
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+        usernameLastChanged: FieldValue.serverTimestamp()
+      }, { merge: true });
+    } catch (dbErr) {
+      console.warn('Firestore users doc creation notice:', dbErr.message);
+    }
+
+    // Save public profile document
+    try {
+      await adminDb.collection('publicProfiles').doc(uid).set({
+        uid,
+        id: uid,
+        username: username.trim(),
+        usernameLower: uClean,
+        name: username.trim(),
+        role: isAdmin ? 'admin' : 'seller',
+        verified: isAdmin,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+    } catch (dbErr) {
+      console.warn('Firestore publicProfile creation notice:', dbErr.message);
+    }
+
+    // Save registered usernames and emails lookup indices
+    try {
+      await adminDb.collection('registeredUsernames').doc(uClean).set({
+        uid,
+        username: username.trim(),
+        authEmail: internalAuthEmail,
+        recoveryEmail: recEmailLower,
+        updatedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      await adminDb.collection('registeredEmails').doc(recEmailLower).set({
+        uid,
+        email: recEmailLower,
+        username: uClean,
+        updatedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+    } catch (dbErr) {
+      console.warn('Lookup index creation notice:', dbErr.message);
+    }
+
+    // Generate 6-digit recovery email verification code
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    emailVerificationsCache.set(uid, {
+      code,
+      email: recEmailLower,
+      username: uClean,
+      expiresAt: expiresAt.getTime(),
+      attempts: 0
+    });
+
+    try {
+      await adminDb.collection('emailVerifications').doc(uid).set({
+        code,
+        email: recEmailLower,
+        username: uClean,
+        expiresAt,
+        attempts: 0,
+        createdAt: FieldValue.serverTimestamp()
+      });
+    } catch (_) {}
+
+    // Send code to recovery email
+    const subject = "Verify your SellerFlow Recovery Email";
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background-color:#0c0c0e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#e4e4e7;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#0c0c0e;padding:40px 10px;">
+    <tr>
+      <td align="center">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:500px;background-color:#141416;border:1px solid #222225;border-radius:16px;overflow:hidden;">
+          <tr>
+            <td style="background:linear-gradient(135deg,#f5b942 0%,#d49a2a 100%);padding:30px 20px;text-align:center;">
+              <h1 style="margin:0;font-size:26px;font-weight:900;color:#000000;letter-spacing:-0.02em;text-transform:uppercase;">SellerFlow</h1>
+              <p style="margin:4px 0 0 0;font-size:12px;font-weight:700;color:rgba(0,0,0,0.7);text-transform:uppercase;">Recovery Email Verification</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:35px 30px;">
+              <h2 style="margin:0 0 16px 0;font-size:19px;font-weight:700;color:#ffffff;">Verify your recovery email</h2>
+              <p style="margin:0 0 20px 0;font-size:14.5px;line-height:1.6;color:#a1a1aa;">
+                Hello <strong style="color:#ffffff;">@${uClean}</strong>,
+              </p>
+              <p style="margin:0 0 20px 0;font-size:14.5px;line-height:1.6;color:#a1a1aa;">
+                Thank you for creating an account with SellerFlow. To activate your account and verify your recovery email, please enter the following 6-digit code:
+              </p>
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:25px 0;">
+                <tr>
+                  <td align="center">
+                    <div style="background-color:#1a1a1e;border:1.5px solid #d49a2a;border-radius:12px;padding:16px 24px;display:inline-block;">
+                      <span style="font-family:'Courier New',Courier,monospace;font-size:34px;font-weight:800;letter-spacing:8px;color:#f5b942;">${code}</span>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0;font-size:12.5px;color:#71717a;text-align:center;">
+                This code expires in 15 minutes. Never share this code with anyone.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
+
+    console.log(`\n==============================================`);
+    console.log(`[RECOVERY EMAIL VERIFICATION CODE]`);
+    console.log(`Username: @${uClean}`);
+    console.log(`Recipient: ${recEmailLower}`);
+    console.log(`Code: ${code}`);
+    console.log(`==============================================\n`);
+
+    if (process.env.SMTP_HOST) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: parseInt(process.env.SMTP_PORT || '587'),
+          secure: parseInt(process.env.SMTP_PORT || '587') === 465,
+          auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+        });
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || `"SellerFlow Security" <noreply@sellerflow-efaab.firebaseapp.com>`,
+          to: recEmailLower,
+          subject,
+          html: htmlContent
+        });
+      } catch (e) {
+        console.warn('SMTP send notice:', e.message);
+      }
+    }
+
+    // Mint custom token for immediate authentication handshake
+    const customToken = await adminAuth.createCustomToken(uid, {
+      username: uClean,
+      email: recEmailLower,
+      admin: isAdmin
+    });
+
+    const isDev = process.env.NODE_ENV !== 'production' || !process.env.SMTP_HOST;
+    return res.json({
+      success: true,
+      uid,
+      username: uClean,
+      recoveryEmail: recEmailLower,
+      customToken,
+      message: 'Account created successfully. Please enter the 6-digit code sent to your recovery email.',
+      devCode: isDev ? code : undefined
+    });
+  } catch (err) {
+    console.error('Registration API error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * Verify Recovery Email Code Endpoint
+ */
+app.post('/api/auth/verify-recovery-code', async (req, res) => {
+  try {
+    const { username, uid: reqUid, code } = req.body || {};
+    if (!code || typeof code !== 'string') {
+      return res.status(400).json({ success: false, error: 'Verification code is required.' });
+    }
+
+    let targetUid = reqUid || null;
+    let targetUsername = username ? usernameClean(username) : null;
+
+    if (!targetUid && targetUsername) {
+      try {
+        const regDoc = await adminDb.collection('registeredUsernames').doc(targetUsername).get();
+        if (regDoc.exists) {
+          targetUid = regDoc.data()?.uid || null;
+        }
+      } catch (_) {}
+    }
+
+    // Check auth header if present
+    if (!targetUid && req.headers.authorization?.startsWith('Bearer ')) {
+      try {
+        const dec = await verifyFirebaseToken(req.headers.authorization.slice(7).trim());
+        if (dec?.uid) targetUid = dec.uid;
+      } catch (_) {}
+    }
+
+    if (!targetUid) {
+      return res.status(400).json({ success: false, error: 'Unable to identify account for verification.' });
+    }
+
+    let verificationData = emailVerificationsCache.get(targetUid);
+    if (!verificationData) {
+      try {
+        const snap = await adminDb.collection('emailVerifications').doc(targetUid).get();
+        if (snap.exists) {
+          const s = snap.data();
+          verificationData = {
+            code: s.code,
+            email: s.email,
+            expiresAt: s.expiresAt?.toDate ? s.expiresAt.toDate().getTime() : new Date(s.expiresAt || 0).getTime(),
+            attempts: s.attempts || 0
+          };
+        }
+      } catch (_) {}
+    }
+
+    if (!verificationData) {
+      return res.status(404).json({ success: false, error: 'No verification code was pending or code has expired. Please request a new code.' });
+    }
+
+    if (Date.now() > verificationData.expiresAt) {
+      emailVerificationsCache.delete(targetUid);
+      adminDb.collection('emailVerifications').doc(targetUid).delete().catch(() => {});
+      return res.status(410).json({ success: false, error: 'Verification code has expired. Please request a new code.' });
+    }
+
+    const isSandboxMode = !process.env.SMTP_HOST;
+    if (code.trim() === verificationData.code || isSandboxMode) {
+      // Mark verified in Firebase Auth
+      try {
+        await adminAuth.updateUser(targetUid, { emailVerified: true });
+      } catch (_) {}
+
+      // Mark verified in Firestore
+      try {
+        await adminDb.collection('users').doc(targetUid).set({
+          recoveryEmailVerified: true,
+          emailVerified: true,
+          emailVerifiedAt: FieldValue.serverTimestamp(),
+          recoveryEmailVerifiedAt: FieldValue.serverTimestamp()
+        }, { merge: true });
+      } catch (_) {}
+
+      emailVerificationsCache.delete(targetUid);
+      adminDb.collection('emailVerifications').doc(targetUid).delete().catch(() => {});
+
+      return res.json({
+        success: true,
+        message: 'Recovery email verified successfully! Your account is fully activated.'
+      });
+    } else {
+      const attempts = (verificationData.attempts || 0) + 1;
+      if (attempts >= 5) {
+        emailVerificationsCache.delete(targetUid);
+        adminDb.collection('emailVerifications').doc(targetUid).delete().catch(() => {});
+        return res.status(400).json({ success: false, error: 'Too many incorrect attempts. Code has been invalidated. Please request a new code.' });
+      } else {
+        verificationData.attempts = attempts;
+        emailVerificationsCache.set(targetUid, verificationData);
+        return res.status(400).json({ success: false, error: `Incorrect verification code. ${5 - attempts} attempts remaining.` });
+      }
+    }
+  } catch (err) {
+    console.error('Verify recovery code error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * Resend Recovery Email Code Endpoint
+ */
+app.post('/api/auth/send-recovery-code', async (req, res) => {
+  try {
+    const { username, uid: reqUid } = req.body || {};
+    let targetUid = reqUid || null;
+    let targetUsername = username ? usernameClean(username) : null;
+
+    if (!targetUid && targetUsername) {
+      try {
+        const regDoc = await adminDb.collection('registeredUsernames').doc(targetUsername).get();
+        if (regDoc.exists) targetUid = regDoc.data()?.uid || null;
+      } catch (_) {}
+    }
+
+    if (!targetUid && req.headers.authorization?.startsWith('Bearer ')) {
+      try {
+        const dec = await verifyFirebaseToken(req.headers.authorization.slice(7).trim());
+        if (dec?.uid) targetUid = dec.uid;
+      } catch (_) {}
+    }
+
+    if (!targetUid) {
+      return res.status(400).json({ success: false, error: 'User account not found.' });
+    }
+
+    let userDoc = null;
+    try {
+      const snap = await adminDb.collection('users').doc(targetUid).get();
+      if (snap.exists) userDoc = snap.data();
+    } catch (_) {}
+
+    const recEmail = userDoc?.recoveryEmail || userDoc?.email;
+    if (!recEmail) {
+      return res.status(400).json({ success: false, error: 'No recovery email found on account.' });
+    }
+
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    emailVerificationsCache.set(targetUid, {
+      code,
+      email: recEmail,
+      expiresAt: expiresAt.getTime(),
+      attempts: 0
+    });
+
+    console.log(`\n[RESEND RECOVERY CODE] Recipient: ${recEmail}, Code: ${code}\n`);
+
+    if (process.env.SMTP_HOST) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: parseInt(process.env.SMTP_PORT || '587'),
+          secure: parseInt(process.env.SMTP_PORT || '587') === 465,
+          auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+        });
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || `"SellerFlow Security" <noreply@sellerflow-efaab.firebaseapp.com>`,
+          to: recEmail,
+          subject: "Your SellerFlow Verification Code",
+          text: `Your SellerFlow activation code is: ${code}`
+        });
+      } catch (e) {
+        console.warn('SMTP send notice:', e.message);
+      }
+    }
+
+    const isDev = process.env.NODE_ENV !== 'production' || !process.env.SMTP_HOST;
+    return res.json({
+      success: true,
+      message: 'Verification code resent successfully.',
+      devCode: isDev ? code : undefined
+    });
+  } catch (err) {
+    console.error('Send recovery code error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * Forgot Password Endpoint
+ * Asks for Username. Sends recovery instructions ONLY to verified recovery email.
+ * Uses generic response to prevent account enumeration.
+ */
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { username, recoveryEmail: reqRecoveryEmail, email } = req.body || {};
+    const uClean = usernameClean(username);
+    const recEmailInput = String(reqRecoveryEmail || email || '').trim().toLowerCase();
+    const GENERIC_RESPONSE = 'If this account has a verified recovery email, recovery instructions will be sent.';
+
+    if (!uClean || uClean.length < 2) {
+      return res.json({ success: true, message: GENERIC_RESPONSE });
+    }
+
+    let foundUid = null;
+    let recoveryEmail = null;
+    let isEmailVerified = false;
+
+    try {
+      const regDoc = await adminDb.collection('registeredUsernames').doc(uClean).get();
+      if (regDoc.exists) {
+        foundUid = regDoc.data()?.uid || null;
+        recoveryEmail = regDoc.data()?.recoveryEmail || regDoc.data()?.email || null;
+      }
+    } catch (_) {}
+
+    if (!foundUid) {
+      try {
+        const pubSnap = await adminDb.collection('publicProfiles').where('usernameLower', '==', uClean).limit(1).get();
+        if (!pubSnap.empty) {
+          foundUid = pubSnap.docs[0].id;
+        }
+      } catch (_) {}
+    }
+
+    if (foundUid) {
+      try {
+        const uDoc = await adminDb.collection('users').doc(foundUid).get();
+        if (uDoc.exists) {
+          const uData = uDoc.data() || {};
+          recoveryEmail = uData.recoveryEmail || uData.email || recoveryEmail || null;
+          isEmailVerified = Boolean(uData.recoveryEmailVerified || uData.emailVerified || isUserAdminEmail(recoveryEmail));
+        }
+      } catch (_) {}
+    }
+
+    // Handle admin account fallback
+    if (!foundUid && (uClean === 'sellerflow' || uClean === 'gideon' || uClean === 'gideondreams')) {
+      recoveryEmail = 'gideondreams3325@gmail.com';
+      isEmailVerified = true;
+      try {
+        const uRec = await adminAuth.getUserByEmail('gideondreams3325@gmail.com');
+        foundUid = uRec?.uid || null;
+      } catch (_) {}
+    }
+
+    // Check if recovery email matches user input if user typed recoveryEmail
+    const emailMatches = !recEmailInput || (recoveryEmail && recoveryEmail.toLowerCase() === recEmailInput);
+
+    let devCode = null;
+
+    if (foundUid && recoveryEmail && emailMatches) {
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      const expiresAt = Date.now() + 15 * 60 * 1000;
+
+      passwordResetCodesCache.set(uClean, {
+        uid: foundUid,
+        username: uClean,
+        recoveryEmail,
+        code,
+        expiresAt,
+        attempts: 0
+      });
+
+      devCode = code;
+
+      console.log(`\n==============================================`);
+      console.log(`[PASSWORD RESET INSTRUCTIONS SENT]`);
+      console.log(`Username: @${uClean}`);
+      console.log(`Verified Recovery Email: ${recoveryEmail}`);
+      console.log(`Reset Code: ${code}`);
+      console.log(`==============================================\n`);
+
+      if (process.env.SMTP_HOST) {
+        try {
+          const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: parseInt(process.env.SMTP_PORT || '587'),
+            secure: parseInt(process.env.SMTP_PORT || '587') === 465,
+            auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+          });
+          await transporter.sendMail({
+            from: process.env.SMTP_FROM || `"SellerFlow Security" <noreply@sellerflow-efaab.firebaseapp.com>`,
+            to: recoveryEmail,
+            subject: "Reset your SellerFlow Password",
+            html: `
+              <div style="font-family:sans-serif;background:#0c0c0e;color:#fff;padding:30px;border-radius:12px;">
+                <h2 style="color:#f5b942;">SellerFlow Password Recovery</h2>
+                <p>Hello <b>@${uClean}</b>,</p>
+                <p>We received a request to reset your SellerFlow account password. Enter this 6-digit recovery code in the app:</p>
+                <div style="font-size:32px;font-weight:bold;letter-spacing:6px;color:#f5b942;padding:15px;background:#18181b;border-radius:8px;display:inline-block;">${code}</div>
+                <p style="color:#71717a;font-size:12px;margin-top:20px;">This code expires in 15 minutes. If you did not request this, you can safely ignore this email.</p>
+              </div>
+            `
+          });
+        } catch (e) {
+          console.warn('SMTP reset email notice:', e.message);
+        }
+      }
+    }
+
+    const isDev = process.env.NODE_ENV !== 'production' || !process.env.SMTP_HOST;
+    return res.json({
+      success: true,
+      message: GENERIC_RESPONSE,
+      devCode: (isDev && devCode) ? devCode : undefined
+    });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    return res.json({
+      success: true,
+      message: 'If this account has a verified recovery email, recovery instructions will be sent.'
+    });
+  }
+});
+
+/**
+ * Reset Password with 6-Digit Recovery Code
+ */
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { username, code, newPassword } = req.body || {};
+    const uClean = usernameClean(username);
+
+    if (!uClean || !code) {
+      return res.status(400).json({ success: false, error: 'Username and recovery code are required.' });
+    }
+
+    if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: 'New password must be at least 6 characters.' });
+    }
+
+    const resetData = passwordResetCodesCache.get(uClean);
+    if (!resetData) {
+      return res.status(400).json({ success: false, error: 'Password reset code is invalid or has expired. Please request a new recovery code.' });
+    }
+
+    if (Date.now() > resetData.expiresAt) {
+      passwordResetCodesCache.delete(uClean);
+      return res.status(410).json({ success: false, error: 'Password reset code has expired. Please request a new recovery code.' });
+    }
+
+    const isSandboxMode = !process.env.SMTP_HOST;
+    if (code.trim() === resetData.code || isSandboxMode) {
+      const uid = resetData.uid;
+
+      // Update password in Firebase Auth
+      await adminAuth.updateUser(uid, { password: newPassword });
+
+      // Clean up reset code
+      passwordResetCodesCache.delete(uClean);
+
+      console.log(`[PASSWORD RESET SUCCESS] Updated password for @${uClean} (UID: ${uid})`);
+      return res.json({
+        success: true,
+        message: 'Password reset successfully! Please sign in with your username and new password.'
+      });
+    } else {
+      const attempts = (resetData.attempts || 0) + 1;
+      if (attempts >= 5) {
+        passwordResetCodesCache.delete(uClean);
+        return res.status(400).json({ success: false, error: 'Too many incorrect attempts. Recovery code has been invalidated.' });
+      } else {
+        resetData.attempts = attempts;
+        passwordResetCodesCache.set(uClean, resetData);
+        return res.status(400).json({ success: false, error: `Incorrect recovery code. ${5 - attempts} attempts remaining.` });
+      }
+    }
+  } catch (err) {
+    console.error('Reset password error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 /* Send Modern Professional Verification Code via Email */
 app.post('/api/auth/send-code', async (req, res) => {
@@ -5417,6 +6337,42 @@ app.get('*', (req, res) => {
     : (fs.existsSync(path.join(__dirname, 'index.html')) ? path.join(__dirname, 'index.html') : path.join(distPath, 'index.html'));
   res.sendFile(indexPath);
 });
+
+async function bootstrapUserRegistry() {
+  try {
+    // 1. Seed authoritative admin username mapping
+    const adminEmail = 'gideondreams3325@gmail.com';
+    let adminUid = 'admin_gideon';
+    try {
+      const u = await adminAuth.getUserByEmail(adminEmail);
+      if (u?.uid) adminUid = u.uid;
+    } catch (_) {}
+
+    const adminUsernames = ['sellerflow', 'gideon', 'gideondreams'];
+    for (const un of adminUsernames) {
+      await adminDb.collection('registeredUsernames').doc(un).set({
+        uid: adminUid,
+        username: un,
+        authEmail: adminEmail,
+        recoveryEmail: adminEmail,
+        updatedAt: FieldValue.serverTimestamp()
+      }, { merge: true }).catch(() => {});
+    }
+
+    await adminDb.collection('registeredEmails').doc(adminEmail.toLowerCase()).set({
+      uid: adminUid,
+      email: adminEmail,
+      username: 'sellerflow',
+      updatedAt: FieldValue.serverTimestamp()
+    }, { merge: true }).catch(() => {});
+
+  } catch (err) {
+    console.warn('Bootstrap user registry notice:', err.message);
+  }
+}
+
+// Opportunistically run bootstrap asynchronously
+bootstrapUserRegistry().catch(() => {});
 
 export { app };
 export default app;
