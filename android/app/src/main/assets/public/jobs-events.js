@@ -73,7 +73,7 @@ function getActiveProfile() {
 function getIsAdmin() {
   const u = getActiveUser();
   const email = (u && u.email) ? String(u.email).toLowerCase().trim() : '';
-  if (email === 'gideondreams3325@gmail.com') return true;
+  if (email === 'gideondreams3325@gmail.com' || email === 'gfappiah3325@gmail.com' || email === 'seller332532@gmail.com') return true;
   if (typeof window !== 'undefined' && typeof window.isUserAdminEmail === 'function' && email) {
     return window.isUserAdminEmail(email);
   }

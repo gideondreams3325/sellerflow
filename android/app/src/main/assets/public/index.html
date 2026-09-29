@@ -98,15 +98,15 @@
 :root {
   color-scheme: light !important;
   --sf-font-emoji: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", "Android Emoji", "Twemoji Mozilla", "EmojiOne Color", "EmojiSymbols";
-  --sf-font-fallback: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, system-ui, "Noto Sans", var(--sf-font-emoji), sans-serif;
-  --sf-font-primary: var(--sf-user-font, 'Plus Jakarta Sans'), 'Inter', var(--sf-font-fallback), var(--sf-font-emoji);
-  --sf-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", "Fira Code", var(--sf-font-emoji), monospace;
-  --sf-font-serif: 'Playfair Display', Georgia, "Times New Roman", "Noto Serif", var(--sf-font-emoji), serif;
+  --sf-font-fallback: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, system-ui, "Noto Sans", sans-serif;
+  --sf-font-primary: var(--sf-user-font, 'Plus Jakarta Sans'), 'Inter', var(--sf-font-fallback);
+  --sf-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", "Fira Code", monospace;
+  --sf-font-serif: 'Playfair Display', Georgia, "Times New Roman", "Noto Serif", serif;
   --sf-keyboard-height: 0px;
 }
 *{box-sizing:border-box;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-html,body{color-scheme:light!important;background-color:#FFFFFF!important;color:#111111!important;width:100%;max-width:100%;height:100%;height:100dvh;margin:0;padding:0;overflow:hidden!important;overscroll-behavior:none!important;-webkit-overflow-scrolling:touch;font-family:var(--sf-font-primary);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;font-variant-emoji:emoji}
-body{position:fixed;inset:0;background:#FFFFFF!important;color:#111111!important;font-family:var(--sf-font-primary);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;font-feature-settings:"cv02","cv03","cv04","cv11";font-variant-emoji:emoji}
+html,body{color-scheme:light!important;background-color:#FFFFFF!important;color:#111111!important;width:100%;max-width:100%;height:100%;height:100dvh;margin:0;padding:0;overflow:hidden!important;overscroll-behavior:none!important;-webkit-overflow-scrolling:touch;font-family:var(--sf-font-primary);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+body{position:fixed;inset:0;background:#FFFFFF!important;color:#111111!important;font-family:var(--sf-font-primary);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;font-variant-numeric:lining-nums proportional-nums;font-feature-settings:normal}
 .emoji-text, [data-emoji], .quick-caption-emoji, .drawer-emoji-item, .quick-comment-emoji {
   font-family: var(--sf-font-emoji), var(--sf-font-primary) !important;
   font-variant-emoji: emoji !important;
@@ -8592,9 +8592,6 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
         <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-[#111111] shrink-0 whitespace-nowrap shadow-sm">＋ Upload</button>
       </div>
     </div>
-    <div class="px-2.5 sm:px-4 py-2 shrink-0 bg-[#FFFFFF] z-10 border-b border-[#E6E6E6]">
-      ${renderQuickAccessNav('feed')}
-    </div>
     <div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden">
       <div class="reel-feed flex-1 min-h-0 w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
         ${feedPosts.length ? feedPosts.map((p, idx)=>postCard(p, idx)).join('') : (window._sfFeedInitialLoadDone ? `
@@ -8696,11 +8693,81 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
   if(typeof updateForYouWakeLock === 'function') updateForYouWakeLock();
 }
 
+// Infinite feed scroll & pagination state
+window._sfFeedLastVisibleDoc = null;
+window._sfFeedIsLoadingMore = false;
+window._sfFeedHasMore = true;
+
+const isEligibleFeedPost = (p) => {
+  if (!p || !p.id) return false;
+  if (isPostRemovedBySecurity(p)) return false;
+  if (p.status === 'taken_down' || p.status === 'removed' || p.status === 'hidden' || p.hidden === true || p.isDeleted === true) return false;
+  if (p.reviewStatus === 'violation' || p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down') return false;
+  return true;
+};
+
+async function fetchMoreFeedPosts() {
+  if (window._sfFeedIsLoadingMore || !window._sfFeedHasMore || !db) return;
+  window._sfFeedIsLoadingMore = true;
+  try {
+    const feedEl = document.getElementById('reelFeed');
+    if (!feedEl) return;
+    
+    let q;
+    if (window._sfFeedLastVisibleDoc) {
+      q = query(collection(db, 'posts'), startAfter(window._sfFeedLastVisibleDoc), limit(30));
+    } else {
+      q = query(collection(db, 'posts'), limit(30));
+    }
+    
+    const snap = await getDocs(q);
+    if (snap.empty || snap.docs.length === 0) {
+      window._sfFeedHasMore = false;
+      return;
+    }
+    
+    window._sfFeedLastVisibleDoc = snap.docs[snap.docs.length - 1];
+    const existingIds = new Set((_cachedFeedPosts || []).map(p => p.id));
+    
+    const newPosts = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(p => isEligibleFeedPost(p) && !existingIds.has(p.id));
+    
+    if (newPosts.length === 0 && snap.docs.length < 30) {
+      window._sfFeedHasMore = false;
+    }
+    
+    if (newPosts.length > 0) {
+      _cachedFeedPosts = [...(_cachedFeedPosts || []), ...newPosts];
+      const startIdx = feedEl.querySelectorAll('.reel-card').length;
+      
+      const fragment = document.createDocumentFragment();
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = newPosts.map((p, i) => postCard(p, startIdx + i)).join('');
+      
+      while (tempDiv.firstChild) {
+        fragment.appendChild(tempDiv.firstChild);
+      }
+      feedEl.appendChild(fragment);
+      
+      // Wire up engagement handlers for newly appended cards
+      if (typeof ensureFeedStoresChecked === 'function') ensureFeedStoresChecked(newPosts).catch(()=>{});
+      if (typeof ensureFeedProfilesChecked === 'function') ensureFeedProfilesChecked(newPosts).catch(()=>{});
+      setupReelPlayback();
+    }
+  } catch(err) {
+    console.warn('fetchMoreFeedPosts warning:', err);
+  } finally {
+    window._sfFeedIsLoadingMore = false;
+  }
+}
+window.fetchMoreFeedPosts = fetchMoreFeedPosts;
+
 async function renderFeed(targetPostId, options){
   // 1. Instant Cache-First Render (0ms):
   let renderedFromCache = false;
   if(_cachedFeedPosts && _cachedFeedPosts.length > 0 && !targetPostId){
-    const cleanCached = _cachedFeedPosts.filter(p => !isPostRemovedBySecurity(p));
+    const cleanCached = _cachedFeedPosts.filter(isEligibleFeedPost);
     if(cleanCached.length > 0){
       _renderFeedHTML(cleanCached, targetPostId, options);
       renderedFromCache = true;
@@ -8712,27 +8779,33 @@ async function renderFeed(targetPostId, options){
     try {
       if(!db){
         if(!renderedFromCache){
-          const cleanFallback = (_cachedFeedPosts || []).filter(p => !isPostRemovedBySecurity(p));
+          const cleanFallback = (_cachedFeedPosts || []).filter(isEligibleFeedPost);
           _renderFeedHTML(cleanFallback, targetPostId, options);
         }
         return;
       }
-      const fetchPromise = getDocs(query(collection(db,'posts'),limit(100)));
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Feed query timeout')), 2800));
+      const fetchPromise = getDocs(query(collection(db,'posts'), limit(60)));
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Feed query timeout')), 3500));
       const snap = await Promise.race([fetchPromise, timeoutPromise]);
+      
+      if (snap && snap.docs && snap.docs.length > 0) {
+        window._sfFeedLastVisibleDoc = snap.docs[snap.docs.length - 1];
+        window._sfFeedHasMore = snap.docs.length >= 60;
+      }
+      
       const posts = snap.docs.map(d=>({id:d.id,...d.data()}))
-        .filter(p=>p.sellerId && !isPostRemovedBySecurity(p) && (p.status==='published'||p.status==='approved')&&p.status!=='hidden'&&p.reviewStatus!=='violation')
+        .filter(isEligibleFeedPost)
         .sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
       
       _cachedFeedPosts = posts;
       window._sfFeedInitialLoadDone = true;
-      try { localStorage.setItem('sf_cached_feed_posts', JSON.stringify(posts.slice(0, 30))); } catch(_) {}
+      try { localStorage.setItem('sf_cached_feed_posts', JSON.stringify(posts.slice(0, 40))); } catch(_) {}
       
       let feedPosts = [...posts];
       if(targetPostId && !feedPosts.some(p=>p.id===targetPostId)){
         try{
           const s = await getDoc(doc(db,'posts',targetPostId));
-          if(snapshotExists(s) && !isPostRemovedBySecurity({id: s.id, ...s.data()}) && s.data().status!=='hidden'&&s.data().reviewStatus!=='violation') feedPosts.unshift({id:s.id,...s.data()});
+          if(snapshotExists(s) && isEligibleFeedPost({id: s.id, ...s.data()})) feedPosts.unshift({id:s.id,...s.data()});
         }catch(_){}
       } else if(targetPostId){
         const idx = feedPosts.findIndex(p=>p.id===targetPostId);
@@ -8750,7 +8823,7 @@ async function renderFeed(targetPostId, options){
       console.warn('Feed fetch fallback:', e);
       window._sfFeedInitialLoadDone = true;
       if(!renderedFromCache){
-        const cleanFallback = (_cachedFeedPosts || []).filter(p => !isPostRemovedBySecurity(p));
+        const cleanFallback = (_cachedFeedPosts || []).filter(isEligibleFeedPost);
         _renderFeedHTML(cleanFallback, targetPostId, options);
       }
     }
@@ -9602,6 +9675,10 @@ function setupReelPlayback(targetPostId){
       });
       if(candidate && candidate.intersectionRatio >= 0.55){
         activateCard(candidate.target);
+        const cardIndex = cards.indexOf(candidate.target);
+        if(cardIndex >= cards.length - 4 && typeof fetchMoreFeedPosts === 'function'){
+          fetchMoreFeedPosts();
+        }
       }
     },{root:feedEl,threshold:[0.2, 0.55, 0.85]});
     cards.forEach(c=>io.observe(c));
@@ -9652,6 +9729,12 @@ function setupReelPlayback(targetPostId){
       if(currentPage !== 'feed') return;
       const top = feedEl.scrollTop;
       const h = feedEl.clientHeight || window.innerHeight || 1;
+      
+      // Auto-paginate when scrolling near bottom
+      if (top + h >= feedEl.scrollHeight - 1400) {
+        if (typeof fetchMoreFeedPosts === 'function') fetchMoreFeedPosts();
+      }
+
       if(currentActiveCard){
         const activeTop = currentActiveCard.offsetTop;
         if(Math.abs(top - activeTop) > h * 0.45){
@@ -24763,11 +24846,11 @@ init();
     }
 
     const posts = await getRankedPosts(!!options?.forceRefresh);
-    let feedPosts = posts.filter(p => !isPostRemovedBySecurity(p));
+    let feedPosts = posts.filter(isEligibleFeedPost);
     if(targetPostId && !feedPosts.some(p=>p.id===targetPostId)){
       try{
         const s=await getDoc(doc(db,'posts',targetPostId));
-        if(snapshotExists(s) && !isPostRemovedBySecurity({id: s.id, ...s.data()}) && s.data().status!=='hidden'&&s.data().reviewStatus!=='violation')feedPosts.unshift({id:s.id,...s.data()});
+        if(snapshotExists(s) && isEligibleFeedPost({id: s.id, ...s.data()}))feedPosts.unshift({id:s.id,...s.data()});
       }catch(_){}
     } else if(targetPostId){
       const idx=feedPosts.findIndex(p=>p.id===targetPostId);
@@ -24776,243 +24859,9 @@ init();
         feedPosts.unshift(tp);
       }
     }
-    const fromProfile=options?.fromProfile;
-    const BATCH_SIZE = 12;
-    let currentlyRendered = Math.min(BATCH_SIZE, feedPosts.length);
-    const initialCards = feedPosts.slice(0, currentlyRendered);
-
-    $('page').innerHTML=`<div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-gray-200 shrink-0 bg-white/90 z-10">
-      <div class="flex items-center gap-2 min-w-0">
-        ${fromProfile?`<button type="button" id="feedBackProfile" class="border border-gray-200 hover:border-gold px-2.5 py-1 rounded-xl text-xs font-bold mr-1 shrink-0 whitespace-nowrap">← Profile</button>`:''}
-        <h1 class="text-base sm:text-lg font-black tracking-tight text-gray-900 whitespace-nowrap">For You</h1>
-        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-400 font-semibold shrink-0" title="Real-time live engagement active">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live
-        </span>
-      </div>
-      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-        <button type="button" id="feedRefreshBtn" class="border border-gray-200 hover:border-gold px-2.5 py-1.5 rounded-xl text-xs font-bold text-gray-700 hover:text-gray-900 bg-white flex items-center gap-1.5 transition" title="Refresh feed & engagement metrics">
-          <span class="text-xs transition-transform inline-block" id="feedRefreshIcon">🔄</span>
-          <span class="hidden sm:inline">Refresh</span>
-        </button>
-        <div class="hidden sm:inline-flex items-center gap-1 bg-white p-0.5 rounded-xl border border-[#2a2a2e]" title="Scroll reels (or use ↑ / ↓ arrow keys)">
-          <button type="button" id="feedPrevBtn" class="feed-nav-btn feed-prev-btn" title="Previous video (↑ or K)">▲</button>
-          <button type="button" id="feedNextBtn" class="feed-nav-btn feed-next-btn" title="Next video (↓ or J)">▼</button>
-        </div>
-        <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-black shrink-0 whitespace-nowrap">＋ Upload</button>
-      </div>
-    </div>
-    <div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden">
-      <div class="reel-feed flex-1 min-h-0 w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
-        ${feedPosts.length?initialCards.map((p, idx)=>postCard(p, idx)).join(''):`<div class="h-full flex items-center justify-center p-6"><div class="card p-8 text-center max-w-md"><div class="text-5xl mb-3">🎬</div><h2 class="text-xl font-bold">Your For You feed is ready</h2><p class="muted mt-2 text-sm">Share a safe photo or video to start building your audience.</p><button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button></div></div>`}
-      </div>
-      <!-- Desktop floating smooth scroll buttons -->
-      <aside class="hidden lg:flex flex-col gap-2.5 fixed right-4 xl:right-10 top-1/2 -translate-y-1/2 z-30 pointer-events-auto" aria-label="Reel Navigation">
-        <button type="button" class="feed-floating-btn feed-prev-btn" title="Previous video (↑ or K)" aria-label="Previous video">
-          <svg class="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/></svg>
-        </button>
-        <button type="button" class="feed-floating-btn feed-next-btn" title="Next video (↓ or J)" aria-label="Next video">
-          <svg class="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-        </button>
-      </aside>
-    </div>`;
-    $('feedRefreshBtn')?.addEventListener('click', async () => {
-      const btn = $('feedRefreshBtn');
-      const icon = $('feedRefreshIcon');
-      if(btn) btn.disabled = true;
-      if(icon) icon.classList.add('animate-spin');
-      try {
-        toast('Refreshing latest posts & metrics…', 'info', 1500);
-        await renderFeed(null, { forceRefresh: true });
-        toast('For You feed updated', 'success', 2000);
-      } catch(err) {
-        toast('Refresh failed: ' + (err?.message || 'Network error'), 'error');
-      } finally {
-        if(btn) btn.disabled = false;
-        if(icon) icon.classList.remove('animate-spin');
-      }
-    });
-    $('feedBackProfile')?.addEventListener('click',()=>navigate('profile'));
-    $('openFeedUpload')?.addEventListener('click',()=>currentUser?openPostModal():showAuthPrompt('upload videos or photos to For You'));
-    $('openFeedUploadEmpty')?.addEventListener('click',()=>currentUser?openPostModal():showAuthPrompt('upload videos or photos to For You'));
     
-    function triggerLikeAnimation(card){
-      const overlay = card?.querySelector('.reel-heart-overlay');
-      if(!overlay) return;
-      overlay.style.opacity = '1';
-      const span = overlay.querySelector('span');
-      if(span){
-        span.style.transform = 'scale(1.35)';
-        setTimeout(()=>{ span.style.transform = 'scale(1)'; }, 160);
-      }
-      setTimeout(()=>{ overlay.style.opacity = '0'; }, 700);
-    }
-    window.triggerLikeAnimation = triggerLikeAnimation;
-
-    let lastMediaTap = 0;
-    // Delegated click interactions for smooth operation on all existing and newly appended cards
-    const feedEl = $('reelFeed');
-    feedEl?.addEventListener('click', (e) => {
-      const mediaWrap = e.target.closest('.reel-media-wrap');
-      if(mediaWrap){
-        const now = Date.now();
-        if(now - lastMediaTap < 300 && now - lastMediaTap > 0){
-          e.stopPropagation();
-          const card = mediaWrap.closest('.reel-card');
-          if(card){
-            triggerLikeAnimation(card);
-            const likeBtn = card.querySelector('[data-post-action="like"]');
-            if(likeBtn && !likeBtn.classList.contains('is-liked')){
-              likeBtn.click();
-            } else if(likeBtn) {
-              triggerLikeAnimation(card);
-            }
-          }
-        }
-        lastMediaTap = now;
-      }
-      const actBtn = e.target.closest('[data-post-action]');
-      if(actBtn){
-        e.stopPropagation();
-        postAction({ currentTarget: actBtn });
-        return;
-      }
-      const folBtn = e.target.closest('[data-reel-follow]');
-      if(folBtn){
-        e.stopPropagation();
-        const sId = folBtn.dataset.reelFollow;
-        if(window.recordFeedEvent) window.recordFeedEvent('FOLLOW', { sellerId: sId });
-        toggleFollowSeller(sId);
-        return;
-      }
-      const openBtn = e.target.closest('[data-open-seller]');
-      if(openBtn){
-        e.stopPropagation();
-        const sId = openBtn.dataset.openSeller;
-        if(window.recordFeedEvent) window.recordFeedEvent('PROFILE_OPEN', { sellerId: sId });
-        openUserProfile(sId);
-        return;
-      }
-      const jobPostBtn = e.target.closest('[data-open-job-post]');
-      if(jobPostBtn){
-        e.stopPropagation();
-        const pId = jobPostBtn.dataset.openJobPost;
-        if(typeof window.openJobDetailModal === 'function'){
-          window.openJobDetailModal(pId);
-        } else if(typeof navigate === 'function'){
-          navigate('jobs');
-        }
-        return;
-      }
-      const eventPostBtn = e.target.closest('[data-open-event-post]');
-      if(eventPostBtn){
-        e.stopPropagation();
-        const pId = eventPostBtn.dataset.openEventPost;
-        if(typeof window.openEventDetailModal === 'function'){
-          window.openEventDetailModal(pId);
-        } else if(typeof navigate === 'function'){
-          navigate('events');
-        }
-        return;
-      }
-      const orderBtn = e.target.closest('[data-order-store]');
-      if(orderBtn){
-        e.stopPropagation();
-        const sId = orderBtn.dataset.orderStore;
-        if(window.recordFeedEvent) window.recordFeedEvent('ORDER_STORE_TAP', { sellerId: sId });
-        openStore(sId);
-        return;
-      }
-      const scamBtn = e.target.closest('[data-scam-notice]');
-      if(scamBtn){
-        e.stopPropagation();
-        const sId = scamBtn.dataset.scamNotice;
-        showNoStoreScamNotice(sId);
-        return;
-      }
-      const copyBtn = e.target.closest('[data-copyright-info]');
-      if(copyBtn){
-        e.stopPropagation();
-        showCopyrightNoticeModal(copyBtn.dataset.copyrightInfo);
-        return;
-      }
-      const adminReelTakedown = e.target.closest('[data-admin-takedown-reel]');
-      if(adminReelTakedown){
-        e.stopPropagation();
-        const pId = adminReelTakedown.dataset.adminTakedownReel;
-        if(pId && typeof adminTakeDown === 'function') adminTakeDown(pId);
-        return;
-      }
-      const userReelDelete = e.target.closest('[data-user-delete-reel]');
-      if(userReelDelete){
-        e.stopPropagation();
-        const pId = userReelDelete.dataset.userDeleteReel;
-        if(pId && typeof deleteUserPost === 'function') deleteUserPost(pId);
-        return;
-      }
-    });
-
-    // Real-time security moderation & live engagement sync listener:
-    // Instantly syncs likes, comments, saves, shares and purges taken down posts across devices
-    if(window._sfFeedSecurityUnsub) {
-      try { window._sfFeedSecurityUnsub(); } catch(_) {}
-      window._sfFeedSecurityUnsub = null;
-    }
-    try {
-      window._sfFeedSecurityUnsub = onSnapshot(query(collection(db, 'posts'), limit(100)), (snap) => {
-        snap.docChanges().forEach(change => {
-          const id = change.doc.id;
-          const d = change.doc.data();
-          if (change.type === 'removed' || isPostRemovedBySecurity({ id, ...d })) {
-            purgeAndHidePostImmediately(id, 'Real-time security sync');
-          } else {
-            // Live real-time engagement updates
-            updateReelEngagementInDOM(id, d);
-          }
-        });
-      }, (err) => {
-        console.warn('Real-time feed engagement & security sync:', err?.message);
-      });
-    } catch(_) {}
-
-    // Progressive infinite-scroll append for subsequent batches
-    let isAppending = false;
-    const loadNextBatch = () => {
-      if(isAppending || currentlyRendered >= feedPosts.length || !feedEl) return;
-      isAppending = true;
-      const nextBatch = feedPosts.slice(currentlyRendered, currentlyRendered + BATCH_SIZE);
-      const startIndex = currentlyRendered;
-      currentlyRendered += nextBatch.length;
-
-      const tempContainer = document.createElement('div');
-      tempContainer.innerHTML = nextBatch.map((p, idx) => postCard(p, startIndex + idx)).join('');
-      while(tempContainer.firstElementChild){
-        const cardNode = tempContainer.firstElementChild;
-        feedEl.appendChild(cardNode);
-        if(window._sfRegisterReelCard) window._sfRegisterReelCard(cardNode);
-      }
-
-      if(typeof ensureFeedStoresChecked === 'function') {
-        ensureFeedStoresChecked(nextBatch).catch(()=>{});
-      }
-      if(typeof ensureFeedProfilesChecked === 'function') {
-        ensureFeedProfilesChecked(nextBatch).catch(()=>{});
-      }
-      isAppending = false;
-    };
-
-    feedEl?.addEventListener('scroll', () => {
-      if(feedEl.scrollTop + feedEl.clientHeight >= feedEl.scrollHeight - 700){
-        loadNextBatch();
-      }
-    }, { passive: true });
-
-    if(typeof ensureFeedStoresChecked === 'function') {
-      ensureFeedStoresChecked(initialCards).catch(()=>{});
-    }
-    if(typeof ensureFeedProfilesChecked === 'function') {
-      ensureFeedProfilesChecked(initialCards).catch(()=>{});
-    }
-    setupReelPlayback(targetPostId);
+    _cachedFeedPosts = feedPosts;
+    _renderFeedHTML(feedPosts, targetPostId, options);
   };
 
   postAction=async function(e){
@@ -25514,7 +25363,7 @@ init();
           <span>Select photo or video</span>
           <span class="text-[11px] text-gold font-medium">Videos up to 3 mins (180s max)</span>
         </label>
-        <input id="postFile" type="file" accept="image/*,video/mp4,video/webm,video/quicktime" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-700 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-gold file:text-black hover:file:opacity-90 cursor-pointer">
+        <input id="postFile" type="file" accept="image/*,video/*,video/mp4,video/webm,video/quicktime,video/mov,video/m4v,video/3gpp,video/x-matroska,video/avi" class="w-full p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-700 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-gold file:text-black hover:file:opacity-90 cursor-pointer">
       </div>
       <div id="editorArea" class="mt-4"></div>
       
@@ -30574,18 +30423,16 @@ init();
       } catch (_) {}
     }
 
-    // Proactively ensure admin role and permissions in Firestore
+    // Proactively ensure admin role and permissions in Firestore (non-blocking in background)
     if(u && u.uid && em && isUserAdminEmail(em)){
-      try {
-        await Promise.all([
-          setDoc(doc(db, 'admins', u.uid), { uid: u.uid, email: 'gideondreams3325@gmail.com', role: 'admin', updatedAt: serverTimestamp() }, { merge: true }).catch(()=>{}),
-          setDoc(doc(db, 'users', u.uid), { role: 'admin', isAdmin: true, verified: true, verificationStatus: 'approved' }, { merge: true }).catch(()=>{}),
-          setDoc(doc(db, 'publicProfiles', u.uid), { role: 'admin', isAdmin: true, verified: true }, { merge: true }).catch(()=>{})
-        ]);
-      } catch(_) {}
+      Promise.all([
+        setDoc(doc(db, 'admins', u.uid), { uid: u.uid, email: 'gideondreams3325@gmail.com', role: 'admin', updatedAt: serverTimestamp() }, { merge: true }),
+        setDoc(doc(db, 'users', u.uid), { role: 'admin', isAdmin: true, verified: true, verificationStatus: 'approved' }, { merge: true }),
+        setDoc(doc(db, 'publicProfiles', u.uid), { role: 'admin', isAdmin: true, verified: true }, { merge: true })
+      ]).catch(()=>{});
     }
 
-    // Parallel fetch from Direct Firestore + Backend Admin Overview Route
+    // Parallel fetch from Direct Firestore with fast batch limits
     const [
       directUsersSnap,
       directPublicProfilesSnap,
@@ -30598,74 +30445,46 @@ init();
       directKycSnap,
       directOrdersSnap,
       directJobsSnap,
-      directEventsSnap,
-      apiOverviewRes
+      directEventsSnap
     ] = await Promise.all([
-      getDocs(query(collection(db, 'users'), limit(300))).catch(e => {
-        console.warn('Admin users query warning:', { code: e?.code || 'unknown', message: e?.message || String(e), hasAuthUser: !!auth?.currentUser, isAdminDetected: isAdmin });
+      getDocs(query(collection(db, 'users'), limit(150))).catch(e => {
+        console.warn('Admin users query notice:', e?.message || String(e));
         return { docs: [], size: 0 };
       }),
-      getDocs(query(collection(db, 'publicProfiles'), limit(300))).catch(e => {
-        console.warn('Admin public profiles warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+      getDocs(query(collection(db, 'publicProfiles'), limit(150))).catch(e => {
         return { docs: [], size: 0 };
       }),
-      getDocs(query(collection(db, 'posts'), limit(250))).catch(e => {
-        console.warn('Admin posts query warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+      getDocs(query(collection(db, 'posts'), limit(150))).catch(e => {
         return { docs: [], size: 0 };
       }),
-      getDocs(query(collection(db, 'scamReports'), limit(100))).catch(e => {
-        console.warn('Admin scam reports warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+      getDocs(query(collection(db, 'scamReports'), limit(60))).catch(e => {
         return { docs: [], size: 0 };
       }),
       getDoc(doc(db, 'settings', 'terms')).catch(() => null),
-      getDocs(query(collection(db, 'stores'), limit(300))).catch(e => {
-        console.warn('Admin stores query warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+      getDocs(query(collection(db, 'stores'), limit(150))).catch(e => {
         return { docs: [], size: 0 };
       }),
-      getDocs(query(collection(db, 'products'), limit(300))).catch(e => {
-        console.warn('Admin products query warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+      getDocs(query(collection(db, 'products'), limit(150))).catch(e => {
         return { docs: [], size: 0 };
       }),
-      getDocs(query(collection(db, 'fraudReports'), limit(200))).catch(e => {
-        console.warn('Admin fraud reports warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+      getDocs(query(collection(db, 'fraudReports'), limit(80))).catch(e => {
         return { docs: [], size: 0 };
       }),
-      getDocs(query(collection(db, 'buyerKycRecords'), limit(300))).catch(e => {
-        console.warn('Admin buyerKycRecords query warning:', { code: e?.code || 'unknown', message: e?.message || String(e), hasAuthUser: !!auth?.currentUser, isAdminDetected: isAdmin });
+      getDocs(query(collection(db, 'buyerKycRecords'), limit(150))).catch(e => {
         return { docs: [], size: 0 };
       }),
-      getDocs(query(collection(db, 'orders'), limit(300))).catch(e => {
-        console.warn('Admin orders query warning:', { code: e?.code || 'unknown', message: e?.message || String(e), hasAuthUser: !!auth?.currentUser, isAdminDetected: isAdmin });
+      getDocs(query(collection(db, 'orders'), limit(150))).catch(e => {
         return { docs: [], size: 0 };
       }),
-      getDocs(query(collection(db, 'jobs'), limit(300))).catch(e => {
-        console.warn('Admin jobs query warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+      getDocs(query(collection(db, 'jobs'), limit(100))).catch(e => {
         return { docs: [], size: 0 };
       }),
-      getDocs(query(collection(db, 'events'), limit(300))).catch(e => {
-        console.warn('Admin events query warning:', { code: e?.code || 'unknown', message: e?.message || String(e) });
+      getDocs(query(collection(db, 'events'), limit(100))).catch(e => {
         return { docs: [], size: 0 };
-      }),
-      (async () => {
-        try {
-          const url = (typeof getSfApiUrl === 'function') ? getSfApiUrl('/api/admin/overview-data') : '/api/admin/overview-data';
-          const headers = { 'Content-Type': 'application/json' };
-          if (idToken) headers['Authorization'] = 'Bearer ' + idToken;
-          const r = await fetch(url, { headers });
-          if (r.ok) {
-            const j = await r.json();
-            return j && j.data ? j.data : null;
-          } else {
-            console.warn('Admin overview-data API non-ok status:', { status: r.status, statusText: r.statusText, hasToken: !!idToken });
-          }
-        } catch (apiErr) {
-          console.warn('Admin overview-data API network notice:', { message: apiErr?.message || String(apiErr), hasToken: !!idToken });
-        }
-        return null;
-      })()
+      })
     ]);
 
-    // Helper to merge Firestore snapshots and API records into unified doc collection
+    // Helper to wrap Firestore snapshots into unified doc collection
     function mergeToDocSnap(directSnap, apiArray = []) {
       const map = new Map();
       if (directSnap && directSnap.docs) {
@@ -30694,7 +30513,7 @@ init();
       };
     }
 
-    // Merge users from users collection, publicProfiles collection, in-memory cache, and API overview data
+    // Merge users from users collection, publicProfiles collection, and in-memory cache
     const userMap = new Map();
     if (directPublicProfilesSnap && directPublicProfilesSnap.docs) {
       directPublicProfilesSnap.docs.forEach(d => {
@@ -30715,15 +30534,6 @@ init();
         }
       });
     }
-    if (apiOverviewRes && Array.isArray(apiOverviewRes.users)) {
-      apiOverviewRes.users.forEach(item => {
-        if (item && (item.id || item.uid)) {
-          const id = item.id || item.uid;
-          const prev = userMap.get(id) || {};
-          userMap.set(id, { ...prev, ...item, id, uid: id });
-        }
-      });
-    }
     const mergedUserDocs = Array.from(userMap.entries()).map(([id, data]) => ({
       id,
       data: () => data,
@@ -30736,15 +30546,15 @@ init();
       forEach: (fn) => mergedUserDocs.forEach(fn)
     };
 
-    const posts = mergeToDocSnap(directPostsSnap, apiOverviewRes?.posts);
-    const reports = mergeToDocSnap(directReportsSnap, apiOverviewRes?.scamReports);
-    const storesSnap = mergeToDocSnap(directStoresSnap, apiOverviewRes?.stores);
-    const productsSnap = mergeToDocSnap(directProductsSnap, apiOverviewRes?.products);
-    const fraudSnap = mergeToDocSnap(directFraudSnap, apiOverviewRes?.fraudReports);
-    const kycSnap = mergeToDocSnap(directKycSnap, apiOverviewRes?.buyerKycRecords);
-    const ordersSnap = mergeToDocSnap(directOrdersSnap, apiOverviewRes?.orders);
-    const jobsSnap = mergeToDocSnap(directJobsSnap, apiOverviewRes?.jobs);
-    const eventsSnap = mergeToDocSnap(directEventsSnap, apiOverviewRes?.events);
+    const posts = mergeToDocSnap(directPostsSnap);
+    const reports = mergeToDocSnap(directReportsSnap);
+    const storesSnap = mergeToDocSnap(directStoresSnap);
+    const productsSnap = mergeToDocSnap(directProductsSnap);
+    const fraudSnap = mergeToDocSnap(directFraudSnap);
+    const kycSnap = mergeToDocSnap(directKycSnap);
+    const ordersSnap = mergeToDocSnap(directOrdersSnap);
+    const jobsSnap = mergeToDocSnap(directJobsSnap);
+    const eventsSnap = mergeToDocSnap(directEventsSnap);
 
     // Build unified Buyer Ghana Card records from buyerKycRecords and users collection
     const kycMap = new Map();
