@@ -336,6 +336,24 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 }
 
 /* ==========================================================================
+   SELLERFLOW CHOICE SHEET & CUSTOM DROPDOWN SYSTEM
+   ========================================================================== */
+.sf-choice-sheet-enter {
+  animation: sfSheetSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.sf-choice-sheet-leave {
+  animation: sfSheetSlideDown 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+@keyframes sfSheetSlideUp {
+  from { opacity: 0; transform: translateY(40px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes sfSheetSlideDown {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(40px) scale(0.97); }
+}
+
+/* ==========================================================================
    SELLERFLOW STOREFRONT THEME CUSTOMIZER & CSS VARIABLES SYSTEM
    Allows Ghanaian merchants to select custom brand colors for their storefront,
    which are dynamically applied via CSS variables.
@@ -5168,26 +5186,7 @@ function checkVideoDuration(file, maxSeconds=60){
 async function fileToBase64(file) {
   if (!file) throw new Error('No file provided');
 
-  // Method A: ArrayBuffer conversion (fast, reliable across all mobile browsers & Android WebView)
-  try {
-    if (typeof file.arrayBuffer === 'function') {
-      const buffer = await file.arrayBuffer();
-      const bytes = new Uint8Array(buffer);
-      let binary = '';
-      const len = bytes.byteLength;
-      const chunkSize = 8192;
-      for (let i = 0; i < len; i += chunkSize) {
-        binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunkSize, len)));
-      }
-      const b64 = btoa(binary);
-      const mime = file.type || 'image/jpeg';
-      return `data:${mime};base64,${b64}`;
-    }
-  } catch (abErr) {
-    console.warn('ArrayBuffer to base64 fallback notice:', abErr);
-  }
-
-  // Method B: Standard FileReader
+  // Fast Native FileReader (runs in browser engine C++, does not freeze JS thread)
   try {
     const dataUrl = await new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -5198,10 +5197,10 @@ async function fileToBase64(file) {
     });
     if (dataUrl) return dataUrl;
   } catch (frErr) {
-    console.warn('FileReader fallback notice:', frErr);
+    console.warn('FileReader notice:', frErr);
   }
 
-  // Method C: Image + Canvas (for images)
+  // Fallback for image canvas
   if (file.type && file.type.startsWith('image/')) {
     try {
       const dataUrl = await new Promise((resolve, reject) => {
@@ -5211,13 +5210,12 @@ async function fileToBase64(file) {
           URL.revokeObjectURL(url);
           try {
             const canvas = document.createElement('canvas');
-            canvas.width = img.naturalWidth || img.width || 400;
-            canvas.height = img.naturalHeight || img.height || 400;
+            canvas.width = Math.min(img.naturalWidth || img.width || 400, 1200);
+            canvas.height = Math.min(img.naturalHeight || img.height || 400, 1200);
             const ctx = canvas.getContext('2d');
             if (!ctx) return reject(new Error('Canvas context failed'));
-            ctx.drawImage(img, 0, 0);
-            const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-            resolve(canvas.toDataURL(mime, 0.85));
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/webp', 0.82));
           } catch (cErr) {
             reject(cErr);
           }
@@ -5229,147 +5227,282 @@ async function fileToBase64(file) {
         img.src = url;
       });
       if (dataUrl) return dataUrl;
-    } catch (imgErr) {
-      console.warn('Image canvas fallback notice:', imgErr);
-    }
+    } catch (_) {}
   }
 
   throw new Error('Unable to process file');
 }
 window.fileToBase64 = fileToBase64;
 
+/* =========================================================================
+   UNIVERSAL MEDIA UPLOADING OVERLAY & PROGRESS CONTROLLER
+   Ensures that whenever any picture, video, or media is uploaded anywhere
+   in the entire application, a prominent and clear "Uploading, please wait..."
+   modal is shown with real-time progress until finished.
+   ========================================================================= */
+
+function ensureUniversalUploadModalElement() {
+  let modal = document.getElementById('sfUniversalUploadModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'sfUniversalUploadModal';
+    modal.className = 'fixed inset-0 z-[99999] bg-black/65 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-200 opacity-0 pointer-events-none select-none';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Uploading media, please wait');
+    modal.innerHTML = `
+      <div class="bg-white rounded-[28px] p-6 sm:p-7 max-w-sm w-full shadow-2xl border border-gray-100 text-center space-y-4 transform transition-all duration-200 scale-95" id="sfUniversalUploadCard">
+        <div class="relative w-16 h-16 mx-auto flex items-center justify-center">
+          <div class="w-16 h-16 rounded-2xl bg-amber-50 border border-gold/40 flex items-center justify-center text-3xl shadow-sm text-gold" id="sfUploadMediaIconContainer">
+            <span id="sfUploadMediaIcon">📷</span>
+          </div>
+          <div id="sfUploadMediaSpinner" class="absolute -inset-1 rounded-2xl border-2 border-gold/30 border-t-gold animate-spin pointer-events-none"></div>
+        </div>
+
+        <div>
+          <h3 id="sfUploadMediaTitle" class="text-base sm:text-lg font-black text-gray-900 tracking-tight">Uploading, please wait…</h3>
+          <p id="sfUploadMediaSubtitle" class="text-xs text-gray-500 mt-1 leading-relaxed">
+            Please wait while your <span id="sfUploadMediaKind" class="font-bold text-gray-800">picture</span> is uploaded. Do not close or refresh the app.
+          </p>
+        </div>
+
+        <div class="space-y-1.5 pt-1">
+          <div class="w-full h-2.5 rounded-full bg-gray-100 overflow-hidden p-0.5 border border-gray-200">
+            <div id="sfUploadMediaBar" class="h-full rounded-full bg-gradient-to-r from-amber-400 via-gold to-yellow-500 transition-all duration-150" style="width: 0%;"></div>
+          </div>
+          <div class="flex items-center justify-between text-[11px] font-mono text-gray-500 px-1">
+            <span id="sfUploadMediaStatusText" class="truncate max-w-[190px]">Uploading, please wait…</span>
+            <span id="sfUploadMediaPercent" class="font-bold text-gray-900 shrink-0">0%</span>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  return modal;
+}
+
+let _sfMediaUploadActiveCount = 0;
+
+function showUniversalMediaUploadingOverlay({ isVideo = false, fileName = '', fileSize = 0 } = {}) {
+  _sfMediaUploadActiveCount++;
+  const modal = ensureUniversalUploadModalElement();
+  const card = document.getElementById('sfUniversalUploadCard');
+  const icon = document.getElementById('sfUploadMediaIcon');
+  const kind = document.getElementById('sfUploadMediaKind');
+  const title = document.getElementById('sfUploadMediaTitle');
+  const subtitle = document.getElementById('sfUploadMediaSubtitle');
+  const bar = document.getElementById('sfUploadMediaBar');
+  const percentEl = document.getElementById('sfUploadMediaPercent');
+  const statusEl = document.getElementById('sfUploadMediaStatusText');
+  const spinner = document.getElementById('sfUploadMediaSpinner');
+
+  const mediaLabel = isVideo ? 'video' : 'picture';
+
+  if (icon) icon.textContent = isVideo ? '🎬' : '📷';
+  if (kind) kind.textContent = mediaLabel;
+  if (title) title.textContent = 'Uploading, please wait…';
+  if (subtitle) {
+    subtitle.innerHTML = `Please wait while your <span class="font-bold text-gray-800">${mediaLabel}</span> is uploaded. Do not close or refresh the app.`;
+  }
+  if (bar) bar.style.width = '0%';
+  if (percentEl) percentEl.textContent = '0%';
+  if (statusEl) statusEl.textContent = `Uploading ${mediaLabel}, please wait…`;
+  if (spinner) spinner.classList.remove('hidden');
+
+  modal.classList.remove('opacity-0', 'pointer-events-none');
+  modal.classList.add('opacity-100');
+  if (card) {
+    card.classList.remove('scale-95');
+    card.classList.add('scale-100');
+  }
+}
+
+function updateUniversalMediaUploadingProgress(percent, customStatus) {
+  const pct = Math.min(100, Math.max(0, Math.round(percent)));
+  const bar = document.getElementById('sfUploadMediaBar');
+  const percentEl = document.getElementById('sfUploadMediaPercent');
+  const statusEl = document.getElementById('sfUploadMediaStatusText');
+
+  if (bar) bar.style.width = `${pct}%`;
+  if (percentEl) percentEl.textContent = `${pct}%`;
+  if (statusEl && customStatus) {
+    statusEl.textContent = customStatus;
+  }
+}
+
+function hideUniversalMediaUploadingOverlay(success = true) {
+  _sfMediaUploadActiveCount = Math.max(0, _sfMediaUploadActiveCount - 1);
+  if (_sfMediaUploadActiveCount > 0) return;
+
+  const modal = document.getElementById('sfUniversalUploadModal');
+  if (!modal) return;
+
+  const title = document.getElementById('sfUploadMediaTitle');
+  const icon = document.getElementById('sfUploadMediaIcon');
+  const bar = document.getElementById('sfUploadMediaBar');
+  const percentEl = document.getElementById('sfUploadMediaPercent');
+  const statusEl = document.getElementById('sfUploadMediaStatusText');
+  const spinner = document.getElementById('sfUploadMediaSpinner');
+  const card = document.getElementById('sfUniversalUploadCard');
+
+  if (success) {
+    if (bar) bar.style.width = '100%';
+    if (percentEl) percentEl.textContent = '100%';
+    if (title) title.textContent = '✓ Upload finished!';
+    if (icon) icon.textContent = '✅';
+    if (statusEl) statusEl.textContent = 'Done!';
+    if (spinner) spinner.classList.add('hidden');
+  }
+
+  setTimeout(() => {
+    if (_sfMediaUploadActiveCount === 0) {
+      modal.classList.remove('opacity-100');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      if (card) {
+        card.classList.remove('scale-100');
+        card.classList.add('scale-95');
+      }
+    }
+  }, success ? 320 : 80);
+}
+
+window.showUniversalMediaUploadingOverlay = showUniversalMediaUploadingOverlay;
+window.updateUniversalMediaUploadingProgress = updateUniversalMediaUploadingProgress;
+window.hideUniversalMediaUploadingOverlay = hideUniversalMediaUploadingOverlay;
+
 async function universalStorageUpload(file, path, maxMB = 250) {
   if (!file) throw Error('No file selected.');
 
-  // 1. Direct binary upload to server storage (/api/storage/upload)
-  try {
-    const binResp = await fetch(`/api/storage/upload?path=${encodeURIComponent(path)}`, {
-      method: 'POST',
-      headers: {
-        'x-file-path': encodeURIComponent(path),
-        'Content-Type': file.type || 'application/octet-stream'
-      },
-      body: file
-    });
-    if (binResp.ok) {
-      const binData = await binResp.json();
-      if (binData.success && binData.url) {
-        // Opportunistically sync to Supabase in the background
-        if (supabaseUrl && !supabaseUrl.includes('placeholder')) {
-          fetch(`${supabaseUrl}/storage/v1/object/${SUPABASE_BUCKET}/${path}`, {
-            method: 'POST',
-            headers: {
-              apikey: supabaseKey,
-              Authorization: `Bearer ${supabaseKey}`,
-              'Content-Type': file.type || 'application/octet-stream',
-              'x-upsert': 'true'
-            },
-            body: file
-          }).catch(() => {});
-        }
-        return { url: binData.url, path: binData.path || path };
-      }
-    }
-  } catch (binErr) {
-    console.warn('Direct server storage upload notice, falling back to Supabase:', binErr);
-  }
+  const fileName = file?.name || path || '';
+  const ext = (fileName.split('.').pop() || '').toLowerCase();
+  const mime = file?.type || '';
+  const isVid = (mime && mime.startsWith('video/')) || ['mp4', 'webm', 'mov', 'm4v', 'qt', 'mkv', 'avi', '3gp'].includes(ext);
+  const isPic = !isVid && ((mime && mime.startsWith('image/')) || ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif'].includes(ext));
 
-  // 2. Try Supabase storage if server direct upload failed
-  if (supabaseUrl && !supabaseUrl.includes('placeholder')) {
-    try {
-      const endpoint = `${supabaseUrl}/storage/v1/object/${SUPABASE_BUCKET}/${path}`;
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-          'Content-Type': file.type || 'application/octet-stream',
-          'x-upsert': 'true'
-        },
-        body: file
-      });
-      if (res.ok) {
-        // Use our authenticated proxy URL so private bucket objects are actually viewable
-        return {
-          url: `/api/media/supabase?path=${encodeURIComponent(path)}`,
-          path: path
-        };
-      }
-    } catch (supaErr) {
-      console.warn('Supabase storage unavailable:', supaErr);
-    }
-  }
+  // 1. Immediately display the universal "Uploading, please wait..." indicator
+  showUniversalMediaUploadingOverlay({
+    isVideo: isVid,
+    fileName: fileName,
+    fileSize: file.size || 0
+  });
 
-  // 3. Direct streaming upload to /api/storage/upload using resolved API URL
   const uploadApiUrl = (typeof getSfApiUrl === 'function') ? getSfApiUrl('/api/storage/upload') : '/api/storage/upload';
-  try {
-    const rawResp = await fetch(uploadApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': file.type || 'application/octet-stream',
-        'x-file-path': encodeURIComponent(path)
-      },
-      body: file
-    });
-    if (rawResp.ok) {
-      const data = await rawResp.json();
-      if (data.success && data.url) {
-        return { url: data.url, path: data.path || path };
-      }
-    }
-  } catch (rawErr) {
-    console.warn('Direct stream upload notice, trying JSON base64 fallback:', rawErr);
-  }
+  const targetUrl = `${uploadApiUrl}?path=${encodeURIComponent(path)}`;
 
-  // 3b. Fallback: JSON base64 upload (/api/storage/upload) to get a compact public URL (/uploads/...)
-  let base64Data = '';
-  try {
-    base64Data = await fileToBase64(file);
-  } catch (convErr) {
-    console.warn('fileToBase64 warning:', convErr);
-  }
+  let uploadSucceeded = false;
 
-  if (base64Data) {
-    try {
-      const resp = await fetch(uploadApiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          path: path,
-          base64: base64Data,
-          contentType: file.type || 'image/jpeg'
-        })
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data.success && data.url) {
-          return { url: data.url, path: data.path || path };
+  try {
+    // 2. Direct binary streaming via XMLHttpRequest with real-time percentage progress
+    const result = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', targetUrl, true);
+      xhr.setRequestHeader('x-file-path', encodeURIComponent(path));
+      xhr.setRequestHeader('Content-Type', mime || (isVid ? 'video/mp4' : 'image/jpeg'));
+
+      xhr.upload.onprogress = (evt) => {
+        if (evt.lengthComputable && evt.total > 0) {
+          const percent = Math.min(99, Math.round((evt.loaded / evt.total) * 100));
+          const kindLabel = isVid ? 'video' : 'picture';
+          updateUniversalMediaUploadingProgress(percent, `Uploading ${kindLabel}, please wait… (${percent}%)`);
         }
-      } else {
-        const errJson = await resp.json().catch(() => ({}));
-        throw new Error(errJson.error || `Server storage upload failed with status ${resp.status}`);
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (data.success && data.url) {
+              updateUniversalMediaUploadingProgress(100, 'Finishing up…');
+              return resolve({ url: data.url, path: data.path || path });
+            }
+            reject(new Error(data.error || 'Server upload failed'));
+          } catch (e) {
+            reject(new Error('Invalid upload response from server'));
+          }
+        } else {
+          reject(new Error(`Upload server responded with status ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Network error during media upload. Check your internet connection.'));
+      xhr.ontimeout = () => reject(new Error('Media upload timed out. Please try again.'));
+      xhr.timeout = 180000; // 3 minutes timeout
+      xhr.send(file);
+    });
+
+    uploadSucceeded = true;
+    hideUniversalMediaUploadingOverlay(true);
+    return result;
+
+  } catch (streamErr) {
+    console.warn('XHR streaming upload failed, attempting fast FormData fallback:', streamErr);
+
+    // 3. Fallback: Fast FormData upload
+    try {
+      const formResult = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', targetUrl, true);
+        xhr.setRequestHeader('x-file-path', encodeURIComponent(path));
+
+        const fd = new FormData();
+        fd.append('file', file, fileName);
+
+        xhr.upload.onprogress = (evt) => {
+          if (evt.lengthComputable && evt.total > 0) {
+            const percent = Math.min(99, Math.round((evt.loaded / evt.total) * 100));
+            updateUniversalMediaUploadingProgress(percent, `Uploading, please wait… (${percent}%)`);
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              if (data.success && data.url) {
+                return resolve({ url: data.url, path: data.path || path });
+              }
+              reject(new Error(data.error || 'FormData upload failed'));
+            } catch (e) {
+              reject(new Error('Invalid response'));
+            }
+          } else {
+            reject(new Error(`Upload error ${xhr.status}`));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('Network error'));
+        xhr.timeout = 90000;
+        xhr.send(fd);
+      });
+
+      uploadSucceeded = true;
+      hideUniversalMediaUploadingOverlay(true);
+      return formResult;
+
+    } catch (fdErr) {
+      console.warn('FormData fallback error:', fdErr);
+
+      // 4. Tiny image fallback (< 500KB)
+      if (isPic && file.size <= 500 * 1024) {
+        try {
+          const b64 = await fileToBase64(file);
+          if (b64) {
+            uploadSucceeded = true;
+            hideUniversalMediaUploadingOverlay(true);
+            return { url: b64, path: path };
+          }
+        } catch (_) {}
       }
-    } catch (serverUpErr) {
-      console.warn('Server storage upload notice:', serverUpErr);
-      // If file is large (> 500KB, e.g. video), do not fallback to base64 data URL to avoid Firestore 1MB document limit
-      if (file.size > 500 * 1024) {
-        throw new Error(`Video or large file upload failed: ${serverUpErr.message || 'Server storage unavailable'}. Please check network connection and try again.`);
-      }
+
+      hideUniversalMediaUploadingOverlay(false);
+      throw streamErr || fdErr;
+    }
+  } finally {
+    if (!uploadSucceeded) {
+      hideUniversalMediaUploadingOverlay(false);
     }
   }
-
-  // 3. Fallback for tiny images only (< 500KB)
-  if (base64Data && file.size <= 500 * 1024) {
-    return { url: base64Data, path: path };
-  }
-
-  // 4. Object URL emergency fallback
-  try {
-    const objUrl = URL.createObjectURL(file);
-    return { url: objUrl, path: path };
-  } catch (_) {}
-
-  throw Error('Could not process this file. Please select a valid image or video.');
 }
 window.universalStorageUpload = universalStorageUpload;
 
@@ -5385,8 +5518,10 @@ async function uploadPublic(file, folder) {
   const isImg = file && (file.type?.startsWith('image/') || ['jpg','jpeg','png','webp','gif','heic','heif'].includes(((file.name||'').split('.').pop()||'').toLowerCase()));
   if (isImg) {
     try {
-      const maxDim = (folder === 'profiles' || folder === 'avatars') ? 800 : (folder === 'banners' ? 1400 : 1920);
-      uploadableFile = await compressImageForUpload(file, { maxDimension: maxDim, quality: 0.85 });
+      // High-efficiency pre-compression: transforms heavy 8MB-15MB mobile photos to ~200KB WebP in milliseconds
+      const maxDim = (folder === 'profiles' || folder === 'avatars') ? 600 : (folder === 'banners' ? 1200 : 1600);
+      const quality = (folder === 'profiles' || folder === 'avatars') ? 0.85 : 0.82;
+      uploadableFile = await compressImageForUpload(file, { maxDimension: maxDim, quality });
     } catch(e) {
       console.warn('Image optimization skipped:', e);
     }
@@ -7168,6 +7303,28 @@ function renderPageLoadingSkeleton(page, targetPostId, options = {}){
             </div>
           `).join('')}
         </div>
+      </div>
+    `;
+    return;
+  }
+
+  if(page === 'analysis'){
+    pageEl.innerHTML = `
+      <div class="max-w-6xl mx-auto space-y-5 pb-16 pt-1">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-2xl bg-white sf-shimmer-box border border-gray-200"></div>
+            <div class="space-y-1.5">
+              <div class="w-48 h-6 rounded-lg bg-white sf-shimmer-box"></div>
+              <div class="w-64 h-3.5 rounded bg-white sf-shimmer-box"></div>
+            </div>
+          </div>
+          <div class="w-56 h-9 rounded-xl bg-white sf-shimmer-box border border-gray-200"></div>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          ${[1,2,3,4].map(() => `<div class="card p-4 rounded-2xl bg-white border border-gray-200 h-24 sf-shimmer-box"></div>`).join('')}
+        </div>
+        <div class="card p-5 rounded-2xl bg-white border border-gray-200 h-40 sf-shimmer-box"></div>
       </div>
     `;
     return;
@@ -9915,6 +10072,8 @@ async function renderDashboard(){
 }
 
 let _sfAnalysisFilter = '30d';
+let _sfAnalysisCachedData = null;
+
 async function renderAnalysis(targetPostId, options){
   if(!currentUser){
     showAuthPrompt('view your performance analysis');
@@ -9930,30 +10089,19 @@ async function renderAnalysis(targetPostId, options){
     const userUid = currentUser.uid;
     const profile = currentProfile || sellerProfile(userUid) || {};
 
-    // Parallel fetch all data in 1 network roundtrip
-    const [postsSnap, productsSnap, sSnap1, sSnap2, buyerOrdersSnap, storeSnap] = await Promise.all([
-      getDocs(query(collection(db, 'posts'), where('sellerId', '==', userUid), limit(150))).catch(() => ({ docs: [] })),
-      getDocs(query(collection(db, 'products'), where('sellerId', '==', userUid), limit(150))).catch(() => ({ docs: [] })),
-      getDocs(query(collection(db, 'orders'), where('sellerId', '==', userUid), limit(100))).catch(() => ({ docs: [] })),
-      getDocs(query(collection(db, 'orders'), where('sellerIds', 'array-contains', userUid), limit(100))).catch(() => ({ docs: [] })),
-      getDocs(query(collection(db, 'orders'), where('buyerId', '==', userUid), limit(100))).catch(() => ({ docs: [] })),
-      getDoc(doc(db, 'stores', userUid)).catch(() => null)
-    ]);
+    let allUserProducts = (window._cachedProducts || []).filter(p => p.sellerId === userUid);
+    let allUserPosts = (window._lastRankedPostsCache || []).filter(p => p.sellerId === userUid);
+    let allSellerOrders = [];
+    let allBuyerOrders = [];
+    let userStore = (window._cachedStores || []).find(s => (s.ownerId === userUid || s.id === userUid || s.sellerId === userUid)) || null;
 
-    const allUserPosts = postsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.status !== 'removed' && p.status !== 'taken_down');
-    const allUserProducts = productsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.status !== 'removed');
-    
-    const allSellerOrders = [];
-    const seenSellerOrderIds = new Set();
-    [...sSnap1.docs, ...sSnap2.docs].forEach(d => {
-      if (!seenSellerOrderIds.has(d.id)) {
-        seenSellerOrderIds.add(d.id);
-        allSellerOrders.push({ id: d.id, ...d.data() });
-      }
-    });
-
-    const allBuyerOrders = buyerOrdersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const userStore = (storeSnap && snapshotExists(storeSnap)) ? { id: storeSnap.id, ...storeSnap.data() } : null;
+    if (_sfAnalysisCachedData && _sfAnalysisCachedData.uid === userUid) {
+      allUserPosts = _sfAnalysisCachedData.posts?.length ? _sfAnalysisCachedData.posts : allUserPosts;
+      allUserProducts = _sfAnalysisCachedData.products?.length ? _sfAnalysisCachedData.products : allUserProducts;
+      allSellerOrders = _sfAnalysisCachedData.sellerOrders || allSellerOrders;
+      allBuyerOrders = _sfAnalysisCachedData.buyerOrders || allBuyerOrders;
+      userStore = _sfAnalysisCachedData.store || userStore;
+    }
 
     function computeMetrics(timeRange) {
       const now = Date.now();
@@ -10161,8 +10309,6 @@ async function renderAnalysis(targetPostId, options){
               `).join('')}
             </div>
           </div>
-
-          ${renderQuickAccessNav('analysis')}
 
           ${isNewUser ? `
             <!-- Empty State for New Account -->
@@ -10448,7 +10594,63 @@ async function renderAnalysis(targetPostId, options){
       $('analysisManageProductsBtn')?.addEventListener('click', () => navigate('products'));
     }
 
+    // Paint immediately with cached / in-memory data (0ms latency)
     renderDashboardView(_sfAnalysisFilter);
+    ready();
+    if (typeof finishPageProgress === 'function') finishPageProgress();
+
+    // Asynchronously fetch fresh data with a safe 3.5-second timeout
+    const fetchWithTimeout = (promise, ms = 3500, fallback = { docs: [] }) =>
+      Promise.race([
+        promise.catch(() => fallback),
+        new Promise(res => setTimeout(() => res(fallback), ms))
+      ]);
+
+    Promise.all([
+      fetchWithTimeout(getDocs(query(collection(db, 'posts'), where('sellerId', '==', userUid), limit(150)))),
+      fetchWithTimeout(getDocs(query(collection(db, 'products'), where('sellerId', '==', userUid), limit(150)))),
+      fetchWithTimeout(getDocs(query(collection(db, 'orders'), where('sellerId', '==', userUid), limit(100)))),
+      fetchWithTimeout(getDocs(query(collection(db, 'orders'), where('buyerId', '==', userUid), limit(100)))),
+      fetchWithTimeout(getDoc(doc(db, 'stores', userUid)), 3500, null)
+    ]).then(([postsSnap, productsSnap, sSnap, buyerOrdersSnap, storeSnap]) => {
+      let changed = false;
+      if (postsSnap && postsSnap.docs && postsSnap.docs.length > 0) {
+        allUserPosts = postsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.status !== 'removed' && p.status !== 'taken_down');
+        changed = true;
+      }
+      if (productsSnap && productsSnap.docs && productsSnap.docs.length > 0) {
+        allUserProducts = productsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.status !== 'removed');
+        changed = true;
+      }
+      if (sSnap && sSnap.docs && sSnap.docs.length > 0) {
+        allSellerOrders = sSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        changed = true;
+      }
+      if (buyerOrdersSnap && buyerOrdersSnap.docs && buyerOrdersSnap.docs.length > 0) {
+        allBuyerOrders = buyerOrdersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        changed = true;
+      }
+      if (storeSnap && snapshotExists(storeSnap)) {
+        userStore = { id: storeSnap.id, ...storeSnap.data() };
+        changed = true;
+      }
+
+      _sfAnalysisCachedData = {
+        uid: userUid,
+        posts: allUserPosts,
+        products: allUserProducts,
+        sellerOrders: allSellerOrders,
+        buyerOrders: allBuyerOrders,
+        store: userStore,
+        ts: Date.now()
+      };
+
+      if (changed && currentPage === 'analysis') {
+        renderDashboardView(_sfAnalysisFilter);
+      }
+    }).catch(e => {
+      console.warn('Background analysis sync notice:', e);
+    });
 
   } catch(err) {
     console.error('Analysis error:', err);
@@ -10462,6 +10664,7 @@ async function renderAnalysis(targetPostId, options){
     $('retryAnalysisBtn')?.addEventListener('click', () => renderAnalysis());
   } finally {
     ready();
+    if (typeof finishPageProgress === 'function') finishPageProgress();
   }
 }
 window.renderAnalysis = renderAnalysis;
@@ -10808,12 +11011,14 @@ async function renderMarketplace(initialTab = 'products', targetPostId, options)
     const filtered=validStores.filter(s=>{
       const hay=(s.name+' '+(s.description||'')+' '+(s.location||'')+' '+(s.address||'')).toLowerCase();
       const matchQuery=!q || hay.includes(q);
+      const storeCats = (Array.isArray(s.categories) && s.categories.length ? s.categories : (s.category ? String(s.category).split(',').map(x=>x.trim()) : [])).map(x=>x.toLowerCase());
       let matchCat=true;
       if(activeStoreFilter==='accra') matchCat=hay.includes('accra')||hay.includes('legon')||hay.includes('osu');
       else if(activeStoreFilter==='kumasi') matchCat=hay.includes('kumasi');
-      else if(activeStoreFilter==='fashion') matchCat=hay.includes('fashion')||hay.includes('cloth')||hay.includes('wear')||hay.includes('beauty')||hay.includes('hair');
-      else if(activeStoreFilter==='tech') matchCat=hay.includes('phone')||hay.includes('tech')||hay.includes('electr')||hay.includes('gadget');
-      else if(activeStoreFilter==='food') matchCat=hay.includes('food')||hay.includes('snack')||hay.includes('grocery')||hay.includes('provis');
+      else if(activeStoreFilter==='fashion') matchCat=storeCats.includes('fashion')||hay.includes('fashion')||hay.includes('cloth')||hay.includes('wear')||hay.includes('beauty')||hay.includes('hair');
+      else if(activeStoreFilter==='tech') matchCat=storeCats.includes('tech')||hay.includes('phone')||hay.includes('tech')||hay.includes('electr')||hay.includes('gadget');
+      else if(activeStoreFilter==='food') matchCat=storeCats.includes('food')||hay.includes('food')||hay.includes('snack')||hay.includes('grocery')||hay.includes('provis');
+      else if(activeStoreFilter && activeStoreFilter !== 'all') matchCat=storeCats.includes(activeStoreFilter.toLowerCase());
       return matchQuery && matchCat;
     });
     const countEl=$('marketCount');
@@ -10986,6 +11191,14 @@ function storeCard(s, idx = 0){
 
         <p class="muted text-xs sm:text-sm mt-3 line-clamp-2 leading-relaxed">${esc(s.description || 'Verified Ghanaian merchant on SellerFlow.')}</p>
         ${s.location || s.address ? `<div class="text-xs text-gray-600 mt-2 truncate flex items-center gap-1"><span>📍</span><span>${esc(s.location || s.address)}</span></div>` : ''}
+        ${(Array.isArray(s.categories) && s.categories.length ? s.categories : (s.category ? String(s.category).split(',') : [])).length ? `
+          <div class="flex items-center gap-1 flex-wrap mt-2">
+            ${(Array.isArray(s.categories) && s.categories.length ? s.categories : (s.category ? String(s.category).split(',') : [])).slice(0, 3).map(cid => {
+              const meta = getCategoryMeta(cid.trim());
+              return `<span class="text-[10px] font-bold text-gray-700 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full flex items-center gap-1"><span>${meta.icon}</span><span>${meta.name}</span></span>`;
+            }).join('')}
+          </div>
+        ` : ''}
 
         ${prodCount > 0 ? `
           <div class="mt-3.5 pt-3 border-t border-[#222] flex items-center gap-1.5 overflow-hidden">
@@ -11323,6 +11536,500 @@ function renderStorePreviewContent(storeId, store, p, products){
     };
   });
 }
+
+/* ==========================================================================
+   SELLERFLOW CHOICE PICKER & CUSTOM DROPDOWN ENGINE
+   Replaces dark native OS select dialogs with a modern, high-converting choice bottom-sheet/modal.
+   Supports single selection, multi-selection, search filtering, rich icons & descriptions.
+   ========================================================================== */
+const SF_STORE_CATEGORIES = [
+  { id: 'fashion', icon: '👗', name: 'Fashion & Beauty', desc: 'Clothing, Shoes, Wigs, Jewelry, Bags & Accessories' },
+  { id: 'tech', icon: '📱', name: 'Tech & Electronics', desc: 'Phones, Laptops, Gadgets, Audio & Accessories' },
+  { id: 'food', icon: '🍲', name: 'Food & Provisions', desc: 'Groceries, Meals, Spices, Snacks, Pastries & Drinks' },
+  { id: 'home', icon: '🏠', name: 'Home & Living', desc: 'Furniture, Decor, Kitchenware, Bedding & Cleaning' },
+  { id: 'health', icon: '🌿', name: 'Health & Wellness', desc: 'Personal Care, Skincare, Haircare, Herbal & Supplements' },
+  { id: 'auto', icon: '🚗', name: 'Auto & Parts', desc: 'Vehicles, Car Accessories, Spare Parts & Detailing' },
+  { id: 'services', icon: '🛠️', name: 'Services & Crafts', desc: 'Artisans, Tailoring, Repairs, Design & Events' },
+  { id: 'general', icon: '🛍️', name: 'General Goods', desc: 'Multi-Department, Supermarket & Everyday Essentials' }
+];
+
+function getCategoryMeta(catId) {
+  if (!catId) return { id: 'general', icon: '🛍️', name: 'General Goods', desc: 'Everyday Essentials' };
+  const found = SF_STORE_CATEGORIES.find(c => c.id.toLowerCase() === String(catId).toLowerCase());
+  return found || { id: catId, icon: '🏷️', name: catId.charAt(0).toUpperCase() + catId.slice(1), desc: '' };
+}
+
+function openChoicePicker(config = {}) {
+  const {
+    title = 'Choose Option',
+    subtitle = '',
+    icon = '📋',
+    options = [],
+    value = null,
+    multiple = false,
+    searchable = options.length > 4,
+    confirmText = 'Done',
+    onSelect = () => {},
+    onClose = () => {}
+  } = config;
+
+  const existingPicker = document.getElementById('sfChoiceSheetOverlay');
+  if (existingPicker) {
+    try { existingPicker.remove(); } catch (_) {}
+  }
+
+  let currentSelection = multiple
+    ? (Array.isArray(value) ? [...value] : (value ? [value] : []))
+    : value;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'sfChoiceSheetOverlay';
+  overlay.className = 'sf-choice-backdrop fixed inset-0 z-[100000] flex flex-col justify-end sm:justify-center items-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 opacity-0 transition-opacity duration-200';
+
+  let filteredOptions = [...options];
+
+  function closeSheet(selectedVal) {
+    const card = overlay.querySelector('.sf-choice-sheet-card');
+    if (card) {
+      card.classList.remove('sf-choice-sheet-enter');
+      card.classList.add('sf-choice-sheet-leave');
+    }
+    overlay.classList.remove('opacity-100');
+    overlay.classList.add('opacity-0');
+    setTimeout(() => {
+      try { overlay.remove(); } catch (_) {}
+      if (selectedVal !== undefined) {
+        onSelect(selectedVal);
+      }
+      onClose();
+    }, 200);
+  }
+
+  function renderItems() {
+    if (!filteredOptions.length) {
+      return `
+        <div class="py-10 text-center text-gray-500">
+          <div class="text-3xl mb-1 opacity-60">🔍</div>
+          <p class="text-xs font-bold text-gray-700">No matching options</p>
+          <p class="text-[11px] text-gray-400 mt-0.5">Try searching with a different keyword</p>
+        </div>
+      `;
+    }
+
+    const isMulti = !!multiple;
+    return filteredOptions.map(opt => {
+      const isSelected = isMulti
+        ? (Array.isArray(currentSelection) && currentSelection.includes(opt.value))
+        : currentSelection === opt.value;
+      const isDisabled = !!opt.disabled;
+
+      return `
+        <div data-choice-val="${esc(opt.value)}" class="sf-choice-opt p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 select-none ${isDisabled ? 'opacity-40 pointer-events-none bg-gray-100 border-gray-200' : (isSelected ? 'border-gold bg-amber-50/80 text-gray-950 font-bold shadow-xs ring-1 ring-gold/40' : 'border-gray-200/80 bg-gray-50/70 hover:bg-gray-100/90 text-gray-800 hover:border-gray-300')}">
+          <div class="flex items-center gap-3 min-w-0 flex-1">
+            ${opt.icon ? `
+              <div class="w-10 h-10 rounded-xl ${isSelected ? 'bg-white border-gold/50 shadow-xs' : 'bg-white border-gray-200'} border flex items-center justify-center text-xl shrink-0">
+                ${opt.icon}
+              </div>
+            ` : ''}
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs sm:text-sm ${isSelected ? 'font-black text-gray-950' : 'font-bold text-gray-900'} truncate" ${opt.fontStyle ? `style="${opt.fontStyle}"` : ''}>
+                  ${esc(opt.label || opt.value)}
+                </span>
+                ${opt.badge ? `<span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-900 border border-amber-300">${esc(opt.badge)}</span>` : ''}
+              </div>
+              ${opt.desc ? `<p class="text-[11px] sm:text-xs text-gray-500 mt-0.5 leading-relaxed ${isSelected ? 'text-gray-700 font-normal' : ''}">${esc(opt.desc)}</p>` : ''}
+            </div>
+          </div>
+
+          <div class="shrink-0 flex items-center">
+            ${isMulti ? `
+              <div class="w-6 h-6 rounded-lg border-2 flex items-center justify-center text-xs font-black transition-all ${isSelected ? 'border-gold bg-gold text-black shadow-xs' : 'border-gray-300 bg-white text-transparent'}">
+                ✓
+              </div>
+            ` : `
+              <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-black transition-all ${isSelected ? 'border-gold bg-gold text-black shadow-xs' : 'border-gray-300 bg-white text-transparent'}">
+                ✓
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function bindEvents() {
+    overlay.querySelector('#choiceCloseBtn')?.addEventListener('click', () => closeSheet());
+    overlay.querySelector('#choiceCancelBtn')?.addEventListener('click', () => closeSheet());
+
+    if (multiple) {
+      overlay.querySelector('#choiceDoneBtn')?.addEventListener('click', () => closeSheet(currentSelection));
+      overlay.querySelector('#choiceSelectAllBtn')?.addEventListener('click', () => {
+        currentSelection = options.filter(o => !o.disabled).map(o => o.value);
+        render();
+      });
+      overlay.querySelector('#choiceClearAllBtn')?.addEventListener('click', () => {
+        currentSelection = [];
+        render();
+      });
+    }
+
+    const searchInput = overlay.querySelector('#choiceSearchInput');
+    const searchClear = overlay.querySelector('#choiceSearchClear');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase().trim();
+        if (searchClear) searchClear.classList.toggle('hidden', !q);
+        filteredOptions = options.filter(o => {
+          const hay = `${o.label || ''} ${o.desc || ''} ${o.value || ''}`.toLowerCase();
+          return !q || hay.includes(q);
+        });
+        const listEl = overlay.querySelector('#choiceOptionsList');
+        if (listEl) {
+          listEl.innerHTML = renderItems();
+          bindItemClicks();
+        }
+      });
+      searchClear?.addEventListener('click', () => {
+        searchInput.value = '';
+        searchClear.classList.add('hidden');
+        filteredOptions = [...options];
+        const listEl = overlay.querySelector('#choiceOptionsList');
+        if (listEl) {
+          listEl.innerHTML = renderItems();
+          bindItemClicks();
+        }
+      });
+    }
+
+    bindItemClicks();
+    bindSwipeToDismiss(overlay.querySelector('.sf-choice-sheet-card'));
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        if (multiple) {
+          closeSheet(currentSelection);
+        } else {
+          closeSheet();
+        }
+      }
+    });
+  }
+
+  function bindSwipeToDismiss(card) {
+    if (!card) return;
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let isHeaderOrHandle = false;
+    let startTime = 0;
+    const listEl = overlay.querySelector('#choiceOptionsList');
+
+    const onTouchStart = (e) => {
+      const touch = e.touches ? e.touches[0] : e;
+      const target = e.target;
+
+      const isHandle = !!target.closest('#choiceDragHandle, #choiceHeaderRow');
+      const atTop = !listEl || listEl.scrollTop <= 0;
+
+      if (!isHandle && !atTop) return;
+
+      startY = touch.clientY;
+      currentY = startY;
+      startTime = Date.now();
+      isDragging = false;
+      isHeaderOrHandle = isHandle;
+      card.style.transition = 'none';
+    };
+
+    const onTouchMove = (e) => {
+      if (startY === 0) return;
+      const touch = e.touches ? e.touches[0] : e;
+      const diffY = touch.clientY - startY;
+
+      if (!isHeaderOrHandle && listEl && listEl.scrollTop > 0) {
+        return;
+      }
+
+      if (diffY > 6) {
+        isDragging = true;
+        currentY = touch.clientY;
+        if (e.cancelable) e.preventDefault();
+        card.style.transform = `translateY(${Math.max(0, diffY)}px)`;
+        const opacity = Math.max(0.12, 0.6 * (1 - diffY / 420));
+        overlay.style.backgroundColor = `rgba(0, 0, 0, ${opacity})`;
+      } else if (diffY < 0 && isDragging) {
+        card.style.transform = 'translateY(0)';
+      }
+    };
+
+    const onTouchEnd = () => {
+      if (!isDragging) {
+        startY = 0;
+        return;
+      }
+      isDragging = false;
+      const diffY = currentY - startY;
+      const duration = Date.now() - startTime;
+      const velocity = diffY / (duration || 1);
+
+      card.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+
+      if (diffY > 90 || (diffY > 35 && velocity > 0.35)) {
+        card.style.transform = 'translateY(100%)';
+        overlay.style.transition = 'opacity 0.2s ease';
+        overlay.classList.remove('opacity-100');
+        overlay.classList.add('opacity-0');
+        setTimeout(() => {
+          closeSheet(multiple ? currentSelection : undefined);
+        }, 180);
+      } else {
+        card.style.transform = 'translateY(0)';
+        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+        setTimeout(() => {
+          card.style.transition = '';
+        }, 250);
+      }
+      startY = 0;
+    };
+
+    card.addEventListener('touchstart', onTouchStart, { passive: false });
+    card.addEventListener('touchmove', onTouchMove, { passive: false });
+    card.addEventListener('touchend', onTouchEnd);
+    card.addEventListener('touchcancel', onTouchEnd);
+
+    let pointerStartY = 0;
+    let isPointerDragging = false;
+    const dragArea = overlay.querySelector('#choiceDragHandle') || overlay.querySelector('#choiceHeaderRow');
+    if (dragArea) {
+      dragArea.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('#choiceCloseBtn') || e.target.closest('button')) return;
+        pointerStartY = e.clientY;
+        isPointerDragging = true;
+        card.style.transition = 'none';
+        dragArea.setPointerCapture?.(e.pointerId);
+      });
+      dragArea.addEventListener('pointermove', (e) => {
+        if (!isPointerDragging) return;
+        const diffY = e.clientY - pointerStartY;
+        if (diffY > 5) {
+          card.style.transform = `translateY(${Math.max(0, diffY)}px)`;
+        }
+      });
+      const endPointerDrag = (e) => {
+        if (!isPointerDragging) return;
+        isPointerDragging = false;
+        const diffY = e.clientY - pointerStartY;
+        card.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+        if (diffY > 80) {
+          card.style.transform = 'translateY(100%)';
+          setTimeout(() => closeSheet(multiple ? currentSelection : undefined), 180);
+        } else {
+          card.style.transform = 'translateY(0)';
+        }
+      };
+      dragArea.addEventListener('pointerup', endPointerDrag);
+      dragArea.addEventListener('pointercancel', endPointerDrag);
+    }
+  }
+
+  function bindItemClicks() {
+    overlay.querySelectorAll('.sf-choice-opt').forEach(optEl => {
+      optEl.onclick = () => {
+        const val = optEl.dataset.choiceVal;
+        if (multiple) {
+          if (!Array.isArray(currentSelection)) currentSelection = [];
+          const idx = currentSelection.indexOf(val);
+          if (idx >= 0) {
+            currentSelection.splice(idx, 1);
+          } else {
+            currentSelection.push(val);
+          }
+          render();
+        } else {
+          currentSelection = val;
+          closeSheet(val);
+        }
+      };
+    });
+  }
+
+  function render() {
+    const isMulti = !!multiple;
+    const count = isMulti ? currentSelection.length : (currentSelection ? 1 : 0);
+
+    overlay.innerHTML = `
+      <div class="sf-choice-sheet-card w-full sm:max-w-lg bg-white rounded-t-[28px] sm:rounded-3xl shadow-2xl border border-gray-100 flex flex-col max-h-[88vh] sm:max-h-[82vh] overflow-hidden sf-choice-sheet-enter">
+        <div id="choiceDragHandle" class="w-14 h-1.5 bg-gray-300 hover:bg-gray-400 rounded-full mx-auto my-3 sm:hidden shrink-0 cursor-grab active:cursor-grabbing transition-colors"></div>
+
+        <div id="choiceHeaderRow" class="px-5 py-3.5 border-b border-gray-100 flex items-start justify-between gap-3 bg-white shrink-0 select-none">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-2xl bg-amber-50 border border-gold/30 text-gold flex items-center justify-center text-xl shrink-0 shadow-xs">
+              ${icon}
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <h3 class="text-base sm:text-lg font-black text-gray-900 tracking-tight truncate">${esc(title)}</h3>
+                ${isMulti ? `<span id="choiceSelectedBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gold/15 text-gold border border-gold/30 whitespace-nowrap">${count} selected</span>` : ''}
+              </div>
+              ${subtitle ? `<p class="text-xs text-gray-500 mt-0.5 line-clamp-1">${esc(subtitle)}</p>` : ''}
+            </div>
+          </div>
+          <button type="button" id="choiceCloseBtn" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 flex items-center justify-center font-bold text-sm transition shrink-0 cursor-pointer" title="Close">
+            ✕
+          </button>
+        </div>
+
+        ${searchable ? `
+          <div class="px-5 pt-3 pb-1 bg-white shrink-0">
+            <div class="relative">
+              <span class="absolute left-3 top-2.5 text-gray-400 text-sm">🔍</span>
+              <input type="text" id="choiceSearchInput" placeholder="Search options…" class="w-full pl-9 pr-8 py-2 text-xs rounded-xl bg-gray-50 border border-gray-200 focus:border-gold focus:bg-white text-gray-900 outline-none transition">
+              <button type="button" id="choiceSearchClear" class="hidden absolute right-2.5 top-2 text-gray-400 hover:text-gray-600 text-xs font-bold">✕</button>
+            </div>
+          </div>
+        ` : ''}
+
+        ${isMulti ? `
+          <div class="px-5 py-2 flex items-center justify-between gap-2 border-b border-gray-100 bg-gray-50/60 text-xs shrink-0">
+            <span class="text-gray-500 font-medium text-[11px]">Select all that apply</span>
+            <div class="flex items-center gap-2">
+              <button type="button" id="choiceSelectAllBtn" class="text-[11px] font-bold text-gold hover:underline cursor-pointer">Select all</button>
+              <span class="text-gray-300">·</span>
+              <button type="button" id="choiceClearAllBtn" class="text-[11px] font-bold text-gray-500 hover:text-rose-500 cursor-pointer">Clear</button>
+            </div>
+          </div>
+        ` : ''}
+
+        <div id="choiceOptionsList" class="p-4 sm:p-5 space-y-2 overflow-y-auto flex-1 min-h-[160px] max-h-[55vh]">
+          ${renderItems()}
+        </div>
+
+        <div class="p-4 border-t border-gray-100 bg-white flex items-center justify-between gap-3 shrink-0">
+          ${isMulti ? `
+            <button type="button" id="choiceDoneBtn" class="w-full py-3 px-5 rounded-xl bg-gold hover:brightness-110 text-black font-extrabold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+              <span>✓</span>
+              <span>${esc(confirmText)} (${currentSelection.length} Selected)</span>
+            </button>
+          ` : `
+            <button type="button" id="choiceCancelBtn" class="w-full py-2.5 px-4 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs transition cursor-pointer">
+              Cancel
+            </button>
+          `}
+        </div>
+      </div>
+    `;
+
+    bindEvents();
+  }
+
+  document.body.appendChild(overlay);
+  render();
+
+  requestAnimationFrame(() => {
+    overlay.classList.remove('opacity-0');
+    overlay.classList.add('opacity-100');
+  });
+}
+
+function openSelectAsChoicePicker(select) {
+  if (!select || select.disabled) return;
+
+  const rawOptions = Array.from(select.options || []);
+  if (!rawOptions.length) return;
+
+  let title = select.getAttribute('aria-label') || '';
+  if (!title) {
+    const parentLabel = select.closest('label');
+    if (parentLabel) {
+      title = parentLabel.innerText.replace(/\*|\(.*?\)/g, '').trim();
+    } else if (select.id) {
+      const prevLabel = document.querySelector(`label[for="${select.id}"]`) || select.closest('div')?.querySelector('label');
+      if (prevLabel) title = prevLabel.innerText.replace(/\*|\(.*?\)/g, '').trim();
+    }
+  }
+  if (!title) {
+    const firstOpt = rawOptions[0];
+    if (firstOpt && (firstOpt.disabled || !firstOpt.value)) {
+      title = firstOpt.text.replace(/--|\(|\)|Required/g, '').trim();
+    }
+  }
+  if (!title) title = 'Select Option';
+
+  const isMulti = !!select.multiple;
+  const currentVal = isMulti
+    ? rawOptions.filter(o => o.selected).map(o => o.value)
+    : select.value;
+
+  const parsedOptions = [];
+  rawOptions.forEach(opt => {
+    if (!opt.value && opt.disabled && rawOptions.length > 1) return;
+
+    let text = opt.text.trim();
+    let icon = '';
+    let desc = '';
+    let fontStyle = opt.style?.fontFamily ? `font-family: ${opt.style.fontFamily}` : '';
+
+    const emojiMatch = text.match(/^(\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji})/u);
+    if (emojiMatch) {
+      icon = emojiMatch[0];
+      text = text.slice(icon.length).trim();
+    }
+
+    const parenMatch = text.match(/^(.*?)\s*\((.*?)\)$/);
+    let label = text;
+    if (parenMatch) {
+      label = parenMatch[1].trim();
+      desc = parenMatch[2].trim();
+    }
+    if (!label) label = opt.text.trim();
+
+    parsedOptions.push({
+      value: opt.value,
+      label: label,
+      desc: desc,
+      icon: icon,
+      fontStyle: fontStyle,
+      disabled: opt.disabled
+    });
+  });
+
+  openChoicePicker({
+    title: title,
+    subtitle: isMulti ? 'Choose all that apply' : 'Tap to select an option',
+    icon: '✨',
+    options: parsedOptions,
+    value: currentVal,
+    multiple: isMulti,
+    onSelect: (newVal) => {
+      if (isMulti && Array.isArray(newVal)) {
+        rawOptions.forEach(o => {
+          o.selected = newVal.includes(o.value);
+        });
+      } else {
+        select.value = newVal;
+      }
+      select.dispatchEvent(new Event('input', { bubbles: true }));
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  });
+}
+
+// Global Custom Select Interceptor: intercept touches & clicks so the dark native OS dialog never appears
+document.addEventListener('pointerdown', (e) => {
+  const select = e.target.closest('select:not([data-native])');
+  if (!select || select.disabled) return;
+  e.preventDefault();
+  select.blur();
+  openSelectAsChoicePicker(select);
+}, { passive: false, capture: true });
+
+document.addEventListener('click', (e) => {
+  const select = e.target.closest('select:not([data-native])');
+  if (!select || select.disabled) return;
+  e.preventDefault();
+  select.blur();
+}, { passive: false, capture: true });
 
 /* ==========================================================================
    SELLERFLOW STOREFRONT THEME CUSTOMIZER ENGINE
@@ -12232,6 +12939,12 @@ async function openStore(uid){
                 ${businessCertBadge(store || p)}
               </h1>
               <div class="muted text-xs sm:text-sm">@${esc(p.username)} · ${(p.followers||[]).length} followers</div>
+              <div class="flex items-center gap-1.5 flex-wrap mt-2">
+                ${(Array.isArray(store?.categories) && store.categories.length ? store.categories : (store?.category ? String(store.category).split(',') : ['general'])).map(catId => {
+                  const meta = getCategoryMeta(catId.trim());
+                  return `<span class="inline-flex items-center gap-1 text-[11px] font-bold text-gray-800 bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full shadow-2xs"><span>${meta.icon}</span><span>${meta.name}</span></span>`;
+                }).join('')}
+              </div>
             </div>
           </div>
 
@@ -15104,6 +15817,16 @@ async function renderStore(forceEdit = false){
       store?.accountVerified === true
     );
 
+    let selectedStoreCategories = [];
+    if (Array.isArray(store.categories) && store.categories.length) {
+      selectedStoreCategories = store.categories.map(c => String(c).toLowerCase().trim()).filter(Boolean);
+    } else if (store.category) {
+      selectedStoreCategories = String(store.category).split(',').map(c => c.toLowerCase().trim()).filter(Boolean);
+    }
+    if (!selectedStoreCategories.length) {
+      selectedStoreCategories = ['general'];
+    }
+
     const isApproved = store.status === 'approved' || store.reviewStatus === 'approved';
     const isPending = !isApproved && (store.status === 'pending_review' || store.reviewStatus === 'pending');
     const isTakenDown = !isApproved && (store.status === 'taken_down' || store.reviewStatus === 'taken_down');
@@ -15379,21 +16102,33 @@ async function renderStore(forceEdit = false){
             </div>
 
             <div>
-              <div class="flex items-center justify-between mb-1">
-                <label class="muted text-xs block">Store Category *</label>
-                <span class="text-[10px] text-gold/90 font-mono">Select store type</span>
+              <div class="flex items-center justify-between mb-1.5 flex-wrap gap-1">
+                <div>
+                  <label class="font-bold text-xs text-gray-900 block">Store Categories *</label>
+                  <span class="text-[11px] text-gray-500">Choose multiple categories for your products and store</span>
+                </div>
+                <button type="button" id="openStoreCategoryPickerBtn" class="text-xs font-black text-gold hover:underline flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100/80 px-3 py-1.5 rounded-xl border border-gold/40 shadow-xs transition cursor-pointer">
+                  <span>＋</span><span>Choose Categories</span>
+                </button>
               </div>
-              <select id="storeCategory" required class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-gold text-sm text-gray-900 transition">
-                <option value="" disabled ${!store?.category ? 'selected' : ''}>-- Select store category (Required) --</option>
-                <option value="fashion" ${store?.category==='fashion'?'selected':''}>👗 Fashion & Beauty (Clothing, Shoes, Wigs, Jewelry)</option>
-                <option value="tech" ${store?.category==='tech'?'selected':''}>📱 Tech & Electronics (Phones, Laptops, Gadgets, Audio)</option>
-                <option value="food" ${store?.category==='food'?'selected':''}>🍲 Food & Provisions (Groceries, Meals, Spices, Drinks)</option>
-                <option value="home" ${store?.category==='home'?'selected':''}>🏠 Home & Living (Furniture, Decor, Kitchen, Bedding)</option>
-                <option value="health" ${store?.category==='health'?'selected':''}>🌿 Health & Wellness (Personal Care, Skincare, Herbal)</option>
-                <option value="auto" ${store?.category==='auto'?'selected':''}>🚗 Auto & Parts (Vehicles, Accessories, Spare Parts)</option>
-                <option value="services" ${store?.category==='services'?'selected':''}>🛠️ Services & Crafts (Artisans, Repairs, Tailoring)</option>
-                <option value="general" ${store?.category==='general'?'selected':''}>🛍️ General Goods & Multi-Department</option>
-              </select>
+
+              <!-- Selected Category Badges -->
+              <div id="storeSelectedCategoriesWrap" class="p-3 rounded-2xl bg-gray-50 border border-gray-200 min-h-[58px] flex items-center flex-wrap gap-2 transition cursor-pointer hover:border-gold/50" title="Click to choose categories">
+                <!-- Populated dynamically -->
+              </div>
+
+              <!-- Quick toggle pills -->
+              <div class="flex items-center gap-1.5 flex-wrap pt-2">
+                <span class="text-[11px] font-semibold text-gray-500 mr-0.5">Quick pick:</span>
+                ${SF_STORE_CATEGORIES.map(cat => `
+                  <button type="button" data-store-cat-toggle="${cat.id}" class="store-cat-quick-pill text-[11px] px-2.5 py-1 rounded-xl border transition flex items-center gap-1 cursor-pointer shadow-xs">
+                    <span>${cat.icon}</span>
+                    <span>${cat.name}</span>
+                  </button>
+                `).join('')}
+              </div>
+
+              <input type="hidden" id="storeCategory" value="${esc(selectedStoreCategories[0] || 'general')}">
             </div>
 
             <div>
@@ -15824,13 +16559,106 @@ async function renderStore(forceEdit = false){
     $('storeStartVerificationBtn')?.addEventListener('click', launchSellerVerification);
     $('storeGoVerificationBtn')?.addEventListener('click', launchSellerVerification);
 
+    function updateStoreCategoryDisplay() {
+      const container = $('storeSelectedCategoriesWrap');
+      const inputCategory = $('storeCategory');
+      if (inputCategory) inputCategory.value = selectedStoreCategories[0] || 'general';
+
+      if (container) {
+        if (!selectedStoreCategories.length) {
+          container.innerHTML = `
+            <div class="text-xs text-gray-400 py-1 flex items-center gap-2">
+              <span>🏷️</span>
+              <span>No categories selected yet. Tap to choose store categories.</span>
+            </div>
+          `;
+        } else {
+          container.innerHTML = selectedStoreCategories.map(catId => {
+            const meta = getCategoryMeta(catId);
+            return `
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-gold/70 text-gray-900 font-bold text-xs shadow-xs transition hover:border-gold">
+                <span>${meta.icon}</span>
+                <span>${meta.name}</span>
+                <button type="button" data-remove-store-cat="${catId}" class="text-gray-400 hover:text-rose-500 font-black ml-1 text-xs cursor-pointer p-0.5" title="Remove category">✕</button>
+              </span>
+            `;
+          }).join('');
+        }
+
+        container.querySelectorAll('[data-remove-store-cat]').forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const removeId = btn.dataset.removeStoreCat;
+            if (selectedStoreCategories.length <= 1) {
+              toast('Store must have at least one category.', 'info');
+              return;
+            }
+            selectedStoreCategories = selectedStoreCategories.filter(c => c !== removeId);
+            updateStoreCategoryDisplay();
+          };
+        });
+      }
+
+      document.querySelectorAll('[data-store-cat-toggle]').forEach(btn => {
+        const cid = btn.dataset.storeCatToggle;
+        const isAct = selectedStoreCategories.includes(cid);
+        btn.className = `store-cat-quick-pill text-[11px] px-2.5 py-1 rounded-xl border transition flex items-center gap-1 cursor-pointer shadow-xs ${
+          isAct ? 'bg-gold text-black font-extrabold border-gold shadow-sm' : 'bg-white text-gray-700 border-gray-200 hover:border-gold'
+        }`;
+      });
+    }
+
+    const openStoreCategoryModal = () => {
+      openChoicePicker({
+        title: 'Choose Store Categories',
+        subtitle: 'Sellers can choose multiple categories for their store',
+        icon: '🏪',
+        options: SF_STORE_CATEGORIES.map(c => ({
+          value: c.id,
+          label: c.name,
+          icon: c.icon,
+          desc: c.desc
+        })),
+        value: selectedStoreCategories,
+        multiple: true,
+        confirmText: 'Done · Save Categories',
+        onSelect: (newCats) => {
+          selectedStoreCategories = Array.isArray(newCats) && newCats.length ? newCats : ['general'];
+          updateStoreCategoryDisplay();
+        }
+      });
+    };
+
+    $('openStoreCategoryPickerBtn')?.addEventListener('click', openStoreCategoryModal);
+    $('storeSelectedCategoriesWrap')?.addEventListener('click', openStoreCategoryModal);
+
+    document.querySelectorAll('[data-store-cat-toggle]').forEach(btn => {
+      btn.onclick = () => {
+        const cid = btn.dataset.storeCatToggle;
+        if (selectedStoreCategories.includes(cid)) {
+          if (selectedStoreCategories.length > 1) {
+            selectedStoreCategories = selectedStoreCategories.filter(c => c !== cid);
+          } else {
+            toast('Store must have at least one category.', 'info');
+          }
+        } else {
+          selectedStoreCategories.push(cid);
+        }
+        updateStoreCategoryDisplay();
+      };
+    });
+
+    updateStoreCategoryDisplay();
+
     $('saveStore').onclick = async () => {
       try {
         const name = $('storeName').value.trim();
         if(name.length < 2) throw Error('Enter a valid store name (at least 2 characters).');
 
-        const category = $('storeCategory')?.value;
-        if(!category) throw Error('Please select a store category.');
+        if(!selectedStoreCategories || !selectedStoreCategories.length){
+          throw Error('Please select at least one store category.');
+        }
+        const category = selectedStoreCategories[0] || 'general';
 
         const location = $('storeLocation').value.trim();
         if(!location) throw Error('Please provide your location or area (e.g. East Legon, Accra).');
@@ -15926,6 +16754,7 @@ async function renderStore(forceEdit = false){
           ownerId: currentUser.uid,
           name,
           category,
+          categories: selectedStoreCategories,
           description: $('storeDesc').value.trim(),
           location,
           address: $('storeAddress').value.trim(),
@@ -15957,6 +16786,7 @@ async function renderStore(forceEdit = false){
           logoUrl,
           logoPath,
           category,
+          categories: selectedStoreCategories,
           storeTheme: theme,
           ...(logoUrl ? { avatarUrl: logoUrl } : {}),
           hasBusinessCert,
@@ -15967,6 +16797,8 @@ async function renderStore(forceEdit = false){
           bannerPath,
           logoUrl,
           logoPath,
+          category,
+          categories: selectedStoreCategories,
           ghanaCardName,
           ghanaCardDob,
           ghanaCardNum,
@@ -22768,7 +23600,21 @@ init();
       postData.reviewStatus = 'approved';
       postData.safeContent = true;
       postData.publishedAt = serverTimestamp();
-      const ref = await addDoc(collection(db, 'posts'), postData);
+      let ref = null;
+      try {
+        ref = await addDoc(collection(db, 'posts'), postData);
+      } catch (_) {
+        try {
+          const idToken = await currentUser.getIdToken();
+          const srvRes = await fetch('/api/posts/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+            body: JSON.stringify(postData)
+          });
+          const srvData = await srvRes.json();
+          if (srvData?.success && srvData?.id) ref = { id: srvData.id };
+        } catch (_) {}
+      }
       if(window.invalidateRankedFeedCache) window.invalidateRankedFeedCache();
       return {
         ref,
@@ -22786,8 +23632,33 @@ init();
     postData.publishedAt = serverTimestamp();
     postData.submittedToSecurityDeskAt = serverTimestamp();
 
-    // 1. Initial post document created in Firestore
-    const ref = await addDoc(collection(db, 'posts'), postData);
+    // 1. Initial post document created in Firestore with seamless server fallback
+    let ref = null;
+    try {
+      ref = await addDoc(collection(db, 'posts'), postData);
+    } catch (createErr) {
+      console.warn('Direct Firestore post add failed, utilizing authoritative server endpoint:', createErr);
+      try {
+        const idToken = await currentUser.getIdToken();
+        const srvRes = await fetch('/api/posts/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          body: JSON.stringify(postData)
+        });
+        if (srvRes.ok) {
+          const srvData = await srvRes.json();
+          if (srvData?.success && srvData?.id) {
+            ref = { id: srvData.id };
+          }
+        }
+      } catch (srvErr) {
+        console.error('Server post creation fallback error:', srvErr);
+      }
+      if (!ref) throw createErr;
+    }
 
     // 2. Query authoritative server-side moderation endpoint with Gemini 3.8 Flash
     let evalResult = null;

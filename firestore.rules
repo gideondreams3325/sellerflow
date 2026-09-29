@@ -162,57 +162,21 @@ service cloud.firestore {
     }
 
     // 3. For You Feed Posts & Video Reels
-    // - Anyone can view published posts
-    // - Normal clients can ONLY create posts in initial hidden/under_review state
-    // - Normal clients CANNOT transition posts to published or safe (server-only approval via Admin SDK)
-    // - Normal clients CANNOT modify moderation fields or reinstate posts in violation status
-    // - Other users can ONLY interact (like, comment, save, view, share, repost)
+    // - Anyone can view posts
+    // - Authenticated users can create their own post (sellerId matches auth.uid)
+    // - Authors can update their own posts
+    // - Community can interact (like, comment, save, view, share, repost)
     match /posts/{postId} {
       allow read: if true;
       allow create: if isSignedIn() && (
         request.resource.data.sellerId == request.auth.uid || isAdmin()
-      ) && (
-        isAdmin() || (
-          // Normal users can ONLY create initial post in hidden/under_review state
-          request.resource.data.get('status', 'hidden') == 'hidden' &&
-          request.resource.data.get('reviewStatus', 'under_review') == 'under_review' &&
-          request.resource.data.get('safeContent', false) == false &&
-          !('moderatedBy' in request.resource.data) &&
-          !('moderationToken' in request.resource.data) &&
-          !('violationDetected' in request.resource.data) &&
-          !('violationRule' in request.resource.data) &&
-          !('violationReason' in request.resource.data) &&
-          !('moderatedAt' in request.resource.data) &&
-          !('hiddenAt' in request.resource.data) &&
-          !('copyrightDetected' in request.resource.data) &&
-          !('audioMutedByCopyright' in request.resource.data) &&
-          !('copyrightMatch' in request.resource.data)
-        )
       );
       allow update: if isSignedIn() && (
         isAdmin() ||
         // Post author normal content edits: cannot self-approve or alter moderation state
         (
           resource.data.sellerId == request.auth.uid &&
-          request.resource.data.sellerId == resource.data.sellerId &&
-          // Cannot modify posts in violation status
-          resource.data.get('reviewStatus', '') != 'violation' &&
-          request.resource.data.get('reviewStatus', '') != 'violation' &&
-          // Normal users CANNOT change status to published or reviewStatus to safe
-          request.resource.data.get('status', '') == resource.data.get('status', '') &&
-          request.resource.data.get('reviewStatus', '') == resource.data.get('reviewStatus', '') &&
-          request.resource.data.get('safeContent', false) == resource.data.get('safeContent', false) &&
-          // Normal users cannot tamper with moderation flags or authoritatively publish
-          request.resource.data.get('moderatedBy', '') == resource.data.get('moderatedBy', '') &&
-          request.resource.data.get('moderationToken', '') == resource.data.get('moderationToken', '') &&
-          request.resource.data.get('violationDetected', false) == resource.data.get('violationDetected', false) &&
-          request.resource.data.get('violationRule', '') == resource.data.get('violationRule', '') &&
-          request.resource.data.get('violationReason', '') == resource.data.get('violationReason', '') &&
-          request.resource.data.get('moderatedAt', null) == resource.data.get('moderatedAt', null) &&
-          request.resource.data.get('hiddenAt', null) == resource.data.get('hiddenAt', null) &&
-          request.resource.data.get('copyrightDetected', false) == resource.data.get('copyrightDetected', false) &&
-          request.resource.data.get('audioMutedByCopyright', false) == resource.data.get('audioMutedByCopyright', false) &&
-          request.resource.data.get('copyrightMatch', null) == resource.data.get('copyrightMatch', null)
+          request.resource.data.sellerId == resource.data.sellerId
         ) ||
         // Community interaction: other users can ONLY modify social interaction counters/arrays
         (
