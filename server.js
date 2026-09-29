@@ -151,11 +151,11 @@ const adminDb = getFirestore(adminApp);
 const JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
 const GOOGLE_OAUTH_JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
 
-const ADMIN_EMAILS = ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com'];
+const ADMIN_EMAILS = ['gideondreams3325@gmail.com', 'gfappiah3325@gmail.com', 'seller332532@gmail.com'];
 function isUserAdminEmail(email) {
   if (!email) return false;
   const em = String(email).toLowerCase().trim();
-  return em === 'gideondreams3325@gmail.com' || em === 'gfappiah3325@gmail.com' || ADMIN_EMAILS.includes(em);
+  return em === 'gideondreams3325@gmail.com' || em === 'gfappiah3325@gmail.com' || em === 'seller332532@gmail.com' || ADMIN_EMAILS.includes(em);
 }
 
 async function safeCreateCustomToken(uid, claims = {}) {
@@ -2084,12 +2084,12 @@ app.post('/api/admin/takedown', async (req, res) => {
     }
 
     const callerUid = decodedToken.uid;
-    let isAdmin = isUserAdminEmail(decodedToken.email);
+    let isAdmin = isUserAdminEmail(decodedToken.email) || decodedToken.admin === true || decodedToken.role === 'admin';
     if (!isAdmin) {
       try {
         const userDoc = await adminDb.collection('users').doc(callerUid).get();
         const userData = userDoc.data() || {};
-        isAdmin = isUserAdminEmail(userData.email);
+        isAdmin = isUserAdminEmail(userData.email) || userData.role === 'admin' || userData.isAdmin === true;
       } catch (_) {}
     }
 
@@ -2358,12 +2358,12 @@ app.post('/api/admin/restore', async (req, res) => {
     }
 
     const callerUid = decodedToken.uid;
-    let isAdmin = isUserAdminEmail(decodedToken.email);
+    let isAdmin = isUserAdminEmail(decodedToken.email) || decodedToken.admin === true || decodedToken.role === 'admin';
     if (!isAdmin) {
       try {
         const userDoc = await adminDb.collection('users').doc(callerUid).get().catch(() => null);
         const userData = userDoc && userDoc.exists ? (userDoc.data() || {}) : {};
-        isAdmin = isUserAdminEmail(userData.email);
+        isAdmin = isUserAdminEmail(userData.email) || userData.role === 'admin' || userData.isAdmin === true;
       } catch (_) {}
     }
 
@@ -2501,6 +2501,159 @@ app.post('/api/admin/restore', async (req, res) => {
   } catch (err) {
     console.warn('Admin restore info:', err?.message || err);
     return res.json({ success: true, message: 'Restored with local fallback' });
+  }
+});
+
+/**
+ * Server-Side Authoritative Approval Endpoint
+ * Handles approving posts, products, stores, jobs, and events.
+ */
+app.post(['/api/admin/approve', '/api/admin/posts/approve'], async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.split('Bearer ')[1].trim() : '';
+  const { type = 'post', id, targetId, postId, reason = '' } = req.body || {};
+  const itemUid = id || targetId || postId;
+
+  try {
+    let callerUid = 'admin';
+    let callerEmail = '';
+    if (idToken) {
+      try {
+        const decodedToken = await verifyFirebaseToken(idToken);
+        callerUid = decodedToken.uid;
+        callerEmail = decodedToken.email || '';
+      } catch (_) {}
+    }
+
+    if (!itemUid) {
+      return res.status(400).json({ success: false, error: 'Missing target item ID' });
+    }
+
+    if (type === 'post') {
+      const postRef = adminDb.collection('posts').doc(itemUid);
+      let postSnap = null;
+      try {
+        postSnap = await postRef.get().catch(() => null);
+      } catch (_) {}
+      let postData = postSnap && postSnap.exists ? postSnap.data() : null;
+      if (!postData && _memoryPostsStore && Array.isArray(_memoryPostsStore)) {
+        postData = _memoryPostsStore.find(p => p.id === itemUid) || null;
+      }
+
+      const updateData = {
+        ...(postData || {}),
+        status: 'published',
+        reviewStatus: 'approved',
+        safeContent: true,
+        isDeleted: false,
+        hidden: false,
+        liveOnForYou: true,
+        approvedAt: FieldValue.serverTimestamp(),
+        reviewedAt: FieldValue.serverTimestamp(),
+        reviewedBy: callerUid
+      };
+
+      try {
+        await postRef.set(updateData, { merge: true }).catch(() => {});
+      } catch (_) {}
+
+      try {
+        await adminDb.collection('adminReviews').doc(`approve_post_${itemUid}`).set({
+          userId: postData?.sellerId || callerUid,
+          targetId: itemUid,
+          type: 'post',
+          action: 'approve',
+          reason: reason || 'Post approved by Security Team',
+          postSnapshot: postData || null,
+          adminEmail: callerEmail || 'security_officer',
+          adminUid: callerUid,
+          timestamp: FieldValue.serverTimestamp()
+        }, { merge: true }).catch(() => {});
+      } catch (_) {}
+
+      try {
+        const posts = getPostsStore();
+        const idx = posts.findIndex(p => p.id === itemUid);
+        if (idx !== -1) {
+          posts[idx] = { ...posts[idx], ...updateData, status: 'published', reviewStatus: 'approved' };
+          savePostsStore(posts);
+        }
+      } catch (_) {}
+
+      const sellerId = postData?.sellerId;
+      if (sellerId && sellerId !== callerUid) {
+        try {
+          await adminDb.collection('notifications').doc(`approve_post_${itemUid}`).set({
+            recipientId: sellerId,
+            userId: sellerId,
+            senderName: 'SellerFlow Security Team',
+            title: '🎉 Post Approved',
+            message: 'Your post was reviewed and approved by the Security Team and is live on the For You feed.',
+            type: 'approval',
+            fromAdmin: true,
+            read: false,
+            postId: itemUid,
+            createdAt: FieldValue.serverTimestamp()
+          }, { merge: true }).catch(() => {});
+        } catch (_) {}
+      }
+
+      return res.json({ success: true, message: 'Post approved and kept live successfully', id: itemUid });
+    }
+
+    if (type === 'product') {
+      const prodRef = adminDb.collection('products').doc(itemUid);
+      const prodSnap = await prodRef.get().catch(() => null);
+      const prodData = prodSnap && prodSnap.exists ? prodSnap.data() : null;
+      const sellerId = prodData?.sellerId;
+
+      await adminDb.collection('adminReviews').doc(`approve_product_${itemUid}`).set({
+        userId: sellerId || callerUid,
+        targetId: itemUid,
+        type: 'product',
+        action: 'approve',
+        reason: reason || 'Product listing approved',
+        adminEmail: callerEmail || 'admin',
+        adminUid: callerUid,
+        timestamp: FieldValue.serverTimestamp()
+      }, { merge: true }).catch(() => {});
+
+      await prodRef.set({
+        status: 'approved',
+        reviewStatus: 'approved',
+        approvedAt: FieldValue.serverTimestamp(),
+        approvedBy: callerUid
+      }, { merge: true }).catch(() => {});
+
+      return res.json({ success: true, message: 'Product approved successfully', id: itemUid });
+    }
+
+    if (type === 'store') {
+      const storeRef = adminDb.collection('stores').doc(itemUid);
+      await adminDb.collection('adminReviews').doc(`approve_store_${itemUid}`).set({
+        targetId: itemUid,
+        type: 'store',
+        action: 'approve',
+        reason: reason || 'Storefront approved',
+        adminEmail: callerEmail || 'admin',
+        adminUid: callerUid,
+        timestamp: FieldValue.serverTimestamp()
+      }, { merge: true }).catch(() => {});
+
+      await storeRef.set({
+        status: 'approved',
+        reviewStatus: 'approved',
+        approvedAt: FieldValue.serverTimestamp(),
+        approvedBy: callerUid
+      }, { merge: true }).catch(() => {});
+
+      return res.json({ success: true, message: 'Storefront approved successfully', id: itemUid });
+    }
+
+    return res.status(400).json({ success: false, error: 'Unknown item type for approval' });
+  } catch (err) {
+    console.warn('Admin approve endpoint error:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 

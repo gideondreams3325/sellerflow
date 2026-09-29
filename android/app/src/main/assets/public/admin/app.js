@@ -747,7 +747,12 @@ function updateBadges() {
 
   const pendingKycCount = state.data.buyerKycRecords.filter(r => r.verificationStatus === 'pending' || r.verificationStatus === 'REVIEW').length;
   const pendingReportsCount = [...state.data.scamReports, ...state.data.fraudReports].filter(r => r.status === 'pending' || !r.status).length;
-  const flaggedPostsCount = state.data.posts.filter(p => p.violationDetected || p.reviewStatus === 'under_review' || p.reviewStatus === 'violation' || p.needsAdminReview).length;
+  const flaggedPostsCount = state.data.posts.filter(p => {
+    const isTakenDown = p.status === 'taken_down' || p.status === 'hidden' || p.status === 'removed' || p.isDeleted || p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down';
+    const isApproved = p.reviewStatus === 'approved' || p.reviewStatus === 'reviewed' || p.reviewStatus === 'safe';
+    if (isTakenDown || isApproved) return false;
+    return p.violationDetected || p.reviewStatus === 'under_review' || p.reviewStatus === 'violation' || p.needsAdminReview || p.reviewStatus === 'pending_security_review' || !p.reviewStatus;
+  }).length;
 
   const setBadge = (id, count) => {
     const el = document.getElementById(id);
@@ -1363,22 +1368,30 @@ function renderModerationPosts() {
   if (!container) return;
 
   const filtered = state.data.posts.filter(p => {
+    const isTakenDown = p.status === 'taken_down' || p.status === 'hidden' || p.status === 'removed' || p.isDeleted || p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down';
+    const isApproved = p.reviewStatus === 'approved' || p.reviewStatus === 'reviewed' || p.reviewStatus === 'safe';
+
     if (currentModFilter === 'security_desk') {
-      return (p.status === 'published' || p.liveOnForYou) &&
-        p.status !== 'taken_down' && p.status !== 'removed' && !p.isDeleted &&
-        (p.reviewStatus === 'pending_security_review' || p.submittedToSecurityDeskAt || p.liveOnForYou || (p.status === 'published' && p.reviewStatus !== 'approved' && p.reviewStatus !== 'reviewed'));
+      if (isTakenDown || isApproved) return false;
+      return p.reviewStatus === 'pending_security_review' || p.reviewStatus === 'under_review' || p.reviewStatus === 'pending' || p.reviewStatus === 'review' || p.reviewStatus === 'violation' || p.violationDetected || p.submittedToSecurityDeskAt || !p.reviewStatus;
     }
     if (currentModFilter === 'pending') {
-      return p.reviewStatus === 'under_review' || p.reviewStatus === 'pending' || p.status === 'pending' || p.reviewStatus === 'pending_security_review';
+      if (isTakenDown || isApproved) return false;
+      return p.reviewStatus === 'under_review' || p.reviewStatus === 'pending' || p.status === 'pending' || p.reviewStatus === 'pending_security_review' || !p.reviewStatus;
     }
     if (currentModFilter === 'ai_flagged') {
+      if (isTakenDown || isApproved) return false;
       return p.violationDetected || p.reviewStatus === 'violation' || p.needsAdminReview;
     }
     if (currentModFilter === 'copyright') {
+      if (isTakenDown) return false;
       return p.copyrightDetected || p.audioMutedByCopyright;
     }
     if (currentModFilter === 'taken_down') {
-      return p.status === 'taken_down' || p.status === 'hidden';
+      return isTakenDown;
+    }
+    if (currentModFilter === 'live') {
+      return (p.status === 'published' || p.status === 'approved' || p.status === 'active' || isApproved) && !isTakenDown;
     }
     return true;
   });
@@ -1386,7 +1399,7 @@ function renderModerationPosts() {
   const countEl = document.getElementById('moderationCount');
   if (countEl) {
     if (currentModFilter === 'security_desk') {
-      countEl.textContent = `${filtered.length} live posts on Security Desk`;
+      countEl.textContent = `${filtered.length} pending review posts on Security Desk`;
     } else {
       countEl.textContent = `${filtered.length} posts displayed`;
     }
@@ -1398,11 +1411,12 @@ function renderModerationPosts() {
   }
 
   container.innerHTML = filtered.map(p => {
-    const isTakenDown = p.status === 'taken_down' || p.status === 'hidden';
+    const isTakenDown = p.status === 'taken_down' || p.status === 'hidden' || p.status === 'removed' || p.isDeleted || p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down';
+    const isApproved = p.reviewStatus === 'approved' || p.reviewStatus === 'reviewed' || p.reviewStatus === 'safe';
     const isAiFlag = p.violationDetected || p.reviewStatus === 'violation';
     const isCopyright = p.audioMutedByCopyright || p.copyrightDetected;
-    const isPendingSecurityReview = p.reviewStatus === 'pending_security_review' || p.submittedToSecurityDeskAt || p.liveOnForYou;
-    const isLiveOnForYou = (p.status === 'published' || p.liveOnForYou) && !isTakenDown;
+    const isPendingSecurityReview = !isApproved && !isTakenDown && (p.reviewStatus === 'pending_security_review' || p.submittedToSecurityDeskAt || p.reviewStatus === 'under_review' || !p.reviewStatus);
+    const isLiveOnForYou = !isTakenDown && (isApproved || p.status === 'published' || p.liveOnForYou);
 
     return `
       <div class="bg-white border border-[#262626] rounded-xl overflow-hidden flex flex-col justify-between shadow-md">
@@ -1412,12 +1426,12 @@ function renderModerationPosts() {
               <span class="badge ${isTakenDown ? 'badge-danger' : isLiveOnForYou ? 'badge-success' : isAiFlag ? 'badge-warning' : 'badge-neutral'}">
                 ${isTakenDown ? '🚫 Taken Down' : isLiveOnForYou ? '🟢 Live on For You' : escapeHtml(p.status || 'published')}
               </span>
-              ${isPendingSecurityReview && !isTakenDown ? `
+              ${isPendingSecurityReview ? `
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
                   <span>🛡️</span> Desk Review
                 </span>
               ` : ''}
-              ${p.reviewStatus === 'approved' ? `
+              ${isApproved && !isTakenDown ? `
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                   ✓ Approved
                 </span>
@@ -1470,10 +1484,10 @@ function renderModerationPosts() {
               </div>
               <p class="text-zinc-300 text-[11px]">${escapeHtml(p.violationReason || p.violationRule || 'Policy safety threshold exceeded')}</p>
             </div>
-          ` : isPendingSecurityReview && !isTakenDown ? `
+          ` : isPendingSecurityReview ? `
             <div class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] flex items-center justify-between">
-              <span class="text-amber-300 font-medium">Live on For You Feed</span>
-              <span class="text-[10px] text-zinc-400">Awaiting Desk Review</span>
+              <span class="text-amber-300 font-medium">Awaiting Security Desk Review</span>
+              <span class="text-[10px] text-zinc-400">Action Required</span>
             </div>
           ` : ''}
 
@@ -1508,6 +1522,8 @@ window.handlePostApprove = async function(postId) {
       status: 'published',
       safeContent: true,
       liveOnForYou: true,
+      hidden: false,
+      isDeleted: false,
       approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
       reviewedBy: state.currentUser?.email || 'security_officer',
       reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1664,8 +1680,13 @@ window.handlePostRestore = function(postId) {
     onExecute: async (reason) => {
       try {
         await db.collection('posts').doc(postId).set({
-          status: 'active',
+          status: 'published',
           reviewStatus: 'approved',
+          safeContent: true,
+          liveOnForYou: true,
+          hidden: false,
+          isDeleted: false,
+          restoredAt: firebase.firestore.FieldValue.serverTimestamp(),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
