@@ -1405,7 +1405,7 @@ function renderModerationPosts() {
     const isLiveOnForYou = (p.status === 'published' || p.liveOnForYou) && !isTakenDown;
 
     return `
-      <div class="bg-[#141414] border border-[#262626] rounded-xl overflow-hidden flex flex-col justify-between shadow-md">
+      <div class="bg-white border border-[#262626] rounded-xl overflow-hidden flex flex-col justify-between shadow-md">
         <div class="p-4 space-y-3">
           <div class="flex items-center justify-between flex-wrap gap-1">
             <div class="flex items-center gap-1.5 flex-wrap">
@@ -2458,22 +2458,60 @@ document.addEventListener('DOMContentLoaded', () => {
 function isCapacitorNative() {
   if (typeof window.Capacitor !== 'undefined') {
     if (typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) return true;
-    if (typeof window.Capacitor.getPlatform === 'function' && window.Capacitor.getPlatform() === 'android') return true;
+    if (typeof window.Capacitor.getPlatform === 'function' && (window.Capacitor.getPlatform() === 'android' || window.Capacitor.getPlatform() === 'ios')) return true;
+    if (window.Capacitor.platform === 'android' || window.Capacitor.platform === 'ios') return true;
   }
   const origin = window.location.origin || '';
-  if (origin.includes('capacitor://') || origin.includes('http://localhost') || origin.includes('https://localhost')) {
+  const hostname = window.location.hostname || '';
+  const port = window.location.port || '';
+  const protocol = window.location.protocol || '';
+
+  if (protocol === 'file:' || protocol === 'capacitor:' || origin.includes('capacitor://') || origin.startsWith('file:')) {
+    return true;
+  }
+  if ((hostname === 'localhost' || hostname === '127.0.0.1') && port !== '3000' && port !== '5173' && port !== '8080') {
+    return true;
+  }
+  if (typeof navigator !== 'undefined' && navigator.userAgent && (navigator.userAgent.includes('Capacitor') || navigator.userAgent.includes('SellerFlowAndroid'))) {
     return true;
   }
   return false;
 }
 
 function getAdminAppUrl() {
-  const origin = window.location.origin || '';
-  if (origin && origin.startsWith('http') && !origin.includes('capacitor://') && !origin.startsWith('file:') && !origin.includes('127.0.0.1:0')) {
-    return origin.replace(/\/+$/, '');
+  const isCap = isCapacitorNative();
+  if (!isCap) {
+    const origin = window.location.origin || '';
+    if (origin && origin.startsWith('http') && !origin.includes('capacitor://') && !origin.startsWith('file:') && !origin.includes('127.0.0.1:0')) {
+      return origin.replace(/\/+$/, '');
+    }
+  }
+  if (window.SELLERFLOW_APP_URL && typeof window.SELLERFLOW_APP_URL === 'string' && window.SELLERFLOW_APP_URL.startsWith('http')) {
+    return window.SELLERFLOW_APP_URL.replace(/\/+$/, '');
   }
   return 'https://sellerflow-tan.vercel.app';
 }
+
+// Safe Response.json wrapper
+(function() {
+  const originalJson = Response.prototype.json;
+  Response.prototype.json = async function() {
+    try {
+      const text = await this.text();
+      if (!text) return { success: this.ok };
+      const trimmed = text.trim();
+      if (trimmed.startsWith('<') || trimmed.startsWith('<!doctype') || trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html')) {
+        return {
+          success: false,
+          error: this.ok ? 'Unexpected response received from server.' : `Server returned status ${this.status}.`
+        };
+      }
+      return JSON.parse(trimmed);
+    } catch (parseErr) {
+      return { success: false, error: 'Unable to parse server response.' };
+    }
+  };
+})();
 
 let adminCapacitorInitialized = false;
 window._sfHandledAdminOAuthFingerprints = window._sfHandledAdminOAuthFingerprints || new Set();

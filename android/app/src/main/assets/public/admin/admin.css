@@ -1,18 +1,18 @@
-/* SELLER FLOW ADMIN — Professional Dark Theme Stylesheet */
+/* SELLER FLOW ADMIN — Professional Light Theme Stylesheet */
 :root {
-  --bg-primary: #0d0d0d;
-  --bg-card: #141414;
-  --bg-card-hover: #1c1c1c;
-  --bg-elevated: #1f1f1f;
-  --bg-input: #121212;
-  --border-color: #262626;
+  --bg-primary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f9fafb;
+  --bg-elevated: #ffffff;
+  --bg-input: #ffffff;
+  --border-color: #e5e7eb;
   --border-focus: #f5b942;
   --accent-gold: #f5b942;
   --accent-gold-hover: #e0a331;
   --accent-gold-glow: rgba(245, 185, 66, 0.2);
-  --text-main: #f4f4f5;
-  --text-muted: #a1a1aa;
-  --text-sub: #71717a;
+  --text-main: #111827;
+  --text-muted: #4b5563;
+  --text-sub: #6b7280;
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
@@ -41,14 +41,14 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #111;
+  background: #f3f4f6;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2a2a2a;
+  background: #d1d5db;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: #9ca3af;
 }
 
 /* Layout Container */
@@ -61,7 +61,7 @@ body {
 /* Sidebar Navigation */
 .admin-sidebar {
   width: 260px;
-  background-color: #111111;
+  background-color: #ffffff;
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
