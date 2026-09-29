@@ -13,12 +13,14 @@ function buildCapacitorBundle() {
   const browserPath = path.resolve('node_modules/@capacitor/browser/dist/plugin.js');
   const appPath = path.resolve('node_modules/@capacitor/app/dist/plugin.js');
   const pushPath = path.resolve('node_modules/@capacitor/push-notifications/dist/plugin.js');
+  const sharePath = path.resolve('node_modules/@capacitor/share/dist/plugin.js');
 
   if (fs.existsSync(corePath) && fs.existsSync(browserPath) && fs.existsSync(appPath) && fs.existsSync(pushPath)) {
     const core = fs.readFileSync(corePath, 'utf8');
     const browser = fs.readFileSync(browserPath, 'utf8');
     const app = fs.readFileSync(appPath, 'utf8');
     const push = fs.readFileSync(pushPath, 'utf8');
+    const share = fs.existsSync(sharePath) ? fs.readFileSync(sharePath, 'utf8') : '';
 
     const bundle = [
       '// SellerFlow Capacitor Runtime Bridge Bundle',
@@ -29,6 +31,7 @@ function buildCapacitorBundle() {
       browser,
       app,
       push,
+      share,
       '(function() {',
       '  if (typeof window === "undefined") return;',
       '  var cap = window.Capacitor || (typeof capacitorExports !== "undefined" && capacitorExports.Capacitor) || {};',
@@ -36,6 +39,7 @@ function buildCapacitorBundle() {
       '  if (typeof capacitorBrowser !== "undefined" && capacitorBrowser.Browser) cap.Plugins.Browser = capacitorBrowser.Browser;',
       '  if (typeof capacitorApp !== "undefined" && capacitorApp.App) cap.Plugins.App = capacitorApp.App;',
       '  if (typeof capacitorPushNotifications !== "undefined" && capacitorPushNotifications.PushNotifications) cap.Plugins.PushNotifications = capacitorPushNotifications.PushNotifications;',
+      '  if (typeof capacitorShare !== "undefined" && capacitorShare.Share) cap.Plugins.Share = capacitorShare.Share;',
       '  window.Capacitor = cap;',
       '})();\n'
     ].join('\n');
