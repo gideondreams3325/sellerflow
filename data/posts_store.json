@@ -104,7 +104,9 @@
     "trimStart": 0,
     "trimEnd": 15.05,
     "videoDuration": 15.1,
-    "likes": [],
+    "likes": [
+      "test_user_123"
+    ],
     "saves": [],
     "comments": [],
     "reposts": [],
@@ -141,6 +143,7 @@
     "soundOriginName": "Gideon Appiah",
     "soundUrl": "",
     "platformLabel": "SellerFlow",
-    "isAdminPost": false
+    "isAdminPost": false,
+    "shares": []
   }
 ]

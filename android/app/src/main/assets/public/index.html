@@ -2613,7 +2613,7 @@ function getAppUrl() {
       return origin.replace(/\/+$/, '');
     }
   }
-  const injectedUrl = 'https://ais-dev-qyxutttddabby4hegm3yj5-140252152764.europe-west2.run.app';
+  const injectedUrl = 'https://ais-dev-7tdmaygfvfreigw4gp7scg-123405530511.europe-west2.run.app';
   if (injectedUrl && injectedUrl.startsWith('http') && !injectedUrl.includes('____')) {
     return injectedUrl.replace(/\/+$/, '');
   }
@@ -3495,6 +3495,49 @@ const arrayUnion=(...values)=>firebase.firestore.FieldValue.arrayUnion(...values
 const arrayRemove=(...values)=>firebase.firestore.FieldValue.arrayRemove(...values);
 // Snapshot compatibility helper: works with Firebase Compat and Modular snapshots.
 function snapshotExists(snap){return !!snap && (typeof snap.exists==='function' ? snap.exists() : !!snap.exists);}
+
+const writeBatch=(database)=>{
+  const d = getDbSafe(database);
+  if(d && typeof d.batch === 'function') return d.batch();
+  return {
+    set: (ref, data, opts) => (ref && typeof ref.set === 'function' ? ref.set(data, opts) : Promise.resolve()),
+    update: (ref, data) => (ref && typeof ref.update === 'function' ? ref.update(data) : Promise.resolve()),
+    delete: (ref) => (ref && typeof ref.delete === 'function' ? ref.delete() : Promise.resolve()),
+    commit: async () => {}
+  };
+};
+window.writeBatch = writeBatch;
+const startAfter=(...args)=>(q)=>(q&&typeof q.startAfter==='function'?q.startAfter(...args):q);
+const startAt=(...args)=>(q)=>(q&&typeof q.startAt==='function'?q.startAt(...args):q);
+const endAt=(...args)=>(q)=>(q&&typeof q.endAt==='function'?q.endAt(...args):q);
+const endBefore=(...args)=>(q)=>(q&&typeof q.endBefore==='function'?q.endBefore(...args):q);
+window.startAfter = startAfter;
+window.startAt = startAt;
+window.endAt = endAt;
+window.endBefore = endBefore;
+
+function customAlert(opts = {}){
+  return new Promise((resolve) => {
+    if (typeof modal === 'function') {
+      modal(`<div>
+        <div class="text-4xl text-center mb-2">${opts.icon || 'ℹ️'}</div>
+        <h3 class="font-bold text-lg text-center text-gray-900">${esc(opts.title || 'Notification')}</h3>
+        <p class="text-sm text-gray-600 text-center mt-2">${esc(opts.message || '')}</p>
+        ${opts.subText ? `<p class="text-xs text-gray-500 text-center mt-1">${esc(opts.subText)}</p>` : ''}
+        <button id="_customAlertOk" class="mt-4 w-full bg-gold text-black py-2.5 rounded-xl font-bold text-sm">Understood</button>
+      </div>`);
+      const ok = document.getElementById('_customAlertOk');
+      if(ok) ok.onclick = () => { if(typeof closeModal === 'function') closeModal(); resolve(); };
+      else resolve();
+    } else {
+      resolve();
+    }
+  });
+}
+window.customAlert = customAlert;
+window.showOrderDetailModal = function(id) {
+  if (typeof openOrderDetailModal === 'function') return openOrderDetailModal(id);
+};
 
 
 
@@ -8569,6 +8612,36 @@ function updateReelEngagementInDOM(id, d){
 }
 window.updateReelEngagementInDOM = updateReelEngagementInDOM;
 
+function triggerLikeAnimation(wrap){
+  if(!wrap) return;
+  const overlay = wrap.querySelector('.reel-heart-overlay');
+  if(!overlay) return;
+  const heart = overlay.querySelector('span');
+
+  overlay.classList.remove('opacity-0', 'pointer-events-none');
+  overlay.classList.add('opacity-100');
+  if(heart){
+    heart.style.transition = 'transform 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+    heart.style.transform = 'scale(1.4)';
+  }
+
+  setTimeout(()=>{
+    overlay.style.transition = 'opacity 0.35s ease-out';
+    overlay.classList.remove('opacity-100');
+    overlay.classList.add('opacity-0');
+    if(heart){
+      heart.style.transition = 'transform 0.35s ease-out';
+      heart.style.transform = 'scale(0.75)';
+    }
+    setTimeout(()=>{
+      overlay.classList.add('pointer-events-none');
+      overlay.style.transition = '';
+      if(heart) heart.style.transition = '';
+    }, 380);
+  }, 480);
+}
+window.triggerLikeAnimation = triggerLikeAnimation;
+
 function _renderFeedHTML(feedPosts, targetPostId, options){
   const fromProfile = options?.fromProfile;
   $('page').innerHTML = `
@@ -8681,6 +8754,12 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
       if(pId && typeof deleteUserPost === 'function') deleteUserPost(pId);
     };
   });
+  document.querySelectorAll('[data-post-action]').forEach(b=>{
+    b.onclick=(e)=>{
+      e.stopPropagation();
+      if(typeof postAction === 'function') postAction(e);
+    };
+  });
   if(typeof ensureFeedStoresChecked === 'function') {
     const pList = feedPosts || [];
     ensureFeedStoresChecked(pList).catch(()=>{});
@@ -8745,6 +8824,46 @@ async function fetchMoreFeedPosts() {
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = newPosts.map((p, i) => postCard(p, startIdx + i)).join('');
       
+      tempDiv.querySelectorAll('[data-post-action]').forEach(b=>{
+        b.onclick=(e)=>{
+          e.stopPropagation();
+          if(typeof postAction === 'function') postAction(e);
+        };
+      });
+      tempDiv.querySelectorAll('[data-reel-follow]').forEach(b=>b.onclick=(e)=>{
+        e.stopPropagation();
+        toggleFollowSeller(b.dataset.reelFollow);
+      });
+      tempDiv.querySelectorAll('[data-open-seller]').forEach(b=>b.onclick=(e)=>{
+        e.stopPropagation();
+        openUserProfile(b.dataset.openSeller);
+      });
+      tempDiv.querySelectorAll('[data-order-store]').forEach(b=>b.onclick=(e)=>{
+        e.stopPropagation();
+        const sId=b.dataset.orderStore;
+        if(window.recordFeedEvent) window.recordFeedEvent('ORDER_STORE_TAP', { sellerId: sId });
+        openStore(sId);
+      });
+      tempDiv.querySelectorAll('[data-scam-notice]').forEach(b=>b.onclick=(e)=>{
+        e.stopPropagation();
+        const sId=b.dataset.scamNotice;
+        showNoStoreScamNotice(sId);
+      });
+      tempDiv.querySelectorAll('[data-admin-takedown-reel]').forEach(b=>{
+        b.onclick=(e)=>{
+          e.stopPropagation();
+          const pId = b.dataset.adminTakedownReel;
+          if(pId && typeof adminTakeDown === 'function') adminTakeDown(pId);
+        };
+      });
+      tempDiv.querySelectorAll('[data-user-delete-reel]').forEach(b=>{
+        b.onclick=(e)=>{
+          e.stopPropagation();
+          const pId = b.dataset.userDeleteReel;
+          if(pId && typeof deleteUserPost === 'function') deleteUserPost(pId);
+        };
+      });
+
       while (tempDiv.firstChild) {
         fragment.appendChild(tempDiv.firstChild);
       }
@@ -9470,6 +9589,43 @@ function setupReelPlayback(targetPostId){
       const img = card.querySelector('img.reel-media');
       if(img) img.addEventListener('click',toggle);
     }
+
+    let lastTapTime = 0;
+    const mediaWrap = card.querySelector('.reel-media-wrap');
+    if (mediaWrap) {
+      const handleDoubleTap = (e) => {
+        if(e.target.closest('.reel-actions') || e.target.closest('.reel-content button') || e.target.closest('.sound-chip') || e.target.closest('.comment-sheet') || e.target.closest('.reel-sound-label') || e.target.closest('[data-sound-toggle]')) return;
+        if(e.stopPropagation) e.stopPropagation();
+        triggerLikeAnimation(card);
+        const likeBtn = card.querySelector('[data-post-action="like"]');
+        if (likeBtn) {
+          likeBtn.click();
+        } else if (!currentUser) {
+          showAuthPrompt('like posts on For You');
+        }
+      };
+
+      mediaWrap.addEventListener('dblclick', handleDoubleTap);
+      mediaWrap.addEventListener('touchend', (e) => {
+        if(e.target.closest('.reel-actions') || e.target.closest('.reel-content button') || e.target.closest('.sound-chip') || e.target.closest('.comment-sheet') || e.target.closest('.reel-sound-label') || e.target.closest('[data-sound-toggle]')) return;
+        const now = Date.now();
+        const diff = now - lastTapTime;
+        if (diff > 40 && diff < 340) {
+          lastTapTime = 0;
+          if(e.preventDefault) e.preventDefault();
+          handleDoubleTap(e);
+          return;
+        }
+        lastTapTime = now;
+      }, { passive: false });
+    }
+
+    card.querySelectorAll('[data-post-action]').forEach(b => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        if(typeof postAction === 'function') postAction(e);
+      };
+    });
   };
 
   cards.forEach(bindCardVideoAndControls);
@@ -9969,6 +10125,11 @@ window.openVideoShareModal = async function(id, p) {
     const prevCount = parseInt(countEl.textContent, 10) || (postData.shares?.length || 0);
     countEl.textContent = formatReelCount(prevCount + 1);
   }
+  if(typeof updateReelEngagementInDOM === 'function') {
+    const currentShares = Array.isArray(postData.shares) ? postData.shares : [];
+    const newShares = currentUser && !currentShares.includes(currentUser.uid) ? [...currentShares, currentUser.uid] : currentShares;
+    updateReelEngagementInDOM(postId, { ...postData, shares: newShares, shareCount: Math.max(newShares.length, (postData.shareCount || 0) + 1) });
+  }
 
   // Native Android & System Share Invocation Helper
   const triggerNativeShare = async () => {
@@ -10128,25 +10289,94 @@ async function postAction(e){
     showAuthPrompt(verb);
     return;
   }
-  const r=doc(db,'posts',id),s=await getDoc(r);if(!snapshotExists(s))return;const p=s.data();
+  let p = (window._sfCachedPosts && window._sfCachedPosts.get(id)) || (typeof _cachedFeedPosts !== 'undefined' && Array.isArray(_cachedFeedPosts) && _cachedFeedPosts.find(x => x && x.id === id));
+  if(!p){
+    try {
+      const s = await getDoc(doc(db,'posts',id));
+      if(snapshotExists(s)) p = { id: s.id, ...s.data() };
+    } catch(_) {}
+  }
+  if(!p) p = { id, likes: [], saves: [], comments: [], reposts: [] };
+
   if(action==='comment'){openCommentPanel(id,p);return}
   if(action==='sound'){await saveSoundForUser(id,p);return}
-  if(action==='share'){openVideoShareModal(id,p);return}
+  if(action==='share'){if(typeof openVideoShareModal === 'function') openVideoShareModal(id,p);return}
   if(action==='options'){if(typeof openPostSettingsModal === 'function') openPostSettingsModal(id,p);return}
+
+  if(action==='repost'){
+    const active=currentUser&&(p.reposts||[]).includes(currentUser.uid);
+    p.reposts = active ? (p.reposts||[]).filter(u => u !== currentUser.uid) : [...(p.reposts||[]), currentUser.uid];
+    if(!active){
+      toast('Video reposted! Your followers can now discover this video.','success');
+      if(window.recordFeedEvent) window.recordFeedEvent('SHARE', { postId: id, sellerId: p.sellerId }, p);
+      if(typeof notifyPostOwner === 'function') notifyPostOwner(id,'repost').catch(()=>{});
+    } else {
+      toast('Repost removed','info');
+    }
+    const wrap=document.querySelector(`[data-reel-id="${id}"]`);
+    const btn=wrap?.querySelector(`[data-post-action="repost"]`);
+    if(btn){
+      btn.innerHTML=`<span class="text-lg">${!active?'🔁':'🔄'}</span><div class="text-[10px] mt-0.5">${(p.reposts||[]).length}</div>`;
+    }
+    try {
+      const r = doc(db,'posts',id);
+      updateDoc(r,{reposts:active?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)}).catch(()=>{});
+    } catch(_) {}
+    try {
+      fetch('/api/posts/engage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: id, action: 'repost', userId: currentUser.uid })
+      }).catch(()=>{});
+    } catch(_) {}
+    return;
+  }
 
   if(action==='like'||action==='save'){
     const wasActive=(action==='like'?(p.likes||[]).includes(currentUser.uid):(p.saves||[]).includes(currentUser.uid));
     const nowActive=!wasActive;
     if(action==='like'){
-      p.likes = nowActive ? [...(p.likes||[]), currentUser.uid] : (p.likes||[]).filter(u => u !== currentUser.uid);
-      await updateDoc(r,{likes:nowActive?arrayUnion(currentUser.uid):arrayRemove(currentUser.uid)});
-      if(nowActive) notifyPostOwner(id,'like').catch(()=>{});
+      p.likes = nowActive ? [...(p.likes||[]).filter(u => u !== currentUser.uid), currentUser.uid] : (p.likes||[]).filter(u => u !== currentUser.uid);
+      if(typeof updateReelEngagementInDOM === 'function') updateReelEngagementInDOM(id, p);
+      if(nowActive && typeof triggerLikeAnimation === 'function'){
+        const wrap = document.querySelector(`[data-reel-id="${id}"]`);
+        if(wrap) triggerLikeAnimation(wrap);
+      }
+      toast(nowActive ? 'Post liked' : 'Reaction removed', 'success', 1800);
       if(window.recordFeedEvent) window.recordFeedEvent(nowActive ? 'LIKE' : 'UNLIKE', { postId: id, sellerId: p.sellerId }, p);
+      try {
+        const r = doc(db,'posts',id);
+        updateDoc(r,{likes:nowActive?arrayUnion(currentUser.uid):arrayRemove(currentUser.uid)}).catch(async () => {
+          await setDoc(r, { likes: p.likes }, { merge: true }).catch(()=>{});
+        });
+        if(nowActive && typeof notifyPostOwner === 'function') notifyPostOwner(id,'like').catch(()=>{});
+      } catch(_) {}
+      try {
+        fetch('/api/posts/engage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postId: id, action: nowActive ? 'like' : 'unlike', userId: currentUser.uid })
+        }).catch(()=>{});
+      } catch(_) {}
     } else {
-      p.saves = nowActive ? [...(p.saves||[]), currentUser.uid] : (p.saves||[]).filter(u => u !== currentUser.uid);
-      await updateDoc(r,{saves:nowActive?arrayUnion(currentUser.uid):arrayRemove(currentUser.uid)});
-      if(nowActive) notifyPostOwner(id,'save').catch(()=>{});
+      p.saves = nowActive ? [...(p.saves||[]).filter(u => u !== currentUser.uid), currentUser.uid] : (p.saves||[]).filter(u => u !== currentUser.uid);
+      if(typeof updateReelEngagementInDOM === 'function') updateReelEngagementInDOM(id, p);
+      toast(nowActive ? 'Post saved to your collection' : 'Post removed from saves', 'success', 1800);
       if(window.recordFeedEvent) window.recordFeedEvent(nowActive ? 'SAVE' : 'UNSAVE', { postId: id, sellerId: p.sellerId }, p);
+      try {
+        const r = doc(db,'posts',id);
+        updateDoc(r,{saves:nowActive?arrayUnion(currentUser.uid):arrayRemove(currentUser.uid)}).catch(async () => {
+          await setDoc(r, { saves: p.saves }, { merge: true }).catch(()=>{});
+        });
+        if(nowActive && typeof notifyPostOwner === 'function') notifyPostOwner(id,'save').catch(()=>{});
+      } catch(_) {}
+      try {
+        fetch('/api/posts/engage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postId: id, action: nowActive ? 'save' : 'unsave', userId: currentUser.uid })
+        }).catch(()=>{});
+      } catch(_) {}
     }
 
     if(window._sfCachedPosts && window._sfCachedPosts.has(id)){
@@ -10170,9 +10400,6 @@ async function postAction(e){
           svg.setAttribute('class', nowActive ? 'w-6 h-6 text-red-500 fill-red-500 stroke-red-500' : 'w-6 h-6 text-white fill-none stroke-current');
           btn.classList.toggle('is-liked', nowActive);
         }
-        if(nowActive && wrap && typeof triggerLikeAnimation === 'function'){
-          triggerLikeAnimation(wrap);
-        }
       } else if(action==='save'){
         const svg=btn.querySelector('svg');
         if(svg){
@@ -10186,7 +10413,6 @@ async function postAction(e){
         countEl.textContent=formatReelCount(currentCount);
       }
     }
-    toast(action==='like'?(nowActive?'Post liked':'Reaction removed'):(nowActive?'Post saved':'Post removed from saves'),'success');
   }
 }
 
@@ -10329,12 +10555,27 @@ function openCommentPanel(id,p){
       createdAt: Date.now(),
       text
     };
-    await updateDoc(doc(db,'posts',id),{
-      comments: arrayUnion(commentObj)
-    });
+    try {
+      await updateDoc(doc(db,'posts',id),{
+        comments: arrayUnion(commentObj)
+      });
+    } catch (_) {
+      try {
+        await setDoc(doc(db,'posts',id), { comments: p.comments }, { merge: true });
+      } catch (_) {}
+    }
+    try {
+      fetch('/api/posts/engage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: id, action: 'comment', userId: currentUser.uid, comment: commentObj })
+      }).catch(()=>{});
+    } catch (_) {}
     if(Array.isArray(p.comments)){
       p.comments.push(commentObj);
     }
+    if(window.recordFeedEvent) window.recordFeedEvent('COMMENT', { postId: id, sellerId: p.sellerId }, p);
+    if(typeof notifyPostOwner === 'function') notifyPostOwner(id, 'comment').catch(()=>{});
     const wrap = document.querySelector(`[data-reel-id="${id}"]`);
     const countEl = wrap?.querySelector(`[data-post-action="comment"]`)?.parentElement?.querySelector('.reel-action-count');
     if(countEl){
@@ -24881,87 +25122,95 @@ init();
       showAuthPrompt(verb);
       return;
     }
-    const r=doc(db,'posts',id),s=await getDoc(r);if(!snapshotExists(s))return;const p=s.data();
+
+    // Retrieve post from memory cache or Firestore
+    let p = (window._sfCachedPosts && window._sfCachedPosts.get(id)) || (_cachedFeedPosts && _cachedFeedPosts.find(x => x.id === id));
+    if(!p){
+      try {
+        const s = await getDoc(doc(db,'posts',id));
+        if(snapshotExists(s)) p = { id: s.id, ...s.data() };
+      } catch(_) {}
+    }
+    if(!p) p = { id, likes: [], saves: [], comments: [], reposts: [] };
+
     if(action==='like'){
       const active=currentUser&&(p.likes||[]).includes(currentUser.uid);
       const nowActive=!active;
-      p.likes = nowActive ? [...(p.likes||[]), currentUser.uid] : (p.likes||[]).filter(u => u !== currentUser.uid);
-      await updateDoc(r,{likes:nowActive?arrayUnion(currentUser.uid):arrayRemove(currentUser.uid)});
-      if(nowActive) await notifyPostOwner(id,'like').catch(()=>{});
+      p.likes = nowActive ? [...(p.likes||[]).filter(u => u !== currentUser.uid), currentUser.uid] : (p.likes||[]).filter(u => u !== currentUser.uid);
+
+      // 1. Optimistic UI update across DOM and memory
+      updateReelEngagementInDOM(id, p);
+      if(nowActive && typeof triggerLikeAnimation === 'function'){
+        const wrap = document.querySelector(`[data-reel-id="${id}"]`);
+        if(wrap) triggerLikeAnimation(wrap);
+      }
+      toast(nowActive ? 'Post liked' : 'Reaction removed', 'success', 1800);
+
+      // 2. Telemetry & recommendation signals
       if(window.recordFeedEvent) window.recordFeedEvent(nowActive ? 'LIKE' : 'UNLIKE', { postId: id, sellerId: p.sellerId }, p);
+
+      // 3. Background persist & notify owner
+      try {
+        const r = doc(db,'posts',id);
+        updateDoc(r,{likes:nowActive?arrayUnion(currentUser.uid):arrayRemove(currentUser.uid)}).catch(async () => {
+          await setDoc(r, { likes: p.likes }, { merge: true }).catch(()=>{});
+        });
+        if(nowActive) notifyPostOwner(id,'like').catch(()=>{});
+      } catch(_) {}
+      return;
     }
+
     if(action==='save'){
       const active=currentUser&&(p.saves||[]).includes(currentUser.uid);
       const nowActive=!active;
-      p.saves = nowActive ? [...(p.saves||[]), currentUser.uid] : (p.saves||[]).filter(u => u !== currentUser.uid);
-      await updateDoc(r,{saves:nowActive?arrayUnion(currentUser.uid):arrayRemove(currentUser.uid)});
-      if(nowActive) await notifyPostOwner(id,'save').catch(()=>{});
+      p.saves = nowActive ? [...(p.saves||[]).filter(u => u !== currentUser.uid), currentUser.uid] : (p.saves||[]).filter(u => u !== currentUser.uid);
+
+      // 1. Optimistic UI update across DOM and memory
+      updateReelEngagementInDOM(id, p);
+      toast(nowActive ? 'Post saved to your collection' : 'Post removed from saves', 'success', 1800);
+
+      // 2. Telemetry & recommendation signals
       if(window.recordFeedEvent) window.recordFeedEvent(nowActive ? 'SAVE' : 'UNSAVE', { postId: id, sellerId: p.sellerId }, p);
+
+      // 3. Background persist & notify owner
+      try {
+        const r = doc(db,'posts',id);
+        updateDoc(r,{saves:nowActive?arrayUnion(currentUser.uid):arrayRemove(currentUser.uid)}).catch(async () => {
+          await setDoc(r, { saves: p.saves }, { merge: true }).catch(()=>{});
+        });
+        if(nowActive) notifyPostOwner(id,'save').catch(()=>{});
+      } catch(_) {}
+      return;
     }
+
     if(action==='repost'){
       const active=currentUser&&(p.reposts||[]).includes(currentUser.uid);
-      await updateDoc(r,{reposts:active?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)});
+      p.reposts = active ? (p.reposts||[]).filter(u => u !== currentUser.uid) : [...(p.reposts||[]), currentUser.uid];
       if(!active){
-        await notifyPostOwner(id,'repost').catch(()=>{});
         toast('Video reposted! Your followers can now discover this video.','success');
         if(window.recordFeedEvent) window.recordFeedEvent('SHARE', { postId: id, sellerId: p.sellerId }, p);
-      }else{
+        notifyPostOwner(id,'repost').catch(()=>{});
+      } else {
         toast('Repost removed','info');
       }
       const wrap=document.querySelector(`[data-reel-id="${id}"]`);
       const btn=wrap?.querySelector(`[data-post-action="repost"]`);
       if(btn){
-        const nowCount=Math.max(0,(p.reposts||[]).length+(active?-1:1));
-        btn.innerHTML=`<span class="text-lg">${!active?'🔁':'🔄'}</span><div class="text-[10px] mt-0.5">${nowCount}</div>`;
+        btn.innerHTML=`<span class="text-lg">${!active?'🔁':'🔄'}</span><div class="text-[10px] mt-0.5">${(p.reposts||[]).length}</div>`;
       }
+      try {
+        const r = doc(db,'posts',id);
+        updateDoc(r,{reposts:active?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid)}).catch(()=>{});
+      } catch(_) {}
       return;
     }
-    if(action==='comment'){openCommentPanel(id,p);return}
-    if(action==='sound'){await saveSoundForUser(id,p);return}
-    if(action==='options'){openPostSettingsModal(id,p);return}
+
+    if(action==='comment'){openCommentPanel(id,p);return;}
+    if(action==='sound'){await saveSoundForUser(id,p);return;}
+    if(action==='options'){openPostSettingsModal(id,p);return;}
     if(action==='share'){
       openVideoShareModal(id, p);
       return;
-    }
-    if(action==='like'||action==='save'){
-      const wrap=document.querySelector(`[data-reel-id="${id}"]`);
-      const btn=wrap?.querySelector(`[data-post-action="${action}"]`)||b;
-      const nowActive = action==='like' ? (currentUser && (p.likes||[]).includes(currentUser.uid)) : (currentUser && (p.saves||[]).includes(currentUser.uid));
-      if(window._sfCachedPosts && window._sfCachedPosts.has(id)){
-        if(action==='like') window._sfCachedPosts.get(id).likes = p.likes;
-        else window._sfCachedPosts.get(id).saves = p.saves;
-      }
-      if(typeof _cachedFeedPosts !== 'undefined' && Array.isArray(_cachedFeedPosts)){
-        const cp = _cachedFeedPosts.find(x => x.id === id);
-        if(cp){
-          if(action==='like') cp.likes = p.likes;
-          else cp.saves = p.saves;
-        }
-      }
-      if(btn){
-        if(action==='like'){
-          btn.classList.toggle('is-liked', Boolean(nowActive));
-          const heartSvg = btn.querySelector('svg');
-          if(heartSvg){
-            heartSvg.setAttribute('class', nowActive ? 'w-6 h-6 text-red-500 fill-red-500 stroke-red-500' : 'w-6 h-6 text-white fill-none stroke-current');
-          }
-          if(nowActive && wrap && typeof triggerLikeAnimation === 'function'){
-            triggerLikeAnimation(wrap);
-          }
-        } else if(action==='save'){
-          btn.classList.toggle('is-saved', Boolean(nowActive));
-          const saveSvg = btn.querySelector('svg');
-          if(saveSvg){
-            saveSvg.setAttribute('class', nowActive ? 'w-6 h-6 text-yellow-400 fill-yellow-400 stroke-yellow-400' : 'w-6 h-6 text-white fill-none stroke-current');
-          }
-        }
-        const countEl=btn.parentElement?.querySelector('.reel-action-count') || wrap?.querySelector(`[data-post-action="${action}"]`)?.parentElement?.querySelector('.reel-action-count');
-        if(countEl){
-          const baseCount = (action==='like'?(p.likes||[]).length:(p.saves||[]).length);
-          countEl.textContent=formatReelCount(baseCount);
-        }
-      }
-      toast(action==='like'?(nowActive?'Post liked':'Reaction removed'):(nowActive?'Post saved':'Post removed from saves'),'success');
     }
   };
 
@@ -25319,6 +25568,7 @@ init();
           if(window.recordFeedEvent) window.recordFeedEvent('COMMENT', { postId: id, sellerId: p.sellerId }, p);
           await updateDoc(doc(db,'posts',id),{comments:list});
           p.comments=list;
+          if(typeof updateReelEngagementInDOM === 'function') updateReelEngagementInDOM(id, p);
           replyingTo=null;
           drawComments();
           toast('Comment posted','success');
@@ -28622,8 +28872,27 @@ init();
 
   /* Real online/offline indicators. lastSeen is refreshed while the app is open; offline means stale/no heartbeat. */
   let sfPresenceTimer=null;
-  async function sfPresence(){if(!currentUser)return;try{await updateDoc(doc(db,'users',currentUser.uid),{online:true,lastSeen:serverTimestamp()});await setDoc(doc(db,'publicProfiles',currentUser.uid),{online:true,lastSeen:serverTimestamp()},{merge:true})}catch(e){console.warn('Presence update skipped',e)}}
-  function sfStartPresence(){if(sfPresenceTimer)return;sfPresence();sfPresenceTimer=setInterval(sfPresence,45000);window.addEventListener('pagehide',()=>{try{if(!currentUser)return;updateDoc(doc(db,'users',currentUser.uid),{online:false,lastSeen:serverTimestamp()});setDoc(doc(db,'publicProfiles',currentUser.uid),{online:false,lastSeen:serverTimestamp()},{merge:true})}catch(_){}},{once:true})}
+  async function sfPresence(){
+    const u = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (typeof window !== 'undefined' ? window.currentUser : null);
+    if(!u) return;
+    try{
+      await updateDoc(doc(db,'users',u.uid),{online:true,lastSeen:serverTimestamp()});
+      await setDoc(doc(db,'publicProfiles',u.uid),{online:true,lastSeen:serverTimestamp()},{merge:true});
+    }catch(e){console.warn('Presence update skipped',e)}
+  }
+  function sfStartPresence(){
+    if(sfPresenceTimer) return;
+    sfPresence();
+    sfPresenceTimer=setInterval(sfPresence,45000);
+    window.addEventListener('pagehide',()=>{
+      try{
+        const u = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (typeof window !== 'undefined' ? window.currentUser : null);
+        if(!u) return;
+        updateDoc(doc(db,'users',u.uid),{online:false,lastSeen:serverTimestamp()});
+        setDoc(doc(db,'publicProfiles',u.uid),{online:false,lastSeen:serverTimestamp()},{merge:true});
+      }catch(_){}
+    },{once:true});
+  }
   sfStartPresence();
   if(!sfPresenceTimer)sfPresenceTimer=setInterval(sfPresence,45000);
   function sfIsOnline(u){if(u?.online===true)return true;const t=ts(u?.lastSeen);return !!t&&Date.now()-t<120000}
@@ -35661,6 +35930,16 @@ FINANCIAL:
       renderConnectivityBanner('offline', "You're offline · Will auto-refresh when reconnected");
     }
   }, 3500);
+
+  // Delegated post engagement click handler for all [data-post-action] buttons
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-post-action]');
+    if (b) {
+      if (typeof postAction === 'function') {
+        postAction(e);
+      }
+    }
+  });
 
   if (typeof initServiceWorker === 'function') {
     initServiceWorker();
