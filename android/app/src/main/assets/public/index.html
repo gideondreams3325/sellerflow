@@ -2238,7 +2238,7 @@ html.light-theme .sf-bottom-tab-item.active .tab-label {
       <!-- Username Field (Always required for login, signup, forgot password) -->
       <div id="usernameWrap">
         <div class="flex items-center justify-between">
-          <label class="text-sm font-semibold text-gray-800">Username</label>
+          <label id="authUsernameLabel" class="text-sm font-semibold text-gray-800">Username</label>
           <span class="text-[11px] text-gray-500 font-mono">@<span id="authUsernamePreview">username</span></span>
         </div>
         <div class="relative mt-1">
@@ -2613,7 +2613,7 @@ function getAppUrl() {
       return origin.replace(/\/+$/, '');
     }
   }
-  const injectedUrl = 'https://ais-dev-7tdmaygfvfreigw4gp7scg-123405530511.europe-west2.run.app';
+  const injectedUrl = 'https://ais-dev-2tv7nzssy56jjsfubuze2h-404136744563.europe-west1.run.app';
   if (injectedUrl && injectedUrl.startsWith('http') && !injectedUrl.includes('____')) {
     return injectedUrl.replace(/\/+$/, '');
   }
@@ -5814,9 +5814,9 @@ function showAuth(mode='register', targetEmail=''){
     if($('authSwitch'))$('authSwitch').textContent='Already have an account? Sign in';
     if($('passwordLabel'))$('passwordLabel').textContent='Password';
 
-    setVisible($('nameWrap'), true);
+    setVisible($('nameWrap'), false);
     setVisible($('usernameWrap'), true);
-    setVisible($('recoveryEmailWrap'), true);
+    setVisible($('recoveryEmailWrap'), false);
     setVisible($('passwordWrap'), true);
     setVisible($('confirmPasswordWrap'), true);
     setVisible($('termsWrap'), true);
@@ -5825,8 +5825,12 @@ function showAuth(mode='register', targetEmail=''){
     setVisible($('codeVerificationWrap'), false);
     setVisible($('backToSignInBtn'), false);
 
-    if (uInput) uInput.required = true;
-    if (recEmailInput) recEmailInput.required = true;
+    if (uInput) {
+      uInput.required = true;
+      uInput.placeholder = 'e.g. gideon_shop';
+    }
+    if ($('authUsernameLabel')) $('authUsernameLabel').textContent = 'Username';
+    if (recEmailInput) { recEmailInput.required = false; recEmailInput.value = ''; }
     if (pInput) pInput.required = true;
     if (cpInput) cpInput.required = true;
     if (resetCodeInput) { resetCodeInput.required = false; resetCodeInput.value = ''; }
@@ -5846,7 +5850,8 @@ function showAuth(mode='register', targetEmail=''){
     }, 20);
   } else if (mode === 'forgot') {
     if($('authTitle'))$('authTitle').textContent='Forgot Password';
-    if($('authSubtitle'))$('authSubtitle').textContent='Enter your SellerFlow username to receive a 6-digit recovery code.';
+    if($('authSubtitle'))$('authSubtitle').textContent='Enter your SellerFlow username or recovery email to receive a 6-digit recovery code.';
+    if($('authUsernameLabel'))$('authUsernameLabel').textContent='Username or Recovery Email';
     setBtnText($('authSubmit'), 'Send Recovery Code');
     if($('authSwitch'))$('authSwitch').textContent='Remembered your password? Sign in';
 
@@ -5865,6 +5870,7 @@ function showAuth(mode='register', targetEmail=''){
     if (uInput) {
       uInput.required = true;
       uInput.readOnly = false;
+      uInput.placeholder = 'e.g. gideon_shop or you@example.com';
     }
     if (recEmailInput) {
       recEmailInput.required = false;
@@ -5880,6 +5886,7 @@ function showAuth(mode='register', targetEmail=''){
   } else if (mode === 'resetPassword') {
     if($('authTitle'))$('authTitle').textContent='Set New Password';
     if($('authSubtitle'))$('authSubtitle').textContent='Enter the 6-digit recovery code sent to your email and set a new password.';
+    if($('authUsernameLabel'))$('authUsernameLabel').textContent='Username / Identifier';
     setBtnText($('authSubmit'), 'Reset Password & Sign In');
     if($('authSwitch'))$('authSwitch').textContent='Back to Sign In';
     if($('passwordLabel'))$('passwordLabel').textContent='New Password';
@@ -5920,6 +5927,7 @@ function showAuth(mode='register', targetEmail=''){
     // Standard 'login' mode: ONLY Username and Password
     if($('authTitle'))$('authTitle').textContent='Welcome back';
     if($('authSubtitle'))$('authSubtitle').textContent='Sign in to continue.';
+    if($('authUsernameLabel'))$('authUsernameLabel').textContent='Username';
     setBtnText($('authSubmit'), 'Sign In');
     if($('authSwitch'))$('authSwitch').textContent='New here? Create an account';
     if($('passwordLabel'))$('passwordLabel').textContent='Password';
@@ -5939,6 +5947,7 @@ function showAuth(mode='register', targetEmail=''){
     if (uInput) {
       uInput.required = true;
       uInput.readOnly = false;
+      uInput.placeholder = 'e.g. gideon_shop';
     }
     if (pInput) pInput.required = true;
     if (recEmailInput) recEmailInput.required = false;
@@ -19613,6 +19622,8 @@ async function acceptCurrentTerms(){if(!currentUser)return;await updateDoc(doc(d
 async function enforceTermsAcceptance(){await ensureTerms();if(!currentUser||isAdmin)return true;if(currentProfile?.termsAccepted&&currentProfile?.termsVersion===appTermsVersion)return true;showTermsModal(true);return false}
 async function renderSettings(){
   const t=await ensureTerms();const p=currentProfile||{};
+  const recEmail = p.recoveryEmail || currentUser?.recoveryEmail || '';
+  const isRecVerified = Boolean(p.recoveryEmailVerified || currentUser?.recoveryEmailVerified);
 
   const isPasswordUser = currentUser?.providerData?.some(prov => prov.providerId === 'password');
 
@@ -19673,17 +19684,46 @@ async function renderSettings(){
       <section class="card overflow-hidden">
         <div class="p-5 border-b border-gray-200">
           <h2 class="text-xl font-bold flex items-center gap-2">🔑 Security & Credentials</h2>
-          <p class="muted text-sm mt-1">Update your login email address and account password.</p>
+          <p class="muted text-sm mt-1">Manage your account recovery email and password.</p>
         </div>
         
-        <div class="settings-item border-b border-gray-200">
-          <div class="text-2xl">📧</div>
-          <div class="flex-1">
-            <b>Email Address</b>
-            <p class="muted text-sm font-mono">${esc(currentUser?.email || 'No email registered')}</p>
+        ${(recEmail && isRecVerified) ? `
+          <div class="settings-item border-b border-gray-200" id="recoveryEmailVerifiedItem">
+            <div class="text-2xl">🛡️</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <b class="text-gray-900 font-bold">Manage Recovery Email</b>
+                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                  ✓ Verified
+                </span>
+              </div>
+              <p class="muted text-sm font-mono mt-0.5">${esc(maskEmail(recEmail))}</p>
+              <p class="text-[11px] text-gray-500 mt-1">Verification status: <strong class="text-emerald-700 font-semibold">Verified</strong> · Protects your account if you forget your password.</p>
+            </div>
+            ${button('Manage Recovery Email', 'manageRecoveryEmailBtn', 'border border-gray-200 bg-transparent text-gray-900 text-xs font-bold hover:bg-gray-100')}
           </div>
-          ${button('Change Email', 'changeEmailBtn', 'border border-gray-200 bg-transparent text-gray-900')}
-        </div>
+        ` : `
+          <div class="p-5 border-b border-gray-200 bg-amber-50/40 space-y-3" id="recoveryEmailUnverifiedItem">
+            <div class="flex items-start gap-3">
+              <div class="text-2xl">🛡️</div>
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <b class="text-gray-900 font-bold">Add Recovery Email</b>
+                  <span class="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">Protect Account</span>
+                </div>
+                <p class="text-xs text-gray-600 mt-1 leading-relaxed">
+                  A recovery email protects your account if you forget your password. We will send a single-use 6-digit verification code to confirm ownership.
+                </p>
+              </div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2 pt-1">
+              <input id="settingsRecoveryEmailInput" type="email" placeholder="you@example.com" class="flex-1 p-2.5 rounded-xl bg-white border border-gray-300 text-sm text-gray-900 focus:border-gold outline-none" autocomplete="email">
+              <button id="settingsAddRecoveryEmailBtn" type="button" class="bg-gold text-black font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-sm hover:brightness-105 transition cursor-pointer whitespace-nowrap">
+                Add Recovery Email
+              </button>
+            </div>
+          </div>
+        `}
 
         <div class="settings-item">
           <div class="text-2xl">🔒</div>
@@ -19744,7 +19784,20 @@ async function renderSettings(){
   $('deleteAccountBtn')?.addEventListener('click', () => triggerAccountDeletionFlow());
   $('startVerification')?.addEventListener('click',openVerificationModal);
 
-  $('changeEmailBtn')?.addEventListener('click', () => openChangeEmailModal());
+  $('manageRecoveryEmailBtn')?.addEventListener('click', () => openManageRecoveryEmailModal());
+  $('settingsAddRecoveryEmailBtn')?.addEventListener('click', () => {
+    const val = $('settingsRecoveryEmailInput')?.value.trim();
+    if (!val) {
+      toast('Please enter a recovery email address.', 'error');
+      $('settingsRecoveryEmailInput')?.focus();
+      return;
+    }
+    initiateAddRecoveryEmail(val);
+  });
+  $('changeEmailBtn')?.addEventListener('click', () => {
+    if (recEmail && isRecVerified) openManageRecoveryEmailModal();
+    else openAddRecoveryEmailModal();
+  });
   $('changePasswordBtn')?.addEventListener('click', () => openChangePasswordModal());
 }
 
@@ -19857,97 +19910,396 @@ function openAppFontSelectorModal() {
 }
 window.openAppFontSelectorModal = openAppFontSelectorModal;
 
-async function openChangeEmailModal() {
-  if (!currentUser) return toast('You must be signed in to change your email.', 'error');
-  const isPasswordUser = currentUser.providerData?.some(prov => prov.providerId === 'password');
-
-  let html = `
-    <div class="text-left space-y-4">
-      <div class="flex items-center gap-3 pb-3 border-b border-gray-200">
-        <div class="text-3xl">📧</div>
-        <div>
-          <h2 class="text-xl font-bold">Change Email Address</h2>
-          <p class="muted text-xs">Update your secure login and notifications email.</p>
-        </div>
-      </div>
-
-      <div class="space-y-3 mt-4">
-        <div>
-          <label class="text-xs text-gray-600 block mb-1 font-semibold">New Email Address</label>
-          <input id="newEmailInput" type="email" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900" placeholder="e.g. name@domain.com">
-        </div>
-  `;
-
-  if (isPasswordUser) {
-    html += `
-        <div>
-          <label class="text-xs text-gray-600 block mb-1 font-semibold">Current Password</label>
-          <input id="reauthPasswordInput" type="password" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900" placeholder="Enter current password to verify">
-        </div>
-    `;
-  } else {
-    html += `
-        <div class="p-3.5 bg-sky-950/20 border border-sky-200 text-sky-400 rounded-xl text-xs leading-5">
-          💡 Your account is linked to Google/Social login. Re-entering a password is not required.
-        </div>
-    `;
+async function initiateAddRecoveryEmail(inputEmail) {
+  const cleanEmail = String(inputEmail || '').trim().toLowerCase();
+  if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+    toast('Please enter a valid recovery email address.', 'error');
+    return;
   }
+  loading('Sending verification code…');
+  try {
+    const res = await fetch('/api/auth/add-recovery-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: cleanEmail,
+        username: currentProfile?.username || (currentUser?.displayName || ''),
+        uid: currentUser?.uid
+      })
+    });
+    const data = await res.json();
+    ready();
+    if (!res.ok || !data.success) {
+      if (data.devCode) {
+        toast(`Test mode: Code is ${data.devCode}`, 'info', 7000);
+        openRecoveryCodeVerificationModal(cleanEmail, data.maskedEmail || maskEmail(cleanEmail), data.devCode);
+        return;
+      }
+      toast(data.error || 'Failed to send verification code. Please try again.', 'error', 5000);
+      return;
+    }
+    toast(data.message || `Verification code sent to ${data.maskedEmail || maskEmail(cleanEmail)}`, 'success', 5000);
+    openRecoveryCodeVerificationModal(cleanEmail, data.maskedEmail || maskEmail(cleanEmail), data.devCode);
+  } catch (err) {
+    ready();
+    toast(err.message || 'Unable to contact server. Please try again.', 'error');
+  }
+}
+window.initiateAddRecoveryEmail = initiateAddRecoveryEmail;
 
-  html += `
+function openRecoveryCodeVerificationModal(email, maskedEmail, devCode) {
+  let countdownSecs = 45;
+  let countdownInterval = null;
+
+  modal(`
+    <div class="text-left space-y-4 max-w-sm mx-auto">
+      <div class="flex items-center gap-3 pb-3 border-b border-gray-200">
+        <div class="w-12 h-12 rounded-2xl bg-gold/15 border border-gold/30 flex items-center justify-center text-2xl shrink-0">
+          📧
+        </div>
+        <div>
+          <h2 class="text-lg font-bold text-gray-900">Verify Recovery Email</h2>
+          <p class="muted text-xs">Enter the 6-digit code sent to <span class="font-mono font-bold text-gray-900">${esc(maskedEmail || maskEmail(email))}</span></p>
+        </div>
       </div>
 
-      <div class="flex justify-end gap-2 pt-4 border-t border-gray-200">
-        <button data-close-modal class="border border-gray-200 px-4 py-2.5 rounded-xl text-xs font-bold text-gray-700">Cancel</button>
-        <button id="confirmChangeEmailBtn" class="bg-gold text-black px-4 py-2.5 rounded-xl text-xs font-bold hover:brightness-110 transition">Update Email</button>
+      <div class="space-y-3 mt-2">
+        <div>
+          <label class="text-xs text-gray-700 block mb-1 font-semibold">6-Digit Verification Code</label>
+          <input id="recVerifyCodeInput" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-center font-mono text-xl tracking-widest text-gray-900 focus:border-gold outline-none" placeholder="123456" autocomplete="one-time-code">
+          <p class="text-[11px] text-gray-500 mt-1">Single-use code expires in 10 minutes.</p>
+        </div>
+
+        ${devCode ? `
+          <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-center justify-between">
+            <span>Test Mode Code: <strong class="font-mono text-sm">${esc(devCode)}</strong></span>
+            <button type="button" id="useDevCodeBtn" class="text-xs font-bold text-gold underline">Auto-fill</button>
+          </div>
+        ` : ''}
+
+        <div class="flex items-center justify-between text-xs text-gray-600 pt-1 border-t border-gray-100">
+          <span>Didn't receive the code?</span>
+          <button type="button" id="recResendCodeBtn" class="text-gold font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed transition" disabled>
+            Resend in <span id="recResendCountdown">45</span>s
+          </button>
+        </div>
+
+        <div id="recVerifyError" class="text-xs text-red-600 hidden font-medium p-2.5 rounded-lg bg-red-50 border border-red-200"></div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-gray-200">
+        <button data-close-modal class="border border-gray-200 px-4 py-2 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50">Cancel</button>
+        <button id="recSubmitVerifyBtn" class="bg-gold text-black px-5 py-2 rounded-xl text-xs font-bold hover:brightness-110 shadow-sm transition">Verify</button>
       </div>
     </div>
-  `;
+  `);
 
-  modal(html);
+  if (devCode && $('useDevCodeBtn')) {
+    $('useDevCodeBtn').onclick = () => {
+      if ($('recVerifyCodeInput')) $('recVerifyCodeInput').value = devCode;
+    };
+  }
 
-  $('confirmChangeEmailBtn').onclick = async () => {
-    const newEmail = $('newEmailInput').value.trim();
-    if (!newEmail || !newEmail.includes('@')) {
-      return toast('Please enter a valid email address.', 'error');
-    }
-
-    loading('Updating secure email…');
-    try {
-      if (isPasswordUser) {
-        const password = $('reauthPasswordInput').value;
-        if (!password) {
-          ready();
-          return toast('Your current password is required for security verification.', 'error');
-        }
-        const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, password);
-        await currentUser.reauthenticateWithCredential(credential);
+  const updateCountdown = () => {
+    if (countdownSecs > 0) {
+      countdownSecs--;
+      if ($('recResendCountdown')) $('recResendCountdown').textContent = countdownSecs;
+    } else {
+      if (countdownInterval) clearInterval(countdownInterval);
+      const btn = $('recResendCodeBtn');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Resend Code';
       }
-
-      await currentUser.updateEmail(newEmail);
-
-      // Sync updated email in users table & current profile reference
-      try {
-        await updateDoc(doc(db, 'users', currentUser.uid), {
-          email: newEmail,
-          emailLower: newEmail.toLowerCase()
-        });
-        if (currentProfile) {
-          currentProfile.email = newEmail;
-        }
-      } catch (dbErr) {
-        console.warn('Silent DB sync bypassed:', dbErr.message);
-      }
-
-      ready();
-      toast('Email updated successfully!', 'success');
-      closeModal();
-      renderSettings();
-    } catch (err) {
-      ready();
-      toast(errMsg(err), 'error');
     }
   };
+  countdownInterval = setInterval(updateCountdown, 1000);
+
+  $('recResendCodeBtn')?.addEventListener('click', async () => {
+    $('recResendCodeBtn').disabled = true;
+    $('recResendCodeBtn').textContent = 'Sending...';
+    try {
+      const res = await fetch('/api/auth/add-recovery-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          username: currentProfile?.username || (currentUser?.displayName || ''),
+          uid: currentUser?.uid
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        if (data.devCode) {
+          toast(`Test code: ${data.devCode}`, 'info', 7000);
+        } else {
+          toast(data.error || 'Failed to resend code.', 'error');
+          $('recResendCodeBtn').disabled = false;
+          $('recResendCodeBtn').textContent = 'Resend Code';
+          return;
+        }
+      }
+      toast('A new verification code has been sent!', 'success');
+      countdownSecs = 45;
+      $('recResendCodeBtn').disabled = true;
+      $('recResendCodeBtn').innerHTML = 'Resend in <span id="recResendCountdown">45</span>s';
+      countdownInterval = setInterval(updateCountdown, 1000);
+    } catch (e) {
+      toast(e.message || 'Resend failed', 'error');
+      $('recResendCodeBtn').disabled = false;
+      $('recResendCodeBtn').textContent = 'Resend Code';
+    }
+  });
+
+  $('recSubmitVerifyBtn')?.addEventListener('click', async () => {
+    const code = $('recVerifyCodeInput')?.value.trim();
+    if (!code || code.length !== 6) {
+      const errEl = $('recVerifyError');
+      if (errEl) {
+        errEl.textContent = 'Please enter the complete 6-digit verification code.';
+        errEl.classList.remove('hidden');
+      }
+      return;
+    }
+    const errEl = $('recVerifyError');
+    if (errEl) errEl.classList.add('hidden');
+    $('recSubmitVerifyBtn').disabled = true;
+    $('recSubmitVerifyBtn').textContent = 'Verifying…';
+
+    try {
+      const vRes = await fetch('/api/auth/verify-recovery-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          email,
+          username: currentProfile?.username,
+          uid: currentUser?.uid
+        })
+      });
+      const vData = await vRes.json();
+      if (!vRes.ok || !vData.success) {
+        $('recSubmitVerifyBtn').disabled = false;
+        $('recSubmitVerifyBtn').textContent = 'Verify';
+        if (errEl) {
+          errEl.textContent = vData.error || 'Verification failed. Please check the code.';
+          errEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (countdownInterval) clearInterval(countdownInterval);
+      if (currentProfile) {
+        currentProfile.recoveryEmail = email;
+        currentProfile.recoveryEmailVerified = true;
+      }
+      if (currentUser) {
+        currentUser.recoveryEmail = email;
+        currentUser.recoveryEmailVerified = true;
+      }
+
+      // Requirement 4.11 exact confirmation message
+      modal(`
+        <div class="text-center space-y-4 p-4 max-w-sm mx-auto">
+          <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-3xl shadow-inner select-none">
+            ✓
+          </div>
+          <div>
+            <h3 class="text-xl font-black text-gray-900">Recovery Email Verified ✓</h3>
+            <p class="text-xs sm:text-sm text-gray-600 mt-2 leading-relaxed">
+              Your recovery email has been added successfully. You can now use it to recover your SellerFlow account if you forget your password.
+            </p>
+          </div>
+          <div class="pt-2">
+            <button id="verifiedDoneBtn" type="button" class="w-full py-3 px-4 rounded-xl bg-gold hover:brightness-105 font-bold text-black text-sm transition cursor-pointer shadow-sm">
+              Done
+            </button>
+          </div>
+        </div>
+      `);
+
+      $('verifiedDoneBtn')?.addEventListener('click', () => {
+        closeModal();
+        renderSettings();
+      });
+
+    } catch (e) {
+      $('recSubmitVerifyBtn').disabled = false;
+      $('recSubmitVerifyBtn').textContent = 'Verify';
+      if (errEl) {
+        errEl.textContent = e.message || 'Verification error. Please try again.';
+        errEl.classList.remove('hidden');
+      }
+    }
+  });
 }
+window.openRecoveryCodeVerificationModal = openRecoveryCodeVerificationModal;
+
+function openManageRecoveryEmailModal() {
+  const currentEmail = currentProfile?.recoveryEmail || currentUser?.recoveryEmail || '';
+  const masked = maskEmail(currentEmail) || currentEmail;
+  modal(`
+    <div class="text-left space-y-4 max-w-sm mx-auto">
+      <div class="flex items-center gap-3 pb-3 border-b border-gray-200">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl shrink-0">
+          🛡️
+        </div>
+        <div>
+          <h2 class="text-lg font-bold text-gray-900">Manage Recovery Email</h2>
+          <p class="muted text-xs">Protects your SellerFlow account if you forget your password.</p>
+        </div>
+      </div>
+
+      <div class="p-3.5 rounded-xl bg-gray-50 border border-gray-200 space-y-1.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-gray-500">Recovery Address</span>
+          <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+            ✓ Verified
+          </span>
+        </div>
+        <p class="font-mono text-sm font-semibold text-gray-900">${esc(masked)}</p>
+      </div>
+
+      <div class="pt-2 border-t border-gray-100 space-y-2">
+        <label class="text-xs font-bold text-gray-700 block">Change Recovery Email Address</label>
+        <p class="text-[11px] text-gray-500">Enter a new email address to receive a 6-digit verification code.</p>
+        <div class="flex gap-2">
+          <input id="newManageRecoveryEmailInput" type="email" placeholder="new-email@example.com" class="flex-1 p-2.5 rounded-xl bg-white border border-gray-300 text-sm text-gray-900 focus:border-gold outline-none">
+          <button id="submitNewRecoveryEmailBtn" type="button" class="bg-gold text-black px-4 py-2.5 rounded-xl text-xs font-bold hover:brightness-105 transition shrink-0">
+            Update
+          </button>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-3 border-t border-gray-200">
+        <button data-close-modal class="border border-gray-200 px-4 py-2 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50">Close</button>
+      </div>
+    </div>
+  `);
+
+  $('submitNewRecoveryEmailBtn')?.addEventListener('click', () => {
+    const val = $('newManageRecoveryEmailInput')?.value.trim();
+    if (!val) {
+      toast('Please enter the new recovery email address.', 'error');
+      return;
+    }
+    initiateAddRecoveryEmail(val);
+  });
+}
+window.openManageRecoveryEmailModal = openManageRecoveryEmailModal;
+
+function openAddRecoveryEmailModal(prefill = '') {
+  modal(`
+    <div class="text-left space-y-4 max-w-sm mx-auto">
+      <div class="flex items-center gap-3 pb-3 border-b border-gray-200">
+        <div class="w-12 h-12 rounded-2xl bg-gold/15 border border-gold/30 flex items-center justify-center text-2xl shrink-0">
+          🛡️
+        </div>
+        <div>
+          <h2 class="text-lg font-bold text-gray-900">Add Recovery Email</h2>
+          <p class="muted text-xs">Protects your account if you forget your password.</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 mt-2">
+        <div>
+          <label class="text-xs text-gray-700 block mb-1 font-semibold">Recovery Email Address</label>
+          <input id="modalAddRecoveryEmailInput" type="email" value="${esc(prefill)}" placeholder="you@example.com" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 focus:border-gold outline-none" autocomplete="email">
+          <p class="text-[11px] text-gray-500 mt-1">We will send a single-use 6-digit verification code to confirm ownership.</p>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-gray-200">
+        <button data-close-modal class="border border-gray-200 px-4 py-2 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50">Cancel</button>
+        <button id="modalAddRecoverySubmitBtn" class="bg-gold text-black px-5 py-2 rounded-xl text-xs font-bold hover:brightness-110 shadow-sm transition">Send Code</button>
+      </div>
+    </div>
+  `);
+
+  $('modalAddRecoverySubmitBtn')?.addEventListener('click', () => {
+    const val = $('modalAddRecoveryEmailInput')?.value.trim();
+    if (!val) {
+      toast('Please enter a recovery email address.', 'error');
+      return;
+    }
+    initiateAddRecoveryEmail(val);
+  });
+}
+window.openAddRecoveryEmailModal = openAddRecoveryEmailModal;
+
+async function showWelcomeNotificationDialog(uid, username) {
+  if (!uid) return;
+  try {
+    if (typeof db !== 'undefined' && db && typeof addDoc === 'function' && typeof collection === 'function') {
+      await addDoc(collection(db, 'notifications'), {
+        recipientId: uid,
+        userId: uid,
+        type: 'welcome',
+        title: 'Welcome to SellerFlow! 🎉',
+        message: 'Your account has been created successfully. You can now explore SellerFlow, connect with sellers, discover products, and grow your business.\n\nProtect your account: Add and verify a recovery email in Settings. You will need it if you ever forget your password.',
+        action: 'add_recovery_email',
+        read: false,
+        createdAt: serverTimestamp()
+      });
+    }
+  } catch (err) {
+    console.warn('Welcome notification storage notice:', err?.message);
+  }
+
+  const storageKey = 'sf_welcome_shown_' + uid;
+  if (localStorage.getItem(storageKey)) return;
+  localStorage.setItem(storageKey, 'true');
+
+  modal(`
+    <div class="text-center space-y-4 p-2 max-w-sm mx-auto">
+      <div class="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-3xl shadow-inner select-none">
+        🎉
+      </div>
+      <div>
+        <h3 class="text-xl font-black text-gray-900">Welcome to SellerFlow! 🎉</h3>
+        <p class="text-xs sm:text-sm text-gray-600 mt-2 leading-relaxed">
+          Your account has been created successfully. You can now explore SellerFlow, connect with sellers, discover products, and grow your business.
+        </p>
+      </div>
+      <div class="p-3.5 bg-amber-50 border border-amber-200/80 rounded-2xl text-left text-xs text-amber-900 leading-relaxed flex items-start gap-2.5">
+        <span class="text-base shrink-0 select-none">🛡️</span>
+        <div>
+          <strong class="font-bold block mb-0.5 text-gray-900">Protect your account:</strong>
+          Add and verify a recovery email in Settings. You will need it if you ever forget your password.
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2.5 pt-2">
+        <button id="welcomeAddRecoveryBtn" type="button" class="flex-1 py-3 px-4 rounded-xl bg-gold hover:brightness-105 text-black font-extrabold text-xs shadow-md transition cursor-pointer">
+          Add Recovery Email
+        </button>
+        <button id="welcomeMaybeLaterBtn" type="button" class="flex-1 py-3 px-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs transition cursor-pointer">
+          Maybe Later
+        </button>
+      </div>
+    </div>
+  `);
+
+  $('welcomeAddRecoveryBtn')?.addEventListener('click', () => {
+    closeModal();
+    navigate('settings');
+    setTimeout(() => {
+      openAddRecoveryEmailModal();
+    }, 250);
+  });
+
+  $('welcomeMaybeLaterBtn')?.addEventListener('click', () => {
+    closeModal();
+  });
+}
+window.showWelcomeNotificationDialog = showWelcomeNotificationDialog;
+
+window.openChangeEmailModal = function() {
+  if (currentProfile?.recoveryEmail && currentProfile?.recoveryEmailVerified) {
+    openManageRecoveryEmailModal();
+  } else {
+    openAddRecoveryEmailModal();
+  }
+};
 
 async function openChangePasswordModal() {
   if (!currentUser) return toast('You must be signed in to change your password.', 'error');
@@ -22328,18 +22680,21 @@ $('authForgotPasswordBtn')?.addEventListener('click',()=>showAuth('forgot'));
 $('backToSignInBtn')?.addEventListener('click',()=>showAuth('login'));
 
 $('resendResetCodeBtn')?.addEventListener('click', async () => {
-  const username = $('authUsername') ? $('authUsername').value.trim() : '';
-  const uClean = usernameClean(username);
-  if (!uClean) return;
+  const inputVal = $('authUsername') ? $('authUsername').value.trim() : '';
+  if (!inputVal) return;
   const resendBtn = $('resendResetCodeBtn');
   if (resendBtn) resendBtn.disabled = true;
   loading('Resending recovery code…');
 
   try {
+    const payload = inputVal.includes('@')
+      ? { email: inputVal.toLowerCase(), identifier: inputVal.toLowerCase() }
+      : { username: usernameClean(inputVal), identifier: usernameClean(inputVal) };
+
     const rRes = await fetch('/api/auth/resend-reset-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: uClean })
+      body: JSON.stringify(payload)
     });
     const rData = await rRes.json();
     ready();
@@ -22582,15 +22937,14 @@ if($('authForm')){
       const password = $('authPassword') ? $('authPassword').value : '';
 
       if (authMode === 'register') {
-        const recoveryEmail = $('authRecoveryEmail') ? $('authRecoveryEmail').value.trim().toLowerCase() : '';
         const confirmPassword = $('authConfirmPassword') ? $('authConfirmPassword').value : '';
         const name = $('authName') ? $('authName').value.trim() : (rawUsername || 'SellerFlow Merchant');
+        const recoveryEmail = $('authRecoveryEmail') ? $('authRecoveryEmail').value.trim().toLowerCase() : '';
 
         if (!username || username.length < 3) throw Error('Username must be at least 3 characters.');
-        if (!recoveryEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recoveryEmail)) throw Error('A valid recovery email is required.');
         if (!password || password.length < 6) throw Error('Password must be at least 6 characters.');
         if (password !== confirmPassword) throw Error('Passwords do not match. Please verify your password.');
-        if (username === 'sellerflow' && !isUserAdminEmail(recoveryEmail)) {
+        if (username === 'sellerflow') {
           $('authUsername')?.focus();
           throw Error('The username "sellerflow" is reserved. Please choose another username.');
         }
@@ -22702,6 +23056,7 @@ if($('authForm')){
           await startUser(user);
           navigate('feed');
           toast(`Welcome to SellerFlow, @${username}!`, 'success', 4000);
+          showWelcomeNotificationDialog(user.uid, username);
         } else {
           ready();
           showAuth('login');
@@ -22709,16 +23064,20 @@ if($('authForm')){
         }
 
       } else if (authMode === 'forgot') {
-        const uClean = usernameClean(username);
-        if (!uClean || uClean.length < 2) throw Error('Enter your SellerFlow username.');
+        const rawInput = ($('authUsername') ? $('authUsername').value.trim() : '');
+        if (!rawInput || rawInput.length < 2) throw Error('Enter your SellerFlow username or recovery email.');
         loading('Sending recovery code…');
         hide($('recoveryErrorWrap'));
+
+        const payload = rawInput.includes('@')
+          ? { email: rawInput.toLowerCase(), identifier: rawInput.toLowerCase() }
+          : { username: usernameClean(rawInput), identifier: usernameClean(rawInput) };
 
         try {
           const fRes = await fetch('/api/auth/forgot-password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: uClean })
+            body: JSON.stringify(payload)
           });
           const fData = await fRes.json();
           ready();
@@ -22728,25 +23087,25 @@ if($('authForm')){
             return;
           }
 
-          const masked = fData.maskedEmail || 'your verified recovery email';
+          const masked = fData.maskedEmail || 'your recovery email';
           if ($('recoveryMaskedEmailDisplay')) {
             $('recoveryMaskedEmailDisplay').textContent = masked;
           }
           toast(fData.message || `Recovery code sent to ${masked}`, 'info', 5000);
           showAuth('resetPassword');
           if ($('authUsername')) {
-            $('authUsername').value = uClean;
+            $('authUsername').value = fData.username || rawInput;
           }
         } catch (fetchErr) {
           ready();
-          showRecoveryError('Unable to send your recovery code right now. Please try again.');
+          showRecoveryError(fetchErr?.message || 'Unable to send your recovery code right now. Please try again.');
         }
 
       } else if (authMode === 'resetPassword') {
-        const uClean = usernameClean(username);
+        const rawInput = ($('authUsername') ? $('authUsername').value.trim() : '');
         const code = ($('authResetCode') ? $('authResetCode').value.trim() : '');
         const confirmPassword = $('authConfirmPassword') ? $('authConfirmPassword').value : '';
-        if (!uClean || uClean.length < 2) throw Error('Enter your SellerFlow username.');
+        if (!rawInput || rawInput.length < 2) throw Error('Enter your SellerFlow username or recovery email.');
         if (!code || code.length !== 6) throw Error('Enter the 6-digit recovery code.');
         if (!password || password.length < 6) throw Error('Password must be at least 6 characters.');
         if (password !== confirmPassword) throw Error('Passwords do not match.');
@@ -22756,7 +23115,13 @@ if($('authForm')){
           const rRes = await fetch('/api/auth/reset-password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: uClean, code, newPassword: password })
+            body: JSON.stringify({
+              username: rawInput.includes('@') ? undefined : usernameClean(rawInput),
+              identifier: rawInput,
+              email: rawInput.includes('@') ? rawInput.toLowerCase() : undefined,
+              code,
+              newPassword: password
+            })
           });
           const rData = await rRes.json();
           ready();
@@ -28666,6 +29031,18 @@ init();
         const n = notificationCache.find(x => x.id === nid);
         if(!n) return;
         markNotificationsRead(nid);
+        if(n.type === 'welcome' || n.action === 'add_recovery_email'){
+          closeModal();
+          navigate('settings');
+          setTimeout(() => {
+            if ((currentProfile?.recoveryEmail && currentProfile?.recoveryEmailVerified) || (currentUser?.recoveryEmail && currentUser?.recoveryEmailVerified)) {
+              openManageRecoveryEmailModal();
+            } else {
+              openAddRecoveryEmailModal();
+            }
+          }, 250);
+          return;
+        }
         if(n.postId){
           closeModal();
           window.openFeedWithPost(n.postId);
