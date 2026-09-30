@@ -58,5 +58,13 @@
     "recoveryEmailVerifiedAt": "2026-09-30T20:52:59.314Z",
     "isExisting": true,
     "isAdmin": false
+  },
+  {
+    "uid": null,
+    "username": "testuser",
+    "recoveryEmail": "test@example.com",
+    "recoveryEmailVerified": false,
+    "usernameLower": "testuser",
+    "updatedAt": "2026-09-30T21:12:37.270Z"
   }
 ]

@@ -58,5 +58,26 @@
     "recoveryEmailVerifiedAt": "2026-09-30T20:52:59.314Z",
     "isExisting": true,
     "isAdmin": false
+  },
+  {
+    "uid": null,
+    "username": "testuser",
+    "recoveryEmail": "test@example.com",
+    "recoveryEmailVerified": false,
+    "usernameLower": "testuser",
+    "updatedAt": "2026-09-30T21:12:37.270Z"
+  },
+  {
+    "uid": "PYhBM1xIabZq8cBnywZ9EQiUY9k2",
+    "authEmail": "seller@users.sellerflow.internal",
+    "recoveryEmail": null,
+    "recoveryEmailVerified": false,
+    "username": "seller",
+    "isExisting": false,
+    "passwordHash": "e0cbd7147e8cbf4b274cbf08a2b1164991a829119f8da3210c2c69c5d78432d50b1481705bc2314b336f39ccfb372db91f3bfd631e6bfba8d917e1e16e55d612",
+    "passwordSalt": "b0682a03619e990f6d71c7c8b32d277b",
+    "isAdmin": false,
+    "usernameLower": "seller",
+    "updatedAt": "2026-09-30T21:51:12.498Z"
   }
 ]

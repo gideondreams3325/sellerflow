@@ -224,7 +224,9 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 .island-toast.toast-hiding{opacity:0;transform:translateY(-8px) scale(0.96)}
 @keyframes islandDropIn{from{opacity:0;transform:translateY(-10px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
 .island-icon-wrap{width:22px;height:22px;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;background:rgba(16,185,129,0.22);color:#34d399;border:1px solid rgba(16,185,129,0.45)}
+.island-toast.toast-error{background:rgba(30,8,8,0.96)!important;border-color:rgba(239,68,68,0.6)!important;box-shadow:0 12px 32px -4px rgba(0,0,0,0.8),0 0 20px rgba(239,68,68,0.25),0 0 0 1px rgba(239,68,68,0.35)!important}
 .island-toast.toast-error .island-icon-wrap{background:rgba(239,68,68,0.2);color:#f87171;border-color:rgba(239,68,68,0.45)}
+.island-toast.toast-error .island-close-btn{color:#fca5a5}
 .island-toast.toast-warning .island-icon-wrap{background:rgba(245,158,11,0.2);color:#fbbf24;border-color:rgba(245,158,11,0.45)}
 .island-toast.toast-info .island-icon-wrap{background:rgba(59,130,246,0.2);color:#60a5fa;border-color:rgba(59,130,246,0.45)}
 .island-toast-text{font-size:12px;font-weight:600;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(68vw,320px);line-height:1.3}
@@ -2627,11 +2629,9 @@ window.getAppUrl = getAppUrl;
 function getSfApiUrl(path) {
   if (!path) return '';
   const p = path.startsWith('/') ? path : '/' + path;
-  const isCap = isCapacitorNative();
-  if (!isCap && window.location.protocol && window.location.protocol.startsWith('http')) {
-    const hostname = window.location.hostname || '';
-    const port = window.location.port || '';
-    if (hostname !== 'localhost' || port === '3000' || port === '5173') {
+  if (typeof window !== 'undefined' && window.location && window.location.protocol && window.location.protocol.startsWith('http')) {
+    const origin = window.location.origin || '';
+    if (origin && origin !== 'null' && !origin.includes('capacitor://') && !origin.startsWith('file:') && !origin.includes('127.0.0.1:0')) {
       return p;
     }
   }
@@ -2641,6 +2641,71 @@ function getSfApiUrl(path) {
 }
 window.getSfApiUrl = getSfApiUrl;
 window.__sfBackendUrl = (typeof getAppUrl === 'function') ? getAppUrl() : 'https://sellerflow-tan.vercel.app';
+
+// Universal error sanitizer translating technical failures into useful SellerFlow messages
+function formatSellerFlowError(err, fallback = 'Unable to complete request. Please try again.') {
+  if (!err) return fallback;
+  const code = (typeof err === 'object' && err.code) ? String(err.code).toUpperCase() : '';
+  const str = (typeof err === 'string') ? err : (err.error || err.message || '');
+  if (!str && !code) return fallback;
+
+  // 1. Precise machine error codes mapped to clean user action messages
+  if (code === 'INVALID_EMAIL') return 'Please enter a valid recovery email address.';
+  if (code === 'AUTH_REQUIRED') return 'Your session has expired. Please sign in again.';
+  if (code === 'EMAIL_ALREADY_IN_USE') return 'This recovery email is already associated with another account.';
+  if (code === 'RATE_LIMITED') return 'Too many verification attempts. Please wait and request a new code.';
+  if (code === 'EMAIL_SERVICE_UNAVAILABLE') return 'Recovery email service is temporarily unavailable. Please try again later.';
+  if (code === 'EMAIL_DELIVERY_FAILED') {
+    if (typeof err === 'object' && err.configured === false) {
+      return 'Recovery email service is temporarily unavailable. Please try again later.';
+    }
+    return "We couldn't send the verification email right now. Please try again.";
+  }
+  if (code === 'CODE_EXPIRED') return 'This verification code has expired. Please request a new code.';
+  if (code === 'TOO_MANY_ATTEMPTS') return 'Too many verification attempts. Please wait and request a new code.';
+  if (code === 'INVALID_CODE' || code === 'WRONG_CODE') return 'That verification code is incorrect. Please check your email and try again.';
+
+  const lower = str.toLowerCase();
+
+  // 2. Specific validation and recovery domain rules
+  if (lower.includes('invalid') && (lower.includes('email') || lower.includes('address'))) {
+    return 'Please enter a valid recovery email address.';
+  }
+  if (lower.includes('session') || lower.includes('sign in') || lower.includes('signed in') || lower.includes('auth_required') || lower.includes('unauthorized')) {
+    return 'Your session has expired. Please sign in again.';
+  }
+  if (lower.includes('already associated') || lower.includes('already in use') || lower.includes('already verified')) {
+    return 'This recovery email is already associated with another account.';
+  }
+  if (lower.includes('recovery email service is temporarily unavailable') || lower.includes('not configured') || lower.includes('email service is not configured') || lower.includes('email delivery is not configured') || lower.includes('email service is temporarily unavailable') || (lower.includes('smtp') && lower.includes('not configured'))) {
+    return 'Recovery email service is temporarily unavailable. Please try again later.';
+  }
+  if (lower.includes("couldn't send") || lower.includes('could not send') || lower.includes('email delivery failed') || lower.includes('unable to send')) {
+    return "We couldn't send the verification email right now. Please try again.";
+  }
+  if (lower.includes('expired') || lower.includes('code_expired')) {
+    return 'This verification code has expired. Please request a new code.';
+  }
+  if (lower.includes('too many') || lower.includes('too_many_attempts') || lower.includes('rate_limited') || lower.includes('cooldown')) {
+    return 'Too many verification attempts. Please wait and request a new code.';
+  }
+  if (lower.includes('incorrect') || lower.includes('wrong code') || lower.includes('invalid code') || lower.includes('check the code')) {
+    return 'That verification code is incorrect. Please check your email and try again.';
+  }
+
+  // 3. Network and connection failures
+  if (lower.includes('failed to fetch') || lower.includes('network') || lower.includes('load failed') || lower.includes('connection_error') || lower.includes('networkerror') || lower.includes('net::')) {
+    return 'SellerFlow is having trouble connecting right now. Please check your connection and try again.';
+  }
+
+  // 4. Unexpected server responses
+  if (lower.includes('unexpected response') || lower.includes('parse_error') || lower.includes('syntaxerror') || lower.includes('cannot get') || lower.includes('cannot post')) {
+    return 'SellerFlow received an unexpected response from the server. Please try again.';
+  }
+
+  return str;
+}
+window.formatSellerFlowError = formatSellerFlowError;
 
 // Bulletproof Response.json wrapper: Never throw "Unexpected token '<', <!doctype..." on HTML/404/500 responses
 (function() {
@@ -2653,12 +2718,17 @@ window.__sfBackendUrl = (typeof getAppUrl === 'function') ? getAppUrl() : 'https
       if (trimmed.startsWith('<') || trimmed.startsWith('<!doctype') || trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html')) {
         return {
           success: false,
-          error: this.ok ? 'Unexpected response received from server.' : `Server returned status ${this.status}. Please check your connection.`
+          code: 'CONNECTION_ERROR',
+          error: 'SellerFlow is having trouble connecting right now. Please check your connection and try again.'
         };
       }
       return JSON.parse(trimmed);
     } catch (parseErr) {
-      return { success: false, error: 'Unable to parse server response.' };
+      return {
+        success: false,
+        code: 'PARSE_ERROR',
+        error: 'SellerFlow is having trouble connecting right now. Please check your connection and try again.'
+      };
     }
   };
 })();
@@ -19692,7 +19762,7 @@ async function renderSettings(){
             <div class="text-2xl">🛡️</div>
             <div class="flex-1">
               <div class="flex items-center gap-2">
-                <b class="text-gray-900 font-bold">Manage Recovery Email</b>
+                <b class="text-gray-900 font-bold">Recovery Email</b>
                 <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                   ✓ Verified
                 </span>
@@ -19912,42 +19982,55 @@ window.openAppFontSelectorModal = openAppFontSelectorModal;
 
 async function initiateAddRecoveryEmail(inputEmail) {
   const cleanEmail = String(inputEmail || '').trim().toLowerCase();
-  if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!cleanEmail || !emailRegex.test(cleanEmail)) {
     toast('Please enter a valid recovery email address.', 'error');
     return;
   }
   loading('Sending verification code…');
   try {
+    let authHeader = {};
+    if (typeof auth !== 'undefined' && auth && auth.currentUser && typeof auth.currentUser.getIdToken === 'function') {
+      try {
+        const token = await auth.currentUser.getIdToken();
+        if (token) authHeader = { 'Authorization': 'Bearer ' + token };
+      } catch (_) {}
+    }
+
     const res = await fetch('/api/auth/add-recovery-email', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeader
+      },
       body: JSON.stringify({
         email: cleanEmail,
+        recoveryEmail: cleanEmail,
         username: currentProfile?.username || (currentUser?.displayName || ''),
         uid: currentUser?.uid
       })
     });
     const data = await res.json();
     ready();
+
     if (!res.ok || !data.success) {
-      if (data.devCode) {
-        toast(`Test mode: Code is ${data.devCode}`, 'info', 7000);
-        openRecoveryCodeVerificationModal(cleanEmail, data.maskedEmail || maskEmail(cleanEmail), data.devCode);
-        return;
-      }
-      toast(data.error || 'Failed to send verification code. Please try again.', 'error', 5000);
+      const errMsg = formatSellerFlowError(data || data?.error || data?.message || "We couldn't send the verification email right now. Please try again.");
+      toast(errMsg, 'error', 5000);
       return;
     }
-    toast(data.message || `Verification code sent to ${data.maskedEmail || maskEmail(cleanEmail)}`, 'success', 5000);
-    openRecoveryCodeVerificationModal(cleanEmail, data.maskedEmail || maskEmail(cleanEmail), data.devCode);
+
+    toast('Verification code sent', 'success', 3500);
+    toast('Check your recovery email for the 6-digit code.', 'info', 5000);
+    openRecoveryCodeVerificationModal(cleanEmail, data.maskedEmail || maskEmail(cleanEmail));
   } catch (err) {
     ready();
-    toast(err.message || 'Unable to contact server. Please try again.', 'error');
+    const errMsg = formatSellerFlowError(err || err?.message || 'SellerFlow is having trouble connecting right now. Please check your connection and try again.');
+    toast(errMsg, 'error', 5000);
   }
 }
 window.initiateAddRecoveryEmail = initiateAddRecoveryEmail;
 
-function openRecoveryCodeVerificationModal(email, maskedEmail, devCode) {
+function openRecoveryCodeVerificationModal(email, maskedEmail) {
   let countdownSecs = 45;
   let countdownInterval = null;
 
@@ -19958,8 +20041,8 @@ function openRecoveryCodeVerificationModal(email, maskedEmail, devCode) {
           📧
         </div>
         <div>
-          <h2 class="text-lg font-bold text-gray-900">Verify Recovery Email</h2>
-          <p class="muted text-xs">Enter the 6-digit code sent to <span class="font-mono font-bold text-gray-900">${esc(maskedEmail || maskEmail(email))}</span></p>
+          <h2 class="text-lg font-bold text-gray-900">Check your email</h2>
+          <p class="muted text-xs">We sent a 6-digit verification code to <span class="font-mono font-bold text-gray-900">${esc(maskedEmail || maskEmail(email))}</span></p>
         </div>
       </div>
 
@@ -19969,13 +20052,6 @@ function openRecoveryCodeVerificationModal(email, maskedEmail, devCode) {
           <input id="recVerifyCodeInput" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*" class="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-center font-mono text-xl tracking-widest text-gray-900 focus:border-gold outline-none" placeholder="123456" autocomplete="one-time-code">
           <p class="text-[11px] text-gray-500 mt-1">Single-use code expires in 10 minutes.</p>
         </div>
-
-        ${devCode ? `
-          <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-center justify-between">
-            <span>Test Mode Code: <strong class="font-mono text-sm">${esc(devCode)}</strong></span>
-            <button type="button" id="useDevCodeBtn" class="text-xs font-bold text-gold underline">Auto-fill</button>
-          </div>
-        ` : ''}
 
         <div class="flex items-center justify-between text-xs text-gray-600 pt-1 border-t border-gray-100">
           <span>Didn't receive the code?</span>
@@ -19989,16 +20065,10 @@ function openRecoveryCodeVerificationModal(email, maskedEmail, devCode) {
 
       <div class="flex justify-end gap-2 pt-3 border-t border-gray-200">
         <button data-close-modal class="border border-gray-200 px-4 py-2 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50">Cancel</button>
-        <button id="recSubmitVerifyBtn" class="bg-gold text-black px-5 py-2 rounded-xl text-xs font-bold hover:brightness-110 shadow-sm transition">Verify</button>
+        <button id="recSubmitVerifyBtn" class="bg-gold text-black px-5 py-2 rounded-xl text-xs font-bold hover:brightness-110 shadow-sm transition">Verify Recovery Email</button>
       </div>
     </div>
   `);
-
-  if (devCode && $('useDevCodeBtn')) {
-    $('useDevCodeBtn').onclick = () => {
-      if ($('recVerifyCodeInput')) $('recVerifyCodeInput').value = devCode;
-    };
-  }
 
   const updateCountdown = () => {
     if (countdownSecs > 0) {
@@ -20019,33 +20089,43 @@ function openRecoveryCodeVerificationModal(email, maskedEmail, devCode) {
     $('recResendCodeBtn').disabled = true;
     $('recResendCodeBtn').textContent = 'Sending...';
     try {
+      let authHeader = {};
+      if (typeof auth !== 'undefined' && auth && auth.currentUser && typeof auth.currentUser.getIdToken === 'function') {
+        try {
+          const token = await auth.currentUser.getIdToken();
+          if (token) authHeader = { 'Authorization': 'Bearer ' + token };
+        } catch (_) {}
+      }
+
       const res = await fetch('/api/auth/add-recovery-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeader
+        },
         body: JSON.stringify({
           email,
+          recoveryEmail: email,
           username: currentProfile?.username || (currentUser?.displayName || ''),
           uid: currentUser?.uid
         })
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        if (data.devCode) {
-          toast(`Test code: ${data.devCode}`, 'info', 7000);
-        } else {
-          toast(data.error || 'Failed to resend code.', 'error');
-          $('recResendCodeBtn').disabled = false;
-          $('recResendCodeBtn').textContent = 'Resend Code';
-          return;
-        }
+        const errMsg = formatSellerFlowError(data || data?.error || data?.message || "We couldn't send the verification email right now. Please try again.");
+        toast(errMsg, 'error', 5000);
+        $('recResendCodeBtn').disabled = false;
+        $('recResendCodeBtn').textContent = 'Resend Code';
+        return;
       }
-      toast('A new verification code has been sent!', 'success');
+      toast('Verification code sent', 'success', 3500);
+      toast('Check your recovery email for the 6-digit code.', 'info', 5000);
       countdownSecs = 45;
       $('recResendCodeBtn').disabled = true;
       $('recResendCodeBtn').innerHTML = 'Resend in <span id="recResendCountdown">45</span>s';
       countdownInterval = setInterval(updateCountdown, 1000);
     } catch (e) {
-      toast(e.message || 'Resend failed', 'error');
+      toast(formatSellerFlowError(e || e?.message || 'SellerFlow is having trouble connecting right now. Please check your connection and try again.'), 'error', 5000);
       $('recResendCodeBtn').disabled = false;
       $('recResendCodeBtn').textContent = 'Resend Code';
     }
@@ -20067,9 +20147,20 @@ function openRecoveryCodeVerificationModal(email, maskedEmail, devCode) {
     $('recSubmitVerifyBtn').textContent = 'Verifying…';
 
     try {
+      let authHeader = {};
+      if (typeof auth !== 'undefined' && auth && auth.currentUser && typeof auth.currentUser.getIdToken === 'function') {
+        try {
+          const token = await auth.currentUser.getIdToken();
+          if (token) authHeader = { 'Authorization': 'Bearer ' + token };
+        } catch (_) {}
+      }
+
       const vRes = await fetch('/api/auth/verify-recovery-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeader
+        },
         body: JSON.stringify({
           code,
           email,
@@ -20080,9 +20171,9 @@ function openRecoveryCodeVerificationModal(email, maskedEmail, devCode) {
       const vData = await vRes.json();
       if (!vRes.ok || !vData.success) {
         $('recSubmitVerifyBtn').disabled = false;
-        $('recSubmitVerifyBtn').textContent = 'Verify';
+        $('recSubmitVerifyBtn').textContent = 'Verify Recovery Email';
         if (errEl) {
-          errEl.textContent = vData.error || 'Verification failed. Please check the code.';
+          errEl.textContent = formatSellerFlowError(vData || vData.error || 'That verification code is incorrect. Please check your email and try again.');
           errEl.classList.remove('hidden');
         }
         return;
@@ -20097,8 +20188,23 @@ function openRecoveryCodeVerificationModal(email, maskedEmail, devCode) {
         currentUser.recoveryEmail = email;
         currentUser.recoveryEmailVerified = true;
       }
+      try {
+        const savedSession = localStorage.getItem('sf_active_user_session');
+        if (savedSession) {
+          const s = JSON.parse(savedSession);
+          if (s) {
+            s.recoveryEmail = email;
+            s.recoveryEmailVerified = true;
+            if (s.profile) {
+              s.profile.recoveryEmail = email;
+              s.profile.recoveryEmailVerified = true;
+            }
+            localStorage.setItem('sf_active_user_session', JSON.stringify(s));
+          }
+        }
+      } catch (_) {}
 
-      // Requirement 4.11 exact confirmation message
+      // Confirmation modal
       modal(`
         <div class="text-center space-y-4 p-4 max-w-sm mx-auto">
           <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-3xl shadow-inner select-none">
@@ -20125,9 +20231,9 @@ function openRecoveryCodeVerificationModal(email, maskedEmail, devCode) {
 
     } catch (e) {
       $('recSubmitVerifyBtn').disabled = false;
-      $('recSubmitVerifyBtn').textContent = 'Verify';
+      $('recSubmitVerifyBtn').textContent = 'Verify Recovery Email';
       if (errEl) {
-        errEl.textContent = e.message || 'Verification error. Please try again.';
+        errEl.textContent = formatSellerFlowError(e?.message || 'That verification code is incorrect. Please check your email and try again.');
         errEl.classList.remove('hidden');
       }
     }

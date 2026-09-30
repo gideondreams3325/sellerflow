@@ -18,7 +18,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = (process.env.PORT === '8080') ? 3000 : (process.env.PORT || 3000);
+const PORT = 3000;
 
 app.use(compression({
   threshold: 1024,
@@ -4330,12 +4330,18 @@ app.post(['/api/auth/register', '/api/auth/register-username'], async (req, res)
  * Add / Update Recovery Email Endpoint
  * Dispatches a 6-digit verification code to the recovery email.
  */
-app.post(['/api/auth/add-recovery-email', '/api/auth/send-recovery-code'], async (req, res) => {
+app.post(['/api/auth/add-recovery-email', '/api/auth/add-recovery-email/', '/api/auth/send-recovery-code', '/api/auth/send-recovery-code/'], async (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
   try {
     const { email, recoveryEmail, username, uid: reqUid } = req.body || {};
     const inputEmail = String(recoveryEmail || email || '').trim().toLowerCase();
-    if (!inputEmail || !inputEmail.includes('@') || !inputEmail.includes('.')) {
-      return res.status(400).json({ success: false, error: 'Please enter a valid recovery email address.' });
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!inputEmail || !emailRegex.test(inputEmail)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please enter a valid recovery email address.',
+        code: 'INVALID_EMAIL'
+      });
     }
 
     let targetUid = reqUid || null;
@@ -4361,7 +4367,11 @@ app.post(['/api/auth/add-recovery-email', '/api/auth/send-recovery-code'], async
     }
 
     if (!account && !targetUid) {
-      return res.status(401).json({ success: false, error: 'You must be signed in to add a recovery email.' });
+      return res.status(401).json({
+        success: false,
+        error: 'Your session has expired. Please sign in again.',
+        code: 'AUTH_REQUIRED'
+      });
     }
 
     const uid = account?.uid || targetUid;
@@ -4369,8 +4379,12 @@ app.post(['/api/auth/add-recovery-email', '/api/auth/send-recovery-code'], async
 
     // Rule: cannot add an email already verified on a different account
     for (const other of localAccountsMap.values()) {
-      if (other.usernameLower !== uClean && other.recoveryEmail === inputEmail && other.recoveryEmailVerified) {
-        return res.status(400).json({ success: false, error: 'This recovery email is already verified on another SellerFlow account.' });
+      if (other.usernameLower !== uClean && other.uid !== uid && other.recoveryEmail === inputEmail && other.recoveryEmailVerified) {
+        return res.status(400).json({
+          success: false,
+          error: 'This recovery email is already associated with another account.',
+          code: 'EMAIL_ALREADY_IN_USE'
+        });
       }
     }
 
@@ -4382,26 +4396,11 @@ app.post(['/api/auth/add-recovery-email', '/api/auth/send-recovery-code'], async
       const waitSecs = Math.ceil((45000 - (now - lastSent)) / 1000);
       return res.status(429).json({
         success: false,
-        error: 'Please wait ' + waitSecs + 's before requesting another verification code.',
+        error: 'Too many verification attempts. Please wait and request a new code.',
+        code: 'RATE_LIMITED',
         cooldownSeconds: waitSecs
       });
     }
-
-    // Save as unverified pending
-    saveAccountRecord({
-      uid,
-      username: uClean,
-      recoveryEmail: inputEmail,
-      recoveryEmailVerified: false
-    });
-
-    try {
-      await adminDb.collection('users').doc(uid).set({
-        recoveryEmail: inputEmail,
-        recoveryEmailVerified: false,
-        updatedAt: FieldValue.serverTimestamp()
-      }, { merge: true });
-    } catch (_) {}
 
     const code = crypto.randomInt(100000, 1000000).toString();
     const expiresAt = now + 10 * 60 * 1000; // 10 minutes
@@ -4418,18 +4417,6 @@ app.post(['/api/auth/add-recovery-email', '/api/auth/send-recovery-code'], async
     emailVerificationsCache.set(uClean, verificationPayload);
     emailVerificationsCache.set(uid, verificationPayload);
     emailVerificationsCache.set(inputEmail, verificationPayload);
-    passwordResetRateLimits.set(rateLimitKey, now);
-
-    try {
-      await adminDb.collection('emailVerifications').doc(uid).set({
-        code,
-        email: inputEmail,
-        username: uClean,
-        expiresAt,
-        attempts: 0,
-        createdAt: FieldValue.serverTimestamp()
-      });
-    } catch (_) {}
 
     const mailResult = await sendRecoveryEmail({
       to: inputEmail,
@@ -4441,33 +4428,68 @@ app.post(['/api/auth/add-recovery-email', '/api/auth/send-recovery-code'], async
     const masked = maskEmail(inputEmail);
 
     if (!mailResult.sent) {
+      // Email delivery is not configured on the server
       if (mailResult.configured === false) {
         return res.status(503).json({
           success: false,
           configured: false,
+          error: 'Recovery email service is temporarily unavailable. Please try again later.',
+          message: 'Email delivery is not configured on the server. Please set SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS in your environment.',
+          code: 'EMAIL_SERVICE_UNAVAILABLE',
           maskedEmail: masked,
-          error: 'Email delivery is not configured on the server. Please set SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS in your environment.',
-          devCode: (process.env.NODE_ENV !== 'production' || process.env.ENABLE_DEV_CODES === 'true') ? code : undefined
+          requiresVerification: false
         });
       }
       return res.status(503).json({
         success: false,
         configured: true,
+        error: "We couldn't send the verification email right now. Please try again.",
+        code: 'EMAIL_DELIVERY_FAILED',
         maskedEmail: masked,
-        error: "We couldn't send the verification email right now. Please try again later.",
-        devCode: (process.env.NODE_ENV !== 'production' || process.env.ENABLE_DEV_CODES === 'true') ? code : undefined
+        requiresVerification: false
       });
     }
 
+    // Email delivery confirmed succeeded: activate challenge and rate limit
+    passwordResetRateLimits.set(rateLimitKey, now);
+
+    // Save as unverified pending
+    saveAccountRecord({
+      uid,
+      username: uClean,
+      recoveryEmail: inputEmail,
+      recoveryEmailVerified: false
+    });
+
+    try {
+      await adminDb.collection('users').doc(uid).set({
+        recoveryEmail: inputEmail,
+        recoveryEmailVerified: false,
+        updatedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+      await adminDb.collection('emailVerifications').doc(uid).set({
+        code,
+        email: inputEmail,
+        username: uClean,
+        expiresAt,
+        attempts: 0,
+        createdAt: FieldValue.serverTimestamp()
+      });
+    } catch (_) {}
+
     return res.json({
       success: true,
-      maskedEmail: masked,
-      message: 'Verification code sent to ' + masked + '. Check your inbox and spam folder.',
-      devCode: (process.env.NODE_ENV !== 'production' || process.env.ENABLE_DEV_CODES === 'true') ? code : undefined
+      message: 'Verification code sent to your recovery email.',
+      requiresVerification: true,
+      maskedEmail: masked
     });
   } catch (err) {
     console.error('Add recovery email error:', err);
-    return res.status(500).json({ success: false, error: 'Unable to send verification code. Please try again.' });
+    return res.status(500).json({
+      success: false,
+      error: "We couldn't send the verification email right now. Please try again.",
+      code: 'EMAIL_DELIVERY_FAILED'
+    });
   }
 });
 
@@ -4475,12 +4497,17 @@ app.post(['/api/auth/add-recovery-email', '/api/auth/send-recovery-code'], async
  * Verify Recovery Email Code Endpoint
  * Marks recovery email verified ONLY after valid single-use code is verified.
  */
-app.post(['/api/auth/verify-recovery-email', '/api/auth/verify-recovery-code'], async (req, res) => {
+app.post(['/api/auth/verify-recovery-email', '/api/auth/verify-recovery-email/', '/api/auth/verify-recovery-code', '/api/auth/verify-recovery-code/'], async (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
   try {
     const { code, email, username, uid: reqUid } = req.body || {};
     const inputCode = String(code || '').trim();
-    if (!inputCode) {
-      return res.status(400).json({ success: false, error: 'Verification code is required.' });
+    if (!inputCode || inputCode.length !== 6) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please enter the 6-digit verification code.',
+        code: 'INVALID_CODE'
+      });
     }
 
     let targetUid = reqUid || null;
@@ -4507,7 +4534,11 @@ app.post(['/api/auth/verify-recovery-email', '/api/auth/verify-recovery-code'], 
     }
 
     if (!verificationData) {
-      return res.status(400).json({ success: false, error: 'No verification code was pending or code has expired. Please request a new code.' });
+      return res.status(400).json({
+        success: false,
+        error: 'This verification code has expired. Please request a new code.',
+        code: 'CODE_EXPIRED'
+      });
     }
 
     const expTime = verificationData.expiresAt?.toDate ? verificationData.expiresAt.toDate().getTime() : verificationData.expiresAt;
@@ -4515,19 +4546,32 @@ app.post(['/api/auth/verify-recovery-email', '/api/auth/verify-recovery-code'], 
       if (targetUsername) emailVerificationsCache.delete(targetUsername);
       if (targetUid) emailVerificationsCache.delete(targetUid);
       if (verificationData.email) emailVerificationsCache.delete(verificationData.email);
-      return res.status(410).json({ success: false, error: 'Verification code has expired. Please request a new code.' });
+      return res.status(410).json({
+        success: false,
+        error: 'This verification code has expired. Please request a new code.',
+        code: 'CODE_EXPIRED'
+      });
     }
 
     if (verificationData.attempts >= 5) {
       if (targetUsername) emailVerificationsCache.delete(targetUsername);
       if (targetUid) emailVerificationsCache.delete(targetUid);
       if (verificationData.email) emailVerificationsCache.delete(verificationData.email);
-      return res.status(400).json({ success: false, error: 'Too many incorrect attempts. Code has been invalidated. Please request a new code.' });
+      return res.status(400).json({
+        success: false,
+        error: 'Too many verification attempts. Please wait and request a new code.',
+        code: 'TOO_MANY_ATTEMPTS'
+      });
     }
 
     if (inputCode !== verificationData.code) {
       verificationData.attempts = (verificationData.attempts || 0) + 1;
-      return res.status(400).json({ success: false, error: 'Incorrect verification code. ' + (5 - verificationData.attempts) + ' attempts remaining.' });
+      return res.status(400).json({
+        success: false,
+        error: 'That verification code is incorrect. Please check your email and try again.',
+        code: 'WRONG_CODE',
+        attemptsRemaining: Math.max(0, 5 - verificationData.attempts)
+      });
     }
 
     // Code matches! Invalidate pending code
@@ -4584,7 +4628,11 @@ app.post(['/api/auth/verify-recovery-email', '/api/auth/verify-recovery-code'], 
     });
   } catch (err) {
     console.error('Verify recovery email error:', err);
-    return res.status(500).json({ success: false, error: 'Verification failed. Please try again.' });
+    return res.status(500).json({
+      success: false,
+      error: 'Verification failed. Please try again.',
+      code: 'SERVER_ERROR'
+    });
   }
 });
 
@@ -7422,7 +7470,8 @@ function getCachedIndexHtml() {
 
 // Unmatched /api/* routes must return 404 JSON, NOT the consumer index.html
 app.all(['/api', '/api/*'], (req, res) => {
-  res.status(404).json({ success: false, error: 'API endpoint not found' });
+  res.setHeader('Content-Type', 'application/json');
+  res.status(404).json({ success: false, error: 'API endpoint not found', code: 'NOT_FOUND' });
 });
 
 app.get('*', (req, res) => {
@@ -7483,7 +7532,7 @@ bootstrapUserRegistry().catch(() => {});
 export { app };
 export default app;
 
-const isDirectRun = Boolean(!process.argv[1] || path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url)) || process.argv[1].endsWith('server.js'));
+const isDirectRun = Boolean(process.argv[1] && (path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url)) || process.argv[1].endsWith('server.js')));
 
 if (isDirectRun && !process.env.VERCEL && process.env.NODE_ENV !== 'test') {
   app.listen(PORT, '0.0.0.0', () => {
