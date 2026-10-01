@@ -69,12 +69,11 @@
   },
   {
     "uid": "admin_gideon",
-    "authEmail": "sellerflow@users.sellerflow.internal",
-    "recoveryEmail": "gideondreams3325@gmail.com",
+    "authEmail": "gideon@users.sellerflow.internal",
+    "recoveryEmail": "sellerflow99@gmail.com",
     "recoveryEmailVerified": true,
     "username": "sellerflow",
-    "name": "SellerFlow Team",
-    "role": "admin",
+    "name": "Gideon",
     "isAdmin": true,
     "isExisting": true,
     "passwordHash": "c1604b6d344e851ab20dd8fadb844646a17161443e2ceb6b4cea51521821ea88e5123bb67ffcf62553beb07b42e74934fe9afb2a2bc103c3f7e0a820478a1396",
@@ -84,32 +83,15 @@
     "recoveryEmailVerifiedAt": "2026-10-01T14:13:16.520Z"
   },
   {
-    "uid": "N1cDBddZDicqELeyDRvfGMUy7fi1",
-    "id": "N1cDBddZDicqELeyDRvfGMUy7fi1",
-    "authEmail": "gideon@users.sellerflow.internal",
-    "recoveryEmail": "sellerflow99@gmail.com",
-    "recoveryEmailVerified": true,
-    "username": "gideon",
-    "usernameLower": "gideon",
-    "name": "Gideon",
-    "role": "seller",
-    "isAdmin": false,
-    "isExisting": true,
-    "passwordHash": "c1604b6d344e851ab20dd8fadb844646a17161443e2ceb6b4cea51521821ea88e5123bb67ffcf62553beb07b42e74934fe9afb2a2bc103c3f7e0a820478a1396",
-    "passwordSalt": "4c3798c6e8b6e28edb49cdcda9c03757",
-    "updatedAt": "2026-10-01T15:10:57.278Z",
-    "recoveryEmailVerifiedAt": "2026-10-01T14:13:16.520Z"
-  },
-  {
     "uid": "uid_testmerchant_1",
     "username": "testmerchant_1",
     "recoveryEmail": "merchant_real@example.com",
     "recoveryEmailVerified": true,
     "usernameLower": "testmerchant_1",
-    "updatedAt": "2026-10-01T15:56:10.153Z",
-    "recoveryEmailVerifiedAt": "2026-10-01T15:56:07.585Z",
-    "passwordHash": "4db4139efc4e1cd4cdcb0e980d21e1f240ccccbbc8d496f501ce77d0fed486b9e690d643754adee8d10cd66d32a18b8110d45ba9f842fa539f643ff01ee1d9cb",
-    "passwordSalt": "bfa0c2fa6a20cadf99311fdb2f2871d9"
+    "updatedAt": "2026-10-01T15:20:51.930Z",
+    "recoveryEmailVerifiedAt": "2026-10-01T15:20:49.244Z",
+    "passwordHash": "05f14b748aab41d713c6c13bc59ca1eef109757a2c64737ffbd1d277f035fe4404ef33735175718aeb826f9b7a81200b2324d600ae89cdabf6527e25125fff2c",
+    "passwordSalt": "a8c1fdee302e5dcfc45b030252eebaa2"
   },
   {
     "uid": "uid_unique_merchant_3",

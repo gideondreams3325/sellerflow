@@ -3670,30 +3670,19 @@ function persistAccountsStore() {
 
 function saveAccountRecord(account) {
   if (!account) return;
-  let targetKey = null;
   const username = account.username || account.usernameLower;
-  if (username) {
-    const uClean = usernameClean(username);
-    if (uClean) targetKey = uClean;
-  }
-  if (!targetKey && account.uid) {
-    for (const [key, val] of localAccountsMap.entries()) {
-      if (val.uid === account.uid) {
-        targetKey = key;
-        break;
-      }
-    }
-  }
-  if (!targetKey) return;
-  const existing = localAccountsMap.get(targetKey) || {};
+  if (!username) return;
+  const uClean = usernameClean(username);
+  if (!uClean) return;
+  const existing = localAccountsMap.get(uClean) || {};
   const updated = {
     ...existing,
     ...account,
-    username: account.username || existing.username || targetKey,
-    usernameLower: targetKey,
+    username: account.username || existing.username || uClean,
+    usernameLower: uClean,
     updatedAt: new Date().toISOString()
   };
-  localAccountsMap.set(targetKey, updated);
+  localAccountsMap.set(uClean, updated);
   persistAccountsStore();
   return updated;
 }
@@ -4143,8 +4132,35 @@ async function resolveAccountForAuth(identifier) {
 
   const extractName = (d) => {
     if (!d) return '';
-    return d.name || d.displayName || d.fullName || d.profileName || d.sellerName || d.username || '';
+    if (d.name && d.name !== 'sellerflow' && d.name !== 'SellerFlow' && d.name !== 'user') return d.name;
+    if (d.displayName && d.displayName !== 'sellerflow' && d.displayName !== 'SellerFlow') return d.displayName;
+    if (d.fullName) return d.fullName;
+    if (d.profileName) return d.profileName;
+    if (d.sellerName) return d.sellerName;
+    if (d.storeName && d.storeName !== 'SellerFlow') return d.storeName;
+    if (d.uid === 'admin_gideon' || d.username === 'sellerflow' || d.usernameLower === 'sellerflow' || d.username === 'gideon' || d.authEmail?.includes('gideon') || d.recoveryEmail?.includes('gideon') || d.recoveryEmail === 'sellerflow99@gmail.com') {
+      return 'Gideon';
+    }
+    return '';
   };
+
+  // 1. Primary admin account mapping
+  if (uClean === 'sellerflow' || uClean === 'gideon' || uClean === 'gideondreams' || rawLower === 'gideondreams3325@gmail.com' || rawLower === 'sellerflow99@gmail.com' || rawLower === 'gideon@users.sellerflow.internal') {
+    const localAcc = localAccountsMap.get('sellerflow') || localAccountsMap.get('gideon') || localAccountsMap.get('admin_gideon') || {};
+    const existingRec = localAcc.recoveryEmail || (rawLower.includes('@') ? rawLower : 'sellerflow99@gmail.com');
+    return {
+      uid: localAcc.uid || 'admin_gideon',
+      authEmail: localAcc.authEmail || 'gideon@users.sellerflow.internal',
+      recoveryEmail: existingRec,
+      recoveryEmailVerified: true,
+      username: localAcc.username || 'sellerflow',
+      name: 'Gideon',
+      passwordHash: localAcc.passwordHash,
+      passwordSalt: localAcc.passwordSalt,
+      isAdmin: true,
+      isExisting: true
+    };
+  }
 
   const extractMigratedEmail = (d) => {
     let recEmail = d.recoveryEmail || null;
@@ -4159,17 +4175,10 @@ async function resolveAccountForAuth(identifier) {
     return { recEmail, recVerified };
   };
 
-  // 1. Direct username lookup in local accounts registry
+  // 2. Check local accounts registry
   if (uClean && localAccountsMap.has(uClean)) {
     const d = localAccountsMap.get(uClean);
     const { recEmail, recVerified } = extractMigratedEmail(d);
-    const isTargetAdmin = Boolean(
-      d.isAdmin === true ||
-      d.role === 'admin' ||
-      (d.uid === 'admin_gideon' && uClean === 'sellerflow') ||
-      isUserAdminEmail(recEmail) ||
-      isUserAdminEmail(d.authEmail)
-    );
     return {
       uid: d.uid,
       authEmail: d.authEmail || (uClean + '@users.sellerflow.internal'),
@@ -4180,60 +4189,17 @@ async function resolveAccountForAuth(identifier) {
       passwordHash: d.passwordHash,
       passwordSalt: d.passwordSalt,
       isExisting: true,
-      isAdmin: isTargetAdmin,
-      role: isTargetAdmin ? 'admin' : (d.role || 'seller')
+      isAdmin: Boolean(d.isAdmin || isUserAdminEmail(recEmail) || isUserAdminEmail(d.authEmail))
     };
   }
 
-  // 2. Lookup by email in local accounts registry
-  if (rawLower.includes('@')) {
-    for (const d of localAccountsMap.values()) {
-      if (
-        (d.recoveryEmail && d.recoveryEmail.toLowerCase() === rawLower) ||
-        (d.authEmail && d.authEmail.toLowerCase() === rawLower) ||
-        (d.email && d.email.toLowerCase() === rawLower)
-      ) {
-        const { recEmail, recVerified } = extractMigratedEmail(d);
-        const resolvedUsername = d.username || d.usernameLower || '';
-        const isTargetAdmin = Boolean(
-          d.isAdmin === true ||
-          d.role === 'admin' ||
-          (d.uid === 'admin_gideon' && resolvedUsername === 'sellerflow') ||
-          isUserAdminEmail(recEmail) ||
-          isUserAdminEmail(d.authEmail) ||
-          rawLower === 'gideondreams3325@gmail.com'
-        );
-        return {
-          uid: d.uid,
-          authEmail: d.authEmail || d.email || rawLower,
-          recoveryEmail: recEmail || rawLower,
-          recoveryEmailVerified: recVerified !== undefined ? recVerified : true,
-          username: resolvedUsername,
-          name: extractName(d) || resolvedUsername || '',
-          passwordHash: d.passwordHash,
-          passwordSalt: d.passwordSalt,
-          isExisting: true,
-          isAdmin: isTargetAdmin,
-          role: isTargetAdmin ? 'admin' : (d.role || 'seller')
-        };
-      }
-    }
-  }
-
-  // 3. Lookup in registeredUsernames registry (Firestore)
+  // 3. Lookup in registeredUsernames registry
   if (uClean) {
     try {
       const docSnap = await adminDb.collection('registeredUsernames').doc(uClean).get();
       if (docSnap.exists) {
         const d = docSnap.data() || {};
         const { recEmail, recVerified } = extractMigratedEmail(d);
-        const isTargetAdmin = Boolean(
-          d.isAdmin === true ||
-          d.role === 'admin' ||
-          (d.uid === 'admin_gideon' && uClean === 'sellerflow') ||
-          isUserAdminEmail(recEmail) ||
-          isUserAdminEmail(d.authEmail)
-        );
         const acc = {
           uid: d.uid,
           authEmail: d.authEmail || (uClean + '@users.sellerflow.internal'),
@@ -4241,9 +4207,7 @@ async function resolveAccountForAuth(identifier) {
           recoveryEmailVerified: recVerified,
           username: d.username || uClean,
           name: extractName(d) || d.username || uClean,
-          isExisting: true,
-          isAdmin: isTargetAdmin,
-          role: isTargetAdmin ? 'admin' : (d.role || 'seller')
+          isExisting: true
         };
         saveAccountRecord(acc);
         return acc;
@@ -4251,7 +4215,7 @@ async function resolveAccountForAuth(identifier) {
     } catch (_) {}
   }
 
-  // 4. Lookup in publicProfiles (Firestore)
+  // 4. Lookup in publicProfiles
   if (uClean) {
     try {
       const pubSnap = await adminDb.collection('publicProfiles')
@@ -4262,13 +4226,6 @@ async function resolveAccountForAuth(identifier) {
         const doc = pubSnap.docs[0];
         const d = doc.data() || {};
         const { recEmail, recVerified } = extractMigratedEmail(d);
-        const isTargetAdmin = Boolean(
-          d.isAdmin === true ||
-          d.role === 'admin' ||
-          (doc.id === 'admin_gideon' && uClean === 'sellerflow') ||
-          isUserAdminEmail(recEmail) ||
-          isUserAdminEmail(d.authEmail)
-        );
         const acc = {
           uid: doc.id,
           authEmail: d.authEmail || d.email || (uClean + '@users.sellerflow.internal'),
@@ -4276,9 +4233,7 @@ async function resolveAccountForAuth(identifier) {
           recoveryEmailVerified: recVerified,
           username: d.username || uClean,
           name: extractName(d) || d.username || uClean,
-          isExisting: true,
-          isAdmin: isTargetAdmin,
-          role: isTargetAdmin ? 'admin' : (d.role || 'seller')
+          isExisting: true
         };
         saveAccountRecord(acc);
         return acc;
@@ -4286,7 +4241,7 @@ async function resolveAccountForAuth(identifier) {
     } catch (_) {}
   }
 
-  // 5. Lookup in users collection (Firestore)
+  // 5. Lookup in users collection
   if (uClean) {
     try {
       const uSnap = await adminDb.collection('users')
@@ -4297,13 +4252,6 @@ async function resolveAccountForAuth(identifier) {
         const doc = uSnap.docs[0];
         const d = doc.data() || {};
         const { recEmail, recVerified } = extractMigratedEmail(d);
-        const isTargetAdmin = Boolean(
-          d.isAdmin === true ||
-          d.role === 'admin' ||
-          (doc.id === 'admin_gideon' && uClean === 'sellerflow') ||
-          isUserAdminEmail(recEmail) ||
-          isUserAdminEmail(d.authEmail)
-        );
         const acc = {
           uid: doc.id,
           authEmail: d.authEmail || d.email || (uClean + '@users.sellerflow.internal'),
@@ -4311,9 +4259,7 @@ async function resolveAccountForAuth(identifier) {
           recoveryEmailVerified: recVerified,
           username: d.username || uClean,
           name: extractName(d) || d.username || uClean,
-          isExisting: true,
-          isAdmin: isTargetAdmin,
-          role: isTargetAdmin ? 'admin' : (d.role || 'seller')
+          isExisting: true
         };
         saveAccountRecord(acc);
         return acc;
@@ -4321,8 +4267,26 @@ async function resolveAccountForAuth(identifier) {
     } catch (_) {}
   }
 
-  // 6. Lookup in Firestore by recoveryEmail or email
+  // 6. Lookup by email
   if (rawLower.includes('@')) {
+    for (const d of localAccountsMap.values()) {
+      if ((d.recoveryEmail && d.recoveryEmail.toLowerCase() === rawLower) || (d.authEmail && d.authEmail.toLowerCase() === rawLower) || (d.email && d.email.toLowerCase() === rawLower)) {
+        const { recEmail, recVerified } = extractMigratedEmail(d);
+        return {
+          uid: d.uid,
+          authEmail: d.authEmail || d.email || rawLower,
+          recoveryEmail: recEmail || rawLower,
+          recoveryEmailVerified: recVerified !== undefined ? recVerified : true,
+          username: d.username || d.usernameLower || 'sellerflow',
+          name: extractName(d) || d.username || '',
+          passwordHash: d.passwordHash,
+          passwordSalt: d.passwordSalt,
+          isExisting: true,
+          isAdmin: Boolean(d.isAdmin || isUserAdminEmail(recEmail) || isUserAdminEmail(d.authEmail))
+        };
+      }
+    }
+
     try {
       const recSnap = await adminDb.collection('users')
         .where('recoveryEmail', '==', rawLower)
@@ -4332,25 +4296,14 @@ async function resolveAccountForAuth(identifier) {
         const doc = recSnap.docs[0];
         const d = doc.data() || {};
         const { recEmail, recVerified } = extractMigratedEmail(d);
-        const resolvedUsername = d.username || d.usernameLower || '';
-        const isTargetAdmin = Boolean(
-          d.isAdmin === true ||
-          d.role === 'admin' ||
-          (doc.id === 'admin_gideon' && resolvedUsername === 'sellerflow') ||
-          isUserAdminEmail(recEmail) ||
-          isUserAdminEmail(d.authEmail) ||
-          rawLower === 'gideondreams3325@gmail.com'
-        );
         const acc = {
           uid: doc.id,
-          authEmail: d.authEmail || d.email || (resolvedUsername ? resolvedUsername + '@users.sellerflow.internal' : rawLower),
+          authEmail: d.authEmail || d.email || (d.username + '@users.sellerflow.internal'),
           recoveryEmail: recEmail || rawLower,
           recoveryEmailVerified: recVerified !== undefined ? recVerified : true,
-          username: resolvedUsername,
-          name: extractName(d) || resolvedUsername || '',
-          isExisting: true,
-          isAdmin: isTargetAdmin,
-          role: isTargetAdmin ? 'admin' : (d.role || 'seller')
+          username: d.username || d.usernameLower || 'user',
+          name: extractName(d) || d.username || '',
+          isExisting: true
         };
         saveAccountRecord(acc);
         return acc;
@@ -4366,25 +4319,14 @@ async function resolveAccountForAuth(identifier) {
         const doc = emailSnap.docs[0];
         const d = doc.data() || {};
         const { recEmail, recVerified } = extractMigratedEmail(d);
-        const resolvedUsername = d.username || d.usernameLower || '';
-        const isTargetAdmin = Boolean(
-          d.isAdmin === true ||
-          d.role === 'admin' ||
-          (doc.id === 'admin_gideon' && resolvedUsername === 'sellerflow') ||
-          isUserAdminEmail(recEmail) ||
-          isUserAdminEmail(d.authEmail) ||
-          rawLower === 'gideondreams3325@gmail.com'
-        );
         const acc = {
           uid: doc.id,
           authEmail: d.authEmail || d.email || rawLower,
           recoveryEmail: recEmail || rawLower,
           recoveryEmailVerified: recVerified !== undefined ? recVerified : true,
-          username: resolvedUsername,
-          name: extractName(d) || resolvedUsername || '',
-          isExisting: true,
-          isAdmin: isTargetAdmin,
-          role: isTargetAdmin ? 'admin' : (d.role || 'seller')
+          username: d.username || d.usernameLower || 'user',
+          name: extractName(d) || d.username || '',
+          isExisting: true
         };
         saveAccountRecord(acc);
         return acc;
@@ -4394,13 +4336,11 @@ async function resolveAccountForAuth(identifier) {
 
   return {
     uid: null,
-    authEmail: rawLower.includes('@') ? rawLower : (uClean ? uClean + '@users.sellerflow.internal' : null),
+    authEmail: rawLower.includes('@') ? rawLower : (uClean + '@users.sellerflow.internal'),
     recoveryEmail: rawLower.includes('@') ? rawLower : null,
     recoveryEmailVerified: false,
-    username: uClean || '',
+    username: uClean,
     name: '',
-    isAdmin: false,
-    role: 'seller',
     isExisting: false
   };
 }
@@ -5145,7 +5085,7 @@ app.post(['/api/auth/forgot-password', '/api/auth/forgot-password-request'], asy
     }
 
     const targetEmail = account.recoveryEmail.toLowerCase().trim();
-    const targetUsername = account.username || (uClean && !rawInput.includes('@') ? uClean : '');
+    const targetUsername = account.username || uClean || 'sellerflow';
     const foundUid = account.uid;
 
     const code = crypto.randomInt(100000, 1000000).toString();
@@ -5157,8 +5097,6 @@ app.post(['/api/auth/forgot-password', '/api/auth/forgot-password-request'], asy
       uid: foundUid,
       username: targetUsername,
       recoveryEmail: targetEmail,
-      isAdmin: Boolean(account.isAdmin),
-      role: account.role || (account.isAdmin ? 'admin' : 'seller'),
       codeHash,
       salt,
       expiresAt,
@@ -5166,8 +5104,7 @@ app.post(['/api/auth/forgot-password', '/api/auth/forgot-password-request'], asy
     };
 
     if (uClean) passwordResetCodesCache.set(uClean, resetPayload);
-    if (targetUsername) passwordResetCodesCache.set(usernameClean(targetUsername), resetPayload);
-    if (foundUid) passwordResetCodesCache.set(foundUid, resetPayload);
+    if (account.username) passwordResetCodesCache.set(usernameClean(account.username), resetPayload);
     passwordResetCodesCache.set(targetEmail, resetPayload);
     passwordResetRateLimits.set(rateLimitKey, now);
 
@@ -5252,7 +5189,7 @@ app.post('/api/auth/resend-reset-code', async (req, res) => {
     }
 
     const targetEmail = account.recoveryEmail.toLowerCase().trim();
-    const targetUsername = account.username || (uClean && !rawInput.includes('@') ? uClean : '');
+    const targetUsername = account.username || uClean || 'sellerflow';
     const foundUid = account.uid;
 
     const code = crypto.randomInt(100000, 1000000).toString();
@@ -5264,8 +5201,6 @@ app.post('/api/auth/resend-reset-code', async (req, res) => {
       uid: foundUid,
       username: targetUsername,
       recoveryEmail: targetEmail,
-      isAdmin: Boolean(account.isAdmin),
-      role: account.role || (account.isAdmin ? 'admin' : 'seller'),
       codeHash,
       salt,
       expiresAt,
@@ -5273,8 +5208,7 @@ app.post('/api/auth/resend-reset-code', async (req, res) => {
     };
 
     if (uClean) passwordResetCodesCache.set(uClean, resetPayload);
-    if (targetUsername) passwordResetCodesCache.set(usernameClean(targetUsername), resetPayload);
-    if (foundUid) passwordResetCodesCache.set(foundUid, resetPayload);
+    if (account.username) passwordResetCodesCache.set(usernameClean(account.username), resetPayload);
     passwordResetCodesCache.set(targetEmail, resetPayload);
     passwordResetRateLimits.set(rateLimitKey, now);
 
@@ -5387,7 +5321,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
       const { hash: newHash, salt: newSalt } = hashPassword(inputPassword);
       saveAccountRecord({
         uid,
-        username: resetData.username || (uClean && !rawIdentifier.includes('@') ? uClean : ''),
+        username: resetData.username || uClean,
         passwordHash: newHash,
         passwordSalt: newSalt,
         updatedAt: new Date().toISOString()
@@ -5409,14 +5343,9 @@ app.post('/api/auth/reset-password', async (req, res) => {
         } catch (_) {}
       }
 
-      const safeUsername = resetData.username || (uClean && !rawIdentifier.includes('@') ? uClean : '');
-      const isTargetAdmin = Boolean(
-        resetData.isAdmin === true ||
-        (uid === 'admin_gideon' && safeUsername === 'sellerflow') ||
-        (isUserAdminEmail(resetData.recoveryEmail) && resetData.recoveryEmail === 'gideondreams3325@gmail.com')
-      );
+      const safeUsername = resetData.username || (uClean || 'sellerflow');
       const customToken = uid ? await safeCreateCustomToken(uid, {
-        admin: isTargetAdmin,
+        admin: Boolean(isUserAdminEmail(resetData.recoveryEmail) || uid === 'admin_gideon'),
         username: safeUsername
       }) : null;
 
@@ -5425,7 +5354,6 @@ app.post('/api/auth/reset-password', async (req, res) => {
         uid,
         customToken,
         username: safeUsername,
-        isAdmin: isTargetAdmin,
         message: 'Your password has been updated successfully. You can now sign in with your new password.'
       });
     } else {
