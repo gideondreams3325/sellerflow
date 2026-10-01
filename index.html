@@ -2646,17 +2646,19 @@ window.__sfBackendUrl = (typeof getAppUrl === 'function') ? getAppUrl() : 'https
 function formatSellerFlowError(err, fallback = 'Unable to complete request. Please try again.') {
   if (!err) return fallback;
   const code = (typeof err === 'object' && err) ? String(err.code || (err.error && typeof err.error === 'object' ? err.error.code : '') || '').toUpperCase() : '';
+  const failureCode = (typeof err === 'object' && err) ? String(err.failureCode || (err.error && typeof err.error === 'object' ? err.error.failureCode : '') || '').toUpperCase() : '';
   const rawStr = (typeof err === 'string') ? err : (typeof err.error === 'string' ? err.error : (typeof err.message === 'string' ? err.message : ''));
   const str = typeof rawStr === 'string' ? rawStr : '';
-  if (!str && !code) return fallback;
+  if (!str && !code && !failureCode) return fallback;
 
   // 1. Precise machine error codes mapped to clean user action messages
   if (code === 'INVALID_EMAIL') return 'Please enter a valid recovery email address.';
   if (code === 'AUTH_REQUIRED') return 'Your session has expired. Please sign in again.';
   if (code === 'EMAIL_ALREADY_IN_USE') return 'This recovery email is already associated with another account.';
   if (code === 'RATE_LIMITED') return 'Too many verification attempts. Please wait and request a new code.';
-  if (code === 'EMAIL_SERVICE_UNAVAILABLE') return 'Recovery email service is temporarily unavailable. Please try again later.';
-  if (code === 'EMAIL_DELIVERY_FAILED') return 'Recovery email service is temporarily unavailable. Please try again later.';
+  if (code === 'EMAIL_SERVICE_UNAVAILABLE' || code === 'EMAIL_DELIVERY_FAILED' || failureCode === 'EMAIL_PROVIDER_AUTH_FAILED' || failureCode === 'EMAIL_PROVIDER_CONFIGURATION_MISSING' || failureCode === 'EMAIL_PROVIDER_CONNECTION_FAILED') {
+    return 'Recovery email service is temporarily unavailable. Please try again later.';
+  }
   if (code === 'SERVER_ERROR') return 'Recovery email service is temporarily unavailable. Please try again later.';
   if (code === 'CODE_EXPIRED') return 'This verification code has expired. Please request a new code.';
   if (code === 'TOO_MANY_ATTEMPTS') return 'Too many verification attempts. Please wait and request a new code.';
