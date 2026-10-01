@@ -62,6 +62,11 @@ export async function verifyCallerToken(token: string, internalHeader?: string |
     return { uid: 'supabase_service_role', provider: 'service_role' };
   }
 
+  // Supabase anon / publishable key matches
+  if (SUPABASE_ANON_KEY && (token === SUPABASE_ANON_KEY || internalHeader === SUPABASE_ANON_KEY)) {
+    return { uid: 'supabase_client', provider: 'anon_key' };
+  }
+
   if (!token || typeof token !== 'string') {
     throw new Error('Missing or empty authentication token');
   }
@@ -111,13 +116,15 @@ export async function verifyCallerToken(token: string, internalHeader?: string |
  * Builds the authoritative branded HTML & Plaintext email templates.
  */
 export function buildRecoveryEmailTemplate({
+  name,
   cleanUsername,
   cleanTo,
   code,
   type = 'reset',
   fromName = 'SellerFlow Security'
 }: {
-  cleanUsername: string;
+  name?: string;
+  cleanUsername?: string;
   cleanTo: string;
   code: string;
   type: string;
@@ -127,9 +134,20 @@ export function buildRecoveryEmailTemplate({
   const subject = isVerify ? 'SellerFlow Recovery Email Verification Code' : 'SellerFlow Password Recovery Code';
   const headerSubtitle = isVerify ? 'Recovery Email Verification' : 'Password Recovery';
 
+  // Determine personalized account/profile greeting name
+  let greetingName = '';
+  if (name && typeof name === 'string' && name.trim()) {
+    greetingName = name.trim();
+  } else if (cleanUsername && typeof cleanUsername === 'string' && cleanUsername.trim()) {
+    const u = cleanUsername.trim();
+    greetingName = u.charAt(0).toUpperCase() + u.slice(1);
+  }
+
+  const greeting = greetingName ? `Hello ${greetingName},` : 'Hello SellerFlow,';
+
   const textBody = isVerify
-    ? `Hello ${cleanUsername},\n\nYou requested to add this email address as your SellerFlow recovery email.\n\nYour verification code is:\n\n${code}\n\nThis code expires in 10 minutes and can only be used once.\n\nIf you did not request this, you can safely ignore this email.\n\nSellerFlow\nBUY • SELL • GROW`
-    : `Hello ${cleanUsername},\n\nWe received a request to reset your SellerFlow account password.\n\nYour verification code is:\n\n${code}\n\nThis code expires in 10 minutes and can only be used once.\n\nIf you did not request this, you can safely ignore this email.\n\nSellerFlow\nBUY • SELL • GROW`;
+    ? `${greeting}\n\nYou requested to add this email address as your SellerFlow recovery email.\n\nYour verification code is:\n\n${code}\n\nThis code expires in 10 minutes and can only be used once.\n\nIf you did not request this, you can safely ignore this email.\n\nSellerFlow\nBUY • SELL • GROW\n\n© 2026 POMAAH GROUP. ALL RIGHT RESERVED`
+    : `${greeting}\n\nWe received a request to reset your SellerFlow account password.\n\nYour verification code is:\n\n${code}\n\nThis code expires in 10 minutes and can only be used once.\n\nIf you did not request this, you can safely ignore this email.\n\nSellerFlow\nBUY • SELL • GROW\n\n© 2026 POMAAH GROUP. ALL RIGHT RESERVED`;
 
   const html = `<!DOCTYPE html>
 <html>
@@ -147,7 +165,7 @@ export function buildRecoveryEmailTemplate({
           <p style="margin:6px 0 0 0;font-size:12px;font-weight:700;color:rgba(0,0,0,0.8);text-transform:uppercase;letter-spacing:0.05em;">${headerSubtitle}</p>
         </td></tr>
         <tr><td style="padding:32px 28px;">
-          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#111827;">Hello <strong>${cleanUsername}</strong>,</p>
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#111827;">${greeting}</p>
           <p style="margin:0 0 20px 0;font-size:14px;line-height:1.6;color:#374151;">${isVerify ? 'You requested to add this email address as your SellerFlow recovery email.' : 'We received a request to reset your SellerFlow account password.'}</p>
           <p style="margin:0 0 10px 0;font-size:13px;font-weight:600;color:#4b5563;">Your verification code is:</p>
           <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:16px 0 24px 0;">
@@ -164,7 +182,7 @@ export function buildRecoveryEmailTemplate({
           <p style="margin:2px 0 0 0;font-size:11px;font-weight:700;color:#d49a2a;letter-spacing:0.08em;text-transform:uppercase;">BUY • SELL • GROW</p>
         </td></tr>
         <tr><td style="padding:16px 28px;background-color:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;">
-          <p style="margin:0;font-size:11px;color:#9ca3af;">&copy; 2026 SellerFlow Ghana · All Rights Reserved</p>
+          <p style="margin:0;font-size:11px;color:#9ca3af;">&copy; 2026 POMAAH GROUP. ALL RIGHT RESERVED</p>
         </td></tr>
       </table>
     </td></tr>
@@ -242,7 +260,7 @@ export async function handleSendRecoveryEmail(req: Request): Promise<Response> {
       });
     }
 
-    const { to, username, code, type = 'reset' } = body || {};
+    const { to, username, name, code, type = 'reset' } = body || {};
 
     // Validate recipient
     if (!to || typeof to !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to.trim())) {
@@ -283,6 +301,7 @@ export async function handleSendRecoveryEmail(req: Request): Promise<Response> {
 
     const cleanTo = to.trim().toLowerCase();
     const cleanUsername = username ? String(username).trim() : 'user';
+    const cleanName = (name && typeof name === 'string' && name.trim()) ? name.trim() : '';
     const cleanCode = code.trim();
 
     // 3. Inspect email provider configuration (Resend API)
@@ -304,10 +323,11 @@ export async function handleSendRecoveryEmail(req: Request): Promise<Response> {
       });
     }
 
-    const fromAddress = env.get('RECOVERY_EMAIL_FROM') || 'SellerFlow Security <onboarding@resend.dev>';
+    const fromAddress = env.get('RECOVERY_EMAIL_FROM') || 'SellerFlow Security <noreply@sellerflow.work.gd>';
     const fromName = env.get('RECOVERY_EMAIL_FROM_NAME') || 'SellerFlow Security';
 
     const { subject, html, textBody } = buildRecoveryEmailTemplate({
+      name: cleanName,
       cleanUsername,
       cleanTo,
       code: cleanCode,

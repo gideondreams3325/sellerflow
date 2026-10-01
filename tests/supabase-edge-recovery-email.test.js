@@ -271,16 +271,21 @@ try {
   console.log('\n--- Test 15: Actual provider send succeeds when valid test credentials are supplied ---');
   // Build and inspect email template
   const tmpl = buildRecoveryEmailTemplate({
-    cleanUsername: 'TestMerchant',
-    cleanTo: 'merchant@sellerflow.gh',
+    name: 'Gideon',
+    cleanUsername: 'sellerflow',
+    cleanTo: 'gideondreams3325@gmail.com',
     code: '716253',
-    type: 'verify'
+    type: 'reset'
   });
-  assert.ok(tmpl.subject.includes('SellerFlow Recovery Email Verification Code'));
+  assert.ok(tmpl.subject.includes('SellerFlow Password Recovery Code'));
+  assert.ok(tmpl.textBody.includes('Hello Gideon,'));
+  assert.ok(tmpl.html.includes('Hello Gideon,'));
+  assert.ok(tmpl.textBody.includes('© 2026 POMAAH GROUP. ALL RIGHT RESERVED'));
+  assert.ok(tmpl.html.includes('&copy; 2026 POMAAH GROUP. ALL RIGHT RESERVED') || tmpl.html.includes('© 2026 POMAAH GROUP. ALL RIGHT RESERVED'));
   assert.ok(tmpl.textBody.includes('716253'));
   assert.ok(tmpl.html.includes('716253'));
   assert.ok(tmpl.html.includes('BUY • SELL • GROW'));
-  console.log('  ✓ Recovery email template generation matches branded SellerFlow design');
+  console.log('  ✓ Recovery email template generation matches personalized greeting and POMAAH GROUP copyright');
 
   // Test 16: Password recovery still works
   console.log('\n--- Test 16: Password recovery still works ---');

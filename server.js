@@ -3781,9 +3781,10 @@ const RECOVERY_EMAIL_FUNCTION_URL = process.env.RECOVERY_EMAIL_FUNCTION_URL || `
  * Dispatches recovery email delivery via Supabase Edge Function 'send-recovery-email'.
  * This removes all dependency on Cloud Run/Nodemailer/SMTP runtimes for email delivery.
  */
-async function dispatchRecoveryEmailViaSupabaseEdgeFunction({ to, username, code, type = 'reset', token = '' }) {
+async function dispatchRecoveryEmailViaSupabaseEdgeFunction({ to, username, name = '', code, type = 'reset', token = '' }) {
   const cleanTo = to.trim().toLowerCase();
   const cleanUsername = username ? usernameClean(username) : 'user';
+  const cleanName = (name && typeof name === 'string' && name.trim()) ? name.trim() : '';
 
   try {
     const headers = {
@@ -3812,6 +3813,7 @@ async function dispatchRecoveryEmailViaSupabaseEdgeFunction({ to, username, code
       body: JSON.stringify({
         to: cleanTo,
         username: cleanUsername,
+        name: cleanName,
         code,
         type
       })
@@ -3862,19 +3864,27 @@ async function dispatchRecoveryEmailViaSupabaseEdgeFunction({ to, username, code
 }
 
 /**
- * Offline / local test harness SMTP dispatcher (used strictly during tests with LocalSmtpServer)
+ * Dispatches recovery email directly via Resend HTTPS API using verified domain (noreply@sellerflow.work.gd)
  */
-async function dispatchRecoveryEmailViaSmtp({ to, username, code, type = 'reset', name = '' }) {
+async function dispatchRecoveryEmailViaResendDirect({ to, username, code, type = 'reset', name = '' }) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return null;
+
   const cleanTo = to.trim().toLowerCase();
   const cleanUsername = username ? usernameClean(username) : (name || 'user');
+  const greetingName = (name && typeof name === 'string' && name.trim())
+    ? name.trim()
+    : (username ? (username.charAt(0).toUpperCase() + username.slice(1)) : 'SellerFlow');
+  const greeting = greetingName ? `Hello ${greetingName},` : 'Hello SellerFlow,';
+
   const isVerify = type === 'verify' || type === 'account_verify';
-  const fromAddress = process.env.SMTP_FROM || (process.env.SMTP_USER ? ('"SellerFlow Security" <' + process.env.SMTP_USER + '>') : '"SellerFlow Security" <noreply@sellerflow-efaab.firebaseapp.com>');
+  const fromAddress = process.env.RECOVERY_EMAIL_FROM || 'SellerFlow Security <noreply@sellerflow.work.gd>';
   const subject = isVerify ? "SellerFlow Recovery Email Verification Code" : "SellerFlow Password Recovery Code";
   const headerSubtitle = isVerify ? "Recovery Email Verification" : "Password Recovery";
 
   const textBody = isVerify
-    ? `Hello ${cleanUsername},\n\nYou requested to add this email address as your SellerFlow recovery email.\n\nYour verification code is:\n\n${code}\n\nThis code expires in 10 minutes and can only be used once.\n\nIf you did not request this, you can safely ignore this email.\n\nSellerFlow\nBUY • SELL • GROW`
-    : `Hello ${cleanUsername},\n\nWe received a request to reset your SellerFlow account password.\n\nYour verification code is:\n\n${code}\n\nThis code expires in 10 minutes and can only be used once.\n\nIf you did not request this, you can safely ignore this email.\n\nSellerFlow\nBUY • SELL • GROW`;
+    ? `${greeting}\n\nYou requested to add this email address as your SellerFlow recovery email.\n\nYour verification code is:\n\n${code}\n\nThis code expires in 10 minutes and can only be used once.\n\nIf you did not request this, you can safely ignore this email.\n\nSellerFlow\nBUY • SELL • GROW\n\n© 2026 POMAAH GROUP. ALL RIGHT RESERVED`
+    : `${greeting}\n\nWe received a request to reset your SellerFlow account password.\n\nYour verification code is:\n\n${code}\n\nThis code expires in 10 minutes and can only be used once.\n\nIf you did not request this, you can safely ignore this email.\n\nSellerFlow\nBUY • SELL • GROW\n\n© 2026 POMAAH GROUP. ALL RIGHT RESERVED`;
 
   const html = `<!DOCTYPE html>
 <html>
@@ -3892,7 +3902,7 @@ async function dispatchRecoveryEmailViaSmtp({ to, username, code, type = 'reset'
           <p style="margin:6px 0 0 0;font-size:12px;font-weight:700;color:rgba(0,0,0,0.8);text-transform:uppercase;letter-spacing:0.05em;">${headerSubtitle}</p>
         </td></tr>
         <tr><td style="padding:32px 28px;">
-          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#111827;">Hello <strong>${cleanUsername}</strong>,</p>
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#111827;">${greeting}</p>
           <p style="margin:0 0 20px 0;font-size:14px;line-height:1.6;color:#374151;">${isVerify ? 'You requested to add this email address as your SellerFlow recovery email.' : 'We received a request to reset your SellerFlow account password.'}</p>
           <p style="margin:0 0 10px 0;font-size:13px;font-weight:600;color:#4b5563;">Your verification code is:</p>
           <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:16px 0 24px 0;">
@@ -3909,7 +3919,111 @@ async function dispatchRecoveryEmailViaSmtp({ to, username, code, type = 'reset'
           <p style="margin:2px 0 0 0;font-size:11px;font-weight:700;color:#d49a2a;letter-spacing:0.08em;text-transform:uppercase;">BUY • SELL • GROW</p>
         </td></tr>
         <tr><td style="padding:16px 28px;background-color:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;">
-          <p style="margin:0;font-size:11px;color:#9ca3af;">&copy; 2026 SellerFlow Ghana · All Rights Reserved</p>
+          <p style="margin:0;font-size:11px;color:#9ca3af;">&copy; 2026 POMAAH GROUP. ALL RIGHT RESERVED</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  try {
+    console.log(`[sendRecoveryEmail] Dispatching ${type.toUpperCase()} email via Resend API directly to ${maskEmail(cleanTo)}`);
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: fromAddress,
+        to: [cleanTo],
+        subject,
+        html,
+        text: textBody
+      })
+    });
+
+    const resData = await res.json().catch(() => ({}));
+    if (res.ok && resData?.id) {
+      console.log(`[sendRecoveryEmail] Successfully delivered via Resend directly to ${maskEmail(cleanTo)} (ID: ${resData.id})`);
+      return {
+        sent: true,
+        to: cleanTo,
+        username: cleanUsername,
+        messageId: resData.id
+      };
+    }
+
+    console.warn(`[sendRecoveryEmail] Direct Resend delivery non-success (${res.status}):`, resData?.message || 'Rejected');
+    return {
+      sent: false,
+      configured: true,
+      failureCode: res.status === 401 ? 'EMAIL_PROVIDER_AUTH_FAILED' : (res.status === 403 ? 'EMAIL_PROVIDER_RECIPIENT_RESTRICTED' : 'EMAIL_DELIVERY_FAILED'),
+      to: cleanTo,
+      username: cleanUsername,
+      error: resData?.message || 'Resend rejected delivery'
+    };
+  } catch (err) {
+    console.warn('[sendRecoveryEmail] Direct Resend delivery exception:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Offline / local test harness SMTP dispatcher (used strictly during tests with LocalSmtpServer)
+ */
+async function dispatchRecoveryEmailViaSmtp({ to, username, code, type = 'reset', name = '' }) {
+  const cleanTo = to.trim().toLowerCase();
+  const cleanUsername = username ? usernameClean(username) : (name || 'user');
+  const greetingName = (name && typeof name === 'string' && name.trim())
+    ? name.trim()
+    : (username ? (username.charAt(0).toUpperCase() + username.slice(1)) : 'SellerFlow');
+  const greeting = greetingName ? `Hello ${greetingName},` : 'Hello SellerFlow,';
+
+  const isVerify = type === 'verify' || type === 'account_verify';
+  const fromAddress = process.env.SMTP_FROM || process.env.RECOVERY_EMAIL_FROM || (process.env.SMTP_USER ? ('"SellerFlow Security" <' + process.env.SMTP_USER + '>') : 'SellerFlow Security <noreply@sellerflow.work.gd>');
+  const subject = isVerify ? "SellerFlow Recovery Email Verification Code" : "SellerFlow Password Recovery Code";
+  const headerSubtitle = isVerify ? "Recovery Email Verification" : "Password Recovery";
+
+  const textBody = isVerify
+    ? `${greeting}\n\nYou requested to add this email address as your SellerFlow recovery email.\n\nYour verification code is:\n\n${code}\n\nThis code expires in 10 minutes and can only be used once.\n\nIf you did not request this, you can safely ignore this email.\n\nSellerFlow\nBUY • SELL • GROW\n\n© 2026 POMAAH GROUP. ALL RIGHT RESERVED`
+    : `${greeting}\n\nWe received a request to reset your SellerFlow account password.\n\nYour verification code is:\n\n${code}\n\nThis code expires in 10 minutes and can only be used once.\n\nIf you did not request this, you can safely ignore this email.\n\nSellerFlow\nBUY • SELL • GROW\n\n© 2026 POMAAH GROUP. ALL RIGHT RESERVED`;
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#111111;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f9fafb;padding:40px 10px;">
+    <tr><td align="center">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:520px;background-color:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.05);">
+        <tr><td style="background:linear-gradient(135deg,#f5b942 0%,#d49a2a 100%);padding:28px 24px;text-align:center;">
+          <h1 style="margin:0;font-size:24px;font-weight:900;color:#000000;text-transform:uppercase;letter-spacing:-0.02em;">SellerFlow</h1>
+          <p style="margin:6px 0 0 0;font-size:12px;font-weight:700;color:rgba(0,0,0,0.8);text-transform:uppercase;letter-spacing:0.05em;">${headerSubtitle}</p>
+        </td></tr>
+        <tr><td style="padding:32px 28px;">
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#111827;">${greeting}</p>
+          <p style="margin:0 0 20px 0;font-size:14px;line-height:1.6;color:#374151;">${isVerify ? 'You requested to add this email address as your SellerFlow recovery email.' : 'We received a request to reset your SellerFlow account password.'}</p>
+          <p style="margin:0 0 10px 0;font-size:13px;font-weight:600;color:#4b5563;">Your verification code is:</p>
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:16px 0 24px 0;">
+            <tr><td align="center">
+              <div style="background-color:#fef3c7;border:2px solid #f5b942;border-radius:12px;padding:16px 32px;display:inline-block;">
+                <span style="font-family:monospace;font-size:34px;font-weight:800;letter-spacing:8px;color:#000000;">${code}</span>
+              </div>
+            </td></tr>
+          </table>
+          <p style="margin:0 0 16px 0;font-size:13px;color:#4b5563;line-height:1.5;">This code expires in 10 minutes and can only be used once.</p>
+          <p style="margin:0 0 24px 0;font-size:13px;color:#6b7280;line-height:1.5;">If you did not request this, you can safely ignore this email.</p>
+          <hr style="border:0;border-top:1px solid #e5e7eb;margin:24px 0 20px 0;">
+          <p style="margin:0;font-size:13px;font-weight:800;color:#111827;letter-spacing:0.02em;">SellerFlow</p>
+          <p style="margin:2px 0 0 0;font-size:11px;font-weight:700;color:#d49a2a;letter-spacing:0.08em;text-transform:uppercase;">BUY • SELL • GROW</p>
+        </td></tr>
+        <tr><td style="padding:16px 28px;background-color:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#9ca3af;">&copy; 2026 POMAAH GROUP. ALL RIGHT RESERVED</p>
         </td></tr>
       </table>
     </td></tr>
@@ -3984,7 +4098,7 @@ async function dispatchRecoveryEmailViaSmtp({ to, username, code, type = 'reset'
 
 /**
  * Sends recovery or verification message.
- * Authoritative pipeline: Supabase Edge Function 'send-recovery-email' (via Resend HTTPS API).
+ * Authoritative pipeline: Resend HTTPS API / Supabase Edge Function 'send-recovery-email' using sellerflow.work.gd.
  */
 async function sendRecoveryEmail({ to, username, code, type = 'reset', name = '', token = '' }) {
   if (!to || typeof to !== 'string' || !to.includes('@')) {
@@ -3994,14 +4108,23 @@ async function sendRecoveryEmail({ to, username, code, type = 'reset', name = ''
 
   const cleanTo = to.trim().toLowerCase();
   const cleanUsername = username ? usernameClean(username) : (name || 'user');
+  const cleanName = (name && typeof name === 'string' && name.trim()) ? name.trim() : '';
 
   // Compatibility hook: If a local SMTP server was specifically configured for offline tests (e.g. tests/real-email-delivery-flow.test.js)
   if (process.env.SMTP_HOST && (process.env.NODE_ENV === 'test' || process.env.SMTP_HOST === '127.0.0.1')) {
-    return await dispatchRecoveryEmailViaSmtp({ to: cleanTo, username: cleanUsername, code, type, name });
+    return await dispatchRecoveryEmailViaSmtp({ to: cleanTo, username: cleanUsername, code, type, name: cleanName });
   }
 
-  // Authoritative Primary Route: Supabase Edge Function (removes Cloud Run SMTP dependency)
-  return await dispatchRecoveryEmailViaSupabaseEdgeFunction({ to: cleanTo, username: cleanUsername, code, type, token });
+  // 1. Direct Resend dispatch if configured in server environment
+  if (process.env.RESEND_API_KEY) {
+    const directResend = await dispatchRecoveryEmailViaResendDirect({ to: cleanTo, username: cleanUsername, code, type, name: cleanName });
+    if (directResend && directResend.sent) {
+      return directResend;
+    }
+  }
+
+  // 2. Authoritative Primary Route: Supabase Edge Function (runs in Deno with Resend API & verified domain)
+  return await dispatchRecoveryEmailViaSupabaseEdgeFunction({ to: cleanTo, username: cleanUsername, name: cleanName, code, type, token });
 }
 
 /**
@@ -4014,6 +4137,11 @@ async function resolveAccountForAuth(identifier) {
   const uClean = usernameClean(raw);
   const rawLower = raw.toLowerCase();
 
+  const extractName = (d) => {
+    if (!d) return '';
+    return d.name || d.displayName || d.fullName || d.profileName || d.sellerName || d.storeName || '';
+  };
+
   // 1. Primary admin account mapping
   if (uClean === 'sellerflow' || uClean === 'gideon' || uClean === 'gideondreams' || rawLower === 'gideondreams3325@gmail.com') {
     return {
@@ -4022,6 +4150,7 @@ async function resolveAccountForAuth(identifier) {
       recoveryEmail: 'gideondreams3325@gmail.com',
       recoveryEmailVerified: true,
       username: 'sellerflow',
+      name: 'Gideon',
       isAdmin: true,
       isExisting: true
     };
@@ -4050,6 +4179,7 @@ async function resolveAccountForAuth(identifier) {
       recoveryEmail: recEmail,
       recoveryEmailVerified: recVerified,
       username: d.username || uClean,
+      name: extractName(d) || d.username || uClean,
       passwordHash: d.passwordHash,
       passwordSalt: d.passwordSalt,
       isExisting: true,
@@ -4070,6 +4200,7 @@ async function resolveAccountForAuth(identifier) {
           recoveryEmail: recEmail,
           recoveryEmailVerified: recVerified,
           username: d.username || uClean,
+          name: extractName(d) || d.username || uClean,
           isExisting: true
         };
         saveAccountRecord(acc);
@@ -4095,6 +4226,7 @@ async function resolveAccountForAuth(identifier) {
           recoveryEmail: recEmail,
           recoveryEmailVerified: recVerified,
           username: d.username || uClean,
+          name: extractName(d) || d.username || uClean,
           isExisting: true
         };
         saveAccountRecord(acc);
@@ -4120,6 +4252,7 @@ async function resolveAccountForAuth(identifier) {
           recoveryEmail: recEmail,
           recoveryEmailVerified: recVerified,
           username: d.username || uClean,
+          name: extractName(d) || d.username || uClean,
           isExisting: true
         };
         saveAccountRecord(acc);
@@ -4139,6 +4272,7 @@ async function resolveAccountForAuth(identifier) {
           recoveryEmail: recEmail,
           recoveryEmailVerified: recVerified,
           username: d.username || d.usernameLower,
+          name: extractName(d) || d.username || '',
           passwordHash: d.passwordHash,
           passwordSalt: d.passwordSalt,
           isExisting: true,
@@ -4154,6 +4288,7 @@ async function resolveAccountForAuth(identifier) {
     recoveryEmail: rawLower.includes('@') ? rawLower : null,
     recoveryEmailVerified: false,
     username: uClean,
+    name: '',
     isExisting: false
   };
 }
@@ -4603,6 +4738,7 @@ app.post(['/api/auth/add-recovery-email', '/api/auth/add-recovery-email/', '/api
     const mailResult = await sendRecoveryEmail({
       to: inputEmail,
       username: uClean,
+      name: account?.name || account?.displayName || '',
       code,
       type: 'verify',
       token: callerToken
@@ -4935,6 +5071,7 @@ app.post(['/api/auth/forgot-password', '/api/auth/forgot-password-request'], asy
     const mailResult = await sendRecoveryEmail({
       to: targetEmail,
       username: targetUsername,
+      name: account?.name || account?.displayName || '',
       code,
       type: 'reset',
       token: callerToken
@@ -5025,6 +5162,7 @@ app.post('/api/auth/resend-reset-code', async (req, res) => {
     const mailResult = await sendRecoveryEmail({
       to: targetEmail,
       username: targetUsername,
+      name: account?.name || account?.displayName || '',
       code,
       type: 'reset',
       token: callerToken
