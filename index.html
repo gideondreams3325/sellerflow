@@ -2656,6 +2656,9 @@ function formatSellerFlowError(err, fallback = 'Unable to complete request. Plea
   if (code === 'AUTH_REQUIRED') return 'Your session has expired. Please sign in again.';
   if (code === 'EMAIL_ALREADY_IN_USE') return 'This recovery email is already associated with another account.';
   if (code === 'RATE_LIMITED') return 'Too many verification attempts. Please wait and request a new code.';
+  if (code === 'EMAIL_PROVIDER_RECIPIENT_RESTRICTED' || failureCode === 'EMAIL_PROVIDER_RECIPIENT_RESTRICTED') {
+    return 'Recipient domain is restricted. On the Resend free tier, emails can only be sent to the verified account owner email. Verify your domain at resend.com/domains to send to all addresses.';
+  }
   if (code === 'EMAIL_SERVICE_UNAVAILABLE' || code === 'EMAIL_DELIVERY_FAILED' || failureCode === 'EMAIL_PROVIDER_AUTH_FAILED' || failureCode === 'EMAIL_PROVIDER_CONFIGURATION_MISSING' || failureCode === 'EMAIL_PROVIDER_CONNECTION_FAILED') {
     return 'Recovery email service is temporarily unavailable. Please try again later.';
   }

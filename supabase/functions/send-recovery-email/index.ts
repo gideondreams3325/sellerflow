@@ -360,13 +360,27 @@ export async function handleSendRecoveryEmail(req: Request): Promise<Response> {
       const status = resendRes.status;
       console.error(`[send-recovery-email] Provider rejected delivery (HTTP ${status}):`, resendData?.message || resendData?.name || 'Unknown error');
 
-      if (status === 401 || status === 403) {
+      if (status === 401) {
         return new Response(JSON.stringify({
           success: false,
           code: 'EMAIL_PROVIDER_AUTH_FAILED',
           error: 'Recovery email service is temporarily unavailable. Please try again later.',
           configured: true,
           details: 'Authentication with email delivery provider failed. Verify RESEND_API_KEY in Supabase secrets.',
+          maskedEmail: maskEmail(cleanTo)
+        }), {
+          status: 503,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      if (status === 403) {
+        return new Response(JSON.stringify({
+          success: false,
+          code: 'EMAIL_PROVIDER_RECIPIENT_RESTRICTED',
+          error: 'Recovery email service is temporarily restricted for this recipient.',
+          configured: true,
+          details: resendData?.message || 'Email delivery provider restricted sending to this recipient. To send to any recipient, verify your custom sending domain at resend.com/domains.',
           maskedEmail: maskEmail(cleanTo)
         }), {
           status: 503,
