@@ -2875,6 +2875,22 @@ app.post('/api/admin/permanent-delete', async (req, res) => {
           savePostsStore(filtered);
         }
       } catch (_) {}
+    } else if (type === 'job') {
+      try {
+        const store = getJobsEventsStore();
+        if (store && Array.isArray(store.jobs)) {
+          store.jobs = store.jobs.filter(j => j && j.id !== itemUid);
+          saveJobsEventsStore(store);
+        }
+      } catch (_) {}
+    } else if (type === 'event') {
+      try {
+        const store = getJobsEventsStore();
+        if (store && Array.isArray(store.events)) {
+          store.events = store.events.filter(e => e && e.id !== itemUid);
+          saveJobsEventsStore(store);
+        }
+      } catch (_) {}
     }
 
     return res.json({ success: true, message: `${type} permanently deleted from database` });
@@ -3386,6 +3402,59 @@ app.post('/api/admin/report-action', async (req, res) => {
   }
 });
 
+/* Authenticated Fraud Report Submission Endpoint */
+app.post('/api/fraud/report', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: You must be logged in to submit a fraud report.' });
+    }
+    const idToken = authHeader.split('Bearer ')[1].trim();
+    let decodedToken;
+    try {
+      decodedToken = await verifyFirebaseToken(idToken);
+    } catch (_) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid authentication session.' });
+    }
+
+    const callerUid = decodedToken.uid;
+    const callerEmail = decodedToken.email || '';
+    const reportData = req.body || {};
+
+    if (!reportData.targetName && !reportData.description) {
+      return res.status(400).json({ success: false, error: 'Missing required report fields.' });
+    }
+
+    const reportId = 'fraud_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const finalReport = {
+      id: reportId,
+      reporterUid: callerUid,
+      reporterEmail: callerEmail,
+      reporterContact: reportData.complainantContact || reportData.reporterContact || callerEmail,
+      targetType: reportData.targetType || 'seller',
+      targetName: reportData.targetName || '',
+      targetId: reportData.targetId || '',
+      category: reportData.category || 'other',
+      amount: Number(reportData.amount) || 0,
+      transactionRef: reportData.transactionRef || '',
+      description: reportData.description || '',
+      evidenceUrl: reportData.evidenceUrl || '',
+      status: 'pending',
+      createdAt: FieldValue.serverTimestamp()
+    };
+
+    try {
+      await adminDb.collection('fraudReports').doc(reportId).set(finalReport);
+    } catch (e) {
+      console.warn('Fraud report Firestore write notice:', e.message);
+    }
+
+    return res.json({ success: true, reportId, message: 'Fraud report submitted successfully to the Security Desk.' });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.post('/api/auth/custom-token', async (req, res) => {
   try {
     const authHeader = req.headers.authorization || '';
@@ -3671,26 +3740,42 @@ function persistAccountsStore() {
 function saveAccountRecord(account) {
   if (!account) return;
   let targetKey = null;
-  const username = account.username || account.usernameLower;
-  if (username) {
-    const uClean = usernameClean(username);
-    if (uClean) targetKey = uClean;
-  }
-  if (!targetKey && account.uid) {
+
+  // 1. If UID is provided, find the exact account with that UID
+  if (account.uid) {
     for (const [key, val] of localAccountsMap.entries()) {
-      if (val.uid === account.uid) {
+      if (val && val.uid === account.uid) {
         targetKey = key;
         break;
       }
     }
   }
+
+  // 2. Otherwise match by username
+  if (!targetKey) {
+    const username = account.username || account.usernameLower;
+    if (username) {
+      const uClean = usernameClean(username);
+      if (uClean) targetKey = uClean;
+    }
+  }
+
   if (!targetKey) return;
   const existing = localAccountsMap.get(targetKey) || {};
+
+  // Preserve all immutable identity fields from existing record
   const updated = {
     ...existing,
     ...account,
-    username: account.username || existing.username || targetKey,
-    usernameLower: targetKey,
+    uid: existing.uid || account.uid,
+    username: existing.username || account.username || targetKey,
+    usernameLower: existing.usernameLower || targetKey,
+    name: existing.name || account.name || '',
+    authEmail: existing.authEmail || account.authEmail,
+    recoveryEmail: existing.recoveryEmail || account.recoveryEmail,
+    recoveryEmailVerified: existing.recoveryEmailVerified !== undefined ? existing.recoveryEmailVerified : account.recoveryEmailVerified,
+    role: existing.role || account.role || (existing.isAdmin ? 'admin' : 'seller'),
+    isAdmin: existing.isAdmin !== undefined ? existing.isAdmin : Boolean(account.isAdmin),
     updatedAt: new Date().toISOString()
   };
   localAccountsMap.set(targetKey, updated);
@@ -6068,6 +6153,48 @@ app.post('/api/posts/engage', async (req, res) => {
     return res.json({ success: true, post });
   } catch (err) {
     return res.status(500).json({ success: false, error: err?.message || 'Server error' });
+  }
+});
+
+/* User or Admin Post Deletion Endpoint with Real-Time Store Synchronization */
+app.post('/api/posts/delete', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Missing token' });
+    }
+    const idToken = authHeader.split('Bearer ')[1].trim();
+    let decodedToken;
+    try {
+      decodedToken = await verifyFirebaseToken(idToken);
+    } catch (_) {
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid token' });
+    }
+    const callerUid = decodedToken.uid;
+    const isAdmin = isUserAdminEmail(decodedToken.email);
+    const { postId } = req.body || {};
+    if (!postId) {
+      return res.status(400).json({ success: false, error: 'Missing postId' });
+    }
+
+    const posts = getPostsStore();
+    const targetPost = posts.find(p => p && p.id === postId);
+    if (targetPost && targetPost.sellerId !== callerUid && !isAdmin) {
+      return res.status(403).json({ success: false, error: 'Forbidden: You can only delete your own posts' });
+    }
+
+    const filtered = posts.filter(p => p && p.id !== postId);
+    if (filtered.length !== posts.length) {
+      savePostsStore(filtered);
+    }
+
+    try {
+      await adminDb.collection('posts').doc(postId).delete().catch(() => {});
+    } catch (_) {}
+
+    return res.json({ success: true, message: 'Post deleted successfully', postId });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
