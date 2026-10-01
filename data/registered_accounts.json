@@ -68,17 +68,17 @@
     "updatedAt": "2026-09-30T21:12:37.270Z"
   },
   {
-    "uid": "GPpohsMeBMcXSeJ2V8e0kxwDQmn1",
-    "authEmail": "gideondreams3325@gmail.com",
+    "uid": "U7OHpRQFpbh0TcJJfRZQqK7geDZ2",
+    "authEmail": "gideon@users.sellerflow.internal",
     "recoveryEmail": "gideondreams3325@gmail.com",
     "recoveryEmailVerified": true,
     "username": "sellerflow",
     "isAdmin": true,
     "isExisting": true,
-    "passwordHash": "2bdae8280e8d10fa20685fa4d7e2ab988d35b6c0e7ec7fd81ee2768e817d45e2798be25cd43480427127ebd234c73c7946023747f447f60c621bcc823af8e56e",
-    "passwordSalt": "bbac9e0eb62ecd10be6f36cb5a206a65",
+    "passwordHash": "456d1f586e9116d37cd86b686981df4b09fc7c1d66767cf8f5db4f326e080d67d1f62382e9005f380c61f1fcd10a34db00788f7a1419cf82f431a9b0d0581466",
+    "passwordSalt": "cdb4df13a924d89718c78b3d2c3259d5",
     "usernameLower": "sellerflow",
-    "updatedAt": "2026-09-30T22:22:26.251Z"
+    "updatedAt": "2026-10-01T02:56:16.774Z"
   },
   {
     "uid": "uid_testmerchant_1",
@@ -86,10 +86,10 @@
     "recoveryEmail": "merchant_real@example.com",
     "recoveryEmailVerified": true,
     "usernameLower": "testmerchant_1",
-    "updatedAt": "2026-09-30T22:40:17.206Z",
-    "recoveryEmailVerifiedAt": "2026-09-30T22:40:14.950Z",
-    "passwordHash": "4c078ee1ea5fbfa482c718f1f22c77b07162d33b72c943d58cfb4f90fcb1e1f499846448e1c2e2275a04aedd4de0f7124e1c8c2fa5cb93ceb77835868a778070",
-    "passwordSalt": "5ef4c6b34156521bd33ae6fb55c5f16f"
+    "updatedAt": "2026-10-01T04:02:09.420Z",
+    "recoveryEmailVerifiedAt": "2026-10-01T04:02:07.208Z",
+    "passwordHash": "132a622ef1c95d48363cc67761009dd8f8ed97c5f23f81f4f6312d315a9e433c62a38ef7c0661860c960a08bb9a3f6a8ab4e04bd244dca62709c5ac5d84cc70a",
+    "passwordSalt": "50d453afcf87979fb6d198434c2d8dca"
   },
   {
     "uid": "uid_unique_merchant_3",

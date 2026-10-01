@@ -11,3 +11,8 @@ verify_jwt = false
 # user authentication token directly to the function for authoritative server-side verification.
 verify_jwt = false
 
+[functions.send-recovery-email]
+# verify_jwt is set to false so the function directly validates incoming user or service tokens
+verify_jwt = false
+
+

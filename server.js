@@ -3771,16 +3771,100 @@ async function getMailTransporter() {
   }
 }
 
-/**
- * Sends recovery or verification message.
- * Accurately reports whether message was sent.
- */
-async function sendRecoveryEmail({ to, username, code, type = 'reset', name = '' }) {
-  if (!to || typeof to !== 'string' || !to.includes('@')) {
-    console.warn('[sendRecoveryEmail] Invalid recipient email:', to);
-    return { sent: false, error: 'Invalid recipient email.', to, username };
-  }
+const SUPABASE_PROJECT_ID = process.env.SUPABASE_PROJECT_ID || 'vvpwntehstjbccarqqzp';
+const SUPABASE_URL = process.env.SUPABASE_URL || `https://${SUPABASE_PROJECT_ID}.supabase.co`;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || '';
+const RECOVERY_EMAIL_FUNCTION_URL = process.env.RECOVERY_EMAIL_FUNCTION_URL || `${SUPABASE_URL}/functions/v1/send-recovery-email`;
 
+/**
+ * Dispatches recovery email delivery via Supabase Edge Function 'send-recovery-email'.
+ * This removes all dependency on Cloud Run/Nodemailer/SMTP runtimes for email delivery.
+ */
+async function dispatchRecoveryEmailViaSupabaseEdgeFunction({ to, username, code, type = 'reset', token = '' }) {
+  const cleanTo = to.trim().toLowerCase();
+  const cleanUsername = username ? usernameClean(username) : 'user';
+
+  try {
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    } else if (SUPABASE_SERVICE_ROLE_KEY) {
+      headers['Authorization'] = `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
+      headers['apikey'] = SUPABASE_SERVICE_ROLE_KEY;
+    } else if (SUPABASE_ANON_KEY) {
+      headers['apikey'] = SUPABASE_ANON_KEY;
+      headers['Authorization'] = `Bearer ${SUPABASE_ANON_KEY}`;
+    }
+
+    if (process.env.INTERNAL_RECOVERY_KEY) {
+      headers['x-internal-key'] = process.env.INTERNAL_RECOVERY_KEY;
+    }
+
+    console.log(`[sendRecoveryEmail] Invoking Supabase Edge Function (${RECOVERY_EMAIL_FUNCTION_URL}) for ${maskEmail(cleanTo)}`);
+
+    const response = await fetch(RECOVERY_EMAIL_FUNCTION_URL, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        to: cleanTo,
+        username: cleanUsername,
+        code,
+        type
+      })
+    });
+
+    let resData = null;
+    try {
+      resData = await response.json();
+    } catch (_) {
+      resData = {};
+    }
+
+    if (response.ok && resData?.success) {
+      console.log(`[sendRecoveryEmail] Successfully delivered via Supabase Edge Function to ${maskEmail(cleanTo)} (ID: ${resData?.providerMessageId || 'ok'})`);
+      return {
+        sent: true,
+        to: cleanTo,
+        username: cleanUsername,
+        messageId: resData?.providerMessageId || 'ok'
+      };
+    }
+
+    const failureCode = resData?.code || 'EMAIL_PROVIDER_CONFIGURATION_MISSING';
+    const isConfigured = resData?.configured !== undefined ? resData.configured : false;
+    const detailMsg = resData?.details || resData?.error || 'Email delivery is not configured on the server. Please set RESEND_API_KEY in your Supabase environment.';
+
+    console.warn(`[sendRecoveryEmail] Supabase Edge Function returned non-success (${failureCode}):`, detailMsg);
+
+    return {
+      sent: false,
+      configured: isConfigured,
+      failureCode,
+      to: cleanTo,
+      username: cleanUsername,
+      error: detailMsg
+    };
+  } catch (err) {
+    console.error('[sendRecoveryEmail] Supabase Edge Function network error:', err.message);
+    return {
+      sent: false,
+      configured: true,
+      failureCode: 'EMAIL_PROVIDER_CONNECTION_FAILED',
+      to: cleanTo,
+      username: cleanUsername,
+      error: 'Failed to connect to recovery email service: ' + err.message
+    };
+  }
+}
+
+/**
+ * Offline / local test harness SMTP dispatcher (used strictly during tests with LocalSmtpServer)
+ */
+async function dispatchRecoveryEmailViaSmtp({ to, username, code, type = 'reset', name = '' }) {
   const cleanTo = to.trim().toLowerCase();
   const cleanUsername = username ? usernameClean(username) : (name || 'user');
   const isVerify = type === 'verify' || type === 'account_verify';
@@ -3841,9 +3925,31 @@ async function sendRecoveryEmail({ to, username, code, type = 'reset', name = ''
     return {
       sent: false,
       configured: false,
+      failureCode: 'SMTP_CONFIGURATION_MISSING',
       to: cleanTo,
       username: cleanUsername,
       error: 'Email delivery is not configured on the server. Please set SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS in your environment.'
+    };
+  }
+
+  // Authoritatively verify the SMTP transporter before attempting delivery
+  try {
+    await transporter.verify();
+  } catch (verifyErr) {
+    let failureCode = 'SMTP_DELIVERY_FAILED';
+    if (verifyErr.code === 'EAUTH' || verifyErr.responseCode === 535) {
+      failureCode = 'SMTP_AUTH_FAILED';
+    } else if (verifyErr.code === 'ECONNREFUSED' || verifyErr.code === 'ETIMEDOUT' || verifyErr.code === 'ENOTFOUND' || verifyErr.code === 'ESOCKET') {
+      failureCode = 'SMTP_CONNECTION_FAILED';
+    }
+    console.error('[sendRecoveryEmail] SMTP transporter verification failed (' + failureCode + '):', verifyErr.message);
+    return {
+      sent: false,
+      configured: true,
+      failureCode,
+      to: cleanTo,
+      username: cleanUsername,
+      error: 'SMTP verification failed (' + failureCode + '): ' + verifyErr.message
     };
   }
 
@@ -3858,15 +3964,44 @@ async function sendRecoveryEmail({ to, username, code, type = 'reset', name = ''
     console.log('[sendRecoveryEmail] Successfully delivered email to ' + maskEmail(cleanTo) + ' (Message ID: ' + info.messageId + ')');
     return { sent: true, to: cleanTo, username: cleanUsername, messageId: info.messageId };
   } catch (sendErr) {
-    console.error('[sendRecoveryEmail] SMTP delivery failed for ' + maskEmail(cleanTo) + ':', sendErr.message);
+    let failureCode = 'SMTP_DELIVERY_FAILED';
+    if (sendErr.code === 'EAUTH' || sendErr.responseCode === 535) {
+      failureCode = 'SMTP_AUTH_FAILED';
+    } else if (sendErr.code === 'ECONNREFUSED' || sendErr.code === 'ETIMEDOUT' || sendErr.code === 'ENOTFOUND' || sendErr.code === 'ESOCKET') {
+      failureCode = 'SMTP_CONNECTION_FAILED';
+    }
+    console.error('[sendRecoveryEmail] SMTP delivery failed for ' + maskEmail(cleanTo) + ' (' + failureCode + '):', sendErr.message);
     return {
       sent: false,
       configured: true,
+      failureCode,
       to: cleanTo,
       username: cleanUsername,
-      error: 'Failed to deliver email through SMTP server: ' + sendErr.message
+      error: 'SMTP delivery failed (' + failureCode + '): ' + sendErr.message
     };
   }
+}
+
+/**
+ * Sends recovery or verification message.
+ * Authoritative pipeline: Supabase Edge Function 'send-recovery-email' (via Resend HTTPS API).
+ */
+async function sendRecoveryEmail({ to, username, code, type = 'reset', name = '', token = '' }) {
+  if (!to || typeof to !== 'string' || !to.includes('@')) {
+    console.warn('[sendRecoveryEmail] Invalid recipient email:', to);
+    return { sent: false, error: 'Invalid recipient email.', to, username };
+  }
+
+  const cleanTo = to.trim().toLowerCase();
+  const cleanUsername = username ? usernameClean(username) : (name || 'user');
+
+  // Compatibility hook: If a local SMTP server was specifically configured for offline tests (e.g. tests/real-email-delivery-flow.test.js)
+  if (process.env.SMTP_HOST && (process.env.NODE_ENV === 'test' || process.env.SMTP_HOST === '127.0.0.1')) {
+    return await dispatchRecoveryEmailViaSmtp({ to: cleanTo, username: cleanUsername, code, type, name });
+  }
+
+  // Authoritative Primary Route: Supabase Edge Function (removes Cloud Run SMTP dependency)
+  return await dispatchRecoveryEmailViaSupabaseEdgeFunction({ to: cleanTo, username: cleanUsername, code, type, token });
 }
 
 /**
@@ -4463,11 +4598,14 @@ app.post(['/api/auth/add-recovery-email', '/api/auth/add-recovery-email/', '/api
     emailVerificationsCache.set(uid, verificationPayload);
     emailVerificationsCache.set(inputEmail, verificationPayload);
 
+    const callerToken = (req.headers['authorization'] || '').replace(/^Bearer\s+/i, '').trim();
+
     const mailResult = await sendRecoveryEmail({
       to: inputEmail,
       username: uClean,
       code,
-      type: 'verify'
+      type: 'verify',
+      token: callerToken
     });
 
     const masked = maskEmail(inputEmail);
@@ -4476,6 +4614,7 @@ app.post(['/api/auth/add-recovery-email', '/api/auth/add-recovery-email/', '/api
       return res.status(503).json({
         success: false,
         code: 'EMAIL_SERVICE_UNAVAILABLE',
+        failureCode: mailResult.failureCode || (mailResult.configured ? 'SMTP_DELIVERY_FAILED' : 'SMTP_CONFIGURATION_MISSING'),
         error: 'Recovery email service is temporarily unavailable. Please try again later.',
         configured: mailResult.configured !== undefined ? mailResult.configured : false,
         details: mailResult.error || 'Email delivery is not configured on the server.',
@@ -4721,7 +4860,7 @@ app.get('/api/auth/recovery-email-status', async (req, res) => {
  * Requires SellerFlow username only. Looks up account and verified recovery email.
  * Never leaks account existence or private email addresses.
  */
-app.post('/api/auth/forgot-password', async (req, res) => {
+app.post(['/api/auth/forgot-password', '/api/auth/forgot-password-request'], async (req, res) => {
   try {
     const { username, identifier } = req.body || {};
     const rawInput = String(username || identifier || '').trim();
@@ -4791,11 +4930,14 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       } catch (_) {}
     }
 
+    const callerToken = (req.headers['authorization'] || '').replace(/^Bearer\s+/i, '').trim();
+
     const mailResult = await sendRecoveryEmail({
       to: targetEmail,
       username: targetUsername,
       code,
-      type: 'reset'
+      type: 'reset',
+      token: callerToken
     });
 
     const masked = maskEmail(targetEmail);
@@ -4804,6 +4946,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       return res.status(503).json({
         success: false,
         code: 'EMAIL_SERVICE_UNAVAILABLE',
+        failureCode: mailResult.failureCode || (mailResult.configured ? 'SMTP_DELIVERY_FAILED' : 'SMTP_CONFIGURATION_MISSING'),
         error: 'Recovery email service is temporarily unavailable. Please try again later.',
         maskedEmail: masked
       });
@@ -4877,11 +5020,14 @@ app.post('/api/auth/resend-reset-code', async (req, res) => {
     passwordResetCodesCache.set(uClean, resetPayload);
     passwordResetRateLimits.set(uClean, now);
 
+    const callerToken = (req.headers['authorization'] || '').replace(/^Bearer\s+/i, '').trim();
+
     const mailResult = await sendRecoveryEmail({
       to: targetEmail,
       username: targetUsername,
       code,
-      type: 'reset'
+      type: 'reset',
+      token: callerToken
     });
 
     const masked = maskEmail(targetEmail);
@@ -4890,6 +5036,7 @@ app.post('/api/auth/resend-reset-code', async (req, res) => {
       return res.status(503).json({
         success: false,
         code: 'EMAIL_SERVICE_UNAVAILABLE',
+        failureCode: mailResult.failureCode || (mailResult.configured ? 'SMTP_DELIVERY_FAILED' : 'SMTP_CONFIGURATION_MISSING'),
         error: 'Recovery email service is temporarily unavailable. Please try again later.',
         maskedEmail: masked
       });
