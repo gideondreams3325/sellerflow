@@ -65,11 +65,11 @@ try {
   const r4 = await apiCall('/api/auth/add-recovery-email', 'POST', { email: 'valid_test@example.com', username: 'testuser_demo' });
   assert.strictEqual(r4.status, 503);
   assert.ok(r4.contentType.includes('application/json'), 'Must return JSON');
-  assert.strictEqual(r4.json?.code, 'EMAIL_DELIVERY_FAILED');
-  assert.strictEqual(r4.json?.error, 'Email service is not configured yet. Please try again later.');
-  assert.strictEqual(r4.json?.requiresVerification, false);
+  assert.strictEqual(r4.json?.code, 'EMAIL_SERVICE_UNAVAILABLE');
+  assert.strictEqual(r4.json?.error, 'Recovery email service is temporarily unavailable. Please try again later.');
+  assert.strictEqual(r4.json?.requiresVerification, undefined);
   assert.strictEqual(r4.json?.devCode, undefined, 'Must NEVER leak devCode');
-  console.log('  ✓ Unconfigured SMTP reports EMAIL_DELIVERY_FAILED with zero code leakage');
+  console.log('  ✓ Unconfigured SMTP reports EMAIL_SERVICE_UNAVAILABLE with zero code leakage');
 
   // Test 5: Verify recovery email with invalid code length
   console.log('Test 5: Verify with invalid code length');

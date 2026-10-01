@@ -68,16 +68,35 @@
     "updatedAt": "2026-09-30T21:12:37.270Z"
   },
   {
-    "uid": "PYhBM1xIabZq8cBnywZ9EQiUY9k2",
-    "authEmail": "seller@users.sellerflow.internal",
-    "recoveryEmail": null,
+    "uid": "GPpohsMeBMcXSeJ2V8e0kxwDQmn1",
+    "authEmail": "gideondreams3325@gmail.com",
+    "recoveryEmail": "gideondreams3325@gmail.com",
+    "recoveryEmailVerified": true,
+    "username": "sellerflow",
+    "isAdmin": true,
+    "isExisting": true,
+    "passwordHash": "2bdae8280e8d10fa20685fa4d7e2ab988d35b6c0e7ec7fd81ee2768e817d45e2798be25cd43480427127ebd234c73c7946023747f447f60c621bcc823af8e56e",
+    "passwordSalt": "bbac9e0eb62ecd10be6f36cb5a206a65",
+    "usernameLower": "sellerflow",
+    "updatedAt": "2026-09-30T22:22:26.251Z"
+  },
+  {
+    "uid": "uid_testmerchant_1",
+    "username": "testmerchant_1",
+    "recoveryEmail": "merchant_real@example.com",
+    "recoveryEmailVerified": true,
+    "usernameLower": "testmerchant_1",
+    "updatedAt": "2026-09-30T22:39:08.453Z",
+    "recoveryEmailVerifiedAt": "2026-09-30T22:39:06.279Z",
+    "passwordHash": "8f90bf5cf46de81246991e8b82edef96c17561b0300c6d8d6653f2129c2b9a095a5e9bcacbf45574889d15d6056b7f72c6c4c277932dea5d5e320e0f52e1cbb2",
+    "passwordSalt": "8603b257fd05d218045f4c25e678fafc"
+  },
+  {
+    "uid": "uid_unique_merchant_3",
+    "username": "unique_merchant_3",
+    "recoveryEmail": "new_unique_merchant@example.com",
     "recoveryEmailVerified": false,
-    "username": "seller",
-    "isExisting": false,
-    "passwordHash": "e0cbd7147e8cbf4b274cbf08a2b1164991a829119f8da3210c2c69c5d78432d50b1481705bc2314b336f39ccfb372db91f3bfd631e6bfba8d917e1e16e55d612",
-    "passwordSalt": "b0682a03619e990f6d71c7c8b32d277b",
-    "isAdmin": false,
-    "usernameLower": "seller",
-    "updatedAt": "2026-09-30T21:51:12.498Z"
+    "usernameLower": "unique_merchant_3",
+    "updatedAt": "2026-09-30T22:25:41.990Z"
   }
 ]

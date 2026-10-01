@@ -2645,8 +2645,9 @@ window.__sfBackendUrl = (typeof getAppUrl === 'function') ? getAppUrl() : 'https
 // Universal error sanitizer translating technical failures into useful SellerFlow messages
 function formatSellerFlowError(err, fallback = 'Unable to complete request. Please try again.') {
   if (!err) return fallback;
-  const code = (typeof err === 'object' && err.code) ? String(err.code).toUpperCase() : '';
-  const str = (typeof err === 'string') ? err : (err.error || err.message || '');
+  const code = (typeof err === 'object' && err) ? String(err.code || (err.error && typeof err.error === 'object' ? err.error.code : '') || '').toUpperCase() : '';
+  const rawStr = (typeof err === 'string') ? err : (typeof err.error === 'string' ? err.error : (typeof err.message === 'string' ? err.message : ''));
+  const str = typeof rawStr === 'string' ? rawStr : '';
   if (!str && !code) return fallback;
 
   // 1. Precise machine error codes mapped to clean user action messages
@@ -2655,12 +2656,8 @@ function formatSellerFlowError(err, fallback = 'Unable to complete request. Plea
   if (code === 'EMAIL_ALREADY_IN_USE') return 'This recovery email is already associated with another account.';
   if (code === 'RATE_LIMITED') return 'Too many verification attempts. Please wait and request a new code.';
   if (code === 'EMAIL_SERVICE_UNAVAILABLE') return 'Recovery email service is temporarily unavailable. Please try again later.';
-  if (code === 'EMAIL_DELIVERY_FAILED') {
-    if (typeof err === 'object' && err.configured === false) {
-      return 'Recovery email service is temporarily unavailable. Please try again later.';
-    }
-    return "We couldn't send the verification email right now. Please try again.";
-  }
+  if (code === 'EMAIL_DELIVERY_FAILED') return 'Recovery email service is temporarily unavailable. Please try again later.';
+  if (code === 'SERVER_ERROR') return 'Recovery email service is temporarily unavailable. Please try again later.';
   if (code === 'CODE_EXPIRED') return 'This verification code has expired. Please request a new code.';
   if (code === 'TOO_MANY_ATTEMPTS') return 'Too many verification attempts. Please wait and request a new code.';
   if (code === 'INVALID_CODE' || code === 'WRONG_CODE') return 'That verification code is incorrect. Please check your email and try again.';
@@ -2677,11 +2674,8 @@ function formatSellerFlowError(err, fallback = 'Unable to complete request. Plea
   if (lower.includes('already associated') || lower.includes('already in use') || lower.includes('already verified')) {
     return 'This recovery email is already associated with another account.';
   }
-  if (lower.includes('recovery email service is temporarily unavailable') || lower.includes('not configured') || lower.includes('email service is not configured') || lower.includes('email delivery is not configured') || lower.includes('email service is temporarily unavailable') || (lower.includes('smtp') && lower.includes('not configured'))) {
+  if (lower.includes('recovery email service') || lower.includes('temporarily unavailable') || lower.includes('not configured') || lower.includes('email service') || lower.includes('email delivery') || lower.includes('smtp') || lower.includes("couldn't send") || lower.includes('could not send') || lower.includes('unable to send') || lower.includes('server_error') || lower.includes('function_invocation_failed')) {
     return 'Recovery email service is temporarily unavailable. Please try again later.';
-  }
-  if (lower.includes("couldn't send") || lower.includes('could not send') || lower.includes('email delivery failed') || lower.includes('unable to send')) {
-    return "We couldn't send the verification email right now. Please try again.";
   }
   if (lower.includes('expired') || lower.includes('code_expired')) {
     return 'This verification code has expired. Please request a new code.';
@@ -2693,17 +2687,18 @@ function formatSellerFlowError(err, fallback = 'Unable to complete request. Plea
     return 'That verification code is incorrect. Please check your email and try again.';
   }
 
-  // 3. Network and connection failures
-  if (lower.includes('failed to fetch') || lower.includes('network') || lower.includes('load failed') || lower.includes('connection_error') || lower.includes('networkerror') || lower.includes('net::')) {
+  // 3. Network and connection failures ONLY when device is genuinely offline
+  if ((typeof navigator !== 'undefined' && navigator.onLine === false) || lower.includes('net::err_internet_disconnected') || lower.includes('network is offline')) {
     return 'SellerFlow is having trouble connecting right now. Please check your connection and try again.';
   }
-
-  // 4. Unexpected server responses
-  if (lower.includes('unexpected response') || lower.includes('parse_error') || lower.includes('syntaxerror') || lower.includes('cannot get') || lower.includes('cannot post')) {
-    return 'SellerFlow received an unexpected response from the server. Please try again.';
+  if (lower.includes('failed to fetch') || lower.includes('networkerror') || lower.includes('load failed')) {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      return 'SellerFlow is having trouble connecting right now. Please check your connection and try again.';
+    }
+    return 'Recovery email service is temporarily unavailable. Please try again later.';
   }
 
-  return str;
+  return str || fallback;
 }
 window.formatSellerFlowError = formatSellerFlowError;
 
@@ -2716,18 +2711,39 @@ window.formatSellerFlowError = formatSellerFlowError;
       if (!text) return { success: this.ok };
       const trimmed = text.trim();
       if (trimmed.startsWith('<') || trimmed.startsWith('<!doctype') || trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html')) {
+        if (this.status === 401) {
+          return {
+            success: false,
+            code: 'AUTH_REQUIRED',
+            error: 'Your session has expired. Please sign in again.'
+          };
+        }
+        if (this.status === 503 || this.status >= 500) {
+          return {
+            success: false,
+            code: 'EMAIL_SERVICE_UNAVAILABLE',
+            error: 'Recovery email service is temporarily unavailable. Please try again later.'
+          };
+        }
         return {
           success: false,
-          code: 'CONNECTION_ERROR',
-          error: 'SellerFlow is having trouble connecting right now. Please check your connection and try again.'
+          code: 'UNEXPECTED_RESPONSE',
+          error: 'Recovery email service is temporarily unavailable. Please try again later.'
         };
       }
       return JSON.parse(trimmed);
     } catch (parseErr) {
+      if (this.status === 503 || this.status >= 500) {
+        return {
+          success: false,
+          code: 'EMAIL_SERVICE_UNAVAILABLE',
+          error: 'Recovery email service is temporarily unavailable. Please try again later.'
+        };
+      }
       return {
         success: false,
         code: 'PARSE_ERROR',
-        error: 'SellerFlow is having trouble connecting right now. Please check your connection and try again.'
+        error: 'Recovery email service is temporarily unavailable. Please try again later.'
       };
     }
   };
@@ -19997,6 +20013,9 @@ async function initiateAddRecoveryEmail(inputEmail) {
       } catch (_) {}
     }
 
+    const activeUsername = currentProfile?.username || currentUser?.username || (currentUser?.displayName || '') || (currentUser?.email ? currentUser.email.split('@')[0] : '') || localStorage.getItem('sf_last_username') || '';
+    const activeUid = currentUser?.uid || currentProfile?.uid || (typeof auth !== 'undefined' && auth.currentUser?.uid) || '';
+
     const res = await fetch('/api/auth/add-recovery-email', {
       method: 'POST',
       headers: {
@@ -20006,15 +20025,15 @@ async function initiateAddRecoveryEmail(inputEmail) {
       body: JSON.stringify({
         email: cleanEmail,
         recoveryEmail: cleanEmail,
-        username: currentProfile?.username || (currentUser?.displayName || ''),
-        uid: currentUser?.uid
+        username: activeUsername,
+        uid: activeUid
       })
     });
     const data = await res.json();
     ready();
 
     if (!res.ok || !data.success) {
-      const errMsg = formatSellerFlowError(data || data?.error || data?.message || "We couldn't send the verification email right now. Please try again.");
+      const errMsg = formatSellerFlowError(data || data?.error || data?.message || "Recovery email service is temporarily unavailable. Please try again later.");
       toast(errMsg, 'error', 5000);
       return;
     }
@@ -20024,7 +20043,7 @@ async function initiateAddRecoveryEmail(inputEmail) {
     openRecoveryCodeVerificationModal(cleanEmail, data.maskedEmail || maskEmail(cleanEmail));
   } catch (err) {
     ready();
-    const errMsg = formatSellerFlowError(err || err?.message || 'SellerFlow is having trouble connecting right now. Please check your connection and try again.');
+    const errMsg = formatSellerFlowError(err || err?.message || 'Recovery email service is temporarily unavailable. Please try again later.');
     toast(errMsg, 'error', 5000);
   }
 }
@@ -20097,6 +20116,9 @@ function openRecoveryCodeVerificationModal(email, maskedEmail) {
         } catch (_) {}
       }
 
+      const activeUsername = currentProfile?.username || currentUser?.username || (currentUser?.displayName || '') || (currentUser?.email ? currentUser.email.split('@')[0] : '') || localStorage.getItem('sf_last_username') || '';
+      const activeUid = currentUser?.uid || currentProfile?.uid || (typeof auth !== 'undefined' && auth.currentUser?.uid) || '';
+
       const res = await fetch('/api/auth/add-recovery-email', {
         method: 'POST',
         headers: {
@@ -20106,13 +20128,13 @@ function openRecoveryCodeVerificationModal(email, maskedEmail) {
         body: JSON.stringify({
           email,
           recoveryEmail: email,
-          username: currentProfile?.username || (currentUser?.displayName || ''),
-          uid: currentUser?.uid
+          username: activeUsername,
+          uid: activeUid
         })
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        const errMsg = formatSellerFlowError(data || data?.error || data?.message || "We couldn't send the verification email right now. Please try again.");
+        const errMsg = formatSellerFlowError(data || data?.error || data?.message || "Recovery email service is temporarily unavailable. Please try again later.");
         toast(errMsg, 'error', 5000);
         $('recResendCodeBtn').disabled = false;
         $('recResendCodeBtn').textContent = 'Resend Code';
@@ -20125,7 +20147,7 @@ function openRecoveryCodeVerificationModal(email, maskedEmail) {
       $('recResendCodeBtn').innerHTML = 'Resend in <span id="recResendCountdown">45</span>s';
       countdownInterval = setInterval(updateCountdown, 1000);
     } catch (e) {
-      toast(formatSellerFlowError(e || e?.message || 'SellerFlow is having trouble connecting right now. Please check your connection and try again.'), 'error', 5000);
+      toast(formatSellerFlowError(e || e?.message || 'Recovery email service is temporarily unavailable. Please try again later.'), 'error', 5000);
       $('recResendCodeBtn').disabled = false;
       $('recResendCodeBtn').textContent = 'Resend Code';
     }
@@ -20155,6 +20177,9 @@ function openRecoveryCodeVerificationModal(email, maskedEmail) {
         } catch (_) {}
       }
 
+      const activeUsername = currentProfile?.username || currentUser?.username || (currentUser?.displayName || '') || (currentUser?.email ? currentUser.email.split('@')[0] : '') || localStorage.getItem('sf_last_username') || '';
+      const activeUid = currentUser?.uid || currentProfile?.uid || (typeof auth !== 'undefined' && auth.currentUser?.uid) || '';
+
       const vRes = await fetch('/api/auth/verify-recovery-email', {
         method: 'POST',
         headers: {
@@ -20164,8 +20189,8 @@ function openRecoveryCodeVerificationModal(email, maskedEmail) {
         body: JSON.stringify({
           code,
           email,
-          username: currentProfile?.username,
-          uid: currentUser?.uid
+          username: activeUsername,
+          uid: activeUid
         })
       });
       const vData = await vRes.json();

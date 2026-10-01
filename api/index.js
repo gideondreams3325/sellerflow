@@ -13,7 +13,7 @@ export default function handler(req, res) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(500).json({
         success: false,
-        error: 'SellerFlow is having trouble connecting right now. Please check your connection and try again.',
+        error: 'Unable to process request right now. Please try again later.',
         code: 'SERVER_ERROR'
       });
     }

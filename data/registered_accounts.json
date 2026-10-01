@@ -66,5 +66,37 @@
     "recoveryEmailVerified": false,
     "usernameLower": "testuser",
     "updatedAt": "2026-09-30T21:12:37.270Z"
+  },
+  {
+    "uid": "GPpohsMeBMcXSeJ2V8e0kxwDQmn1",
+    "authEmail": "gideondreams3325@gmail.com",
+    "recoveryEmail": "gideondreams3325@gmail.com",
+    "recoveryEmailVerified": true,
+    "username": "sellerflow",
+    "isAdmin": true,
+    "isExisting": true,
+    "passwordHash": "2bdae8280e8d10fa20685fa4d7e2ab988d35b6c0e7ec7fd81ee2768e817d45e2798be25cd43480427127ebd234c73c7946023747f447f60c621bcc823af8e56e",
+    "passwordSalt": "bbac9e0eb62ecd10be6f36cb5a206a65",
+    "usernameLower": "sellerflow",
+    "updatedAt": "2026-09-30T22:22:26.251Z"
+  },
+  {
+    "uid": "uid_testmerchant_1",
+    "username": "testmerchant_1",
+    "recoveryEmail": "merchant_real@example.com",
+    "recoveryEmailVerified": true,
+    "usernameLower": "testmerchant_1",
+    "updatedAt": "2026-09-30T22:40:17.206Z",
+    "recoveryEmailVerifiedAt": "2026-09-30T22:40:14.950Z",
+    "passwordHash": "4c078ee1ea5fbfa482c718f1f22c77b07162d33b72c943d58cfb4f90fcb1e1f499846448e1c2e2275a04aedd4de0f7124e1c8c2fa5cb93ceb77835868a778070",
+    "passwordSalt": "5ef4c6b34156521bd33ae6fb55c5f16f"
+  },
+  {
+    "uid": "uid_unique_merchant_3",
+    "username": "unique_merchant_3",
+    "recoveryEmail": "new_unique_merchant@example.com",
+    "recoveryEmailVerified": false,
+    "usernameLower": "unique_merchant_3",
+    "updatedAt": "2026-09-30T22:25:41.990Z"
   }
 ]
