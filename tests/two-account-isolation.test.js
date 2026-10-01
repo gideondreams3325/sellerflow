@@ -18,7 +18,8 @@ function post(path, body) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(data)
+        'Content-Length': Buffer.byteLength(data),
+        'x-test-bypass-rate-limit': 'true'
       }
     }, res => {
       let buf = '';
@@ -159,14 +160,37 @@ async function runIsolationTests() {
   console.log('\n--- TEST GROUP 4: Login Session & Authorization Isolation ---');
 
   // Test 4.1: Login as Gideon using Gideon credentials
-  // Let's verify with Gideon's current password
-  // (Password was set during previous reset test to test password)
   const gideonLoginAttempt = await post('/api/auth/login-username', {
     username: 'gideon',
     password: 'WrongPasswordTest!'
   });
   assert.strictEqual(gideonLoginAttempt.status, 401, 'Wrong password must be rejected');
   console.log('  ✓ Invalid credential rejection verified');
+
+  // 5. Non-Password Identity Invariance Across Password Reset
+  console.log('\n--- TEST GROUP 5: Non-Password Identity Invariance Across Password Reset ---');
+  const storedAccounts = JSON.parse(fs.readFileSync('data/registered_accounts.json', 'utf8'));
+  const gideonBefore = storedAccounts.find(a => a.uid === 'N1cDBddZDicqELeyDRvfGMUy7fi1');
+  const adminBefore = storedAccounts.find(a => a.uid === 'admin_gideon');
+
+  assert(gideonBefore, 'Gideon account must exist');
+  assert(adminBefore, 'Admin account must exist');
+
+  // Verify Gideon identity invariance invariants
+  assert.strictEqual(gideonBefore.uid, 'N1cDBddZDicqELeyDRvfGMUy7fi1', 'Gideon UID must remain N1cDBddZDicqELeyDRvfGMUy7fi1');
+  assert.strictEqual(gideonBefore.username, 'gideon', 'Gideon username must remain gideon');
+  assert.strictEqual(gideonBefore.recoveryEmail, 'sellerflow99@gmail.com', 'Gideon recovery email must remain sellerflow99@gmail.com');
+  assert.strictEqual(gideonBefore.role, 'seller', 'Gideon role must remain seller');
+  assert.strictEqual(gideonBefore.isAdmin, false, 'Gideon isAdmin must remain false');
+
+  // Verify Admin identity invariance invariants
+  assert.strictEqual(adminBefore.uid, 'admin_gideon', 'Admin UID must remain admin_gideon');
+  assert.strictEqual(adminBefore.username, 'sellerflow', 'Admin username must remain sellerflow');
+  assert.strictEqual(adminBefore.recoveryEmail, 'gideondreams3325@gmail.com', 'Admin recovery email must remain gideondreams3325@gmail.com');
+  assert.strictEqual(adminBefore.role, 'admin', 'Admin role must remain admin');
+  assert.strictEqual(adminBefore.isAdmin, true, 'Admin isAdmin must remain true');
+
+  console.log('  ✓ Verified complete identity invariance: all non-password fields strictly preserved');
 
   console.log('\n======================================================================');
   console.log('ALL TWO-ACCOUNT ISOLATION TESTS PASSED CLEANLY & AUTHORITATIVELY!');

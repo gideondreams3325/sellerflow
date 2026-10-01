@@ -8588,6 +8588,19 @@ async function deleteUserPost(postId) {
       }).catch(() => {});
     });
 
+    // Authoritative backend post store synchronization
+    try {
+      const idToken = currentUser ? await currentUser.getIdToken().catch(() => '') : '';
+      fetch('/api/posts/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {})
+        },
+        body: JSON.stringify({ postId })
+      }).catch(() => {});
+    } catch (_) {}
+
     // Remove from in-memory profile cache if present
     if (window._cachedProfileData?.[currentUser.uid]?.posts) {
       window._cachedProfileData[currentUser.uid].posts = window._cachedProfileData[currentUser.uid].posts.filter(x => x.id !== postId);
@@ -8639,12 +8652,24 @@ function purgeAndHidePostImmediately(postId, reason = 'Security team takedown') 
     window._sfCachedPosts.delete(safePostId);
   }
 
+  if (window._cachedProfileData) {
+    Object.values(window._cachedProfileData).forEach(prof => {
+      if (Array.isArray(prof?.posts)) {
+        prof.posts = prof.posts.filter(x => x && x.id !== safePostId);
+      }
+    });
+  }
+
+  if (Array.isArray(window._cachedSavedPosts)) {
+    window._cachedSavedPosts = window._cachedSavedPosts.filter(p => p && p.id !== safePostId);
+  }
+
   // 2. Hide and delete matching cards from the DOM across the document immediately
   try {
     const safeSelectorId = (typeof CSS !== 'undefined' && typeof CSS.escape === 'function')
       ? CSS.escape(safePostId)
       : safePostId.replace(/[^\w-]/g, '\\$&');
-    const selector = `.reel-card[data-reel-id="${safeSelectorId}"], [data-post-id="${safeSelectorId}"], [data-feed-post-id="${safeSelectorId}"], [data-admin-takedown-post="${safeSelectorId}"], #feedItem-${safeSelectorId}`;
+    const selector = `.reel-card[data-reel-id="${safeSelectorId}"], [data-post-id="${safeSelectorId}"], [data-feed-post-id="${safeSelectorId}"], [data-admin-takedown-post="${safeSelectorId}"], #feedItem-${safeSelectorId}, .profile-grid-item[data-post-id="${safeSelectorId}"]`;
     const matchingCards = document.querySelectorAll(selector);
     matchingCards.forEach(card => {
       // Stop playback and unload media immediately
@@ -10703,14 +10728,16 @@ function openCommentPanel(id,p){
         <button type="button" id="closeCommentPanel" class="w-10 h-10 rounded-full border border-gray-200 hover:border-gold transition">×</button>
       </div>
       <div class="space-y-3 my-5 max-h-64 overflow-auto">
-        ${(p.comments||[]).slice(-30).map(c=>{
+        ${(p.comments||[]).slice(-30).map((c, idx)=>{
           const userObj = c.uid ? (typeof allPublicProfiles !== 'undefined' && allPublicProfiles.has(c.uid) ? allPublicProfiles.get(c.uid) : sellerProfile(c.uid)) : c;
+          const canDelete = currentUser && (currentUser.uid === c.uid || currentUser.uid === p.sellerId || isAdmin);
           return `
-            <div class="bg-gray-50 p-3 rounded-xl flex items-start gap-3 border border-[#272727]">
+            <div class="bg-gray-50 p-3 rounded-xl flex items-start gap-3 border border-[#272727] relative group" id="commentItem_${idx}">
               ${avatar(userObj, 'w-8 h-8 rounded-full object-cover shrink-0')}
               <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-1.5">
+                <div class="flex items-center justify-between gap-1.5">
                   <b class="text-xs text-gray-800">${esc(c.name||userObj.name||'User')}</b>
+                  ${canDelete ? `<button type="button" class="text-xs text-rose-500 hover:text-rose-700 p-1 delete-comment-btn" data-comment-idx="${idx}" title="Delete comment">🗑️</button>` : ''}
                 </div>
                 <div class="text-sm mt-1 text-gray-700 leading-relaxed">${esc(c.text)}</div>
               </div>
@@ -10724,6 +10751,28 @@ function openCommentPanel(id,p){
   `;
   $('closeCommentPanel').onclick=closeModal;
   $('commentBackdrop').onclick=closeModal;
+
+  root.querySelectorAll('.delete-comment-btn').forEach(btn => {
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      const cIdx = parseInt(btn.dataset.commentIdx, 10);
+      if (isNaN(cIdx) || !p.comments || !p.comments[cIdx]) return;
+      const targetComment = p.comments[cIdx];
+      p.comments.splice(cIdx, 1);
+      document.getElementById('commentItem_' + cIdx)?.remove();
+      try {
+        await updateDoc(doc(db, 'posts', id), {
+          comments: arrayRemove(targetComment)
+        });
+      } catch (_) {
+        try { await setDoc(doc(db, 'posts', id), { comments: p.comments }, { merge: true }); } catch (_) {}
+      }
+      toast('Comment deleted', 'success');
+      const wrap = document.querySelector(`[data-reel-id="${id}"]`);
+      const countEl = wrap?.querySelector(`[data-post-action="comment"]`)?.parentElement?.querySelector('.reel-action-count');
+      if (countEl) countEl.textContent = formatReelCount(p.comments.length);
+    };
+  });
   $('submitComment').onclick=async()=>{
     if(!currentUser){
       closeModal();
@@ -15421,7 +15470,16 @@ async function deleteProduct(id){
     if(!snapshotExists(s)) throw Error('Product not found.');
     const data = s.data();
     if(data.sellerId !== currentUser.uid && !isAdmin) throw Error('You do not have permission to delete this product.');
+    purgeAndHideProductImmediately(id);
     await deleteDoc(doc(db, 'products', id));
+    try {
+      const token = currentUser ? await currentUser.getIdToken().catch(() => '') : '';
+      fetch('/api/admin/remove-item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ type: 'product', id })
+      }).catch(() => {});
+    } catch (_) {}
     toast('Product deleted successfully', 'success');
     if(currentPage === 'store') openStore(data.sellerId);
     else if(currentPage === 'marketplace' || currentPage === 'products') renderMarketplace('products');
@@ -15451,7 +15509,16 @@ async function deleteStore(storeId){
     if(!snapshotExists(s)) throw Error('Store not found.');
     const data = s.data();
     if(data.ownerId !== currentUser.uid && !isAdmin) throw Error('You do not have permission to delete this store.');
+    purgeAndHideStoreImmediately(storeId);
     await deleteDoc(doc(db, 'stores', storeId));
+    try {
+      const token = currentUser ? await currentUser.getIdToken().catch(() => '') : '';
+      fetch('/api/admin/remove-item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ type: 'store', id: storeId })
+      }).catch(() => {});
+    } catch (_) {}
     toast('Store deleted successfully', 'success');
     if(currentPage === 'store') navigate('marketplace');
     else if(currentPage === 'marketplace') renderMarketplace('stores');
@@ -21664,6 +21731,175 @@ window.updateOrdersBadge=updateOrdersBadge;
 window.handleOrdersSnapshot=handleOrdersSnapshot;
 window.dispatchNotification=dispatchNotification;
 window.initServiceWorker=initServiceWorker;
+
+let postsWatcherUnsubscribe = null;
+function startPostsWatcher() {
+  if (postsWatcherUnsubscribe) {
+    try { postsWatcherUnsubscribe(); } catch (_) {}
+    postsWatcherUnsubscribe = null;
+  }
+  if (!db) return;
+  try {
+    const q = query(collection(db, 'posts'), limit(150));
+    if (q && typeof q.onSnapshot === 'function') {
+      postsWatcherUnsubscribe = q.onSnapshot(snap => {
+        if (!snap) return;
+        const changes = typeof snap.docChanges === 'function' ? snap.docChanges() : [];
+        changes.forEach(change => {
+          const docId = change.doc?.id;
+          if (!docId) return;
+          if (change.type === 'removed') {
+            purgeAndHidePostImmediately(docId, 'Deleted from Firebase');
+          } else if (change.type === 'modified') {
+            const data = typeof change.doc.data === 'function' ? change.doc.data() : change.doc;
+            if (data.status === 'removed' || data.status === 'taken_down' || data.isDeleted === true || data.hidden === true || data.reviewStatus === 'removed' || data.reviewStatus === 'taken_down') {
+              purgeAndHidePostImmediately(docId, 'Removed/Taken down in Firebase');
+            } else {
+              if (window._sfCachedPosts) {
+                window._sfCachedPosts.set(docId, { id: docId, ...data });
+              }
+              if (Array.isArray(window._cachedFeedPosts)) {
+                const idx = window._cachedFeedPosts.findIndex(p => p && p.id === docId);
+                if (idx >= 0) window._cachedFeedPosts[idx] = { id: docId, ...data };
+              }
+            }
+          }
+        });
+      }, err => {
+        console.warn('Real-time posts watcher notice:', err?.message || err);
+      });
+    }
+  } catch (err) {
+    console.warn('Could not start posts watcher:', err?.message || err);
+  }
+}
+window.startPostsWatcher = startPostsWatcher;
+
+function stopPostsWatcher() {
+  if (postsWatcherUnsubscribe) {
+    try { postsWatcherUnsubscribe(); } catch (_) {}
+    postsWatcherUnsubscribe = null;
+  }
+}
+window.stopPostsWatcher = stopPostsWatcher;
+
+let productsWatcherUnsubscribe = null;
+function startProductsWatcher() {
+  if (productsWatcherUnsubscribe) {
+    try { productsWatcherUnsubscribe(); } catch (_) {}
+    productsWatcherUnsubscribe = null;
+  }
+  if (!db) return;
+  try {
+    const q = query(collection(db, 'products'), limit(150));
+    if (q && typeof q.onSnapshot === 'function') {
+      productsWatcherUnsubscribe = q.onSnapshot(snap => {
+        if (!snap) return;
+        const changes = typeof snap.docChanges === 'function' ? snap.docChanges() : [];
+        changes.forEach(change => {
+          const docId = change.doc?.id;
+          if (!docId) return;
+          if (change.type === 'removed') {
+            purgeAndHideProductImmediately(docId, 'Deleted from Firebase');
+          } else if (change.type === 'modified') {
+            const data = typeof change.doc.data === 'function' ? change.doc.data() : change.doc;
+            if (data.status === 'removed' || data.status === 'taken_down' || data.isDeleted === true) {
+              purgeAndHideProductImmediately(docId, 'Removed in Firebase');
+            } else {
+              if (Array.isArray(window._cachedProducts)) {
+                const idx = window._cachedProducts.findIndex(p => p && p.id === docId);
+                if (idx >= 0) window._cachedProducts[idx] = { id: docId, ...data };
+              }
+            }
+          }
+        });
+      }, err => {
+        console.warn('Real-time products watcher notice:', err?.message || err);
+      });
+    }
+  } catch (err) {
+    console.warn('Could not start products watcher:', err?.message || err);
+  }
+}
+window.startProductsWatcher = startProductsWatcher;
+
+function purgeAndHideProductImmediately(prodId, reason = 'Product removed') {
+  if (!prodId) return;
+  const safeId = String(prodId).trim();
+  if (Array.isArray(window._cachedProducts)) {
+    window._cachedProducts = window._cachedProducts.filter(p => p && p.id !== safeId);
+    try {
+      localStorage.setItem('sf_cached_products', JSON.stringify(window._cachedProducts.slice(0, 100)));
+    } catch (_) {}
+  }
+  const cards = document.querySelectorAll(`[data-product-id="${safeId}"], [data-view-product="${safeId}"], [data-edit-product="${safeId}"], [data-delete-product="${safeId}"]`);
+  cards.forEach(el => {
+    const card = el.closest('.product-card, .marketplace-card, [data-prod-card]') || el;
+    card.remove();
+  });
+  const countEl = document.getElementById('productCount');
+  if (countEl && Array.isArray(window._cachedProducts)) {
+    countEl.textContent = `${window._cachedProducts.length} product${window._cachedProducts.length === 1 ? '' : 's'} available`;
+  }
+}
+window.purgeAndHideProductImmediately = purgeAndHideProductImmediately;
+
+let storesWatcherUnsubscribe = null;
+function startStoresWatcher() {
+  if (storesWatcherUnsubscribe) {
+    try { storesWatcherUnsubscribe(); } catch (_) {}
+    storesWatcherUnsubscribe = null;
+  }
+  if (!db) return;
+  try {
+    const q = query(collection(db, 'stores'), limit(150));
+    if (q && typeof q.onSnapshot === 'function') {
+      storesWatcherUnsubscribe = q.onSnapshot(snap => {
+        if (!snap) return;
+        const changes = typeof snap.docChanges === 'function' ? snap.docChanges() : [];
+        changes.forEach(change => {
+          const docId = change.doc?.id;
+          if (!docId) return;
+          if (change.type === 'removed') {
+            purgeAndHideStoreImmediately(docId, 'Deleted from Firebase');
+          } else if (change.type === 'modified') {
+            const data = typeof change.doc.data === 'function' ? change.doc.data() : change.doc;
+            if (data.status === 'removed' || data.status === 'taken_down' || data.isDeleted === true) {
+              purgeAndHideStoreImmediately(docId, 'Store taken down in Firebase');
+            } else {
+              if (Array.isArray(window._cachedStores)) {
+                const idx = window._cachedStores.findIndex(s => s && (s.id === docId || s.uid === docId));
+                if (idx >= 0) window._cachedStores[idx] = { id: docId, ...data };
+              }
+            }
+          }
+        });
+      }, err => {
+        console.warn('Real-time stores watcher notice:', err?.message || err);
+      });
+    }
+  } catch (err) {
+    console.warn('Could not start stores watcher:', err?.message || err);
+  }
+}
+window.startStoresWatcher = startStoresWatcher;
+
+function purgeAndHideStoreImmediately(storeId, reason = 'Storefront removed') {
+  if (!storeId) return;
+  const safeId = String(storeId).trim();
+  if (Array.isArray(window._cachedStores)) {
+    window._cachedStores = window._cachedStores.filter(s => s && s.id !== safeId && s.uid !== safeId);
+    try {
+      localStorage.setItem('sf_cached_stores', JSON.stringify(window._cachedStores.slice(0, 50)));
+    } catch (_) {}
+  }
+  const cards = document.querySelectorAll(`[data-store-id="${safeId}"]`);
+  cards.forEach(el => {
+    const card = el.closest('.store-card, [data-store-card]') || el;
+    card.remove();
+  });
+}
+window.purgeAndHideStoreImmediately = purgeAndHideStoreImmediately;
 async function openNotifications(){if(window.renderGroupedNotifications){return window.renderGroupedNotifications()}if(window.openNotifications&&window.openNotifications!==openNotifications){return window.openNotifications()}}
 async function markAllNotifications(){
   try{
@@ -22392,6 +22628,11 @@ async function openAdminSupportEditor(currentData){
 window.openAdminSupportEditor = openAdminSupportEditor;
 
 function openReportFraudModal(prefillType='seller', prefillId='', prefillName=''){
+  if(!currentUser){
+    window._pendingFraudReport = { prefillType, prefillId, prefillName };
+    showAuthPrompt('submit a fraud report to SellerFlow Security');
+    return;
+  }
   modal(`
     <div class="space-y-4 max-w-lg mx-auto" id="reportFraudModalContent">
       <div class="pb-3 border-b border-[#E6E6E6]">
@@ -22488,6 +22729,11 @@ function openReportFraudModal(prefillType='seller', prefillId='', prefillName=''
   `);
 
   if($('submitFraudReportBtn')) $('submitFraudReportBtn').onclick = async () => {
+    if(!currentUser){
+      closeModal();
+      showAuthPrompt('submit a fraud report to SellerFlow Security');
+      return;
+    }
     const btn = $('submitFraudReportBtn');
     try {
       const targetType = $('reportTargetType').value;
@@ -22561,6 +22807,7 @@ function openReportFraudModal(prefillType='seller', prefillId='', prefillName=''
   };
 }
 window.openReportFraudModal = openReportFraudModal;
+window.openReportModal = openReportFraudModal;
 
 // =======================================================
 // Cross-Device Physical & System Navigation Architecture
@@ -23781,7 +24028,28 @@ async function startUser(u){
   startNotificationWatcher();
   startOrdersWatcher();
   startBuyerOrdersWatcher();
+  startPostsWatcher();
+  startProductsWatcher();
+  startStoresWatcher();
   ready();
+  if (window._pendingJobsEventsAction) {
+    const pendingAction = window._pendingJobsEventsAction;
+    window._pendingJobsEventsAction = null;
+    setTimeout(() => {
+      if (typeof window.resumePendingJobsEventsAction === 'function') {
+        window.resumePendingJobsEventsAction(pendingAction);
+      }
+    }, 450);
+  }
+  if (window._pendingFraudReport) {
+    const pfr = window._pendingFraudReport;
+    window._pendingFraudReport = null;
+    setTimeout(() => {
+      if (typeof openReportFraudModal === 'function') {
+        openReportFraudModal(pfr.prefillType, pfr.prefillId, pfr.prefillName);
+      }
+    }, 500);
+  }
   if (typeof initCapacitorPushNotifications === 'function') {
     setTimeout(() => {
       initCapacitorPushNotifications(u).catch(e => console.warn('Push init error:', e));
@@ -24263,6 +24531,9 @@ async function init(){
             setNav();
           }
         }
+        if (typeof startPostsWatcher === 'function') startPostsWatcher();
+        if (typeof startProductsWatcher === 'function') startProductsWatcher();
+        if (typeof startStoresWatcher === 'function') startStoresWatcher();
         return;
       }
 
@@ -31534,7 +31805,6 @@ init();
     const isPostApprovedAndLive = (x) => {
       const d = x.data || x;
       if (isPostTakenDown(x)) return false;
-      if (isPostInReviewQueue(x)) return false;
       return d.status === 'published' || d.status === 'approved' || d.status === 'active' || d.reviewStatus === 'approved' || d.reviewStatus === 'reviewed' || d.liveOnForYou === true;
     };
 
@@ -32234,8 +32504,8 @@ init();
               </div>
               <span class="text-xs font-bold px-2.5 py-1 rounded-full ${takenDownPosts.length ? 'bg-rose-950/60 text-rose-400 border border-rose-800' : 'bg-gray-100 text-gray-600'}">${takenDownPosts.length} in archive</span>
             </div>
-            <div class="space-y-3 mt-4">
-              ${takenDownPosts.slice(0, 2).map(x => adminRestoreCard(x.id, x.data)).join('') || '<div class="p-8 text-center muted text-xs bg-white rounded-xl border border-gray-200">No taken-down posts in archive. All clear!</div>'}
+            <div class="space-y-3 mt-4 max-h-96 overflow-y-auto pr-1">
+              ${takenDownPosts.map(x => adminRestoreCard(x.id, x.data)).join('') || '<div class="p-8 text-center muted text-xs bg-white rounded-xl border border-gray-200">No taken-down posts in archive. All clear!</div>'}
             </div>
             <button id="openAllRestoration" class="mt-4 border border-gray-200 hover:border-gold rounded-xl px-4 py-2.5 text-xs font-bold w-full transition text-gray-900 bg-white hover:bg-gray-50 shadow-sm">
               View All Taken-Down Posts (${takenDownPosts.length}) →
@@ -32254,8 +32524,8 @@ init();
               </div>
               <span class="text-xs gold bg-[#1f180c] px-2.5 py-1 rounded-full border border-amber-200 font-bold">${reviewPosts.length} queued</span>
             </div>
-            <div class="space-y-3 mt-4">
-              ${reviewPosts.slice(0, 2).map(x => adminPostCard(x.id, x.data)).join('') || '<div class="p-8 text-center muted text-xs bg-white rounded-xl border border-gray-200">No posts waiting for safety review.</div>'}
+            <div class="space-y-3 mt-4 max-h-96 overflow-y-auto pr-1">
+              ${reviewPosts.map(x => adminPostCard(x.id, x.data)).join('') || '<div class="p-8 text-center muted text-xs bg-white rounded-xl border border-gray-200">No posts waiting for safety review.</div>'}
             </div>
             <button id="openAllReview" class="mt-4 border border-gray-200 hover:border-gold rounded-xl px-4 py-2.5 text-xs font-bold w-full transition text-gray-900 bg-white hover:bg-gray-50 shadow-sm">
               View Safety Review Queue (${reviewPosts.length}) →
@@ -32678,19 +32948,19 @@ init();
     const isPostApprovedAndLive = (x) => {
       const d = x.data || x;
       if (isPostTakenDown(x)) return false;
-      if (isPostInReviewQueue(x)) return false;
       return d.status === 'published' || d.status === 'approved' || d.status === 'active' || d.reviewStatus === 'approved' || d.reviewStatus === 'reviewed' || d.liveOnForYou === true;
     };
 
     const allReview = reviewPosts ? reviewPosts.filter(isPostInReviewQueue) : allPostsDocs.map(d => ({ id: d.id, data: d.data() })).filter(isPostInReviewQueue);
     const allLive = livePosts ? livePosts.filter(isPostApprovedAndLive) : allPostsDocs.map(d => ({ id: d.id, data: d.data() })).filter(isPostApprovedAndLive);
     const allRestoration = takenDownPosts ? takenDownPosts.filter(isPostTakenDown) : allPostsDocs.map(d => ({ id: d.id, data: d.data() })).filter(isPostTakenDown);
+    const allCanonical = allPostsDocs.map(d => ({ id: d.id, data: d.data() })).filter(x => !isPostTakenDown(x));
 
     let activeSubTab = initialSubTab || window._currentAdminPostsSubTab || 'live';
     window._currentAdminPostsSubTab = activeSubTab;
 
-    const totalCount = (posts?.size || (allLive.length + allReview.length + allRestoration.length));
-    const videoCount = allPostsDocs.filter(d => d.data().mediaType?.startsWith('video')).length;
+    const totalCount = (posts?.size || allPostsDocs.length || (allLive.length + allRestoration.length));
+    const videoCount = allPostsDocs.filter(d => (d.data?.() || d.data || d).mediaType?.startsWith('video')).length;
     const photoCount = totalCount - videoCount;
 
     $('adminWorkspace').innerHTML = `
@@ -32723,6 +32993,9 @@ init();
         <!-- Sleek Segmented Subtabs for Posts Section -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-1.5 p-1 rounded-2xl bg-white border border-gray-200 w-full sm:w-auto overflow-x-auto scrollbar-none" id="postsSubTabs">
+            <button type="button" class="admin-subtab ${activeSubTab === 'all' ? 'active' : ''}" data-posts-subtab="all">
+              <span>📚 All (${allCanonical.length})</span>
+            </button>
             <button type="button" class="admin-subtab ${activeSubTab === 'live' ? 'active' : ''}" data-posts-subtab="live">
               <span>🟢 Live Feed</span>
               <span class="ml-1 text-[11px] px-1.5 py-0.2 rounded bg-white">${allLive.length}</span>
@@ -32759,6 +33032,7 @@ init();
       let currentList = [];
       if(activeSubTab === 'restoration') currentList = allRestoration;
       else if(activeSubTab === 'review') currentList = allReview;
+      else if(activeSubTab === 'all') currentList = allCanonical;
       else currentList = allLive;
 
       const q = ($('postSearchInput')?.value || '').toLowerCase().trim();

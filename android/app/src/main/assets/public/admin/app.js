@@ -127,17 +127,9 @@ function rebuildUnifiedUsers() {
 
 function rebuildUnifiedPosts() {
   const postMap = new Map();
-  rawPostsMap.forEach((val, key) => postMap.set(key, { ...val }));
-  rawAdminReviewsMap.forEach((rev) => {
-    if (rev.action === 'takedown' && rev.targetId && rev.postSnapshot && !postMap.has(rev.targetId)) {
-      postMap.set(rev.targetId, {
-        id: rev.targetId,
-        ...rev.postSnapshot,
-        status: 'taken_down',
-        reviewStatus: 'removed',
-        takedownReason: rev.reason || 'Taken down by Security Team',
-        removedAt: rev.timestamp || null
-      });
+  rawPostsMap.forEach((val, key) => {
+    if (val && !val.isDeleted && val.status !== 'deleted') {
+      postMap.set(key, { ...val });
     }
   });
   state.data.posts = Array.from(postMap.values());
@@ -550,23 +542,10 @@ async function fetchAdminData(force = false) {
     (postsSnap.docs || []).forEach(d => rawPostsMap.set(d.id, serializeDoc(d)));
     (adminReviewsSnap.docs || []).forEach(d => rawAdminReviewsMap.set(d.id, { id: d.id, ...d.data(), source: 'adminReviews' }));
 
-    // Build unified posts list (merging archived reviews if any)
+    // Build unified posts list (do not resurrect deleted records from stale admin review snapshots)
     const postMap = new Map();
     (postsSnap.docs || []).forEach(d => {
       postMap.set(d.id, serializeDoc(d));
-    });
-    (adminReviewsSnap.docs || []).forEach(d => {
-      const rev = d.data() || {};
-      if (rev.targetId && rev.postSnapshot && !postMap.has(rev.targetId)) {
-        postMap.set(rev.targetId, {
-          id: rev.targetId,
-          ...rev.postSnapshot,
-          status: 'taken_down',
-          reviewStatus: 'removed',
-          takedownReason: rev.reason || 'Taken down by Security Team',
-          removedAt: rev.timestamp || null
-        });
-      }
     });
 
     // Build unified map of users
@@ -1361,7 +1340,7 @@ window.handleProductRestore = function(productId) {
 };
 
 // 12. TAB 5: CONTENT MODERATION (POSTS & MEDIA) - SECURITY TEAM DESK
-let currentModFilter = 'security_desk';
+let currentModFilter = 'all';
 
 function renderModerationPosts() {
   const container = document.getElementById('moderationPostsContainer');
@@ -1371,13 +1350,12 @@ function renderModerationPosts() {
     const isTakenDown = p.status === 'taken_down' || p.status === 'hidden' || p.status === 'removed' || p.isDeleted || p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down';
     const isApproved = p.reviewStatus === 'approved' || p.reviewStatus === 'reviewed' || p.reviewStatus === 'safe';
 
-    if (currentModFilter === 'security_desk') {
+    if (currentModFilter === 'all') {
+      return !p.isDeleted && p.status !== 'deleted';
+    }
+    if (currentModFilter === 'security_desk' || currentModFilter === 'pending') {
       if (isTakenDown || isApproved) return false;
       return p.reviewStatus === 'pending_security_review' || p.reviewStatus === 'under_review' || p.reviewStatus === 'pending' || p.reviewStatus === 'review' || p.reviewStatus === 'violation' || p.violationDetected || p.submittedToSecurityDeskAt || !p.reviewStatus;
-    }
-    if (currentModFilter === 'pending') {
-      if (isTakenDown || isApproved) return false;
-      return p.reviewStatus === 'under_review' || p.reviewStatus === 'pending' || p.status === 'pending' || p.reviewStatus === 'pending_security_review' || !p.reviewStatus;
     }
     if (currentModFilter === 'ai_flagged') {
       if (isTakenDown || isApproved) return false;
@@ -1391,7 +1369,7 @@ function renderModerationPosts() {
       return isTakenDown;
     }
     if (currentModFilter === 'live') {
-      return (p.status === 'published' || p.status === 'approved' || p.status === 'active' || isApproved) && !isTakenDown;
+      return (p.status === 'published' || p.status === 'approved' || p.status === 'active' || isApproved || p.liveOnForYou) && !isTakenDown;
     }
     return true;
   });
@@ -1401,7 +1379,7 @@ function renderModerationPosts() {
     if (currentModFilter === 'security_desk') {
       countEl.textContent = `${filtered.length} pending review posts on Security Desk`;
     } else {
-      countEl.textContent = `${filtered.length} posts displayed`;
+      countEl.textContent = `${filtered.length} posts displayed (${state.data.posts.length} total canonical posts)`;
     }
   }
 

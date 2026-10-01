@@ -106,10 +106,13 @@
     "recoveryEmail": "merchant_real@example.com",
     "recoveryEmailVerified": true,
     "usernameLower": "testmerchant_1",
-    "updatedAt": "2026-10-01T15:56:10.153Z",
-    "recoveryEmailVerifiedAt": "2026-10-01T15:56:07.585Z",
-    "passwordHash": "4db4139efc4e1cd4cdcb0e980d21e1f240ccccbbc8d496f501ce77d0fed486b9e690d643754adee8d10cd66d32a18b8110d45ba9f842fa539f643ff01ee1d9cb",
-    "passwordSalt": "bfa0c2fa6a20cadf99311fdb2f2871d9"
+    "updatedAt": "2026-10-01T21:00:37.447Z",
+    "recoveryEmailVerifiedAt": "2026-10-01T21:00:35.238Z",
+    "passwordHash": "4dbcac159a074e3e82195330a31c0c7437ada66be4b30b144e574c3f6d3a9f2c61c027b0db0b9306992509258a7951331fed1e188a186b6dba4ae6d0e122a420",
+    "passwordSalt": "71248163d523939771d8768f45c6329d",
+    "name": "",
+    "role": "seller",
+    "isAdmin": false
   },
   {
     "uid": "uid_unique_merchant_3",

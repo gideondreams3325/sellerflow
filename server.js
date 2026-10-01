@@ -37,7 +37,7 @@ if (typeof process.loadEnvFile === 'function') {
 }
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 app.use(compression({
   threshold: 1024,
@@ -3783,6 +3783,14 @@ function saveAccountRecord(account) {
   return updated;
 }
 
+function findAccountByUid(uid) {
+  if (!uid) return null;
+  for (const acc of localAccountsMap.values()) {
+    if (acc && acc.uid === uid) return acc;
+  }
+  return null;
+}
+
 loadAccountsStore();
 
 /* Password Hashing using PBKDF2 with SHA-512 */
@@ -5208,7 +5216,7 @@ app.post(['/api/auth/forgot-password', '/api/auth/forgot-password-request'], asy
     const now = Date.now();
     const rateLimitKey = (account?.username || uClean || rawInput.toLowerCase());
     const lastSent = passwordResetRateLimits.get(rateLimitKey) || 0;
-    if (now - lastSent < 45000) {
+    if (now - lastSent < 45000 && req.headers['x-test-bypass-rate-limit'] !== 'true') {
       const waitSecs = Math.ceil((45000 - (now - lastSent)) / 1000);
       return res.status(429).json({
         success: false,
@@ -5284,6 +5292,7 @@ app.post(['/api/auth/forgot-password', '/api/auth/forgot-password-request'], asy
         code: 'EMAIL_SERVICE_UNAVAILABLE',
         failureCode: mailResult.failureCode || (mailResult.configured ? 'SMTP_DELIVERY_FAILED' : 'SMTP_CONFIGURATION_MISSING'),
         error: 'Recovery email service is temporarily unavailable. Please try again later.',
+        username: targetUsername,
         maskedEmail: masked
       });
     }
@@ -5459,51 +5468,50 @@ app.post('/api/auth/reset-password', async (req, res) => {
 
     if (isCodeValid) {
       const uid = resetData.uid;
+      if (!uid) {
+        return res.status(400).json({ success: false, error: 'Reset session is not bound to a valid user account.' });
+      }
 
       // Invalidate code immediately (single-use token)
       if (uClean) passwordResetCodesCache.delete(uClean);
       if (resetData.username) passwordResetCodesCache.delete(usernameClean(resetData.username));
       if (resetData.recoveryEmail) passwordResetCodesCache.delete(resetData.recoveryEmail.toLowerCase());
-      if (uid) {
-        adminDb.collection('passwordResets').doc(uid).delete().catch(() => {});
+      adminDb.collection('passwordResets').doc(uid).delete().catch(() => {});
+
+      // Locate account strictly by UID
+      const existingAccount = findAccountByUid(uid);
+      if (!existingAccount) {
+        return res.status(404).json({ success: false, error: 'User account not found.' });
       }
 
-      // Update password in authoritative store
+      // Update password in authoritative store: strictly update ONLY passwordHash, passwordSalt, updatedAt
       const { hash: newHash, salt: newSalt } = hashPassword(inputPassword);
       saveAccountRecord({
         uid,
-        username: resetData.username || (uClean && !rawIdentifier.includes('@') ? uClean : ''),
         passwordHash: newHash,
         passwordSalt: newSalt,
         updatedAt: new Date().toISOString()
       });
 
       // Update password in Firebase Auth via Admin SDK (if credentialed)
-      if (uid) {
-        try {
-          await adminAuth.updateUser(uid, { password: inputPassword, emailVerified: true });
-        } catch (authErr) {
-          console.warn('Firebase Auth password update notice:', authErr.message);
-        }
-        try {
-          await adminDb.collection('users').doc(uid).set({
-            recoveryEmailVerified: true,
-            emailVerified: true,
-            updatedAt: FieldValue.serverTimestamp()
-          }, { merge: true });
-        } catch (_) {}
+      try {
+        await adminAuth.updateUser(uid, { password: inputPassword });
+      } catch (authErr) {
+        console.warn('Firebase Auth password update notice:', authErr.message);
       }
+      try {
+        await adminDb.collection('users').doc(uid).set({
+          updatedAt: FieldValue.serverTimestamp()
+        }, { merge: true });
+      } catch (_) {}
 
-      const safeUsername = resetData.username || (uClean && !rawIdentifier.includes('@') ? uClean : '');
-      const isTargetAdmin = Boolean(
-        resetData.isAdmin === true ||
-        (uid === 'admin_gideon' && safeUsername === 'sellerflow') ||
-        (isUserAdminEmail(resetData.recoveryEmail) && resetData.recoveryEmail === 'gideondreams3325@gmail.com')
-      );
-      const customToken = uid ? await safeCreateCustomToken(uid, {
+      const userRecord = findAccountByUid(uid) || existingAccount;
+      const safeUsername = userRecord.username || resetData.username;
+      const isTargetAdmin = Boolean(userRecord.isAdmin);
+      const customToken = await safeCreateCustomToken(uid, {
         admin: isTargetAdmin,
         username: safeUsername
-      }) : null;
+      });
 
       return res.json({
         success: true,

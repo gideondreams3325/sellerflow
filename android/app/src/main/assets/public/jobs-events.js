@@ -414,7 +414,7 @@ async function prefetchJobsData() {
   try {
     const localJobs = JSON.parse(localStorage.getItem('sf_my_posted_jobs') || '[]');
     localJobs.forEach(lj => {
-      if (lj && lj.id && !seenIds.has(lj.id) && (lj.status === 'approved' || !lj.status) && !String(lj.id).startsWith('job_seed_')) {
+      if (lj && lj.id && !seenIds.has(lj.id) && (lj.status === 'approved' || !lj.status) && !lj.isDeleted && lj.status !== 'removed' && lj.status !== 'taken_down' && lj.status !== 'deleted' && !String(lj.id).startsWith('job_seed_')) {
         seenIds.add(lj.id);
         jobs.push(lj);
       }
@@ -481,7 +481,7 @@ async function prefetchEventsData() {
   try {
     const localEvents = JSON.parse(localStorage.getItem('sf_my_hosted_events') || '[]');
     localEvents.forEach(le => {
-      if (le && le.id && !seenIds.has(le.id) && (le.status === 'approved' || !le.status)) {
+      if (le && le.id && !seenIds.has(le.id) && (le.status === 'approved' || !le.status) && !le.isDeleted && le.status !== 'removed' && le.status !== 'taken_down' && le.status !== 'deleted') {
         seenIds.add(le.id);
         events.push(le);
       }
@@ -862,7 +862,17 @@ async function renderJobs() {
   });
 
   _$('postJobBtn')?.addEventListener('click', async () => {
-    const eligible = await checkJobsEventsEligibility(getActiveUser(), 'post a job opening');
+    const user = getActiveUser();
+    if (!user) {
+      window._pendingJobsEventsAction = { type: 'post_job' };
+      if (typeof showAuthPrompt === 'function') {
+        showAuthPrompt('post a job opening on SellerFlow');
+      } else if (typeof showAuth === 'function') {
+        showAuth('login');
+      }
+      return;
+    }
+    const eligible = await checkJobsEventsEligibility(user, 'post a job opening');
     if (eligible) openPostJobModal();
   });
 
@@ -991,7 +1001,20 @@ async function loadJobsFeed() {
             </button>
           </div>
         `;
-        _$('feedEmptyPostJobBtn')?.addEventListener('click', () => openPostJobModal());
+        _$('feedEmptyPostJobBtn')?.addEventListener('click', async () => {
+          const user = getActiveUser();
+          if (!user) {
+            window._pendingJobsEventsAction = { type: 'post_job' };
+            if (typeof showAuthPrompt === 'function') {
+              showAuthPrompt('post a job opening on SellerFlow');
+            } else if (typeof showAuth === 'function') {
+              showAuth('login');
+            }
+            return;
+          }
+          const eligible = await checkJobsEventsEligibility(user, 'post a job opening');
+          if (eligible) openPostJobModal();
+        });
       } else {
         currentList.innerHTML = `
           <div class="text-center py-14 bg-[#14141e] border border-zinc-800/80 rounded-2xl p-6 space-y-2 max-w-md mx-auto">
@@ -1011,8 +1034,19 @@ async function loadJobsFeed() {
       b.onclick = () => openJobDetailModal(b.dataset.viewJob);
     });
     currentList.querySelectorAll('[data-apply-job]').forEach(b => {
-      b.onclick = async () => {
-        const eligible = await checkJobsEventsEligibility(getActiveUser(), 'apply for this job');
+      b.onclick = async (e) => {
+        e.stopPropagation();
+        const user = getActiveUser();
+        if (!user) {
+          window._pendingJobsEventsAction = { type: 'apply_job', id: b.dataset.applyJob };
+          if (typeof showAuthPrompt === 'function') {
+            showAuthPrompt('apply for this job on SellerFlow');
+          } else if (typeof showAuth === 'function') {
+            showAuth('login');
+          }
+          return;
+        }
+        const eligible = await checkJobsEventsEligibility(user, 'apply for this job');
         if (eligible) openApplyJobModal(b.dataset.applyJob);
       };
     });
@@ -1677,8 +1711,19 @@ async function openJobDetailModal(jobId) {
     modal.querySelector('#closeDetailModalBtn').onclick = () => modal.remove();
     modal.querySelector('#detailCloseBtn').onclick = () => modal.remove();
     modal.querySelector('#detailApplyBtn').onclick = async () => {
+      const user = getActiveUser();
+      if (!user) {
+        window._pendingJobsEventsAction = { type: 'apply_job', id: jobId };
+        modal.remove();
+        if (typeof showAuthPrompt === 'function') {
+          showAuthPrompt('apply for this job on SellerFlow');
+        } else if (typeof showAuth === 'function') {
+          showAuth('login');
+        }
+        return;
+      }
       modal.remove();
-      const eligible = await checkJobsEventsEligibility(getActiveUser(), 'apply for this job');
+      const eligible = await checkJobsEventsEligibility(user, 'apply for this job');
       if (eligible) openApplyJobModal(jobId);
     };
   } catch (err) {
@@ -2102,7 +2147,17 @@ async function renderEvents() {
   });
 
   _$('createEventBtn')?.addEventListener('click', async () => {
-    const eligible = await checkJobsEventsEligibility(getActiveUser(), 'host an event');
+    const user = getActiveUser();
+    if (!user) {
+      window._pendingJobsEventsAction = { type: 'create_event' };
+      if (typeof showAuthPrompt === 'function') {
+        showAuthPrompt('host an event on SellerFlow');
+      } else if (typeof showAuth === 'function') {
+        showAuth('login');
+      }
+      return;
+    }
+    const eligible = await checkJobsEventsEligibility(user, 'host an event');
     if (eligible) openCreateEventModal();
   });
 
@@ -2212,7 +2267,20 @@ async function loadEventsFeed() {
             </button>
           </div>
         `;
-        _$('feedEmptyHostEventBtn')?.addEventListener('click', () => openCreateEventModal());
+        _$('feedEmptyHostEventBtn')?.addEventListener('click', async () => {
+          const user = getActiveUser();
+          if (!user) {
+            window._pendingJobsEventsAction = { type: 'create_event' };
+            if (typeof showAuthPrompt === 'function') {
+              showAuthPrompt('host an event on SellerFlow');
+            } else if (typeof showAuth === 'function') {
+              showAuth('login');
+            }
+            return;
+          }
+          const eligible = await checkJobsEventsEligibility(user, 'host an event');
+          if (eligible) openCreateEventModal();
+        });
       } else {
         currentList.innerHTML = `
           <div class="col-span-full text-center py-14 bg-[#14141e] border border-zinc-800/80 rounded-2xl p-6 space-y-2 max-w-md mx-auto">
@@ -2278,8 +2346,19 @@ async function loadEventsFeed() {
     });
 
     currentList.querySelectorAll('[data-register-event]').forEach(b => {
-      b.onclick = async () => {
-        const eligible = await checkJobsEventsEligibility(getActiveUser(), 'register for this event');
+      b.onclick = async (e) => {
+        e.stopPropagation();
+        const user = getActiveUser();
+        if (!user) {
+          window._pendingJobsEventsAction = { type: 'register_event', id: b.dataset.registerEvent };
+          if (typeof showAuthPrompt === 'function') {
+            showAuthPrompt('register for this event on SellerFlow');
+          } else if (typeof showAuth === 'function') {
+            showAuth('login');
+          }
+          return;
+        }
+        const eligible = await checkJobsEventsEligibility(user, 'register for this event');
         if (eligible) openRegisterEventModal(b.dataset.registerEvent);
       };
     });
@@ -2390,8 +2469,19 @@ async function openEventDetailModal(eventId) {
   modal.querySelector('#closeEventDetailModalBtn').onclick = () => modal.remove();
   modal.querySelector('#eventDetailCloseBtn').onclick = () => modal.remove();
   modal.querySelector('#eventDetailRegisterBtn').onclick = async () => {
+    const user = getActiveUser();
+    if (!user) {
+      window._pendingJobsEventsAction = { type: 'register_event', id: eventId };
+      modal.remove();
+      if (typeof showAuthPrompt === 'function') {
+        showAuthPrompt('register for this event on SellerFlow');
+      } else if (typeof showAuth === 'function') {
+        showAuth('login');
+      }
+      return;
+    }
     modal.remove();
-    const eligible = await checkJobsEventsEligibility(getActiveUser(), 'register for this event');
+    const eligible = await checkJobsEventsEligibility(user, 'register for this event');
     if (eligible) openRegisterEventModal(eventId);
   };
 }
@@ -3975,6 +4065,205 @@ window._sfInvalidateJobsEventsCache = () => {
   _cachedEvents = null;
   _lastEventsFetchTime = 0;
 };
+
+let _jobsWatcherUnsub = null;
+function startJobsWatcher() {
+  if (_jobsWatcherUnsub) {
+    try { _jobsWatcherUnsub(); } catch (_) {}
+    _jobsWatcherUnsub = null;
+  }
+  const dbInst = getJobsEventsDb();
+  if (!dbInst || typeof dbInst.collection !== 'function') return;
+  try {
+    _jobsWatcherUnsub = dbInst.collection('jobs').limit(150).onSnapshot(snap => {
+      if (!snap) return;
+      const changes = typeof snap.docChanges === 'function' ? snap.docChanges() : [];
+      changes.forEach(change => {
+        const docId = change.doc?.id;
+        if (!docId) return;
+        if (change.type === 'removed') {
+          purgeAndHideJobImmediately(docId);
+        } else if (change.type === 'modified') {
+          const d = typeof change.doc.data === 'function' ? change.doc.data() : change.doc;
+          if (d.status === 'removed' || d.status === 'taken_down' || d.hidden === true || d.isDeleted === true) {
+            purgeAndHideJobImmediately(docId);
+          } else {
+            if (_cachedJobs) {
+              const idx = _cachedJobs.findIndex(j => j && j.id === docId);
+              if (idx >= 0) _cachedJobs[idx] = { id: docId, ...d };
+            }
+          }
+        }
+      });
+    }, err => console.warn('Jobs watcher notice:', err));
+  } catch (e) {
+    console.warn('Failed to start jobs watcher:', e);
+  }
+}
+
+let _eventsWatcherUnsub = null;
+function startEventsWatcher() {
+  if (_eventsWatcherUnsub) {
+    try { _eventsWatcherUnsub(); } catch (_) {}
+    _eventsWatcherUnsub = null;
+  }
+  const dbInst = getJobsEventsDb();
+  if (!dbInst || typeof dbInst.collection !== 'function') return;
+  try {
+    _eventsWatcherUnsub = dbInst.collection('events').limit(150).onSnapshot(snap => {
+      if (!snap) return;
+      const changes = typeof snap.docChanges === 'function' ? snap.docChanges() : [];
+      changes.forEach(change => {
+        const docId = change.doc?.id;
+        if (!docId) return;
+        if (change.type === 'removed') {
+          purgeAndHideEventImmediately(docId);
+        } else if (change.type === 'modified') {
+          const d = typeof change.doc.data === 'function' ? change.doc.data() : change.doc;
+          if (d.status === 'removed' || d.status === 'taken_down' || d.hidden === true || d.isDeleted === true) {
+            purgeAndHideEventImmediately(docId);
+          } else {
+            if (_cachedEvents) {
+              const idx = _cachedEvents.findIndex(ev => ev && ev.id === docId);
+              if (idx >= 0) _cachedEvents[idx] = { id: docId, ...d };
+            }
+          }
+        }
+      });
+    }, err => console.warn('Events watcher notice:', err));
+  } catch (e) {
+    console.warn('Failed to start events watcher:', e);
+  }
+}
+
+function purgeAndHideJobImmediately(jobId) {
+  if (!jobId) return;
+  const safeId = String(jobId).trim();
+  if (_cachedJobs) {
+    _cachedJobs = _cachedJobs.filter(j => j && j.id !== safeId);
+  }
+  if (Array.isArray(_adminJobsCache)) {
+    _adminJobsCache = _adminJobsCache.filter(j => j && j.id !== safeId);
+  }
+  try {
+    const stored = JSON.parse(localStorage.getItem('sf_my_posted_jobs') || '[]');
+    localStorage.setItem('sf_my_posted_jobs', JSON.stringify(stored.filter(j => j && j.id !== safeId)));
+  } catch (_) {}
+  try {
+    const cached = JSON.parse(localStorage.getItem('sf_cached_jobs') || '[]');
+    localStorage.setItem('sf_cached_jobs', JSON.stringify(cached.filter(j => j && j.id !== safeId)));
+  } catch (_) {}
+
+  document.querySelectorAll(`[data-view-job="${safeId}"], [data-apply-job="${safeId}"], [data-delete-job="${safeId}"]`).forEach(el => {
+    const card = el.closest('.bg-\\[\\#14141e\\], [data-job-card]') || el;
+    card.remove();
+  });
+  const modal = document.getElementById('jobDetailModal');
+  if (modal && modal.querySelector(`[data-apply-job="${safeId}"]`)) {
+    modal.remove();
+    if (typeof toast === 'function') toast('This job listing was removed.', 'info');
+  }
+}
+
+function purgeAndHideEventImmediately(eventId) {
+  if (!eventId) return;
+  const safeId = String(eventId).trim();
+  if (_cachedEvents) {
+    _cachedEvents = _cachedEvents.filter(e => e && e.id !== safeId);
+  }
+  if (Array.isArray(_adminEventsCache)) {
+    _adminEventsCache = _adminEventsCache.filter(e => e && e.id !== safeId);
+  }
+  try {
+    const stored = JSON.parse(localStorage.getItem('sf_my_hosted_events') || '[]');
+    localStorage.setItem('sf_my_hosted_events', JSON.stringify(stored.filter(e => e && e.id !== safeId)));
+  } catch (_) {}
+  try {
+    const cached = JSON.parse(localStorage.getItem('sf_cached_events') || '[]');
+    localStorage.setItem('sf_cached_events', JSON.stringify(cached.filter(e => e && e.id !== safeId)));
+  } catch (_) {}
+
+  document.querySelectorAll(`[data-view-event="${safeId}"], [data-register-event="${safeId}"], [data-delete-event="${safeId}"]`).forEach(el => {
+    const card = el.closest('.bg-\\[\\#14141e\\], [data-event-card]') || el;
+    card.remove();
+  });
+  const modal = document.getElementById('eventDetailModal');
+  if (modal && modal.querySelector(`[data-register-event="${safeId}"]`)) {
+    modal.remove();
+    if (typeof toast === 'function') toast('This event listing was removed.', 'info');
+  }
+}
+
+async function deleteJob(jobId) {
+  if (!jobId) return;
+  purgeAndHideJobImmediately(jobId);
+  try {
+    const dbInst = getJobsEventsDb();
+    if (dbInst && typeof dbInst.collection === 'function') {
+      await dbInst.collection('jobs').doc(jobId).delete().catch(() => {});
+    }
+  } catch (_) {}
+  try {
+    const user = getActiveUser();
+    const token = user?.getIdToken ? await user.getIdToken().catch(() => '') : '';
+    await fetch('/api/admin/remove-item', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ type: 'job', id: jobId })
+    }).catch(() => {});
+  } catch (_) {}
+  if (typeof toast === 'function') toast('Job listing deleted successfully', 'success');
+}
+
+async function deleteEvent(eventId) {
+  if (!eventId) return;
+  purgeAndHideEventImmediately(eventId);
+  try {
+    const dbInst = getJobsEventsDb();
+    if (dbInst && typeof dbInst.collection === 'function') {
+      await dbInst.collection('events').doc(eventId).delete().catch(() => {});
+    }
+  } catch (_) {}
+  try {
+    const user = getActiveUser();
+    const token = user?.getIdToken ? await user.getIdToken().catch(() => '') : '';
+    await fetch('/api/admin/remove-item', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ type: 'event', id: eventId })
+    }).catch(() => {});
+  } catch (_) {}
+  if (typeof toast === 'function') toast('Event deleted successfully', 'success');
+}
+
+function resumePendingJobsEventsAction(action) {
+  if (!action || !action.type) return;
+  const user = getActiveUser();
+  if (!user) return;
+  if (action.type === 'post_job') {
+    openPostJobModal();
+  } else if (action.type === 'apply_job' && action.id) {
+    openApplyJobModal(action.id);
+  } else if (action.type === 'create_event') {
+    openCreateEventModal();
+  } else if (action.type === 'register_event' && action.id) {
+    openRegisterEventModal(action.id);
+  }
+}
+
+window.startJobsWatcher = startJobsWatcher;
+window.startEventsWatcher = startEventsWatcher;
+window.purgeAndHideJobImmediately = purgeAndHideJobImmediately;
+window.purgeAndHideEventImmediately = purgeAndHideEventImmediately;
+window.deleteJob = deleteJob;
+window.deleteEvent = deleteEvent;
+window.resumePendingJobsEventsAction = resumePendingJobsEventsAction;
+
+// Initialize realtime watchers
+setTimeout(() => {
+  startJobsWatcher();
+  startEventsWatcher();
+}, 200);
 
 })(typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : this), typeof document !== 'undefined' ? document : {});
 
