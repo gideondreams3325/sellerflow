@@ -2080,8 +2080,7 @@ html.light-theme #headerProfileBtn:hover {
 }
 
 /* ==========================================================================
-   SELLERFLOW BOTTOM NAVIGATION BAR (JW LIBRARY FIXED DOCKED STYLE)
-   Five persistent icons with labels underneath (For You, Marketplace, Jobs, Events, Orders)
+   SELLERFLOW BOTTOM NAVIGATION BAR (7 ITEMS: HOME, MARKETPLACE, JOBS, EVENTS, +, INBOX, PROFILE)
    ========================================================================== */
 .sf-bottom-tab-bar {
   position: relative;
@@ -2092,8 +2091,8 @@ html.light-theme #headerProfileBtn:hover {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid #E6E6E6 !important;
-  padding-top: 5px;
-  padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+  padding-top: 4px;
+  padding-bottom: max(5px, env(safe-area-inset-bottom, 0px));
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.05) !important;
   display: flex;
   align-items: center;
@@ -2113,8 +2112,8 @@ html.light-theme .sf-bottom-tab-bar {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  padding: 4px 2px;
+  gap: 2px;
+  padding: 3px 1px;
   min-width: 0;
   color: #666666 !important;
   background: transparent;
@@ -2127,8 +2126,8 @@ html.light-theme .sf-bottom-tab-bar {
 }
 
 .sf-bottom-tab-item svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   color: #666666 !important;
   stroke: #666666 !important;
   transition: transform 0.16s ease, stroke 0.16s ease, color 0.16s ease;
@@ -2136,7 +2135,7 @@ html.light-theme .sf-bottom-tab-bar {
 }
 
 .sf-bottom-tab-item .tab-label {
-  font-size: 10.5px;
+  font-size: 9.5px;
   font-weight: 600;
   line-height: 1.1;
   letter-spacing: -0.01em;
@@ -2172,45 +2171,146 @@ html.light-theme .sf-bottom-tab-bar {
   color: #A67C00 !important;
 }
 
-html.light-theme .sf-bottom-tab-item {
-  color: #666666 !important;
+/* Center TikTok-Style Create Button */
+.sf-bottom-create-item {
+  flex: 1 1 0%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px;
 }
 
-html.light-theme .sf-bottom-tab-item svg {
-  color: #666666 !important;
-  stroke: #666666 !important;
+.sf-tiktok-create-btn {
+  position: relative;
+  width: 40px;
+  height: 27px;
+  border-radius: 8px;
+  background: #111111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: -2.5px 0 0 #20d5ec, 2.5px 0 0 #fe2c55, 0 2px 8px rgba(0,0,0,0.25);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+  margin: 1px 0;
 }
 
-html.light-theme .sf-bottom-tab-item:hover {
-  color: #111111 !important;
+.sf-tiktok-create-plus {
+  color: #FFFFFF;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1;
+  display: block;
 }
 
-html.light-theme .sf-bottom-tab-item.active {
-  color: #A67C00 !important;
+.sf-bottom-tab-item:hover .sf-tiktok-create-btn {
+  transform: scale(1.08);
 }
 
-html.light-theme .sf-bottom-tab-item.active svg {
-  color: #D4AF37 !important;
-  stroke: #D4AF37 !important;
-  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.45)) !important;
+.sf-bottom-tab-item:active .sf-tiktok-create-btn {
+  transform: scale(0.92);
 }
 
-html.light-theme .sf-bottom-tab-item.active .tab-label {
-  color: #A67C00 !important;
+/* For You Full-Screen Feed Mode (TikTok Dark Immersive) */
+#app.is-feed-page > header {
+  display: none !important;
+}
+
+#app.is-feed-page .sf-bottom-tab-bar {
+  background: #000000 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.8) !important;
+}
+
+#app.is-feed-page .sf-bottom-tab-item svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+#app.is-feed-page .sf-bottom-tab-item .tab-label {
+  color: #999999 !important;
+}
+
+#app.is-feed-page .sf-bottom-tab-item.active svg {
+  color: #f5b942 !important;
+  stroke: #f5b942 !important;
+  filter: drop-shadow(0 0 8px rgba(245, 185, 66, 0.6)) !important;
+}
+
+#app.is-feed-page .sf-bottom-tab-item.active .tab-label {
+  color: #ffffff !important;
   font-weight: 800 !important;
+}
+
+#app.is-feed-page .sf-tiktok-create-btn {
+  background: #FFFFFF;
+  box-shadow: -2.5px 0 0 #20d5ec, 2.5px 0 0 #fe2c55, 0 2px 8px rgba(0,0,0,0.5);
+}
+
+#app.is-feed-page .sf-tiktok-create-plus {
+  color: #000000;
+}
+
+/* Feed Top Overlay Navigation Tabs */
+.sf-feed-top-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(10px, env(safe-area-inset-top, 10px)) 12px 14px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.25) 60%, transparent 100%);
+  pointer-events: none;
+  user-select: none;
+}
+
+.sf-top-tab {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14.5px;
+  font-weight: 700;
+  position: relative;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  transition: color 0.16s ease, transform 0.16s ease;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+}
+
+.sf-top-tab:hover {
+  color: #ffffff;
+}
+
+.sf-top-tab.is-active {
+  color: #ffffff !important;
+  font-weight: 900 !important;
+}
+
+.sf-top-tab-indicator {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 2.5px;
+  background: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
 }
 
 .sf-bottom-tab-badge {
   position: absolute;
   top: 1px;
-  right: calc(50% - 18px);
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
+  right: calc(50% - 15px);
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3.5px;
   border-radius: 9999px;
   background: #ef4444;
   color: #ffffff;
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -2383,23 +2483,23 @@ html.light-theme .sf-bottom-tab-item.active .tab-label {
     <div class="copyright-tag text-[11px] text-zinc-600 text-center mt-4">© 2026 POMAAH GROUP · All Rights Reserved</div>
   </div>
 </div>
-<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#FFFFFF] backdrop-blur-md border-b border-[#E6E6E6] shadow-sm shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-1.5 sm:gap-4"><div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0"><button id="mobileMenu" class="md:hidden w-10 h-10 -ml-1 rounded-xl hover:bg-white active:scale-95 transition flex items-center justify-center text-[#111111] shrink-0 cursor-pointer" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-6 h-6 text-[#111111]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-2 sm:gap-2.5 shrink-0 select-none cursor-pointer group text-left" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-8 h-8 sm:w-9 sm:h-9 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(212,175,55,0.25)] transition-transform group-hover:scale-105" /><div class="flex flex-col items-start leading-none justify-center"><div class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font leading-none"><span class="text-[#111111]">Seller</span><span class="gold-gradient">Flow</span><span class="text-[9px] font-extrabold text-[#A67C00] bg-amber-500/15 px-1.5 py-0.5 rounded-md border border-[#D4AF37]/50 uppercase tracking-wider ml-1.5 inline-block">GH</span></div><div class="text-[8px] sm:text-[9px] font-black tracking-[0.24em] text-[#666666] flex items-center gap-1 uppercase select-none mt-1 leading-none"><span>BUY</span><span class="text-[#D4AF37] font-black">•</span><span>SELL</span><span class="text-[#D4AF37] font-black">•</span><span>GROW</span></div></div></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1 sm:gap-2 shrink-0"></div></div></header><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden" aria-hidden="true"></div><aside id="mobileNav" class="hide md:hidden" aria-label="Mobile Navigation Drawer"></aside><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"><div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#E6E6E6] shrink-0 bg-[#FFFFFF] z-10"><div class="flex items-center gap-2 min-w-0"><h1 class="text-base sm:text-lg font-black tracking-tight text-[#111111] whitespace-nowrap flex items-center gap-2"><span>For You</span><span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-gold animate-pulse"></span></h1></div><div class="flex items-center gap-1.5 sm:gap-2 shrink-0"><div class="w-20 h-7 rounded-xl bg-[#F8F8F8] sf-shimmer-box"></div></div></div><div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden"><div class="reel-feed flex-1 min-h-0 w-full overflow-hidden" id="reelFeedSkeleton"><div class="reel-card sf-shimmer-box relative flex items-center justify-center"><div class="flex flex-col items-center justify-center p-6 text-center z-10 select-none pointer-events-none"><div class="relative mb-3.5 flex items-center justify-center"><div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-gold animate-spin"></div><div class="absolute inset-0 flex items-center justify-center"><span class="text-[10px] font-black text-gold font-mono">GH</span></div></div><div class="text-sm font-bold text-gray-900 tracking-wide flex items-center gap-1.5"><span>Loading For You Feed</span><span class="inline-flex gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 0ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 150ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 300ms"></span></span></div><div class="text-[11px] text-gray-600 mt-1 font-medium">Discovering top Ghanaian reels…</div></div><div class="reel-actions flex flex-col items-center gap-4 absolute right-2.5 sm:right-4 bottom-20 z-10 pointer-events-none"><div class="w-11 h-11 rounded-full bg-white sf-shimmer-box border border-gray-200"></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-white sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-white"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-white sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-white"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-white sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-white"></div></div><div class="w-9 h-9 rounded-full bg-white sf-shimmer-box border border-gold/30"></div></div><div class="reel-content flex flex-col gap-2 pointer-events-none"><div class="flex items-center gap-2"><div class="w-28 h-4 rounded-md bg-white sf-shimmer-box"></div><div class="w-16 h-4 rounded-full bg-amber-500/20 sf-shimmer-box"></div></div><div class="w-52 h-3.5 rounded bg-white sf-shimmer-box"></div><div class="w-36 h-3 rounded bg-white sf-shimmer-box"></div><div class="flex items-center gap-2 mt-1"><div class="w-32 h-7 rounded-full bg-white sf-shimmer-box"></div><div class="w-20 h-7 rounded-full bg-amber-500/30 sf-shimmer-box"></div></div></div></div></div></div></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#E6E6E6] text-center text-xs text-[#666666]"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1 font-bold tracking-widest text-[11px] text-[#111111]">BUY <span class="text-[#D4AF37] font-black">•</span> SELL <span class="text-[#D4AF37] font-black">•</span> GROW</div><div class="mt-0.5 text-[#666666] text-[11px]">Ghana’s social selling marketplace.</div></footer></div><nav id="bottomTabBar" class="sf-bottom-tab-bar" aria-label="Bottom Navigation">
-  <button type="button" class="sf-bottom-tab-item active" data-bottom-page="feed" title="For You">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#FFFFFF] backdrop-blur-md border-b border-[#E6E6E6] shadow-sm shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-1.5 sm:gap-4"><div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0"><button id="mobileMenu" class="md:hidden w-10 h-10 -ml-1 rounded-xl hover:bg-white active:scale-95 transition flex items-center justify-center text-[#111111] shrink-0 cursor-pointer" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-6 h-6 text-[#111111]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-2 sm:gap-2.5 shrink-0 select-none cursor-pointer group text-left" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-8 h-8 sm:w-9 sm:h-9 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(212,175,55,0.25)] transition-transform group-hover:scale-105" /><div class="flex flex-col items-start leading-none justify-center"><div class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font leading-none"><span class="text-[#111111]">Seller</span><span class="gold-gradient">Flow</span><span class="text-[9px] font-extrabold text-[#A67C00] bg-amber-500/15 px-1.5 py-0.5 rounded-md border border-[#D4AF37]/50 uppercase tracking-wider ml-1.5 inline-block">GH</span></div><div class="text-[8px] sm:text-[9px] font-black tracking-[0.24em] text-[#666666] flex items-center gap-1 uppercase select-none mt-1 leading-none"><span>BUY</span><span class="text-[#D4AF37] font-black">•</span><span>SELL</span><span class="text-[#D4AF37] font-black">•</span><span>GROW</span></div></div></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1 sm:gap-2 shrink-0"></div></div></header><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden" aria-hidden="true"></div><aside id="mobileNav" class="hide md:hidden" aria-label="Mobile Navigation Drawer"></aside><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"><div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden"><div class="reel-feed flex-1 min-h-0 w-full overflow-hidden" id="reelFeedSkeleton"><div class="reel-card sf-shimmer-box relative flex items-center justify-center"><div class="flex flex-col items-center justify-center p-6 text-center z-10 select-none pointer-events-none"><div class="relative mb-3.5 flex items-center justify-center"><div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-gold animate-spin"></div><div class="absolute inset-0 flex items-center justify-center"><span class="text-[10px] font-black text-gold font-mono">GH</span></div></div><div class="text-sm font-bold text-gray-900 tracking-wide flex items-center gap-1.5"><span>Loading For You Feed</span><span class="inline-flex gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 0ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 150ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 300ms"></span></span></div><div class="text-[11px] text-gray-600 mt-1 font-medium">Discovering top Ghanaian reels…</div></div><div class="reel-actions flex flex-col items-center gap-4 absolute right-2.5 sm:right-4 bottom-20 z-10 pointer-events-none"><div class="w-11 h-11 rounded-full bg-white sf-shimmer-box border border-gray-200"></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-white sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-white"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-white sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-white"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-white sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-white"></div></div><div class="w-9 h-9 rounded-full bg-white sf-shimmer-box border border-gold/30"></div></div><div class="reel-content flex flex-col gap-2 pointer-events-none"><div class="flex items-center gap-2"><div class="w-28 h-4 rounded-md bg-white sf-shimmer-box"></div><div class="w-16 h-4 rounded-full bg-amber-500/20 sf-shimmer-box"></div></div><div class="w-52 h-3.5 rounded bg-white sf-shimmer-box"></div><div class="w-36 h-3 rounded bg-white sf-shimmer-box"></div><div class="flex items-center gap-2 mt-1"><div class="w-32 h-7 rounded-full bg-white sf-shimmer-box"></div><div class="w-20 h-7 rounded-full bg-amber-500/30 sf-shimmer-box"></div></div></div></div></div></div></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#E6E6E6] text-center text-xs text-[#666666]"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1 font-bold tracking-widest text-[11px] text-[#111111]">BUY <span class="text-[#D4AF37] font-black">•</span> SELL <span class="text-[#D4AF37] font-black">•</span> GROW</div><div class="mt-0.5 text-[#666666] text-[11px]">Ghana’s social selling marketplace.</div></footer></div><nav id="bottomTabBar" class="sf-bottom-tab-bar" aria-label="Bottom Navigation">
+  <button type="button" class="sf-bottom-tab-item active" data-bottom-page="feed" title="Home / For You">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9.5z"/>
     </svg>
-    <span class="tab-label">For You</span>
+    <span class="tab-label">Home</span>
   </button>
   <button type="button" class="sf-bottom-tab-item" data-bottom-page="marketplace" title="Marketplace">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3 9l1.5-5h15L21 9v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z"/>
-      <path d="M3 9h18"/>
-      <path d="M9 13a3 3 0 0 0 6 0"/>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <path d="M16 10a4 4 0 0 1-8 0"/>
     </svg>
     <span class="tab-label">Marketplace</span>
   </button>
   <button type="button" class="sf-bottom-tab-item" data-bottom-page="jobs" title="Jobs">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
       <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
       <path d="M12 12v.01"/>
@@ -2407,23 +2507,34 @@ html.light-theme .sf-bottom-tab-item.active .tab-label {
     <span class="tab-label">Jobs</span>
   </button>
   <button type="button" class="sf-bottom-tab-item" data-bottom-page="events" title="Events">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
       <line x1="16" y1="2" x2="16" y2="6"/>
       <line x1="8" y1="2" x2="8" y2="6"/>
       <line x1="3" y1="10" x2="21" y2="10"/>
-      <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
     </svg>
     <span class="tab-label">Events</span>
   </button>
-  <button type="button" class="sf-bottom-tab-item" data-bottom-page="orders" title="Orders">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-      <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-      <line x1="12" y1="22.08" x2="12" y2="12"/>
+  <button type="button" class="sf-bottom-tab-item sf-bottom-create-item" data-bottom-action="create" title="Create / Upload Post">
+    <div class="sf-tiktok-create-btn">
+      <span class="sf-tiktok-create-plus">＋</span>
+    </div>
+  </button>
+  <button type="button" class="sf-bottom-tab-item" data-bottom-page="chats" title="Inbox / Chats">
+    <div class="relative flex items-center justify-center">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <span id="bottomBarInboxBadge" class="sf-bottom-tab-badge hide">0</span>
+    </div>
+    <span class="tab-label">Inbox</span>
+  </button>
+  <button type="button" class="sf-bottom-tab-item" data-bottom-page="profile" title="My Profile">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
     </svg>
-    <span class="tab-label">Orders</span>
-    <span id="bottomBarOrdersBadge" class="sf-bottom-tab-badge hide">0</span>
+    <span class="tab-label">Profile</span>
   </button>
 </nav></div>
 <div id="modalRoot"></div><div id="customDialogRoot"></div><div id="receiptPrintRoot" class="hide"></div><div id="toast" class="toast-container" aria-live="polite"></div>
@@ -8011,28 +8122,41 @@ function setNav(){
     });
   }
 
-  // Update fixed bottom navigation tab bar (JW Library style)
+  // Update fixed bottom navigation tab bar (7 items: Home, Marketplace, Jobs, Events, +, Inbox, Profile)
   const bottomNav = $('bottomTabBar');
   if(bottomNav){
     const activePage = (currentPage === 'products' ? 'marketplace' : (currentPage === 'for_you' ? 'feed' : currentPage));
     bottomNav.querySelectorAll('.sf-bottom-tab-item').forEach(b => {
       const p = b.dataset.bottomPage;
-      const isAct = (p === activePage);
+      const act = b.dataset.bottomAction;
+      const isAct = (p && p === activePage);
       b.classList.toggle('active', isAct);
-      b.onclick = () => {
-        if(p) navigate(p);
+      b.onclick = (e) => {
+        e.preventDefault();
+        if(act === 'create'){
+          if(!currentUser) return showAuthPrompt('create posts on SellerFlow');
+          openPostModal();
+        } else if(p){
+          navigate(p);
+        }
       };
-      b.onmouseenter = () => { if(typeof prefetchPage === 'function') prefetchPage(p); };
-      b.ontouchstart = () => { if(typeof prefetchPage === 'function') prefetchPage(p); };
+      if(p){
+        b.onmouseenter = () => { if(typeof prefetchPage === 'function') prefetchPage(p); };
+        b.ontouchstart = () => { if(typeof prefetchPage === 'function') prefetchPage(p); };
+      }
     });
 
-    const bOrdersBadge = $('bottomBarOrdersBadge');
-    if(bOrdersBadge){
-      if(pCount > 0){
-        bOrdersBadge.textContent = pCount > 99 ? '99+' : String(pCount);
-        bOrdersBadge.classList.remove('hide');
+    const bInboxBadge = $('bottomBarInboxBadge');
+    if(bInboxBadge){
+      const readSet = (typeof getLocallyReadNotifIds === 'function') ? getLocallyReadNotifIds() : new Set();
+      const notifUnread = (typeof notificationCache !== 'undefined' && Array.isArray(notificationCache))
+        ? notificationCache.filter(n => !n.read && !readSet.has(n.id)).length
+        : 0;
+      if(notifUnread > 0){
+        bInboxBadge.textContent = notifUnread > 99 ? '99+' : String(notifUnread);
+        bInboxBadge.classList.remove('hide');
       } else {
-        bOrdersBadge.classList.add('hide');
+        bInboxBadge.classList.add('hide');
       }
     }
   }
@@ -8855,45 +8979,83 @@ window.triggerLikeAnimation = triggerLikeAnimation;
 
 function _renderFeedHTML(feedPosts, targetPostId, options){
   const fromProfile = options?.fromProfile;
+  const currentFeedTab = window._sfActiveFeedTab || 'for_you';
+
+  let displayedPosts = feedPosts || [];
+  if (currentFeedTab === 'following') {
+    displayedPosts = (feedPosts || []).filter(p => isFollowingUser(p.sellerId));
+  } else if (currentFeedTab === 'community') {
+    displayedPosts = (feedPosts || []).filter(p => p.category === 'marketing' || p.isAdminPost || p.platformLabel === 'SellerFlow');
+  }
+
   $('page').innerHTML = `
-    <div class="feed-top-bar flex items-center justify-between px-3 sm:px-4 py-2 border-b border-[#E6E6E6] shrink-0 bg-[#FFFFFF] z-10">
-      <div class="flex items-center gap-2 min-w-0">
-        ${fromProfile ? `<button type="button" id="feedBackProfile" class="border border-[#E6E6E6] hover:border-gold px-2.5 py-1 rounded-xl text-xs font-bold mr-1 shrink-0 whitespace-nowrap bg-white text-[#111111]">← Profile</button>` : ''}
-        <h1 class="text-base sm:text-lg font-black tracking-tight text-[#111111] whitespace-nowrap">For You</h1>
-        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-600 font-semibold shrink-0" title="Real-time live engagement active">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live
-        </span>
-      </div>
-      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-        <button type="button" id="feedRefreshBtn" class="border border-[#E6E6E6] hover:border-gold px-2.5 py-1.5 rounded-xl text-xs font-bold text-[#666666] hover:text-[#111111] bg-white flex items-center gap-1.5 transition shadow-sm" title="Refresh feed & engagement metrics">
-          <span class="text-xs transition-transform inline-block" id="feedRefreshIcon">🔄</span>
-          <span class="hidden sm:inline">Refresh</span>
-        </button>
-        <div class="hidden sm:inline-flex items-center gap-1 bg-white p-0.5 rounded-xl border border-[#E6E6E6]" title="Scroll reels (or use ↑ / ↓ arrow keys)">
-          <button type="button" id="feedPrevBtn" class="feed-nav-btn feed-prev-btn" title="Previous video (↑ or K)">▲</button>
-          <button type="button" id="feedNextBtn" class="feed-nav-btn feed-next-btn" title="Next video (↓ or J)">▼</button>
+    <div class="relative flex-1 min-h-0 w-full h-full flex flex-col overflow-hidden bg-black">
+      <!-- Lightweight TikTok-Style Top Overlay Bar -->
+      <header class="sf-feed-top-overlay pointer-events-auto" role="banner" aria-label="For You Feed Navigation">
+        <!-- Left: LIVE / Back to Profile -->
+        <div class="flex items-center gap-2">
+          ${fromProfile ? `
+            <button type="button" id="feedBackProfile" class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white hover:bg-black/60 active:scale-95 text-xs font-bold transition" title="Back to Profile">
+              <span>←</span><span>Profile</span>
+            </button>
+          ` : `
+            <button type="button" id="feedLiveOverlayBtn" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white hover:bg-black/60 active:scale-95 transition cursor-pointer" title="SellerFlow LIVE Streams">
+              <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+              <span class="text-[11px] font-black tracking-wider uppercase text-white drop-shadow">LIVE</span>
+            </button>
+          `}
         </div>
-        <button type="button" id="openFeedUpload" class="btn px-3.5 py-1.5 text-xs rounded-xl font-bold bg-gold text-[#111111] shrink-0 whitespace-nowrap shadow-sm">＋ Upload</button>
-      </div>
-    </div>
-    <div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden">
+
+        <!-- Center: Feed Tabs (Community | Following | For You) -->
+        <div class="flex items-center gap-3 sm:gap-5 select-none" role="tablist">
+          <button type="button" class="sf-top-tab ${currentFeedTab === 'community' ? 'is-active' : ''}" data-feed-tab="community" role="tab" aria-selected="${currentFeedTab === 'community' ? 'true' : 'false'}" title="Community Updates">
+            Community
+            ${currentFeedTab === 'community' ? '<span class="sf-top-tab-indicator"></span>' : ''}
+          </button>
+          <button type="button" class="sf-top-tab ${currentFeedTab === 'following' ? 'is-active' : ''}" data-feed-tab="following" role="tab" aria-selected="${currentFeedTab === 'following' ? 'true' : 'false'}" title="Following Creators">
+            Following
+            ${currentFeedTab === 'following' ? '<span class="sf-top-tab-indicator"></span>' : ''}
+          </button>
+          <button type="button" class="sf-top-tab ${currentFeedTab === 'for_you' ? 'is-active' : ''}" data-feed-tab="for_you" role="tab" aria-selected="${currentFeedTab === 'for_you' ? 'true' : 'false'}" title="For You Feed">
+            For You
+            ${currentFeedTab === 'for_you' ? '<span class="sf-top-tab-indicator"></span>' : ''}
+          </button>
+        </div>
+
+        <!-- Right: Search Overlay Button -->
+        <div class="flex items-center gap-2">
+          <button type="button" id="feedSearchOverlayBtn" class="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-black/60 active:scale-95 transition cursor-pointer" title="Search SellerFlow">
+            <svg class="w-4 h-4 text-white drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.3">
+              <circle cx="11" cy="11" r="7"/>
+              <line x1="21" y1="21" x2="16" y2="16"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Full-Screen Reel Feed Media Container -->
       <div class="reel-feed flex-1 min-h-0 w-full overflow-y-scroll overscroll-y-contain" id="reelFeed">
-        ${feedPosts.length ? feedPosts.map((p, idx)=>postCard(p, idx)).join('') : (window._sfFeedInitialLoadDone ? `
-          <div class="h-full flex items-center justify-center p-6">
-            <div class="card p-8 text-center max-w-md">
+        ${displayedPosts.length ? displayedPosts.map((p, idx)=>postCard(p, idx)).join('') : (window._sfFeedInitialLoadDone ? `
+          <div class="h-full flex items-center justify-center p-6 bg-black text-white">
+            <div class="card p-8 text-center max-w-md bg-zinc-900 border border-zinc-800 text-white">
               <div class="text-5xl mb-3">🎬</div>
-              <h2 class="text-xl font-bold">Your For You feed is ready</h2>
-              <p class="muted mt-2 text-sm">Share something and it will be published while SellerFlow reviews it for safety.</p>
-              <button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-sm font-bold">＋ Upload first post</button>
+              <h2 class="text-xl font-black text-white">${currentFeedTab === 'following' ? 'No posts from followed creators yet' : 'Your For You feed is ready'}</h2>
+              <p class="text-gray-400 mt-2 text-xs leading-relaxed">${currentFeedTab === 'following' ? 'Follow Ghanaian creators to see their latest videos & products here.' : 'Share something and it will appear immediately while SellerFlow reviews it for safety.'}</p>
+              ${currentFeedTab === 'following' ? `
+                <button id="switchFeedForYouBtn" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-xs font-bold hover:brightness-110 active:scale-95 transition">Explore For You</button>
+              ` : `
+                <button id="openFeedUploadEmpty" class="mt-4 bg-gold text-black px-4 py-2 rounded-xl text-xs font-bold hover:brightness-110 active:scale-95 transition">＋ Upload First Post</button>
+              `}
             </div>
           </div>
         ` : `
-          <div class="h-full flex flex-col items-center justify-center p-6 text-center">
-            <div class="w-8 h-8 rounded-full border-2 border-gray-200 border-t-[#f5b942] animate-spin mb-3"></div>
-            <div class="text-xs text-gray-600 font-medium">Discovering top Ghanaian reels…</div>
+          <div class="h-full flex flex-col items-center justify-center p-6 text-center bg-black text-white">
+            <div class="w-8 h-8 rounded-full border-2 border-gray-700 border-t-[#f5b942] animate-spin mb-3"></div>
+            <div class="text-xs text-gray-400 font-medium">Discovering top Ghanaian reels…</div>
           </div>
         `)}
       </div>
+
       <!-- Desktop floating smooth scroll buttons -->
       <aside class="hidden lg:flex flex-col gap-2.5 fixed right-4 xl:right-10 top-1/2 -translate-y-1/2 z-30 pointer-events-auto" aria-label="Reel Navigation">
         <button type="button" class="feed-floating-btn feed-prev-btn" title="Previous video (↑ or K)" aria-label="Previous video">
@@ -8906,21 +9068,35 @@ function _renderFeedHTML(feedPosts, targetPostId, options){
     </div>
   `;
 
-  $('feedRefreshBtn')?.addEventListener('click', async () => {
-    const btn = $('feedRefreshBtn');
-    const icon = $('feedRefreshIcon');
-    if(btn) btn.disabled = true;
-    if(icon) icon.classList.add('animate-spin');
-    try {
-      toast('Refreshing latest posts & metrics…', 'info', 1500);
-      await renderFeed(null, { forceRefresh: true });
-      toast('For You feed updated', 'success', 2000);
-    } catch(err) {
-      toast('Refresh failed: ' + (err?.message || 'Network error'), 'error');
-    } finally {
-      if(btn) btn.disabled = false;
-      if(icon) icon.classList.remove('animate-spin');
+  // Top Overlay Event Handlers
+  $('feedLiveOverlayBtn')?.addEventListener('click', () => {
+    toast('🔴 LIVE: Discovering real-time broadcast sellers in Accra & Kumasi…', 'info', 2500);
+  });
+
+  $('feedSearchOverlayBtn')?.addEventListener('click', () => {
+    if (typeof window.globalSearch === 'function') {
+      window.globalSearch();
+    } else if (typeof globalSearch === 'function') {
+      globalSearch();
+    } else {
+      navigate('marketplace');
     }
+  });
+
+  document.querySelectorAll('[data-feed-tab]').forEach(tabBtn => {
+    tabBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const tabKey = tabBtn.dataset.feedTab;
+      if (tabKey) {
+        window._sfActiveFeedTab = tabKey;
+        _renderFeedHTML(feedPosts, targetPostId, options);
+      }
+    });
+  });
+
+  $('switchFeedForYouBtn')?.addEventListener('click', () => {
+    window._sfActiveFeedTab = 'for_you';
+    _renderFeedHTML(feedPosts, targetPostId, options);
   });
 
   $('feedBackProfile')?.addEventListener('click',()=>navigate('profile'));
@@ -17839,10 +18015,129 @@ async function renderProfile(){
   const isUsernameLocked = !usernameCooldown.canChange && !isAdmin;
   const nextDateStr = usernameCooldown.nextChangeDate ? usernameCooldown.nextChangeDate.toLocaleDateString('en-GH', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
   const lastDateStr = usernameCooldown.lastChangedDate ? usernameCooldown.lastChangedDate.toLocaleDateString('en-GH', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+  const pendingOrders = typeof pendingOrdersCount !== 'undefined' ? pendingOrdersCount : 0;
 
-  $('page').innerHTML=pageTitle('Profile','Manage your account details and profile picture.')+renderQuickAccessNav('profile')+`<div class="grid lg:grid-cols-[1fr_1.3fr] gap-5"><div class="card p-6"><div class="flex items-center gap-4">${avatar(p,'w-20 h-20 rounded-full object-cover bg-gray-100')}<div><h2 class="text-xl font-bold">${esc(p.name||'')}</h2><div class="muted">@${esc(p.username||'')}</div>${p.verified?'<div class="text-sm font-bold mt-1 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':''}${(p.hasBusinessCert || p.businessCertUrl || verification.hasBusinessCert)?'<div class="text-xs font-bold mt-1.5 flex items-center gap-2 text-amber-300 bg-amber-950/30 border border-amber-800/50 p-2 rounded-xl"><span>🏢</span><span>Registered Business Certificate Verified</span></div>':''}</div></div><input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-5"><button id="uploadAvatar" class="mt-3 border border-gray-200 rounded-xl px-4 py-2">Update profile picture</button><label class="muted text-sm block mt-5">Full name</label><input id="profileName" value="${esc(p.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 focus:border-gold outline-none transition" placeholder="Your full name"><div class="flex items-center justify-between mt-4"><label class="muted text-sm block">Username</label><span class="text-[11px] text-gray-500 font-mono">@<span id="profileUsernamePreview">${esc(p.username||'')}</span></span></div><div class="relative mt-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 font-mono text-sm select-none pointer-events-none">@</span><input id="profileUsername" value="${esc(p.username||'')}" ${isUsernameLocked ? 'readonly disabled' : ''} class="w-full pl-10 pr-10 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 font-mono focus:border-gold outline-none transition ${isUsernameLocked ? 'cursor-not-allowed bg-white text-gray-600 border-[#272727]' : ''}" placeholder="username" autocomplete="off"><span id="profileUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">${isUsernameLocked ? '<span class="text-amber-400 text-xs" title="Username locked (360-day policy)">🔒</span>' : ''}</span></div>${isUsernameLocked ? `<div class="mt-2.5 p-3 rounded-xl bg-amber-950/20 border border-amber-800/40 text-xs text-amber-200/90 flex items-start gap-2.5"><span class="text-base leading-none select-none">🔒</span><div class="leading-relaxed"><div class="font-bold text-amber-300 flex items-center gap-1.5"><span>Username Locked (360-Day Policy)</span><span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-200 border border-amber-700/60 font-semibold">${usernameCooldown.daysRemaining} days left</span></div><div class="mt-1 text-gray-700">Every username can be changed once every 360 days. You can change your username again in <b class="text-gray-900">${usernameCooldown.daysRemaining} day${usernameCooldown.daysRemaining === 1 ? '' : 's'}</b> (on ${esc(nextDateStr)}).</div>${lastDateStr ? `<div class="mt-0.5 text-[11px] text-gray-600">Last changed: ${esc(lastDateStr)}</div>` : ''}</div></div>` : `<div class="text-[11px] text-gray-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can be changed once every 360 days.</span></div>`}<div id="profileUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div><div id="profileUsernameSuggestions" class="mt-2 hidden"></div><button id="saveProfile" class="mt-4 bg-gold text-black px-5 py-2.5 rounded-xl font-bold">Save profile</button><div class="muted text-sm mt-4">${esc(currentUser.email)}</div></div><div class="space-y-5">
-<div class="card p-6"><h2 class="text-xl font-bold">Seller identity</h2><p class="muted mt-2">Verification is managed from Settings. Approved sellers receive the modern blue SellerFlow verification badge.</p><button id="openSettingsVerification" class="mt-4 bg-gold text-black px-5 py-3 rounded-xl font-bold">Open Settings</button></div>
-</div></div>`;
+  $('page').innerHTML = `
+    <!-- Profile Page Header with ☰ Menu and ⚙ Settings -->
+    <div class="flex items-center justify-between pb-4 mb-4 border-b border-[#E6E6E6]">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <h1 class="text-2xl font-black text-[#111111] truncate flex items-center gap-1.5">
+          <span>@${esc(p.username || 'profile')}</span>
+          ${p.verified ? '<span class="verified-badge text-xs">✓</span>' : ''}
+        </h1>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button type="button" id="profileSettingsBtn" class="w-10 h-10 rounded-xl bg-white border border-[#E6E6E6] hover:border-gold text-[#111111] hover:text-gold flex items-center justify-center text-lg transition shadow-xs cursor-pointer active:scale-95" title="Settings & Security">
+          ⚙️
+        </button>
+        <button type="button" id="profileMenuBtn" class="w-10 h-10 rounded-xl bg-white border border-[#E6E6E6] hover:border-gold text-[#111111] hover:text-gold flex items-center justify-center transition shadow-xs cursor-pointer active:scale-95" title="Secondary Menu (Orders, Stores, Products, Saved)">
+          <svg class="w-5 h-5 text-[#111111]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Secondary Navigation Hub (Profile ☰ Quick Access) -->
+    <div class="mb-6">
+      <div class="text-[11px] font-black uppercase tracking-wider text-[#A67C00] mb-2 px-1">Quick Commerce & Account Access</div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <button type="button" id="profileNavOrdersBtn" class="p-3.5 rounded-2xl bg-white border border-[#E6E6E6] hover:border-gold/80 hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xl group-hover:scale-110 transition">📦</span>
+            ${pendingOrders > 0 ? `<span class="orders-nav-badge">${pendingOrders > 99 ? '99+' : pendingOrders}</span>` : '<span class="text-xs text-gray-400">›</span>'}
+          </div>
+          <div class="mt-2">
+            <div class="text-xs font-black text-[#111111] group-hover:text-[#A67C00] transition">My Orders</div>
+            <div class="text-[10px] text-gray-500 truncate">Fulfillment & Tracking</div>
+          </div>
+        </button>
+
+        <button type="button" id="profileNavStoreBtn" class="p-3.5 rounded-2xl bg-white border border-[#E6E6E6] hover:border-gold/80 hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xl group-hover:scale-110 transition">🏪</span>
+            <span class="text-xs text-gray-400">›</span>
+          </div>
+          <div class="mt-2">
+            <div class="text-xs font-black text-[#111111] group-hover:text-[#A67C00] transition">My Storefront</div>
+            <div class="text-[10px] text-gray-500 truncate">Manage & Showcase</div>
+          </div>
+        </button>
+
+        <button type="button" id="profileNavProductsBtn" class="p-3.5 rounded-2xl bg-white border border-[#E6E6E6] hover:border-gold/80 hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xl group-hover:scale-110 transition">🛒</span>
+            <span class="text-xs text-gray-400">›</span>
+          </div>
+          <div class="mt-2">
+            <div class="text-xs font-black text-[#111111] group-hover:text-[#A67C00] transition">My Products</div>
+            <div class="text-[10px] text-gray-500 truncate">Catalog & Inventory</div>
+          </div>
+        </button>
+
+        <button type="button" id="profileNavFraudBtn" class="p-3.5 rounded-2xl bg-rose-50/70 border border-rose-200 hover:border-rose-400 hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="text-xl group-hover:scale-110 transition">🚨</span>
+            <span class="text-xs text-rose-400">›</span>
+          </div>
+          <div class="mt-2">
+            <div class="text-xs font-black text-rose-900 transition">Report Fraud</div>
+            <div class="text-[10px] text-rose-700/80 truncate">Security Desk</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-[1fr_1.3fr] gap-5">
+      <div class="card p-6">
+        <div class="flex items-center gap-4">
+          ${avatar(p,'w-20 h-20 rounded-full object-cover bg-gray-100')}
+          <div>
+            <h2 class="text-xl font-bold">${esc(p.name||'')}</h2>
+            <div class="muted">@${esc(p.username||'')}</div>
+            ${p.verified?'<div class="text-sm font-bold mt-1 flex items-center gap-2"><span class="verified-badge">✓</span><span>Verified seller</span></div>':''}
+            ${(p.hasBusinessCert || p.businessCertUrl || verification.hasBusinessCert)?'<div class="text-xs font-bold mt-1.5 flex items-center gap-2 text-amber-300 bg-amber-950/30 border border-amber-800/50 p-2 rounded-xl"><span>🏢</span><span>Registered Business Certificate Verified</span></div>':''}
+          </div>
+        </div>
+        <input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full mt-5">
+        <button id="uploadAvatar" class="mt-3 border border-gray-200 rounded-xl px-4 py-2">Update profile picture</button>
+        <label class="muted text-sm block mt-5">Full name</label>
+        <input id="profileName" value="${esc(p.name||'')}" class="w-full mt-1 p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 focus:border-gold outline-none transition" placeholder="Your full name">
+        <div class="flex items-center justify-between mt-4">
+          <label class="muted text-sm block">Username</label>
+          <span class="text-[11px] text-gray-500 font-mono">@<span id="profileUsernamePreview">${esc(p.username||'')}</span></span>
+        </div>
+        <div class="relative mt-1">
+          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 font-mono text-sm select-none pointer-events-none">@</span>
+          <input id="profileUsername" value="${esc(p.username||'')}" ${isUsernameLocked ? 'readonly disabled' : ''} class="w-full pl-10 pr-10 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 font-mono focus:border-gold outline-none transition ${isUsernameLocked ? 'cursor-not-allowed bg-white text-gray-600 border-[#272727]' : ''}" placeholder="username" autocomplete="off">
+          <span id="profileUsernameStatusIcon" class="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">${isUsernameLocked ? '<span class="text-amber-400 text-xs" title="Username locked (360-day policy)">🔒</span>' : ''}</span>
+        </div>
+        ${isUsernameLocked ? `<div class="mt-2.5 p-3 rounded-xl bg-amber-950/20 border border-amber-800/40 text-xs text-amber-200/90 flex items-start gap-2.5"><span class="text-base leading-none select-none">🔒</span><div class="leading-relaxed"><div class="font-bold text-amber-300 flex items-center gap-1.5"><span>Username Locked (360-Day Policy)</span><span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-200 border border-amber-700/60 font-semibold">${usernameCooldown.daysRemaining} days left</span></div><div class="mt-1 text-gray-700">Every username can be changed once every 360 days. You can change your username again in <b class="text-gray-900">${usernameCooldown.daysRemaining} day${usernameCooldown.daysRemaining === 1 ? '' : 's'}</b> (on ${esc(nextDateStr)}).</div>${lastDateStr ? `<div class="mt-0.5 text-[11px] text-gray-600">Last changed: ${esc(lastDateStr)}</div>` : ''}</div></div>` : `<div class="text-[11px] text-gray-500 mt-1 flex items-center gap-1"><span>ℹ️</span><span>Usernames can be changed once every 360 days.</span></div>`}
+        <div id="profileUsernameFeedback" class="text-xs mt-1.5 min-h-[18px]"></div>
+        <div id="profileUsernameSuggestions" class="mt-2 hidden"></div>
+        <button id="saveProfile" class="mt-4 bg-gold text-black px-5 py-2.5 rounded-xl font-bold">Save profile</button>
+        <div class="muted text-sm mt-4">${esc(currentUser.email)}</div>
+      </div>
+      <div class="space-y-5">
+        <div class="card p-6">
+          <h2 class="text-xl font-bold">Seller identity</h2>
+          <p class="muted mt-2">Verification is managed from Settings. Approved sellers receive the modern blue SellerFlow verification badge.</p>
+          <button id="openSettingsVerification" class="mt-4 bg-gold text-black px-5 py-3 rounded-xl font-bold">Open Settings</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Profile Header & Navigation Bindings
+  $('profileSettingsBtn')?.addEventListener('click', () => navigate('settings'));
+  $('profileMenuBtn')?.addEventListener('click', () => openMobileNav());
+  $('profileNavOrdersBtn')?.addEventListener('click', () => navigate('orders'));
+  $('profileNavStoreBtn')?.addEventListener('click', () => {
+    if (typeof openStore === 'function') openStore(currentUser.uid);
+    else navigate('store');
+  });
+  $('profileNavProductsBtn')?.addEventListener('click', () => navigate('products'));
+  $('profileNavFraudBtn')?.addEventListener('click', () => openReportFraudModal('seller'));
 
   setupUsernameFieldController({
     inputEl: $('profileUsername'),
