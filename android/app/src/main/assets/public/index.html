@@ -8,10 +8,27 @@
 <meta name="supported-color-schemes" content="light">
 <script>
 // Global state fallbacks
-var pendingOrdersCount = 0;
-var pendingOrders = 0;
 window.pendingOrdersCount = 0;
 window.pendingOrders = 0;
+
+// Early modal fallbacks to prevent ReferenceError if called before main bundle initialization
+window.modal = window.modal || function(html, keepVideoPlaying) {
+  var root = document.getElementById('modalRoot');
+  if (root) {
+    root.innerHTML = '<div class="modal"><div class="modal-card">' + html + '</div></div>';
+    var closeButtons = root.querySelectorAll('[data-close-modal]');
+    closeButtons.forEach(function(b) {
+      b.onclick = function() { root.innerHTML = ''; };
+    });
+  }
+};
+window.closeModal = window.closeModal || function() {
+  var root = document.getElementById('modalRoot');
+  if (root) root.innerHTML = '';
+};
+var modal = window.modal;
+var closeModal = window.closeModal;
+
 
 // Enforce Permanent White + Gold Theme: SellerFlow is exclusively Light Theme
 (function() {
@@ -601,14 +618,15 @@ input, textarea, select { color: #111111 !important; }
 #brandBtn:active{transform:scale(.97)}
 .gold-gradient{background:linear-gradient(135deg,#FFF066 0%,#FFC700 45%,#F59E0B 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
-#mobileMenu,#pageSelectorBtn{width:42px;height:42px;min-width:42px;border-radius:12px;background:#F8F8F8;border:1px solid #E6E6E6;color:#111111;display:inline-flex;align-items:center;justify-content:center;font-size:15px;padding:0;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:all .16s ease;cursor:pointer}
+#mobileMenu{display:none!important}
+#pageSelectorBtn{width:42px;height:42px;min-width:42px;border-radius:12px;background:#F8F8F8;border:1px solid #E6E6E6;color:#111111;display:inline-flex;align-items:center;justify-content:center;font-size:15px;padding:0;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:all .16s ease;cursor:pointer}
 @media(max-width:480px){
-  #mobileMenu,#pageSelectorBtn{width:40px;height:40px;min-width:40px;font-size:14px;border-radius:11px}
+  #pageSelectorBtn{width:40px;height:40px;min-width:40px;font-size:14px;border-radius:11px}
   #brandBtn{font-size:1.15rem!important}
   #brandBtn img{width:32px!important;height:32px!important}
 }
-#mobileMenu:hover,#pageSelectorBtn:hover{background:#FFFFFF;border-color:#D4AF37;color:#A67C00}
-#mobileMenu:active,#pageSelectorBtn:active{transform:scale(.94)}
+#pageSelectorBtn:hover{background:#FFFFFF;border-color:#D4AF37;color:#A67C00}
+#pageSelectorBtn:active{transform:scale(.94)}
 
 .sf-search-btn{height:36px;min-height:36px;padding:0 12px;border-radius:11px;background:#F8F8F8!important;border:1px solid #E6E6E6!important;color:#333333!important;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:all .16s ease}
 @media(max-width:640px){.sf-search-btn{width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important;padding:0!important;border-radius:9px!important}}
@@ -1021,6 +1039,21 @@ html.light-theme .btn-dark:hover,
 html.light-theme .sf-btn-dark:hover {
   background-color: #262626 !important;
   color: #FFFFFF !important;
+}
+
+/* Guarantee crystal clear text contrast on light colored tint cards */
+html.light-theme [class*="bg-amber-50"] p,
+html.light-theme [class*="bg-amber-50"] div,
+html.light-theme [class*="bg-amber-50"] span {
+  color: #451a03 !important;
+}
+html.light-theme [class*="bg-emerald-50"] span,
+html.light-theme [class*="bg-emerald-50"] p {
+  color: #065f46 !important;
+}
+html.light-theme [class*="bg-rose-50"] span,
+html.light-theme [class*="bg-rose-50"] p {
+  color: #9f1239 !important;
 }
 
 /* Danger buttons: red background with white text */
@@ -2217,7 +2250,7 @@ html.light-theme .sf-bottom-tab-bar {
   transform: scale(0.92);
 }
 
-/* Remove Top Header from the entire app (Everything moved to Profile | Settings ☰ Menu) */
+/* Hide legacy Top Header (Navigation is via Bottom Tab Bar & Profile) */
 #app > header {
   display: none !important;
 }
@@ -2490,7 +2523,7 @@ html.light-theme .sf-bottom-tab-bar {
     <div class="copyright-tag text-[11px] text-zinc-600 text-center mt-4">© 2026 POMAAH GROUP · All Rights Reserved</div>
   </div>
 </div>
-<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#FFFFFF] backdrop-blur-md border-b border-[#E6E6E6] shadow-sm shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-1.5 sm:gap-4"><div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0"><button id="mobileMenu" class="md:hidden w-10 h-10 -ml-1 rounded-xl hover:bg-white active:scale-95 transition flex items-center justify-center text-[#111111] shrink-0 cursor-pointer" type="button" title="Open navigation menu" aria-label="Open navigation menu"><svg class="w-6 h-6 text-[#111111]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="brandBtn" class="flex items-center gap-2 sm:gap-2.5 shrink-0 select-none cursor-pointer group text-left" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-8 h-8 sm:w-9 sm:h-9 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(212,175,55,0.25)] transition-transform group-hover:scale-105" /><div class="flex flex-col items-start leading-none justify-center"><div class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font leading-none"><span class="text-[#111111]">Seller</span><span class="gold-gradient">Flow</span><span class="text-[9px] font-extrabold text-[#A67C00] bg-amber-500/15 px-1.5 py-0.5 rounded-md border border-[#D4AF37]/50 uppercase tracking-wider ml-1.5 inline-block">GH</span></div><div class="text-[8px] sm:text-[9px] font-black tracking-[0.24em] text-[#666666] flex items-center gap-1 uppercase select-none mt-1 leading-none"><span>BUY</span><span class="text-[#D4AF37] font-black">•</span><span>SELL</span><span class="text-[#D4AF37] font-black">•</span><span>GROW</span></div></div></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1 sm:gap-2 shrink-0"></div></div></header><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden" aria-hidden="true"></div><aside id="mobileNav" class="hide md:hidden" aria-label="Mobile Navigation Drawer"></aside><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"><div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden"><div class="reel-feed flex-1 min-h-0 w-full overflow-hidden" id="reelFeedSkeleton"><div class="reel-card sf-shimmer-box relative flex items-center justify-center"><div class="flex flex-col items-center justify-center p-6 text-center z-10 select-none pointer-events-none"><div class="relative mb-3.5 flex items-center justify-center"><div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-gold animate-spin"></div><div class="absolute inset-0 flex items-center justify-center"><span class="text-[10px] font-black text-gold font-mono">GH</span></div></div><div class="text-sm font-bold text-gray-900 tracking-wide flex items-center gap-1.5"><span>Loading For You Feed</span><span class="inline-flex gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 0ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 150ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 300ms"></span></span></div><div class="text-[11px] text-gray-600 mt-1 font-medium">Discovering top Ghanaian reels…</div></div><div class="reel-actions flex flex-col items-center gap-4 absolute right-2.5 sm:right-4 bottom-20 z-10 pointer-events-none"><div class="w-11 h-11 rounded-full bg-white sf-shimmer-box border border-gray-200"></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-white sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-white"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-white sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-white"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-white sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-white"></div></div><div class="w-9 h-9 rounded-full bg-white sf-shimmer-box border border-gold/30"></div></div><div class="reel-content flex flex-col gap-2 pointer-events-none"><div class="flex items-center gap-2"><div class="w-28 h-4 rounded-md bg-white sf-shimmer-box"></div><div class="w-16 h-4 rounded-full bg-amber-500/20 sf-shimmer-box"></div></div><div class="w-52 h-3.5 rounded bg-white sf-shimmer-box"></div><div class="w-36 h-3 rounded bg-white sf-shimmer-box"></div><div class="flex items-center gap-2 mt-1"><div class="w-32 h-7 rounded-full bg-white sf-shimmer-box"></div><div class="w-20 h-7 rounded-full bg-amber-500/30 sf-shimmer-box"></div></div></div></div></div></div></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#E6E6E6] text-center text-xs text-[#666666]"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1 font-bold tracking-widest text-[11px] text-[#111111]">BUY <span class="text-[#D4AF37] font-black">•</span> SELL <span class="text-[#D4AF37] font-black">•</span> GROW</div><div class="mt-0.5 text-[#666666] text-[11px]">Ghana’s social selling marketplace.</div></footer></div><nav id="bottomTabBar" class="sf-bottom-tab-bar" aria-label="Bottom Navigation">
+<div id="app" class="hide app-shell-lock"><header class="sticky top-0 z-50 bg-[#FFFFFF] backdrop-blur-md border-b border-[#E6E6E6] shadow-sm shrink-0"><div class="max-w-7xl mx-auto px-2.5 sm:px-4 h-16 flex items-center justify-between gap-1.5 sm:gap-4"><div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0"><button id="brandBtn" class="flex items-center gap-2 sm:gap-2.5 shrink-0 select-none cursor-pointer group text-left" type="button" title="SellerFlow Ghana"><img src="/nav-emblem.svg" alt="SellerFlow Logo" class="w-8 h-8 sm:w-9 sm:h-9 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(212,175,55,0.25)] transition-transform group-hover:scale-105" /><div class="flex flex-col items-start leading-none justify-center"><div class="flex items-center font-black tracking-tight text-xl sm:text-2xl brand-font leading-none"><span class="text-[#111111]">Seller</span><span class="gold-gradient">Flow</span><span class="text-[9px] font-extrabold text-[#A67C00] bg-amber-500/15 px-1.5 py-0.5 rounded-md border border-[#D4AF37]/50 uppercase tracking-wider ml-1.5 inline-block">GH</span></div><div class="text-[8px] sm:text-[9px] font-black tracking-[0.24em] text-[#666666] flex items-center gap-1 uppercase select-none mt-1 leading-none"><span>BUY</span><span class="text-[#D4AF37] font-black">•</span><span>SELL</span><span class="text-[#D4AF37] font-black">•</span><span>GROW</span></div></div></button></div><div class="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar py-1" id="desktopNav"></div><div id="headerRightActions" class="flex items-center gap-1 sm:gap-2 shrink-0"></div></div></header><div id="mobileNavOverlay" class="sf-drawer-backdrop hide md:hidden" aria-hidden="true"></div><aside id="mobileNav" class="hide md:hidden" aria-label="Mobile Navigation Drawer"></aside><div id="appMainScroll" class="app-main-scroll"><main id="page" class="max-w-7xl mx-auto px-4 py-4 md:py-6 w-full"><div class="relative flex-1 min-h-0 w-full flex flex-col overflow-hidden"><div class="reel-feed flex-1 min-h-0 w-full overflow-hidden" id="reelFeedSkeleton"><div class="reel-card sf-shimmer-box relative flex items-center justify-center"><div class="flex flex-col items-center justify-center p-6 text-center z-10 select-none pointer-events-none"><div class="relative mb-3.5 flex items-center justify-center"><div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-gold animate-spin"></div><div class="absolute inset-0 flex items-center justify-center"><span class="text-[10px] font-black text-gold font-mono">GH</span></div></div><div class="text-sm font-bold text-gray-900 tracking-wide flex items-center gap-1.5"><span>Loading For You Feed</span><span class="inline-flex gap-1"><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 0ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 150ms"></span><span class="w-1.5 h-1.5 rounded-full bg-gold animate-bounce" style="animation-delay: 300ms"></span></span></div><div class="text-[11px] text-gray-600 mt-1 font-medium">Discovering top Ghanaian reels…</div></div><div class="reel-actions flex flex-col items-center gap-4 absolute right-2.5 sm:right-4 bottom-20 z-10 pointer-events-none"><div class="w-11 h-11 rounded-full bg-white sf-shimmer-box border border-gray-200"></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-white sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-white"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-white sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-white"></div></div><div class="flex flex-col items-center gap-1"><div class="w-10 h-10 rounded-full bg-white sf-shimmer-box"></div><div class="w-5 h-2 rounded bg-white"></div></div><div class="w-9 h-9 rounded-full bg-white sf-shimmer-box border border-gold/30"></div></div><div class="reel-content flex flex-col gap-2 pointer-events-none"><div class="flex items-center gap-2"><div class="w-28 h-4 rounded-md bg-white sf-shimmer-box"></div><div class="w-16 h-4 rounded-full bg-amber-500/20 sf-shimmer-box"></div></div><div class="w-52 h-3.5 rounded bg-white sf-shimmer-box"></div><div class="w-36 h-3 rounded bg-white sf-shimmer-box"></div><div class="flex items-center gap-2 mt-1"><div class="w-32 h-7 rounded-full bg-white sf-shimmer-box"></div><div class="w-20 h-7 rounded-full bg-amber-500/30 sf-shimmer-box"></div></div></div></div></div></div></main><footer class="max-w-7xl mx-auto px-4 py-6 border-t border-[#E6E6E6] text-center text-xs text-[#666666]"><div>© 2026 POMAAH GROUP · All Rights Reserved</div><div class="mt-1 font-bold tracking-widest text-[11px] text-[#111111]">BUY <span class="text-[#D4AF37] font-black">•</span> SELL <span class="text-[#D4AF37] font-black">•</span> GROW</div><div class="mt-0.5 text-[#666666] text-[11px]">Ghana’s social selling marketplace.</div></footer></div><nav id="bottomTabBar" class="sf-bottom-tab-bar" aria-label="Bottom Navigation">
   <button type="button" class="sf-bottom-tab-item active" data-bottom-page="feed" title="Home / For You">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9.5z"/>
@@ -2744,7 +2777,7 @@ function getAppUrl() {
       return origin.replace(/\/+$/, '');
     }
   }
-  const injectedUrl = 'https://ais-dev-ld2soxs7x3hv2hbqljht6f-909278422069.europe-west2.run.app';
+  const injectedUrl = 'https://ais-dev-qbls5jc7d5sfqzrp6disvu-809157880249.europe-west2.run.app';
   if (injectedUrl && injectedUrl.startsWith('http') && !injectedUrl.includes('____')) {
     return injectedUrl.replace(/\/+$/, '');
   }
@@ -4237,7 +4270,7 @@ function customConfirm(options = {}){
 
     let confirmBtnClass = 'bg-gold hover:brightness-110 text-black font-black shadow-[0_4px_20px_rgba(245,185,66,0.35)]';
     if(type === 'danger'){
-      confirmBtnClass = 'bg-gradient-to-r from-red-600 via-red-500 to-rose-600 hover:brightness-110 text-gray-900 font-bold shadow-[0_4px_20px_rgba(239,68,68,0.45)]';
+      confirmBtnClass = 'bg-gradient-to-r from-red-600 via-red-500 to-rose-600 hover:brightness-110 text-white font-bold shadow-[0_4px_20px_rgba(239,68,68,0.45)]';
     } else if(type === 'warning'){
       confirmBtnClass = 'bg-gradient-to-r from-amber-600 to-yellow-500 hover:brightness-110 text-black font-black shadow-[0_4px_20px_rgba(245,158,11,0.4)]';
     }
@@ -4343,7 +4376,7 @@ function customPrompt(options = {}){
 
     let confirmBtnClass = 'bg-gold hover:brightness-110 text-black font-black shadow-[0_4px_20px_rgba(245,185,66,0.35)]';
     if(type === 'danger'){
-      confirmBtnClass = 'bg-gradient-to-r from-red-600 via-red-500 to-rose-600 hover:brightness-110 text-gray-900 font-bold shadow-[0_4px_20px_rgba(239,68,68,0.45)]';
+      confirmBtnClass = 'bg-gradient-to-r from-red-600 via-red-500 to-rose-600 hover:brightness-110 text-white font-bold shadow-[0_4px_20px_rgba(239,68,68,0.45)]';
     } else if(type === 'warning'){
       confirmBtnClass = 'bg-gradient-to-r from-amber-600 to-yellow-500 hover:brightness-110 text-black font-black shadow-[0_4px_20px_rgba(245,158,11,0.4)]';
     }
@@ -6285,7 +6318,7 @@ function isSellerflowReserved(username, userEmail = '') {
   return false;
 }
 
-function usernameClean(v){return String(v||'').toLowerCase().replace(/[^a-z0-9_]/g,'').slice(0,24)}
+function usernameClean(v){return String(v||'').trim().replace(/[^a-zA-Z0-9_]/g,'').slice(0,24)}
 
 const USERNAME_CHANGE_COOLDOWN_DAYS = 360;
 const USERNAME_CHANGE_COOLDOWN_MS = USERNAME_CHANGE_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
@@ -8054,7 +8087,7 @@ function setNav(){
           </div>
           ${userHeaderHtml}
 
-          <!-- Quick Search Bar inside ☰ Drawer -->
+          <!-- Quick Search Bar inside Drawer -->
           <button type="button" id="mobileDrawerSearchBtn" class="w-full px-3.5 py-2.5 rounded-xl bg-[#F4F4F5] hover:bg-[#EAEAEA] border border-[#E4E4E7] text-left text-xs font-semibold text-[#555555] flex items-center justify-between transition cursor-pointer active:scale-98 shadow-xs">
             <span class="flex items-center gap-2">
               <span>🔍</span>
@@ -11811,17 +11844,17 @@ async function renderMarketplace(initialTab = 'products', targetPostId, options)
       <span id="marketBreadcrumbLabel" class="text-gray-700 font-semibold">${activeMarketTab==='products'?'📦 Products Catalogue':'🏪 Verified Stores'}</span>
     </div>` + pageTitle('Marketplace', 'Discover verified Ghanaian products, local boutiques, and shops.') + `
     ${!currentUser ? `
-      <div class="mb-5 p-4 rounded-2xl bg-gradient-to-r from-[#1c180e] via-[#141414] to-[#121212] border border-gold/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-gold/5">
+      <div class="mb-5 p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-50/50 to-white border border-amber-300/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 shadow-xs">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-gold/15 border border-gold/40 flex items-center justify-center text-xl shrink-0">🛍️</div>
+          <div class="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-400/40 flex items-center justify-center text-2xl shrink-0 shadow-2xs">🛍️</div>
           <div>
-            <div class="font-bold text-sm text-gray-900">Browse Ghanaian marketplace & products freely</div>
-            <div class="text-xs text-gray-600 mt-0.5">Explore authentic products and verified local shops across Ghana. An account is required to place orders, add to cart, or message sellers.</div>
+            <div class="font-black text-sm text-[#111111]">Browse Ghanaian marketplace & products freely</div>
+            <div class="text-xs text-[#555555] mt-0.5 leading-relaxed">Explore authentic products and verified local shops across Ghana. An account is required to place orders, add to cart, or message sellers.</div>
           </div>
         </div>
         <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-          <button type="button" id="marketGuestLogin" class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold border border-gray-200 hover:border-gold text-gray-900 bg-gray-50 transition">Sign In</button>
-          <button type="button" id="marketGuestRegister" class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold bg-gold text-black hover:brightness-110 shadow-sm transition">Register</button>
+          <button type="button" id="marketGuestLogin" class="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold border border-gray-300 hover:border-gold text-[#111111] bg-white hover:bg-gray-50 transition shadow-2xs cursor-pointer">Sign In</button>
+          <button type="button" id="marketGuestRegister" class="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-black bg-gold hover:brightness-105 text-[#111111] shadow-2xs transition cursor-pointer">Register</button>
         </div>
       </div>
     ` : ''}
@@ -11840,12 +11873,17 @@ async function renderMarketplace(initialTab = 'products', targetPostId, options)
         </button>
       </div>
 
-      ${(isAdmin || currentProfile?.verified) ? `
-        <button type="button" id="marketAddProductBtn" class="btn px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gold text-black hover:brightness-110 shadow-sm flex items-center gap-1.5 shrink-0">
-          <span>+</span>
-          <span>Add product</span>
+      <!-- Action Buttons: Add Product & Create Store (Permanent with Auth & Verification Prompts) -->
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <button type="button" id="marketAddProductBtn" class="flex-1 sm:flex-none px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-black text-xs sm:text-sm bg-gold text-black hover:brightness-110 shadow-xs flex items-center justify-center gap-1.5 shrink-0 transition active:scale-95 cursor-pointer">
+          <span>＋</span>
+          <span>Add Product</span>
         </button>
-      ` : ''}
+        <button type="button" id="marketCreateStoreBtn" class="flex-1 sm:flex-none px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-white hover:bg-gray-50 border border-gray-300 hover:border-gold text-[#111111] shadow-xs flex items-center justify-center gap-1.5 shrink-0 transition active:scale-95 cursor-pointer">
+          <span>🏪</span>
+          <span>Create Store</span>
+        </button>
+      </div>
     </div>
 
     <!-- PRODUCTS TAB VIEW -->
@@ -11903,7 +11941,22 @@ async function renderMarketplace(initialTab = 'products', targetPostId, options)
 
   $('marketGuestLogin')?.addEventListener('click',()=>showAuth('login'));
   $('marketGuestRegister')?.addEventListener('click',()=>showAuth('register'));
-  $('marketAddProductBtn')?.addEventListener('click',()=>openProductModal());
+  $('marketAddProductBtn')?.addEventListener('click', () => {
+    if (!currentUser) return showAuthPrompt('add and list products on SellerFlow');
+    const isVerified = isAdmin || currentProfile?.accountVerificationStatus === 'VERIFIED' || currentProfile?.verified === true || currentProfile?.accountVerified === true || currentProfile?.verificationStatus === 'approved';
+    if (!isVerified) {
+      return openVerificationModal({ purpose: 'seller', onSuccess: () => openProductModal() });
+    }
+    openProductModal();
+  });
+  $('marketCreateStoreBtn')?.addEventListener('click', () => {
+    if (!currentUser) return showAuthPrompt('create and launch your verified Ghanaian store');
+    const isVerified = isAdmin || currentProfile?.accountVerificationStatus === 'VERIFIED' || currentProfile?.verified === true || currentProfile?.accountVerified === true || currentProfile?.verificationStatus === 'approved';
+    if (!isVerified) {
+      return openVerificationModal({ purpose: 'store', onSuccess: () => renderStore(true) });
+    }
+    renderStore(true);
+  });
 
   // Tab switching logic
   const setMarketTab = (tab) => {
@@ -13928,20 +13981,39 @@ async function openStore(uid){
       getDoc(doc(db,'publicProfiles',uid)).catch(()=>null),
       getDocs(query(collection(db,'products'),where('sellerId','==',uid))).catch(()=>({docs:[]}))
     ]);
-    const store = (ss && snapshotExists(ss)) ? ss.data() : null;
-    const p = (ps && snapshotExists(ps)) ? ps.data() : sellerProfile(uid);
-    const products = prodsSnap.docs.map(d=>({id:d.id,...d.data()}));
-    const following=isFollowingUser(uid);
-    if(currentUser){
-      addDoc(collection(db,'profileVisits'),{visitorId:currentUser.uid,profileId:uid,createdAt:serverTimestamp()}).catch(()=>{});
+    let store = (ss && snapshotExists(ss)) ? { id: ss.id, ...ss.data() } : null;
+    if (!store) {
+      store = allStores.get(uid) || null;
     }
-    const isOwner = currentUser && currentUser.uid === uid;
+    if (!store) {
+      try {
+        const ownerSnap = await getDocs(query(collection(db, 'stores'), where('ownerId', '==', uid), limit(1)));
+        if (ownerSnap && !ownerSnap.empty) {
+          store = { id: ownerSnap.docs[0].id, ...ownerSnap.docs[0].data() };
+        }
+      } catch (_) {}
+    }
+    const actualOwnerId = store?.ownerId || uid;
+    let p = (ps && snapshotExists(ps)) ? ps.data() : sellerProfile(actualOwnerId);
+    if (!p || !p.username) {
+      try {
+        const realPs = await getDoc(doc(db, 'publicProfiles', actualOwnerId));
+        if (snapshotExists(realPs)) p = realPs.data();
+      } catch (_) {}
+    }
+    const products = prodsSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const following=isFollowingUser(actualOwnerId);
+    if(currentUser){
+      addDoc(collection(db,'profileVisits'),{visitorId:currentUser.uid,profileId:actualOwnerId,createdAt:serverTimestamp()}).catch(()=>{});
+    }
+    const isOwner = currentUser && (currentUser.uid === uid || currentUser.uid === actualOwnerId);
     const isStoreApproved = store?.status === 'approved' || store?.reviewStatus === 'approved';
     const isStoreTakenDown = !isStoreApproved && (store?.status === 'taken_down' || store?.reviewStatus === 'taken_down');
     const isStorePending = !isStoreApproved && (store?.status === 'pending_review' || store?.reviewStatus === 'pending');
     const isStoreRejected = !isStoreApproved && (store?.status === 'rejected' || store?.reviewStatus === 'rejected');
 
-    const effectiveBannerUrl = store?.bannerUrl || p?.bannerUrl || (isOwner ? currentProfile?.bannerUrl : '');
+    const localSavedBanner = (typeof localStorage !== 'undefined' && actualOwnerId) ? (localStorage.getItem('sf_store_banner_' + actualOwnerId) || localStorage.getItem('sf_store_banner_' + uid) || '') : '';
+    const effectiveBannerUrl = store?.bannerUrl || store?.banner || p?.bannerUrl || p?.banner || (isOwner ? currentProfile?.bannerUrl : '') || (allStores.get(uid)?.bannerUrl) || (allStores.get(actualOwnerId)?.bannerUrl) || localSavedBanner || '';
     const effectiveLogoUrl = store?.logoUrl || p?.logoUrl || p?.avatarUrl || (isOwner ? currentProfile?.avatarUrl : '');
     const storeTheme = normalizeStoreTheme(store?.theme || p?.storeTheme || (isOwner ? currentProfile?.storeTheme : null));
     const storeThemeCssVars = generateStoreCssVars(storeTheme);
@@ -14184,20 +14256,46 @@ async function openStore(uid){
       try {
         validFile(f, ['image/jpeg','image/png','image/webp'], 10);
         loading('Uploading store banner…');
-        const up = await uploadPublic(f, 'stores');
-        await setDoc(doc(db, 'stores', uid), {
-          bannerUrl: up.url,
-          bannerPath: up.path,
+        let compressedBanner = f;
+        try {
+          compressedBanner = await compressImageForUpload(f, { maxDimension: 1200, quality: 0.82 });
+        } catch (_) {}
+        const up = await uploadPublic(compressedBanner, 'stores');
+        const finalBannerUrl = up.url;
+        const finalBannerPath = up.path;
+
+        await setDoc(doc(db, 'stores', actualOwnerId), {
+          bannerUrl: finalBannerUrl,
+          bannerPath: finalBannerPath,
           updatedAt: serverTimestamp()
         }, { merge: true });
-        await setDoc(doc(db, 'publicProfiles', uid), {
-          bannerUrl: up.url,
-          bannerPath: up.path
-        }, { merge: true }).catch(()=>{});
-        if(currentProfile) {
-          currentProfile.bannerUrl = up.url;
-          currentProfile.bannerPath = up.path;
+        if (uid !== actualOwnerId) {
+          await setDoc(doc(db, 'stores', uid), {
+            bannerUrl: finalBannerUrl,
+            bannerPath: finalBannerPath,
+            updatedAt: serverTimestamp()
+          }, { merge: true }).catch(()=>{});
         }
+        await setDoc(doc(db, 'publicProfiles', actualOwnerId), {
+          bannerUrl: finalBannerUrl,
+          bannerPath: finalBannerPath
+        }, { merge: true }).catch(()=>{});
+        await setDoc(doc(db, 'users', actualOwnerId), {
+          bannerUrl: finalBannerUrl,
+          bannerPath: finalBannerPath
+        }, { merge: true }).catch(()=>{});
+
+        if(currentProfile) {
+          currentProfile.bannerUrl = finalBannerUrl;
+          currentProfile.bannerPath = finalBannerPath;
+        }
+        try {
+          localStorage.setItem('sf_store_banner_' + actualOwnerId, finalBannerUrl);
+          localStorage.setItem('sf_store_banner_' + uid, finalBannerUrl);
+        } catch (_) {}
+        allStores.set(actualOwnerId, { ...(allStores.get(actualOwnerId) || {}), bannerUrl: finalBannerUrl, bannerPath: finalBannerPath });
+        allStores.set(uid, { ...(allStores.get(uid) || {}), bannerUrl: finalBannerUrl, bannerPath: finalBannerPath });
+
         toast('Store banner updated successfully!', 'success');
         await openStore(uid);
       } catch(err){
@@ -14565,12 +14663,12 @@ async function openProductDetailModal(rawP){
       </div>
 
       <!-- Anti-Fraud Safe Shopping Tip for Buyer -->
-      <div class="p-3.5 rounded-2xl bg-gradient-to-r from-[#1b1710] to-[#121214] border border-[#3e2f1b] text-xs text-gray-700">
-        <div class="flex items-center gap-1.5 font-bold text-amber-300 mb-1">
+      <div class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-300/90 text-xs space-y-1 shadow-2xs">
+        <div class="flex items-center gap-1.5 font-bold text-amber-900 mb-0.5">
           <span class="text-sm">🛡️</span>
           <span>Buyer Anti-Fraud Tip & Safety Notice</span>
         </div>
-        <p class="text-gray-700 text-[11.5px] leading-relaxed">
+        <p class="text-amber-950 text-[11.5px] leading-relaxed font-medium">
           Always inspect your ordered items upon delivery before releasing payment. Never transfer advance funds to unverified phone numbers or share your private Mobile Money PIN.
         </p>
       </div>
@@ -18043,7 +18141,7 @@ async function renderProfile(){
   const pendingOrders = typeof pendingOrdersCount !== 'undefined' ? pendingOrdersCount : 0;
 
   $('page').innerHTML = `
-    <!-- Profile Page Header with ☰ Menu and ⚙ Settings -->
+    <!-- Profile Page Header with Standalone Sign Out -->
     <div class="flex items-center justify-between pb-4 mb-4 border-b border-[#E6E6E6]">
       <div class="flex items-center gap-2.5 min-w-0">
         <h1 class="text-2xl font-black text-[#111111] truncate flex items-center gap-1.5">
@@ -18052,18 +18150,14 @@ async function renderProfile(){
         </h1>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <button type="button" id="profileSettingsBtn" class="w-10 h-10 rounded-xl bg-white border border-[#E6E6E6] hover:border-gold text-[#111111] hover:text-gold flex items-center justify-center text-lg transition shadow-xs cursor-pointer active:scale-95" title="Settings & Security">
-          ⚙️
-        </button>
-        <button type="button" id="profileMenuBtn" class="w-10 h-10 rounded-xl bg-white border border-[#E6E6E6] hover:border-gold text-[#111111] hover:text-gold flex items-center justify-center transition shadow-xs cursor-pointer active:scale-95" title="Secondary Menu (Orders, Stores, Products, Saved)">
-          <svg class="w-5 h-5 text-[#111111]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
+        <button type="button" id="profileSignOutBtn" class="px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-2xs" title="Sign Out">
+          <span>🚪</span>
+          <span>Sign Out</span>
         </button>
       </div>
     </div>
 
-    <!-- Secondary Navigation Hub (Profile ☰ Quick Access) -->
+    <!-- Secondary Navigation Hub (Profile Quick Access) -->
     <div class="mb-6 space-y-4">
       <div>
         <div class="text-[11px] font-black uppercase tracking-wider text-[#A67C00] mb-2 px-1 flex items-center justify-between">
@@ -18224,14 +18318,14 @@ async function renderProfile(){
             </div>
           </button>
           ` : `
-          <button type="button" id="profileNavSettingsBtn" class="p-3 rounded-2xl bg-white border border-[#E6E6E6] hover:border-gold/80 hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
+          <button type="button" id="profileNavSignOutBtn" class="p-3 rounded-2xl bg-rose-50/70 border border-rose-200 hover:border-rose-400 hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
             <div class="flex items-center justify-between">
-              <span class="text-xl group-hover:scale-110 transition">⚙️</span>
-              <span class="text-xs text-gray-400">›</span>
+              <span class="text-xl group-hover:scale-110 transition">🚪</span>
+              <span class="text-xs text-rose-400">›</span>
             </div>
             <div class="mt-2">
-              <div class="text-xs font-black text-[#111111] group-hover:text-[#A67C00] transition">Settings</div>
-              <div class="text-[10px] text-gray-500 truncate">Account & Legal</div>
+              <div class="text-xs font-black text-rose-900 transition">Sign Out</div>
+              <div class="text-[10px] text-rose-700/80 truncate">Log Out Session</div>
             </div>
           </button>
           `}
@@ -18270,10 +18364,10 @@ async function renderProfile(){
         <div class="muted text-sm mt-4">${esc(currentUser.email)}</div>
       </div>
       <div class="space-y-5">
-        <div class="card p-6">
-          <h2 class="text-xl font-bold">Seller identity</h2>
-          <p class="muted mt-2">Verification is managed from Settings. Approved sellers receive the modern blue SellerFlow verification badge.</p>
-          <button id="openSettingsVerification" class="mt-4 bg-gold text-black px-5 py-3 rounded-xl font-bold cursor-pointer">Open Settings</button>
+        <div class="card p-5 border border-gray-200">
+          <h2 class="text-base font-black text-gray-900">Account Verification</h2>
+          <p class="text-xs text-gray-600 mt-1">First-party SellerFlow account verification. Verified accounts receive the official blue verification badge.</p>
+          <button id="openSettingsVerification" type="button" class="mt-3.5 bg-gold text-black px-4 py-2 rounded-xl font-black text-xs hover:brightness-105 transition shadow-xs cursor-pointer">Verify Account Now</button>
         </div>
 
         <div class="card p-5 border border-rose-200 bg-rose-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
@@ -18292,8 +18386,9 @@ async function renderProfile(){
   `;
 
   // Profile Header & Navigation Bindings
-  $('profileSettingsBtn')?.addEventListener('click', () => navigate('settings'));
-  $('profileNavSettingsBtn')?.addEventListener('click', () => navigate('settings'));
+  $('openSettingsVerification')?.addEventListener('click', () => openVerificationModal());
+  $('profileSignOutBtn')?.addEventListener('click', logoutUser);
+  $('profileNavSignOutBtn')?.addEventListener('click', logoutUser);
   $('profileMenuBtn')?.addEventListener('click', () => openMobileNav());
   $('profileNavOrdersBtn')?.addEventListener('click', () => navigate('orders'));
   $('profileNavStoreBtn')?.addEventListener('click', () => {
@@ -19853,56 +19948,49 @@ async function openCheckout(){
     }
   }
 
-  const hasCardNumber = !!(uData.ghanaCardNumber || uData.ghanaCardMasked || uData.ghanaCardNum);
-  const hasFrontDoc = !!(uData.ghanaCardFrontPath || uData.ghanaCardFrontUrl || uData.ghanaCardFront);
-  const hasBackDoc = !!(uData.ghanaCardBackPath || uData.ghanaCardBackUrl || uData.ghanaCardBack);
-  const isVerifiedBuyer = isAdmin || (hasCardNumber && hasFrontDoc && hasBackDoc);
+  const isVerifiedBuyer = isAdmin || 
+    uData.verified === true || 
+    uData.accountVerified === true || 
+    uData.accountVerificationStatus === 'VERIFIED' || 
+    uData.verificationStatus === 'approved' || 
+    currentProfile?.verified === true || 
+    currentProfile?.accountVerified === true || 
+    currentProfile?.accountVerificationStatus === 'VERIFIED' || 
+    currentProfile?.verificationStatus === 'approved';
 
   if(!isVerifiedBuyer){
     modal(`
       <div class="space-y-4 max-w-md mx-auto text-left">
         <div class="flex items-center gap-3 pb-3 border-b border-gray-200">
-          <div class="w-10 h-10 rounded-xl bg-amber-950/40 border border-amber-800 text-gold flex items-center justify-center text-xl shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-300 text-gold flex items-center justify-center text-xl shrink-0">
             🛡️
           </div>
           <div>
-            <h2 class="text-lg font-black text-gray-900">Ghana Card Verification Required</h2>
-            <p class="text-xs text-gray-600">Buyer Protection & Law of Ghana Compliance</p>
+            <h2 class="text-lg font-black text-gray-900">SellerFlow Verification Required</h2>
+            <p class="text-xs text-gray-600">Buyer Protection & Trusted Commerce</p>
           </div>
         </div>
 
-        <div class="p-3.5 rounded-2xl bg-amber-950/20 border border-amber-500/30 text-xs text-gray-700 space-y-2 leading-relaxed">
-          <p class="font-bold text-amber-300 text-xs">Identity verification is required before checkout.</p>
-          <p class="text-[11.5px] text-gray-700">
-            Under SellerFlow Trust & Anti-Fraud Policy and the Laws of Ghana, all buyers must complete Ghana Card identification (PIN number, front image, and back image) before placing orders.
+        <div class="p-4 rounded-2xl bg-amber-50/90 border border-amber-300 text-xs text-amber-950 space-y-2 leading-relaxed shadow-xs">
+          <p class="font-bold text-amber-900 text-xs flex items-center gap-1.5">
+            <span>🇬🇭</span><span>Identity verification is required before checkout.</span>
           </p>
-          <div class="text-[11px] pt-1 space-y-1 font-mono">
-            <div class="flex items-center gap-2">
-              <span>${hasCardNumber ? '✓' : '❌'}</span>
-              <span class="${hasCardNumber ? 'text-emerald-400 font-semibold' : 'text-amber-300'}">Ghana Card PIN ${hasCardNumber ? 'Recorded' : 'Required'}</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span>${hasFrontDoc ? '✓' : '❌'}</span>
-              <span class="${hasFrontDoc ? 'text-emerald-400 font-semibold' : 'text-amber-300'}">Front Document Image ${hasFrontDoc ? 'Uploaded' : 'Required'}</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span>${hasBackDoc ? '✓' : '❌'}</span>
-              <span class="${hasBackDoc ? 'text-emerald-400 font-semibold' : 'text-amber-300'}">Back Document Image ${hasBackDoc ? 'Uploaded' : 'Required'}</span>
-            </div>
-          </div>
+          <p class="text-[12px] text-amber-950 font-medium leading-relaxed">
+            Under SellerFlow Trust & Anti-Fraud Policy, all accounts must complete first-party SellerFlow account verification (Live Selfie Check & Full Body Photos) before placing orders and checking out.
+          </p>
         </div>
 
-        <div class="p-3 rounded-xl bg-emerald-50/70 border border-emerald-600/30 text-xs text-gray-700 flex items-center gap-2">
-          <span class="text-base text-emerald-400 shrink-0">🛡️</span>
-          <span><b>Zero-Access Privacy:</b> Your Ghana Card is encrypted and protected by the <b>SellerFlow Security Team</b>. Documents are never exposed to sellers or unauthorized users.</span>
+        <div class="p-3.5 rounded-2xl bg-emerald-50/90 border border-emerald-300 text-xs text-emerald-950 flex items-center gap-2.5 shadow-xs">
+          <span class="text-lg text-emerald-600 shrink-0">🛡️</span>
+          <span class="text-[11.5px] text-emerald-900 leading-snug"><b>Zero-Access Privacy:</b> Your verification is encrypted and protected by the <b>SellerFlow Security Team</b>. Your identity documents are never exposed to sellers or unauthorized users.</span>
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-200">
-          <button type="button" data-close-modal class="border border-gray-200 hover:border-zinc-400 text-gray-700 px-4 py-2.5 rounded-xl text-xs font-semibold">
+          <button type="button" data-close-modal class="border border-gray-200 hover:border-zinc-400 text-gray-700 px-4 py-2.5 rounded-xl text-xs font-semibold bg-white cursor-pointer transition">
             Cancel
           </button>
-          <button type="button" id="startBuyerVerificationCheckoutBtn" class="bg-gold text-black font-extrabold px-5 py-2.5 rounded-xl text-xs hover:brightness-110 shadow-sm flex items-center gap-1.5">
-            <span>Verify Ghana Card Now</span>
+          <button type="button" id="startBuyerVerificationCheckoutBtn" class="bg-gold text-black font-black px-5 py-2.5 rounded-xl text-xs hover:brightness-105 shadow-xs flex items-center gap-1.5 cursor-pointer transition">
+            <span>Verify Account Now</span>
             <span>→</span>
           </button>
         </div>
@@ -22105,12 +22193,13 @@ function stopNotificationWatcher(){
 }
 
 let ordersWatcherUnsubscribe=null;
-let pendingOrdersCount=0;
+var pendingOrdersCount=window.pendingOrdersCount||0;
 let knownPendingOrderIds=new Set();
 let ordersWatcherInitialized=false;
 
 function updateOrdersBadge(count){
   pendingOrdersCount=Math.max(0,Number(count)||0);
+  window.pendingOrdersCount=pendingOrdersCount;
   const text=pendingOrdersCount>99?'99+':String(pendingOrdersCount);
   const badges=document.querySelectorAll('.orders-nav-badge, #desktopOrdersBadge, #mobileOrdersBadge, #bottomBarOrdersBadge, .sf-bottom-tab-badge');
   badges.forEach(b=>{
@@ -22965,6 +23054,8 @@ function closeModal(){
   window._activeConversationId = null;
   $('modalRoot').innerHTML='';
 }
+window.modal = modal;
+window.closeModal = closeModal;
 
 /* Customer Support & Help Desk System */
 async function openHelpSupportModal(){
@@ -22991,60 +23082,60 @@ async function openHelpSupportModal(){
       <div class="space-y-4 max-w-lg mx-auto" id="helpSupportModalContent">
         <div class="pb-3 border-b border-gray-200 flex items-center justify-between gap-3">
           <div class="flex items-center gap-2.5">
-            <div class="w-10 h-10 rounded-xl bg-gold/15 border border-gold/40 flex items-center justify-center text-xl shrink-0">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-400/40 flex items-center justify-center text-xl shrink-0">
               🎧
             </div>
             <div>
-              <h2 class="text-lg font-black text-gray-900">Customer Service & Help Desk</h2>
-              <p class="text-xs text-gray-600">SellerFlow Ghana Official Support & Security</p>
+              <h2 class="text-base sm:text-lg font-black text-[#111111] leading-snug">Customer Help Desk</h2>
+              <p class="text-xs text-[#666666]">SellerFlow Ghana Official Support & Security</p>
             </div>
           </div>
-          <button type="button" data-close-modal class="text-gray-600 hover:text-gray-900 text-sm p-1">✕</button>
+          <button type="button" data-close-modal class="text-gray-500 hover:text-gray-900 text-sm p-1.5 rounded-lg hover:bg-gray-100 transition cursor-pointer" title="Close">✕</button>
         </div>
 
-        <div class="p-3.5 rounded-2xl bg-gradient-to-r from-[#18181f] to-[#121216] border border-gold/30 text-xs text-gray-700 leading-relaxed space-y-1">
-          <div class="font-bold text-amber-300 flex items-center gap-1.5">
+        <div class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-300/90 text-xs space-y-1 shadow-2xs">
+          <div class="font-black text-amber-900 flex items-center gap-1.5 text-xs">
             <span>🇬🇭</span><span>Ghana Marketplace Guarantee</span>
           </div>
-          <p class="text-[11.5px] text-gray-700">${esc(supportData.notice)}</p>
+          <p class="text-[12px] text-amber-950 font-medium leading-relaxed">${esc(supportData.notice)}</p>
         </div>
 
         <!-- Direct Contact Actions Grid -->
-        <div class="grid grid-cols-2 gap-2">
-          <a href="tel:${esc(supportData.phone)}" class="p-3 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 hover:bg-white border border-[#2e2e38] hover:border-gold/50 flex flex-col items-center justify-center text-center gap-1 transition group">
-            <span class="text-xl group-hover:scale-110 transition">📞</span>
-            <span class="text-xs font-bold text-gray-900">Call Support</span>
-            <span class="text-[10px] text-gray-600 font-mono">${esc(supportData.phone)}</span>
+        <div class="grid grid-cols-2 gap-2.5">
+          <a href="tel:${esc(supportData.phone)}" class="p-3 rounded-2xl bg-white hover:bg-gray-50 border border-gray-200 hover:border-gold/60 flex flex-col items-center justify-center text-center gap-1 transition group shadow-2xs cursor-pointer">
+            <span class="text-2xl group-hover:scale-110 transition">📞</span>
+            <span class="text-xs font-bold text-[#111111]">Call Support</span>
+            <span class="text-[10px] text-[#666666] font-mono">${esc(supportData.phone)}</span>
           </a>
 
-          <a href="https://wa.me/${cleanWa}?text=${encodeURIComponent('Hello SellerFlow Customer Support, I need assistance with...')}" target="_blank" rel="noopener" class="p-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 hover:border-emerald-500 flex flex-col items-center justify-center text-center gap-1 transition group">
-            <span class="text-xl group-hover:scale-110 transition">💬</span>
-            <span class="text-xs font-bold text-emerald-300">WhatsApp Chat</span>
-            <span class="text-[10px] text-emerald-400/80 font-mono">+${cleanWa}</span>
+          <a href="https://wa.me/${cleanWa}?text=${encodeURIComponent('Hello SellerFlow Customer Support, I need assistance with...')}" target="_blank" rel="noopener" class="p-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 hover:border-emerald-500 flex flex-col items-center justify-center text-center gap-1 transition group shadow-2xs cursor-pointer">
+            <span class="text-2xl group-hover:scale-110 transition">💬</span>
+            <span class="text-xs font-black text-emerald-800">WhatsApp Chat</span>
+            <span class="text-[10px] text-emerald-700 font-mono font-bold">+${cleanWa}</span>
           </a>
 
-          <button type="button" id="helpReplayTutorialBtn" class="p-3 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 hover:bg-white border border-[#2e2e38] hover:border-gold/50 flex flex-col items-center justify-center text-center gap-1 transition group">
-            <span class="text-xl group-hover:scale-110 transition">🎓</span>
-            <span class="text-xs font-bold text-gray-900">App Tutorial</span>
-            <span class="text-[10px] text-amber-300/80">Feature Guide</span>
+          <button type="button" id="helpReplayTutorialBtn" class="p-3 rounded-2xl bg-white hover:bg-gray-50 border border-gray-200 hover:border-gold/60 flex flex-col items-center justify-center text-center gap-1 transition group shadow-2xs cursor-pointer">
+            <span class="text-2xl group-hover:scale-110 transition">🎓</span>
+            <span class="text-xs font-bold text-[#111111]">App Tutorial</span>
+            <span class="text-[10px] text-[#A67C00] font-bold">Feature Guide</span>
           </button>
 
-          <button type="button" id="helpReportFraudBtn" class="p-3 rounded-xl bg-rose-950/40 hover:bg-rose-900/50 border border-rose-800/60 hover:border-rose-600 flex flex-col items-center justify-center text-center gap-1 transition group">
-            <span class="text-xl group-hover:scale-110 transition">🚨</span>
-            <span class="text-xs font-bold text-rose-300">Report Fraud</span>
-            <span class="text-[10px] text-rose-400/80">Security Desk</span>
+          <button type="button" id="helpReportFraudBtn" class="p-3 rounded-2xl bg-rose-50 hover:bg-rose-100 border border-rose-200 hover:border-rose-400 flex flex-col items-center justify-center text-center gap-1 transition group shadow-2xs cursor-pointer">
+            <span class="text-2xl group-hover:scale-110 transition">🚨</span>
+            <span class="text-xs font-black text-rose-800">Report Fraud</span>
+            <span class="text-[10px] text-rose-700 font-bold">Security Desk</span>
           </button>
         </div>
 
         <!-- Support Info List -->
-        <div class="space-y-2 text-xs bg-white border border-gray-200 text-gray-900 p-3.5 rounded-xl border border-[#24242c]">
-          <div class="flex items-center justify-between border-b border-[#22222a] pb-2">
-            <span class="text-gray-600">🕒 Operating Hours:</span>
-            <span class="text-gray-900 font-medium">${esc(supportData.hours)}</span>
+        <div class="space-y-2 text-xs bg-gray-50/80 border border-gray-200/90 text-[#111111] p-3.5 rounded-2xl shadow-2xs">
+          <div class="flex items-center justify-between border-b border-gray-200/70 pb-2">
+            <span class="text-[#666666] font-medium">🕒 Operating Hours:</span>
+            <span class="text-[#111111] font-bold">${esc(supportData.hours)}</span>
           </div>
           <div class="flex items-start justify-between gap-2 pt-1">
-            <span class="text-gray-600 shrink-0">📍 Ghana Office:</span>
-            <span class="text-gray-900 text-right font-medium">${esc(supportData.address)}</span>
+            <span class="text-[#666666] shrink-0 font-medium">📍 Ghana Office:</span>
+            <span class="text-[#111111] text-right font-bold">${esc(supportData.address)}</span>
           </div>
         </div>
 
@@ -29826,7 +29917,7 @@ init();
               <div class="font-bold text-sm text-gray-900 leading-snug break-words flex-1">
                 ${esc(n.title || 'SellerFlow post review complete')}
               </div>
-              <span class="w-5 h-5 rounded-full bg-[#0095f6] text-gray-900 text-[11px] font-black flex items-center justify-center shrink-0" title="Official Verified Release">✓</span>
+              <span class="w-5 h-5 rounded-full bg-[#0095f6] text-white text-[11px] font-black flex items-center justify-center shrink-0" title="Official Verified Release">✓</span>
             </div>
             <div class="text-xs text-gray-700 mt-1.5 leading-relaxed break-words">
               ${esc(n.message || 'Your post remains live on SellerFlow after safety review.')}
@@ -30168,11 +30259,14 @@ init();
   .sf-online{width:10px;height:10px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.12)}
   .sf-offline{width:10px;height:10px;border-radius:50%;background:#666;box-shadow:0 0 0 3px rgba(255,255,255,.05)}
   .sf-user-row{transition:.15s ease;background:#ffffff;border:1px solid #e5e7eb}.sf-user-row:hover{border-color:#f5b942!important;background:#f9fafb}
-  .sf-profile-cover{position:relative;overflow:hidden;border:1px solid #e5e7eb!important;border-radius:26px;background:#ffffff!important;box-shadow:0 1px 3px rgba(0,0,0,0.04);color:#111111!important}
+  .sf-profile-cover{position:relative;overflow:hidden;border:1px solid #e5e7eb!important;border-radius:24px;background:#ffffff!important;box-shadow:0 1px 3px rgba(0,0,0,0.04);color:#111111!important}
   .sf-profile-cover:after{display:none!important}
-  .sf-profile-avatar, .sf-profile-picture{width:112px;height:112px;border-radius:50%;object-fit:cover;border:4px solid #ffffff;box-shadow:0 4px 16px rgba(0,0,0,0.12);background:#f3f4f6}
-  .sf-profile-tabs{display:flex;gap:4px;border-bottom:1px solid #e5e7eb}.sf-profile-tab{padding:14px 18px;color:#6b7280;font-weight:700;border-bottom:2px solid transparent}.sf-profile-tab.active{color:#111827!important;border-color:#f5b942!important;font-weight:800}
-  .sf-post-tile{aspect-ratio:1/1;position:relative;overflow:hidden;background:#f3f4f6;cursor:pointer;border-radius:12px}.sf-post-tile img,.sf-post-tile video{width:100%;height:100%;object-fit:cover}.sf-post-tile:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 60%,rgba(0,0,0,.45));pointer-events:none}
+  .sf-profile-avatar, .sf-profile-picture{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid #ffffff;box-shadow:0 4px 16px rgba(0,0,0,0.10);background:#f3f4f6}
+  .sf-profile-tabs{display:flex;gap:6px;border-bottom:1px solid #e5e7eb}.sf-profile-tab{padding:12px 16px;color:#6b7280;font-weight:700;border-bottom:2px solid transparent;transition:all .15s ease;font-size:13px;cursor:pointer}.sf-profile-tab:hover{color:#111827}.sf-profile-tab.active{color:#111827!important;border-color:#f5b942!important;font-weight:800}
+  .profile-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}@media(min-width:640px){.profile-grid{gap:10px}}
+  .sf-post-tile{aspect-ratio:1/1;position:relative;overflow:hidden;background:#f3f4f6;cursor:pointer;border-radius:14px;border:1px solid rgba(0,0,0,0.05);transition:transform .15s ease,box-shadow .15s ease}.sf-post-tile:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.08)}
+  .sf-post-tile img,.sf-post-tile video{width:100%;height:100%;object-fit:cover}
+  .sf-post-tile:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,0.55) 100%);pointer-events:none}
   .sf-tile-meta{position:absolute;left:8px;right:8px;bottom:7px;z-index:2;font-size:11px;display:flex;justify-content:space-between;color:#ffffff}
   .sf-media-status{padding:7px 10px;border-radius:10px;background:#ffffff;border:1px solid #e5e7eb;font-size:12px;color:#111111}
   .sf-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}@media(max-width:640px){.sf-edit-grid{grid-template-columns:1fr}}
@@ -30613,9 +30707,9 @@ init();
     const prevPageLabel = prevPageKey === 'marketplace' ? 'Marketplace' : (prevPageKey === 'store' ? 'Store' : 'For You');
 
     $('page').innerHTML=`
-      <!-- Profile Top Navigation Bar with ☰ Three-Line Menu & ⚙ Settings -->
-      <div class="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-200">
-        <button type="button" id="profileBackNavBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 hover:border-gold font-bold text-xs transition cursor-pointer shadow-xs" title="Back to previous page">
+      <!-- Profile Modern Top Bar -->
+      <div class="flex items-center justify-between gap-3 mb-3 pb-2.5 border-b border-gray-100">
+        <button type="button" id="profileBackNavBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-800 border border-gray-200/80 font-bold text-xs transition cursor-pointer shadow-2xs" title="Back to previous page">
           <span>←</span>
           <span>Back to ${prevPageLabel}</span>
         </button>
@@ -30623,307 +30717,184 @@ init();
           <span>@${esc(p.username || 'user')}</span>
           ${verifyBadge(p)}
         </div>
-        <div class="flex items-center gap-2">
-          <button type="button" id="profileSettingsHeaderBtn" class="w-9 h-9 rounded-xl bg-white border border-gray-200 hover:border-gold text-gray-900 hover:text-gold flex items-center justify-center text-sm shadow-xs transition active:scale-95 cursor-pointer" title="Settings">
-            ⚙️
-          </button>
-          <button type="button" id="profileMenuHeaderBtn" class="w-9 h-9 rounded-xl bg-white border border-gray-200 hover:border-gold text-gray-900 hover:text-gold flex items-center justify-center shadow-xs transition active:scale-95 cursor-pointer" title="Open ☰ Full Menu">
-            <svg class="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.3">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
-          </button>
+        <div class="flex items-center gap-1.5">
+          ${isOwner ? `
+            <button type="button" id="profileSignOutHeaderBtn" class="px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition active:scale-95 cursor-pointer shadow-2xs flex items-center gap-1" title="Sign Out">
+              <span>🚪</span><span>Sign Out</span>
+            </button>
+          ` : ''}
         </div>
       </div>
 
-      <section class="sf-profile-cover mb-5">
-        <div class="relative z-10 p-4 sm:p-6 md:p-7">
-          <div class="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6">
-            ${isOwner ? `
-              <button type="button" id="profilePhotoBtn" class="shrink-0 border-0 bg-transparent cursor-pointer relative group self-start sm:self-auto" title="Manage profile picture">
-                <img class="sf-profile-avatar sf-profile-picture rounded-full object-cover group-hover:brightness-95 transition" src="${esc(getUserAvatarUrl(p))}" data-avatar-uid="${esc(p.uid || currentUser?.uid || '')}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
-                <span class="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-gold text-black flex items-center justify-center text-sm shadow-md border-2 border-[#121212] group-hover:scale-110 transition" title="Change photo">📷</span>
-              </button>
-            ` : `
-              <button type="button" class="shrink-0 relative self-start sm:self-auto border-0 bg-transparent cursor-pointer group" title="View profile picture" data-view-image="${esc(getUserAvatarUrl(p))}" data-view-title="${esc(p.name||p.username||'User')}'s profile picture">
-                <img class="sf-profile-avatar sf-profile-picture rounded-full object-cover group-hover:brightness-105 transition" src="${esc(getUserAvatarUrl(p))}" data-avatar-uid="${esc(p.uid || p.id || '')}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
-              </button>
-            `}
-            <div class="flex-1 min-w-0">
-              <div class="flex flex-wrap items-center gap-2">
-                <h2 class="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 truncate">${esc(p.name||p.username||'SellerFlow User')}</h2>
-                ${verifyBadge(p)}
-                ${businessCertBadge(p, 'compact')}
-              </div>
-              <div class="text-xs sm:text-sm text-gray-600 mt-1 flex flex-wrap items-center gap-2 font-mono">
-                <span class="text-gold font-bold">@${esc(p.username||'seller')}</span>
-                <span class="text-zinc-600">·</span>
-                <span>${sfPresenceBadge(p)}</span>
-                <span class="text-zinc-600">·</span>
-                <span class="text-xs font-sans px-2 py-0.5 rounded-full bg-gray-100/80 text-gray-700 border border-gray-200/80">🇬🇭 Ghana</span>
-              </div>
-              <div class="mt-2.5 text-xs sm:text-sm text-gray-800 bg-white backdrop-blur-xs border border-gray-200 rounded-xl p-3 max-w-2xl leading-relaxed">
-                ${esc(p.bio||(isOwner ? 'Welcome to my SellerFlow creator profile! Tap Edit profile to add your bio.' : 'Welcome to my official SellerFlow profile! Check out my videos and tap VISIT store below.'))}
-              </div>
-              <div class="flex flex-wrap gap-2.5 mt-3.5 items-center">
-                <!-- User requested VISIT store button -->
-                <button type="button" id="profileVisitStoreBtn" class="bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 active:scale-95 text-black font-black px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-[0_4px_16px_rgba(245,158,11,0.3)] flex items-center gap-2 transition text-xs sm:text-sm cursor-pointer" title="Visit official store">
-                  <span class="text-base">🛍️</span>
-                  <span>VISIT store</span>
-                </button>
-
-                ${isOwner ? `
-                  <button id="editProfileTop" class="btn btn-primary px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm">
-                    <span>✏️</span><span>Edit profile</span>
-                  </button>
-                  <button id="profileCreatePost" class="border border-gray-200 hover:border-gold bg-gray-50 text-gray-900 px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer">
-                    <span>＋</span><span>Create post</span>
-                  </button>
-                  <button id="profileOpenSettings" class="border border-gray-200 hover:border-gold px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-gray-900 flex items-center gap-1.5 transition cursor-pointer">
-                    <span>⚙️</span><span>Settings</span>
-                  </button>
-                  <button id="profileOpenMenuBtn" class="border border-gray-200 hover:border-gold px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-gray-900 flex items-center gap-1.5 transition cursor-pointer" title="Open Full ☰ Menu">
-                    <span>☰</span><span>Menu</span>
-                  </button>
-                ` : `
-                  <button type="button" id="profileFollowSellerBtn" class="border ${isFollowingThem ? 'border-gray-200 bg-gray-100 text-gray-700 hover:bg-zinc-700' : 'border-gold bg-gold/15 text-gold hover:bg-gold/25'} px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer">
-                    <span>${isFollowingThem ? '✓ Following' : '＋ Follow'}</span>
-                  </button>
-                  <button type="button" id="profileMessageSellerBtn" class="border border-gray-200 hover:border-gold bg-gray-50 text-gray-900 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer" title="Direct message @${esc(p.username||'seller')}">
-                    <span>💬</span><span>Message</span>
-                  </button>
-                  <button type="button" id="profileShareSellerBtn" class="border border-gray-200 hover:border-gold bg-white text-gray-900 p-2 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition active:scale-95 cursor-pointer" title="Share profile">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-                  </button>
-                `}
-              </div>
+      <!-- Modern Profile Header Card -->
+      <section class="bg-white rounded-3xl border border-gray-200/80 p-4 sm:p-6 mb-4 shadow-xs">
+        <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-5">
+          ${isOwner ? `
+            <button type="button" id="profilePhotoBtn" class="shrink-0 border-0 bg-transparent cursor-pointer relative group" title="Change profile picture">
+              <img class="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-white shadow-md bg-gray-100 group-hover:brightness-95 transition" src="${esc(getUserAvatarUrl(p))}" data-avatar-uid="${esc(p.uid || currentUser?.uid || '')}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
+              <span class="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#f5b942] text-black font-bold flex items-center justify-center text-xs shadow-md border-2 border-white group-hover:scale-110 transition" title="Change photo">📷</span>
+            </button>
+          ` : `
+            <button type="button" class="shrink-0 relative border-0 bg-transparent cursor-pointer group" title="View picture" data-view-image="${esc(getUserAvatarUrl(p))}" data-view-title="${esc(p.name||p.username||'User')}'s profile picture">
+              <img class="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-white shadow-md bg-gray-100 group-hover:brightness-105 transition" src="${esc(getUserAvatarUrl(p))}" data-avatar-uid="${esc(p.uid || p.id || '')}" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" data-media-path="${esc((p.avatarPath||''))}" alt="${esc(p.name||'User')}" onerror="window.__sfAvatarFallback(this)">
+            </button>
+          `}
+          <div class="flex-1 min-w-0 w-full">
+            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+              <h2 class="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">${esc(p.name||p.username||'SellerFlow User')}</h2>
+              ${verifyBadge(p)}
+              ${businessCertBadge(p, 'compact')}
             </div>
-          </div>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-5">
-            <button class="sf-stat-card rounded-2xl p-3.5 text-left cursor-pointer hover:border-zinc-500 transition" data-profile-stat="posts" title="View published posts">
-              <div class="text-xl sm:text-2xl font-black text-gray-900">${posts.length}</div>
-              <div class="muted text-xs mt-0.5">Posts</div>
-            </button>
-            ${isOwner ? `
-              <button class="sf-stat-card rounded-2xl p-3.5 text-left cursor-pointer hover:border-amber-500 transition" data-profile-stat="saved" title="View saved videos to watch later">
-                <div class="text-xl sm:text-2xl font-black text-amber-400">${savedPosts.length}</div>
-                <div class="muted text-xs mt-0.5">Saved Videos 🔖</div>
+            <div class="text-xs text-gray-600 mt-1 flex flex-wrap items-center justify-center sm:justify-start gap-2 font-mono">
+              <span class="text-amber-600 font-bold">@${esc(p.username||'seller')}</span>
+              <span class="text-gray-300">·</span>
+              <span>${sfPresenceBadge(p)}</span>
+              <span class="text-gray-300">·</span>
+              <span class="text-[11px] font-sans px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">🇬🇭 Ghana</span>
+            </div>
+            ${p.bio ? `
+              <p class="mt-2 text-xs sm:text-sm text-gray-700 leading-relaxed max-w-xl mx-auto sm:mx-0 font-medium">${esc(p.bio)}</p>
+            ` : (isOwner ? `
+              <button type="button" id="editProfileBioPrompt" class="mt-2 text-xs text-gray-400 hover:text-amber-600 transition italic block mx-auto sm:mx-0 text-left cursor-pointer">Tap to add your bio and tell buyers about your shop…</button>
+            ` : '')}
+
+            <!-- Horizontal Clean Stats Strip -->
+            <div class="flex items-center justify-around py-2.5 my-3.5 border-y border-gray-100 bg-gray-50/70 rounded-2xl">
+              <button type="button" class="flex flex-col items-center flex-1 cursor-pointer group" data-profile-stat="posts" title="View published posts">
+                <span class="text-base sm:text-lg font-black text-gray-900 group-hover:text-amber-600 transition">${posts.length}</span>
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Posts</span>
               </button>
-              <button class="sf-stat-card rounded-2xl p-3.5 text-left cursor-pointer hover:border-yellow-500 transition" data-profile-stat="sounds" title="View saved sounds collection">
-                <div class="text-xl sm:text-2xl font-black text-gold">${savedSounds.length}</div>
-                <div class="muted text-xs mt-0.5">Saved Sounds 🎵</div>
+              <div class="w-px h-5 bg-gray-200"></div>
+              <button type="button" class="flex flex-col items-center flex-1 cursor-pointer group" data-profile-stat="followers" title="View followers">
+                <span class="text-base sm:text-lg font-black text-gray-900 group-hover:text-amber-600 transition">${followers}</span>
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Followers</span>
               </button>
-            ` : `
-              <div class="sf-stat-card rounded-2xl p-3.5 text-left">
-                <div class="text-xl sm:text-2xl font-black text-amber-400">${likes}</div>
-                <div class="muted text-xs mt-0.5">Total Likes ❤️</div>
-              </div>
-              <div class="sf-stat-card rounded-2xl p-3.5 text-left">
-                <div class="text-xl sm:text-2xl font-black text-gold">${views}</div>
-                <div class="muted text-xs mt-0.5">Video Views 👁️</div>
-              </div>
-            `}
-            <button class="sf-stat-card rounded-2xl p-3.5 text-left cursor-pointer hover:border-emerald-500 transition" data-profile-stat="followers" title="View followers">
-              <div class="text-xl sm:text-2xl font-black text-emerald-400">${followers}</div>
-              <div class="muted text-xs mt-0.5">Followers</div>
-            </button>
+              <div class="w-px h-5 bg-gray-200"></div>
+              <button type="button" class="flex flex-col items-center flex-1 cursor-pointer group" data-profile-stat="following" title="View following">
+                <span class="text-base sm:text-lg font-black text-gray-900 group-hover:text-amber-600 transition">${following}</span>
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Following</span>
+              </button>
+              ${isOwner ? `
+                <div class="w-px h-5 bg-gray-200"></div>
+                <button type="button" class="flex flex-col items-center flex-1 cursor-pointer group" data-profile-stat="saved" title="View saved videos">
+                  <span class="text-base sm:text-lg font-black text-amber-600 transition">${savedPosts.length}</span>
+                  <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Saved 🔖</span>
+                </button>
+              ` : `
+                <div class="w-px h-5 bg-gray-200"></div>
+                <div class="flex flex-col items-center flex-1">
+                  <span class="text-base sm:text-lg font-black text-amber-600">${likes}</span>
+                  <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Likes ❤️</span>
+                </div>
+              `}
+            </div>
+
+            <!-- Profile Action Buttons: Clean, Single Responsive Row -->
+            <div class="flex flex-wrap gap-2 items-center justify-center sm:justify-start">
+              <button type="button" id="profileVisitStoreBtn" class="flex-1 sm:flex-none bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 active:scale-95 text-black font-extrabold px-4 sm:px-5 py-2 rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition text-xs sm:text-sm cursor-pointer" title="Visit official store">
+                <span>🛍️</span>
+                <span>Visit Store</span>
+              </button>
+
+              ${isOwner ? `
+                <button type="button" id="editProfileTop" class="flex-1 sm:flex-none border border-gray-200 hover:border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-800 px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition cursor-pointer">
+                  <span>✏️</span><span>Edit Profile</span>
+                </button>
+                <button type="button" id="profileCreatePost" class="border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 px-3 py-2 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1 transition cursor-pointer" title="Create a new post">
+                  <span>＋</span><span>Post</span>
+                </button>
+                <button type="button" id="profileShareSellerBtn" class="border border-gray-200 hover:border-gray-300 bg-white text-gray-700 p-2 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center transition active:scale-95 cursor-pointer" title="Share profile">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                </button>
+              ` : `
+                <button type="button" id="profileFollowSellerBtn" class="border ${isFollowingThem ? 'border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200' : 'border-amber-400 bg-amber-400/20 text-amber-900 hover:bg-amber-400/30'} px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer">
+                  <span>${isFollowingThem ? '✓ Following' : '＋ Follow'}</span>
+                </button>
+                <button type="button" id="profileMessageSellerBtn" class="border border-gray-200 hover:border-gray-300 bg-gray-50 text-gray-800 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer" title="Direct message">
+                  <span>💬</span><span>Message</span>
+                </button>
+                <button type="button" id="profileShareSellerBtn" class="border border-gray-200 hover:border-gray-300 bg-white text-gray-700 p-2 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center transition active:scale-95 cursor-pointer" title="Share profile">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                </button>
+              `}
+            </div>
           </div>
         </div>
       </section>
 
       ${isOwner ? `
-      <!-- Comprehensive Profile ☰ Navigation Hub & Actions -->
-      <section class="mb-6 space-y-4">
-        <!-- Commerce & Seller Tools Row -->
-        <div class="card p-4 sm:p-5 border border-gray-200">
-          <div class="text-[11px] font-black uppercase tracking-wider text-[#A67C00] mb-3 px-1 flex items-center justify-between">
-            <span>📦 Commerce, Orders & Creator Tools</span>
-            <span class="text-[10px] text-gray-500 font-normal">Quick Access</span>
+      <!-- Professional Seller Studio Hub (Compact & Modern) -->
+      <section class="bg-gradient-to-b from-amber-50/50 to-white rounded-3xl border border-amber-200/70 p-4 mb-4 shadow-2xs">
+        <div class="flex items-center justify-between mb-3 px-1">
+          <div class="flex items-center gap-2">
+            <span class="text-base">🏪</span>
+            <span class="text-xs font-black uppercase tracking-wider text-gray-900">Seller Studio</span>
+            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-900 border border-amber-400/30">Merchant Hub</span>
           </div>
-          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
-            <button type="button" id="profileNavOrdersBtn" class="p-3 rounded-2xl bg-gray-50/80 hover:bg-white border border-gray-200 hover:border-gold hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span class="text-xl group-hover:scale-110 transition">📦</span>
-                ${pendingOrders > 0 ? `<span class="orders-nav-badge">${pendingOrders > 99 ? '99+' : pendingOrders}</span>` : '<span class="text-xs text-gray-400">›</span>'}
-              </div>
-              <div class="mt-2">
-                <div class="text-xs font-black text-gray-900 group-hover:text-[#A67C00] transition">My Orders</div>
-                <div class="text-[10px] text-gray-500 truncate">Fulfillment</div>
-              </div>
-            </button>
-
-            <button type="button" id="profileNavStoreBtn" class="p-3 rounded-2xl bg-gray-50/80 hover:bg-white border border-gray-200 hover:border-gold hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span class="text-xl group-hover:scale-110 transition">🏪</span>
-                <span class="text-xs text-gray-400">›</span>
-              </div>
-              <div class="mt-2">
-                <div class="text-xs font-black text-gray-900 group-hover:text-[#A67C00] transition">Storefront</div>
-                <div class="text-[10px] text-gray-500 truncate">Catalog & Info</div>
-              </div>
-            </button>
-
-            <button type="button" id="profileNavProductsBtn" class="p-3 rounded-2xl bg-gray-50/80 hover:bg-white border border-gray-200 hover:border-gold hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span class="text-xl group-hover:scale-110 transition">🛒</span>
-                <span class="text-xs text-gray-400">›</span>
-              </div>
-              <div class="mt-2">
-                <div class="text-xs font-black text-gray-900 group-hover:text-[#A67C00] transition">My Products</div>
-                <div class="text-[10px] text-gray-500 truncate">Stock & Items</div>
-              </div>
-            </button>
-
-            <button type="button" id="profileNavDashboardBtn" class="p-3 rounded-2xl bg-gray-50/80 hover:bg-white border border-gray-200 hover:border-gold hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span class="text-xl group-hover:scale-110 transition">📊</span>
-                <span class="text-xs text-gray-400">›</span>
-              </div>
-              <div class="mt-2">
-                <div class="text-xs font-black text-gray-900 group-hover:text-[#A67C00] transition">Dashboard</div>
-                <div class="text-[10px] text-gray-500 truncate">Analytics</div>
-              </div>
-            </button>
-
-            <button type="button" id="profileNavAnalysisBtn" class="p-3 rounded-2xl bg-gray-50/80 hover:bg-white border border-gray-200 hover:border-gold hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span class="text-xl group-hover:scale-110 transition">📈</span>
-                <span class="text-xs text-gray-400">›</span>
-              </div>
-              <div class="mt-2">
-                <div class="text-xs font-black text-gray-900 group-hover:text-[#A67C00] transition">Analysis</div>
-                <div class="text-[10px] text-gray-500 truncate">Performance</div>
-              </div>
-            </button>
-
-            <button type="button" id="profileNavChatsBtn" class="p-3 rounded-2xl bg-gray-50/80 hover:bg-white border border-gray-200 hover:border-gold hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span class="text-xl group-hover:scale-110 transition">💬</span>
-                <span class="text-xs text-gray-400">›</span>
-              </div>
-              <div class="mt-2">
-                <div class="text-xs font-black text-gray-900 group-hover:text-[#A67C00] transition">Direct Chats</div>
-                <div class="text-[10px] text-gray-500 truncate">Messages</div>
-              </div>
-            </button>
-
-            <button type="button" id="profileNavCartBtn" class="p-3 rounded-2xl bg-gray-50/80 hover:bg-white border border-gray-200 hover:border-gold hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span class="text-xl group-hover:scale-110 transition">🛒</span>
-                <span class="text-xs text-gray-400">›</span>
-              </div>
-              <div class="mt-2">
-                <div class="text-xs font-black text-gray-900 group-hover:text-[#A67C00] transition">My Cart</div>
-                <div class="text-[10px] text-gray-500 truncate">Checkout</div>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        <!-- Discovery Feeds & System Tools Row -->
-        <div class="card p-4 sm:p-5 border border-gray-200">
-          <div class="text-[11px] font-black uppercase tracking-wider text-[#A67C00] mb-3 px-1 flex items-center justify-between">
-            <span>⚙️ Feeds, Preferences & Support</span>
-            <span class="text-[10px] text-gray-500 font-normal">All Features</span>
-          </div>
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-            <button type="button" id="profileNavFeedBtn" class="p-3 rounded-2xl bg-gray-50/80 hover:bg-white border border-gray-200 hover:border-gold hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span class="text-xl group-hover:scale-110 transition">🎬</span>
-                <span class="text-xs text-gray-400">›</span>
-              </div>
-              <div class="mt-2">
-                <div class="text-xs font-black text-gray-900 group-hover:text-[#A67C00] transition">For You</div>
-                <div class="text-[10px] text-gray-500 truncate">Video Feed</div>
-              </div>
-            </button>
-
-            <button type="button" id="profileNavMarketplaceBtn" class="p-3 rounded-2xl bg-gray-50/80 hover:bg-white border border-gray-200 hover:border-gold hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span class="text-xl group-hover:scale-110 transition">🛍️</span>
-                <span class="text-xs text-gray-400">›</span>
-              </div>
-              <div class="mt-2">
-                <div class="text-xs font-black text-gray-900 group-hover:text-[#A67C00] transition">Marketplace</div>
-                <div class="text-[10px] text-gray-500 truncate">All Products</div>
-              </div>
-            </button>
-
-            <button type="button" id="profileNavTutorialBtn" class="p-3 rounded-2xl bg-gray-50/80 hover:bg-white border border-gray-200 hover:border-gold hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span class="text-xl group-hover:scale-110 transition">🎓</span>
-                <span class="text-xs text-gray-400">›</span>
-              </div>
-              <div class="mt-2">
-                <div class="text-xs font-black text-gray-900 group-hover:text-[#A67C00] transition">App Tutorial</div>
-                <div class="text-[10px] text-gray-500 truncate">Guide</div>
-              </div>
-            </button>
-
-            <button type="button" id="profileNavHelpBtn" class="p-3 rounded-2xl bg-gray-50/80 hover:bg-white border border-gray-200 hover:border-gold hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span class="text-xl group-hover:scale-110 transition">🎧</span>
-                <span class="text-xs text-gray-400">›</span>
-              </div>
-              <div class="mt-2">
-                <div class="text-xs font-black text-gray-900 group-hover:text-[#A67C00] transition">Help Desk</div>
-                <div class="text-[10px] text-gray-500 truncate">Support</div>
-              </div>
-            </button>
-
-            <button type="button" id="profileNavFraudBtn" class="p-3 rounded-2xl bg-rose-50/70 border border-rose-200 hover:border-rose-400 hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span class="text-xl group-hover:scale-110 transition">🚨</span>
-                <span class="text-xs text-rose-400">›</span>
-              </div>
-              <div class="mt-2">
-                <div class="text-xs font-black text-rose-900 transition">Report Fraud</div>
-                <div class="text-[10px] text-rose-700/80 truncate">Security Desk</div>
-              </div>
-            </button>
-
-            ${isAdmin ? `
-            <button type="button" id="profileNavAdminBtn" class="p-3 rounded-2xl bg-amber-50/80 border border-[#D4AF37] hover:border-gold hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span class="text-xl group-hover:scale-110 transition">🛡️</span>
-                <span class="text-[9px] font-black uppercase tracking-wider bg-gold text-black px-1.5 py-0.5 rounded">ADMIN</span>
-              </div>
-              <div class="mt-2">
-                <div class="text-xs font-black text-gray-900 group-hover:text-[#A67C00] transition">Admin Desk</div>
-                <div class="text-[10px] text-gray-500 truncate">Moderation Hub</div>
-              </div>
-            </button>
-            ` : `
-            <button type="button" id="profileNavSettingsBtn" class="p-3 rounded-2xl bg-gray-50/80 hover:bg-white border border-gray-200 hover:border-gold hover:shadow-sm text-left transition group active:scale-98 cursor-pointer flex flex-col justify-between">
-              <div class="flex items-center justify-between">
-                <span class="text-xl group-hover:scale-110 transition">⚙️</span>
-                <span class="text-xs text-gray-400">›</span>
-              </div>
-              <div class="mt-2">
-                <div class="text-xs font-black text-gray-900 group-hover:text-[#A67C00] transition">Settings</div>
-                <div class="text-[10px] text-gray-500 truncate">Preferences</div>
-              </div>
-            </button>
-            `}
-          </div>
-        </div>
-
-        <!-- Prominent Account Sign Out Card -->
-        <div class="card p-4 sm:p-5 border border-rose-200 bg-rose-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl p-2 rounded-xl bg-rose-100 border border-rose-200">🚪</span>
-            <div>
-              <div class="font-black text-rose-900 text-sm">Sign Out Account</div>
-              <div class="text-xs text-rose-700/80">Currently signed in as <b class="font-mono text-rose-950">${esc(currentUser?.email || p.email || '')}</b></div>
-            </div>
-          </div>
-          <button type="button" id="profileSignOutBtn" class="bg-rose-600 hover:bg-rose-700 text-white font-black text-xs px-5 py-2.5 rounded-xl transition shadow-sm active:scale-95 cursor-pointer whitespace-nowrap self-start sm:self-auto">
-            Sign Out Account
+          <button type="button" id="profileNavOrdersBtn" class="text-xs font-bold text-amber-700 hover:text-amber-900 flex items-center gap-1 cursor-pointer">
+            ${pendingOrders > 0 ? `<span class="orders-nav-badge mr-1">${pendingOrders > 99 ? '99+' : pendingOrders}</span>` : ''}
+            <span>Fulfillment ›</span>
           </button>
+        </div>
+
+        <!-- 4 Key Merchant Tools in 1 compact grid -->
+        <div class="grid grid-cols-4 gap-2">
+          <button type="button" id="profileNavOrdersBtnQuick" class="p-2.5 rounded-2xl bg-white hover:bg-gray-50 border border-gray-200 hover:border-gold text-center transition group active:scale-95 cursor-pointer shadow-2xs relative">
+            <div class="text-xl mb-1 group-hover:scale-110 transition">📦</div>
+            <div class="text-[11px] font-extrabold text-gray-900 truncate">Orders</div>
+            <div class="text-[9px] text-gray-500 truncate">${pendingOrders > 0 ? `${pendingOrders} Pending` : 'All clear'}</div>
+            ${pendingOrders > 0 ? `<span class="orders-nav-badge absolute -top-1 -right-1">${pendingOrders > 99 ? '99+' : pendingOrders}</span>` : ''}
+          </button>
+
+          <button type="button" id="profileNavStoreBtn" class="p-2.5 rounded-2xl bg-white hover:bg-gray-50 border border-gray-200 hover:border-gold text-center transition group active:scale-95 cursor-pointer shadow-2xs">
+            <div class="text-xl mb-1 group-hover:scale-110 transition">🏪</div>
+            <div class="text-[11px] font-extrabold text-gray-900 truncate">Storefront</div>
+            <div class="text-[9px] text-gray-500 truncate">Catalog</div>
+          </button>
+
+          <button type="button" id="profileNavProductsBtn" class="p-2.5 rounded-2xl bg-white hover:bg-gray-50 border border-gray-200 hover:border-gold text-center transition group active:scale-95 cursor-pointer shadow-2xs">
+            <div class="text-xl mb-1 group-hover:scale-110 transition">🛒</div>
+            <div class="text-[11px] font-extrabold text-gray-900 truncate">Products</div>
+            <div class="text-[9px] text-gray-500 truncate">Inventory</div>
+          </button>
+
+          <button type="button" id="profileNavDashboardBtn" class="p-2.5 rounded-2xl bg-white hover:bg-gray-50 border border-gray-200 hover:border-gold text-center transition group active:scale-95 cursor-pointer shadow-2xs">
+            <div class="text-xl mb-1 group-hover:scale-110 transition">📊</div>
+            <div class="text-[11px] font-extrabold text-gray-900 truncate">Analytics</div>
+            <div class="text-[9px] text-gray-500 truncate">Insights</div>
+          </button>
+        </div>
+
+        <!-- Quick Access Utility Pills (Chats, Cart, Performance, Support) -->
+        <div class="flex items-center gap-1.5 overflow-x-auto py-2 mt-2 -mx-1 px-1 scrollbar-none text-[11px] font-bold text-gray-700">
+          <button type="button" id="profileNavChatsBtn" class="shrink-0 px-2.5 py-1.5 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 hover:border-gold flex items-center gap-1 transition shadow-2xs cursor-pointer">
+            <span>💬</span><span>Chats</span>
+          </button>
+          <button type="button" id="profileNavCartBtn" class="shrink-0 px-2.5 py-1.5 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 hover:border-gold flex items-center gap-1 transition shadow-2xs cursor-pointer">
+            <span>🛒</span><span>Cart</span>
+          </button>
+          <button type="button" id="profileNavAnalysisBtn" class="shrink-0 px-2.5 py-1.5 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 hover:border-gold flex items-center gap-1 transition shadow-2xs cursor-pointer">
+            <span>📈</span><span>Performance</span>
+          </button>
+          <button type="button" id="profileNavTutorialBtn" class="shrink-0 px-2.5 py-1.5 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 hover:border-gold flex items-center gap-1 transition shadow-2xs cursor-pointer">
+            <span>🎓</span><span>Guide</span>
+          </button>
+          <button type="button" id="profileNavHelpBtn" class="shrink-0 px-2.5 py-1.5 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 hover:border-gold flex items-center gap-1 transition shadow-2xs cursor-pointer">
+            <span>🎧</span><span>Help Desk</span>
+          </button>
+          <button type="button" id="profileNavFraudBtn" class="shrink-0 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 flex items-center gap-1 transition shadow-2xs cursor-pointer">
+            <span>🚨</span><span>Report Fraud</span>
+          </button>
+          ${isAdmin ? `
+            <button type="button" id="profileNavAdminBtn" class="shrink-0 px-2.5 py-1.5 rounded-xl bg-[#f5b942] text-black font-black flex items-center gap-1 transition shadow-2xs cursor-pointer">
+              <span>🛡️</span><span>Admin Desk</span>
+            </button>
+          ` : ''}
         </div>
       </section>
       ` : ''}
 
-      <section class="card overflow-hidden border border-gray-200">
+      <section class="card overflow-hidden border border-gray-200/80 rounded-3xl bg-white shadow-2xs">
         <div class="sf-profile-tabs flex items-center justify-between border-b border-gray-200 px-3 sm:px-4 overflow-x-auto gap-2">
           <div class="flex shrink-0">
             <button class="sf-profile-tab ${_profileActiveTab==='posts'?'active':''}" data-tab-switch="posts">
@@ -30931,10 +30902,10 @@ init();
             </button>
             ${isOwner ? `
               <button class="sf-profile-tab ${_profileActiveTab==='saved'?'active':''}" data-tab-switch="saved">
-                <span>🔖 Saved Videos</span> <span class="text-xs opacity-75 font-mono">(${savedPosts.length})</span>
+                <span>🔖 Saved</span> <span class="text-xs opacity-75 font-mono">(${savedPosts.length})</span>
               </button>
               <button class="sf-profile-tab ${_profileActiveTab==='sounds'?'active':''}" data-tab-switch="sounds">
-                <span>🎵 Saved Sounds</span> <span class="text-xs opacity-75 font-mono">(${savedSounds.length})</span>
+                <span>🎵 Sounds</span> <span class="text-xs opacity-75 font-mono">(${savedSounds.length})</span>
               </button>
               <button class="sf-profile-tab ${_profileActiveTab==='following'?'active':''}" data-tab-switch="following">
                 <span>👥 Following</span> <span class="text-xs opacity-75 font-mono">(${following})</span>
@@ -30942,55 +30913,56 @@ init();
             ` : ''}
           </div>
           <div class="text-xs muted hidden md:block shrink-0 pr-2">
-            ${_profileActiveTab==='saved'?'Tap any video to watch later in For You':_profileActiveTab==='sounds'?'Use saved audio to create your next video':_profileActiveTab==='following'?'Creators and shops you follow':'Tap any post to watch in For You'}
+            ${_profileActiveTab==='saved'?'Tap any video to watch later':_profileActiveTab==='sounds'?'Saved audio for your videos':_profileActiveTab==='following'?'Sellers & creators you follow':'Tap any post to watch'}
           </div>
         </div>
 
-        <div class="p-3 sm:p-4">
+        <div class="p-2.5 sm:p-4">
           ${_profileActiveTab === 'posts' ? `
             <div class="profile-grid">${posts.length?posts.map(x=>{
               const isVid=x.mediaType?.startsWith('video');
               let mediaPreview='';
-              let typeBadge='';
               if(isVid){
-                typeBadge=`<span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-white backdrop-blur-md text-[10px] font-bold text-gray-900 border border-gray-200 flex items-center gap-1 shadow-sm">▶ Video</span>`;
                 if(x.thumbnailUrl){
                   mediaPreview=`<img src="${esc(getOptimizedVideoPoster(x.thumbnailUrl))}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="" data-video-url="${esc(x.mediaUrl||'')}" data-post-id="${esc(x.id||'')}" onerror="window.__sfExtractVideoFrame(this)">`;
                 } else if(x.mediaUrl){
                   mediaPreview=`<video src="${esc(x.mediaUrl)}#t=0.5" preload="none" muted playsinline loop class="w-full h-full object-cover pointer-events-none" data-media-path="${esc(x.mediaPath||'')}" onerror="window.__sfMediaFallback(this)"></video>`;
                 } else {
-                  mediaPreview=`<div class="w-full h-full flex flex-col items-center justify-center bg-gray-50 p-3 text-center"><span class="text-3xl mb-1">🎬</span><span class="text-[11px] text-gray-600 font-bold">Video</span></div>`;
+                  mediaPreview=`<div class="w-full h-full flex flex-col items-center justify-center bg-gray-50 p-3 text-center"><span class="text-2xl mb-1">🎬</span><span class="text-[10px] text-gray-500 font-bold">Video</span></div>`;
                 }
               } else if(x.mediaUrl){
-                typeBadge=`<span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-white backdrop-blur-md text-[10px] font-bold text-gray-900 border border-gray-200 flex items-center gap-1 shadow-sm">📷 Photo</span>`;
                 mediaPreview=`<img src="${esc(getOptimizedMediaUrl(x.mediaUrl, 'thumb'))}" loading="lazy" decoding="async" style="${x.photoFilterCss ? `filter:${esc(x.photoFilterCss)};` : ''}" data-media-path="${esc(x.mediaPath||'')}" alt="" class="w-full h-full object-cover ${x.photoFilter ? `sf-filter-${esc(x.photoFilter)}` : ''}" onerror="window.__sfMediaFallback(this)">`;
               } else {
-                typeBadge=`<span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-white backdrop-blur-md text-[10px] font-bold text-gray-900 border border-gray-200 flex items-center gap-1 shadow-sm">💬 Post</span>`;
-                mediaPreview=`<div class="w-full h-full flex flex-col items-center justify-center p-4 text-center bg-white hover:bg-gray-50 border border-gray-200 text-gray-900"><span class="text-3xl mb-1">🛍️</span><p class="text-xs line-clamp-3 text-gray-700 font-medium">${esc(x.text||'SellerFlow post')}</p></div>`;
+                mediaPreview=`<div class="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-gray-50 text-gray-900"><span class="text-2xl mb-1">🛍️</span><p class="text-[11px] line-clamp-3 text-gray-700 font-medium">${esc(x.text||'SellerFlow post')}</p></div>`;
               }
-              const aiBadge=x.isAiGenerated?`<span class="ai-badge">✨ AI</span>`:'';
-              const privBadge=x.privacy==='private'?'<span class="absolute top-2 left-2 bg-white text-[10px] px-1.5 py-0.5 rounded text-gray-700">🔒</span>':x.privacy==='followers'?'<span class="absolute top-2 left-2 bg-white text-[10px] px-1.5 py-0.5 rounded text-gold">👥</span>':'';
+              const aiBadge=x.isAiGenerated?`<span class="absolute bottom-6 right-1.5 px-1.5 py-0.5 rounded bg-black/50 text-[9px] text-amber-300 font-bold">✨ AI</span>`:'';
+              const privBadge=x.privacy==='private'?'<span class="absolute top-2 left-2 bg-black/50 text-[10px] px-1.5 py-0.5 rounded text-white">🔒</span>':x.privacy==='followers'?'<span class="absolute top-2 left-2 bg-black/50 text-[10px] px-1.5 py-0.5 rounded text-[#f5b942]">👥</span>':'';
               return `
-                <div class="sf-post-tile relative overflow-hidden group rounded-xl border border-gray-200 bg-white">
-                  <button type="button" class="w-full h-full text-left cursor-pointer border-0 bg-transparent p-0 block" data-profile-post="${x.id}" title="Watch post in For You feed">
-                    ${mediaPreview}${typeBadge}${aiBadge}${privBadge}
-                    <div class="sf-tile-meta flex items-center justify-between"><span>${isVid?'🎬 Video':x.mediaUrl?'📷 Photo':'💬 Post'}</span><span>❤️ ${x.likes?.length||0} · 👁️ ${x.views||0}</span></div>
+                <div class="sf-post-tile relative overflow-hidden group rounded-xl border border-gray-200/80 bg-gray-100">
+                  <button type="button" class="w-full h-full text-left cursor-pointer border-0 bg-transparent p-0 block relative" data-profile-post="${x.id}" title="Watch post">
+                    ${mediaPreview}
+                    ${isVid ? `<span class="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/40 backdrop-blur-xs flex items-center justify-center text-white text-[10px] shadow-xs">▶</span>` : x.mediaUrl ? `<span class="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/40 backdrop-blur-xs flex items-center justify-center text-white text-[10px] shadow-xs">📷</span>` : ''}
+                    ${aiBadge}${privBadge}
+                    <div class="sf-tile-meta flex items-center justify-between">
+                      <span class="truncate max-w-[55%]">${isVid?'🎬 Video':x.mediaUrl?'📷 Photo':'💬 Post'}</span>
+                      <span class="flex items-center gap-1">❤️ ${x.likes?.length||0}</span>
+                    </div>
                   </button>
                   ${isOwner ? `
-                    <button type="button" class="absolute top-2 left-2 z-20 p-1.5 rounded-lg bg-white hover:bg-red-950 text-gray-700 hover:text-red-400 border border-gray-200 text-xs transition shadow opacity-80 group-hover:opacity-100 cursor-pointer" data-profile-delete-post="${x.id}" title="Delete this post">
+                    <button type="button" class="absolute top-1.5 left-1.5 z-20 w-7 h-7 rounded-full bg-black/40 hover:bg-rose-600 text-white flex items-center justify-center text-xs backdrop-blur-xs transition shadow-xs opacity-75 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer" data-profile-delete-post="${x.id}" title="Delete this post">
                       🗑️
                     </button>
                   ` : ''}
                 </div>`;
-            }).join(''):`<div class="col-span-2 sm:col-span-3 p-10 text-center muted"><div class="text-4xl mb-2">📸</div><h3 class="font-bold text-lg text-gray-900">No posts published yet</h3><p class="text-sm mt-1">${isOwner ? 'Tap "+ Create post" above to share your first photo or video with the SellerFlow community.' : 'This creator has not published any posts or videos yet.'}</p></div>`}</div>
+            }).join(''):`<div class="col-span-3 p-8 sm:p-12 text-center"><div class="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-2">📸</div><h3 class="font-extrabold text-base text-gray-900">No posts published yet</h3><p class="text-xs text-gray-500 mt-1 max-w-xs mx-auto">${isOwner ? 'Tap "+ Post" above to share your first photo or video showcase with Ghanaian buyers.' : 'This creator has not published any posts or videos yet.'}</p></div>`}</div>
           ` : _profileActiveTab === 'saved' ? `
             <div class="space-y-3">
-              <div class="flex items-center justify-between px-2 pb-2 border-b border-[#252525]">
+              <div class="flex items-center justify-between px-1 pb-2 border-b border-gray-100">
                 <div>
-                  <h3 class="text-sm font-bold text-gray-900 flex items-center gap-1.5"><span>🔖</span><span>Saved Videos & Reels</span></h3>
-                  <p class="text-xs muted">Videos bookmarked to watch later or save for reference.</p>
+                  <h3 class="text-xs font-bold text-gray-900 flex items-center gap-1.5"><span>🔖</span><span>Saved Videos & Reels</span></h3>
+                  <p class="text-[11px] text-gray-500">Bookmarked videos to watch anytime.</p>
                 </div>
-                <span class="text-xs text-amber-400 font-mono font-bold">${savedPosts.length} saved</span>
+                <span class="text-xs text-amber-600 font-mono font-bold">${savedPosts.length} saved</span>
               </div>
               ${savedPosts.length ? `
                 <div class="profile-grid">
@@ -31004,93 +30976,77 @@ init();
                       } else if(x.mediaUrl){
                         mediaPreview=`<video src="${esc(x.mediaUrl)}#t=0.5" preload="none" muted playsinline loop class="w-full h-full object-cover pointer-events-none" onerror="window.__sfMediaFallback(this)"></video>`;
                       } else {
-                        mediaPreview=`<div class="w-full h-full flex flex-col items-center justify-center bg-gray-50 p-3 text-center"><span class="text-3xl mb-1">🎬</span><span class="text-[11px] text-gray-600 font-bold">Video</span></div>`;
+                        mediaPreview=`<div class="w-full h-full flex flex-col items-center justify-center bg-gray-50 p-3 text-center"><span class="text-2xl mb-1">🎬</span><span class="text-[10px] text-gray-500 font-bold">Video</span></div>`;
                       }
                     } else if(x.mediaUrl){
                       mediaPreview=`<img src="${esc(getOptimizedMediaUrl(x.mediaUrl, 'thumb'))}" loading="lazy" decoding="async" class="w-full h-full object-cover" onerror="window.__sfMediaFallback(this)">`;
                     } else {
-                      mediaPreview=`<div class="w-full h-full flex flex-col items-center justify-center p-4 text-center bg-white hover:bg-gray-50 border border-gray-200 text-gray-900"><span class="text-3xl mb-1">🛍️</span><p class="text-xs line-clamp-3 text-gray-700 font-medium">${esc(x.text||'SellerFlow post')}</p></div>`;
+                      mediaPreview=`<div class="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-gray-50 text-gray-900"><span class="text-2xl mb-1">🛍️</span><p class="text-[11px] line-clamp-3 text-gray-700 font-medium">${esc(x.text||'SellerFlow post')}</p></div>`;
                     }
                     return `
-                      <div class="sf-post-tile relative overflow-hidden group rounded-xl border border-gray-200 bg-white">
-                        <button type="button" class="w-full h-full text-left cursor-pointer border-0 bg-transparent p-0 block" data-profile-post="${x.id}" title="Watch video in For You feed">
+                      <div class="sf-post-tile relative overflow-hidden group rounded-xl border border-gray-200/80 bg-gray-100">
+                        <button type="button" class="w-full h-full text-left cursor-pointer border-0 bg-transparent p-0 block relative" data-profile-post="${x.id}" title="Watch video">
                           ${mediaPreview}
-                          <span class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-white backdrop-blur-md text-[10px] font-bold text-amber-300 border border-amber-500/30 flex items-center gap-1 shadow-sm">
-                            <span>🔖 Saved</span>
-                          </span>
-                          <span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-white backdrop-blur-md text-[10px] font-bold text-gray-900 border border-gray-200 flex items-center gap-1 shadow-sm">
-                            ${isVid ? '▶ Watch' : '📷 View'}
-                          </span>
+                          <span class="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/40 backdrop-blur-xs flex items-center justify-center text-white text-[10px] shadow-xs">${isVid ? '▶' : '📷'}</span>
                           <div class="sf-tile-meta flex items-center justify-between">
-                            <span class="truncate font-semibold max-w-[65%]">@${esc(s.username||'creator')}</span>
+                            <span class="truncate font-semibold max-w-[60%]">@${esc(s.username||'creator')}</span>
                             <span>❤️ ${x.likes?.length||0}</span>
                           </div>
                         </button>
-                        <div class="absolute bottom-2 right-2 z-20 flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition">
-                          <button type="button" class="p-1.5 rounded-lg bg-white hover:bg-rose-950/90 text-gray-700 hover:text-rose-400 border border-white/15 text-xs transition shadow-md cursor-pointer" data-unsave-video="${x.id}" title="Remove from saved videos">
-                            ✕
-                          </button>
-                        </div>
+                        <button type="button" class="absolute top-1.5 left-1.5 z-20 w-7 h-7 rounded-full bg-black/40 hover:bg-rose-600 text-white flex items-center justify-center text-xs backdrop-blur-xs transition shadow-xs opacity-75 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer" data-unsave-video="${x.id}" title="Remove bookmark">
+                          ✕
+                        </button>
                       </div>
                     `;
                   }).join('')}
                 </div>
               ` : `
-                <div class="p-10 text-center muted">
-                  <div class="w-14 h-14 mx-auto rounded-2xl bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 border border-gray-200 flex items-center justify-center text-2xl mb-3">🔖</div>
-                  <h3 class="font-bold text-base sm:text-lg text-gray-900">No saved videos yet</h3>
-                  <p class="text-xs sm:text-sm mt-1 max-w-md mx-auto text-gray-600">When you see interesting videos or product showcases in the For You feed, tap the bookmark icon 🔖 to save them here and watch later anytime.</p>
-                  <button id="goToFeedFromProfileSaved" class="mt-4 btn btn-primary px-4 py-2 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center gap-2">
-                    <span>🎬</span><span>Explore For You feed</span>
+                <div class="p-8 sm:p-12 text-center">
+                  <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-2">🔖</div>
+                  <h3 class="font-extrabold text-base text-gray-900">No saved videos yet</h3>
+                  <p class="text-xs text-gray-500 mt-1 max-w-xs mx-auto">Tap the bookmark icon 🔖 on any video in your For You feed to save it here.</p>
+                  <button id="goToFeedFromProfileSaved" class="mt-3.5 btn btn-primary px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-2">
+                    <span>🎬</span><span>Explore For You Feed</span>
                   </button>
                 </div>
               `}
             </div>
           ` : _profileActiveTab === 'sounds' ? `
             <div class="space-y-3">
-              <div class="flex items-center justify-between px-2 pb-2 border-b border-[#252525]">
+              <div class="flex items-center justify-between px-1 pb-2 border-b border-gray-100">
                 <div>
-                  <h3 class="text-sm font-bold text-gray-900 flex items-center gap-1.5"><span>🎵</span><span>Saved Sounds Collection</span></h3>
-                  <p class="text-xs muted">Listen to sound previews or click "Use sound" to record and upload a new video.</p>
+                  <h3 class="text-xs font-bold text-gray-900 flex items-center gap-1.5"><span>🎵</span><span>Saved Sounds</span></h3>
+                  <p class="text-[11px] text-gray-500">Audio tracks saved to use in your video uploads.</p>
                 </div>
-                <div class="flex items-center gap-2">
-                  <span class="text-xs text-gold font-mono font-bold">${savedSounds.length} sounds</span>
-                </div>
+                <span class="text-xs text-amber-600 font-mono font-bold">${savedSounds.length} sounds</span>
               </div>
               ${savedSounds.length ? `
-                <div class="grid sm:grid-cols-2 gap-3">
+                <div class="grid sm:grid-cols-2 gap-2.5">
                   ${savedSounds.map(s => {
                     const soundTitle = s.soundName || 'Original sound';
                     const author = s.originatorName || 'SellerFlow creator';
                     const hasUrl = !!s.soundUrl;
                     return `
-                      <div class="p-3.5 rounded-2xl bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 border border-gray-200 hover:border-gold/40 transition flex flex-col justify-between gap-3 group relative">
+                      <div class="p-3 rounded-2xl bg-white border border-gray-200/80 hover:border-gold/60 transition flex flex-col justify-between gap-2.5 group relative shadow-2xs">
                         <div class="flex items-start gap-3">
-                          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-yellow-600/10 border border-gold/30 shrink-0 flex items-center justify-center text-xl shadow-inner relative overflow-hidden">
-                            <span class="animate-spin-slow">🎵</span>
+                          <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 shrink-0 flex items-center justify-center text-lg text-amber-700">
+                            🎵
                           </div>
                           <div class="flex-1 min-w-0 pr-6">
-                            <h4 class="text-sm font-black text-gray-900 truncate" title="${esc(soundTitle)}">${esc(soundTitle)}</h4>
-                            <p class="text-xs text-gray-600 truncate mt-0.5">Original by <span class="text-gold font-medium">${esc(author)}</span></p>
-                            <div class="text-[10px] text-gray-500 mt-1 flex items-center gap-1">
-                              <span>Saved</span>
-                              <span>·</span>
-                              <span>${s.savedAt ? tsAgo(s.savedAt) : 'Recently'}</span>
-                            </div>
+                            <h4 class="text-xs font-extrabold text-gray-900 truncate" title="${esc(soundTitle)}">${esc(soundTitle)}</h4>
+                            <p class="text-[11px] text-gray-500 truncate mt-0.5">by <span class="text-amber-600 font-medium">${esc(author)}</span></p>
+                            <div class="text-[10px] text-gray-400 mt-0.5">Saved ${s.savedAt ? tsAgo(s.savedAt) : 'recently'}</div>
                           </div>
-                          <button type="button" class="absolute top-3 right-3 text-gray-500 hover:text-rose-400 text-xs p-1 rounded-lg transition cursor-pointer" data-unsave-sound="${s.id}" title="Remove sound">✕</button>
+                          <button type="button" class="absolute top-2.5 right-2.5 text-gray-400 hover:text-rose-500 text-xs p-1 rounded-lg transition cursor-pointer" data-unsave-sound="${s.id}" title="Remove sound">✕</button>
                         </div>
-                        
-                        <div class="flex items-center gap-2 pt-2 border-t border-[#222]">
+                        <div class="flex items-center gap-2 pt-2 border-t border-gray-100">
                           ${hasUrl ? `
-                            <button type="button" class="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-white text-gray-800 border border-gray-200 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer" data-sound-preview-url="${esc(s.soundUrl)}" data-sound-preview-id="${esc(s.id)}">
+                            <button type="button" class="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 text-[11px] font-bold flex items-center gap-1 transition cursor-pointer" data-sound-preview-url="${esc(s.soundUrl)}" data-sound-preview-id="${esc(s.id)}">
                               <span>▶</span><span>Preview</span>
                             </button>
-                          ` : `
-                            <span class="text-[11px] text-gray-500 italic px-2">Original audio</span>
-                          `}
-                          <button type="button" class="flex-1 px-3 py-1.5 rounded-xl bg-gold hover:bg-gold-light text-black text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer" data-use-sound-id="${esc(s.soundId||s.id)}" data-use-sound-name="${esc(soundTitle)}" data-use-sound-author="${esc(author)}" data-use-sound-url="${esc(s.soundUrl||'')}">
-                            <span>➕</span><span>Use sound for video</span>
+                          ` : `<span class="text-[10px] text-gray-400 italic">Original audio</span>`}
+                          <button type="button" class="flex-1 px-3 py-1 rounded-lg bg-[#f5b942] hover:brightness-105 text-black text-[11px] font-extrabold flex items-center justify-center gap-1 transition shadow-2xs cursor-pointer" data-use-sound-id="${esc(s.soundId||s.id)}" data-use-sound-name="${esc(soundTitle)}" data-use-sound-author="${esc(author)}" data-use-sound-url="${esc(s.soundUrl||'')}">
+                            <span>➕</span><span>Use for Video</span>
                           </button>
                         </div>
                       </div>
@@ -31098,47 +31054,68 @@ init();
                   }).join('')}
                 </div>
               ` : `
-                <div class="p-10 text-center muted">
-                  <div class="w-14 h-14 mx-auto rounded-2xl bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 border border-gray-200 flex items-center justify-center text-2xl mb-3">🎵</div>
-                  <h3 class="font-bold text-base sm:text-lg text-gray-900">No saved sounds yet</h3>
-                  <p class="text-xs sm:text-sm mt-1 max-w-md mx-auto text-gray-600">When watching videos in For You, tap the spinning audio disc or the sound ticker at the bottom to bookmark audio and use it in your own uploads.</p>
-                  <button id="goToFeedFromProfileSounds" class="mt-4 btn btn-primary px-4 py-2 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center gap-2">
-                    <span>🎬</span><span>Discover sounds in Feed</span>
+                <div class="p-8 sm:p-12 text-center">
+                  <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-2">🎵</div>
+                  <h3 class="font-extrabold text-base text-gray-900">No saved sounds yet</h3>
+                  <p class="text-xs text-gray-500 mt-1 max-w-xs mx-auto">Tap the sound ticker at the bottom of any video in the feed to save audio.</p>
+                  <button id="goToFeedFromProfileSounds" class="mt-3.5 btn btn-primary px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-2">
+                    <span>🎬</span><span>Discover Sounds in Feed</span>
                   </button>
                 </div>
               `}
             </div>
           ` : `
             <div class="space-y-3">
-              <div class="flex items-center justify-between px-2 pb-2 border-b border-[#252525]">
-                <h3 class="text-sm font-bold text-gray-900 flex items-center gap-1.5"><span>👥</span><span>Following (${following})</span></h3>
+              <div class="flex items-center justify-between px-1 pb-2 border-b border-gray-100">
+                <h3 class="text-xs font-bold text-gray-900 flex items-center gap-1.5"><span>👥</span><span>Following (${following})</span></h3>
               </div>
               <div class="space-y-2">
                 ${followingList.map(uid=>{
                   const u=sellerProfile(uid);
                   return `
-                    <div class="flex items-center justify-between p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 hover:border-gray-300 transition">
-                      <button type="button" class="flex items-center gap-3 text-left flex-1 min-w-0 cursor-pointer" data-open-following-seller="${uid}">
-                        ${avatar(u, 'w-10 h-10 rounded-full object-cover bg-gray-100 border border-gray-200 shrink-0')}
+                    <div class="flex items-center justify-between p-2.5 rounded-xl border border-gray-200/80 bg-white hover:bg-gray-50 transition">
+                      <button type="button" class="flex items-center gap-2.5 text-left flex-1 min-w-0 cursor-pointer" data-open-following-seller="${uid}">
+                        ${avatar(u, 'w-9 h-9 rounded-full object-cover bg-gray-100 border border-gray-200 shrink-0')}
                         <span class="min-w-0">
-                          <b class="text-sm text-gray-900 truncate block flex items-center gap-1">
+                          <b class="text-xs text-gray-900 truncate block flex items-center gap-1">
                             <span>${esc(u.name||u.username)}</span>
-                            ${u.verified ? '<span class="verified-badge text-[10px]">✓</span>' : ''}
+                            ${u.verified ? '<span class="verified-badge text-[9px]">✓</span>' : ''}
                           </b>
-                          <div class="muted text-xs">@${esc(u.username||'seller')}</div>
+                          <div class="text-[11px] text-gray-500">@${esc(u.username||'seller')}</div>
                         </span>
                       </button>
-                      <button type="button" class="border border-gray-200 text-xs px-3 py-1.5 rounded-xl text-gray-700 hover:border-rose-400 hover:text-rose-400 transition shrink-0 cursor-pointer" data-unfollow-uid="${uid}">
+                      <button type="button" class="border border-gray-200 text-[11px] font-bold px-2.5 py-1 rounded-lg text-gray-600 hover:border-rose-400 hover:text-rose-500 transition shrink-0 cursor-pointer" data-unfollow-uid="${uid}">
                         Unfollow
                       </button>
                     </div>
                   `;
-                }).join('')||'<div class="muted p-8 text-center text-sm">You are not following any sellers yet. Explore For You or Marketplace to find Ghanaian creators.</div>'}
+                }).join('')||'<div class="p-8 text-center text-xs text-gray-500">You are not following any sellers yet. Explore For You or Marketplace to find Ghanaian creators.</div>'}
               </div>
             </div>
           `}
         </div>
       </section>
+
+      ${isOwner ? `
+      <!-- Account & Preferences Footer Card (Minimal & Professional) -->
+      <section class="mt-6 mb-3">
+        <div class="bg-gray-50/90 rounded-2xl border border-gray-200/80 p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-xl bg-white border border-gray-200/80 flex items-center justify-center text-sm shadow-2xs">👤</span>
+            <div>
+              <div class="text-xs font-bold text-gray-900">Signed In Account</div>
+              <div class="text-[11px] font-mono text-gray-500 truncate max-w-xs">${esc(currentUser?.email || p.email || '')}</div>
+            </div>
+          </div>
+          <div class="w-full sm:w-auto">
+            <button type="button" id="profileSignOutBtn" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-black transition active:scale-95 cursor-pointer shadow-2xs flex items-center justify-center gap-2">
+              <span>🚪</span>
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </div>
+      </section>
+      ` : ''}
     `;
 
     $('profileBackNavBtn')?.addEventListener('click', () => {
@@ -31149,29 +31126,13 @@ init();
       openStore(targetUid);
     });
 
-    $('profileSettingsHeaderBtn')?.addEventListener('click', () => navigate('settings'));
-    $('profileMenuHeaderBtn')?.addEventListener('click', () => openMobileNav());
-    $('profileOpenMenuBtn')?.addEventListener('click', () => openMobileNav());
-
-    // Profile Hub Navigation Bindings
-    $('profileNavOrdersBtn')?.addEventListener('click', () => navigate('orders'));
-    $('profileNavStoreBtn')?.addEventListener('click', () => openStore(currentUser?.uid || targetUid));
-    $('profileNavProductsBtn')?.addEventListener('click', () => navigate('products'));
-    $('profileNavDashboardBtn')?.addEventListener('click', () => navigate('dashboard'));
-    $('profileNavAnalysisBtn')?.addEventListener('click', () => navigate('analysis'));
-    $('profileNavChatsBtn')?.addEventListener('click', () => navigate('chats'));
-    $('profileNavCartBtn')?.addEventListener('click', () => navigate('cart'));
-    $('profileNavFeedBtn')?.addEventListener('click', () => navigate('feed'));
-    $('profileNavMarketplaceBtn')?.addEventListener('click', () => navigate('marketplace'));
-    $('profileNavTutorialBtn')?.addEventListener('click', () => showFirstTimeTutorial(true));
-    $('profileNavHelpBtn')?.addEventListener('click', () => { if(typeof openHelpSupportModal==='function') openHelpSupportModal(); });
-    $('profileNavFraudBtn')?.addEventListener('click', () => openReportFraudModal('seller'));
-    $('profileNavSettingsBtn')?.addEventListener('click', () => navigate('settings'));
-    $('profileNavAdminBtn')?.addEventListener('click', () => navigate('admin'));
+    $('profileSignOutHeaderBtn')?.addEventListener('click', logoutUser);
     $('profileSignOutBtn')?.addEventListener('click', logoutUser);
+    $('profileNavSignOutBtn')?.addEventListener('click', logoutUser);
 
     if($('profileCreatePost')) $('profileCreatePost').onclick=openPostModal;
     if($('editProfileTop')) $('editProfileTop').onclick=sfOpenProfileEditor;
+    if($('editProfileBioPrompt')) $('editProfileBioPrompt').onclick=sfOpenProfileEditor;
     $('profileOpenSettings')?.addEventListener('click',()=>navigate('settings'));
     $('profilePhotoBtn')?.addEventListener('click', sfOpenProfilePhotoModal);
 

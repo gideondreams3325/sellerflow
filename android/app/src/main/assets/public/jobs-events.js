@@ -518,8 +518,8 @@ const SCAM_WARNING_HEADER = `
   </div>
 `;
 
-// Helper: Check eligibility (Identity Verification + Terms Acceptance)
-async function checkJobsEventsEligibility(user, actionType = 'interact on SellerFlow') {
+// Helper: Check eligibility (User Account Check)
+async function checkJobsEventsEligibility(user, actionType = 'participate') {
   const activeUser = user || getActiveUser();
   if (!activeUser) {
     if (typeof showAuthPrompt === 'function') {
@@ -529,85 +529,6 @@ async function checkJobsEventsEligibility(user, actionType = 'interact on Seller
     }
     return false;
   }
-
-  // Admin bypass
-  if (getIsAdmin()) {
-    return true;
-  }
-
-  // Check identity verification state across profile, auth, and database records
-  let isVerified = false;
-  const profile = getActiveProfile();
-
-  // 1. Check in-memory profile flags
-  if (profile) {
-    if (
-      profile.verified === true ||
-      profile.isBuyerVerified === true ||
-      profile.isSellerVerified === true ||
-      profile.verificationStatus === 'approved' ||
-      profile.kycStatus === 'approved' ||
-      profile.ghanaCardVerified === true
-    ) {
-      isVerified = true;
-    }
-  }
-
-  // 2. Check activeUser object flags
-  if (!isVerified && activeUser) {
-    if (
-      activeUser.verified === true ||
-      activeUser.isBuyerVerified === true ||
-      activeUser.isSellerVerified === true ||
-      activeUser.verificationStatus === 'approved' ||
-      activeUser.kycStatus === 'approved' ||
-      activeUser.ghanaCardVerified === true
-    ) {
-      isVerified = true;
-    }
-  }
-
-  // 3. Check local storage KYC cache
-  if (!isVerified && activeUser.uid) {
-    try {
-      const localKyc = localStorage.getItem('sf_kyc_verified_' + activeUser.uid);
-      if (localKyc === 'true' || localKyc === 'approved') {
-        isVerified = true;
-      }
-    } catch (_) {}
-  }
-
-  // 4. Query Firestore user record if not yet confirmed in memory
-  if (!isVerified && activeUser.uid) {
-    try {
-      const userSnap = await getJobsEventsDb().collection('users').doc(activeUser.uid).get();
-      if (userSnap && userSnap.exists) {
-        const uData = userSnap.data() || {};
-        const hasCardNumber = !!(uData.ghanaCardNumber || uData.ghanaCardMasked || uData.ghanaCardNum);
-        const hasDoc = !!(uData.ghanaCardFrontPath || uData.ghanaCardFrontUrl || uData.ghanaCardFront);
-        if (
-          uData.verified === true ||
-          uData.isBuyerVerified === true ||
-          uData.isSellerVerified === true ||
-          uData.verificationStatus === 'approved' ||
-          uData.kycStatus === 'approved' ||
-          uData.ghanaCardVerified === true ||
-          (hasCardNumber && hasDoc)
-        ) {
-          isVerified = true;
-          try { localStorage.setItem('sf_kyc_verified_' + activeUser.uid, 'true'); } catch (_) {}
-        }
-      }
-    } catch (e) {
-      console.warn('User verification check notice:', e);
-    }
-  }
-
-  if (!isVerified) {
-    openIdentityRequiredModal(actionType);
-    return false;
-  }
-
   return true;
 }
 window.checkJobsEventsEligibility = checkJobsEventsEligibility;
@@ -632,38 +553,38 @@ async function checkUserAcceptedTerms(uid) {
   }
 }
 
-// Modal: Identity Verification Required
+// Modal: Identity Verification Required (High Contrast Light Theme)
 function openIdentityRequiredModal(actionType = 'participate') {
   const modal = document.createElement('div');
   modal.id = 'identityRequiredModal';
-  modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in';
+  modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in';
   modal.innerHTML = `
-    <div class="bg-[#181824] border border-amber-500/40 rounded-3xl max-w-md w-full p-6 text-white shadow-2xl space-y-4">
-      <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-3xl mx-auto shadow-inner">
+    <div class="bg-white border border-amber-300 rounded-3xl max-w-md w-full p-6 text-[#111111] shadow-2xl space-y-4">
+      <div class="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-300 text-gold flex items-center justify-center text-3xl mx-auto shadow-xs">
         🪪
       </div>
       <div class="text-center space-y-1.5">
-        <h3 class="text-lg font-black text-amber-300">Verified Account Required</h3>
-        <p class="text-xs text-zinc-300 leading-relaxed">
+        <h3 class="text-lg font-black text-[#111111]">Account Verification Required</h3>
+        <p class="text-xs text-[#555555] leading-relaxed">
           Only verified accounts can ${_esc(actionType)} on SellerFlow. Please complete your <b>SellerFlow account verification</b> to apply for jobs and register for events.
         </p>
       </div>
-      <div class="p-3.5 rounded-2xl bg-[#12121a] border border-[#2a2a3c] text-xs text-zinc-400 space-y-2">
-        <div class="flex items-center gap-2 text-zinc-300">
-          <span class="text-amber-400 font-bold">✓</span> <span>Anti-fraud protection for applicants & attendees</span>
+      <div class="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-300 text-xs text-[#333333] space-y-2 shadow-xs">
+        <div class="flex items-center gap-2 text-[#222222] font-semibold">
+          <span class="text-amber-600 font-black">✓</span> <span>Anti-fraud protection for applicants & attendees</span>
         </div>
-        <div class="flex items-center gap-2 text-zinc-300">
-          <span class="text-amber-400 font-bold">✓</span> <span>Encrypted First-Party Verification & Live Presence Check</span>
+        <div class="flex items-center gap-2 text-[#222222] font-semibold">
+          <span class="text-amber-600 font-black">✓</span> <span>Encrypted First-Party Verification & Live Presence Check</span>
         </div>
-        <div class="flex items-center gap-2 text-zinc-300">
-          <span class="text-amber-400 font-bold">✓</span> <span>Official SellerFlow Verified badge on profile</span>
+        <div class="flex items-center gap-2 text-[#222222] font-semibold">
+          <span class="text-amber-600 font-black">✓</span> <span>Official SellerFlow Verified badge on profile</span>
         </div>
       </div>
       <div class="flex gap-3 pt-2">
-        <button id="closeIdReqBtn" type="button" class="flex-1 py-2.5 rounded-xl border border-zinc-700 hover:bg-zinc-800 text-xs font-bold text-zinc-300 transition">
+        <button id="closeIdReqBtn" type="button" class="flex-1 py-2.5 rounded-xl border border-gray-300 hover:bg-gray-50 text-xs font-bold text-[#333333] bg-white transition cursor-pointer">
           Cancel
         </button>
-        <button id="goToKycBtn" type="button" class="flex-1 py-2.5 rounded-xl bg-gold text-black hover:brightness-110 text-xs font-black transition shadow-md flex items-center justify-center gap-1.5">
+        <button id="goToKycBtn" type="button" class="flex-1 py-2.5 rounded-xl bg-gold text-black hover:brightness-105 text-xs font-black transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
           <span>Verify Account</span>
           <span>→</span>
         </button>
