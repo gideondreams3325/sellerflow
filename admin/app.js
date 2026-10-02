@@ -574,7 +574,8 @@ async function fetchAdminData(force = false) {
       db.collection('orders').limit(400).get().catch(() => ({ docs: [] })),
       db.collection('jobs').limit(300).get().catch(() => ({ docs: [] })),
       db.collection('events').limit(300).get().catch(() => ({ docs: [] })),
-      db.collection('adminReviews').where('action', '==', 'takedown').limit(100).get().catch(() => ({ docs: [] }))
+      db.collection('adminReviews').where('action', '==', 'takedown').limit(100).get().catch(() => ({ docs: [] })),
+      fetch('/api/posts').then(r => r.ok ? r.json() : null).catch(() => null)
     ]);
 
     // Populate raw caches for real-time live sync
@@ -583,11 +584,24 @@ async function fetchAdminData(force = false) {
     (postsSnap.docs || []).forEach(d => rawPostsMap.set(d.id, serializeDoc(d)));
     (adminReviewsSnap.docs || []).forEach(d => rawAdminReviewsMap.set(d.id, { id: d.id, ...d.data(), source: 'adminReviews' }));
 
-    // Build unified posts list (do not resurrect deleted records from stale admin review snapshots)
+    // Build unified posts list (merging canonical Firestore posts and persistent server store)
     const postMap = new Map();
     (postsSnap.docs || []).forEach(d => {
       postMap.set(d.id, serializeDoc(d));
     });
+
+    if (serverPostsRes?.success && Array.isArray(serverPostsRes.posts)) {
+      serverPostsRes.posts.forEach(sp => {
+        if (sp && sp.id && sp.sellerId && !sp.isDeleted && sp.status !== 'deleted') {
+          if (!postMap.has(sp.id)) {
+            postMap.set(sp.id, sp);
+          }
+          if (!rawPostsMap.has(sp.id)) {
+            rawPostsMap.set(sp.id, sp);
+          }
+        }
+      });
+    }
 
     // Build unified map of users
     const userMap = new Map();
@@ -1738,8 +1752,26 @@ window.handlePostPermanentDelete = function(postId) {
     btnText: 'Delete Permanently',
     onExecute: async (reason) => {
       try {
-        await db.collection('posts').doc(postId).delete();
+        rawPostsMap.delete(postId);
+        state.data.posts = state.data.posts.filter(p => p.id !== postId);
+        rebuildUnifiedPosts();
+        renderCurrentTab();
+
+        await db.collection('posts').doc(postId).delete().catch(() => {});
         await db.collection('adminReviews').doc(`takedown_post_${postId}`).delete().catch(() => {});
+
+        try {
+          const token = state.currentUser ? await state.currentUser.getIdToken() : '';
+          await fetch('/api/posts/delete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({ postId })
+          }).catch(() => {});
+        } catch (_) {}
+
         showToast('Post permanently deleted', 'success');
         closeConfirmModal();
         await fetchAdminData();

@@ -6683,28 +6683,35 @@ const POSTS_LOCAL_STORE_PATH = path.join(__dirname, 'data', 'posts_store.json');
 const POSTS_DIST_STORE_PATH = path.join(__dirname, 'dist', 'data', 'posts_store.json');
 
 let _memoryPostsStore = null;
+let _lastPostsStoreMtime = 0;
 
 function getPostsStore() {
-  if (_memoryPostsStore) return _memoryPostsStore;
   const candidatePaths = [POSTS_VERCEL_TMP_STORE, POSTS_LOCAL_STORE_PATH, POSTS_DIST_STORE_PATH];
   for (const storePath of candidatePaths) {
     try {
       if (fs.existsSync(storePath)) {
+        const stat = fs.statSync(storePath);
+        if (_memoryPostsStore && stat.mtimeMs <= _lastPostsStoreMtime) {
+          return _memoryPostsStore;
+        }
         const raw = fs.readFileSync(storePath, 'utf8');
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
           _memoryPostsStore = parsed;
+          _lastPostsStoreMtime = stat.mtimeMs;
           return _memoryPostsStore;
         }
       }
     } catch (_) {}
   }
+  if (_memoryPostsStore) return _memoryPostsStore;
   _memoryPostsStore = [];
   return _memoryPostsStore;
 }
 
 function savePostsStore(posts) {
   _memoryPostsStore = posts;
+  _lastPostsStoreMtime = Date.now();
   try {
     fs.writeFileSync(POSTS_VERCEL_TMP_STORE, JSON.stringify(posts, null, 2), 'utf8');
   } catch (_) {}

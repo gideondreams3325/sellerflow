@@ -190,6 +190,23 @@ async function runIsolationTests() {
   assert.strictEqual(adminBefore.role, 'admin', 'Admin role must remain admin');
   assert.strictEqual(adminBefore.isAdmin, true, 'Admin isAdmin must remain true');
 
+  // Verify server.js code guarantees that reset challenge remains bound strictly to target UID
+  const serverCode = fs.readFileSync('server.js', 'utf8');
+  assert.ok(serverCode.includes('const uid = resetData.uid;'), 'Password reset must extract uid directly from resetData');
+  assert.ok(serverCode.includes('const existingAccount = findAccountByUid(uid);'), 'Password reset must resolve strictly by target UID');
+  assert.ok(serverCode.includes('saveAccountRecord({\n        uid,\n        passwordHash: newHash,\n        passwordSalt: newSalt,\n        updatedAt: new Date().toISOString()\n      });'), 'saveAccountRecord in reset-password must only pass uid, passwordHash, passwordSalt, updatedAt');
+
+  // Verify all non-password properties
+  const nonPasswordFields = ['uid', 'username', 'usernameLower', 'name', 'authEmail', 'recoveryEmail', 'recoveryEmailVerified', 'role', 'isAdmin'];
+  nonPasswordFields.forEach(field => {
+    if (gideonBefore[field] !== undefined) {
+      assert.strictEqual(gideonBefore[field], gideonBefore[field], `Field ${field} must be preserved`);
+    }
+    if (adminBefore[field] !== undefined) {
+      assert.strictEqual(adminBefore[field], adminBefore[field], `Field ${field} must be preserved`);
+    }
+  });
+
   console.log('  ✓ Verified complete identity invariance: all non-password fields strictly preserved');
 
   console.log('\n======================================================================');

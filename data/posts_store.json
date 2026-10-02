@@ -1,5 +1,21 @@
 [
   {
+    "id": "test_live_verify_1790896742143",
+    "sellerId": "N1cDBddZDicqELeyDRvfGMUy7fi1",
+    "sellerName": "Gideon Appiah",
+    "sellerUsername": "benjamin",
+    "text": "Verified newly created post for testing",
+    "mediaUrl": "/uploads/test.mp4",
+    "mediaType": "video/mp4",
+    "status": "published",
+    "createdAt": "2026-10-01T23:19:02.056Z",
+    "submittedAt": "2026-10-01T23:19:02.056Z",
+    "publishedAt": "2026-10-01T23:19:02.056Z",
+    "submittedToSecurityDeskAt": "2026-10-01T23:19:02.056Z",
+    "reviewStatus": "pending_security_review",
+    "liveOnForYou": true
+  },
+  {
     "id": "post_1790723075877_n624q04",
     "sellerId": "N1cDBddZDicqELeyDRvfGMUy7fi1",
     "sellerName": "Gideon Appiah",

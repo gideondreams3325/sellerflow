@@ -268,6 +268,9 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 .reel-media-wrap{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;background:#050505;contain:strict;transform:translateZ(0)}
 .reel-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#050505;transform:translateZ(0);backface-visibility:hidden}
 .reel-shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.88),rgba(0,0,0,.08) 50%,rgba(0,0,0,.25));pointer-events:none}
+.reel-progress-track{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.22);z-index:25;cursor:pointer;transition:height .15s ease}
+.reel-progress-track:hover{height:6px}
+.reel-progress-bar{height:100%;width:0%;background:#f5b942;box-shadow:0 0 8px rgba(245,185,66,0.8);transition:width 0.08s linear}
 .reel-content{position:absolute;left:0;right:68px;bottom:calc(12px + env(safe-area-inset-bottom, 0px));padding:16px;max-height:46%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;z-index:5}
 .reel-content p{max-width:100%;word-break:break-word;overflow-wrap:anywhere}
 .reel-actions{position:absolute;right:12px;bottom:calc(20px + env(safe-area-inset-bottom, 0px));display:flex;flex-direction:column;align-items:center;gap:11px;z-index:10;max-height:calc(100% - 24px - env(safe-area-inset-bottom, 0px));overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
@@ -9218,7 +9221,7 @@ function postCard(p, idx = 0){
         : `<button type="button" class="reel-sound-label sf-sound-toggle ${isSoundUnmuted ? 'is-unmuted' : ''}" data-sound-toggle="${p.id}" title="${isSoundUnmuted ? 'Mute video sound' : 'Unmute video sound'}">${isSoundUnmuted ? '🔊 Sound on' : '🔇 Tap for sound'}</button>`;
       const resolvedVideoUrl = getOptimizedMediaUrl(p.mediaUrl, 'video') || p.mediaUrl;
       const isEarlyCard = typeof idx === 'number' && idx < 3;
-      media=`<video class="reel-media reel-video" src="${esc(resolvedVideoUrl)}" data-original-src="${esc(p.mediaUrl||'')}" data-media-path="${esc(p.mediaPath||'')}" data-post-id="${p.id}" data-copyright-muted="${isCopyrightMuted ? 'true' : 'false'}" data-trim-start="${trimStart}" data-trim-end="${trimEnd}" style="${cropStyle}" ${isCopyrightMuted || !isSoundUnmuted ? 'muted' : ''} playsinline webkit-playsinline loop preload="${isFirst ? 'auto' : (isEarlyCard ? 'metadata' : 'none')}" poster="${esc(poster)}"></video><button type="button" class="reel-play-toggle" data-video-toggle="${p.id}">▶</button>${soundBtnHtml}`;
+      media=`<video class="reel-media reel-video" src="${esc(resolvedVideoUrl)}" data-original-src="${esc(p.mediaUrl||'')}" data-media-path="${esc(p.mediaPath||'')}" data-post-id="${p.id}" data-copyright-muted="${isCopyrightMuted ? 'true' : 'false'}" data-trim-start="${trimStart}" data-trim-end="${trimEnd}" style="${cropStyle}" ${isCopyrightMuted || !isSoundUnmuted ? 'muted' : ''} playsinline webkit-playsinline loop preload="${isFirst ? 'auto' : (isEarlyCard ? 'metadata' : 'none')}" poster="${esc(poster)}"></video><button type="button" class="reel-play-toggle" data-video-toggle="${p.id}">▶</button>${soundBtnHtml}<div class="reel-progress-track" title="Seek video"><div class="reel-progress-bar"></div></div>`;
     }else{
       const optFeedImg = getOptimizedMediaUrl(p.mediaUrl, 'feed');
       const audioEl = hasAudio ? `<audio class="reel-media reel-audio sf-feed-audio" src="${esc(p.soundUrl||p.audioUrl)}" data-post-id="${p.id}" data-copyright-muted="${isCopyrightMuted ? 'true' : 'false'}" ${isCopyrightMuted || !isSoundUnmuted ? 'muted' : ''} loop playsinline preload="${isFirst ? 'auto' : 'none'}"></audio>` : '';
@@ -9529,13 +9532,18 @@ function setupReelPlayback(targetPostId){
 
   function updateCardButton(card,isPlaying){
     const b=card?.querySelector('[data-video-toggle]');
-    if(!b)return;
-    if(isPlaying){
-      b.classList.add('is-playing');
-      b.textContent='❚❚';
-    }else{
-      b.classList.remove('is-playing');
-      b.textContent='▶';
+    if(b){
+      if(isPlaying){
+        b.classList.add('is-playing');
+        b.textContent='❚❚';
+      }else{
+        b.classList.remove('is-playing');
+        b.textContent='▶';
+      }
+    }
+    const disc=card?.querySelector('.reel-sound-disc');
+    if(disc){
+      disc.classList.toggle('is-spinning', !!isPlaying);
     }
   }
 
@@ -9709,7 +9717,26 @@ function setupReelPlayback(targetPostId){
         if(v.duration && (v.currentTime/v.duration)>=0.88){
           card._sfCompleted=true;
         }
+        const pBar = card.querySelector('.reel-progress-bar');
+        if(pBar && v.duration > 0){
+          const pct = Math.min(100, Math.max(0, (v.currentTime / v.duration) * 100));
+          pBar.style.width = `${pct}%`;
+        }
       });
+
+      const pTrack = card.querySelector('.reel-progress-track');
+      if(pTrack){
+        pTrack.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rect = pTrack.getBoundingClientRect();
+          if(rect.width > 0 && v.duration > 0){
+            const clickPos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            v.currentTime = clickPos * v.duration;
+            const pBar = card.querySelector('.reel-progress-bar');
+            if(pBar) pBar.style.width = `${clickPos * 100}%`;
+          }
+        });
+      }
     }
 
     if(a){
@@ -9807,7 +9834,9 @@ function setupReelPlayback(targetPostId){
         triggerLikeAnimation(card);
         const likeBtn = card.querySelector('[data-post-action="like"]');
         if (likeBtn) {
-          likeBtn.click();
+          if (!likeBtn.classList.contains('is-liked')) {
+            likeBtn.click();
+          }
         } else if (!currentUser) {
           showAuthPrompt('like posts on For You');
         }
@@ -25308,10 +25337,23 @@ init();
       });
     }
 
-    if(Array.isArray(_lastRankedPostsCache) && ref?.id){
-      const alreadyIdx = _lastRankedPostsCache.findIndex(p => p.id === ref.id);
-      if(alreadyIdx >= 0) _lastRankedPostsCache.splice(alreadyIdx, 1);
-      _lastRankedPostsCache.unshift({ id: ref.id, ...postData });
+    if(ref?.id){
+      const newLivePost = {
+        id: ref.id,
+        ...postData,
+        status: 'published',
+        safeContent: true,
+        liveOnForYou: true,
+        reviewStatus: 'pending_security_review',
+        createdAt: Date.now(),
+        ...(copyrightResult && copyrightResult.copyrightDetected ? {
+          copyrightDetected: true,
+          audioMutedByCopyright: true,
+          copyrightMatch: copyrightResult
+        } : {})
+      };
+      if(!window._cachedFeedPosts) window._cachedFeedPosts = [];
+      window._cachedFeedPosts = [newLivePost, ...window._cachedFeedPosts.filter(p => p && p.id !== ref.id)];
     }
 
     if(window.invalidateRankedFeedCache) window.invalidateRankedFeedCache();
@@ -25873,6 +25915,10 @@ init();
       try {
         const snap = await getDocs(query(collection(db, 'posts'), limit(120)));
         snapDocs = (snap && snap.docs) ? snap.docs.map(d => ({ id: d.id, ...d.data() })) : [];
+        if (snap && snap.docs && snap.docs.length > 0) {
+          window._sfFeedLastVisibleDoc = snap.docs[snap.docs.length - 1];
+          window._sfFeedHasMore = snap.docs.length >= 120;
+        }
       } catch (fbErr) {
         console.warn('Firestore feed query notice:', fbErr?.message || fbErr);
       }
@@ -25920,6 +25966,7 @@ init();
       const ranked = applyDiversityReRanking(scored);
       _lastRankedPostsCache = ranked.filter(p => !isPostRemovedBySecurity(p));
       _lastRankedPostsTime = Date.now();
+      window._sfFeedInitialLoadDone = true;
       try{
         sessionStorage.setItem('sf_ranked_feed_cache', JSON.stringify({
           posts: _lastRankedPostsCache.slice(0, 30),
@@ -25929,6 +25976,7 @@ init();
       return [..._lastRankedPostsCache];
     }catch(err){
       console.warn('[RankedPosts] Discovery fallback to baseline:', err?.message);
+      window._sfFeedInitialLoadDone = true;
       const snap = await getDocs(query(collection(db, 'posts'), limit(60)));
       return snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.sellerId && !isPostRemovedBySecurity(p) && (p.status==='published'||p.status==='approved') && p.status!=='hidden' && p.reviewStatus!=='violation' && isSafePost(p));
     }
@@ -25961,12 +26009,26 @@ init();
     }
 
     const posts = await getRankedPosts(!!options?.forceRefresh);
+    window._sfFeedInitialLoadDone = true;
     let feedPosts = posts.filter(isEligibleFeedPost);
     if(targetPostId && !feedPosts.some(p=>p.id===targetPostId)){
-      try{
-        const s=await getDoc(doc(db,'posts',targetPostId));
-        if(snapshotExists(s) && isEligibleFeedPost({id: s.id, ...s.data()}))feedPosts.unshift({id:s.id,...s.data()});
-      }catch(_){}
+      let targetPost = (window._sfCachedPosts && window._sfCachedPosts.get(targetPostId)) || null;
+      if(!targetPost && db){
+        try{
+          const s = await getDoc(doc(db,'posts',targetPostId));
+          if(snapshotExists(s)) targetPost = { id: s.id, ...s.data() };
+        }catch(_){}
+      }
+      if(!targetPost){
+        try{
+          const srvRes = await fetch('/api/posts').then(r => r.ok ? r.json() : null).catch(() => null);
+          const found = srvRes?.posts?.find(p => p && p.id === targetPostId);
+          if(found) targetPost = found;
+        }catch(_){}
+      }
+      if(targetPost && isEligibleFeedPost(targetPost)){
+        feedPosts.unshift(targetPost);
+      }
     } else if(targetPostId){
       const idx=feedPosts.findIndex(p=>p.id===targetPostId);
       if(idx>0){
