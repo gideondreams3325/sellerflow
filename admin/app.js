@@ -564,6 +564,7 @@ async function fetchAdminData(force = false) {
       jobsSnap,
       eventsSnap,
       adminReviewsSnap,
+      deletedPostsSnap,
       serverPostsRes
     ] = await Promise.all([
       db.collection('users').limit(400).get().catch(err => { console.warn('users fetch error', err); return { docs: [] }; }),
@@ -578,8 +579,14 @@ async function fetchAdminData(force = false) {
       db.collection('jobs').limit(300).get().catch(() => ({ docs: [] })),
       db.collection('events').limit(300).get().catch(() => ({ docs: [] })),
       db.collection('adminReviews').where('action', '==', 'takedown').limit(100).get().catch(() => ({ docs: [] })),
+      db.collection('deletedPosts').limit(300).get().catch(() => ({ docs: [] })),
       fetch('/api/posts').then(r => r.ok ? r.json() : null).catch(() => null)
     ]);
+
+    window._sfPermanentlyDeletedPostIds = window._sfPermanentlyDeletedPostIds || new Set();
+    (deletedPostsSnap.docs || []).forEach(d => {
+      if (d.id) window._sfPermanentlyDeletedPostIds.add(d.id);
+    });
 
     // Populate raw caches for real-time live sync
     (usersSnap.docs || []).forEach(d => rawUsersMap.set(d.id, serializeDoc(d)));
@@ -1543,13 +1550,8 @@ function renderModerationPosts() {
 
         <div class="p-3 bg-[#111] border-t border-[#262626] flex items-center justify-between gap-2">
           <button onclick="inspectPostDetails('${p.id}')" class="btn btn-secondary btn-sm">Inspect</button>
-          ${isTakenDown ? `
-            <button onclick="handlePostRestore('${p.id}')" class="btn btn-success btn-sm flex-1 font-bold">Restore</button>
-            <button onclick="handlePostPermanentDelete('${p.id}')" class="btn btn-danger btn-sm px-2 font-bold" title="Permanently Delete">🗑️</button>
-          ` : `
-            <button onclick="handlePostApprove('${p.id}')" class="btn btn-success btn-sm flex-1 font-bold" title="Confirm post complies with rules and keep live">Keep Live ✓</button>
-            <button onclick="handlePostTakedown('${p.id}')" class="btn btn-danger btn-sm flex-1 font-bold" title="Take down immediately if it violates For You rules">Take Down 🛑</button>
-          `}
+          <button onclick="handlePostApprove('${p.id}')" class="btn btn-success btn-sm flex-1 font-bold" title="Confirm post complies with rules and keep live">Keep Live ✓</button>
+          <button onclick="handlePostTakedown('${p.id}')" class="btn btn-danger btn-sm flex-1 font-bold" title="Delete permanently and forever">Delete Forever 🗑️</button>
         </div>
       </div>
     `;
@@ -1629,24 +1631,19 @@ window.inspectPostDetails = function(postId) {
   const isTakenDown = post.status === 'taken_down' || post.status === 'hidden';
 
   if (approveBtn) {
-    if (isTakenDown) {
-      approveBtn.classList.add('hidden');
-    } else {
-      approveBtn.classList.remove('hidden');
-      approveBtn.onclick = () => {
-        closePostModal();
-        handlePostApprove(post.id);
-      };
-    }
+    approveBtn.classList.remove('hidden');
+    approveBtn.onclick = () => {
+      closePostModal();
+      handlePostApprove(post.id);
+    };
   }
 
   if (actionBtn) {
-    actionBtn.className = `btn ${isTakenDown ? 'btn-success' : 'btn-danger'} btn-sm font-bold`;
-    actionBtn.textContent = isTakenDown ? 'Restore Post' : 'Take Down Immediately';
+    actionBtn.className = 'btn btn-danger btn-sm font-bold';
+    actionBtn.textContent = 'Delete Permanently Forever';
     actionBtn.onclick = () => {
       closePostModal();
-      if (isTakenDown) handlePostRestore(post.id);
-      else handlePostTakedown(post.id);
+      handlePostTakedown(post.id);
     };
   }
 
@@ -1708,43 +1705,7 @@ window.handlePostTakedown = function(postId) {
 };
 
 window.handlePostRestore = function(postId) {
-  openConfirmModal({
-    action: 'restore',
-    title: `Restore Post: ${postId}`,
-    prompt: 'Reinstating this post will return it to the live For You feed and mark its status as published.',
-    destructive: false,
-    btnText: 'Restore Content',
-    onExecute: async (reason) => {
-      try {
-        await db.collection('posts').doc(postId).set({
-          status: 'published',
-          reviewStatus: 'approved',
-          safeContent: true,
-          liveOnForYou: true,
-          hidden: false,
-          isDeleted: false,
-          restoredAt: firebase.firestore.FieldValue.serverTimestamp(),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-
-        await db.collection('adminReviews').add({
-          action: 'restore',
-          targetType: 'post',
-          targetId: postId,
-          reason: reason || 'Post restored to live feed',
-          adminEmail: state.currentUser?.email || 'admin',
-          adminUid: state.currentUser?.uid || '',
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        showToast('Post restored to live feed successfully', 'success');
-        closeConfirmModal();
-        await fetchAdminData();
-      } catch (err) {
-        showToast(`Failed: ${err.message}`, 'error');
-      }
-    }
-  });
+  showToast('Cannot restore: Posts deleted by post owner or security team are permanently and forever deleted.', 'error');
 };
 
 window.handlePostPermanentDelete = function(postId) {

@@ -178,6 +178,13 @@ service cloud.firestore {
       allow delete: if true;
     }
 
+    // Tombstone collection for posts deleted permanently and forever
+    match /deletedPosts/{postId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if isAdmin();
+    }
+
     // Copyright disputes
     match /copyrightDisputes/{disputeId} {
       allow read: if true;
@@ -341,9 +348,12 @@ service cloud.firestore {
         request.auth.uid in resource.data.participants ||
         isAdmin()
       );
-      allow delete: if isAdmin();
+      allow delete: if isSignedIn() && (
+        request.auth.uid in resource.data.participants ||
+        isAdmin()
+      );
 
-      // Messages subcollection: strictly accessible only by conversation participants
+      // Messages subcollection: strictly accessible only by conversation participants, author can modify/delete
       match /messages/{messageId} {
         allow read: if isSignedIn() && (
           request.auth.uid == resource.data.senderId ||
@@ -359,7 +369,20 @@ service cloud.firestore {
            (exists(/databases/$(database)/documents/conversations/$(conversationId)) &&
             request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants))
         );
-        allow update, delete: if isAdmin();
+        allow update: if isSignedIn() && (
+          (resource.data.senderId == request.auth.uid && request.resource.data.senderId == resource.data.senderId) ||
+          request.auth.uid == resource.data.get('recipientId', '') ||
+          (exists(/databases/$(database)/documents/conversations/$(conversationId)) &&
+           request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants) ||
+          isAdmin()
+        );
+        allow delete: if isSignedIn() && (
+          resource.data.senderId == request.auth.uid ||
+          request.auth.uid in resource.data.get('participants', []) ||
+          isAdmin() ||
+          (exists(/databases/$(database)/documents/conversations/$(conversationId)) &&
+           request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants)
+        );
       }
     }
 

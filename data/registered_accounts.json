@@ -95,9 +95,9 @@
     "role": "seller",
     "isAdmin": false,
     "isExisting": false,
-    "passwordHash": "4de95990a4916afbd820af8d48ed194e2866d3b45f3f63857467bd72039f18c309030a8c95f307024425ab9d498c9910bff645aa1d23cdcbef373282a2e14b68",
-    "passwordSalt": "01f773de4531e86a5668d8f4b315dd92",
-    "updatedAt": "2026-10-02T19:46:55.479Z",
+    "passwordHash": "35eaaeecfe1bd0df0c6facb1476f0450ea6e17649293e15d54aaa12d1a6382b544bcda011361d1caff562831fd81b59fd9fbfb96c929d86adf0519c846a3a3e7",
+    "passwordSalt": "1a2a03976b9e22766e40d24e43362766",
+    "updatedAt": "2026-10-02T20:11:28.473Z",
     "recoveryEmailVerifiedAt": "2026-10-01T14:13:16.520Z"
   },
   {
@@ -106,10 +106,10 @@
     "recoveryEmail": "merchant_real@example.com",
     "recoveryEmailVerified": true,
     "usernameLower": "testmerchant_1",
-    "updatedAt": "2026-10-02T19:51:35.535Z",
-    "recoveryEmailVerifiedAt": "2026-10-02T19:51:32.915Z",
-    "passwordHash": "58fe2296ed5fa7c7d47e623b2e49fd997b55593976f1a465bf60d5b9a437b74a83948d572587d100cc1d628f7d683ae48c4b565b26bd026c2ea07d8146ba63fb",
-    "passwordSalt": "81e30d1b5a09634e432288a402f74ad7",
+    "updatedAt": "2026-10-02T20:16:59.205Z",
+    "recoveryEmailVerifiedAt": "2026-10-02T20:16:56.312Z",
+    "passwordHash": "0e130b10d92e933c0d9b53f8a47f90e525f0c6ba47c6958c30c0ecbda33c6bd925a2676ea123da87911e77e619b421a7d010aae041fb5020f8d06bd5ef70f309",
+    "passwordSalt": "17664107bca3e421cb219bbf33dff068",
     "name": "",
     "role": "seller",
     "isAdmin": false

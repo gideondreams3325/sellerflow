@@ -2141,20 +2141,6 @@ app.post('/api/admin/takedown', async (req, res) => {
       }
       const sellerId = postData?.sellerId;
 
-      // Record in adminReviews for security audit with complete post snapshot
-      try {
-        await adminDb.collection('adminReviews').doc(`takedown_post_${itemUid}`).set({
-          userId: sellerId || callerUid,
-          targetId: itemUid,
-          type: 'post',
-          action: 'takedown',
-          reason,
-          postSnapshot: postData || null,
-          takenDownBy: callerUid,
-          timestamp: FieldValue.serverTimestamp()
-        }, { merge: true }).catch(() => {});
-      } catch (_) {}
-
       if (sellerId && sellerId !== callerUid) {
         try {
           await adminDb.collection('notifications').doc(`takedown_post_${itemUid}`).set({
@@ -2381,76 +2367,7 @@ app.post('/api/admin/restore', async (req, res) => {
     }
 
     if (type === 'post') {
-      if (isPostPermanentlyDeleted(itemUid)) {
-        return res.status(410).json({ success: false, error: 'Cannot restore: This post was deleted permanently and forever.' });
-      }
-      const postRef = adminDb.collection('posts').doc(itemUid);
-      let postSnap = null;
-      try {
-        postSnap = await postRef.get().catch(() => null);
-      } catch (_) {}
-      let postData = postSnap && postSnap.exists ? postSnap.data() : null;
-
-      // If post doc was archived in adminReviews, retrieve and restore it
-      if (!postData) {
-        try {
-          const revSnap = await adminDb.collection('adminReviews').doc(`takedown_post_${itemUid}`).get().catch(() => null);
-          if (revSnap && revSnap.exists && revSnap.data()?.postSnapshot) {
-            postData = revSnap.data().postSnapshot;
-          }
-        } catch (_) {}
-      }
-
-      // Check memory/local store if still null
-      if (!postData && _memoryPostsStore && Array.isArray(_memoryPostsStore)) {
-        postData = _memoryPostsStore.find(p => p.id === itemUid) || null;
-      }
-
-      const updateData = {
-        ...(postData || {}),
-        status: 'published',
-        reviewStatus: 'reviewed',
-        safeContent: true,
-        isDeleted: false,
-        hidden: false,
-        liveOnForYou: true,
-        restoredAt: FieldValue.serverTimestamp(),
-        restoredBy: callerUid
-      };
-
-      try {
-        await postRef.set(updateData, { merge: true }).catch(() => {});
-      } catch (_) {}
-
-      // Update in-memory and local store
-      try {
-        const posts = getPostsStore();
-        const idx = posts.findIndex(p => p.id === itemUid);
-        if (idx !== -1) {
-          posts[idx] = { ...posts[idx], ...updateData, status: 'published', reviewStatus: 'reviewed' };
-          savePostsStore(posts);
-        }
-      } catch (_) {}
-
-      const sellerId = postData?.sellerId;
-      if (sellerId && sellerId !== callerUid) {
-        try {
-          await adminDb.collection('notifications').doc(`restore_post_${itemUid}`).set({
-            recipientId: sellerId,
-            userId: sellerId,
-            senderName: 'SellerFlow Security Team',
-            title: 'Post Restored to Live Feed',
-            message: 'The SellerFlow Security Team has restored your post back to the live For You feed.',
-            type: 'restore',
-            fromAdmin: true,
-            read: false,
-            postId: itemUid,
-            createdAt: FieldValue.serverTimestamp()
-          }, { merge: true }).catch(() => {});
-        } catch (_) {}
-      }
-
-      return res.json({ success: true, message: 'Post restored to live feed successfully' });
+      return res.status(400).json({ success: false, error: 'Posts deleted by post owner or security team are permanently and forever deleted and cannot be restored.' });
     }
 
     if (type === 'product') {
@@ -2936,19 +2853,7 @@ app.all('/api/admin/overview-data', async (req, res) => {
         postMap.set(p.id, p);
       }
     });
-    (adminReviewsSnap.docs || []).forEach(d => {
-      const rev = d.data() || {};
-      if (rev.targetId && rev.postSnapshot && !postMap.has(rev.targetId) && !isPostPermanentlyDeleted(rev.targetId) && rev.action !== 'delete' && rev.action !== 'permanent_delete') {
-        postMap.set(rev.targetId, {
-          id: rev.targetId,
-          ...rev.postSnapshot,
-          status: 'taken_down',
-          reviewStatus: 'removed',
-          takedownReason: rev.reason || 'Taken down by Security Team',
-          removedAt: rev.timestamp || null
-        });
-      }
-    });
+    // Do not resurrect deleted or taken down posts from admin reviews: deleted posts are permanently deleted
     const postsList = Array.from(postMap.values()).filter(p => p && p.id && !isPostPermanentlyDeleted(p.id));
 
     // Build unified map of users (combining users and publicProfiles)
@@ -6672,6 +6577,19 @@ function savePermanentlyDeletedPostIds(idsSet) {
 }
 
 try { getPermanentlyDeletedPostIds(); } catch (_) {}
+
+async function syncDeletedPostsFromFirestore() {
+  try {
+    const snap = await adminDb.collection('deletedPosts').get().catch(() => null);
+    if (snap && !snap.empty) {
+      snap.forEach(doc => {
+        if (doc.id) _permanentlyDeletedPostIds.add(doc.id);
+      });
+      savePermanentlyDeletedPostIds(_permanentlyDeletedPostIds);
+    }
+  } catch (_) {}
+}
+setTimeout(syncDeletedPostsFromFirestore, 500);
 
 function isPostPermanentlyDeleted(postId) {
   if (!postId) return false;

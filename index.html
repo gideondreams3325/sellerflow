@@ -118,6 +118,24 @@ var closeModal = window.closeModal;
 <script src="capacitor.js"></script>
 <script src="/translations.js"></script>
 <script src="/jobs-events.js?v=2.1.0"></script>
+<script>
+  function formatNotifTime(v){
+    const t = (typeof ts === 'function' ? ts(v) : null) || (typeof v === 'number' ? v : (v?.toMillis ? v.toMillis() : (v?.seconds ? v.seconds * 1000 : null)));
+    if(!t) return 'Recently';
+    const diff = Date.now() - t;
+    if(diff < 45000) return 'Just now';
+    if(diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+    if(diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+    if(diff < 172800000) return 'Yesterday';
+    const d = new Date(t);
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  }
+  function formatNotifDate(v){
+    return formatNotifTime(v);
+  }
+  window.formatNotifTime = formatNotifTime;
+  window.formatNotifDate = formatNotifDate;
+</script>
 <script>tailwind.config={darkMode:'class',theme:{extend:{colors:{gold:'#D4AF37',goldbright:'#F5B942',golddark:'#A67C00'}}}}</script>
 <style>
 :root {
@@ -537,8 +555,186 @@ button,.btn,.action-btn,.navbtn,.reel-action,.market-filter,.admin-tab,.orders-n
 .page-selector-item.active{border-color:#f5b942;box-shadow:0 0 0 1px rgba(245,185,66,.2),0 10px 30px rgba(0,0,0,.25)}
 .page-selector-item .page-icon{font-size:24px}
 .page-selector-close{width:100%;margin-top:12px}
-.back-page-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid #e5e7eb;background:#ffffff;border-radius:12px;padding:8px 12px;color:#111111;margin-bottom:12px;transition:all .15s ease}
-.back-page-btn:hover{border-color:#f5b942;color:#f5b942}
+/* Audiomack Signature Back Button */
+.audiomack-back-btn,
+.back-page-btn,
+.btn-modal-back,
+#postsBackOverview,
+#restorationBackOverview,
+#adminUsersBack,
+#pendingBack,
+#reportsBack,
+#fraudBack,
+#ordersBack,
+#adminKycBackBtn,
+#notifyBack,
+#termsBack,
+#backMarket,
+#noStoreBackBtn,
+#receiptBackToDetailBtn,
+#backToStorefrontBtn,
+#backToNotificationsBtn,
+#profileBackNavBtn,
+#updateBackBtn,
+#chatModalBackBtn,
+#chatMobileBackToList {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  border-radius: 9999px !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  color: #111111 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  padding: 6px 14px 6px 7px !important;
+  margin-bottom: 12px;
+  cursor: pointer !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  user-select: none !important;
+  text-decoration: none !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+  width: auto !important;
+}
+
+/* Icon-only circular variation (Audiomack header / modal / chat back button) */
+.audiomack-back-btn.icon-only,
+.back-page-btn.icon-only,
+#chatModalBackBtn,
+#chatMobileBackToList {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  padding: 0 !important;
+  border-radius: 9999px !important;
+  margin-bottom: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.audiomack-back-btn.icon-only svg,
+.back-page-btn.icon-only svg {
+  width: 18px !important;
+  height: 18px !important;
+  display: block !important;
+  stroke: currentColor !important;
+  stroke-width: 2.6 !important;
+  transition: transform 0.18s ease !important;
+}
+.audiomack-back-btn.icon-only:hover svg,
+.back-page-btn.icon-only:hover svg {
+  transform: translateX(-1.5px) !important;
+}
+
+/* Inner circular badge for chevron */
+.audiomack-back-btn .back-arrow-icon,
+.back-page-btn .back-arrow-icon {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 9999px !important;
+  background: #f3f4f6 !important;
+  color: #111111 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.18s ease !important;
+  flex-shrink: 0 !important;
+}
+
+/* Audiomack signature hover: micro-shift left, gold border, inner badge turns brand gold with black chevron */
+.audiomack-back-btn:hover,
+.back-page-btn:hover,
+.btn-modal-back:hover,
+#postsBackOverview:hover,
+#restorationBackOverview:hover,
+#adminUsersBack:hover,
+#pendingBack:hover,
+#reportsBack:hover,
+#fraudBack:hover,
+#ordersBack:hover,
+#adminKycBackBtn:hover,
+#notifyBack:hover,
+#termsBack:hover,
+#backMarket:hover,
+#noStoreBackBtn:hover,
+#receiptBackToDetailBtn:hover,
+#backToStorefrontBtn:hover,
+#backToNotificationsBtn:hover,
+#profileBackNavBtn:hover,
+#updateBackBtn:hover,
+#chatModalBackBtn:hover,
+#chatMobileBackToList:hover {
+  background: #ffffff !important;
+  border-color: #D4AF37 !important;
+  color: #111111 !important;
+  transform: translateX(-3px) !important;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.22), 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+.audiomack-back-btn:hover .back-arrow-icon,
+.back-page-btn:hover .back-arrow-icon {
+  background: #D4AF37 !important;
+  color: #000000 !important;
+  transform: scale(1.08) !important;
+}
+
+/* Snappy feedback on click */
+.audiomack-back-btn:active,
+.back-page-btn:active,
+.btn-modal-back:active,
+#postsBackOverview:active,
+#restorationBackOverview:active,
+#adminUsersBack:active,
+#pendingBack:active,
+#reportsBack:active,
+#fraudBack:active,
+#ordersBack:active,
+#adminKycBackBtn:active,
+#notifyBack:active,
+#termsBack:active,
+#backMarket:active,
+#noStoreBackBtn:active,
+#receiptBackToDetailBtn:active,
+#backToStorefrontBtn:active,
+#backToNotificationsBtn:active,
+#profileBackNavBtn:active,
+#updateBackBtn:active,
+#chatModalBackBtn:active,
+#chatMobileBackToList:active {
+  transform: scale(0.93) translateX(-2px) !important;
+}
+
+/* Dark mode / dark card support */
+.dark .audiomack-back-btn,
+.dark .back-page-btn,
+.dark .btn-modal-back {
+  background: #18181b !important;
+  border-color: #27272a !important;
+  color: #f4f4f5 !important;
+}
+.dark .audiomack-back-btn .back-arrow-icon,
+.dark .back-page-btn .back-arrow-icon {
+  background: #27272a !important;
+  color: #f4f4f5 !important;
+}
+.dark .audiomack-back-btn:hover,
+.dark .back-page-btn:hover,
+.dark .btn-modal-back:hover {
+  background: #18181b !important;
+  border-color: #D4AF37 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.25) !important;
+}
+.dark .audiomack-back-btn:hover .back-arrow-icon,
+.dark .back-page-btn:hover .back-arrow-icon {
+  background: #D4AF37 !important;
+  color: #000000 !important;
+}
 .reel-video{cursor:pointer;touch-action:manipulation}
 .reel-play-toggle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;width:68px;height:68px;border-radius:50%;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(8px);font-size:28px;color:#fff;display:flex;align-items:center;justify-content:center;transition:opacity .2s,transform .2s;cursor:pointer;pointer-events:auto}
 .reel-play-toggle.is-playing{opacity:0;pointer-events:none}
@@ -2524,8 +2720,16 @@ html.light-theme .sf-bottom-tab-bar {
       <button id="resetBtn" type="button" class="hide"></button>
     </div>
     <button id="authSwitch" type="button" class="w-full mt-3 text-sm font-bold text-gold hover:underline transition">New here? Create an account</button>
-    <button id="backToSignInBtn" class="w-full mt-2 text-sm text-gold hover:underline hide">← Back to Sign In</button>
-    <button id="backLanding" class="w-full mt-3 text-xs text-gray-500 hover:text-gray-700 transition">← Back to For You</button>
+    <div class="flex justify-center mt-3">
+      <button id="backToSignInBtn" type="button" class="audiomack-back-btn hide">
+        <span class="back-arrow-icon"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg></span>
+        <span>Back to Sign In</span>
+      </button>
+      <button id="backLanding" type="button" class="audiomack-back-btn">
+        <span class="back-arrow-icon"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg></span>
+        <span>Back to For You</span>
+      </button>
+    </div>
 
     <div id="authError" class="text-red-400 text-xs mt-3 text-center min-h-[18px]"></div>
     <div class="copyright-tag text-[11px] text-zinc-600 text-center mt-4">© 2026 POMAAH GROUP · All Rights Reserved</div>
@@ -2659,7 +2863,7 @@ html.light-theme .sf-bottom-tab-bar {
   setTimeout(function(){var l=$x('loading');if(l&&!l.classList.contains('hide')){var t=$x('loadingText');if(t)t.textContent='SellerFlow is ready.';showHomeFeed();if(typeof navigate==='function')navigate('feed');}},6000);
   document.addEventListener('click',function(e){
     var id=e.target&&e.target.id;
-    if(id==='backLanding'){showHomeFeed();if(typeof navigate==='function')navigate('feed');}
+    if(id==='backLanding'||(e.target&&e.target.closest&&e.target.closest('#backLanding'))){showHomeFeed();if(typeof navigate==='function')navigate('feed');}
     if(id==='viewSignupTerms'){if(typeof ensureTerms==='function'&&typeof showTermsModal==='function')ensureTerms().then(()=>showTermsModal(false))}
   },true);
 })();
@@ -5002,7 +5206,56 @@ function ready(){
     }
   }, 220);
 }
-function pageTitle(t,sub=''){const back=currentPage&&currentPage!=='feed'?`<button type="button" class="back-page-btn" data-global-back="1">← Back</button>`:'';return `<div class="mb-6">${back}<h1 class="text-2xl md:text-3xl font-black">${esc(t)}</h1>${sub?`<p class="muted mt-1">${esc(sub)}</p>`:''}</div>`}
+function audiomackBackBtnHtml(label = 'Back', options = {}) {
+  const isIconOnly = options.iconOnly || !label;
+  const attrs = options.attrs || '';
+  const cls = options.cls || '';
+  const id = options.id ? `id="${options.id}"` : '';
+  const globalBack = options.noGlobalBack ? '' : 'data-global-back="1"';
+  const title = options.title ? `title="${options.title}"` : `title="${label || 'Back'}"`;
+  
+  if (isIconOnly) {
+    return `<button type="button" ${id} class="audiomack-back-btn icon-only ${cls}" ${globalBack} ${title} aria-label="${label || 'Go back'}" ${attrs}>
+      <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 19l-7-7 7-7" />
+      </svg>
+    </button>`;
+  }
+
+  return `<button type="button" ${id} class="audiomack-back-btn ${cls}" ${globalBack} ${title} aria-label="${label}" ${attrs}>
+    <span class="back-arrow-icon">
+      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 19l-7-7 7-7" />
+      </svg>
+    </span>
+    <span>${label}</span>
+  </button>`;
+}
+window.audiomackBackBtnHtml = audiomackBackBtnHtml;
+
+function enhanceAudiomackBackButtons(root = document) {
+  try {
+    const candidates = root.querySelectorAll(
+      '.back-page-btn, .btn-modal-back, [data-global-back], [data-modal-back], #postsBackOverview, #restorationBackOverview, #adminUsersBack, #pendingBack, #reportsBack, #fraudBack, #ordersBack, #adminKycBackBtn, #notifyBack, #termsBack, #backMarket, #noStoreBackBtn, #receiptBackToDetailBtn, #backToStorefrontBtn, #backToNotificationsBtn, #profileBackNavBtn, #updateBackBtn, #chatModalBackBtn, #chatMobileBackToList'
+    );
+    candidates.forEach(btn => {
+      btn.classList.add('audiomack-back-btn', 'icon-only');
+      if (!btn.querySelector('svg')) {
+        btn.innerHTML = `<svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7" /></svg>`;
+      } else if (btn.querySelector('.back-arrow-icon') || btn.querySelector('span')) {
+        btn.innerHTML = `<svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7" /></svg>`;
+      }
+    });
+  } catch(_) {}
+}
+window.enhanceAudiomackBackButtons = enhanceAudiomackBackButtons;
+
+function pageTitle(t,sub=''){
+  const back = currentPage && currentPage !== 'feed'
+    ? audiomackBackBtnHtml('', { iconOnly: true, cls: 'back-page-btn' })
+    : '';
+  return `<div class="mb-6">${back}<h1 class="text-2xl md:text-3xl font-black">${esc(t)}</h1>${sub?`<p class="muted mt-1">${esc(sub)}</p>`:''}</div>`;
+}
 function button(t,id='',cls='bg-gold text-black'){return `<button type="button" id="${id}" class="btn px-4 py-2 rounded-xl font-semibold ${cls}">${esc(t)}</button>`}
 function renderQuickAccessNav(activeSection = '') {
   const current = activeSection || (typeof currentPage !== 'undefined' ? currentPage : '');
@@ -7964,9 +8217,10 @@ function setNav(){
       $('headerUploadBtn')?.addEventListener('click', () => openPostModal());
       $('headerProfileBtn')?.addEventListener('click', () => navigate('profile'));
       $('notificationBtn')?.addEventListener('click', () => {
-        if(window.renderGroupedNotifications) return window.renderGroupedNotifications();
-        if(window.openNotifications) return window.openNotifications();
-        if(typeof openNotifications === 'function') openNotifications();
+        if(currentPage === 'chats' || currentPage === 'inbox'){
+          if(typeof window.switchInboxTab === 'function') return window.switchInboxTab('notifications');
+        }
+        navigate('inbox', null, { tab: 'notifications' });
       });
       $('cartBtn')?.addEventListener('click', () => navigate('cart'));
       $('logoutBtn')?.addEventListener('click', logoutUser);
@@ -8194,9 +8448,10 @@ function setNav(){
     $('mobileDrawerCartBtn')?.addEventListener('click', () => { closeMobileNav(); navigate('cart'); });
     $('mobileDrawerNotifBtn')?.addEventListener('click', () => {
       closeMobileNav();
-      if(window.renderGroupedNotifications) return window.renderGroupedNotifications();
-      if(window.openNotifications) return window.openNotifications();
-      if(typeof openNotifications === 'function') openNotifications();
+      if(currentPage === 'chats' || currentPage === 'inbox'){
+        if(typeof window.switchInboxTab === 'function') return window.switchInboxTab('notifications');
+      }
+      navigate('inbox', null, { tab: 'notifications' });
     });
     $('mobileDrawerUploadBtn')?.addEventListener('click', () => {
       closeMobileNav();
@@ -8488,7 +8743,7 @@ async function navigate(page, targetPostId, options){
       : (page === 'analysis' ? 'view your performance analysis'
       : (page === 'products' ? 'manage product catalogue'
       : (page === 'profile' ? 'view and edit your profile'
-      : (page === 'chats' ? 'chat with sellers and buyers'
+      : (page === 'chats' || page === 'inbox' ? 'chat with sellers and view your inbox notifications'
       : 'access ' + page)))))));
     showAuthPrompt(promptMsg);
     return;
@@ -8611,8 +8866,8 @@ async function renderSellerFlowUpdatePage(targetPostId, options){
   $('page').innerHTML = `
     <div class="max-w-3xl mx-auto space-y-6 pb-12 pt-2">
       <div class="flex items-center justify-between gap-3">
-        <button type="button" id="updateBackBtn" class="flex items-center gap-2 border border-gray-200 hover:border-gold px-4 py-2 rounded-xl text-sm font-bold bg-white transition cursor-pointer">
-          ← Back to For You
+        <button type="button" id="updateBackBtn" class="audiomack-back-btn icon-only" title="Back" aria-label="Back">
+          <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
         </button>
         <button type="button" id="updateOpenNotifsBtn" class="border border-gray-200 hover:border-gold px-4 py-2 rounded-xl text-xs font-bold bg-white text-gray-700 cursor-pointer">
           🔔 Notifications
@@ -8729,6 +8984,7 @@ async function renderPage(targetPostId, options){
     admin:renderAdmin,
     update:renderSellerFlowUpdatePage,
     chats:renderChats,
+    inbox:renderChats,
     jobs: typeof renderJobs === 'function' ? renderJobs : (typeof window.renderJobs === 'function' ? window.renderJobs : renderFeed),
     events: typeof renderEvents === 'function' ? renderEvents : (typeof window.renderEvents === 'function' ? window.renderEvents : renderFeed)
   };
@@ -8769,6 +9025,19 @@ try {
   if (Array.isArray(savedPermDeleted)) {
     savedPermDeleted.forEach(id => { if (id) { window._sfPermanentlyDeletedPostIds.add(id); window._sfRemovedPostIds.add(id); window._sfSessionDeletedPostIds.add(id); } });
   }
+} catch(_) {}
+
+try {
+  getDocs(query(collection(db, 'deletedPosts'), limit(200))).then(snap => {
+    if (snap && !snap.empty) {
+      snap.forEach(d => {
+        if (d.id) {
+          window._sfPermanentlyDeletedPostIds.add(d.id);
+          window._sfRemovedPostIds.add(d.id);
+        }
+      });
+    }
+  }).catch(() => {});
 } catch(_) {}
 
 function markPostRemovedBySecurity(postId) {
@@ -14067,8 +14336,8 @@ async function openStore(uid){
             ` : ''}
 
             <div class="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2">
-              <button type="button" id="noStoreBackBtn" class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-gray-300 hover:bg-gray-50 text-xs font-bold text-gray-800 bg-white transition cursor-pointer shadow-2xs">
-                ← Back to ${previousPage === 'marketplace' ? 'Marketplace' : (previousPage === 'profile' ? 'Profile' : 'Previous')}
+              <button type="button" id="noStoreBackBtn" class="audiomack-back-btn icon-only" title="Back" aria-label="Back">
+                <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
               </button>
               ${isOwner ? `
                 <button type="button" id="noStoreCreateBtn" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gold hover:brightness-105 text-black text-xs font-black transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5">
@@ -14210,8 +14479,8 @@ async function openStore(uid){
 
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-3">
-            <button type="button" id="backMarket" class="back-page-btn border border-gray-200 hover:border-gold rounded-xl px-3 py-2 text-sm font-bold bg-white">
-              ← Back to ${previousPage === 'marketplace' ? 'Marketplace' : (previousPage === 'profile' ? 'Profile' : 'For You')}
+            <button type="button" id="backMarket" class="audiomack-back-btn icon-only" title="Back" aria-label="Back">
+              <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
             </button>
             <div class="relative group">
               ${effectiveLogoUrl ? `
@@ -16760,9 +17029,8 @@ function openOrderReceiptModal(order, defaultFormat = 'thermal'){
         </div>
 
         <div class="flex items-center justify-between pt-2 border-t border-gray-200">
-          <button type="button" id="receiptBackToDetailBtn" class="border border-gray-300 hover:border-zinc-400 px-4 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:text-gray-900 transition flex items-center gap-1.5">
-            <span>←</span>
-            <span>Back to Order Details</span>
+          <button type="button" id="receiptBackToDetailBtn" class="audiomack-back-btn icon-only" title="Back to Order Details" aria-label="Back">
+            <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
           </button>
           <button type="button" data-close-modal class="border border-gray-300 hover:border-zinc-400 px-4 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:text-gray-900">
             Close
@@ -17257,8 +17525,8 @@ async function renderStore(forceEdit = false){
         </div>
         <div class="flex items-center gap-2">
           ${hasExistingStore ? `
-            <button type="button" id="backToStorefrontBtn" class="border border-gray-200 hover:border-gold px-3.5 py-2 rounded-xl text-xs font-bold text-gray-900 bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 transition flex items-center gap-1.5">
-              <span>🏪</span><span>Back to Storefront</span>
+            <button type="button" id="backToStorefrontBtn" class="audiomack-back-btn icon-only" title="Back to Storefront" aria-label="Back">
+              <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
             </button>
           ` : ''}
           <button type="button" id="addNewProductStoreBtn" class="bg-gold text-black hover:brightness-110 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
@@ -18482,9 +18750,7 @@ async function renderProfile(){
   $('profileNavChatsBtn')?.addEventListener('click', () => navigate('chats'));
   $('profileNavCartBtn')?.addEventListener('click', () => navigate('cart'));
   $('profileNavNotifBtn')?.addEventListener('click', () => {
-    if(window.renderGroupedNotifications) return window.renderGroupedNotifications();
-    if(window.openNotifications) return window.openNotifications();
-    if(typeof openNotifications === 'function') openNotifications();
+    navigate('inbox', null, { tab: 'notifications' });
   });
   $('profileNavTutorialBtn')?.addEventListener('click', () => showFirstTimeTutorial(true));
   $('profileNavHelpBtn')?.addEventListener('click', () => { if(typeof openHelpSupportModal==='function') openHelpSupportModal(); });
@@ -22684,7 +22950,7 @@ async function adminTakeDown(arg1, arg2){
   if(!ok) return;
   try{
     if(type==='post'){
-      if(typeof purgeAndHidePostImmediately==='function') purgeAndHidePostImmediately(id, 'Security team takedown');
+      if(typeof purgeAndHidePostImmediately==='function') purgeAndHidePostImmediately(id, 'Deleted permanently by Security Team');
       try {
         const token = currentUser ? await currentUser.getIdToken() : '';
         const apiUrl = (typeof getSfApiUrl === 'function') ? getSfApiUrl('/api/admin/takedown') : '/api/admin/takedown';
@@ -22694,20 +22960,22 @@ async function adminTakeDown(arg1, arg2){
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           },
-          body: JSON.stringify({ type: 'post', id, reason: 'Administrative safety takedown' })
+          body: JSON.stringify({ type: 'post', id, reason: 'Administrative safety permanent deletion' })
         });
       } catch (_) {}
-      await updateDoc(doc(db, 'posts', id), {
-        status: 'taken_down',
-        reviewStatus: 'removed',
-        safeContent: false,
-        hidden: true,
-        isDeleted: false,
-        takedownReason: 'Administrative safety takedown',
-        removedAt: serverTimestamp(),
-        removedBy: currentUser ? currentUser.uid : 'admin'
-      }).catch(() => {});
-      toast('Post taken down and archived in Restoration Hub', 'success');
+      try {
+        await deleteDoc(doc(db, 'posts', id));
+      } catch (_) {}
+      if (window._sfPermanentlyDeletedPostIds) window._sfPermanentlyDeletedPostIds.add(id);
+      if (window._sfRemovedPostIds) window._sfRemovedPostIds.add(id);
+      try {
+        const permArr = JSON.parse(localStorage.getItem('sf_permanently_deleted_posts') || '[]');
+        if (!permArr.includes(id)) {
+          permArr.push(id);
+          localStorage.setItem('sf_permanently_deleted_posts', JSON.stringify(permArr));
+        }
+      } catch(_) {}
+      toast('Post permanently deleted forever by Security Team', 'success');
     }else if(type==='product'){
       await deleteDoc(doc(db,'products',id));
       toast('Product removed','success');
@@ -23824,7 +24092,27 @@ try {
   }
 } catch(_) {}
 
-document.addEventListener('click',e=>{const qNav=e.target.closest('[data-quick-dest]');if(qNav){e.preventDefault();const dest=qNav.dataset.quickDest;if(dest&&typeof navigate==='function')navigate(dest);return;}const seller=e.target.closest('[data-open-seller]');if(seller)openUserProfile(seller.dataset.openSeller);const nav=e.target.closest('[data-mobile-page]');if(nav)navigate(nav.dataset.mobilePage);const back=e.target.closest('[data-global-back]');if(back)handleAppBack()});
+document.addEventListener('click',e=>{
+  const qNav=e.target.closest('[data-quick-dest]');
+  if(qNav){e.preventDefault();const dest=qNav.dataset.quickDest;if(dest&&typeof navigate==='function')navigate(dest);return;}
+  const seller=e.target.closest('[data-open-seller]');
+  if(seller)openUserProfile(seller.dataset.openSeller);
+  const nav=e.target.closest('[data-mobile-page]');
+  if(nav)navigate(nav.dataset.mobilePage);
+  const back=e.target.closest('[data-global-back], .back-page-btn');
+  if(back)handleAppBack();
+});
+
+// Automatically ensure all back buttons throughout the app match the signature Audiomack back button
+enhanceAudiomackBackButtons();
+try {
+  let _amDebounce = null;
+  const _audiomackObserver = new MutationObserver(() => {
+    if (_amDebounce) cancelAnimationFrame(_amDebounce);
+    _amDebounce = requestAnimationFrame(() => enhanceAudiomackBackButtons());
+  });
+  _audiomackObserver.observe(document.body, { childList: true, subtree: true });
+} catch(_) {}
 document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>navigate(b.dataset.page));
 $('pageSelectorBtn')?.addEventListener('click',openPageSelector);
 $('mobileMenu')?.addEventListener('click',()=>{
@@ -25524,7 +25812,7 @@ init();
     if(options?.noBackBar){
       $('modalRoot').innerHTML=`<div class="modal"><div class="modal-card">${html}</div></div>`;
     }else{
-      $('modalRoot').innerHTML=`<div class="modal"><div class="modal-card"><div class="modal-header-bar flex items-center justify-between pb-3.5 mb-4 border-b border-gray-200"><button type="button" class="btn-modal-back text-xs border border-gray-300 hover:border-gold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 bg-white text-gray-700 hover:text-gray-900 transition" data-modal-back>← Back</button><span class="text-xs text-gray-600 font-bold uppercase tracking-widest">SELLERFLOW</span><button type="button" class="w-8 h-8 rounded-full border border-gray-300 hover:border-gold flex items-center justify-center text-xs text-gray-600 hover:text-gray-900 bg-white transition" data-close-modal title="Close">✕</button></div>${html}</div></div>`;
+      $('modalRoot').innerHTML=`<div class="modal"><div class="modal-card"><div class="modal-header-bar flex items-center justify-between pb-3.5 mb-4 border-b border-gray-200"><button type="button" class="btn-modal-back audiomack-back-btn" data-modal-back aria-label="Go back"><span class="back-arrow-icon"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg></span><span>Back</span></button><span class="text-xs text-gray-600 font-bold uppercase tracking-widest">SELLERFLOW</span><button type="button" class="w-8 h-8 rounded-full border border-gray-300 hover:border-gold flex items-center justify-center text-xs text-gray-600 hover:text-gray-900 bg-white transition" data-close-modal title="Close">✕</button></div>${html}</div></div>`;
     }
     document.querySelectorAll('[data-close-modal]').forEach(b=>b.onclick=closeModal);
     document.querySelectorAll('[data-modal-back]').forEach(b=>b.onclick=closeModal);
@@ -29266,88 +29554,51 @@ init();
     if(type==='product') return adminTakeDownProduct(uid);
     if(type==='store') return adminTakeDownStore(uid);
     const ok = await customConfirm({
-      title: 'Take Down Post?',
-      message: 'Are you sure you want to take down this post from the live For You feed?',
-      warningText: 'This post will immediately be removed from public feed discovery.',
-      confirmText: 'Take Down Post',
+      title: 'Permanently Delete Post?',
+      message: 'Are you sure you want to permanently delete this post from SellerFlow?',
+      warningText: 'This post will be permanently and forever deleted from the database, feed, and storage.',
+      confirmText: 'Delete Permanently',
       cancelText: 'Cancel',
       type: 'danger',
-      icon: '🛑',
-      tag: 'Moderation Takedown'
+      icon: '🗑️',
+      tag: 'Permanent Deletion'
     });
     if(!ok) return;
     try{
-      loading('Taking down post…');
+      loading('Deleting post permanently…');
       if(typeof purgeAndHidePostImmediately === 'function') {
-        purgeAndHidePostImmediately(uid, 'Administrative safety takedown');
+        purgeAndHidePostImmediately(uid, 'Administrative safety permanent deletion');
       }
-      let serverSuccess = false;
       try {
         const token = currentUser ? await currentUser.getIdToken() : '';
         const apiUrl = (typeof getSfApiUrl === 'function') ? getSfApiUrl('/api/admin/takedown') : '/api/admin/takedown';
-        const res = await fetch(apiUrl, {
+        await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           },
-          body: JSON.stringify({ type: 'post', id: uid, reason: 'Administrative safety takedown' })
+          body: JSON.stringify({ type: 'post', id: uid, reason: 'Administrative safety permanent deletion' })
         });
-        if (res.ok) serverSuccess = true;
       } catch (_) {}
 
-      const s = await getDoc(doc(db, 'posts', uid)).catch(() => null);
-      if(s && snapshotExists(s)){
-        const x = s.data();
-        await updateDoc(doc(db, 'posts', uid), {
-          status: 'taken_down',
-          reviewStatus: 'removed',
-          safeContent: false,
-          isDeleted: false,
-          hidden: true,
-          takedownReason: 'Administrative safety takedown',
-          removedAt: serverTimestamp(),
-          removedBy: currentUser ? currentUser.uid : 'admin'
-        }).catch(() => {});
+      try {
+        await deleteDoc(doc(db, 'posts', uid));
+      } catch (_) {}
 
-        if(x && x.sellerId && (!currentUser || x.sellerId !== currentUser.uid)){
-          await addDoc(collection(db, 'notifications'), {
-            recipientId: x.sellerId,
-            senderName: 'SellerFlow Security Team',
-            title: 'Post taken down',
-            message: 'The SellerFlow Security Team removed your post after a platform safety review.',
-            fromAdmin: true,
-            postId: uid,
-            read: false,
-            createdAt: serverTimestamp()
-          }).catch(() => {});
-        }
-      } else {
-        await updateDoc(doc(db, 'posts', uid), {
-          status: 'taken_down',
-          reviewStatus: 'removed',
-          safeContent: false,
-          isDeleted: false,
-          hidden: true,
-          takedownReason: 'Administrative safety takedown',
-          removedAt: serverTimestamp(),
-          removedBy: currentUser ? currentUser.uid : 'admin'
-        }).catch(() => {});
-      }
-
-      // Add to removed IDs for immediate UI reflection in Restoration Hub
+      if (window._sfPermanentlyDeletedPostIds) window._sfPermanentlyDeletedPostIds.add(uid);
       if (window._sfRemovedPostIds) window._sfRemovedPostIds.add(uid);
       if (window._sfSessionDeletedPostIds) window._sfSessionDeletedPostIds.add(uid);
       try {
-        const removedArr = JSON.parse(localStorage.getItem('sf_removed_post_ids') || '[]');
-        if (!removedArr.includes(uid)) {
-          removedArr.push(uid);
-          localStorage.setItem('sf_removed_post_ids', JSON.stringify(removedArr));
+        const permArr = JSON.parse(localStorage.getItem('sf_permanently_deleted_posts') || '[]');
+        if (!permArr.includes(uid)) {
+          permArr.push(uid);
+          localStorage.setItem('sf_permanently_deleted_posts', JSON.stringify(permArr));
         }
       } catch(_) {}
       if (window.invalidateRankedFeedCache) window.invalidateRankedFeedCache();
 
-      toast('Post taken down and archived in Restoration Hub', 'success');
+      toast('Post permanently deleted forever by Security Team', 'success');
       if(typeof renderAdmin==='function'&&currentPage==='admin') renderAdmin();
       else if(currentPage==='feed') renderFeed();
       else if(typeof renderPage==='function') renderPage();
@@ -29806,10 +30057,12 @@ init();
     const d = new Date(t);
     return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
   }
+  window.formatNotifTime = formatNotifTime;
 
   function formatNotifDate(v){
     return formatNotifTime(v);
   }
+  window.formatNotifDate = formatNotifDate;
 
   window._sfNotifTab = window._sfNotifTab || 'all';
 
@@ -30170,8 +30423,8 @@ init();
             <h2 class="text-xl font-bold text-gray-900">New Followers</h2>
             <p class="muted text-xs mt-0.5">People who recently followed your SellerFlow profile.</p>
           </div>
-          <button type="button" id="backToNotificationsBtn" class="text-xs gold font-bold border border-amber-200 bg-white hover:bg-amber-50/60 border border-amber-300 text-amber-800 hover:bg-[#2a2012] px-3 py-1.5 rounded-xl transition cursor-pointer">
-            ← All Notifications
+          <button type="button" id="backToNotificationsBtn" class="audiomack-back-btn icon-only cursor-pointer" title="Back to notifications" aria-label="Back">
+            <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
           </button>
         </div>
         <div class="space-y-2 max-h-[60vh] overflow-y-auto">
@@ -30786,9 +31039,8 @@ init();
     $('page').innerHTML=`
       <!-- Profile Modern Top Bar -->
       <div class="flex items-center justify-between gap-3 mb-3 pb-2.5 border-b border-gray-100">
-        <button type="button" id="profileBackNavBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-800 border border-gray-200/80 font-bold text-xs transition cursor-pointer shadow-2xs" title="Back to previous page">
-          <span>←</span>
-          <span>Back to ${prevPageLabel}</span>
+        <button type="button" id="profileBackNavBtn" class="audiomack-back-btn icon-only cursor-pointer" title="Back" aria-label="Back">
+          <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
         </button>
         <div class="text-sm font-black text-gray-900 flex items-center gap-1.5 truncate">
           <span>@${esc(p.username || 'user')}</span>
@@ -33914,8 +34166,8 @@ init();
               </div>
               <p class="muted text-xs sm:text-sm mt-1">Unified post management across the live For You feed, safety review queue, and post restoration archive.</p>
             </div>
-            <button id="postsBackOverview" class="border border-gray-200 hover:border-gold rounded-xl px-4 py-2 text-xs font-bold text-gray-900 transition self-start sm:self-auto">
-              ← Back to Overview
+            <button id="postsBackOverview" class="audiomack-back-btn icon-only self-start sm:self-auto" title="Back to Overview" aria-label="Back">
+              <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
             </button>
           </div>
 
@@ -34051,8 +34303,8 @@ init();
               </div>
               <p class="muted text-xs sm:text-sm mt-1">Safely stores all taken-down posts, marketplace products, vendor storefronts, and jobs/events for future review, restoration, or permanent deletion.</p>
             </div>
-            <button id="restorationBackOverview" class="border border-gray-200 hover:border-gold rounded-xl px-4 py-2 text-xs font-bold text-gray-900 transition self-start sm:self-auto">
-              ← Back to Overview
+            <button id="restorationBackOverview" class="audiomack-back-btn icon-only self-start sm:self-auto" title="Back to Overview" aria-label="Back">
+              <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
             </button>
           </div>
 
@@ -34670,8 +34922,8 @@ init();
               </div>
               <p class="muted text-xs sm:text-sm mt-1">Search registered accounts, verify Ghana Card identity credentials, enforce suspensions, toggle account blocks, and restrict publishing privileges.</p>
             </div>
-            <button id="adminUsersBack" class="border border-gray-200 hover:border-gold rounded-xl px-4 py-2 text-xs font-bold text-gray-900 transition self-start sm:self-auto">
-              ← Back to Overview
+            <button id="adminUsersBack" class="audiomack-back-btn icon-only self-start sm:self-auto" title="Back to Overview" aria-label="Back">
+              <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
             </button>
           </div>
 
@@ -34983,7 +35235,9 @@ init();
             <h2 class="text-xl font-black text-gray-900">Pending Verification Applications (${pending.length})</h2>
             <p class="muted text-xs sm:text-sm mt-0.5">Review seller identity submissions and Ghana Card credentials.</p>
           </div>
-          <button id="pendingBack" class="border border-gray-200 hover:border-gold rounded-xl px-4 py-2 text-xs font-bold">← Back</button>
+          <button id="pendingBack" class="audiomack-back-btn icon-only self-start sm:self-auto" title="Back" aria-label="Back">
+            <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+          </button>
         </div>
         <div class="space-y-3 mt-5">
           ${pending.length ? pending.map(d => adminUserCard(d.id, d.data())).join('') : '<div class="muted p-8 text-center bg-white rounded-2xl border border-[#222]">No pending applications. All caught up!</div>'}
@@ -35034,8 +35288,8 @@ init();
               </div>
               <p class="muted text-xs sm:text-sm mt-1">Review community flags regarding scams, fraud, counterfeit items, harassment, and platform policy breaches.</p>
             </div>
-            <button id="reportsBack" class="border border-gray-200 hover:border-gold rounded-xl px-4 py-2 text-xs font-bold text-gray-900 transition self-start sm:self-auto">
-              ← Back to Overview
+            <button id="reportsBack" class="audiomack-back-btn icon-only self-start sm:self-auto" title="Back to Overview" aria-label="Back">
+              <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
             </button>
           </div>
 
@@ -35328,8 +35582,8 @@ init();
               </div>
               <p class="muted text-xs sm:text-sm mt-1">Official fraud reports filed by buyers or sellers. Bound by the Electronic Transactions Act (Act 772) & Criminal Offences Act (Act 29) of Ghana.</p>
             </div>
-            <button id="fraudBack" class="border border-gray-200 hover:border-gold rounded-xl px-4 py-2 text-xs font-bold text-gray-900 transition self-start sm:self-auto">
-              ← Back to Overview
+            <button id="fraudBack" class="audiomack-back-btn icon-only self-start sm:self-auto" title="Back to Overview" aria-label="Back">
+              <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
             </button>
           </div>
         </div>
@@ -35694,8 +35948,8 @@ STATUS: ${f.status || 'Active Investigation'}
                 Buyer orders must pass Security Team review before sellers receive order notifications. Verify delivery destinations, buyer Ghana Card authenticity, and fraud markers.
               </p>
             </div>
-            <button id="ordersBack" class="border border-gray-200 hover:border-gold rounded-xl px-4 py-2 text-xs font-bold text-gray-900 transition self-start lg:self-auto">
-              ← Back to Overview
+            <button id="ordersBack" class="audiomack-back-btn icon-only self-start lg:self-auto" title="Back to Overview" aria-label="Back">
+              <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
             </button>
           </div>
 
@@ -36000,8 +36254,8 @@ FINANCIAL:
               <button type="button" id="adminKycRefreshBtn" class="border border-gray-200 hover:border-zinc-300 px-3 py-2 rounded-xl text-xs font-bold bg-gray-50 text-gray-700 transition flex items-center gap-1.5">
                 <span>🔄</span> Refresh
               </button>
-              <button id="adminKycBackBtn" class="border border-gray-200 hover:border-gold rounded-xl px-3.5 py-2 text-xs font-bold text-gray-900 transition">
-                ← Overview
+              <button id="adminKycBackBtn" class="audiomack-back-btn icon-only self-start sm:self-auto" title="Overview" aria-label="Back">
+                <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
               </button>
             </div>
           </div>
@@ -36459,7 +36713,9 @@ FINANCIAL:
             <h2 class="text-xl font-black text-gray-900">Broadcasts & User Notifications</h2>
             <p class="muted text-xs sm:text-sm mt-0.5">Send custom SellerFlow notifications to a specific user or broadcast to all registered accounts.</p>
           </div>
-          <button id="notifyBack" class="border border-gray-200 hover:border-gold rounded-xl px-4 py-2 text-xs font-bold">← Back</button>
+          <button id="notifyBack" class="audiomack-back-btn icon-only self-start sm:self-auto" title="Back" aria-label="Back">
+            <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+          </button>
         </div>
         <div class="grid md:grid-cols-3 gap-3 mt-4">
           <select id="notifyUser" class="p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm">
@@ -36533,7 +36789,9 @@ FINANCIAL:
             <h2 class="text-xl font-black text-gray-900">Terms & Policies Management</h2>
             <p class="muted text-xs sm:text-sm mt-0.5">Update the legal agreements and terms of service required for all community sellers.</p>
           </div>
-          <button id="termsBack" class="border border-gray-200 hover:border-gold rounded-xl px-4 py-2 text-xs font-bold">← Back</button>
+          <button id="termsBack" class="audiomack-back-btn icon-only self-start sm:self-auto" title="Back" aria-label="Back">
+            <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+          </button>
         </div>
         <textarea id="termsEditor" rows="12" class="w-full mt-2 p-3.5 rounded-xl bg-gray-50 border border-gray-200 font-mono text-xs leading-relaxed text-gray-700">${esc(termData.text || DEFAULT_TERMS)}</textarea>
         <div class="flex flex-wrap items-center justify-between gap-3 mt-4">
@@ -36600,6 +36858,30 @@ FINANCIAL:
 .sf-search-tab:not(.active){background:#ffffff;color:#4b5563;border:1px solid #e5e7eb}
 .sf-search-tab:not(.active):hover{border-color:#d1d5db;color:#111827;background:#f9fafb}
 
+.inbox-tab-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:12px;font-size:12px;font-weight:700;color:#4b5563;transition:all .16s ease;cursor:pointer;border:1px solid transparent;background:transparent}
+.inbox-tab-btn:hover{color:#111827;background:#f3f4f6}
+.inbox-tab-btn.active{background:#ffffff;color:#111827;border-color:#e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.inbox-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9999px;font-size:10px;font-weight:800;background:#f5b942;color:#000000}
+.chat-msg-row{position:relative;display:flex;align-items:center;gap:6px;margin:3px 0;width:100%;transition:all .14s ease}
+.chat-msg-actions{opacity:0;pointer-events:none;transition:opacity .15s ease,transform .15s ease;display:flex;align-items:center;gap:3px;transform:scale(0.95)}
+.chat-msg-row:hover .chat-msg-actions,
+.chat-msg-row.show-actions .chat-msg-actions,
+.chat-msg-row:focus-within .chat-msg-actions{opacity:1;pointer-events:auto;transform:scale(1)}
+@media (hover:none){.chat-msg-actions{opacity:0.9;pointer-events:auto;transform:scale(1)}}
+.chat-action-btn{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;background:#ffffff;border:1px solid #e5e7eb;color:#4b5563;cursor:pointer;transition:all .14s ease;padding:0;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.chat-action-btn:hover{background:#f3f4f6;color:#111827;border-color:#d1d5db;transform:scale(1.08)}
+.chat-action-btn.delete-btn:hover{background:#fee2e2;color:#dc2626;border-color:#fca5a5}
+.chat-reaction-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:9999px;font-size:11px;background:#ffffff;border:1px solid #e5e7eb;cursor:pointer;transition:all .12s ease;user-select:none}
+.chat-reaction-chip:hover{background:#f9fafb;border-color:#d4af37}
+.chat-reaction-chip.active{background:#fef3c7;border-color:#f5b942;font-weight:700}
+.chat-reaction-popover{position:absolute;bottom:calc(100% + 4px);background:#ffffff;border:1px solid #e5e7eb;border-radius:9999px;padding:3px 6px;box-shadow:0 4px 16px rgba(0,0,0,0.12);display:flex;align-items:center;gap:4px;z-index:30}
+.chat-edited-badge{font-size:9px;font-weight:500;opacity:0.75}
+.chat-delete-convo-btn{opacity:0;transition:opacity .14s ease;padding:4px;border-radius:6px;color:#9ca3af;cursor:pointer;background:transparent;border:none}
+.chat-convo-item:hover .chat-delete-convo-btn{opacity:1}
+@media (hover:none){.chat-delete-convo-btn{opacity:0.7}}
+.chat-delete-convo-btn:hover{color:#dc2626;background:#fee2e2}
+.msg-edit-box textarea{font-family:inherit;line-height:1.4}
+
 .chat-shell{background:#ffffff;border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);display:flex;flex-direction:column}
 .chat-layout{display:grid;grid-template-columns:340px 1fr;grid-template-rows:minmax(0,1fr);min-height:520px;height:calc(100dvh - 180px);max-height:760px;overflow:hidden}
 .chat-list-pane{display:flex;flex-direction:column;border-right:1px solid #e5e7eb;background:#f9fafb;min-width:0;min-height:0;height:100%;max-height:100%;overflow:hidden}
@@ -36654,7 +36936,223 @@ FINANCIAL:
     if(diff < 172800000) return 'Yesterday';
     return new Date(ms).toLocaleDateString('en-GH', { month: 'short', day: 'numeric' });
   }
+
+  function formatNotifTime(v){
+    if (typeof window.formatNotifTime === 'function' && window.formatNotifTime !== formatNotifTime) {
+      return window.formatNotifTime(v);
+    }
+    const t = (typeof ts === 'function' ? ts(v) : null) || (typeof v === 'number' ? v : (v?.toMillis ? v.toMillis() : (v?.seconds ? v.seconds * 1000 : null)));
+    if(!t) return 'Recently';
+    const diff = Date.now() - t;
+    if(diff < 45000) return 'Just now';
+    if(diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+    if(diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+    if(diff < 172800000) return 'Yesterday';
+    const d = new Date(t);
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  }
+  window.formatNotifTime = window.formatNotifTime || formatNotifTime;
+
   function profileSearchText(p){return [p?.name,p?.username,p?.email,p?.bio,p?.role].filter(Boolean).join(' ').toLowerCase()}
+
+  function renderMessageReactionsHtml(reactions, cid, mid) {
+    if (!reactions || typeof reactions !== 'object') return '';
+    const entries = Object.entries(reactions).filter(([_, users]) => Array.isArray(users) && users.length > 0);
+    if (!entries.length) return '';
+    return entries.map(([em, users]) => {
+      const hasMine = users.includes(currentUser?.uid);
+      return `<button type="button" class="chat-reaction-chip ${hasMine ? 'active' : ''}" onclick="window.toggleMessageReaction('${cid}', '${mid}', '${em}')" title="${hasMine ? 'Remove reaction' : 'React with ' + em}"><span>${em}</span><span class="text-[10px] ${hasMine ? 'text-amber-900 font-bold' : 'text-gray-600'}">${users.length}</span></button>`;
+    }).join('');
+  }
+  window.renderMessageReactionsHtml = renderMessageReactionsHtml;
+
+  window.copyChatMessageText = async function(mid) {
+    try {
+      const textEl = document.getElementById(`msgText_${mid}`);
+      if (!textEl) return;
+      const text = textEl.dataset.rawText || textEl.textContent.trim();
+      await navigator.clipboard.writeText(text);
+      toast('Copied message to clipboard', 'info');
+    } catch (_) {
+      toast('Could not copy message', 'error');
+    }
+  };
+
+  window.startEditChatMessage = function(cid, mid) {
+    const textEl = document.getElementById(`msgText_${mid}`);
+    if (!textEl) return;
+    const currentText = textEl.dataset.rawText || textEl.textContent.trim();
+    if (!textEl.dataset.originalHtml) {
+      textEl.dataset.originalHtml = textEl.innerHTML;
+    }
+    textEl.innerHTML = `
+      <div class="msg-edit-box mt-1 w-full" id="editBox_${mid}">
+        <textarea id="editInput_${mid}" class="w-full text-xs sm:text-sm p-2 rounded-xl bg-white border-2 border-gold text-gray-900 outline-none resize-none shadow-sm" rows="2">${esc(currentText)}</textarea>
+        <div class="flex items-center justify-end gap-2 mt-1.5">
+          <button type="button" class="text-xs px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition cursor-pointer" onclick="window.cancelEditChatMessage('${mid}')">Cancel</button>
+          <button type="button" class="text-xs px-3 py-1 rounded-lg bg-gold hover:brightness-110 text-black font-bold transition shadow-xs cursor-pointer" onclick="window.saveEditChatMessage('${cid}', '${mid}')">Save Changes</button>
+        </div>
+      </div>
+    `;
+    const input = document.getElementById(`editInput_${mid}`);
+    if (input) {
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          window.saveEditChatMessage(cid, mid);
+        } else if (e.key === 'Escape') {
+          window.cancelEditChatMessage(mid);
+        }
+      };
+    }
+  };
+
+  window.cancelEditChatMessage = function(mid) {
+    const textEl = document.getElementById(`msgText_${mid}`);
+    if (!textEl) return;
+    if (textEl.dataset.originalHtml) {
+      textEl.innerHTML = textEl.dataset.originalHtml;
+      delete textEl.dataset.originalHtml;
+    }
+  };
+
+  window.saveEditChatMessage = async function(cid, mid) {
+    const input = document.getElementById(`editInput_${mid}`);
+    if (!input) return;
+    const clean = formatChatText(input.value);
+    if (!clean) {
+      toast('Message cannot be empty. Delete the message to unsend it.', 'warning');
+      return;
+    }
+    input.disabled = true;
+    try {
+      const msgRef = doc(db, 'conversations', cid, 'messages', mid);
+      await updateDoc(msgRef, {
+        text: clean,
+        edited: true,
+        editedAt: serverTimestamp()
+      });
+      try {
+        const convoRef = doc(db, 'conversations', cid);
+        const cSnap = await getDoc(convoRef);
+        if (cSnap.exists() && cSnap.data().lastSenderId === currentUser?.uid) {
+          await updateDoc(convoRef, { lastMessage: clean, updatedAt: serverTimestamp() });
+        }
+      } catch (_) {}
+      const textEl = document.getElementById(`msgText_${mid}`);
+      if (textEl) {
+        textEl.dataset.rawText = clean;
+        textEl.innerHTML = esc(clean);
+        delete textEl.dataset.originalHtml;
+      }
+      const editedTag = document.getElementById(`msgEditedTag_${mid}`);
+      if (editedTag) editedTag.classList.remove('hidden');
+      toast('Message modified', 'success');
+    } catch (e) {
+      toast(errMsg(e), 'error');
+      input.disabled = false;
+    }
+  };
+
+  window.deleteChatMessage = async function(cid, mid) {
+    const ok = await customConfirm({
+      title: 'Permanently Delete Message?',
+      message: 'Are you sure you want to permanently delete this message?',
+      warningText: 'This message will be removed forever for everyone in this chat.',
+      confirmText: 'Delete Permanently',
+      cancelText: 'Keep Message',
+      type: 'danger'
+    });
+    if (!ok) return;
+    try {
+      const msgRef = doc(db, 'conversations', cid, 'messages', mid);
+      await deleteDoc(msgRef);
+      const row = document.getElementById(`msgRow_${mid}`);
+      if (row) {
+        row.style.transition = 'all 0.2s ease';
+        row.style.opacity = '0';
+        row.style.transform = 'scale(0.95)';
+        setTimeout(() => row.remove(), 200);
+      }
+      try {
+        const msgsSnap = await getDocs(query(collection(db, 'conversations', cid, 'messages'), orderBy('createdAt', 'desc'), limit(1)));
+        const convoRef = doc(db, 'conversations', cid);
+        if (!msgsSnap.empty) {
+          const lData = msgsSnap.docs[0].data();
+          await updateDoc(convoRef, { lastMessage: lData.text || '', lastSenderId: lData.senderId || '', updatedAt: lData.createdAt || serverTimestamp() });
+        } else {
+          await updateDoc(convoRef, { lastMessage: '', updatedAt: serverTimestamp() });
+        }
+      } catch (_) {}
+      toast('Message permanently deleted', 'success');
+    } catch (e) {
+      toast(errMsg(e), 'error');
+    }
+  };
+
+  window.toggleMessageReaction = async function(cid, mid, emoji) {
+    if (!currentUser) return showAuthPrompt('react to messages');
+    try {
+      const msgRef = doc(db, 'conversations', cid, 'messages', mid);
+      const snap = await getDoc(msgRef);
+      if (!snap.exists()) return;
+      const reactions = snap.data()?.reactions || {};
+      const users = new Set(reactions[emoji] || []);
+      if (users.has(currentUser.uid)) users.delete(currentUser.uid);
+      else users.add(currentUser.uid);
+      if (users.size === 0) delete reactions[emoji];
+      else reactions[emoji] = Array.from(users);
+      await updateDoc(msgRef, { reactions });
+    } catch (e) {
+      console.warn('Reaction update notice:', e);
+    }
+  };
+
+  window.deleteConversation = async function(cid, e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    const ok = await customConfirm({
+      title: 'Delete Conversation?',
+      message: 'Are you sure you want to delete this conversation thread?',
+      warningText: 'All messages in this chat will be removed permanently.',
+      confirmText: 'Delete Conversation',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
+    if (!ok) return;
+    try {
+      await deleteDoc(doc(db, 'conversations', cid));
+      toast('Conversation deleted', 'success');
+      if (window._activeConversationId === cid) {
+        window._activeConversationId = null;
+        if (window._activeChatUnsub) {
+          try { window._activeChatUnsub(); } catch (_) {}
+          window._activeChatUnsub = null;
+        }
+        const activePane = $('chatActivePane');
+        if (activePane) {
+          activePane.innerHTML = `
+            <div class="h-full flex flex-col items-center justify-center p-8 text-center select-none my-auto">
+              <div class="w-16 h-16 rounded-2xl bg-white border border-[#2c2c3c] flex items-center justify-center text-3xl mb-4 text-gold">💬</div>
+              <h3 class="text-base font-bold text-gray-900">Your SellerFlow Messages</h3>
+              <p class="text-gray-600 text-xs max-w-sm mt-1.5 mb-5">Select a conversation from the left to read messages, verify order status, and negotiate prices safely.</p>
+              <button type="button" id="startFirstChatBtn" class="bg-gold text-black px-4 py-2 rounded-xl text-xs font-bold hover:brightness-110 active:scale-95 transition cursor-pointer">＋ Start a New Chat</button>
+            </div>
+          `;
+          $('startFirstChatBtn')?.addEventListener('click', openNewChat);
+        }
+      }
+      const item = document.querySelector(`.chat-convo-item[data-chat-id="${cid}"]`);
+      if (item) {
+        item.style.transition = 'all 0.2s ease';
+        item.style.opacity = '0';
+        setTimeout(() => item.remove(), 200);
+      }
+    } catch (err) {
+      toast(errMsg(err), 'error');
+    }
+  };
   
   async function startChat(uid){
     if(!currentUser){showAuthPrompt('chat with Ghanaian sellers');return;}
@@ -36719,7 +37217,7 @@ FINANCIAL:
         <!-- Modern Contact Header -->
         <div class="flex items-center justify-between gap-3 px-4 py-3.5 border-b border-[#24242e] bg-white shrink-0">
           <div class="flex items-center gap-3 min-w-0">
-            ${isModal ? `<button type="button" id="chatModalBackBtn" class="w-8 h-8 rounded-full bg-white hover:bg-gray-100 border border-gray-200 text-gray-800 hover:bg-white text-gray-700 hover:text-gray-900 flex items-center justify-center text-sm font-bold border border-[#2e2e3c] transition" title="Back">←</button>` : `<button type="button" id="chatMobileBackToList" class="md:hidden w-8 h-8 rounded-full bg-white hover:bg-gray-100 border border-gray-200 text-gray-800 hover:bg-white text-gray-700 hover:text-gray-900 flex items-center justify-center text-sm font-bold border border-[#2e2e3c] transition" title="Conversations">←</button>`}
+            ${isModal ? `<button type="button" id="chatModalBackBtn" class="audiomack-back-btn icon-only" title="Back" aria-label="Go back"><svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg></button>` : `<button type="button" id="chatMobileBackToList" class="md:hidden audiomack-back-btn icon-only" title="Conversations" aria-label="Conversations"><svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg></button>`}
             <div class="relative shrink-0 cursor-pointer" id="chatHeaderAvatar" data-chat-user-profile="${esc(uid)}">
               ${avatar(selected,'w-10 h-10 rounded-full object-cover bg-gray-100 border border-gray-200')}
               <span class="absolute bottom-0 right-0 presence-dot ${isOnline ? 'presence-online' : 'presence-offline'}"></span>
@@ -36917,6 +37415,7 @@ FINANCIAL:
       let html = '';
       docsOrArray.forEach(item => {
         const m = typeof item.data === 'function' ? item.data() : item;
+        const mid = item.id || m.id || ('m_' + Math.random().toString(36).slice(2));
         const me = m.senderId === currentUser?.uid;
         const msgTime = ts(m.createdAt) || Date.now();
         const dateObj = new Date(msgTime);
@@ -36929,11 +37428,38 @@ FINANCIAL:
         }
         const timeStr = dateObj.toLocaleTimeString('en-GH', { hour: '2-digit', minute: '2-digit' });
         const cleanMsg = formatChatText(m.text || '');
+        const rxHtml = typeof window.renderMessageReactionsHtml === 'function' ? window.renderMessageReactionsHtml(m.reactions, cid, mid) : '';
         html += `
-          <div class="flex flex-col ${me ? 'items-end' : 'items-start'} my-1">
-            <div class="chat-bubble ${me ? 'chat-me' : 'chat-them'}">
-              <div class="chat-bubble-text">${esc(cleanMsg)}</div>
-              <div class="chat-bubble-time ${me ? 'text-black/75' : 'text-gray-600'} font-medium">${esc(timeStr)}</div>
+          <div class="chat-msg-row flex flex-col ${me ? 'items-end' : 'items-start'} my-1 group relative" id="msgRow_${mid}" data-mid="${mid}" data-cid="${cid}">
+            <div class="relative flex items-center gap-1.5 ${me ? 'flex-row-reverse' : 'flex-row'} max-w-full">
+              <div class="chat-bubble ${me ? 'chat-me' : 'chat-them'} relative select-text" id="msgBubble_${mid}">
+                <div class="chat-bubble-text" id="msgText_${mid}" data-raw-text="${esc(cleanMsg)}">${esc(cleanMsg)}</div>
+                <div class="flex items-center justify-end gap-1.5 mt-1 select-none">
+                  <span id="msgEditedTag_${mid}" class="${m.edited ? '' : 'hidden'} chat-edited-badge text-[9px] ${me ? 'text-black/60' : 'text-gray-400'} italic">edited</span>
+                  <span class="chat-bubble-time ${me ? 'text-black/75' : 'text-gray-600'} font-medium">${esc(timeStr)}</span>
+                </div>
+                <div class="chat-bubble-reactions flex flex-wrap gap-1 mt-1 ${me ? 'justify-end' : 'justify-start'}" id="msgReactions_${mid}">
+                  ${rxHtml}
+                </div>
+              </div>
+
+              <div class="chat-msg-actions flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-white border border-gray-200 shadow-sm shrink-0 z-10">
+                <div class="relative group/emoji">
+                  <button type="button" class="chat-action-btn" title="Add reaction">😊</button>
+                  <div class="hidden group-hover/emoji:flex absolute bottom-full mb-1 ${me ? 'right-0' : 'left-0'} bg-white border border-gray-200 rounded-full px-1.5 py-1 shadow-xl gap-1 items-center z-30">
+                    ${['❤️','👍','😂','🔥','👏','🙏'].map(em => `
+                      <button type="button" class="text-sm p-1 rounded-full hover:bg-amber-100 hover:scale-125 transition select-none leading-none cursor-pointer" onclick="window.toggleMessageReaction('${cid}', '${mid}', '${em}')">${em}</button>
+                    `).join('')}
+                  </div>
+                </div>
+                <button type="button" class="chat-action-btn" title="Copy text" onclick="window.copyChatMessageText('${mid}')">📋</button>
+                ${me ? `
+                  <button type="button" class="chat-action-btn hover:text-blue-600" title="Edit message" onclick="window.startEditChatMessage('${cid}', '${mid}')">✏️</button>
+                ` : ''}
+                ${me || isAdmin ? `
+                  <button type="button" class="chat-action-btn delete-btn" title="Delete message permanently" onclick="window.deleteChatMessage('${cid}', '${mid}')">🗑️</button>
+                ` : ''}
+              </div>
             </div>
           </div>
         `;
@@ -37055,85 +37581,272 @@ FINANCIAL:
     }
   }
 
-  renderChats=async function(){
-    if(!currentUser){showAuthPrompt('view your chats');return;}
+  renderChats=async function(targetPostId, options){
+    if(!currentUser){showAuthPrompt('view your inbox and chats');return;}
     document.body.classList.remove('sf-chat-active');
-    const convs=await loadConversations();
+    
+    // Check if initial tab requested
+    let currentInboxTab = options?.tab || window._sfInboxTab || 'messages';
+    if(options?.targetUid || (targetPostId && targetPostId !== 'notifications')) currentInboxTab = 'messages';
+    window._sfInboxTab = currentInboxTab;
+
+    const [convs] = await Promise.all([
+      loadConversations(),
+      typeof loadNotifications === 'function' ? loadNotifications().catch(()=>[]) : Promise.resolve([])
+    ]);
     const people=[];
     for(const c of convs){
       const uid=(c.participants||[]).find(x=>x!==currentUser.uid);
       if(uid)people.push({uid,c,p:sellerProfile(uid)});
     }
 
-    $('page').innerHTML=`
-      <div id="chatPageHeader">
-        ${pageTitle('Direct Messages','Private real-time conversations with sellers and buyers across Ghana.')}
-        <div class="flex items-center justify-between gap-3 mb-4">
-          <div class="flex items-center gap-2">
-            <button id="newChatBtn" class="bg-gold text-black px-4 py-2 rounded-xl text-xs font-bold hover:brightness-110 active:scale-95 transition flex items-center gap-1.5 shadow-sm shadow-amber-500/10">＋ New Chat</button>
+    const readSet = (typeof getLocallyReadNotifIds === 'function') ? getLocallyReadNotifIds() : new Set();
+    const notifList = (typeof notificationCache !== 'undefined' && Array.isArray(notificationCache)) ? notificationCache : [];
+    const notifUnread = notifList.filter(n => !n.read && !readSet.has(n.id)).length;
+    let notifFilter = window._sfInboxNotifFilter || 'all';
+
+    function buildNotificationsHtml(filter){
+      const filtered = notifList.filter(n => {
+        if(filter === 'interactions') return n.type === 'post_engagement' || n.type === 'comment_activity';
+        if(filter === 'followers') return n.type === 'follow';
+        if(filter === 'updates') return n.fromAdmin || n.type === 'system_update' || n.type?.startsWith('order') || n.orderId || n.type === 'chat_message' || (n.senderName === 'SellerFlow' && !n.postId);
+        return true;
+      });
+
+      if(!filtered.length){
+        return `
+          <div class="p-12 text-center text-gray-500 flex flex-col items-center justify-center my-auto">
+            <div class="w-14 h-14 rounded-2xl bg-amber-50 text-gold border border-amber-200 flex items-center justify-center text-2xl mb-3">🔔</div>
+            <div class="text-gray-900 font-bold text-sm">No notifications found</div>
+            <p class="text-xs text-gray-500 mt-1 max-w-xs">When users interact with your posts, follow your store, or send updates, you will see alerts here.</p>
           </div>
-          <div class="text-xs text-gray-600 font-medium hidden sm:block">
-            <span class="text-gold font-bold">${people.length}</span> active ${people.length === 1 ? 'chat' : 'chats'}
+        `;
+      }
+
+      return filtered.map(n => {
+        const isUnread = !n.read && !readSet.has(n.id);
+        const timeLabel = formatNotifTime(n.createdAt);
+        let icon = '🔔';
+        let actionBtnText = 'View →';
+        let cardType = 'other';
+        if(n.type === 'follow') { icon = '👤'; actionBtnText = 'View Profile →'; cardType = 'follow'; }
+        else if(n.type === 'chat_message') { icon = '💬'; actionBtnText = 'Open Chat →'; cardType = 'chat'; }
+        else if(n.type?.startsWith('order') || n.orderId) { icon = '📦'; actionBtnText = 'Track Order →'; cardType = 'order'; }
+        else if(n.fromAdmin || n.type === 'system_update') { icon = '📢'; actionBtnText = 'Open Update →'; cardType = 'update'; }
+        else if(n.type === 'post_engagement' || n.type === 'comment_activity') { icon = '❤️'; actionBtnText = 'Watch Post →'; cardType = 'post'; }
+
+        return `
+          <div class="notif-card w-full text-left p-3.5 sm:p-4 rounded-2xl ${isUnread ? 'bg-amber-50/80 border border-amber-300' : 'bg-white border border-gray-200'} hover:border-gray-300 flex items-center justify-between gap-3 transition mb-2 cursor-pointer group" data-inbox-notif-id="${esc(n.id)}" data-inbox-notif-type="${cardType}" data-actor-id="${esc(n.actorId||'')}" data-post-id="${esc(n.postId||'')}" data-order-id="${esc(n.orderId||'')}">
+            <div class="flex items-center gap-3.5 min-w-0 flex-1">
+              <div class="relative shrink-0">
+                <div class="w-10 h-10 rounded-2xl bg-white border border-gray-200 text-lg flex items-center justify-center shrink-0">
+                  ${icon}
+                </div>
+                ${isUnread ? `<span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-gold ring-2 ring-white"></span>` : ''}
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-sm text-gray-900 font-semibold leading-snug break-words">
+                  ${esc(n.title || n.senderName || 'Notification')}
+                </div>
+                <div class="text-xs text-gray-600 mt-0.5 line-clamp-2 break-words">
+                  ${esc(n.message || '')}
+                </div>
+                <div class="text-[11px] text-gray-500 mt-1">${esc(timeLabel)}</div>
+              </div>
+            </div>
+            <div class="shrink-0 pl-1">
+              <span class="text-xs text-gold font-bold bg-white border border-amber-300 group-hover:bg-amber-100 px-3 py-1.5 rounded-xl transition flex items-center gap-1 shrink-0 whitespace-nowrap">
+                ${actionBtnText}
+              </span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    $('page').innerHTML=`
+      <div id="chatPageHeader" class="mb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-gray-200">
+          <div>
+            <h1 class="text-xl sm:text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+              <span>📬</span>
+              <span>Inbox</span>
+            </h1>
+            <p class="text-xs text-gray-600 mt-0.5">Real-time chats, notifications, orders & activity across Ghana.</p>
+          </div>
+          <!-- Segmented Tab Control -->
+          <div class="flex items-center p-1 bg-gray-100 rounded-2xl border border-gray-200 self-start sm:self-auto shrink-0">
+            <button type="button" id="inboxTabMessagesBtn" class="inbox-tab-btn ${currentInboxTab === 'messages' ? 'active' : ''}">
+              <span>💬 Chats</span>
+              <span class="inbox-badge text-[10px]">${people.length}</span>
+            </button>
+            <button type="button" id="inboxTabNotifsBtn" class="inbox-tab-btn ${currentInboxTab === 'notifications' ? 'active' : ''}">
+              <span>🔔 Notifications</span>
+              ${notifUnread > 0 ? `<span id="inboxNotifsCountBadge" class="inbox-badge text-[10px] bg-red-600 text-white font-bold">${notifUnread}</span>` : ''}
+            </button>
           </div>
         </div>
       </div>
 
-      <div class="chat-shell">
-        <div id="chatLayoutContainer" class="chat-layout">
-          <!-- Left Pane: Conversations List -->
-          <div id="chatListPane" class="chat-list-pane">
-            <div class="p-3 border-b border-[#23232c] bg-white">
-              <div class="relative">
-                <input id="chatSearchFilter" class="w-full pl-8 pr-7 py-2 text-xs rounded-xl bg-white border border-[#2b2b36] text-gray-900 placeholder-zinc-500 focus:border-gold outline-none transition" placeholder="Search conversations…">
-                <span class="absolute left-2.5 top-2 text-gray-500 text-xs pointer-events-none">⌕</span>
-                <button type="button" id="clearChatFilter" class="hidden absolute right-2.5 top-2 text-gray-600 hover:text-gray-900 text-xs">✕</button>
+      <!-- Messages View Container -->
+      <div id="inboxMessagesView" class="${currentInboxTab === 'messages' ? '' : 'hidden'}">
+        <div class="flex items-center justify-between gap-3 mb-3">
+          <button id="newChatBtn" class="bg-gold text-black px-4 py-2 rounded-xl text-xs font-bold hover:brightness-110 active:scale-95 transition flex items-center gap-1.5 shadow-sm shadow-amber-500/10 cursor-pointer">＋ New Chat</button>
+          <div class="text-xs text-gray-600 font-medium">
+            <span class="text-gold font-bold">${people.length}</span> active conversations
+          </div>
+        </div>
+
+        <div class="chat-shell">
+          <div id="chatLayoutContainer" class="chat-layout">
+            <!-- Left Pane: Conversations List -->
+            <div id="chatListPane" class="chat-list-pane">
+              <div class="p-3 border-b border-[#23232c] bg-white">
+                <div class="relative">
+                  <input id="chatSearchFilter" class="w-full pl-8 pr-7 py-2 text-xs rounded-xl bg-white border border-[#2b2b36] text-gray-900 placeholder-zinc-500 focus:border-gold outline-none transition" placeholder="Search conversations…">
+                  <span class="absolute left-2.5 top-2 text-gray-500 text-xs pointer-events-none">⌕</span>
+                  <button type="button" id="clearChatFilter" class="hidden absolute right-2.5 top-2 text-gray-600 hover:text-gray-900 text-xs">✕</button>
+                </div>
+              </div>
+
+              <div id="chatConvoList" class="chat-list space-y-1.5">
+                ${people.length ? people.map(x => {
+                  const isOnline = onlineNow(x.p);
+                  const isMe = x.c.lastSenderId === currentUser?.uid;
+                  const lastPreview = x.c.lastMessage ? (isMe ? `You: ${x.c.lastMessage}` : x.c.lastMessage) : 'No messages yet';
+                  const timeLabel = timeAgo(x.c.updatedAt);
+                  return `
+                    <div class="chat-convo-item group" data-chat-id="${x.c.id}" data-chat-user="${x.uid}">
+                      <div class="relative shrink-0">
+                        ${avatar(x.p,'w-11 h-11 rounded-full object-cover bg-gray-100 border border-gray-200')}
+                        <span class="absolute bottom-0 right-0 presence-dot ${isOnline ? 'presence-online' : 'presence-offline'}"></span>
+                      </div>
+                      <span class="flex-1 min-w-0">
+                        <span class="flex items-center justify-between gap-1">
+                          <b class="truncate text-xs sm:text-sm text-gray-900 font-semibold">${esc(x.p.name || x.p.username || 'User')}</b>
+                          <span class="text-[10px] text-gray-500 shrink-0 font-medium">${esc(timeLabel)}</span>
+                        </span>
+                        <span class="text-[11px] text-gray-600 block truncate mt-0.5">@${esc(x.p.username || 'user')}</span>
+                        <span class="text-xs text-gray-700 block truncate mt-1">${esc(lastPreview)}</span>
+                      </span>
+                      <button type="button" class="chat-delete-convo-btn shrink-0" title="Delete conversation" onclick="window.deleteConversation('${x.c.id}', event)">
+                        🗑️
+                      </button>
+                    </div>
+                  `;
+                }).join('') : `
+                  <div class="p-8 text-center muted flex flex-col items-center justify-center my-auto">
+                    <div class="w-12 h-12 rounded-2xl bg-white border border-[#2b2b38] flex items-center justify-center text-xl mb-3">💬</div>
+                    <div class="text-gray-900 font-bold text-sm">No conversations yet</div>
+                    <p class="text-xs text-gray-600 mt-1 max-w-xs">Tap New Chat above to message any seller or buyer on SellerFlow.</p>
+                  </div>
+                `}
               </div>
             </div>
 
-            <div id="chatConvoList" class="chat-list space-y-1.5">
-              ${people.length ? people.map(x => {
-                const isOnline = onlineNow(x.p);
-                const isMe = x.c.lastSenderId === currentUser?.uid;
-                const lastPreview = x.c.lastMessage ? (isMe ? `You: ${x.c.lastMessage}` : x.c.lastMessage) : 'No messages yet';
-                const timeLabel = timeAgo(x.c.updatedAt);
-                return `
-                  <button type="button" class="chat-convo-item" data-chat-id="${x.c.id}" data-chat-user="${x.uid}">
-                    <div class="relative shrink-0">
-                      ${avatar(x.p,'w-11 h-11 rounded-full object-cover bg-gray-100 border border-gray-200')}
-                      <span class="absolute bottom-0 right-0 presence-dot ${isOnline ? 'presence-online' : 'presence-offline'}"></span>
-                    </div>
-                    <span class="flex-1 min-w-0">
-                      <span class="flex items-center justify-between gap-1">
-                        <b class="truncate text-xs sm:text-sm text-gray-900 font-semibold">${esc(x.p.name || x.p.username || 'User')}</b>
-                        <span class="text-[10px] text-gray-500 shrink-0 font-medium">${esc(timeLabel)}</span>
-                      </span>
-                      <span class="text-[11px] text-gray-600 block truncate mt-0.5">@${esc(x.p.username || 'user')}</span>
-                      <span class="text-xs text-gray-700 block truncate mt-1">${esc(lastPreview)}</span>
-                    </span>
-                  </button>
-                `;
-              }).join('') : `
-                <div class="p-8 text-center muted flex flex-col items-center justify-center my-auto">
-                  <div class="w-12 h-12 rounded-2xl bg-white border border-[#2b2b38] flex items-center justify-center text-xl mb-3">💬</div>
-                  <div class="text-gray-900 font-bold text-sm">No conversations yet</div>
-                  <p class="text-xs text-gray-600 mt-1 max-w-xs">Tap New Chat above to message any seller or buyer on SellerFlow.</p>
-                </div>
-              `}
-            </div>
-          </div>
-
-          <!-- Right Pane: Active Chat Window -->
-          <div id="chatActivePane" class="chat-main-pane">
-            <div class="h-full flex flex-col items-center justify-center p-8 text-center select-none my-auto">
-              <div class="w-16 h-16 rounded-2xl bg-white border border-[#2c2c3c] flex items-center justify-center text-3xl mb-4 text-gold">💬</div>
-              <h3 class="text-base font-bold text-gray-900">Your SellerFlow Messages</h3>
-              <p class="text-gray-600 text-xs max-w-sm mt-1.5 mb-5">Select a conversation from the left to read messages, verify order status, and negotiate prices safely.</p>
-              <button type="button" id="startFirstChatBtn" class="bg-gold text-black px-4 py-2 rounded-xl text-xs font-bold hover:brightness-110 active:scale-95 transition">＋ Start a New Chat</button>
+            <!-- Right Pane: Active Chat Window -->
+            <div id="chatActivePane" class="chat-main-pane">
+              <div class="h-full flex flex-col items-center justify-center p-8 text-center select-none my-auto">
+                <div class="w-16 h-16 rounded-2xl bg-white border border-[#2c2c3c] flex items-center justify-center text-3xl mb-4 text-gold">💬</div>
+                <h3 class="text-base font-bold text-gray-900">Your SellerFlow Messages</h3>
+                <p class="text-gray-600 text-xs max-w-sm mt-1.5 mb-5">Select a conversation from the left to read messages, verify order status, and negotiate prices safely.</p>
+                <button type="button" id="startFirstChatBtn" class="bg-gold text-black px-4 py-2 rounded-xl text-xs font-bold hover:brightness-110 active:scale-95 transition cursor-pointer">＋ Start a New Chat</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Notifications View Container -->
+      <div id="inboxNotificationsView" class="${currentInboxTab === 'notifications' ? '' : 'hidden'}">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div class="flex items-center gap-1.5 overflow-x-auto text-xs">
+            <button type="button" class="inbox-filter-btn px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${notifFilter === 'all' ? 'bg-gold text-black shadow-xs' : 'bg-gray-100 text-gray-600 hover:text-gray-900'}" data-nfilter="all">All</button>
+            <button type="button" class="inbox-filter-btn px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${notifFilter === 'interactions' ? 'bg-gold text-black shadow-xs' : 'bg-gray-100 text-gray-600 hover:text-gray-900'}" data-nfilter="interactions">Interactions</button>
+            <button type="button" class="inbox-filter-btn px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${notifFilter === 'followers' ? 'bg-gold text-black shadow-xs' : 'bg-gray-100 text-gray-600 hover:text-gray-900'}" data-nfilter="followers">Followers</button>
+            <button type="button" class="inbox-filter-btn px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${notifFilter === 'updates' ? 'bg-gold text-black shadow-xs' : 'bg-gray-100 text-gray-600 hover:text-gray-900'}" data-nfilter="updates">Updates & Orders</button>
+          </div>
+          ${notifUnread > 0 ? `
+            <button type="button" id="inboxMarkAllReadBtn" class="text-xs text-gold font-bold border border-amber-300 bg-white hover:bg-amber-50 px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1">
+              <span>✓</span> Mark all read
+            </button>
+          ` : `
+            <span class="text-xs text-emerald-600 font-semibold px-2 py-1 bg-emerald-50 rounded-lg">✓ All read</span>
+          `}
+        </div>
+
+        <div id="inboxNotifCardsContainer" class="space-y-1">
+          ${buildNotificationsHtml(notifFilter)}
+        </div>
+      </div>
     `;
+
+    // Tab switcher binding
+    window.switchInboxTab = function(tabName){
+      window._sfInboxTab = tabName;
+      $('inboxTabMessagesBtn')?.classList.toggle('active', tabName === 'messages');
+      $('inboxTabNotifsBtn')?.classList.toggle('active', tabName === 'notifications');
+      $('inboxMessagesView')?.classList.toggle('hidden', tabName !== 'messages');
+      $('inboxNotificationsView')?.classList.toggle('hidden', tabName !== 'notifications');
+    };
+
+    $('inboxTabMessagesBtn')?.addEventListener('click', () => window.switchInboxTab('messages'));
+    $('inboxTabNotifsBtn')?.addEventListener('click', () => window.switchInboxTab('notifications'));
+
+    // Notification filter buttons
+    document.querySelectorAll('.inbox-filter-btn').forEach(btn => {
+      btn.onclick = () => {
+        window._sfInboxNotifFilter = btn.dataset.nfilter;
+        document.querySelectorAll('.inbox-filter-btn').forEach(b => {
+          const isSel = b.dataset.nfilter === btn.dataset.nfilter;
+          b.className = `inbox-filter-btn px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${isSel ? 'bg-gold text-black shadow-xs' : 'bg-gray-100 text-gray-600 hover:text-gray-900'}`;
+        });
+        const container = $('inboxNotifCardsContainer');
+        if(container) container.innerHTML = buildNotificationsHtml(btn.dataset.nfilter);
+        bindNotificationCards();
+      };
+    });
+
+    // Mark all read in notifications tab
+    $('inboxMarkAllReadBtn')?.addEventListener('click', () => {
+      const unreadList = notifList.filter(n => !n.read && !readSet.has(n.id));
+      if(unreadList.length) markNotificationsRead(unreadList.map(n => n.id));
+      $('inboxNotifsCountBadge')?.remove();
+      const container = $('inboxNotifCardsContainer');
+      if(container) container.innerHTML = buildNotificationsHtml(window._sfInboxNotifFilter || 'all');
+      bindNotificationCards();
+      toast('All notifications marked as read', 'success');
+    });
+
+    function bindNotificationCards(){
+      document.querySelectorAll('[data-inbox-notif-id]').forEach(card => {
+        card.onclick = () => {
+          const nid = card.dataset.inboxNotifId;
+          const type = card.dataset.inboxNotifType;
+          const actorId = card.dataset.actorId;
+          const postId = card.dataset.postId;
+          const orderId = card.dataset.orderId;
+          if(nid) markNotificationsRead(nid);
+
+          if(type === 'chat' && actorId){
+            window.switchInboxTab('messages');
+            startChat(actorId);
+          } else if(type === 'post' && postId){
+            window.openFeedWithPost(postId);
+          } else if(type === 'follow' && actorId){
+            openUserProfile(actorId);
+          } else if(type === 'order'){
+            navigate('orders');
+          } else if(type === 'update'){
+            const nData = notifList.find(x => x.id === nid);
+            navigate('update', nid, { updateData: nData });
+          } else {
+            navigate('feed');
+          }
+        };
+      });
+    }
+    bindNotificationCards();
 
     // Asynchronously resolve missing profile names for participants
     const missingUids = people.filter(x => !x.p || x.p.name === 'Seller').map(x => x.uid);
@@ -37176,13 +37889,22 @@ FINANCIAL:
     }
 
     // Wire conversation click handlers
-    document.querySelectorAll('[data-chat-id]').forEach(b => {
-      b.onclick = () => openConversation(b.dataset.chatId, b.dataset.chatUser, sellerProfile(b.dataset.chatUser));
+    document.querySelectorAll('.chat-convo-item[data-chat-id]').forEach(b => {
+      b.onclick = (e) => {
+        if(e.target.closest('.chat-delete-convo-btn')) return;
+        openConversation(b.dataset.chatId, b.dataset.chatUser, sellerProfile(b.dataset.chatUser));
+      };
     });
 
     if($('newChatBtn')) $('newChatBtn').onclick = openNewChat;
     const firstChat = $('startFirstChatBtn');
     if(firstChat) firstChat.onclick = openNewChat;
+
+    // Deep link to specific chat if requested
+    const targetUid = options?.targetUid || (targetPostId && targetPostId !== 'notifications' ? targetPostId : null);
+    if(targetUid){
+      startChat(targetUid);
+    }
   };
 
   async function openNewChat(){
@@ -37631,6 +38353,7 @@ FINANCIAL:
   window.startSellerFlowChat = startChat;
   window.startChat = startChat;
   window.renderChats = renderChats;
+  window.renderInbox = renderChats;
   document.addEventListener('click', e => {
     const m = e.target.closest('[data-message-user]');
     if(m) startChat(m.dataset.messageUser);
