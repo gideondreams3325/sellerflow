@@ -131,25 +131,17 @@ if (!fs.existsSync(distUploadsDir)) {
   fs.mkdirSync(distUploadsDir, { recursive: true });
 }
 
-// 1. Pull any existing uploads from android assets into root uploads
-if (fs.existsSync(androidUploadsDir)) {
-  try {
-    fs.cpSync(androidUploadsDir, uploadsDir, { recursive: true });
-  } catch (_) {}
-}
-
-// 2. Push all uploads to dist/uploads
+// 2. Push uploads files to dist/uploads if missing
 if (fs.existsSync(uploadsDir)) {
   try {
-    fs.cpSync(uploadsDir, distUploadsDir, { recursive: true });
+    for (const f of fs.readdirSync(uploadsDir)) {
+      const srcF = path.join(uploadsDir, f);
+      const dstF = path.join(distUploadsDir, f);
+      if (!fs.existsSync(dstF)) {
+        fs.copyFileSync(srcF, dstF);
+      }
+    }
     copiedCount++;
-  } catch (_) {}
-}
-
-// 3. Mirror all uploads back to android assets
-if (fs.existsSync(uploadsDir) && fs.existsSync(path.resolve('android/app/src/main/assets/public'))) {
-  try {
-    fs.cpSync(uploadsDir, androidUploadsDir, { recursive: true });
   } catch (_) {}
 }
 
@@ -189,14 +181,33 @@ if (fs.existsSync(adminDir)) {
 const androidPublicDir = path.resolve('android/app/src/main/assets/public');
 if (fs.existsSync(androidPublicDir)) {
   try {
-    fs.cpSync(distDir, androidPublicDir, { recursive: true });
+    // Only copy non-uploads assets into android assets to avoid duplicating massive upload media trees
+    for (const f of fs.readdirSync(distDir)) {
+      if (f === 'uploads') continue;
+      const s = path.join(distDir, f);
+      const d = path.join(androidPublicDir, f);
+      if (fs.statSync(s).isDirectory()) {
+        fs.cpSync(s, d, { recursive: true });
+      } else {
+        fs.copyFileSync(s, d);
+      }
+    }
   } catch (_) {}
 }
 
 const androidConsumerPublicDir = path.resolve('android/app/src/consumer/assets/public');
 if (fs.existsSync(androidConsumerPublicDir)) {
   try {
-    fs.cpSync(distDir, androidConsumerPublicDir, { recursive: true });
+    for (const f of fs.readdirSync(distDir)) {
+      if (f === 'uploads') continue;
+      const s = path.join(distDir, f);
+      const d = path.join(androidConsumerPublicDir, f);
+      if (fs.statSync(s).isDirectory()) {
+        fs.cpSync(s, d, { recursive: true });
+      } else {
+        fs.copyFileSync(s, d);
+      }
+    }
   } catch (_) {}
 }
 
