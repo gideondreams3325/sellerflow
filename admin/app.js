@@ -561,7 +561,8 @@ async function fetchAdminData(force = false) {
       ordersSnap,
       jobsSnap,
       eventsSnap,
-      adminReviewsSnap
+      adminReviewsSnap,
+      serverPostsRes
     ] = await Promise.all([
       db.collection('users').limit(400).get().catch(err => { console.warn('users fetch error', err); return { docs: [] }; }),
       db.collection('publicProfiles').limit(400).get().catch(() => ({ docs: [] })),

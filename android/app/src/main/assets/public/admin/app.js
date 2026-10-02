@@ -128,11 +128,17 @@ function rebuildUnifiedUsers() {
 function rebuildUnifiedPosts() {
   const postMap = new Map();
   rawPostsMap.forEach((val, key) => {
-    if (val && !val.isDeleted && val.status !== 'deleted') {
+    if (val && !val.isDeleted && val.status !== 'deleted' && val.sellerId) {
       postMap.set(key, { ...val });
     }
   });
-  state.data.posts = Array.from(postMap.values());
+  // Sort posts strictly by creation timestamp descending (newest first)
+  const sorted = Array.from(postMap.values()).sort((a, b) => {
+    const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : (new Date(a.createdAt || a.publishedAt || 0).getTime());
+    const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : (new Date(b.createdAt || b.publishedAt || 0).getTime());
+    return tb - ta;
+  });
+  state.data.posts = sorted;
 }
 
 function rebuildAuditLogs() {
@@ -212,18 +218,53 @@ function initRealtimeListeners() {
     state.data.products = snapshot.docs.map(serializeDoc);
   }, 'products');
 
-  // 5. Posts live listener
-  safeListen(db.collection('posts').limit(300), snapshot => {
+  // 5. Posts live listener (real-time Firebase listener on canonical post source)
+  safeListen(db.collection('posts').limit(500), snapshot => {
     snapshot.docChanges().forEach(change => {
       const doc = change.doc;
       if (change.type === 'removed') {
         rawPostsMap.delete(doc.id);
       } else {
-        rawPostsMap.set(doc.id, serializeDoc(doc));
+        const data = serializeDoc(doc);
+        if (data && data.sellerId && (data.status || data.reviewStatus)) {
+          rawPostsMap.set(doc.id, data);
+        }
       }
     });
     rebuildUnifiedPosts();
   }, 'posts');
+
+  // Authoritative real-time sync with canonical server posts store
+  const postStorePoll = setInterval(async () => {
+    if (!state.isAdmin) return;
+    try {
+      const srvRes = await fetch('/api/posts').then(r => r.ok ? r.json() : null).catch(() => null);
+      if (srvRes?.success && Array.isArray(srvRes.posts)) {
+        let hasChanges = false;
+        srvRes.posts.forEach(sp => {
+          if (!sp || !sp.id || !sp.sellerId) return;
+          const current = rawPostsMap.get(sp.id);
+          if (!current) {
+            rawPostsMap.set(sp.id, sp);
+            hasChanges = true;
+          } else if (
+            current.status !== sp.status ||
+            current.reviewStatus !== sp.reviewStatus ||
+            current.moderationStatus !== sp.moderationStatus ||
+            Boolean(current.isDeleted) !== Boolean(sp.isDeleted)
+          ) {
+            rawPostsMap.set(sp.id, { ...current, ...sp });
+            hasChanges = true;
+          }
+        });
+        if (hasChanges) {
+          rebuildUnifiedPosts();
+          scheduleLiveRender();
+        }
+      }
+    } catch (_) {}
+  }, 2500);
+  realtimeUnsubscribers.push(() => clearInterval(postStorePoll));
 
   // 6. Orders live listener
   safeListen(db.collection('orders').limit(400), snapshot => {
@@ -520,7 +561,8 @@ async function fetchAdminData(force = false) {
       ordersSnap,
       jobsSnap,
       eventsSnap,
-      adminReviewsSnap
+      adminReviewsSnap,
+      serverPostsRes
     ] = await Promise.all([
       db.collection('users').limit(400).get().catch(err => { console.warn('users fetch error', err); return { docs: [] }; }),
       db.collection('publicProfiles').limit(400).get().catch(() => ({ docs: [] })),
@@ -533,7 +575,8 @@ async function fetchAdminData(force = false) {
       db.collection('orders').limit(400).get().catch(() => ({ docs: [] })),
       db.collection('jobs').limit(300).get().catch(() => ({ docs: [] })),
       db.collection('events').limit(300).get().catch(() => ({ docs: [] })),
-      db.collection('adminReviews').where('action', '==', 'takedown').limit(100).get().catch(() => ({ docs: [] }))
+      db.collection('adminReviews').where('action', '==', 'takedown').limit(100).get().catch(() => ({ docs: [] })),
+      fetch('/api/posts').then(r => r.ok ? r.json() : null).catch(() => null)
     ]);
 
     // Populate raw caches for real-time live sync
@@ -542,11 +585,24 @@ async function fetchAdminData(force = false) {
     (postsSnap.docs || []).forEach(d => rawPostsMap.set(d.id, serializeDoc(d)));
     (adminReviewsSnap.docs || []).forEach(d => rawAdminReviewsMap.set(d.id, { id: d.id, ...d.data(), source: 'adminReviews' }));
 
-    // Build unified posts list (do not resurrect deleted records from stale admin review snapshots)
+    // Build unified posts list (merging canonical Firestore posts and persistent server store)
     const postMap = new Map();
     (postsSnap.docs || []).forEach(d => {
       postMap.set(d.id, serializeDoc(d));
     });
+
+    if (serverPostsRes?.success && Array.isArray(serverPostsRes.posts)) {
+      serverPostsRes.posts.forEach(sp => {
+        if (sp && sp.id && sp.sellerId && !sp.isDeleted && sp.status !== 'deleted') {
+          if (!postMap.has(sp.id)) {
+            postMap.set(sp.id, sp);
+          }
+          if (!rawPostsMap.has(sp.id)) {
+            rawPostsMap.set(sp.id, sp);
+          }
+        }
+      });
+    }
 
     // Build unified map of users
     const userMap = new Map();
@@ -1697,8 +1753,26 @@ window.handlePostPermanentDelete = function(postId) {
     btnText: 'Delete Permanently',
     onExecute: async (reason) => {
       try {
-        await db.collection('posts').doc(postId).delete();
+        rawPostsMap.delete(postId);
+        state.data.posts = state.data.posts.filter(p => p.id !== postId);
+        rebuildUnifiedPosts();
+        renderCurrentTab();
+
+        await db.collection('posts').doc(postId).delete().catch(() => {});
         await db.collection('adminReviews').doc(`takedown_post_${postId}`).delete().catch(() => {});
+
+        try {
+          const token = state.currentUser ? await state.currentUser.getIdToken() : '';
+          await fetch('/api/posts/delete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({ postId })
+          }).catch(() => {});
+        } catch (_) {}
+
         showToast('Post permanently deleted', 'success');
         closeConfirmModal();
         await fetchAdminData();

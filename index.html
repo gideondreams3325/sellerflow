@@ -9104,26 +9104,51 @@ async function renderFeed(targetPostId, options){
     }
   }
 
-  // 2. Fetch fresh posts from Firestore (with timeout race for speed)
+  // 2. Fetch fresh posts from Firestore and Authoritative Server Store (with timeout race for speed)
   const fetchFreshPosts = async () => {
     try {
-      if(!db){
-        if(!renderedFromCache){
-          const cleanFallback = (_cachedFeedPosts || []).filter(isEligibleFeedPost);
-          _renderFeedHTML(cleanFallback, targetPostId, options);
+      const postMap = new Map();
+
+      // 1. Fetch from Firestore
+      if(db){
+        try {
+          const fetchPromise = getDocs(query(collection(db,'posts'), limit(60)));
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Feed query timeout')), 3500));
+          const snap = await Promise.race([fetchPromise, timeoutPromise]);
+          if (snap && snap.docs && snap.docs.length > 0) {
+            window._sfFeedLastVisibleDoc = snap.docs[snap.docs.length - 1];
+            window._sfFeedHasMore = snap.docs.length >= 60;
+            snap.docs.forEach(d => {
+              postMap.set(d.id, { id: d.id, ...d.data() });
+            });
+          }
+        } catch(fe) {
+          console.warn('Firestore feed fetch notice:', fe?.message);
         }
-        return;
       }
-      const fetchPromise = getDocs(query(collection(db,'posts'), limit(60)));
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Feed query timeout')), 3500));
-      const snap = await Promise.race([fetchPromise, timeoutPromise]);
-      
-      if (snap && snap.docs && snap.docs.length > 0) {
-        window._sfFeedLastVisibleDoc = snap.docs[snap.docs.length - 1];
-        window._sfFeedHasMore = snap.docs.length >= 60;
+
+      // 2. Fetch from Authoritative Server Store (/api/posts)
+      try {
+        const srvRes = await fetch('/api/posts').then(r => r.ok ? r.json() : null).catch(() => null);
+        if(srvRes && srvRes.success && Array.isArray(srvRes.posts)){
+          srvRes.posts.forEach(sp => {
+            if(sp && sp.id && !postMap.has(sp.id)){
+              postMap.set(sp.id, sp);
+            }
+          });
+        }
+      } catch(se) {}
+
+      // 3. Merge in-memory newly published cache
+      if(window._sfCachedPosts && typeof window._sfCachedPosts.forEach === 'function'){
+        window._sfCachedPosts.forEach((val, key) => {
+          if(key && val && !postMap.has(key)){
+            postMap.set(key, val);
+          }
+        });
       }
-      
-      const posts = snap.docs.map(d=>({id:d.id,...d.data()}))
+
+      const posts = Array.from(postMap.values())
         .filter(isEligibleFeedPost)
         .sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
       
@@ -25181,27 +25206,33 @@ init();
       return out;
     }
 
-    if (isAdmin || (typeof isUserAdminEmail === 'function' && isUserAdminEmail(currentUser?.email))) {
+    const nowIso = new Date().toISOString();
+    const isUserAdmin = isAdmin || (typeof isUserAdminEmail === 'function' && isUserAdminEmail(currentUser?.email));
+
+    if (isUserAdmin) {
       postData.status = 'published';
       postData.reviewStatus = 'approved';
+      postData.moderationStatus = 'APPROVED';
       postData.safeContent = true;
-      postData.publishedAt = serverTimestamp();
+      postData.publishedAt = nowIso;
+      postData.createdAt = postData.createdAt || nowIso;
       const adminClean = sanitizePostData(postData);
       let ref = null;
       try {
         ref = await addDoc(collection(db, 'posts'), adminClean);
-      } catch (_) {
-        try {
-          const idToken = currentUser ? await currentUser.getIdToken() : '';
-          const srvRes = await fetch('/api/posts/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {}) },
-            body: JSON.stringify(adminClean)
-          });
-          const srvData = await srvRes.json();
-          if (srvData?.success && srvData?.id) ref = { id: srvData.id };
-        } catch (_) {}
-      }
+      } catch (_) {}
+
+      try {
+        const idToken = (typeof currentUser?.getIdToken === 'function') ? await currentUser.getIdToken().catch(() => '') : '';
+        const srvRes = await fetch('/api/posts/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {}) },
+          body: JSON.stringify({ ...adminClean, ...(ref?.id ? { id: ref.id } : {}) })
+        });
+        const srvData = await srvRes.json();
+        if (srvData?.success && srvData?.id) ref = { id: srvData.id };
+      } catch (_) {}
+
       if (!ref) {
         ref = { id: 'post_admin_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) };
       }
@@ -25217,10 +25248,13 @@ init();
     // For You posts: Go live immediately upon upload and leave a review on the Security Team Desk
     postData.status = 'published';
     postData.reviewStatus = 'pending_security_review';
+    postData.moderationStatus = 'PENDING';
     postData.safeContent = true;
     postData.liveOnForYou = true;
-    postData.publishedAt = serverTimestamp();
-    postData.submittedToSecurityDeskAt = serverTimestamp();
+    postData.publishedAt = nowIso;
+    postData.createdAt = postData.createdAt || nowIso;
+    postData.submittedAt = nowIso;
+    postData.submittedToSecurityDeskAt = nowIso;
     const cleanPostData = sanitizePostData(postData);
 
     // 1. Initial post document created in Firestore with seamless server fallback
@@ -25229,29 +25263,31 @@ init();
       ref = await addDoc(collection(db, 'posts'), cleanPostData);
     } catch (createErr) {
       console.warn('Direct Firestore post add notice; utilizing authoritative server endpoint:', createErr?.message || createErr);
-      try {
-        const idToken = currentUser ? await currentUser.getIdToken() : '';
-        const srvRes = await fetch('/api/posts/create', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {})
-          },
-          body: JSON.stringify(cleanPostData)
-        });
-        if (srvRes.ok) {
-          const srvData = await srvRes.json();
-          if (srvData?.success && srvData?.id) {
-            ref = { id: srvData.id };
-          }
+    }
+
+    try {
+      const idToken = (typeof currentUser?.getIdToken === 'function') ? await currentUser.getIdToken().catch(() => '') : '';
+      const srvRes = await fetch('/api/posts/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {})
+        },
+        body: JSON.stringify({ ...cleanPostData, ...(ref?.id ? { id: ref.id } : {}) })
+      });
+      if (srvRes.ok) {
+        const srvData = await srvRes.json();
+        if (srvData?.success && srvData?.id) {
+          ref = { id: srvData.id };
         }
-      } catch (srvErr) {
-        console.warn('Server post creation fallback notice:', srvErr?.message || srvErr);
       }
-      if (!ref) {
-        // Resilient client fallback ID so user publishing is NEVER blocked by network/permissions
-        ref = { id: 'post_sf_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) };
-      }
+    } catch (srvErr) {
+      console.warn('Server post creation fallback notice:', srvErr?.message || srvErr);
+    }
+
+    if (!ref) {
+      // Resilient client fallback ID so user publishing is NEVER blocked by network/permissions
+      ref = { id: 'post_sf_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) };
     }
 
     // 2. Query authoritative server-side moderation endpoint with Gemini 3.8 Flash
@@ -25274,52 +25310,51 @@ init();
     }
 
     try{
-      if(!currentUser){
-        throw new Error('User not authenticated');
-      }
-      const idToken = await currentUser.getIdToken();
-      const moderationPayload = {
-        postId: ref.id,
-        sellerId: currentUser.uid,
-        text: postData.text || '',
-        title: postData.title || '',
-        fileName: uploadFile?.name || '',
-        mediaUrl: postData.mediaUrl || '',
-        mediaType: postData.mediaType || '',
-        soundName: postData.soundName || '',
-        soundArtist: postData.soundArtist || '',
-        soundOriginName: postData.soundOriginName || ''
-      };
+      if(currentUser){
+        const idToken = (typeof currentUser.getIdToken === 'function') ? await currentUser.getIdToken().catch(() => '') : '';
+        const moderationPayload = {
+          postId: ref.id,
+          sellerId: currentUser.uid,
+          text: postData.text || '',
+          title: postData.title || '',
+          fileName: uploadFile?.name || '',
+          mediaUrl: postData.mediaUrl || '',
+          mediaType: postData.mediaType || '',
+          soundName: postData.soundName || '',
+          soundArtist: postData.soundArtist || '',
+          soundOriginName: postData.soundOriginName || ''
+        };
 
-      let res = await fetch('/api/moderation/inspect-post', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
-        },
-        body: JSON.stringify(moderationPayload)
-      });
+        let res = await fetch('/api/moderation/inspect-post', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {})
+          },
+          body: JSON.stringify(moderationPayload)
+        });
 
-      if(res && res.ok){
-        const data = await res.json();
-        verdict = data.verdict || 'REVIEW';
-        evalResult = data.evalResult || data;
-        if(data.copyrightResult && data.copyrightResult.copyrightDetected){
-          copyrightResult = data.copyrightResult;
+        if(res && res.ok){
+          const data = await res.json();
+          verdict = data.verdict || 'REVIEW';
+          evalResult = data.evalResult || data;
+          if(data.copyrightResult && data.copyrightResult.copyrightDetected){
+            copyrightResult = data.copyrightResult;
+          }
         }
-      } else {
-        console.warn('Moderation backend returned non-OK status; post remains hidden/under_review');
       }
     }catch(err){
-      console.warn('Server moderation request error; post remains live on For You while queued for security review', err);
+      console.warn('Server moderation request notice; post remains live on For You while queued for security review', err);
     }
 
     // Immediately cache newly published post as live on For You
     postData.id = ref?.id;
     postData.status = 'published';
     postData.reviewStatus = 'pending_security_review';
+    postData.moderationStatus = 'PENDING';
     postData.safeContent = true;
     postData.liveOnForYou = true;
+    postData.createdAt = postData.createdAt || nowIso;
 
     if(window._sfCachedPosts && ref?.id){
       window._sfCachedPosts.set(ref.id, {
@@ -25329,6 +25364,8 @@ init();
         safeContent: true,
         liveOnForYou: true,
         reviewStatus: 'pending_security_review',
+        moderationStatus: 'PENDING',
+        createdAt: nowIso,
         ...(copyrightResult && copyrightResult.copyrightDetected ? {
           copyrightDetected: true,
           audioMutedByCopyright: true,
@@ -25345,7 +25382,8 @@ init();
         safeContent: true,
         liveOnForYou: true,
         reviewStatus: 'pending_security_review',
-        createdAt: Date.now(),
+        moderationStatus: 'PENDING',
+        createdAt: nowIso,
         ...(copyrightResult && copyrightResult.copyrightDetected ? {
           copyrightDetected: true,
           audioMutedByCopyright: true,
@@ -31662,7 +31700,8 @@ init();
       directKycSnap,
       directOrdersSnap,
       directJobsSnap,
-      directEventsSnap
+      directEventsSnap,
+      serverPostsRes
     ] = await Promise.all([
       getDocs(query(collection(db, 'users'), limit(150))).catch(e => {
         console.warn('Admin users query notice:', e?.message || String(e));
@@ -31698,7 +31737,8 @@ init();
       }),
       getDocs(query(collection(db, 'events'), limit(100))).catch(e => {
         return { docs: [], size: 0 };
-      })
+      }),
+      fetch('/api/posts').then(r => r.ok ? r.json() : null).catch(() => null)
     ]);
 
     // Helper to wrap Firestore snapshots into unified doc collection
@@ -31763,7 +31803,13 @@ init();
       forEach: (fn) => mergedUserDocs.forEach(fn)
     };
 
-    const posts = mergeToDocSnap(directPostsSnap);
+    const cachedPostArray = Array.from(new Set([
+      ...(serverPostsRes?.success && Array.isArray(serverPostsRes.posts) ? serverPostsRes.posts : []),
+      ...(typeof _cachedFeedPosts !== 'undefined' && Array.isArray(_cachedFeedPosts) ? _cachedFeedPosts : []),
+      ...(window._cachedFeedPosts && Array.isArray(window._cachedFeedPosts) ? window._cachedFeedPosts : []),
+      ...(window._sfCachedPosts && typeof window._sfCachedPosts.values === 'function' ? Array.from(window._sfCachedPosts.values()) : [])
+    ]));
+    const posts = mergeToDocSnap(directPostsSnap, cachedPostArray);
     const reports = mergeToDocSnap(directReportsSnap);
     const storesSnap = mergeToDocSnap(directStoresSnap);
     const productsSnap = mergeToDocSnap(directProductsSnap);
