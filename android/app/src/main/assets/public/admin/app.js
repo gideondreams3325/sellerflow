@@ -125,10 +125,12 @@ function rebuildUnifiedUsers() {
   state.data.users = Array.from(merged.values());
 }
 
+window._sfPermanentlyDeletedPostIds = window._sfPermanentlyDeletedPostIds || new Set();
+
 function rebuildUnifiedPosts() {
   const postMap = new Map();
   rawPostsMap.forEach((val, key) => {
-    if (val && !val.isDeleted && val.status !== 'deleted' && val.sellerId) {
+    if (val && !val.isDeleted && val.status !== 'deleted' && val.sellerId && !window._sfPermanentlyDeletedPostIds.has(key)) {
       postMap.set(key, { ...val });
     }
   });
@@ -582,18 +584,24 @@ async function fetchAdminData(force = false) {
     // Populate raw caches for real-time live sync
     (usersSnap.docs || []).forEach(d => rawUsersMap.set(d.id, serializeDoc(d)));
     (publicProfilesSnap.docs || []).forEach(d => rawProfilesMap.set(d.id, serializeDoc(d)));
-    (postsSnap.docs || []).forEach(d => rawPostsMap.set(d.id, serializeDoc(d)));
+    (postsSnap.docs || []).forEach(d => {
+      if (!window._sfPermanentlyDeletedPostIds?.has(d.id)) {
+        rawPostsMap.set(d.id, serializeDoc(d));
+      }
+    });
     (adminReviewsSnap.docs || []).forEach(d => rawAdminReviewsMap.set(d.id, { id: d.id, ...d.data(), source: 'adminReviews' }));
 
     // Build unified posts list (merging canonical Firestore posts and persistent server store)
     const postMap = new Map();
     (postsSnap.docs || []).forEach(d => {
-      postMap.set(d.id, serializeDoc(d));
+      if (!window._sfPermanentlyDeletedPostIds?.has(d.id)) {
+        postMap.set(d.id, serializeDoc(d));
+      }
     });
 
     if (serverPostsRes?.success && Array.isArray(serverPostsRes.posts)) {
       serverPostsRes.posts.forEach(sp => {
-        if (sp && sp.id && sp.sellerId && !sp.isDeleted && sp.status !== 'deleted') {
+        if (sp && sp.id && sp.sellerId && !sp.isDeleted && sp.status !== 'deleted' && !window._sfPermanentlyDeletedPostIds?.has(sp.id)) {
           if (!postMap.has(sp.id)) {
             postMap.set(sp.id, sp);
           }
@@ -1647,16 +1655,19 @@ window.inspectPostDetails = function(postId) {
 
 window.handlePostTakedown = function(postId) {
   openConfirmModal({
-    action: 'takedown',
-    title: `Take Down Post: ${postId}`,
-    prompt: 'Taking this post down will immediately remove it from the live For You feed and user discovery if it violates For You rules, and log an audit ticket.',
+    action: 'delete',
+    title: `Permanently Delete Post: ${postId}`,
+    prompt: 'Taking this post down will permanently and forever delete it from SellerFlow, removing its database records, media files, and feed presence.',
     destructive: true,
-    btnText: 'Take Down Immediately',
+    btnText: 'Delete Permanently & Remove',
     onExecute: async (reason) => {
       try {
-        const post = state.data.posts.find(p => p.id === postId);
+        rawPostsMap.delete(postId);
+        state.data.posts = state.data.posts.filter(p => p.id !== postId);
+        rebuildUnifiedPosts();
+        renderCurrentTab();
 
-        // Call authoritative server-side takedown endpoint
+        // Call authoritative server-side takedown & permanent delete endpoint
         try {
           const token = state.currentUser ? await state.currentUser.getIdToken() : '';
           await fetch('/api/admin/takedown', {
@@ -1671,30 +1682,22 @@ window.handlePostTakedown = function(postId) {
           console.warn('Server takedown API notice:', apiErr);
         }
 
-        await db.collection('posts').doc(postId).set({
-          status: 'taken_down',
-          reviewStatus: 'removed',
-          safeContent: false,
-          hidden: true,
-          liveOnForYou: false,
-          takedownReason: reason || 'Violation of For You content safety rules',
-          removedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          removedBy: state.currentUser?.email || 'security_officer',
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
+        try {
+          const token = state.currentUser ? await state.currentUser.getIdToken() : '';
+          await fetch('/api/posts/delete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({ postId })
+          }).catch(() => {});
+        } catch (_) {}
 
-        await db.collection('adminReviews').add({
-          action: 'takedown',
-          targetType: 'post',
-          targetId: postId,
-          reason: reason || 'Violation of For You content safety rules',
-          postSnapshot: post || null,
-          adminEmail: state.currentUser?.email || 'security_officer',
-          adminUid: state.currentUser?.uid || '',
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        await db.collection('posts').doc(postId).delete().catch(() => {});
+        await db.collection('adminReviews').doc(`takedown_post_${postId}`).delete().catch(() => {});
 
-        showToast('Post taken down immediately from For You feed', 'success');
+        showToast('Post permanently deleted forever by Security Team', 'success');
         closeConfirmModal();
         await fetchAdminData();
       } catch (err) {
@@ -1748,11 +1751,14 @@ window.handlePostPermanentDelete = function(postId) {
   openConfirmModal({
     action: 'delete',
     title: `Permanently Delete Post: ${postId}`,
-    prompt: 'Are you sure you want to permanently delete this post? This action cannot be undone and will purge the content from the database.',
+    prompt: 'Are you sure you want to permanently delete this post? This action cannot be undone and will permanently purge the content and all media forever.',
     destructive: true,
-    btnText: 'Delete Permanently',
+    btnText: 'Delete Permanently Forever',
     onExecute: async (reason) => {
       try {
+        window._sfPermanentlyDeletedPostIds = window._sfPermanentlyDeletedPostIds || new Set();
+        window._sfPermanentlyDeletedPostIds.add(postId);
+
         rawPostsMap.delete(postId);
         state.data.posts = state.data.posts.filter(p => p.id !== postId);
         rebuildUnifiedPosts();
@@ -1773,7 +1779,7 @@ window.handlePostPermanentDelete = function(postId) {
           }).catch(() => {});
         } catch (_) {}
 
-        showToast('Post permanently deleted', 'success');
+        showToast('Post permanently and forever deleted', 'success');
         closeConfirmModal();
         await fetchAdminData();
       } catch (err) {

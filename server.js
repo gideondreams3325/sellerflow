@@ -2161,8 +2161,8 @@ app.post('/api/admin/takedown', async (req, res) => {
             recipientId: sellerId,
             userId: sellerId,
             senderName: 'SellerFlow Security Team',
-            title: 'Post Removed by Security Team',
-            message: `Your post was removed and deleted from the For You feed by the Security Team: ${reason}.`,
+            title: 'Post Permanently Deleted by Security Team',
+            message: `Your post was permanently deleted from SellerFlow by the Security Team: ${reason}.`,
             type: 'takedown',
             fromAdmin: true,
             read: false,
@@ -2172,32 +2172,9 @@ app.post('/api/admin/takedown', async (req, res) => {
         } catch (_) {}
       }
 
-      // Update post status to taken_down / removed so it is securely hidden from public feed but preserved in Restoration Hub
-      const updateData = {
-        status: 'taken_down',
-        reviewStatus: 'removed',
-        safeContent: false,
-        isDeleted: false,
-        hidden: true,
-        takedownReason: reason,
-        removedAt: FieldValue.serverTimestamp(),
-        removedBy: callerUid
-      };
+      await recordPermanentPostDeletion(itemUid, callerUid, reason || 'Permanently deleted by security team');
 
-      try {
-        await postRef.set(updateData, { merge: true }).catch(() => {});
-      } catch (_) {}
-
-      try {
-        const posts = getPostsStore();
-        const idx = posts.findIndex(p => p.id === itemUid);
-        if (idx !== -1) {
-          posts[idx] = { ...posts[idx], ...updateData, status: 'taken_down', reviewStatus: 'removed' };
-          savePostsStore(posts);
-        }
-      } catch (_) {}
-
-      return res.json({ success: true, message: 'Post taken down and archived in Restoration Hub successfully' });
+      return res.json({ success: true, message: 'Post permanently and forever deleted by security team', postId: itemUid });
     }
 
     if (type === 'product') {
@@ -2404,6 +2381,9 @@ app.post('/api/admin/restore', async (req, res) => {
     }
 
     if (type === 'post') {
+      if (isPostPermanentlyDeleted(itemUid)) {
+        return res.status(410).json({ success: false, error: 'Cannot restore: This post was deleted permanently and forever.' });
+      }
       const postRef = adminDb.collection('posts').doc(itemUid);
       let postSnap = null;
       try {
@@ -2761,38 +2741,14 @@ app.post('/api/admin/posts/moderate', async (req, res) => {
 
       return res.json({ success: true, message: 'Post approved successfully', postId: targetPostId });
     } else {
-      const updateData = {
-        status: 'taken_down',
-        reviewStatus: 'removed',
-        safeContent: false,
-        isDeleted: false,
-        hidden: true,
-        takedownReason: reason || 'Safety review rejection',
-        removedAt: FieldValue.serverTimestamp(),
-        reviewedAt: FieldValue.serverTimestamp(),
-        reviewedBy: callerUid
-      };
-
-      await postRef.set(updateData, { merge: true }).catch(() => {});
-
-      // Update in-memory / local posts store
-      try {
-        const posts = getPostsStore();
-        const idx = posts.findIndex(p => p.id === targetPostId);
-        if (idx !== -1) {
-          posts[idx] = { ...posts[idx], ...updateData, status: 'taken_down' };
-          savePostsStore(posts);
-        }
-      } catch (_) {}
-
       const sellerId = postData?.sellerId;
       if (sellerId && sellerId !== callerUid) {
         await adminDb.collection('notifications').add({
           recipientId: sellerId,
           userId: sellerId,
           senderName: 'SellerFlow Security Team',
-          title: 'Post Removed',
-          message: 'Your post was removed because it did not meet SellerFlow safety requirements.',
+          title: 'Post Permanently Deleted',
+          message: `Your post was permanently deleted because it did not meet SellerFlow safety requirements: ${reason || 'Safety violation'}.`,
           type: 'takedown',
           fromAdmin: true,
           read: false,
@@ -2801,7 +2757,9 @@ app.post('/api/admin/posts/moderate', async (req, res) => {
         }).catch(() => {});
       }
 
-      return res.json({ success: true, message: 'Post taken down successfully', postId: targetPostId });
+      await recordPermanentPostDeletion(targetPostId, callerUid, reason || 'Safety review rejection - permanently deleted');
+
+      return res.json({ success: true, message: 'Post permanently and forever deleted', postId: targetPostId });
     }
   } catch (err) {
     console.warn('Post moderation error:', err.message);
@@ -2869,12 +2827,10 @@ app.post('/api/admin/permanent-delete', async (req, res) => {
 
     if (type === 'post') {
       try {
-        const posts = getPostsStore();
-        const filtered = posts.filter(p => p.id !== itemUid);
-        if (filtered.length !== posts.length) {
-          savePostsStore(filtered);
-        }
-      } catch (_) {}
+        await recordPermanentPostDeletion(itemUid, callerUid, 'Permanently deleted by security team');
+      } catch (postErr) {
+        console.warn('Post permanent delete error:', postErr);
+      }
     } else if (type === 'job') {
       try {
         const store = getJobsEventsStore();
@@ -2968,19 +2924,21 @@ app.all('/api/admin/overview-data', async (req, res) => {
       return { id: d.id, ...data };
     };
 
-    // Build unified posts list (including any active taken_down posts or archived review snapshots)
+    // Build unified posts list (filtering out permanently deleted posts)
     const postMap = new Map();
     (postsSnap.docs || []).forEach(d => {
-      postMap.set(d.id, serializeDoc(d));
+      if (!isPostPermanentlyDeleted(d.id)) {
+        postMap.set(d.id, serializeDoc(d));
+      }
     });
     (typeof getPostsStore === 'function' ? getPostsStore() : []).forEach(p => {
-      if (p && p.id && !postMap.has(p.id)) {
+      if (p && p.id && !postMap.has(p.id) && !isPostPermanentlyDeleted(p.id)) {
         postMap.set(p.id, p);
       }
     });
     (adminReviewsSnap.docs || []).forEach(d => {
       const rev = d.data() || {};
-      if (rev.targetId && rev.postSnapshot && !postMap.has(rev.targetId)) {
+      if (rev.targetId && rev.postSnapshot && !postMap.has(rev.targetId) && !isPostPermanentlyDeleted(rev.targetId) && rev.action !== 'delete' && rev.action !== 'permanent_delete') {
         postMap.set(rev.targetId, {
           id: rev.targetId,
           ...rev.postSnapshot,
@@ -2991,7 +2949,7 @@ app.all('/api/admin/overview-data', async (req, res) => {
         });
       }
     });
-    const postsList = Array.from(postMap.values());
+    const postsList = Array.from(postMap.values()).filter(p => p && p.id && !isPostPermanentlyDeleted(p.id));
 
     // Build unified map of users (combining users and publicProfiles)
     const userMap = new Map();
@@ -6161,7 +6119,7 @@ app.post('/api/posts/engage', async (req, res) => {
   }
 });
 
-/* User or Admin Post Deletion Endpoint with Real-Time Store Synchronization */
+/* User or Admin Post Deletion Endpoint with Real-Time Store Synchronization & Permanent Deletion */
 app.post('/api/posts/delete', async (req, res) => {
   try {
     const authHeader = req.headers.authorization || '';
@@ -6184,20 +6142,13 @@ app.post('/api/posts/delete', async (req, res) => {
 
     const posts = getPostsStore();
     const targetPost = posts.find(p => p && p.id === postId);
-    if (targetPost && targetPost.sellerId !== callerUid && !isAdmin) {
+    if (targetPost && targetPost.sellerId && targetPost.sellerId !== callerUid && !isAdmin) {
       return res.status(403).json({ success: false, error: 'Forbidden: You can only delete your own posts' });
     }
 
-    const filtered = posts.filter(p => p && p.id !== postId);
-    if (filtered.length !== posts.length) {
-      savePostsStore(filtered);
-    }
+    await recordPermanentPostDeletion(postId, callerUid, isAdmin ? 'Permanently deleted by security team/admin' : 'Permanently deleted by post owner');
 
-    try {
-      await adminDb.collection('posts').doc(postId).delete().catch(() => {});
-    } catch (_) {}
-
-    return res.json({ success: true, message: 'Post deleted successfully', postId });
+    return res.json({ success: true, message: 'Post permanently deleted forever', postId });
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message });
   }
@@ -6678,45 +6629,169 @@ function saveJobsEventsStore(store) {
 const POSTS_VERCEL_TMP_STORE = '/tmp/sellerflow_posts_store.json';
 const POSTS_LOCAL_STORE_PATH = path.join(__dirname, 'data', 'posts_store.json');
 const POSTS_DIST_STORE_PATH = path.join(__dirname, 'dist', 'data', 'posts_store.json');
+const POSTS_ANDROID_STORE_PATH = path.join(__dirname, 'android', 'app', 'src', 'main', 'assets', 'public', 'data', 'posts_store.json');
 
+// Persistent file-backed store for Permanently Deleted Posts (Tombstones)
+const DELETED_POSTS_VERCEL_TMP = '/tmp/sellerflow_deleted_posts.json';
+const DELETED_POSTS_LOCAL_PATH = path.join(__dirname, 'data', 'deleted_posts.json');
+const DELETED_POSTS_DIST_PATH = path.join(__dirname, 'dist', 'data', 'deleted_posts.json');
+const DELETED_POSTS_ANDROID_PATH = path.join(__dirname, 'android', 'app', 'src', 'main', 'assets', 'public', 'data', 'deleted_posts.json');
+
+let _permanentlyDeletedPostIds = new Set();
 let _memoryPostsStore = null;
 let _lastPostsStoreMtime = 0;
 
+function getPermanentlyDeletedPostIds() {
+  const candidatePaths = [DELETED_POSTS_VERCEL_TMP, DELETED_POSTS_LOCAL_PATH, DELETED_POSTS_DIST_PATH, DELETED_POSTS_ANDROID_PATH];
+  for (const storePath of candidatePaths) {
+    try {
+      if (fs.existsSync(storePath)) {
+        const raw = fs.readFileSync(storePath, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          parsed.forEach(id => {
+            if (id && typeof id === 'string') _permanentlyDeletedPostIds.add(id);
+          });
+        }
+      }
+    } catch (_) {}
+  }
+  return _permanentlyDeletedPostIds;
+}
+
+function savePermanentlyDeletedPostIds(idsSet) {
+  const list = Array.from(idsSet || _permanentlyDeletedPostIds);
+  const targetPaths = [DELETED_POSTS_VERCEL_TMP, DELETED_POSTS_LOCAL_PATH, DELETED_POSTS_DIST_PATH, DELETED_POSTS_ANDROID_PATH];
+  for (const p of targetPaths) {
+    try {
+      const dir = path.dirname(p);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(p, JSON.stringify(list, null, 2), 'utf8');
+    } catch (_) {}
+  }
+}
+
+try { getPermanentlyDeletedPostIds(); } catch (_) {}
+
+function isPostPermanentlyDeleted(postId) {
+  if (!postId) return false;
+  getPermanentlyDeletedPostIds();
+  return _permanentlyDeletedPostIds.has(postId);
+}
+
+async function recordPermanentPostDeletion(postId, deletedBy = 'unknown', reason = 'Deleted permanently and forever') {
+  if (!postId || typeof postId !== 'string') return;
+  const cleanPostId = postId.trim();
+  if (!cleanPostId) return;
+
+  _permanentlyDeletedPostIds.add(cleanPostId);
+  savePermanentlyDeletedPostIds(_permanentlyDeletedPostIds);
+
+  // 1. Remove from in-memory and all disk post stores
+  try {
+    const posts = getPostsStore();
+    const filtered = posts.filter(p => p && p.id !== cleanPostId);
+    savePostsStore(filtered);
+  } catch (err) {
+    console.warn('Error filtering post stores during permanent delete:', err?.message || err);
+  }
+
+  // 2. Delete primary post document from Firestore
+  try {
+    await adminDb.collection('posts').doc(cleanPostId).delete().catch(() => {});
+  } catch (_) {}
+
+  // 3. Delete comments subcollection from Firestore
+  try {
+    const commentsSnap = await adminDb.collection('posts').doc(cleanPostId).collection('comments').get().catch(() => null);
+    if (commentsSnap && !commentsSnap.empty) {
+      const batch = adminDb.batch();
+      commentsSnap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit().catch(() => {});
+    }
+  } catch (_) {}
+
+  // 4. Delete likes subcollection from Firestore
+  try {
+    const likesSnap = await adminDb.collection('posts').doc(cleanPostId).collection('likes').get().catch(() => null);
+    if (likesSnap && !likesSnap.empty) {
+      const batch = adminDb.batch();
+      likesSnap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit().catch(() => {});
+    }
+  } catch (_) {}
+
+  // 5. Clean up admin reviews and snapshots to prevent stale resurrection
+  try {
+    await adminDb.collection('adminReviews').doc(`takedown_post_${cleanPostId}`).delete().catch(() => {});
+    await adminDb.collection('adminReviews').doc(cleanPostId).delete().catch(() => {});
+  } catch (_) {}
+
+  // 6. Record authoritative tombstone in Firestore
+  try {
+    await adminDb.collection('deletedPosts').doc(cleanPostId).set({
+      id: cleanPostId,
+      deletedBy: deletedBy || 'system',
+      reason: reason || 'Permanently deleted forever',
+      permanent: true,
+      deletedAt: FieldValue.serverTimestamp()
+    }, { merge: true }).catch(() => {});
+  } catch (_) {}
+
+  // 7. Delete local physical media files if present
+  try {
+    const mediaCandidates = [
+      path.join(uploadsDir, 'media', cleanPostId),
+      path.join(uploadsDir, cleanPostId),
+      path.join(distUploadsDir, 'media', cleanPostId),
+      path.join(distUploadsDir, cleanPostId)
+    ];
+    for (const cPath of mediaCandidates) {
+      if (fs.existsSync(cPath)) {
+        try { fs.rmSync(cPath, { recursive: true, force: true }); } catch (_) {}
+      }
+    }
+  } catch (_) {}
+}
+
 function getPostsStore() {
-  const candidatePaths = [POSTS_VERCEL_TMP_STORE, POSTS_LOCAL_STORE_PATH, POSTS_DIST_STORE_PATH];
+  getPermanentlyDeletedPostIds();
+  const candidatePaths = [POSTS_VERCEL_TMP_STORE, POSTS_LOCAL_STORE_PATH, POSTS_DIST_STORE_PATH, POSTS_ANDROID_STORE_PATH];
   for (const storePath of candidatePaths) {
     try {
       if (fs.existsSync(storePath)) {
         const stat = fs.statSync(storePath);
         if (_memoryPostsStore && stat.mtimeMs <= _lastPostsStoreMtime) {
-          return _memoryPostsStore;
+          return _memoryPostsStore.filter(p => p && p.id && !_permanentlyDeletedPostIds.has(p.id));
         }
         const raw = fs.readFileSync(storePath, 'utf8');
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          _memoryPostsStore = parsed;
+          _memoryPostsStore = parsed.filter(p => p && p.id && !_permanentlyDeletedPostIds.has(p.id));
           _lastPostsStoreMtime = stat.mtimeMs;
           return _memoryPostsStore;
         }
       }
     } catch (_) {}
   }
-  if (_memoryPostsStore) return _memoryPostsStore;
+  if (_memoryPostsStore) return _memoryPostsStore.filter(p => p && p.id && !_permanentlyDeletedPostIds.has(p.id));
   _memoryPostsStore = [];
   return _memoryPostsStore;
 }
 
 function savePostsStore(posts) {
-  _memoryPostsStore = posts;
+  getPermanentlyDeletedPostIds();
+  const cleanPosts = Array.isArray(posts) ? posts.filter(p => p && p.id && !_permanentlyDeletedPostIds.has(p.id)) : [];
+  _memoryPostsStore = cleanPosts;
   _lastPostsStoreMtime = Date.now();
-  try {
-    fs.writeFileSync(POSTS_VERCEL_TMP_STORE, JSON.stringify(posts, null, 2), 'utf8');
-  } catch (_) {}
-  try {
-    const dir = path.dirname(POSTS_LOCAL_STORE_PATH);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(POSTS_LOCAL_STORE_PATH, JSON.stringify(posts, null, 2), 'utf8');
-  } catch (_) {}
+  const targetPaths = [POSTS_VERCEL_TMP_STORE, POSTS_LOCAL_STORE_PATH, POSTS_DIST_STORE_PATH, POSTS_ANDROID_STORE_PATH];
+  for (const p of targetPaths) {
+    try {
+      const dir = path.dirname(p);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(p, JSON.stringify(cleanPosts, null, 2), 'utf8');
+    } catch (_) {}
+  }
 }
 
 // Firestore REST encoding helpers

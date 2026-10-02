@@ -8750,6 +8750,7 @@ window.openUserProfile = openUserProfile;
 let _cachedFeedPosts = [];
 window._sfRemovedPostIds = window._sfRemovedPostIds || new Set();
 window._sfSessionDeletedPostIds = window._sfSessionDeletedPostIds || new Set();
+window._sfPermanentlyDeletedPostIds = window._sfPermanentlyDeletedPostIds || new Set();
 
 // Ensure clean recovery from stale/poisoned cache keys from previous versions
 try {
@@ -8759,7 +8760,14 @@ try {
 try {
   const savedRemoved = JSON.parse(localStorage.getItem('sf_security_removed_posts') || '[]');
   if (Array.isArray(savedRemoved)) {
-    savedRemoved.forEach(id => { if (id) window._sfRemovedPostIds.add(id); });
+    savedRemoved.forEach(id => { if (id) { window._sfRemovedPostIds.add(id); window._sfPermanentlyDeletedPostIds.add(id); } });
+  }
+} catch(_) {}
+
+try {
+  const savedPermDeleted = JSON.parse(localStorage.getItem('sf_permanently_deleted_posts') || '[]');
+  if (Array.isArray(savedPermDeleted)) {
+    savedPermDeleted.forEach(id => { if (id) { window._sfPermanentlyDeletedPostIds.add(id); window._sfRemovedPostIds.add(id); window._sfSessionDeletedPostIds.add(id); } });
   }
 } catch(_) {}
 
@@ -8767,9 +8775,11 @@ function markPostRemovedBySecurity(postId) {
   if (!postId) return;
   window._sfRemovedPostIds.add(postId);
   window._sfSessionDeletedPostIds.add(postId);
+  window._sfPermanentlyDeletedPostIds.add(postId);
   try {
     const list = Array.from(window._sfRemovedPostIds).slice(-1000);
     localStorage.setItem('sf_security_removed_posts', JSON.stringify(list));
+    localStorage.setItem('sf_permanently_deleted_posts', JSON.stringify(Array.from(window._sfPermanentlyDeletedPostIds).slice(-1000)));
   } catch(_) {}
 }
 window.markPostRemovedBySecurity = markPostRemovedBySecurity;
@@ -8777,6 +8787,7 @@ window.markPostRemovedBySecurity = markPostRemovedBySecurity;
 function isPostRemovedBySecurity(p) {
   if (!p) return true;
   const id = typeof p === 'string' ? p : p.id;
+  if (id && window._sfPermanentlyDeletedPostIds && window._sfPermanentlyDeletedPostIds.has(id)) return true;
   if (id && window._sfSessionDeletedPostIds && window._sfSessionDeletedPostIds.has(id)) return true;
   if (id && window._sfRemovedPostIds && window._sfRemovedPostIds.has(id)) return true;
   if (typeof p === 'object') {
@@ -32111,9 +32122,16 @@ init();
       } catch (_) {}
 
       if(window._sfRemovedPostIds) {
-        window._sfRemovedPostIds.delete(postId);
+        window._sfRemovedPostIds.add(postId);
         try {
           localStorage.setItem('sf_removed_post_ids', JSON.stringify([...window._sfRemovedPostIds]));
+          localStorage.setItem('sf_security_removed_posts', JSON.stringify([...window._sfRemovedPostIds]));
+        } catch(_) {}
+      }
+      if(window._sfPermanentlyDeletedPostIds) {
+        window._sfPermanentlyDeletedPostIds.add(postId);
+        try {
+          localStorage.setItem('sf_permanently_deleted_posts', JSON.stringify([...window._sfPermanentlyDeletedPostIds]));
         } catch(_) {}
       }
       if(window._sfSessionDeletedPostIds) {
