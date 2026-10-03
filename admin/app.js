@@ -619,6 +619,37 @@ async function fetchAdminData(force = false) {
       });
     }
 
+    // Incorporate authoritative takedown records from adminReviews to ensure complete Restoration Hub coverage
+    (adminReviewsSnap.docs || []).forEach(d => {
+      const rev = d.data() || {};
+      if (rev.action === 'takedown' && (rev.targetType === 'post' || rev.type === 'post')) {
+        const pId = rev.targetId || rev.id || (d.id ? d.id.replace('takedown_post_', '') : '');
+        if (pId && !window._sfPermanentlyDeletedPostIds?.has(pId)) {
+          if (postMap.has(pId)) {
+            const p = postMap.get(pId);
+            p.status = 'taken_down';
+            p.reviewStatus = 'taken_down';
+            p.hidden = true;
+            p.safeContent = false;
+            p.liveOnForYou = false;
+            p.takedownReason = rev.reason || p.takedownReason || 'Violation of content safety rules';
+            p.takenDownAt = rev.timestamp || p.takenDownAt;
+          } else if (rev.postSnapshot) {
+            const snap = { ...rev.postSnapshot, id: pId };
+            snap.status = 'taken_down';
+            snap.reviewStatus = 'taken_down';
+            snap.hidden = true;
+            snap.safeContent = false;
+            snap.liveOnForYou = false;
+            snap.takedownReason = rev.reason || snap.takedownReason || 'Violation of content safety rules';
+            snap.takenDownAt = rev.timestamp || snap.takenDownAt;
+            postMap.set(pId, snap);
+            rawPostsMap.set(pId, snap);
+          }
+        }
+      }
+    });
+
     // Build unified map of users
     const userMap = new Map();
     (publicProfilesSnap.docs || []).forEach(d => {
@@ -649,6 +680,7 @@ async function fetchAdminData(force = false) {
       fraudReports: (fraudSnap.docs || []).map(serializeDoc),
       jobs: (jobsSnap.docs || []).map(serializeDoc),
       events: (eventsSnap.docs || []).map(serializeDoc),
+      adminReviews: (adminReviewsSnap.docs || []).map(serializeDoc),
       auditLogs: state.data.auditLogs || []
     };
 
@@ -723,6 +755,7 @@ function switchTab(tabId) {
     stores: 'Storefront Directory',
     products: 'Marketplace Products',
     moderation: 'Content Moderation & Restoration',
+    restoration: 'Central Restoration Hub',
     verifications: 'Ghana Card & KYC Verification Center',
     reports: 'Community Safety & Scam Reports',
     orders: 'Commerce Orders Oversight',
@@ -763,6 +796,9 @@ function renderCurrentTab() {
       break;
     case 'moderation':
       renderModerationPosts();
+      break;
+    case 'restoration':
+      renderRestorationHub();
       break;
     case 'verifications':
       renderKycTable();
@@ -818,6 +854,13 @@ function updateBadges() {
   setBadge('badgePendingKyc', pendingKycCount);
   setBadge('badgePendingReports', pendingReportsCount);
   setBadge('badgeFlaggedPosts', flaggedPostsCount);
+
+  const takenDownPostsCount = state.data.posts.filter(p => p.status === 'taken_down' || p.status === 'hidden' || p.status === 'removed' || p.isDeleted || p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down').length;
+  const takenDownProductsCount = state.data.products.filter(p => p.status === 'taken_down' || p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down').length;
+  const takenDownStoresCount = state.data.stores.filter(s => s.status === 'suspended' || s.status === 'taken_down' || s.reviewStatus === 'removed').length;
+  const takenDownJobsEventsCount = [...(state.data.jobs || []), ...(state.data.events || [])].filter(j => j.status === 'taken_down' || j.status === 'removed' || j.status === 'paused').length;
+  const totalRestorationCount = takenDownPostsCount + takenDownProductsCount + takenDownStoresCount + takenDownJobsEventsCount;
+  setBadge('badgeRestorationCount', totalRestorationCount);
 }
 
 // 8. TAB 1: RENDER DASHBOARD
@@ -832,9 +875,10 @@ function renderDashboard() {
   const orders = state.data.orders.length;
   const pendingKyc = state.data.buyerKycRecords.filter(r => r.verificationStatus === 'pending' || r.verificationStatus === 'REVIEW').length;
   const pendingReports = [...state.data.scamReports, ...state.data.fraudReports].filter(r => r.status === 'pending' || !r.status).length;
-  const takenDownCount = state.data.posts.filter(p => p.status === 'taken_down' || p.status === 'hidden').length +
-                         state.data.products.filter(pr => pr.status === 'taken_down').length +
-                         state.data.stores.filter(st => st.status === 'taken_down').length;
+  const takenDownCount = state.data.posts.filter(p => p.status === 'taken_down' || p.status === 'hidden' || p.status === 'removed' || p.isDeleted || p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down').length +
+                         state.data.products.filter(pr => pr.status === 'taken_down' || pr.reviewStatus === 'removed' || pr.reviewStatus === 'taken_down').length +
+                         state.data.stores.filter(st => st.status === 'suspended' || st.status === 'taken_down' || st.reviewStatus === 'removed').length +
+                         [...(state.data.jobs || []), ...(state.data.events || [])].filter(j => j.status === 'taken_down' || j.status === 'removed' || j.status === 'paused').length;
 
   const kpiUsersEl = document.getElementById('kpiTotalUsers');
   if (kpiUsersEl) {
@@ -1549,9 +1593,14 @@ function renderModerationPosts() {
         </div>
 
         <div class="p-3 bg-[#111] border-t border-[#262626] flex items-center justify-between gap-2">
-          <button onclick="inspectPostDetails('${p.id}')" class="btn btn-secondary btn-sm">Inspect</button>
-          <button onclick="handlePostApprove('${p.id}')" class="btn btn-success btn-sm flex-1 font-bold" title="Confirm post complies with rules and keep live">Keep Live ✓</button>
-          <button onclick="handlePostTakedown('${p.id}')" class="btn btn-danger btn-sm flex-1 font-bold" title="Delete permanently and forever">Delete Forever 🗑️</button>
+          ${isTakenDown ? `
+            <button onclick="handlePostRestore('${p.id}')" class="btn btn-secondary text-amber-500 border-amber-500/50 btn-sm flex-1 font-bold">Restore to Feed 🔄</button>
+            <button onclick="handlePostPermanentDelete('${p.id}')" class="btn btn-danger btn-sm flex-1 font-bold">Delete Forever 🗑️</button>
+          ` : `
+            <button onclick="inspectPostDetails('${p.id}')" class="btn btn-secondary btn-sm">Inspect</button>
+            <button onclick="handlePostApprove('${p.id}')" class="btn btn-success btn-sm flex-1 font-bold" title="Confirm post complies with rules and keep live">Keep Live ✓</button>
+            <button onclick="handlePostTakedown('${p.id}')" class="btn btn-danger btn-sm flex-1 font-bold" title="Take down post and archive in Restoration Hub">Take Down 🚫</button>
+          `}
         </div>
       </div>
     `;
@@ -1628,7 +1677,7 @@ window.inspectPostDetails = function(postId) {
     }
   }
 
-  const isTakenDown = post.status === 'taken_down' || post.status === 'hidden';
+  const isTakenDown = post.status === 'taken_down' || post.status === 'hidden' || post.reviewStatus === 'removed' || post.reviewStatus === 'taken_down';
 
   if (approveBtn) {
     approveBtn.classList.remove('hidden');
@@ -1639,12 +1688,21 @@ window.inspectPostDetails = function(postId) {
   }
 
   if (actionBtn) {
-    actionBtn.className = 'btn btn-danger btn-sm font-bold';
-    actionBtn.textContent = 'Delete Permanently Forever';
-    actionBtn.onclick = () => {
-      closePostModal();
-      handlePostTakedown(post.id);
-    };
+    if (isTakenDown) {
+      actionBtn.className = 'btn btn-secondary text-amber-500 border-amber-500/50 btn-sm font-bold';
+      actionBtn.textContent = 'Restore to Feed 🔄';
+      actionBtn.onclick = () => {
+        closePostModal();
+        handlePostRestore(post.id);
+      };
+    } else {
+      actionBtn.className = 'btn btn-danger btn-sm font-bold';
+      actionBtn.textContent = 'Take Down Post 🚫';
+      actionBtn.onclick = () => {
+        closePostModal();
+        handlePostTakedown(post.id);
+      };
+    }
   }
 
   modal?.classList.add('open');
@@ -1652,19 +1710,40 @@ window.inspectPostDetails = function(postId) {
 
 window.handlePostTakedown = function(postId) {
   openConfirmModal({
-    action: 'delete',
-    title: `Permanently Delete Post: ${postId}`,
-    prompt: 'Taking this post down will permanently and forever delete it from SellerFlow, removing its database records, media files, and feed presence.',
+    action: 'takedown',
+    title: `Take Down Post: ${postId}`,
+    prompt: 'Taking this post down will remove it from the live For You feed and place it in the Central Restoration Hub for review or restoration.',
     destructive: true,
-    btnText: 'Delete Permanently & Remove',
+    btnText: 'Confirm Takedown',
     onExecute: async (reason) => {
       try {
-        rawPostsMap.delete(postId);
-        state.data.posts = state.data.posts.filter(p => p.id !== postId);
-        rebuildUnifiedPosts();
-        renderCurrentTab();
+        const post = state.data.posts.find(p => p.id === postId) || rawPostsMap.get(postId);
+        const takedownData = {
+          status: 'taken_down',
+          reviewStatus: 'taken_down',
+          hidden: true,
+          safeContent: false,
+          liveOnForYou: false,
+          takedownReason: reason || 'Violation of content safety rules',
+          takenDownAt: firebase.firestore.FieldValue.serverTimestamp(),
+          takenDownBy: state.currentUser?.email || 'admin',
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
 
-        // Call authoritative server-side takedown & permanent delete endpoint
+        await db.collection('posts').doc(postId).set(takedownData, { merge: true });
+
+        await db.collection('adminReviews').doc(`takedown_post_${postId}`).set({
+          action: 'takedown',
+          targetType: 'post',
+          targetId: postId,
+          reason: reason || 'Violation of content safety rules',
+          postSnapshot: post || null,
+          adminEmail: state.currentUser?.email || 'admin',
+          adminUid: state.currentUser?.uid || '',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        // Call authoritative server-side takedown endpoint
         try {
           const token = state.currentUser ? await state.currentUser.getIdToken() : '';
           await fetch('/api/admin/takedown', {
@@ -1679,24 +1758,29 @@ window.handlePostTakedown = function(postId) {
           console.warn('Server takedown API notice:', apiErr);
         }
 
-        try {
-          const token = state.currentUser ? await state.currentUser.getIdToken() : '';
-          await fetch('/api/posts/delete', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-            },
-            body: JSON.stringify({ postId })
-          }).catch(() => {});
-        } catch (_) {}
+        const localPost = state.data.posts.find(p => p.id === postId);
+        if (localPost) {
+          localPost.status = 'taken_down';
+          localPost.reviewStatus = 'taken_down';
+          localPost.hidden = true;
+          localPost.safeContent = false;
+          localPost.liveOnForYou = false;
+          localPost.takedownReason = reason || 'Violation of content safety rules';
+        }
+        if (rawPostsMap.has(postId)) {
+          const raw = rawPostsMap.get(postId);
+          raw.status = 'taken_down';
+          raw.reviewStatus = 'taken_down';
+          raw.hidden = true;
+          raw.safeContent = false;
+          raw.liveOnForYou = false;
+          raw.takedownReason = reason || 'Violation of content safety rules';
+        }
 
-        await db.collection('posts').doc(postId).delete().catch(() => {});
-        await db.collection('adminReviews').doc(`takedown_post_${postId}`).delete().catch(() => {});
-
-        showToast('Post permanently deleted forever by Security Team', 'success');
+        showToast('Post taken down and archived in Restoration Hub', 'success');
         closeConfirmModal();
-        await fetchAdminData();
+        await rebuildUnifiedPosts();
+        renderCurrentTab();
       } catch (err) {
         showToast(`Failed: ${err.message}`, 'error');
       }
@@ -1705,7 +1789,90 @@ window.handlePostTakedown = function(postId) {
 };
 
 window.handlePostRestore = function(postId) {
-  showToast('Cannot restore: Posts deleted by post owner or security team are permanently and forever deleted.', 'error');
+  openConfirmModal({
+    action: 'restore',
+    title: `Restore Post: ${postId}`,
+    prompt: 'Restoring this post will reactivate it, clear takedown penalties, and return it live to the For You feed.',
+    destructive: false,
+    btnText: 'Restore to Live Feed',
+    onExecute: async (reason) => {
+      try {
+        const restoreData = {
+          status: 'published',
+          reviewStatus: 'approved',
+          hidden: false,
+          safeContent: true,
+          liveOnForYou: true,
+          takedownReason: null,
+          takenDownAt: null,
+          removedAt: null,
+          restoredAt: firebase.firestore.FieldValue.serverTimestamp(),
+          restoredBy: state.currentUser?.email || 'admin',
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await db.collection('posts').doc(postId).set(restoreData, { merge: true });
+
+        // Clean up takedown review marker
+        await db.collection('adminReviews').doc(`takedown_post_${postId}`).delete().catch(() => {});
+
+        await db.collection('adminReviews').doc(`restore_post_${postId}`).set({
+          action: 'restore',
+          targetType: 'post',
+          targetId: postId,
+          reason: reason || 'Restored by Administrator',
+          adminEmail: state.currentUser?.email || 'admin',
+          adminUid: state.currentUser?.uid || '',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        // Call authoritative server-side restore endpoint
+        try {
+          const token = state.currentUser ? await state.currentUser.getIdToken() : '';
+          await fetch('/api/admin/restore', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({ type: 'post', id: postId })
+          });
+        } catch (apiErr) {
+          console.warn('Server restore API notice:', apiErr);
+        }
+
+        const localPost = state.data.posts.find(p => p.id === postId);
+        if (localPost) {
+          localPost.status = 'published';
+          localPost.reviewStatus = 'approved';
+          localPost.hidden = false;
+          localPost.safeContent = true;
+          localPost.liveOnForYou = true;
+          localPost.takedownReason = null;
+        }
+        if (rawPostsMap.has(postId)) {
+          const raw = rawPostsMap.get(postId);
+          raw.status = 'published';
+          raw.reviewStatus = 'approved';
+          raw.hidden = false;
+          raw.safeContent = true;
+          raw.liveOnForYou = true;
+          raw.takedownReason = null;
+        }
+
+        if (window._sfPermanentlyDeletedPostIds) {
+          window._sfPermanentlyDeletedPostIds.delete(postId);
+        }
+
+        showToast('Post restored successfully to live feed', 'success');
+        closeConfirmModal();
+        await rebuildUnifiedPosts();
+        renderCurrentTab();
+      } catch (err) {
+        showToast(`Failed: ${err.message}`, 'error');
+      }
+    }
+  });
 };
 
 window.handlePostPermanentDelete = function(postId) {
@@ -1730,6 +1897,18 @@ window.handlePostPermanentDelete = function(postId) {
 
         try {
           const token = state.currentUser ? await state.currentUser.getIdToken() : '';
+          await fetch('/api/admin/permanent-delete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({ type: 'post', id: postId, targetId: postId })
+          }).catch(() => {});
+        } catch (_) {}
+
+        try {
+          const token = state.currentUser ? await state.currentUser.getIdToken() : '';
           await fetch('/api/posts/delete', {
             method: 'POST',
             headers: {
@@ -1749,6 +1928,278 @@ window.handlePostPermanentDelete = function(postId) {
     }
   });
 };
+
+// 12B. TAB: CENTRAL RESTORATION HUB
+let currentRestoFilter = 'all';
+
+function renderRestorationHub() {
+  const container = document.getElementById('restorationItemsContainer');
+  if (!container) return;
+
+  const searchQuery = (document.getElementById('restorationSearchInput')?.value || '').toLowerCase().trim();
+
+  // Gather taken down items
+  const takenDownPosts = state.data.posts.filter(p => {
+    return p.status === 'taken_down' || p.status === 'hidden' || p.status === 'removed' || p.isDeleted || p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down';
+  });
+
+  const takenDownProducts = state.data.products.filter(p => {
+    return p.status === 'taken_down' || p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down';
+  });
+
+  const takenDownStores = state.data.stores.filter(s => {
+    return s.status === 'suspended' || s.status === 'taken_down' || s.reviewStatus === 'removed';
+  });
+
+  const takenDownJobs = (state.data.jobs || []).filter(j => {
+    return j.status === 'taken_down' || j.status === 'removed' || j.status === 'paused';
+  });
+
+  const takenDownEvents = (state.data.events || []).filter(e => {
+    return e.status === 'taken_down' || e.status === 'removed' || e.status === 'paused';
+  });
+
+  const takenDownJobsEvents = [...takenDownJobs.map(j => ({ ...j, itemType: 'job' })), ...takenDownEvents.map(e => ({ ...e, itemType: 'event' }))];
+
+  const totalRestoCount = takenDownPosts.length + takenDownProducts.length + takenDownStores.length + takenDownJobsEvents.length;
+
+  // Update counter badges
+  const restoCountBadge = document.getElementById('restorationCount');
+  if (restoCountBadge) restoCountBadge.textContent = `${totalRestoCount} Archived Items`;
+
+  const mPosts = document.getElementById('restoMetricPosts');
+  if (mPosts) mPosts.textContent = takenDownPosts.length;
+  const mProds = document.getElementById('restoMetricProducts');
+  if (mProds) mProds.textContent = takenDownProducts.length;
+  const mStores = document.getElementById('restoMetricStores');
+  if (mStores) mStores.textContent = takenDownStores.length;
+  const mJE = document.getElementById('restoMetricJobsEvents');
+  if (mJE) mJE.textContent = takenDownJobsEvents.length;
+
+  const tabAll = document.getElementById('restoTabAllCount');
+  if (tabAll) tabAll.textContent = totalRestoCount;
+  const tabPosts = document.getElementById('restoTabPostsCount');
+  if (tabPosts) tabPosts.textContent = takenDownPosts.length;
+  const tabProds = document.getElementById('restoTabProductsCount');
+  if (tabProds) tabProds.textContent = takenDownProducts.length;
+  const tabStores = document.getElementById('restoTabStoresCount');
+  if (tabStores) tabStores.textContent = takenDownStores.length;
+  const tabJobs = document.getElementById('restoTabJobsCount');
+  if (tabJobs) tabJobs.textContent = takenDownJobsEvents.length;
+
+  let items = [];
+  if (currentRestoFilter === 'all' || currentRestoFilter === 'posts') {
+    takenDownPosts.forEach(p => items.push({ type: 'post', id: p.id, data: p }));
+  }
+  if (currentRestoFilter === 'all' || currentRestoFilter === 'products') {
+    takenDownProducts.forEach(p => items.push({ type: 'product', id: p.id, data: p }));
+  }
+  if (currentRestoFilter === 'all' || currentRestoFilter === 'stores') {
+    takenDownStores.forEach(s => items.push({ type: 'store', id: s.id || s.sellerId, data: s }));
+  }
+  if (currentRestoFilter === 'all' || currentRestoFilter === 'jobs_events') {
+    takenDownJobsEvents.forEach(j => items.push({ type: j.itemType || 'job', id: j.id, data: j }));
+  }
+
+  if (searchQuery) {
+    items = items.filter(item => {
+      const d = item.data || {};
+      const haystack = `${item.id} ${d.name || ''} ${d.title || ''} ${d.text || ''} ${d.description || ''} ${d.takedownReason || ''} ${d.sellerId || ''} ${d.ownerId || ''}`.toLowerCase();
+      return haystack.includes(searchQuery);
+    });
+  }
+
+  // Bind filter buttons
+  document.querySelectorAll('#restoSubTabs .resto-pill').forEach(btn => {
+    const f = btn.getAttribute('data-resto-filter');
+    const isActive = f === currentRestoFilter;
+    btn.classList.toggle('bg-[#f5b942]', isActive);
+    btn.classList.toggle('text-black', isActive);
+    btn.classList.toggle('bg-gray-100', !isActive);
+    btn.classList.toggle('text-gray-700', !isActive);
+    btn.onclick = () => {
+      currentRestoFilter = f;
+      renderRestorationHub();
+    };
+  });
+
+  const searchInput = document.getElementById('restorationSearchInput');
+  if (searchInput && !searchInput.dataset.bound) {
+    searchInput.dataset.bound = 'true';
+    searchInput.addEventListener('input', () => {
+      renderRestorationHub();
+    });
+  }
+
+  if (!items.length) {
+    container.innerHTML = `
+      <div class="p-12 text-center border border-gray-200 rounded-2xl bg-white space-y-2">
+        <div class="text-3xl">✨</div>
+        <div class="text-sm font-bold text-gray-900">Restoration Hub is Clean</div>
+        <div class="text-xs text-gray-500">No taken-down content matching your current filter. All items are active and in good standing.</div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = items.map(item => {
+    const d = item.data || {};
+    const reasonText = d.takedownReason || 'Taken down by Administrator';
+    const takenTime = d.takenDownAt || d.updatedAt || d.createdAt;
+
+    if (item.type === 'post') {
+      const isVideo = d.mediaType === 'video' || (d.mediaUrl || '').endsWith('.mp4');
+      return `
+        <div class="p-4 sm:p-5 rounded-2xl border border-gray-200 bg-white flex flex-col sm:flex-row gap-4 items-start justify-between shadow-sm hover:border-gray-300 transition">
+          <div class="flex flex-col sm:flex-row gap-4 min-w-0 flex-1">
+            <div class="w-full sm:w-40 h-28 sm:h-36 rounded-xl bg-black overflow-hidden flex items-center justify-center shrink-0 relative border border-gray-200">
+              ${d.mediaUrl ? (isVideo ? `
+                <video src="${escapeHtml(d.mediaUrl)}" class="w-full h-full object-cover" muted></video>
+                <div class="absolute inset-0 flex items-center justify-center bg-black/40"><span class="text-xl">📹</span></div>
+              ` : `
+                <img src="${escapeHtml(d.mediaUrl)}" class="w-full h-full object-cover">
+              `) : `<div class="text-gray-400 text-xs font-semibold">📝 Text Post</div>`}
+            </div>
+
+            <div class="min-w-0 flex-1 space-y-1.5">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 border border-rose-500/20">
+                  🚫 Taken Down Post
+                </span>
+                <span class="text-[11px] text-gray-500 font-mono">${formatDate(takenTime)}</span>
+              </div>
+              <div class="text-xs font-bold text-gray-900 truncate">
+                ${escapeHtml(d.sellerName || d.sellerUsername || 'Creator')}
+                <span class="text-gray-500 font-normal">(@${escapeHtml(d.sellerUsername || d.sellerId || '')})</span>
+              </div>
+              <p class="text-xs text-gray-700 line-clamp-2 leading-relaxed">${escapeHtml(d.text || '(No caption provided)')}</p>
+              <div class="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+                <span class="font-bold">Reason:</span> ${escapeHtml(reasonText)}
+              </div>
+              <div class="text-[10px] font-mono text-gray-400">Post ID: ${escapeHtml(item.id)}</div>
+            </div>
+          </div>
+
+          <div class="flex sm:flex-col gap-2 shrink-0 w-full sm:w-44 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+            <button onclick="handlePostRestore('${item.id}')" class="btn btn-secondary text-amber-600 border-amber-400/60 hover:bg-amber-50 btn-sm flex-1 font-bold flex items-center justify-center gap-1.5">
+              <span>🔄</span><span>Restore to Feed</span>
+            </button>
+            <button onclick="handlePostPermanentDelete('${item.id}')" class="btn btn-danger btn-sm flex-1 font-bold flex items-center justify-center gap-1.5">
+              <span>🗑️</span><span>Delete Forever</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    if (item.type === 'product') {
+      const img = d.imageUrl || d.image || '';
+      return `
+        <div class="p-4 sm:p-5 rounded-2xl border border-gray-200 bg-white flex flex-col sm:flex-row gap-4 items-start justify-between shadow-sm hover:border-gray-300 transition">
+          <div class="flex flex-col sm:flex-row gap-4 min-w-0 flex-1">
+            <div class="w-full sm:w-28 h-28 rounded-xl bg-gray-50 overflow-hidden flex items-center justify-center shrink-0 border border-gray-200">
+              ${img ? `<img src="${escapeHtml(img)}" class="w-full h-full object-cover">` : `<span class="text-2xl">🛍️</span>`}
+            </div>
+            <div class="min-w-0 flex-1 space-y-1.5">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700 border border-amber-500/20">
+                  🛍️ Delisted Product
+                </span>
+                <span class="text-xs font-bold text-[#b8860b]">GH₵ ${Number(d.price || 0).toFixed(2)}</span>
+              </div>
+              <h4 class="text-sm font-bold text-gray-900 truncate">${escapeHtml(d.name || d.title || 'Product Listing')}</h4>
+              <p class="text-xs text-gray-600 line-clamp-2 leading-relaxed">${escapeHtml(d.description || 'No description.')}</p>
+              <div class="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+                <span class="font-bold">Reason:</span> ${escapeHtml(reasonText)}
+              </div>
+              <div class="text-[10px] font-mono text-gray-400">Product ID: ${escapeHtml(item.id)} | Seller: ${escapeHtml(d.sellerId || '—')}</div>
+            </div>
+          </div>
+
+          <div class="flex sm:flex-col gap-2 shrink-0 w-full sm:w-44 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+            <button onclick="handleProductRestore('${item.id}')" class="btn btn-secondary text-amber-600 border-amber-400/60 hover:bg-amber-50 btn-sm flex-1 font-bold flex items-center justify-center gap-1.5">
+              <span>🔄</span><span>Restore Product</span>
+            </button>
+            <button onclick="handleProductPermanentDelete('${item.id}')" class="btn btn-danger btn-sm flex-1 font-bold flex items-center justify-center gap-1.5">
+              <span>🗑️</span><span>Delete Permanently</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    if (item.type === 'store') {
+      const logo = d.logoUrl || d.logo || '';
+      return `
+        <div class="p-4 sm:p-5 rounded-2xl border border-gray-200 bg-white flex flex-col sm:flex-row gap-4 items-start justify-between shadow-sm hover:border-gray-300 transition">
+          <div class="flex flex-col sm:flex-row gap-4 min-w-0 flex-1">
+            <div class="w-16 h-16 rounded-full bg-gray-50 overflow-hidden flex items-center justify-center shrink-0 border border-gray-200">
+              ${logo ? `<img src="${escapeHtml(logo)}" class="w-full h-full object-cover">` : `<span class="text-2xl">🏬</span>`}
+            </div>
+            <div class="min-w-0 flex-1 space-y-1.5">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-700 border border-purple-500/20">
+                  🏬 Suspended Store
+                </span>
+                <span class="text-[11px] text-gray-500 font-mono">${formatDate(takenTime)}</span>
+              </div>
+              <h4 class="text-sm font-bold text-gray-900 truncate">${escapeHtml(d.name || 'Storefront')}</h4>
+              <p class="text-xs text-gray-600 line-clamp-2 leading-relaxed">${escapeHtml(d.description || 'No description.')}</p>
+              <div class="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+                <span class="font-bold">Reason:</span> ${escapeHtml(reasonText)}
+              </div>
+              <div class="text-[10px] font-mono text-gray-400">Store ID: ${escapeHtml(item.id)} | Owner: ${escapeHtml(d.ownerId || d.sellerId || '—')}</div>
+            </div>
+          </div>
+
+          <div class="flex sm:flex-col gap-2 shrink-0 w-full sm:w-44 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+            <button onclick="handleStoreRestore('${item.id}')" class="btn btn-secondary text-amber-600 border-amber-400/60 hover:bg-amber-50 btn-sm flex-1 font-bold flex items-center justify-center gap-1.5">
+              <span>🔄</span><span>Restore Store</span>
+            </button>
+            <button onclick="handleStorePermanentDelete('${item.id}')" class="btn btn-danger btn-sm flex-1 font-bold flex items-center justify-center gap-1.5">
+              <span>🗑️</span><span>Delete Permanently</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Job or Event
+    const isEvent = item.type === 'event' || d.date;
+    return `
+      <div class="p-4 sm:p-5 rounded-2xl border border-gray-200 bg-white flex flex-col sm:flex-row gap-4 items-start justify-between shadow-sm hover:border-gray-300 transition">
+        <div class="flex flex-col sm:flex-row gap-4 min-w-0 flex-1">
+          <div class="w-14 h-14 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 border border-gray-200 text-2xl">
+            ${isEvent ? '🎟️' : '💼'}
+          </div>
+          <div class="min-w-0 flex-1 space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-700 border border-blue-500/20">
+                ${isEvent ? '🎟️ Quarantined Event' : '💼 Quarantined Job'}
+              </span>
+              <span class="text-[11px] text-gray-500 font-mono">${formatDate(takenTime)}</span>
+            </div>
+            <h4 class="text-sm font-bold text-gray-900 truncate">${escapeHtml(d.title || d.name || 'Listing')}</h4>
+            <p class="text-xs text-gray-600 line-clamp-2 leading-relaxed">${escapeHtml(d.description || 'No description.')}</p>
+            <div class="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+              <span class="font-bold">Reason:</span> ${escapeHtml(reasonText)}
+            </div>
+            <div class="text-[10px] font-mono text-gray-400">ID: ${escapeHtml(item.id)}</div>
+          </div>
+        </div>
+
+        <div class="flex sm:flex-col gap-2 shrink-0 w-full sm:w-44 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+          <button onclick="handleSecurityAction('${item.id}', '${item.type}', 'approve')" class="btn btn-secondary text-amber-600 border-amber-400/60 hover:bg-amber-50 btn-sm flex-1 font-bold flex items-center justify-center gap-1.5">
+            <span>🔄</span><span>Restore Listing</span>
+          </button>
+          <button onclick="handleSecurityAction('${item.id}', '${item.type}', 'remove')" class="btn btn-danger btn-sm flex-1 font-bold flex items-center justify-center gap-1.5">
+            <span>🗑️</span><span>Delete Permanently</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
 
 window.handleProductPermanentDelete = function(productId) {
   openConfirmModal({

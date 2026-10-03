@@ -2096,8 +2096,9 @@ app.get('/api/admin/verification-media', async (req, res) => {
 app.post('/api/admin/takedown', async (req, res) => {
   const authHeader = req.headers.authorization || '';
   const idToken = authHeader.startsWith('Bearer ') ? authHeader.split('Bearer ')[1].trim() : '';
-  const { type = 'post', id, targetId, reason = 'Taken down after administrative safety review' } = req.body || {};
-  const itemUid = id || targetId;
+  const { type, targetType, entityType, id, targetId, entityId, reason = 'Taken down after administrative safety review' } = req.body || {};
+  const resolvedType = type || targetType || entityType || 'post';
+  const itemUid = id || targetId || entityId;
 
   try {
     if (!idToken) {
@@ -2129,7 +2130,7 @@ app.post('/api/admin/takedown', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Missing target item ID' });
     }
 
-    if (type === 'post') {
+    if (resolvedType === 'post') {
       const postRef = adminDb.collection('posts').doc(itemUid);
       let postSnap = null;
       try {
@@ -2141,14 +2142,63 @@ app.post('/api/admin/takedown', async (req, res) => {
       }
       const sellerId = postData?.sellerId;
 
+      await adminDb.collection('adminReviews').doc(`takedown_post_${itemUid}`).set({
+        userId: sellerId || callerUid,
+        targetId: itemUid,
+        type: 'post',
+        targetType: 'post',
+        action: 'takedown',
+        reason,
+        postSnapshot: postData || null,
+        takenDownBy: callerUid,
+        timestamp: FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      await adminDb.collection('securityReviews').add({
+        reviewerUid: callerUid,
+        action: 'takedown',
+        targetType: 'post',
+        targetId: itemUid,
+        reason,
+        timestamp: FieldValue.serverTimestamp()
+      }).catch(() => {});
+
+      await postRef.set({
+        status: 'taken_down',
+        reviewStatus: 'taken_down',
+        hidden: true,
+        safeContent: false,
+        liveOnForYou: false,
+        takedownReason: reason,
+        takenDownAt: FieldValue.serverTimestamp(),
+        takenDownBy: callerUid
+      }, { merge: true });
+
+      if (_memoryPostsStore && Array.isArray(_memoryPostsStore)) {
+        const memPost = _memoryPostsStore.find(p => p && p.id === itemUid);
+        if (memPost) {
+          memPost.status = 'taken_down';
+          memPost.reviewStatus = 'taken_down';
+          memPost.hidden = true;
+          memPost.safeContent = false;
+          memPost.liveOnForYou = false;
+          memPost.takedownReason = reason;
+          memPost.takenDownAt = new Date().toISOString();
+          memPost.takenDownBy = callerUid;
+        }
+        if (typeof savePostsStore === 'function') {
+          savePostsStore(_memoryPostsStore);
+        }
+      }
+
       if (sellerId && sellerId !== callerUid) {
         try {
           await adminDb.collection('notifications').doc(`takedown_post_${itemUid}`).set({
             recipientId: sellerId,
             userId: sellerId,
             senderName: 'SellerFlow Security Team',
-            title: 'Post Permanently Deleted by Security Team',
-            message: `Your post was permanently deleted from SellerFlow by the Security Team: ${reason}.`,
+            title: 'Post Removed by Security Team',
+            message: `Your post was taken down by the SellerFlow Security Team: ${reason}.`,
             type: 'takedown',
             fromAdmin: true,
             read: false,
@@ -2158,12 +2208,10 @@ app.post('/api/admin/takedown', async (req, res) => {
         } catch (_) {}
       }
 
-      await recordPermanentPostDeletion(itemUid, callerUid, reason || 'Permanently deleted by security team');
-
-      return res.json({ success: true, message: 'Post permanently and forever deleted by security team', postId: itemUid });
+      return res.json({ success: true, message: 'Post taken down and archived in Restoration Hub successfully', postId: itemUid });
     }
 
-    if (type === 'product') {
+    if (resolvedType === 'product') {
       const prodRef = adminDb.collection('products').doc(itemUid);
       const prodSnap = await prodRef.get();
       const prodData = prodSnap.exists ? prodSnap.data() : null;
@@ -2206,7 +2254,7 @@ app.post('/api/admin/takedown', async (req, res) => {
       return res.json({ success: true, message: 'Product taken down and archived in Restoration Hub successfully' });
     }
 
-    if (type === 'store') {
+    if (resolvedType === 'store') {
       const storeRef = adminDb.collection('stores').doc(itemUid);
       const storeSnap = await storeRef.get();
       const storeData = storeSnap.exists ? storeSnap.data() : null;
@@ -2247,7 +2295,7 @@ app.post('/api/admin/takedown', async (req, res) => {
       return res.json({ success: true, message: 'Store taken down and archived in Restoration Hub successfully' });
     }
 
-    if (type === 'job') {
+    if (resolvedType === 'job') {
       const jobRef = adminDb.collection('jobs').doc(itemUid);
       const jobSnap = await jobRef.get();
       const jobData = jobSnap.exists ? jobSnap.data() : null;
@@ -2274,7 +2322,7 @@ app.post('/api/admin/takedown', async (req, res) => {
       return res.json({ success: true, message: 'Job taken down and archived in Restoration Hub successfully' });
     }
 
-    if (type === 'event') {
+    if (resolvedType === 'event') {
       const evRef = adminDb.collection('events').doc(itemUid);
       const evSnap = await evRef.get();
       const evData = evSnap.exists ? evSnap.data() : null;
@@ -2307,7 +2355,7 @@ app.post('/api/admin/takedown', async (req, res) => {
     // If gRPC permissions are missing, execute via authenticated Firestore REST API with the caller's admin token
     if (itemUid && idToken && err.message && (err.message.includes('PERMISSION_DENIED') || err.message.includes('Missing or insufficient permissions') || err.code === 7)) {
       try {
-        const coll = type === 'product' ? 'products' : type === 'store' ? 'stores' : 'posts';
+        const coll = resolvedType === 'product' ? 'products' : resolvedType === 'store' ? 'stores' : 'posts';
         const url = `https://firestore.googleapis.com/v1/projects/sellerflow-efaab/databases/(default)/documents/${coll}/${itemUid}`;
         const restRes = await fetch(url, {
           method: 'DELETE',
@@ -2316,7 +2364,7 @@ app.post('/api/admin/takedown', async (req, res) => {
           }
         });
         if (restRes.ok || restRes.status === 404) {
-          return res.json({ success: true, message: `${type} taken down successfully` });
+          return res.json({ success: true, message: `${resolvedType} taken down successfully` });
         }
       } catch (restErr) {
         console.warn('REST fallback error:', restErr.message);
@@ -2333,8 +2381,9 @@ app.post('/api/admin/takedown', async (req, res) => {
 app.post('/api/admin/restore', async (req, res) => {
   const authHeader = req.headers.authorization || '';
   const idToken = authHeader.startsWith('Bearer ') ? authHeader.split('Bearer ')[1].trim() : '';
-  const { type = 'post', id, targetId } = req.body || {};
-  const itemUid = id || targetId;
+  const { type, targetType, entityType, id, targetId, entityId } = req.body || {};
+  const resolvedType = type || targetType || entityType || 'post';
+  const itemUid = id || targetId || entityId;
 
   try {
     if (!idToken) {
@@ -2366,11 +2415,96 @@ app.post('/api/admin/restore', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Missing target item ID' });
     }
 
-    if (type === 'post') {
-      return res.status(400).json({ success: false, error: 'Posts deleted by post owner or security team are permanently and forever deleted and cannot be restored.' });
+    if (resolvedType === 'post') {
+      const postRef = adminDb.collection('posts').doc(itemUid);
+      let postSnap = null;
+      try {
+        postSnap = await postRef.get().catch(() => null);
+      } catch (_) {}
+      let postData = postSnap && postSnap.exists ? postSnap.data() : null;
+      if (!postData && _memoryPostsStore && Array.isArray(_memoryPostsStore)) {
+        postData = _memoryPostsStore.find(p => p.id === itemUid) || null;
+      }
+      const sellerId = postData?.sellerId;
+
+      await postRef.set({
+        status: 'published',
+        reviewStatus: 'approved',
+        hidden: false,
+        safeContent: true,
+        liveOnForYou: true,
+        takedownReason: null,
+        takenDownAt: null,
+        removedAt: null,
+        restoredAt: FieldValue.serverTimestamp(),
+        restoredBy: callerUid
+      }, { merge: true }).catch(() => {});
+
+      if (_memoryPostsStore && Array.isArray(_memoryPostsStore)) {
+        const memPost = _memoryPostsStore.find(p => p && p.id === itemUid);
+        if (memPost) {
+          memPost.status = 'published';
+          memPost.reviewStatus = 'approved';
+          memPost.hidden = false;
+          memPost.safeContent = true;
+          memPost.liveOnForYou = true;
+          delete memPost.takedownReason;
+          delete memPost.takenDownAt;
+          delete memPost.removedAt;
+          memPost.restoredAt = new Date().toISOString();
+          memPost.restoredBy = callerUid;
+        }
+        if (typeof savePostsStore === 'function') {
+          savePostsStore(_memoryPostsStore);
+        }
+      }
+
+      if (_permanentlyDeletedPostIds && typeof _permanentlyDeletedPostIds.delete === 'function') {
+        _permanentlyDeletedPostIds.delete(itemUid);
+      }
+      try {
+        await adminDb.collection('deletedPosts').doc(itemUid).delete().catch(() => {});
+      } catch (_) {}
+
+      await adminDb.collection('adminReviews').doc(`takedown_post_${itemUid}`).delete().catch(() => {});
+      await adminDb.collection('adminReviews').doc(`restore_post_${itemUid}`).set({
+        userId: sellerId || callerUid,
+        targetId: itemUid,
+        type: 'post',
+        targetType: 'post',
+        action: 'restore',
+        restoredBy: callerUid,
+        timestamp: FieldValue.serverTimestamp()
+      }, { merge: true }).catch(() => {});
+
+      await adminDb.collection('securityReviews').add({
+        reviewerUid: callerUid,
+        action: 'restore',
+        targetType: 'post',
+        targetId: itemUid,
+        reason: 'Restored to feed by administrator',
+        timestamp: FieldValue.serverTimestamp()
+      }).catch(() => {});
+
+      if (sellerId && sellerId !== callerUid) {
+        await adminDb.collection('notifications').doc(`restore_post_${itemUid}`).set({
+          recipientId: sellerId,
+          userId: sellerId,
+          senderName: 'SellerFlow Security Team',
+          title: 'Post Restored to Live Feed',
+          message: 'The SellerFlow Security Team has restored your post back to the live For You feed.',
+          type: 'approval',
+          fromAdmin: true,
+          read: false,
+          postId: itemUid,
+          createdAt: FieldValue.serverTimestamp()
+        }, { merge: true }).catch(() => {});
+      }
+
+      return res.json({ success: true, message: 'Post restored to live feed successfully', postId: itemUid });
     }
 
-    if (type === 'product') {
+    if (resolvedType === 'product') {
       const prodRef = adminDb.collection('products').doc(itemUid);
       try {
         await prodRef.set({
@@ -2383,7 +2517,7 @@ app.post('/api/admin/restore', async (req, res) => {
       return res.json({ success: true, message: 'Product restored successfully' });
     }
 
-    if (type === 'store') {
+    if (resolvedType === 'store') {
       const storeRef = adminDb.collection('stores').doc(itemUid);
       try {
         await storeRef.set({
@@ -2396,7 +2530,7 @@ app.post('/api/admin/restore', async (req, res) => {
       return res.json({ success: true, message: 'Store restored successfully' });
     }
 
-    if (type === 'job') {
+    if (resolvedType === 'job') {
       const jobRef = adminDb.collection('jobs').doc(itemUid);
       try {
         await jobRef.set({
@@ -2409,7 +2543,7 @@ app.post('/api/admin/restore', async (req, res) => {
       return res.json({ success: true, message: 'Job vacancy restored successfully' });
     }
 
-    if (type === 'event') {
+    if (resolvedType === 'event') {
       const evRef = adminDb.collection('events').doc(itemUid);
       try {
         await evRef.set({
@@ -2657,7 +2791,7 @@ app.post('/api/admin/posts/moderate', async (req, res) => {
       }
 
       return res.json({ success: true, message: 'Post approved successfully', postId: targetPostId });
-    } else {
+    } else if (action === 'delete') {
       const sellerId = postData?.sellerId;
       if (sellerId && sellerId !== callerUid) {
         await adminDb.collection('notifications').add({
@@ -2677,6 +2811,59 @@ app.post('/api/admin/posts/moderate', async (req, res) => {
       await recordPermanentPostDeletion(targetPostId, callerUid, reason || 'Safety review rejection - permanently deleted');
 
       return res.json({ success: true, message: 'Post permanently and forever deleted', postId: targetPostId });
+    } else {
+      // Takedown to Restoration Hub
+      const updateData = {
+        status: 'taken_down',
+        reviewStatus: 'taken_down',
+        hidden: true,
+        safeContent: false,
+        liveOnForYou: false,
+        takedownReason: reason || 'Safety review rejection',
+        takenDownAt: FieldValue.serverTimestamp(),
+        takenDownBy: callerUid
+      };
+
+      await postRef.set(updateData, { merge: true }).catch(() => {});
+
+      await adminDb.collection('adminReviews').doc(`takedown_post_${targetPostId}`).set({
+        userId: sellerId || callerUid,
+        targetId: targetPostId,
+        type: 'post',
+        targetType: 'post',
+        action: 'takedown',
+        reason: reason || 'Safety review rejection',
+        postSnapshot: postData || null,
+        takenDownBy: callerUid,
+        timestamp: FieldValue.serverTimestamp()
+      }, { merge: true }).catch(() => {});
+
+      try {
+        const posts = getPostsStore();
+        const idx = posts.findIndex(p => p.id === targetPostId);
+        if (idx !== -1) {
+          posts[idx] = { ...posts[idx], ...updateData };
+          savePostsStore(posts);
+        }
+      } catch (_) {}
+
+      const sellerId = postData?.sellerId;
+      if (sellerId && sellerId !== callerUid) {
+        await adminDb.collection('notifications').add({
+          recipientId: sellerId,
+          userId: sellerId,
+          senderName: 'SellerFlow Security Team',
+          title: 'Post Removed by Security Team',
+          message: `Your post was taken down by the SellerFlow Security Team: ${reason || 'Safety review rejection'}.`,
+          type: 'takedown',
+          fromAdmin: true,
+          read: false,
+          postId: targetPostId,
+          createdAt: FieldValue.serverTimestamp()
+        }).catch(() => {});
+      }
+
+      return res.json({ success: true, message: 'Post taken down and archived in Restoration Hub successfully', postId: targetPostId });
     }
   } catch (err) {
     console.warn('Post moderation error:', err.message);
@@ -2889,7 +3076,8 @@ app.all('/api/admin/overview-data', async (req, res) => {
         }),
         orders: (ordersSnap.docs || []).map(serializeDoc),
         jobs: (jobsSnap.docs || []).map(serializeDoc),
-        events: (eventsSnap.docs || []).map(serializeDoc)
+        events: (eventsSnap.docs || []).map(serializeDoc),
+        adminReviews: (adminReviewsSnap.docs || []).map(serializeDoc)
       }
     });
   } catch (err) {

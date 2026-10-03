@@ -27,15 +27,15 @@ jobs:
       - name: 4. Build Web Application
         run: npm run build
 
-      - name: 5. Prepare Android Assets
+      - name: 5. Synchronize Capacitor Android
+        run: npx cap sync android
+
+      - name: 6. Prepare Android Configuration & Assets
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           node scripts/prepare-android-variants.js
           node scripts/patch-capacitor.js
-
-      - name: 6. Verify Google Services Configuration
-        run: |
           test -s android/app/google-services.json || { echo "❌ android/app/google-services.json is missing or empty!"; exit 1; }
           echo "✅ Unified google-services.json verified."
 
@@ -54,21 +54,24 @@ jobs:
         run: chmod +x android/gradlew
 
       - name: 10. Build SellerFlow Debug APK
-        working-directory: ./android
         run: |
+          cd android
           ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: 11. Package & Validate APK Artifact
+      - name: 11. Verify Debug APK File Exists
         run: |
-          node scripts/package-apks.js
-          test -s "SellerFlow-debug.apk" || { echo "❌ SellerFlow-debug.apk missing!"; exit 1; }
-          echo "✅ APK verified successfully on disk:"
-          ls -lh SellerFlow-debug.apk
+          APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
+          if [ ! -f "$APK_PATH" ] || [ ! -s "$APK_PATH" ]; then
+            echo "❌ Error: Expected debug APK not found or empty at $APK_PATH"
+            exit 1
+          fi
+          echo "✅ Debug APK verified successfully on disk:"
+          ls -lh "$APK_PATH"
 
       - name: 12. Upload Debug APK Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: SellerFlow-debug
-          path: SellerFlow-debug.apk
+          name: SellerFlow-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30

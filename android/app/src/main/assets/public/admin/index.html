@@ -164,6 +164,12 @@
             <span id="badgeFlaggedPosts" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold">0</span>
           </a>
 
+          <a href="#restoration" data-tab="restoration" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition">
+            <span class="text-base">🔄</span>
+            <span>Restoration Hub</span>
+            <span id="badgeRestorationCount" class="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold">0</span>
+          </a>
+
           <a href="#reports" data-tab="reports" class="nav-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition">
             <span class="text-base">🚨</span>
             <span>Reports Desk</span>
@@ -361,19 +367,19 @@
                 </div>
 
                 <!-- Card 10: Taken-down Content -->
-                <div class="stat-card border-gray-200">
+                <div class="stat-card border-gray-200 cursor-pointer hover:border-amber-400 transition" onclick="window.location.hash = '#restoration'">
                   <div class="stat-card-header">
                     <span class="stat-label">Taken-Down</span>
                     <span class="stat-icon">🛑</span>
                   </div>
-                  <div class="stat-value text-gray-600" id="kpiTakenDown">-</div>
-                  <div class="stat-footer">Safety removed items</div>
+                  <div class="stat-value text-rose-500 font-bold" id="kpiTakenDown">-</div>
+                  <div class="stat-footer text-rose-400 font-medium">Click for Restoration Hub →</div>
                 </div>
               </div>
             </div>
 
             <!-- Quick Action Shortcuts -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div class="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between">
                 <div>
                   <div class="text-sm font-bold text-gray-900">Ghana Card Verification Desk</div>
@@ -401,6 +407,16 @@
                 </div>
                 <button type="button" onclick="window.location.hash = '#reports'" class="btn btn-danger btn-sm">
                   Handle Reports
+                </button>
+              </div>
+
+              <div class="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <div class="text-sm font-bold text-gray-900">Central Restoration Hub</div>
+                  <div class="text-xs text-gray-600 mt-0.5">Review taken-down posts, products & stores</div>
+                </div>
+                <button type="button" onclick="window.location.hash = '#restoration'" class="btn btn-secondary text-amber-500 border-amber-500/50 btn-sm">
+                  Restoration
                 </button>
               </div>
             </div>
@@ -725,6 +741,70 @@
             <!-- Posts Moderation Grid -->
             <div id="moderationPostsContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               <div class="col-span-full text-center py-12 text-gray-500">Loading posts for moderation...</div>
+            </div>
+          </section>
+
+          <!-- TAB: CENTRAL RESTORATION HUB -->
+          <section id="tab-restoration" class="admin-tab-pane hidden space-y-4">
+            <div class="section-header">
+              <div>
+                <h3 class="section-title"><span>🔄</span> Central Restoration Hub</h3>
+                <p class="text-xs text-gray-600 mt-0.5">Authoritative repository for taken-down posts, delisted products, suspended storefronts, and quarantined jobs/events. Inspect, restore back to live feed/catalog, or permanently delete.</p>
+              </div>
+              <div class="section-actions">
+                <span id="restorationCount" class="text-xs text-rose-500 font-bold">0 Archived Items</span>
+              </div>
+            </div>
+
+            <!-- Metrics Strip -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="p-3 bg-white border border-gray-200 rounded-xl text-center">
+                <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Posts & Reels</div>
+                <div class="text-xl font-black text-rose-600 mt-1" id="restoMetricPosts">0</div>
+              </div>
+              <div class="p-3 bg-white border border-gray-200 rounded-xl text-center">
+                <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Products</div>
+                <div class="text-xl font-black text-amber-600 mt-1" id="restoMetricProducts">0</div>
+              </div>
+              <div class="p-3 bg-white border border-gray-200 rounded-xl text-center">
+                <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Storefronts</div>
+                <div class="text-xl font-black text-purple-600 mt-1" id="restoMetricStores">0</div>
+              </div>
+              <div class="p-3 bg-white border border-gray-200 rounded-xl text-center">
+                <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Jobs & Events</div>
+                <div class="text-xl font-black text-blue-600 mt-1" id="restoMetricJobsEvents">0</div>
+              </div>
+            </div>
+
+            <!-- Filter and Search Bar -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 pb-3">
+              <div class="flex items-center gap-2 overflow-x-auto" id="restoSubTabs">
+                <button type="button" data-resto-filter="all" class="resto-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-[#f5b942] text-black flex items-center gap-1.5">
+                  <span>🔄</span> All Content (<span id="restoTabAllCount">0</span>)
+                </button>
+                <button type="button" data-resto-filter="posts" class="resto-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-1.5">
+                  <span>🎬</span> Posts (<span id="restoTabPostsCount">0</span>)
+                </button>
+                <button type="button" data-resto-filter="products" class="resto-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-1.5">
+                  <span>🛍️</span> Products (<span id="restoTabProductsCount">0</span>)
+                </button>
+                <button type="button" data-resto-filter="stores" class="resto-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-1.5">
+                  <span>🏪</span> Stores (<span id="restoTabStoresCount">0</span>)
+                </button>
+                <button type="button" data-resto-filter="jobs_events" class="resto-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-1.5">
+                  <span>💼</span> Jobs & Events (<span id="restoTabJobsCount">0</span>)
+                </button>
+              </div>
+
+              <div class="search-input-wrapper max-w-xs">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="restorationSearchInput" placeholder="Search title, ID, creator, reason..." class="search-input">
+              </div>
+            </div>
+
+            <!-- Restoration Items List Container -->
+            <div id="restorationItemsContainer" class="space-y-4">
+              <div class="text-center py-12 text-gray-500">Loading archived content...</div>
             </div>
           </section>
 

@@ -23005,7 +23005,7 @@ async function adminTakeDown(arg1, arg2){
   const ok = await customConfirm({
     title: `Take Down ${type.toUpperCase()}?`,
     message: `Are you sure you want to take down this ${type} from SellerFlow?`,
-    warningText: 'The content will immediately be removed and deleted from the live discovery feed.',
+    warningText: 'The content will be removed from the live feed and safely stored in the Restoration Hub.',
     confirmText: `Take Down ${type}`,
     cancelText: 'Cancel',
     type: 'danger',
@@ -23015,7 +23015,6 @@ async function adminTakeDown(arg1, arg2){
   if(!ok) return;
   try{
     if(type==='post'){
-      if(typeof purgeAndHidePostImmediately==='function') purgeAndHidePostImmediately(id, 'Deleted permanently by Security Team');
       try {
         const token = currentUser ? await currentUser.getIdToken() : '';
         const apiUrl = (typeof getSfApiUrl === 'function') ? getSfApiUrl('/api/admin/takedown') : '/api/admin/takedown';
@@ -23025,28 +23024,51 @@ async function adminTakeDown(arg1, arg2){
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           },
-          body: JSON.stringify({ type: 'post', id, reason: 'Administrative safety permanent deletion' })
+          body: JSON.stringify({ type: 'post', id, reason: 'Administrative safety takedown' })
         });
       } catch (_) {}
       try {
-        await deleteDoc(doc(db, 'posts', id));
+        await updateDoc(doc(db, 'posts', id), {
+          status: 'taken_down',
+          reviewStatus: 'taken_down',
+          hidden: true,
+          safeContent: false,
+          liveOnForYou: false,
+          takedownReason: 'Administrative safety takedown',
+          takenDownAt: serverTimestamp(),
+          takenDownBy: currentUser?.uid || 'admin'
+        });
       } catch (_) {}
-      if (window._sfPermanentlyDeletedPostIds) window._sfPermanentlyDeletedPostIds.add(id);
       if (window._sfRemovedPostIds) window._sfRemovedPostIds.add(id);
-      try {
-        const permArr = JSON.parse(localStorage.getItem('sf_permanently_deleted_posts') || '[]');
-        if (!permArr.includes(id)) {
-          permArr.push(id);
-          localStorage.setItem('sf_permanently_deleted_posts', JSON.stringify(permArr));
-        }
-      } catch(_) {}
-      toast('Post permanently deleted forever by Security Team', 'success');
+      if (window._sfSessionDeletedPostIds) window._sfSessionDeletedPostIds.add(id);
+      if (window.invalidateRankedFeedCache) window.invalidateRankedFeedCache();
+      toast('Post taken down and archived in Restoration Hub', 'success');
     }else if(type==='product'){
-      await deleteDoc(doc(db,'products',id));
-      toast('Product removed','success');
+      try {
+        await updateDoc(doc(db,'products',id), {
+          status: 'taken_down',
+          reviewStatus: 'taken_down',
+          takedownReason: 'Administrative delisting',
+          takenDownAt: serverTimestamp(),
+          takenDownBy: currentUser?.uid || 'admin'
+        });
+      } catch(_) {
+        await deleteDoc(doc(db,'products',id)).catch(()=>{});
+      }
+      toast('Product taken down and archived in Restoration Hub','success');
     }else if(type==='store'){
-      await deleteDoc(doc(db,'stores',id));
-      toast('Store removed','success');
+      try {
+        await updateDoc(doc(db,'stores',id), {
+          status: 'suspended',
+          reviewStatus: 'removed',
+          takedownReason: 'Storefront suspension',
+          takenDownAt: serverTimestamp(),
+          takenDownBy: currentUser?.uid || 'admin'
+        });
+      } catch(_) {
+        await deleteDoc(doc(db,'stores',id)).catch(()=>{});
+      }
+      toast('Store suspended and archived in Restoration Hub','success');
     }
     if(typeof renderAdmin==='function'&&currentPage==='admin')renderAdmin();
     else if(typeof renderPage==='function')renderPage();
@@ -29624,22 +29646,28 @@ init();
     if(!uid) return;
     if(type==='product') return adminTakeDownProduct(uid);
     if(type==='store') return adminTakeDownStore(uid);
-    const ok = await customConfirm({
-      title: 'Permanently Delete Post?',
-      message: 'Are you sure you want to permanently delete this post from SellerFlow?',
-      warningText: 'This post will be permanently and forever deleted from the database, feed, and storage.',
-      confirmText: 'Delete Permanently',
+    const reason = await customPrompt({
+      title: 'Take Down Post from Feed',
+      message: 'Specify the compliance or safety reason for taking down this post:',
+      warningText: 'This post will be removed from the live For You feed and safely stored in the Restoration Hub.',
+      placeholder: 'e.g. Violation of community safety guidelines',
+      defaultValue: 'Violation of For You content safety guidelines.',
+      chips: [
+        'Content safety violation',
+        'Scam or fraud suspicion',
+        'Copyright infringement',
+        'Inappropriate media',
+        'Misleading listing/pricing'
+      ],
+      confirmText: 'Confirm Takedown',
       cancelText: 'Cancel',
       type: 'danger',
-      icon: '🗑️',
-      tag: 'Permanent Deletion'
+      icon: '🚫',
+      tag: 'Content Moderation'
     });
-    if(!ok) return;
+    if(reason === null) return;
     try{
-      loading('Deleting post permanently…');
-      if(typeof purgeAndHidePostImmediately === 'function') {
-        purgeAndHidePostImmediately(uid, 'Administrative safety permanent deletion');
-      }
+      loading('Taking down post…');
       try {
         const token = currentUser ? await currentUser.getIdToken() : '';
         const apiUrl = (typeof getSfApiUrl === 'function') ? getSfApiUrl('/api/admin/takedown') : '/api/admin/takedown';
@@ -29649,27 +29677,32 @@ init();
             'Content-Type': 'application/json',
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           },
-          body: JSON.stringify({ type: 'post', id: uid, reason: 'Administrative safety permanent deletion' })
+          body: JSON.stringify({ type: 'post', id: uid, reason: reason || 'Administrative safety takedown' })
         });
       } catch (_) {}
 
+      const updatePayload = {
+        status: 'taken_down',
+        reviewStatus: 'taken_down',
+        hidden: true,
+        safeContent: false,
+        liveOnForYou: false,
+        takedownReason: reason || 'Administrative safety takedown',
+        takenDownAt: serverTimestamp(),
+        takenDownBy: currentUser?.uid || 'admin'
+      };
+
       try {
-        await deleteDoc(doc(db, 'posts', uid));
+        await updateDoc(doc(db, 'posts', uid), updatePayload).catch(async () => {
+          await setDoc(doc(db, 'posts', uid), updatePayload, { merge: true }).catch(() => {});
+        });
       } catch (_) {}
 
-      if (window._sfPermanentlyDeletedPostIds) window._sfPermanentlyDeletedPostIds.add(uid);
       if (window._sfRemovedPostIds) window._sfRemovedPostIds.add(uid);
       if (window._sfSessionDeletedPostIds) window._sfSessionDeletedPostIds.add(uid);
-      try {
-        const permArr = JSON.parse(localStorage.getItem('sf_permanently_deleted_posts') || '[]');
-        if (!permArr.includes(uid)) {
-          permArr.push(uid);
-          localStorage.setItem('sf_permanently_deleted_posts', JSON.stringify(permArr));
-        }
-      } catch(_) {}
       if (window.invalidateRankedFeedCache) window.invalidateRankedFeedCache();
 
-      toast('Post permanently deleted forever by Security Team', 'success');
+      toast('Post taken down and archived in Restoration Hub', 'success');
       if(typeof renderAdmin==='function'&&currentPage==='admin') renderAdmin();
       else if(currentPage==='feed') renderFeed();
       else if(typeof renderPage==='function') renderPage();
