@@ -3007,10 +3007,10 @@ function isCapacitorNative() {
 window.isCapacitorNative = isCapacitorNative;
 
 function getAppUrl() {
-  const isCap = isCapacitorNative();
+  const isCap = (typeof isCapacitorNative === 'function') ? isCapacitorNative() : false;
   if (!isCap) {
     const origin = window.location.origin || '';
-    if (origin && origin.startsWith('http') && !origin.includes('capacitor://') && !origin.startsWith('file:') && !origin.includes('127.0.0.1:0')) {
+    if (origin && origin.startsWith('http') && !origin.includes('capacitor://') && !origin.startsWith('file:') && !origin.includes('127.0.0.1') && !origin.includes('localhost')) {
       return origin.replace(/\/+$/, '');
     }
   }
@@ -3028,9 +3028,10 @@ window.getAppUrl = getAppUrl;
 function getSfApiUrl(path) {
   if (!path) return '';
   const p = path.startsWith('/') ? path : '/' + path;
-  if (typeof window !== 'undefined' && window.location && window.location.protocol && window.location.protocol.startsWith('http')) {
+  const isCap = (typeof isCapacitorNative === 'function') ? isCapacitorNative() : false;
+  if (!isCap && typeof window !== 'undefined' && window.location && window.location.protocol && window.location.protocol.startsWith('http')) {
     const origin = window.location.origin || '';
-    if (origin && origin !== 'null' && !origin.includes('capacitor://') && !origin.startsWith('file:') && !origin.includes('127.0.0.1:0')) {
+    if (origin && origin !== 'null' && !origin.includes('capacitor://') && !origin.startsWith('file:') && !origin.includes('127.0.0.1') && !origin.includes('localhost')) {
       return p;
     }
   }
@@ -5664,14 +5665,46 @@ window.__sfAvatarFallback = function(img, initial, cls){
   img.classList.add('rounded-full', 'object-cover');
 };
 
-window.__sfBannerFallback = function(img){
+function getStoreBannerFallback(storeOrProfile = {}) {
+  const name = (storeOrProfile?.name || storeOrProfile?.username || 'Verified Store').replace(/[<>&"]/g, '').slice(0, 32);
+  const location = (storeOrProfile?.location || storeOrProfile?.address || 'Accra, Ghana').replace(/[<>&"]/g, '').slice(0, 28);
+  const theme = storeOrProfile?.theme || {};
+  const primary = theme.primaryColor || '#d4af37';
+  const accent = theme.accentColor || '#78350f';
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" fill="none">
+    <defs>
+      <linearGradient id="storeBgGrad" x1="0" y1="0" x2="1200" y2="420" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#18181b"/>
+        <stop offset="40%" stop-color="${accent}"/>
+        <stop offset="80%" stop-color="#1c1917"/>
+        <stop offset="100%" stop-color="${primary}"/>
+      </linearGradient>
+      <pattern id="storeKentePattern" width="60" height="60" patternUnits="userSpaceOnUse">
+        <path d="M0 30 L30 0 L60 30 L30 60 Z" fill="none" stroke="rgba(212,175,55,0.12)" stroke-width="1.5"/>
+        <circle cx="30" cy="30" r="4" fill="rgba(255,255,255,0.08)"/>
+      </pattern>
+    </defs>
+    <rect width="1200" height="420" fill="url(#storeBgGrad)"/>
+    <rect width="1200" height="420" fill="url(#storeKentePattern)"/>
+    <rect x="0" y="380" width="1200" height="40" fill="rgba(0,0,0,0.55)"/>
+    <circle cx="120" cy="195" r="68" fill="rgba(0,0,0,0.35)" stroke="rgba(212,175,55,0.4)" stroke-width="2.5"/>
+    <text x="120" y="210" font-size="62" text-anchor="middle" dominant-baseline="middle">🏪</text>
+    <text x="215" y="165" font-family="system-ui, -apple-system, sans-serif" font-size="36" font-weight="900" fill="#ffffff" letter-spacing="-0.5">${name}</text>
+    <rect x="215" y="195" width="220" height="32" rx="16" fill="rgba(212,175,55,0.25)" stroke="rgba(212,175,55,0.6)" stroke-width="1"/>
+    <text x="325" y="216" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="800" fill="#fef08a" text-anchor="middle" dominant-baseline="middle">🇬🇭 VERIFIED STORE</text>
+    <text x="220" y="258" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="600" fill="rgba(255,255,255,0.9)">📍 ${location} · ★ 5.0 Rating</text>
+    <text x="1150" y="405" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="800" fill="${primary}" text-anchor="end" letter-spacing="1">BUY • SELL • GROW · GHANA</text>
+  </svg>`;
+
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+window.getStoreBannerFallback = getStoreBannerFallback;
+
+window.__sfBannerFallback = function(img, storeName = '', storeLocation = ''){
   if(!img) return;
   img.onerror = null;
-  const div = document.createElement('div');
-  if(img.id) div.id = img.id;
-  div.className = 'w-full h-full bg-gradient-to-r from-zinc-900 via-stone-900 to-amber-950/40 flex items-center justify-center text-zinc-600 text-xs';
-  div.innerHTML = '<span>No store banner uploaded yet</span>';
-  img.replaceWith(div);
+  img.src = getStoreBannerFallback({ name: storeName, location: storeLocation });
 };
 
 function avatar(p,cls='avatar'){
@@ -5702,16 +5735,117 @@ function validFile(file,types,maxMB){
   return true;
 }
 
-const SF_PRODUCT_FALLBACK_IMG = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22 viewBox=%220 0 300 300%22 fill=%22none%22%3E%3Crect width=%22300%22 height=%22300%22 fill=%22%2318181b%22/%3E%3Ctext x=%2250%25%22 y=%2246%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2256%22%3E📦%3C/text%3E%3Ctext x=%2250%25%22 y=%2266%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%2371717a%22 font-family=%22system-ui,sans-serif%22 font-size=%2214%22 font-weight=%22600%22%3ENo Image Available%3C/text%3E%3C/svg%3E';
+function getProductCategoryFallback(category = '', name = '') {
+  const c = String(category || '').toLowerCase().trim();
+  const safeName = String(name || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .slice(0, 24);
+  
+  let bgGradient = ['#3b1803', '#92400e', '#d97706'];
+  let emoji = '🍲';
+  let label = 'Food & Provisions';
+
+  if (c === 'fashion' || c.includes('cloth') || c.includes('wear') || c.includes('beauty') || c.includes('shoe') || c.includes('bag') || c.includes('wig')) {
+    bgGradient = ['#4c0519', '#9f1239', '#e11d48'];
+    emoji = '👗';
+    label = 'Fashion & Beauty';
+  } else if (c === 'tech' || c.includes('phone') || c.includes('electr') || c.includes('laptop') || c.includes('gadget') || c.includes('apple') || c.includes('samsung')) {
+    bgGradient = ['#0f172a', '#1e293b', '#2563eb'];
+    emoji = '📱';
+    label = 'Tech & Electronics';
+  } else if (c === 'food' || c.includes('snack') || c.includes('grocery') || c.includes('spice') || c.includes('meal') || c.includes('drink')) {
+    bgGradient = ['#451a03', '#92400e', '#f59e0b'];
+    emoji = '🍲';
+    label = 'Food & Provisions';
+  } else if (c === 'home' || c.includes('decor') || c.includes('furniture') || c.includes('kitchen') || c.includes('bed')) {
+    bgGradient = ['#14532d', '#15803d', '#84cc16'];
+    emoji = '🏠';
+    label = 'Home & Living';
+  } else if (c === 'health' || c.includes('care') || c.includes('wellness') || c.includes('herbal') || c.includes('skin')) {
+    bgGradient = ['#064e3b', '#047857', '#10b981'];
+    emoji = '🌿';
+    label = 'Health & Wellness';
+  } else if (c === 'auto' || c.includes('car') || c.includes('part') || c.includes('motor') || c.includes('tyre')) {
+    bgGradient = ['#18181b', '#27272a', '#ea580c'];
+    emoji = '🚗';
+    label = 'Auto & Parts';
+  } else if (c === 'services' || c.includes('craft') || c.includes('repair') || c.includes('tailor') || c.includes('plumb')) {
+    bgGradient = ['#134e4a', '#0f766e', '#14b8a6'];
+    emoji = '🛠️';
+    label = 'Services & Crafts';
+  } else {
+    bgGradient = ['#18181b', '#27272a', '#d4af37'];
+    emoji = '📦';
+    label = 'Ghanaian Marketplace';
+  }
+
+  const gradId = 'pbg_' + (c.replace(/[^a-z0-9]/g, '') || 'gen');
+  const gridId = 'pgrid_' + (c.replace(/[^a-z0-9]/g, '') || 'gen');
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+    <defs>
+      <linearGradient id="${gradId}" x1="0" y1="0" x2="400" y2="400" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="${bgGradient[0]}"/>
+        <stop offset="50%" stop-color="${bgGradient[1]}"/>
+        <stop offset="100%" stop-color="${bgGradient[2]}"/>
+      </linearGradient>
+      <pattern id="${gridId}" width="40" height="40" patternUnits="userSpaceOnUse">
+        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="400" height="400" fill="url(#${gradId})"/>
+    <rect width="400" height="400" fill="url(#${gridId})"/>
+    <circle cx="200" cy="160" r="62" fill="rgba(255,255,255,0.12)" stroke="rgba(212,175,55,0.4)" stroke-width="2"/>
+    <text x="200" y="175" font-size="56" text-anchor="middle" dominant-baseline="middle">${emoji}</text>
+    <rect x="50" y="248" width="300" height="34" rx="17" fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
+    <text x="200" y="270" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#fef08a" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.5">${label}</text>
+    ${safeName ? `<text x="200" y="318" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="800" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">${safeName}</text>` : ''}
+    <text x="200" y="355" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="rgba(255,255,255,0.6)" text-anchor="middle" dominant-baseline="middle">🇬🇭 SellerFlow Ghana</text>
+  </svg>`;
+
+  try {
+    if (typeof btoa === 'function') {
+      return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+    }
+  } catch (_) {}
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+window.getProductCategoryFallback = getProductCategoryFallback;
+
+window.__sfProductFallback = function(img, category = '', name = ''){
+  if(!img) return;
+  img.onerror = null;
+  const cat = category || img.dataset.fallbackCat || '';
+  const n = name || img.dataset.fallbackName || img.alt || 'Product';
+  img.src = getProductCategoryFallback(cat, n);
+};
+
+const SF_PRODUCT_FALLBACK_IMG = getProductCategoryFallback('general', 'Product');
 function getProductImageUrl(input, type = 'card'){
   let url = '';
+  let category = '';
+  let name = '';
+  let prodId = '';
+
   if (typeof input === 'string') {
     url = input.trim();
   } else if (input && typeof input === 'object') {
+    prodId = input.id || '';
+    category = input.category || '';
+    name = input.name || '';
     url = input.imageUrl || input.image || input.photoUrl || input.photo || input.productImage || (Array.isArray(input.images) ? input.images[0] : '') || '';
+    if ((!url || url.includes('No%20Image%20Available') || url.includes('No Image Available')) && prodId && typeof localStorage !== 'undefined') {
+      const localCached = localStorage.getItem('sf_product_img_' + prodId);
+      if (localCached) url = localCached;
+    }
   }
-  if(!url || typeof url !== 'string' || !url.trim() || url.startsWith('blob:') || url.startsWith('file:') || url.startsWith('content:')) {
-    return SF_PRODUCT_FALLBACK_IMG;
+
+  if(!url || typeof url !== 'string' || !url.trim() || url.startsWith('blob:') || url.startsWith('file:') || url.startsWith('content:') || url.includes('No%20Image%20Available') || url.includes('No Image Available')) {
+    return getProductCategoryFallback(category, name);
   }
   return getOptimizedMediaUrl(url.trim(), type);
 }
@@ -9096,8 +9230,17 @@ function isPostDeleted(p) {
   if (!id) return true;
   if (window._sfPermanentlyDeletedPostIds && window._sfPermanentlyDeletedPostIds.has(id)) return true;
   if (window._sfSessionDeletedPostIds && window._sfSessionDeletedPostIds.has(id)) return true;
+  if (window._sfRemovedPostIds && window._sfRemovedPostIds.has(id)) return true;
+  try {
+    const cachedDel = JSON.parse(localStorage.getItem('sf_permanently_deleted_posts') || '[]');
+    if (Array.isArray(cachedDel) && cachedDel.includes(id)) {
+      window._sfPermanentlyDeletedPostIds.add(id);
+      return true;
+    }
+  } catch (_) {}
   if (typeof p === 'object') {
-    if (p.isDeleted === true || p.status === 'deleted' || p.deleted === true || p.isPermanentlyDeleted === true) return true;
+    if (p.isDeleted === true || p.status === 'deleted' || p.deleted === true || p.isPermanentlyDeleted === true || p.status === 'removed' || p.status === 'taken_down' || p.status === 'hidden' || p.hidden === true) return true;
+    if (p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down' || p.reviewStatus === 'violation') return true;
   }
   return false;
 }
@@ -9105,9 +9248,11 @@ window.isPostDeleted = isPostDeleted;
 
 function markPostRemovedBySecurity(postId) {
   if (!postId) return;
-  window._sfRemovedPostIds.add(postId);
-  window._sfSessionDeletedPostIds.add(postId);
-  window._sfPermanentlyDeletedPostIds.add(postId);
+  const cleanId = String(postId).trim();
+  if (!cleanId) return;
+  window._sfRemovedPostIds.add(cleanId);
+  window._sfSessionDeletedPostIds.add(cleanId);
+  window._sfPermanentlyDeletedPostIds.add(cleanId);
   try {
     const list = Array.from(window._sfRemovedPostIds).slice(-1000);
     localStorage.setItem('sf_security_removed_posts', JSON.stringify(list));
@@ -9118,15 +9263,14 @@ window.markPostRemovedBySecurity = markPostRemovedBySecurity;
 
 function isPostRemovedBySecurity(p) {
   if (!p) return true;
-  const id = typeof p === 'string' ? p : p.id;
   if (isPostDeleted(p)) return true;
+  const id = typeof p === 'string' ? p : p.id;
   if (id && window._sfPermanentlyDeletedPostIds && window._sfPermanentlyDeletedPostIds.has(id)) return true;
   if (id && window._sfSessionDeletedPostIds && window._sfSessionDeletedPostIds.has(id)) return true;
   if (id && window._sfRemovedPostIds && window._sfRemovedPostIds.has(id)) return true;
   if (typeof p === 'object') {
-    if (p.status === 'removed' || p.status === 'taken_down' || p.status === 'deleted' || p.status === 'hidden' || p.isDeleted === true || p.hidden === true || p.deleted === true) return true;
+    if (p.status === 'removed' || p.status === 'taken_down' || p.status === 'deleted' || p.status === 'hidden' || p.isDeleted === true || p.hidden === true || p.deleted === true || p.isPermanentlyDeleted === true) return true;
     if (p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down' || p.reviewStatus === 'violation') return true;
-    // Active published post in good standing is always safe to display
     if ((p.status === 'published' || p.status === 'approved') && !p.isDeleted && !p.deleted && p.status !== 'deleted' && p.status !== 'taken_down' && p.status !== 'removed' && p.reviewStatus !== 'violation' && p.reviewStatus !== 'removed' && !p.hidden) {
       return false;
     }
@@ -9141,7 +9285,7 @@ async function deleteUserPost(postId) {
 
   const ok = await customConfirm({
     title: 'Delete Your Post?',
-    message: 'Are you sure you want to permanently delete this post? It will be immediately removed and hidden from the For You feed.',
+    message: 'Are you sure you want to permanently delete this post? It will be immediately removed and hidden from the For You feed and your profile.',
     warningText: 'This action cannot be undone. All views, comments, and likes on this post will be permanently deleted.',
     confirmText: 'Delete Post',
     cancelText: 'Cancel',
@@ -9157,7 +9301,8 @@ async function deleteUserPost(postId) {
     if (typeof purgeAndHidePostImmediately === 'function') {
       purgeAndHidePostImmediately(postId, 'Deleted by post creator');
     }
-    // Hard delete document from Firestore
+
+    // Hard delete document from Firestore + tombstone
     await deleteDoc(doc(db, 'posts', postId)).catch(async () => {
       await updateDoc(doc(db, 'posts', postId), {
         status: 'removed',
@@ -9168,22 +9313,39 @@ async function deleteUserPost(postId) {
       }).catch(() => {});
     });
 
+    try {
+      await setDoc(doc(db, 'deletedPosts', postId), {
+        id: postId,
+        deletedBy: currentUser.uid,
+        reason: 'Deleted by post creator',
+        permanent: true,
+        deletedAt: serverTimestamp()
+      }, { merge: true }).catch(() => {});
+    } catch (_) {}
+
     // Authoritative backend post store synchronization
     try {
       const idToken = currentUser ? await currentUser.getIdToken().catch(() => '') : '';
-      fetch('/api/posts/delete', {
+      await fetch('/api/posts/delete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {})
         },
-        body: JSON.stringify({ postId })
+        body: JSON.stringify({ postId, sellerId: currentUser.uid, callerUid: currentUser.uid })
       }).catch(() => {});
     } catch (_) {}
 
-    // Remove from in-memory profile cache if present
+    // Remove from in-memory profile and feed caches
     if (window._cachedProfileData?.[currentUser.uid]?.posts) {
-      window._cachedProfileData[currentUser.uid].posts = window._cachedProfileData[currentUser.uid].posts.filter(x => x.id !== postId);
+      window._cachedProfileData[currentUser.uid].posts = window._cachedProfileData[currentUser.uid].posts.filter(x => x && x.id !== postId);
+    }
+    if (Array.isArray(window._cachedFeedPosts)) {
+      window._cachedFeedPosts = window._cachedFeedPosts.filter(x => x && x.id !== postId);
+      try { localStorage.setItem('sf_cached_feed_posts', JSON.stringify(window._cachedFeedPosts.slice(0, 40))); } catch (_) {}
+    }
+    if (window._sfCachedPosts && typeof window._sfCachedPosts.delete === 'function') {
+      window._sfCachedPosts.delete(postId);
     }
 
     toast('Your post was deleted and removed from SellerFlow', 'success', 3500);
@@ -9327,7 +9489,7 @@ try {
   if(savedFeed) {
     const rawList = JSON.parse(savedFeed);
     if(Array.isArray(rawList)) {
-      _cachedFeedPosts = rawList.filter(p => !isPostRemovedBySecurity(p));
+      _cachedFeedPosts = rawList.filter(p => !isPostDeleted(p) && !isPostRemovedBySecurity(p));
     }
   }
 } catch(_) {}
@@ -12539,9 +12701,14 @@ function marketplaceProductCard(p, idx = 0){
   return `
     <div class="card p-3 sm:p-4 flex flex-col justify-between" id="market-product-${esc(p.id)}">
       <div>
-        <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 border border-gray-200 cursor-pointer" data-view-product="${esc(p.id)}">
-          <img class="w-full h-full object-cover transition duration-300 hover:scale-105" src="${esc(optImgUrl)}" loading="${isFirstRow ? 'eager' : 'lazy'}" fetchpriority="${isFirstRow ? 'high' : 'auto'}" decoding="async" alt="${esc(p.name||'Product')}" onerror="this.onerror=null;this.src=SF_PRODUCT_FALLBACK_IMG;">
-          ${!inStock ? `<span class="absolute top-2 right-2 bg-red-950/90 text-red-300 text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg font-bold border border-red-700/60 shadow">Out of Stock</span>` : `<span class="absolute top-2 right-2 bg-white backdrop-blur-sm text-gray-700 text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-gray-200 font-mono">${maxStock} in stock</span>`}
+        <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 cursor-pointer group" data-view-product="${esc(p.id)}">
+          <img class="w-full h-full object-cover transition duration-300 group-hover:scale-105" src="${esc(optImgUrl)}" data-fallback-cat="${esc(p.category||'')}" data-fallback-name="${esc(p.name||'')}" loading="${isFirstRow ? 'eager' : 'lazy'}" fetchpriority="${isFirstRow ? 'high' : 'auto'}" decoding="async" alt="${esc(p.name||'Product')}" onerror="window.__sfProductFallback(this)">
+          ${!inStock ? `<span class="absolute top-2 right-2 bg-red-950/90 text-red-300 text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg font-bold border border-red-700/60 shadow">Out of Stock</span>` : `<span class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-gray-700 text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-gray-200 font-mono shadow-xs">${maxStock} in stock</span>`}
+          ${isOwner ? `
+            <button type="button" data-edit-product="${esc(p.id)}" class="absolute bottom-2 left-2 bg-black/75 hover:bg-black text-white text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm backdrop-blur flex items-center gap-1 transition active:scale-95 z-10" title="Change product photo">
+              <span>📷</span><span>Change Image</span>
+            </button>
+          ` : ''}
         </div>
 
         <!-- Seller Details (Name, Username link, Location, Reviews) -->
@@ -12630,11 +12797,9 @@ function storeCard(s, idx = 0){
   return `
     <div class="card p-5 flex flex-col justify-between hover:border-gold/60 transition group cursor-pointer relative" id="market-store-${esc(sellerId)}" data-preview-store="${esc(sellerId)}">
       <div>
-        ${s.bannerUrl ? `
-          <div class="w-full h-24 rounded-xl overflow-hidden mb-3 border border-[#2a2a2a] bg-white">
-            <img src="${esc(getOptimizedMediaUrl(s.bannerUrl, 'banner'))}" loading="${isFirst ? 'eager' : 'lazy'}" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" alt="Store Banner" onerror="this.onerror=null;this.parentElement.style.display='none';">
-          </div>
-        ` : ''}
+        <div class="w-full h-24 rounded-xl overflow-hidden mb-3 border border-gray-200 bg-white relative">
+          <img src="${esc(getOptimizedMediaUrl(s.bannerUrl || getStoreBannerFallback(s), 'banner'))}" loading="${isFirst ? 'eager' : 'lazy'}" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" alt="Store Banner" onerror="window.__sfBannerFallback(this, '${esc(s.name||'Store')}')">
+        </div>
         <div class="flex items-start justify-between gap-3">
           <div class="flex items-center gap-3 min-w-0">
             ${s.logoUrl ? `
@@ -14523,17 +14688,11 @@ async function openStore(uid){
 
     $('page').innerHTML=`
       <div id="storefrontContainer" class="sf-storefront-wrapper space-y-5" style="${storeThemeCssVars}">
-        <div class="relative w-full h-40 sm:h-56 rounded-2xl overflow-hidden border border-gray-200 bg-white group">
-          ${effectiveBannerUrl ? `
-            <img id="storefrontBannerImg" src="${esc(effectiveBannerUrl)}" class="w-full h-full object-cover" alt="Store banner" onerror="window.__sfBannerFallback(this)">
-          ` : `
-            <div id="storefrontBannerImg" class="w-full h-full bg-gradient-to-r from-zinc-900 via-stone-900 to-amber-950/40 flex items-center justify-center text-zinc-600 text-xs">
-              <span>No store banner uploaded yet</span>
-            </div>
-          `}
-          <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
+        <div class="relative w-full h-44 sm:h-60 rounded-2xl overflow-hidden border border-gray-200 bg-white group shadow-sm">
+          <img id="storefrontBannerImg" src="${esc(effectiveBannerUrl || getStoreBannerFallback(store || p))}" class="w-full h-full object-cover transition duration-500" alt="Store banner" onerror="window.__sfBannerFallback(this, '${esc(store?.name || p?.name || 'Verified Store')}', '${esc(store?.location || p?.location || 'Accra, Ghana')}')">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none"></div>
           ${isOwner ? `
-            <label class="absolute top-3 right-3 bg-white hover:bg-white text-gray-900 border border-white/20 hover:border-gold px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition flex items-center gap-1.5 shadow backdrop-blur z-10">
+            <label class="absolute top-3 right-3 bg-white/95 hover:bg-white text-gray-900 border border-gray-300 hover:border-gold px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition flex items-center gap-1.5 shadow-md backdrop-blur z-10 active:scale-95">
               <span>📷</span><span>${effectiveBannerUrl ? 'Change Banner' : 'Upload Banner'}</span>
               <input type="file" id="storefrontQuickBannerInput" accept="image/jpeg,image/png,image/webp" class="hidden">
             </label>
@@ -14671,18 +14830,41 @@ async function openStore(uid){
         try {
           compressedBanner = await compressImageForUpload(f, { maxDimension: 1200, quality: 0.82 });
         } catch (_) {}
-        const up = await uploadPublic(compressedBanner, 'stores');
-        const finalBannerUrl = up.url;
-        const finalBannerPath = up.path;
+        let base64Banner = '';
+        try {
+          base64Banner = await fileToBase64(compressedBanner);
+        } catch (_) {}
+
+        let up = null;
+        try {
+          up = await uploadPublic(compressedBanner, 'stores');
+        } catch (uploadErr) {
+          console.warn('Banner public upload notice:', uploadErr);
+        }
+
+        let finalBannerUrl = up?.url || '';
+        let finalBannerPath = up?.path || '';
+
+        // If local /uploads/ URL or upload failed, prioritize persistent base64 data URI so store banner NEVER 404s!
+        if (base64Banner && (!finalBannerUrl || finalBannerUrl.startsWith('/uploads/') || finalBannerUrl.startsWith('media/') || finalBannerUrl.startsWith('/media/'))) {
+          finalBannerUrl = base64Banner;
+        }
+
+        const bannerImgEl = document.getElementById('storefrontBannerImg');
+        if (bannerImgEl && finalBannerUrl) {
+          bannerImgEl.src = finalBannerUrl;
+        }
 
         await setDoc(doc(db, 'stores', actualOwnerId), {
           bannerUrl: finalBannerUrl,
+          banner: finalBannerUrl,
           bannerPath: finalBannerPath,
           updatedAt: serverTimestamp()
         }, { merge: true });
         if (uid !== actualOwnerId) {
           await setDoc(doc(db, 'stores', uid), {
             bannerUrl: finalBannerUrl,
+            banner: finalBannerUrl,
             bannerPath: finalBannerPath,
             updatedAt: serverTimestamp()
           }, { merge: true }).catch(()=>{});
@@ -14704,8 +14886,8 @@ async function openStore(uid){
           localStorage.setItem('sf_store_banner_' + actualOwnerId, finalBannerUrl);
           localStorage.setItem('sf_store_banner_' + uid, finalBannerUrl);
         } catch (_) {}
-        allStores.set(actualOwnerId, { ...(allStores.get(actualOwnerId) || {}), bannerUrl: finalBannerUrl, bannerPath: finalBannerPath });
-        allStores.set(uid, { ...(allStores.get(uid) || {}), bannerUrl: finalBannerUrl, bannerPath: finalBannerPath });
+        allStores.set(actualOwnerId, { ...(allStores.get(actualOwnerId) || {}), bannerUrl: finalBannerUrl, banner: finalBannerUrl, bannerPath: finalBannerPath });
+        allStores.set(uid, { ...(allStores.get(uid) || {}), bannerUrl: finalBannerUrl, banner: finalBannerUrl, bannerPath: finalBannerPath });
 
         toast('Store banner updated successfully!', 'success');
         await openStore(uid);
@@ -14831,9 +15013,14 @@ function productCard(p, idx = 0){
   return `
     <div class="card sf-store-card p-3 sm:p-4 flex flex-col justify-between" id="store-product-${esc(p.id)}">
       <div>
-        <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 border border-gray-200 cursor-pointer" data-view-product="${esc(p.id)}">
-          <img class="w-full h-full object-cover transition duration-300 hover:scale-105" src="${esc(optImgUrl)}" loading="${isFirstRow ? 'eager' : 'lazy'}" fetchpriority="${isFirstRow ? 'high' : 'auto'}" decoding="async" onerror="this.onerror=null;this.src=SF_PRODUCT_FALLBACK_IMG;" alt="${esc(p.name||'Product')}">
+        <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 cursor-pointer group" data-view-product="${esc(p.id)}">
+          <img class="w-full h-full object-cover transition duration-300 group-hover:scale-105" src="${esc(optImgUrl)}" data-fallback-cat="${esc(p.category||'')}" data-fallback-name="${esc(p.name||'')}" loading="${isFirstRow ? 'eager' : 'lazy'}" fetchpriority="${isFirstRow ? 'high' : 'auto'}" decoding="async" onerror="window.__sfProductFallback(this)" alt="${esc(p.name||'Product')}">
           ${!inStock ? `<span class="absolute top-2 right-2 bg-red-950/90 text-red-300 text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg font-bold border border-red-700/60 shadow">Out of Stock</span>` : ''}
+          ${isOwner ? `
+            <button type="button" data-edit-product="${esc(p.id)}" class="absolute bottom-2 left-2 bg-black/75 hover:bg-black text-white text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm backdrop-blur flex items-center gap-1 transition active:scale-95 z-10" title="Change product photo">
+              <span>📷</span><span>Change Image</span>
+            </button>
+          ` : ''}
         </div>
         <div class="flex items-baseline justify-between gap-2 mt-2.5">
           <h3 class="font-bold text-xs sm:text-sm text-gray-900 truncate cursor-pointer hover:text-gold transition" data-view-product="${esc(p.id)}" title="${esc(p.name)}">${esc(p.name)}</h3>
@@ -14905,6 +15092,7 @@ async function openProductDetailModal(rawP){
   const location = getSellerLocation(p.sellerId);
   const inStock = Number(p.stock) > 0;
   const maxStock = inStock ? Number(p.stock) : 0;
+  const isOwner = !!(currentUser && p.sellerId === currentUser.uid);
   
   loading('Loading seller profile & product…');
   let reviewData = { count: 0, avgRating: '5.0', reviews: [] };
@@ -14929,12 +15117,17 @@ async function openProductDetailModal(rawP){
 
       <!-- Product Showcase -->
       <div class="flex flex-col sm:flex-row gap-4">
-        <div class="sm:w-1/2 aspect-square rounded-2xl overflow-hidden bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 border border-[#2a2a2a] relative shrink-0 group cursor-pointer" data-view-image="${esc(getProductImageUrl(p.imageUrl, 'detail'))}" data-view-title="${esc(p.name||'Product')}">
-          <img class="w-full h-full object-cover group-hover:scale-105 transition duration-300" src="${esc(getProductImageUrl(p.imageUrl, 'detail'))}" loading="eager" fetchpriority="high" decoding="async" alt="${esc(p.name||'Product')}" onerror="this.onerror=null;this.src=SF_PRODUCT_FALLBACK_IMG;">
-          <div class="absolute bottom-2.5 left-2.5 bg-white backdrop-blur-xs text-gray-900 text-[11px] font-bold px-2.5 py-1 rounded-lg border border-white/20 flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition shadow">
+        <div class="sm:w-1/2 aspect-square rounded-2xl overflow-hidden bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 relative shrink-0 group cursor-pointer" data-view-image="${esc(getProductImageUrl(p, 'detail'))}" data-view-title="${esc(p.name||'Product')}">
+          <img class="w-full h-full object-cover group-hover:scale-105 transition duration-300" src="${esc(getProductImageUrl(p, 'detail'))}" data-fallback-cat="${esc(p.category||'')}" data-fallback-name="${esc(p.name||'')}" loading="eager" fetchpriority="high" decoding="async" alt="${esc(p.name||'Product')}" onerror="window.__sfProductFallback(this)">
+          <div class="absolute bottom-2.5 left-2.5 bg-white/90 backdrop-blur-xs text-gray-900 text-[11px] font-bold px-2.5 py-1 rounded-lg border border-white/20 flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition shadow">
             <span>🔍</span><span>Tap to zoom</span>
           </div>
           ${!inStock ? `<span class="absolute top-2.5 right-2.5 bg-red-950/90 text-red-300 text-xs px-2.5 py-1 rounded-lg font-bold border border-red-700/60 shadow">Out of Stock</span>` : `<span class="absolute top-2.5 right-2.5 bg-white backdrop-blur-sm text-gray-700 text-xs px-2.5 py-1 rounded-lg border border-gray-200 font-mono">${maxStock} in stock</span>`}
+          ${isOwner ? `
+            <button type="button" onclick="closeModal(); setTimeout(() => openProductModal(window._cachedProducts?.find(x => x && x.id === '${esc(p.id)}') || p), 50)" class="absolute top-2.5 left-2.5 bg-black/75 hover:bg-black text-white text-[11px] font-bold px-2.5 py-1 rounded-xl shadow-md backdrop-blur flex items-center gap-1.5 transition active:scale-95 z-10" title="Change product photo">
+              <span>📷</span><span>Change Image</span>
+            </button>
+          ` : ''}
         </div>
         <div class="flex-1 flex flex-col justify-between">
           <div>
@@ -16040,15 +16233,18 @@ function openProductModal(p=null){
       </div>
 
       <div>
-        <label class="muted text-xs block mb-1">Product image</label>
-        ${prod?.imageUrl ? `
-          <div class="flex items-center gap-3 mb-2 p-2 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 text-gray-900 border border-[#2a2a2a]">
-            <img src="${esc(getProductImageUrl(prod.imageUrl))}" class="w-12 h-12 rounded-lg object-cover" alt="" onerror="this.onerror=null;this.src=SF_PRODUCT_FALLBACK_IMG;">
-            <span class="text-xs text-gray-600">Current image (choose a new file below to replace)</span>
+        <label class="muted text-xs block mb-1">Product image <span class="text-gold font-bold">*</span></label>
+        <div id="prodImageLivePreviewContainer" class="${prod?.imageUrl ? '' : 'hidden'} mb-3">
+          <div class="relative w-32 h-32 sm:w-36 sm:h-36 rounded-2xl overflow-hidden border-2 border-gold/40 bg-gray-50 shadow-sm group">
+            <img id="prodImageLivePreview" src="${esc(prod?.imageUrl ? getProductImageUrl(prod) : '')}" data-fallback-cat="${esc(prod?.category||'')}" data-fallback-name="${esc(prod?.name||'')}" class="w-full h-full object-cover" alt="Product preview" onerror="window.__sfProductFallback(this)">
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-[11px] font-bold pointer-events-none">
+              <span>Selected Photo</span>
+            </div>
           </div>
-        ` : ''}
-        <input id="prodFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full text-xs text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-gray-100 file:text-gray-900 hover:file:bg-zinc-700">
-        <p class="muted text-[11px] mt-1">JPG, PNG, or WebP · maximum 10MB.</p>
+          <span class="text-[11px] text-gray-500 mt-1 block">Selected product photo (choose another file below to change)</span>
+        </div>
+        <input id="prodFile" type="file" accept="image/jpeg,image/png,image/webp" class="w-full text-xs text-gray-600 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-gray-100 file:text-gray-900 hover:file:bg-zinc-200 cursor-pointer">
+        <p class="muted text-[11px] mt-1.5">JPG, PNG, or WebP · automatically optimized for fast Ghanaian mobile loading.</p>
       </div>
 
       <div class="flex justify-end gap-2 pt-2 border-t border-gray-200">
@@ -16059,6 +16255,20 @@ function openProductModal(p=null){
       </div>
     </div>
   `);
+
+  $('prodFile')?.addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    if(f){
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const previewImg = $('prodImageLivePreview');
+        const container = $('prodImageLivePreviewContainer');
+        if(previewImg) previewImg.src = ev.target.result;
+        if(container) container.classList.remove('hidden');
+      };
+      reader.readAsDataURL(f);
+    }
+  });
 
   document.querySelectorAll('#prodCatQuickChips [data-select-cat]').forEach(b => {
     b.onclick = () => {
@@ -16118,16 +16328,37 @@ function openProductModal(p=null){
       }
 
       let imageUrl = prod?.imageUrl || p?.imageUrl || p?.image || p?.photoUrl || p?.photo || p?.productImage || '', imagePath = prod?.imagePath || p?.imagePath || p?.path || '';
+      let base64ProductImg = '';
       if(file){
         validFile(file, ['image/jpeg','image/png','image/webp'], 10);
-        loading('Uploading product image…');
-        const x = await uploadPublic(file, 'products');
-        if(!x || !x.url) throw Error('Product image upload failed. Please try again.');
-        imageUrl = x.url;
-        imagePath = x.path || '';
+        loading('Compressing & saving product image…');
+        let compressedFile = file;
+        try {
+          compressedFile = await compressImageForUpload(file, { maxDimension: 800, quality: 0.82 });
+        } catch (_) {}
+        try {
+          base64ProductImg = await fileToBase64(compressedFile);
+        } catch (_) {}
+
+        let x = null;
+        try {
+          x = await uploadPublic(compressedFile, 'products');
+        } catch (uploadErr) {
+          console.warn('Network upload notice:', uploadErr);
+        }
+
+        imageUrl = x?.url || '';
+        imagePath = x?.path || '';
+
+        // If upload returned relative /uploads/ or failed, prioritize base64 so it NEVER 404s on mobile/restarts
+        if (base64ProductImg && (!imageUrl || imageUrl.startsWith('/uploads/') || imageUrl.startsWith('media/') || imageUrl.startsWith('/media/'))) {
+          imageUrl = base64ProductImg;
+        }
       }
 
-      if(!imageUrl) throw Error('Choose a product image.');
+      if(!imageUrl || imageUrl === SF_PRODUCT_FALLBACK_IMG || imageUrl.includes('No%20Image%20Available') || imageUrl.includes('No Image Available')) {
+        imageUrl = getProductCategoryFallback(category, name);
+      }
 
       const productStatus = isAdmin ? 'approved' : 'pending_review';
       const reviewStatus = isAdmin ? 'approved' : 'pending';
@@ -16157,9 +16388,26 @@ function openProductModal(p=null){
       } else {
         docRef = await addDoc(collection(db, 'products'), { ...data, createdAt: serverTimestamp() });
       }
-      if(window.invalidateMarketplaceCache) window.invalidateMarketplaceCache();
 
       const prodId = isEdit ? p.id : docRef.id;
+      if (imageUrl && !imageUrl.startsWith('http')) {
+        try {
+          localStorage.setItem('sf_product_img_' + prodId, imageUrl);
+        } catch (_) {}
+      }
+      if (Array.isArray(window._cachedProducts)) {
+        const fullProdObj = { id: prodId, ...data, imageUrl, image: imageUrl };
+        const existingIdx = window._cachedProducts.findIndex(x => x && x.id === prodId);
+        if (existingIdx >= 0) {
+          window._cachedProducts[existingIdx] = fullProdObj;
+        } else {
+          window._cachedProducts.unshift(fullProdObj);
+        }
+        try {
+          localStorage.setItem('sf_cached_products', JSON.stringify(window._cachedProducts.slice(0, 100)));
+        } catch (_) {}
+      }
+      if(window.invalidateMarketplaceCache) window.invalidateMarketplaceCache();
 
       // Authoritative product content moderation with Gemini 3.8 Flash
       if(!isAdmin){
@@ -18360,9 +18608,26 @@ async function renderStore(forceEdit = false){
           try {
             compressedBanner = await compressImageForUpload(bannerFile, { maxDimension: 1200, quality: 0.82 });
           } catch (_) {}
-          const up = await uploadPublic(compressedBanner, 'stores');
-          bannerUrl = up.url;
-          bannerPath = up.path;
+          let base64Banner = '';
+          try {
+            base64Banner = await fileToBase64(compressedBanner);
+          } catch (_) {}
+          let up = null;
+          try {
+            up = await uploadPublic(compressedBanner, 'stores');
+          } catch (uploadErr) {
+            console.warn('Banner upload notice:', uploadErr);
+          }
+          bannerUrl = up?.url || '';
+          bannerPath = up?.path || '';
+          if (base64Banner && (!bannerUrl || bannerUrl.startsWith('/uploads/') || bannerUrl.startsWith('media/') || bannerUrl.startsWith('/media/'))) {
+            bannerUrl = base64Banner;
+          }
+          if (bannerUrl) {
+            try {
+              localStorage.setItem('sf_store_banner_' + currentUser.uid, bannerUrl);
+            } catch (_) {}
+          }
         }
 
         if(logoFile){
@@ -18435,6 +18700,7 @@ async function renderStore(forceEdit = false){
           termsAccepted: true,
           termsAcceptedAt: serverTimestamp(),
           bannerUrl,
+          banner: bannerUrl,
           bannerPath,
           logoUrl,
           logoPath,
@@ -18451,6 +18717,7 @@ async function renderStore(forceEdit = false){
         await setDoc(doc(db, 'stores', currentUser.uid), storeData, { merge: true });
         await setDoc(doc(db, 'publicProfiles', currentUser.uid), {
           bannerUrl,
+          banner: bannerUrl,
           bannerPath,
           logoUrl,
           logoPath,
@@ -18461,8 +18728,16 @@ async function renderStore(forceEdit = false){
           hasBusinessCert,
           businessCertUrl
         }, { merge: true }).catch(()=>{});
+
+        const ghanaCardName = store?.ghanaCardName || currentProfile?.ghanaCardName || currentProfile?.name || currentProfile?.fullName || currentUser?.displayName || '';
+        const ghanaCardDob = store?.ghanaCardDob || currentProfile?.ghanaCardDob || currentProfile?.dob || '';
+        const ghanaCardNum = store?.ghanaCardNum || store?.ghanaCardPin || currentProfile?.ghanaCardNum || currentProfile?.ghanaCardPin || currentProfile?.ghanaCardNumber || '';
+        const ghanaCardFrontPath = store?.ghanaCardFrontPath || currentProfile?.ghanaCardFrontPath || '';
+        const ghanaCardBackPath = store?.ghanaCardBackPath || currentProfile?.ghanaCardBackPath || '';
+
         await setDoc(doc(db, 'users', currentUser.uid), {
           bannerUrl,
+          banner: bannerUrl,
           bannerPath,
           logoUrl,
           logoPath,
@@ -19193,7 +19468,7 @@ function startLivenessChallenge(kycData) {
             <p id="livenessActionDesc" class="text-[11px] text-gray-700 font-medium">Position face centered in oval and look straight into camera</p>
             
             <!-- Hold Progress Bar -->
-            <div class="w-full bg-gray-100/90 h-2 rounded-full mt-2 overflow-hidden border border-gray-200">
+            <div id="livenessHoldBarWrap" class="w-full bg-gray-100/90 h-2 rounded-full mt-2 overflow-hidden border border-gray-200">
               <div id="livenessHoldBar" class="bg-gradient-to-r from-amber-400 to-emerald-400 h-full rounded-full transition-all duration-75 w-0"></div>
             </div>
 
@@ -19201,6 +19476,17 @@ function startLivenessChallenge(kycData) {
             <button type="button" id="snapNowBtn" class="mt-2 w-full py-1.5 px-3 rounded-lg bg-gold hover:brightness-110 text-black font-extrabold text-xs shadow hidden transition flex items-center justify-center gap-1.5 pointer-events-auto">
               <span>📸</span> Capture Full Person Now
             </button>
+
+            <!-- Direct Fallback Capture when browser getUserMedia is blocked/denied -->
+            <div id="livenessFallbackOptions" class="mt-2.5 hidden space-y-2 pointer-events-auto">
+              <input type="file" id="directCameraCaptureInput" accept="image/*" capture="user" class="hidden">
+              <button type="button" id="livenessFallbackCamBtn" class="w-full py-2 px-3 rounded-xl bg-gold hover:brightness-110 text-black font-extrabold text-xs shadow-md transition flex items-center justify-center gap-1.5">
+                <span>📸</span> Take Selfie with Device Camera
+              </button>
+              <button type="button" id="livenessRetryPermBtn" class="w-full py-1.5 px-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs transition flex items-center justify-center gap-1">
+                <span>🔄</span> Grant Permission & Retry Stream
+              </button>
+            </div>
           </div>
         </div>
 
@@ -19288,12 +19574,45 @@ async function initLivenessDetection(kycData) {
 
     if (faceStatusText) faceStatusText.textContent = 'Camera ready. Align face in oval.';
   } catch (camErr) {
-    console.error('Liveness camera access error:', camErr);
-    if (faceStatusText) faceStatusText.textContent = '⚠️ Camera access denied or unavailable.';
-    if (faceStatusPill) faceStatusPill.className = 'px-2.5 py-1 rounded-full bg-red-950 border border-red-800 text-[10.5px] font-bold text-red-300';
-    if (actionTitle) actionTitle.textContent = 'CAMERA PERMISSION REQUIRED';
-    if (actionDesc) actionDesc.textContent = 'Please enable camera permissions in your browser or Android settings to complete live verification.';
+    console.warn('Liveness camera stream unavailable or permission blocked:', camErr?.message || camErr);
+    if (faceStatusText) faceStatusText.textContent = '⚠️ Camera stream blocked. Use device camera photo.';
+    if (faceStatusPill) faceStatusPill.className = 'px-2.5 py-1 rounded-full bg-amber-950 border border-amber-800 text-[10.5px] font-bold text-amber-300';
+    if (actionIcon) actionIcon.textContent = '📸';
+    if (actionTitle) actionTitle.textContent = 'CAPTURE LIVE SELFIE';
+    if (actionDesc) actionDesc.textContent = 'Take a live photo with your phone camera or upload your selfie to complete verification.';
+    
+    $('livenessHoldBarWrap')?.classList.add('hidden');
+    $('livenessFallbackOptions')?.classList.remove('hidden');
     if (retryBtn) retryBtn.classList.remove('hidden');
+
+    $('livenessFallbackCamBtn')?.addEventListener('click', () => {
+      $('directCameraCaptureInput')?.click();
+    });
+
+    $('livenessRetryPermBtn')?.addEventListener('click', () => {
+      startLivenessChallenge(kycData);
+    });
+
+    $('directCameraCaptureInput')?.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        loading('Processing verification photo…');
+        const compressed = await compressImageForUpload(file, { maxDimension: 900, quality: 0.85 });
+        const b64 = await fileToBase64(compressed);
+        const photos = {
+          FRONT: { base64: b64, blob: compressed },
+          LEFT: { base64: b64, blob: compressed },
+          RIGHT: { base64: b64, blob: compressed },
+          FULL_PERSON: { base64: b64, blob: compressed }
+        };
+        ready();
+        showLivenessConfirmationPreview(kycData, photos, ['FRONT', 'FALLBACK_CAPTURE']);
+      } catch (err) {
+        ready();
+        toast('Failed to process photo: ' + (err.message || 'Unknown error'), 'error');
+      }
+    });
     return;
   }
 
@@ -20174,7 +20493,7 @@ async function finalizeIdentityVerification(kycData, selfieBlob, selfieBase64, l
         if (data.verdict === 'VERIFIED') {
           toast('🎉 Your account and full body picture comparison have completed SellerFlow\'s verification process.', 'success');
         } else if (data.verdict === 'REVIEW') {
-          toast('SellerFlow verification submitted and under review by SellerFlow administrators.', 'info');
+          toast('SellerFlow verification submitted and under review by the SellerFlow Security Team.', 'info');
         } else {
           toast(data.message || 'Your account has completed SellerFlow\'s verification process.', 'success');
         }
@@ -20182,12 +20501,12 @@ async function finalizeIdentityVerification(kycData, selfieBlob, selfieBase64, l
         if (data.verdict === 'REJECTED') {
           toast(data.error || data.message || 'Verification rejected: Please check that live selfie and account details match requirements.', 'error');
         } else {
-          toast(data.error || data.message || 'SellerFlow verification submitted and under review by SellerFlow administrators.', 'info');
+          toast(data.error || data.message || 'SellerFlow verification submitted and under review by the SellerFlow Security Team.', 'info');
         }
       }
     } catch (callErr) {
       console.warn('Verification endpoint notice:', callErr);
-      toast('SellerFlow verification submitted and under review by SellerFlow administrators.', 'info');
+      toast('SellerFlow verification submitted and under review by the SellerFlow Security Team.', 'info');
     }
 
     closeModal();
@@ -21020,14 +21339,14 @@ async function renderSettings(){
           <div class="flex items-center justify-between">
             <div class="font-black text-[#111111] flex items-center gap-2">
               <span class="text-xl">🛡️</span>
-              <span class="text-base">Administrator & Security Team Portal</span>
+              <span class="text-base">SellerFlow Security Team Portal</span>
               <span class="verified-badge ml-1">✓</span>
             </div>
             <span class="text-[10px] font-bold bg-gold text-black px-2 py-0.5 rounded-full uppercase tracking-wider">RESTRICTED</span>
           </div>
-          <div class="muted text-xs leading-relaxed">Platform administrator access. Review Ghana Card KYC submissions, manage buyer order fraud checks, moderate video reels and product listings, and broadcast platform updates.</div>
+          <div class="muted text-xs leading-relaxed">Authorized SellerFlow Security Team access. Review Ghana Card KYC submissions, manage buyer order fraud checks, moderate video reels and product listings, and broadcast platform updates.</div>
           <button type="button" id="settingsOpenAdminDeskBtn" class="bg-gradient-to-r from-amber-400 via-gold to-yellow-500 text-black px-4 py-2.5 rounded-xl font-black text-xs hover:brightness-105 transition shadow-sm flex items-center gap-1.5 active:scale-95 cursor-pointer">
-            <span>🛡️</span><span>Open Admin Security Desk</span>
+            <span>🛡️</span><span>Open Security Team Desk</span>
           </button>
         </div>
       ` : p.verified ? `
@@ -21732,21 +22051,6 @@ function openVerificationModal(options = {}){
         </div>
       </div>
 
-      <div class="p-4 rounded-2xl bg-emerald-50/90 border border-emerald-300 text-xs text-emerald-950 space-y-2 shadow-sm">
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2 font-bold text-emerald-900">
-            <span class="text-base">🛡️</span>
-            <span class="text-xs sm:text-[13px] tracking-wide">Platform Security & Verified Trust</span>
-          </div>
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white text-emerald-800 border border-emerald-300 uppercase tracking-wider shadow-xs">
-            One-Time
-          </span>
-        </div>
-        <p class="text-[11px] text-emerald-800 leading-relaxed font-medium">
-          SellerFlow uses first-party account verification to protect buyers and sellers across Ghana. Once verified, your verification applies across Web, Android, store creation, publishing, and checkout.
-        </p>
-      </div>
-
       <div class="space-y-3.5">
         <!-- Account Details -->
         <div class="grid sm:grid-cols-2 gap-3">
@@ -21780,7 +22084,7 @@ function openVerificationModal(options = {}){
           </div>
           
           <p class="text-[11px] text-gray-600 leading-relaxed">
-            Take a live selfie to help protect your account and allow authorized SellerFlow administrators to confirm the verification belongs to you.
+            Take a live selfie to help protect your account and allow the authorized SellerFlow Security Team to confirm the verification belongs to you.
           </p>
 
           <!-- Camera Stream & Preview Area -->
@@ -21832,10 +22136,10 @@ function openVerificationModal(options = {}){
             </div>
           </div>
 
-          <!-- Privacy & Authorized Administrator Access Notice -->
-          <div class="text-[10px] text-gray-600 bg-emerald-50/60 border border-emerald-200 rounded-lg p-2 flex items-start gap-1.5">
-            <span class="text-emerald-400">🔒</span>
-            <span>Your selfie is stored in private storage, linked to this verification record, and accessible only to authorized SellerFlow administrators for security and verification checks.</span>
+          <!-- Privacy & Authorized Security Team Access Notice -->
+          <div class="text-[10px] text-gray-600 bg-gray-50 border border-gray-200 rounded-lg p-2 flex items-start gap-1.5">
+            <span class="text-gold">🔒</span>
+            <span>Your selfie is stored in private storage, linked to this verification record, and accessible only to the authorized SellerFlow Security Team for security and verification checks.</span>
           </div>
         </div>
 
@@ -31106,28 +31410,52 @@ init();
       }
 
       try{
-        const [s, sv, ss] = await Promise.all([
+        const [s, sv, ss, srvRes] = await Promise.all([
           getDocs(query(collection(db,'posts'),where('sellerId','==',currentUser.uid),limit(100))).catch(()=>({docs:[]})),
           getDocs(query(collection(db,'posts'),where('saves','array-contains',currentUser.uid),limit(100))).catch(()=>({docs:[]})),
-          getDocs(query(collection(db,'savedSounds',currentUser.uid,'items'),limit(100))).catch(()=>({docs:[]}))
+          getDocs(query(collection(db,'savedSounds',currentUser.uid,'items'),limit(100))).catch(()=>({docs:[]})),
+          fetch(getSfApiUrl('/api/posts')).then(r => r.ok ? r.json() : null).catch(() => null)
         ]);
-        posts=s.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.status!=='removed' && !isPostRemovedBySecurity(x)).sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
-        savedPosts=sv.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.status!=='removed' && !isPostRemovedBySecurity(x)).sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
+        const firestorePosts = s.docs.map(d=>({id:d.id,...d.data()}));
+        const existingIds = new Set(firestorePosts.map(p => p.id));
+        if (srvRes?.success && Array.isArray(srvRes.posts)) {
+          srvRes.posts.forEach(sp => {
+            if (sp && sp.id && (sp.sellerId === currentUser.uid || sp.authorId === currentUser.uid) && !existingIds.has(sp.id)) {
+              firestorePosts.push(sp);
+              existingIds.add(sp.id);
+            }
+          });
+        }
+        posts=firestorePosts.filter(x=>!isPostDeleted(x) && !isPostRemovedBySecurity(x)).sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
+        savedPosts=sv.docs.map(d=>({id:d.id,...d.data()})).filter(x=>!isPostDeleted(x) && !isPostRemovedBySecurity(x)).sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
         savedSounds=ss.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ts(b.savedAt)-ts(a.savedAt));
         if(!window._cachedProfileData) window._cachedProfileData = {};
         window._cachedProfileData[currentUser.uid] = { posts, savedPosts, savedSounds };
       }catch(_){ }
     } else {
       try{
-        const s = await getDocs(query(collection(db,'posts'),where('sellerId','==',targetUid),limit(100))).catch(()=>({docs:[]}));
-        posts=s.docs.map(d=>({id:d.id,...d.data()}))
-          .filter(x=>x.status!=='removed' && x.status!=='hidden' && x.reviewStatus!=='violation' && !isPostRemovedBySecurity(x) && (x.status==='published'||x.status==='approved'||!x.status))
+        const [s, srvRes] = await Promise.all([
+          getDocs(query(collection(db,'posts'),where('sellerId','==',targetUid),limit(100))).catch(()=>({docs:[]})),
+          fetch(getSfApiUrl('/api/posts')).then(r => r.ok ? r.json() : null).catch(() => null)
+        ]);
+        const list = s.docs.map(d=>({id:d.id,...d.data()}));
+        const existingIds = new Set(list.map(p => p.id));
+        if (srvRes?.success && Array.isArray(srvRes.posts)) {
+          srvRes.posts.forEach(sp => {
+            if (sp && sp.id && (sp.sellerId === targetUid || sp.authorId === targetUid) && !existingIds.has(sp.id)) {
+              list.push(sp);
+              existingIds.add(sp.id);
+            }
+          });
+        }
+        posts=list
+          .filter(x=>!isPostDeleted(x) && !isPostRemovedBySecurity(x) && (x.status==='published'||x.status==='approved'||!x.status))
           .sort((a,b)=>ts(b.createdAt)-ts(a.createdAt));
       }catch(_){ }
     }
 
     if(!posts.length && Array.isArray(_cachedFeedPosts)){
-      const cached = _cachedFeedPosts.filter(x=>x.sellerId===targetUid && !isPostRemovedBySecurity(x) && x.status!=='removed');
+      const cached = _cachedFeedPosts.filter(x=>x.sellerId===targetUid && !isPostDeleted(x) && !isPostRemovedBySecurity(x));
       if(cached.length) posts = cached;
     }
 
@@ -32829,7 +33157,7 @@ init();
       }
     }
     if(!isAdmin){
-      $('page').innerHTML = pageTitle('Access denied', 'Only the authorized administrators have permission to manage the SellerFlow Security Portal.');
+      $('page').innerHTML = pageTitle('Access denied', 'Only the authorized SellerFlow Security Team has permission to manage the SellerFlow Security Portal.');
       return;
     }
 
@@ -34901,7 +35229,7 @@ init();
       <div class="card p-4 border border-gray-200 hover:border-gold/40 transition flex flex-col justify-between" id="admin-prod-card-${esc(p.id)}">
         <div>
           <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-3 bg-white border border-[#252525] cursor-pointer" data-admin-view-product="${esc(p.id)}">
-            <img src="${esc(getProductImageUrl(p.imageUrl))}" class="w-full h-full object-cover" alt="${esc(p.name || 'Product')}" onerror="this.onerror=null;this.src=SF_PRODUCT_FALLBACK_IMG;">
+            <img src="${esc(getProductImageUrl(p))}" data-fallback-cat="${esc(p.category||'')}" data-fallback-name="${esc(p.name||'')}" class="w-full h-full object-cover" alt="${esc(p.name || 'Product')}" onerror="window.__sfProductFallback(this)">
             <div class="absolute top-2 right-2">${statusPill}</div>
             <div class="absolute bottom-2 left-2 bg-white backdrop-blur px-2.5 py-1 rounded-lg font-black text-gold text-xs">${money(p.price)}</div>
           </div>

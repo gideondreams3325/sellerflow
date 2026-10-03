@@ -592,7 +592,8 @@ async function fetchAdminData(force = false) {
     (usersSnap.docs || []).forEach(d => rawUsersMap.set(d.id, serializeDoc(d)));
     (publicProfilesSnap.docs || []).forEach(d => rawProfilesMap.set(d.id, serializeDoc(d)));
     (postsSnap.docs || []).forEach(d => {
-      if (!window._sfPermanentlyDeletedPostIds?.has(d.id)) {
+      const data = d.data() || {};
+      if (!data.isDeleted && data.status !== 'deleted' && !data.deleted && !window._sfPermanentlyDeletedPostIds?.has(d.id)) {
         rawPostsMap.set(d.id, serializeDoc(d));
       }
     });
@@ -601,7 +602,8 @@ async function fetchAdminData(force = false) {
     // Build unified posts list (merging canonical Firestore posts and persistent server store)
     const postMap = new Map();
     (postsSnap.docs || []).forEach(d => {
-      if (!window._sfPermanentlyDeletedPostIds?.has(d.id)) {
+      const data = d.data() || {};
+      if (!data.isDeleted && data.status !== 'deleted' && !data.deleted && !window._sfPermanentlyDeletedPostIds?.has(d.id)) {
         postMap.set(d.id, serializeDoc(d));
       }
     });
@@ -664,7 +666,7 @@ async function fetchAdminData(force = false) {
       users: Array.from(userMap.values()),
       stores: (storesSnap.docs || []).map(serializeDoc),
       products: (productsSnap.docs || []).map(serializeDoc),
-      posts: Array.from(postMap.values()),
+      posts: Array.from(postMap.values()).filter(p => p && !p.isDeleted && p.status !== 'deleted' && !p.deleted && !window._sfPermanentlyDeletedPostIds?.has(p.id)),
       orders: (ordersSnap.docs || []).map(serializeDoc),
       buyerKycRecords: (kycSnap.docs || []).map(d => {
         const doc = serializeDoc(d);

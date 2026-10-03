@@ -56,7 +56,7 @@ jobs:
       - name: 10. Build SellerFlow Debug APK
         run: |
           cd android
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew assembleDebug
 
       - name: 11. Verify Debug APK File Exists
         run: |
