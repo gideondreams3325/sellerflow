@@ -119,8 +119,35 @@ var closeModal = window.closeModal;
 <script src="/translations.js"></script>
 <script src="/jobs-events.js?v=2.1.0"></script>
 <script>
+  function ts(v){
+    if (!v) return 0;
+    if (typeof v === 'number' && !isNaN(v)) {
+      if (v > 100000000000) return v;
+      if (v > 1000000000) return v * 1000;
+      return v;
+    }
+    if (v instanceof Date) return isNaN(v.getTime()) ? 0 : v.getTime();
+    if (typeof v?.toMillis === 'function') return v.toMillis();
+    if (typeof v?.seconds === 'number') return v.seconds * 1000 + (v.nanoseconds ? Math.floor(v.nanoseconds / 1000000) : 0);
+    if (typeof v?._seconds === 'number') return v._seconds * 1000;
+    if (typeof v === 'string') {
+      const num = Number(v.trim());
+      if (!isNaN(num) && num > 100000000000) return num;
+      if (!isNaN(num) && num > 1000000000) return num * 1000;
+      const parsed = Date.parse(v);
+      if (!isNaN(parsed)) return parsed;
+    }
+    if (typeof v === 'object') {
+      if (v.createdAt) return ts(v.createdAt);
+      if (v.created_at) return ts(v.created_at);
+      if (v.timestamp) return ts(v.timestamp);
+    }
+    return 0;
+  }
+  window.ts = ts;
+
   function formatNotifTime(v){
-    const t = (typeof ts === 'function' ? ts(v) : null) || (typeof v === 'number' ? v : (v?.toMillis ? v.toMillis() : (v?.seconds ? v.seconds * 1000 : null)));
+    const t = ts(v);
     if(!t) return 'Recently';
     const diff = Date.now() - t;
     if(diff < 45000) return 'Just now';
@@ -2721,13 +2748,11 @@ html.light-theme .sf-bottom-tab-bar {
     </div>
     <button id="authSwitch" type="button" class="w-full mt-3 text-sm font-bold text-gold hover:underline transition">New here? Create an account</button>
     <div class="flex justify-center mt-3">
-      <button id="backToSignInBtn" type="button" class="audiomack-back-btn hide">
-        <span class="back-arrow-icon"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg></span>
-        <span>Back to Sign In</span>
+      <button id="backToSignInBtn" type="button" class="audiomack-back-btn icon-only hide" title="Back to Sign In" aria-label="Back">
+        <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
       </button>
-      <button id="backLanding" type="button" class="audiomack-back-btn">
-        <span class="back-arrow-icon"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg></span>
-        <span>Back to For You</span>
+      <button id="backLanding" type="button" class="audiomack-back-btn icon-only" title="Back to For You" aria-label="Back">
+        <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
       </button>
     </div>
 
@@ -4360,7 +4385,32 @@ const hide = e => { if (e && e.classList) e.classList.add('hide'); };
 
 function esc(v=''){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function money(n){return new Intl.NumberFormat('en-GH',{style:'currency',currency:'GHS',maximumFractionDigits:2}).format(Number(n)||0)}
-function ts(v){return v?.toMillis?v.toMillis():v?.seconds?v.seconds*1000:0}
+function ts(v){
+  if (!v) return 0;
+  if (typeof v === 'number' && !isNaN(v)) {
+    if (v > 100000000000) return v;
+    if (v > 1000000000) return v * 1000;
+    return v;
+  }
+  if (v instanceof Date) return isNaN(v.getTime()) ? 0 : v.getTime();
+  if (typeof v?.toMillis === 'function') return v.toMillis();
+  if (typeof v?.seconds === 'number') return v.seconds * 1000 + (v.nanoseconds ? Math.floor(v.nanoseconds / 1000000) : 0);
+  if (typeof v?._seconds === 'number') return v._seconds * 1000;
+  if (typeof v === 'string') {
+    const num = Number(v.trim());
+    if (!isNaN(num) && num > 100000000000) return num;
+    if (!isNaN(num) && num > 1000000000) return num * 1000;
+    const parsed = Date.parse(v);
+    if (!isNaN(parsed)) return parsed;
+  }
+  if (typeof v === 'object') {
+    if (v.createdAt) return ts(v.createdAt);
+    if (v.created_at) return ts(v.created_at);
+    if (v.timestamp) return ts(v.timestamp);
+  }
+  return 0;
+}
+window.ts = ts;
 function tsAgo(v){
   const ms = typeof v === 'number' ? v : (v?.toMillis ? v.toMillis() : (v?.seconds ? v.seconds * 1000 : (v ? new Date(v).getTime() : 0)));
   if(!ms || isNaN(ms)) return 'Recently';
@@ -9040,6 +9090,19 @@ try {
   }).catch(() => {});
 } catch(_) {}
 
+function isPostDeleted(p) {
+  if (!p) return true;
+  const id = typeof p === 'string' ? p : p.id;
+  if (!id) return true;
+  if (window._sfPermanentlyDeletedPostIds && window._sfPermanentlyDeletedPostIds.has(id)) return true;
+  if (window._sfSessionDeletedPostIds && window._sfSessionDeletedPostIds.has(id)) return true;
+  if (typeof p === 'object') {
+    if (p.isDeleted === true || p.status === 'deleted' || p.deleted === true || p.isPermanentlyDeleted === true) return true;
+  }
+  return false;
+}
+window.isPostDeleted = isPostDeleted;
+
 function markPostRemovedBySecurity(postId) {
   if (!postId) return;
   window._sfRemovedPostIds.add(postId);
@@ -9056,14 +9119,15 @@ window.markPostRemovedBySecurity = markPostRemovedBySecurity;
 function isPostRemovedBySecurity(p) {
   if (!p) return true;
   const id = typeof p === 'string' ? p : p.id;
+  if (isPostDeleted(p)) return true;
   if (id && window._sfPermanentlyDeletedPostIds && window._sfPermanentlyDeletedPostIds.has(id)) return true;
   if (id && window._sfSessionDeletedPostIds && window._sfSessionDeletedPostIds.has(id)) return true;
   if (id && window._sfRemovedPostIds && window._sfRemovedPostIds.has(id)) return true;
   if (typeof p === 'object') {
-    if (p.status === 'removed' || p.status === 'taken_down' || p.status === 'deleted' || p.status === 'hidden' || p.isDeleted === true || p.hidden === true) return true;
+    if (p.status === 'removed' || p.status === 'taken_down' || p.status === 'deleted' || p.status === 'hidden' || p.isDeleted === true || p.hidden === true || p.deleted === true) return true;
     if (p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down' || p.reviewStatus === 'violation') return true;
     // Active published post in good standing is always safe to display
-    if ((p.status === 'published' || p.status === 'approved') && !p.isDeleted && p.status !== 'taken_down' && p.status !== 'removed' && p.reviewStatus !== 'violation' && p.reviewStatus !== 'removed' && !p.hidden) {
+    if ((p.status === 'published' || p.status === 'approved') && !p.isDeleted && !p.deleted && p.status !== 'deleted' && p.status !== 'taken_down' && p.status !== 'removed' && p.reviewStatus !== 'violation' && p.reviewStatus !== 'removed' && !p.hidden) {
       return false;
     }
   }
@@ -9512,8 +9576,9 @@ window._sfFeedHasMore = true;
 
 const isEligibleFeedPost = (p) => {
   if (!p || !p.id) return false;
+  if (isPostDeleted(p)) return false;
   if (isPostRemovedBySecurity(p)) return false;
-  if (p.status === 'taken_down' || p.status === 'removed' || p.status === 'hidden' || p.hidden === true || p.isDeleted === true) return false;
+  if (p.status === 'taken_down' || p.status === 'removed' || p.status === 'hidden' || p.status === 'deleted' || p.hidden === true || p.isDeleted === true || p.deleted === true || p.isPermanentlyDeleted === true) return false;
   if (p.reviewStatus === 'violation' || p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down') return false;
   return true;
 };
@@ -26915,14 +26980,20 @@ init();
       const followingList = currentProfile?.following || [];
 
       const raw = snapDocs.filter(p => {
-        if(!p.sellerId) return false;
+        if(!p || !p.id || !p.sellerId) return false;
+        if(isPostDeleted(p)) return false;
         if(isPostRemovedBySecurity(p)) return false;
+        if(p.status === 'deleted' || p.isDeleted === true || p.deleted === true || p.isPermanentlyDeleted === true) return false;
+        if(p.status === 'taken_down' || p.status === 'removed' || p.status === 'hidden' || p.hidden === true) return false;
+        if(p.reviewStatus === 'violation' || p.reviewStatus === 'removed' || p.reviewStatus === 'taken_down') return false;
+
         const isMine = currentUser && currentUser.uid === p.sellerId;
         const isViewerAdmin = isAdmin || (typeof isUserAdminEmail === 'function' && isUserAdminEmail(currentUser?.email));
         if(!isMine && !isViewerAdmin){
           if(p.status !== 'published' && p.status !== 'approved') return false;
-          if(p.status === 'hidden' || p.reviewStatus === 'violation') return false;
           if(!isSafePost(p)) return false;
+        } else {
+          if(p.status !== 'published' && p.status !== 'approved') return false;
         }
 
         const privacy = p.privacy || 'public';
@@ -32824,26 +32895,37 @@ init();
     ]);
 
     // Helper to wrap Firestore snapshots into unified doc collection
-    function mergeToDocSnap(directSnap, apiArray = []) {
+    function mergeToDocSnap(directSnap, apiArray = [], isPosts = false) {
       const map = new Map();
       if (directSnap && directSnap.docs) {
         directSnap.docs.forEach(d => {
-          map.set(d.id, { id: d.id, ...d.data() });
+          const itemData = { id: d.id, ...d.data() };
+          if (isPosts && (typeof isPostDeleted === 'function' ? isPostDeleted(itemData) : (itemData.isDeleted || itemData.status === 'deleted'))) return;
+          if (itemData.isDeleted === true || itemData.status === 'deleted' || itemData.deleted === true || itemData.isPermanentlyDeleted === true) return;
+          map.set(d.id, itemData);
         });
       }
       if (Array.isArray(apiArray)) {
         apiArray.forEach(item => {
           if (item && item.id) {
+            if (isPosts && (typeof isPostDeleted === 'function' ? isPostDeleted(item) : (item.isDeleted || item.status === 'deleted'))) return;
+            if (item.isDeleted === true || item.status === 'deleted' || item.deleted === true || item.isPermanentlyDeleted === true) return;
             const prev = map.get(item.id) || {};
             map.set(item.id, { ...prev, ...item });
           }
         });
       }
-      const docs = Array.from(map.entries()).map(([id, data]) => ({
-        id,
-        data: () => data,
-        ...data
-      }));
+      const docs = Array.from(map.entries())
+        .filter(([id, data]) => {
+          if (isPosts && (typeof isPostDeleted === 'function' ? isPostDeleted({ id, ...data }) : (data.isDeleted || data.status === 'deleted'))) return false;
+          if (data.isDeleted === true || data.status === 'deleted' || data.deleted === true || data.isPermanentlyDeleted === true) return false;
+          return true;
+        })
+        .map(([id, data]) => ({
+          id,
+          data: () => data,
+          ...data
+        }));
       return {
         docs,
         size: docs.length,
@@ -32890,8 +32972,8 @@ init();
       ...(typeof _cachedFeedPosts !== 'undefined' && Array.isArray(_cachedFeedPosts) ? _cachedFeedPosts : []),
       ...(window._cachedFeedPosts && Array.isArray(window._cachedFeedPosts) ? window._cachedFeedPosts : []),
       ...(window._sfCachedPosts && typeof window._sfCachedPosts.values === 'function' ? Array.from(window._sfCachedPosts.values()) : [])
-    ]));
-    const posts = mergeToDocSnap(directPostsSnap, cachedPostArray);
+    ])).filter(p => typeof isPostDeleted === 'function' ? !isPostDeleted(p) : (!p?.isDeleted && p?.status !== 'deleted'));
+    const posts = mergeToDocSnap(directPostsSnap, cachedPostArray, true);
     const reports = mergeToDocSnap(directReportsSnap);
     const storesSnap = mergeToDocSnap(directStoresSnap);
     const productsSnap = mergeToDocSnap(directProductsSnap);
@@ -32968,19 +33050,22 @@ init();
     
     // Authoritative Post Classification Helpers (Mutually Exclusive)
     const isPostTakenDown = (x) => {
-      const d = x.data || x;
+      const d = x.data ? (typeof x.data === 'function' ? x.data() : x.data) : x;
+      if (typeof isPostDeleted === 'function' && isPostDeleted(d)) return false;
+      if (d.status === 'deleted' || d.isDeleted === true || d.deleted === true || d.isPermanentlyDeleted === true) return false;
       return d.status === 'taken_down' || 
              d.status === 'removed' || 
              d.status === 'rejected' ||
              d.reviewStatus === 'removed' || 
              d.reviewStatus === 'taken_down' ||
              d.hidden === true || 
-             d.isDeleted === true || 
              Boolean(window._sfRemovedPostIds && window._sfRemovedPostIds.has(x.id || d.id));
     };
 
     const isPostInReviewQueue = (x) => {
-      const d = x.data || x;
+      const d = x.data ? (typeof x.data === 'function' ? x.data() : x.data) : x;
+      if (typeof isPostDeleted === 'function' && isPostDeleted(d)) return false;
+      if (d.status === 'deleted' || d.isDeleted === true || d.deleted === true || d.isPermanentlyDeleted === true) return false;
       if (isPostTakenDown(x)) return false;
       if (d.reviewStatus === 'reviewed' || d.reviewStatus === 'approved' || d.reviewStatus === 'safe') return false;
       return d.reviewStatus === 'pending_security_review' || 
@@ -32993,7 +33078,9 @@ init();
     };
 
     const isPostApprovedAndLive = (x) => {
-      const d = x.data || x;
+      const d = x.data ? (typeof x.data === 'function' ? x.data() : x.data) : x;
+      if (typeof isPostDeleted === 'function' && isPostDeleted(d)) return false;
+      if (d.status === 'deleted' || d.isDeleted === true || d.deleted === true || d.isPermanentlyDeleted === true) return false;
       if (isPostTakenDown(x)) return false;
       return d.status === 'published' || d.status === 'approved' || d.status === 'active' || d.reviewStatus === 'approved' || d.reviewStatus === 'reviewed' || d.liveOnForYou === true;
     };
@@ -33014,21 +33101,21 @@ init();
       .filter(isPostTakenDown);
 
     // Stores metrics
-    const allStoreDocs = storesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const allStoreDocs = storesSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(s => s.status !== 'deleted' && !s.isDeleted && !s.deleted);
     const liveStores = allStoreDocs.filter(s => s.status === 'approved' || (!s.status && s.reviewStatus !== 'pending_review' && s.status !== 'taken_down' && s.status !== 'rejected'));
     const pendingStores = allStoreDocs.filter(s => s.status === 'pending_review' || s.reviewStatus === 'pending');
     const takenDownStores = allStoreDocs.filter(s => s.status === 'taken_down' || s.reviewStatus === 'taken_down');
     const rejectedStores = allStoreDocs.filter(s => s.status === 'rejected' || s.reviewStatus === 'rejected');
 
     // Products metrics
-    const allProductDocs = productsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const allProductDocs = productsSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.status !== 'deleted' && !p.isDeleted && !p.deleted);
     const liveProducts = allProductDocs.filter(p => p.status === 'approved' || (!p.status && p.reviewStatus !== 'pending_review' && p.status !== 'taken_down' && p.status !== 'rejected'));
     const pendingProducts = allProductDocs.filter(p => p.status === 'pending_review' || p.reviewStatus === 'pending');
     const takenDownProducts = allProductDocs.filter(p => p.status === 'taken_down' || p.reviewStatus === 'taken_down');
     const rejectedProducts = allProductDocs.filter(p => p.status === 'rejected' || p.reviewStatus === 'rejected');
 
     // Orders Security metrics
-    const allOrderDocs = ordersSnap.docs ? ordersSnap.docs.map(d => ({ id: d.id, ...d.data() })) : [];
+    const allOrderDocs = (ordersSnap.docs ? ordersSnap.docs.map(d => ({ id: d.id, ...d.data() })) : []).filter(o => o.status !== 'deleted' && !o.isDeleted && !o.deleted);
     const pendingReviewOrders = allOrderDocs.filter(o => o.status === 'pending_review' || o.securityReviewStatus === 'pending');
     const approvedOrders = allOrderDocs.filter(o => o.status !== 'pending_review' && o.status !== 'cancelled');
     const cancelledOrders = allOrderDocs.filter(o => o.status === 'cancelled');
@@ -33996,8 +34083,28 @@ init();
       ? { ...sellerProfile(p.sellerId), name: 'SellerFlow', username: 'sellerflow', verified: true }
       : sellerProfile(p.sellerId);
     const isVid = p.mediaType?.startsWith('video') || (p.mediaUrl && /\.(mp4|mov|webm|m4v)(\?|$)/i.test(p.mediaUrl));
-    const removedDateStr = p.removedAt ? new Date(ts(p.removedAt)).toLocaleString('en-GH', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Prior session';
-    const createdDateStr = p.createdAt ? new Date(ts(p.createdAt)).toLocaleString('en-GH', {month:'short',day:'numeric'}) : 'Recently';
+    let createdTs = ts(p.createdAt || p.created_at || p.timestamp || p.postedAt);
+    if (!createdTs || isNaN(createdTs)) {
+      const rawId = uid || p.id || '';
+      const match = String(rawId).match(/(?:post_|^)(\d{10,14})/);
+      if (match && match[1]) {
+        const num = Number(match[1]);
+        if (!isNaN(num) && num > 100000000000) createdTs = num;
+        else if (!isNaN(num) && num > 1000000000) createdTs = num * 1000;
+      }
+    }
+    const createdDateStr = createdTs && !isNaN(createdTs) 
+      ? new Date(createdTs).toLocaleDateString('en-GH', {
+          day: 'numeric',
+          month: 'short',
+          ...(new Date(createdTs).getFullYear() !== new Date().getFullYear() ? { year: 'numeric' } : {})
+        })
+      : 'Recently';
+
+    let removedTs = p.removedAt ? ts(p.removedAt) : 0;
+    const removedDateStr = removedTs && !isNaN(removedTs) 
+      ? new Date(removedTs).toLocaleString('en-GH', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) 
+      : 'Prior session';
 
     const likesCount = Array.isArray(p.likes) ? p.likes.length : (typeof p.likes === 'number' ? p.likes : 0);
     const commentsCount = Array.isArray(p.comments) ? p.comments.length : (typeof p.commentCount === 'number' ? p.commentCount : (typeof p.comments === 'number' ? p.comments : 0));
@@ -34108,22 +34215,28 @@ init();
   /* Distinct Section: Posts & Content Moderation Hub */
   function sfAdminPosts(posts, livePosts, reviewPosts, takenDownPosts, initialSubTab){
     // Resolve full list from fallback if called standalone
-    const allPostsDocs = posts?.docs || [];
+    const allPostsDocs = (posts?.docs || []).filter(d => {
+      const data = d.data ? (typeof d.data === 'function' ? d.data() : d.data) : d;
+      return typeof isPostDeleted === 'function' ? !isPostDeleted(data) : (!data?.isDeleted && data?.status !== 'deleted');
+    });
 
     const isPostTakenDown = (x) => {
-      const d = x.data || x;
+      const d = x.data ? (typeof x.data === 'function' ? x.data() : x.data) : x;
+      if (typeof isPostDeleted === 'function' && isPostDeleted(d)) return false;
+      if (d.status === 'deleted' || d.isDeleted === true || d.deleted === true || d.isPermanentlyDeleted === true) return false;
       return d.status === 'taken_down' || 
              d.status === 'removed' || 
              d.status === 'rejected' ||
              d.reviewStatus === 'removed' || 
              d.reviewStatus === 'taken_down' ||
              d.hidden === true || 
-             d.isDeleted === true || 
              Boolean(window._sfRemovedPostIds && window._sfRemovedPostIds.has(x.id || d.id));
     };
 
     const isPostInReviewQueue = (x) => {
-      const d = x.data || x;
+      const d = x.data ? (typeof x.data === 'function' ? x.data() : x.data) : x;
+      if (typeof isPostDeleted === 'function' && isPostDeleted(d)) return false;
+      if (d.status === 'deleted' || d.isDeleted === true || d.deleted === true || d.isPermanentlyDeleted === true) return false;
       if (isPostTakenDown(x)) return false;
       if (d.reviewStatus === 'reviewed' || d.reviewStatus === 'approved' || d.reviewStatus === 'safe') return false;
       return d.reviewStatus === 'pending_security_review' || 
@@ -34136,7 +34249,9 @@ init();
     };
 
     const isPostApprovedAndLive = (x) => {
-      const d = x.data || x;
+      const d = x.data ? (typeof x.data === 'function' ? x.data() : x.data) : x;
+      if (typeof isPostDeleted === 'function' && isPostDeleted(d)) return false;
+      if (d.status === 'deleted' || d.isDeleted === true || d.deleted === true || d.isPermanentlyDeleted === true) return false;
       if (isPostTakenDown(x)) return false;
       return d.status === 'published' || d.status === 'approved' || d.status === 'active' || d.reviewStatus === 'approved' || d.reviewStatus === 'reviewed' || d.liveOnForYou === true;
     };

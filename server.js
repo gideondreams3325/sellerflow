@@ -6674,32 +6674,34 @@ async function recordPermanentPostDeletion(postId, deletedBy = 'unknown', reason
 
 function getPostsStore() {
   getPermanentlyDeletedPostIds();
+  const isClean = (p) => p && p.id && !_permanentlyDeletedPostIds.has(p.id) && p.status !== 'deleted' && !p.isDeleted && !p.deleted && !p.isPermanentlyDeleted;
   const candidatePaths = [POSTS_VERCEL_TMP_STORE, POSTS_LOCAL_STORE_PATH, POSTS_DIST_STORE_PATH, POSTS_ANDROID_STORE_PATH];
   for (const storePath of candidatePaths) {
     try {
       if (fs.existsSync(storePath)) {
         const stat = fs.statSync(storePath);
         if (_memoryPostsStore && stat.mtimeMs <= _lastPostsStoreMtime) {
-          return _memoryPostsStore.filter(p => p && p.id && !_permanentlyDeletedPostIds.has(p.id));
+          return _memoryPostsStore.filter(isClean);
         }
         const raw = fs.readFileSync(storePath, 'utf8');
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          _memoryPostsStore = parsed.filter(p => p && p.id && !_permanentlyDeletedPostIds.has(p.id));
+          _memoryPostsStore = parsed.filter(isClean);
           _lastPostsStoreMtime = stat.mtimeMs;
           return _memoryPostsStore;
         }
       }
     } catch (_) {}
   }
-  if (_memoryPostsStore) return _memoryPostsStore.filter(p => p && p.id && !_permanentlyDeletedPostIds.has(p.id));
+  if (_memoryPostsStore) return _memoryPostsStore.filter(isClean);
   _memoryPostsStore = [];
   return _memoryPostsStore;
 }
 
 function savePostsStore(posts) {
   getPermanentlyDeletedPostIds();
-  const cleanPosts = Array.isArray(posts) ? posts.filter(p => p && p.id && !_permanentlyDeletedPostIds.has(p.id)) : [];
+  const isClean = (p) => p && p.id && !_permanentlyDeletedPostIds.has(p.id) && p.status !== 'deleted' && !p.isDeleted && !p.deleted && !p.isPermanentlyDeleted;
+  const cleanPosts = Array.isArray(posts) ? posts.filter(isClean) : [];
   _memoryPostsStore = cleanPosts;
   _lastPostsStoreMtime = Date.now();
   const targetPaths = [POSTS_VERCEL_TMP_STORE, POSTS_LOCAL_STORE_PATH, POSTS_DIST_STORE_PATH, POSTS_ANDROID_STORE_PATH];
