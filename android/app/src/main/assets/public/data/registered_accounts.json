@@ -95,9 +95,9 @@
     "role": "seller",
     "isAdmin": false,
     "isExisting": false,
-    "passwordHash": "4c7c0709e59e188fd02f91376c0129bb1567ffecbe0c570dc87aead53013858dfb05adb9de8c31006f251af86d6de9bc5e9d8a15c86b1d90aae71b764210ed4e",
-    "passwordSalt": "0dc1799a233e9035be4efe353f6065a3",
-    "updatedAt": "2026-10-03T04:11:09.821Z",
+    "passwordHash": "60000a07284edccd4ae42b5e5dd96a145383f5c7898ac4814ffa657ddb6694bd7d3daae05457ad0ad635a79be1a714ec642c70b1cdaa945eb5a420161a116553",
+    "passwordSalt": "f773c745433f7892c221f62522464b99",
+    "updatedAt": "2026-10-03T03:38:39.415Z",
     "recoveryEmailVerifiedAt": "2026-10-01T14:13:16.520Z"
   },
   {

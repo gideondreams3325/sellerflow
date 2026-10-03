@@ -1,0 +1,69 @@
+name: Deploy SellerFlow to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# Do not cancel in-progress runs to ensure complete deployments.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build SellerFlow Bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: 3. Install NPM Dependencies
+        run: npm ci || npm install
+
+      - name: 4. Build Application (dist/)
+        run: npm run build
+
+      - name: 5. Verify Static Bundle Output
+        run: |
+          if [ -f "dist/index.html" ]; then
+            echo "✅ dist/index.html verified successfully."
+            ls -la dist/
+          else
+            echo "❌ Error: dist/index.html missing after build!"
+            exit 1
+          fi
+
+      - name: 6. Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: 7. Upload Pages Artifact (dist/ only)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+
+  deploy:
+    name: Deploy to GitHub Pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: 8. Deploy Artifact to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -92,6 +92,10 @@ for (const file of filesToCopy) {
       let appUrl = process.env.APP_URL || 'https://sellerflow-tan.vercel.app';
       content = content.replace(/____SELLERFLOW_APP_URL____/g, appUrl);
       fs.writeFileSync(destPath, content, 'utf8');
+      // Create 404.html SPA fallback for static platforms like GitHub Pages
+      fs.writeFileSync(path.join(distDir, '404.html'), content, 'utf8');
+      // Ensure .nojekyll exists so GitHub Pages serves raw assets and underscore files
+      fs.writeFileSync(path.join(distDir, '.nojekyll'), '', 'utf8');
     } else {
       fs.copyFileSync(srcPath, destPath);
     }
