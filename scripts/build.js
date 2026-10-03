@@ -89,7 +89,7 @@ for (const file of filesToCopy) {
   if (fs.existsSync(srcPath)) {
     if (file === 'index.html') {
       let content = fs.readFileSync(srcPath, 'utf8');
-      let appUrl = process.env.APP_URL || 'https://sellerflow-tan.vercel.app';
+      let appUrl = process.env.APP_URL || '';
       content = content.replace(/____SELLERFLOW_APP_URL____/g, appUrl);
       fs.writeFileSync(destPath, content, 'utf8');
       // Create 404.html SPA fallback for static platforms like GitHub Pages
@@ -135,16 +135,10 @@ if (!fs.existsSync(distUploadsDir)) {
   fs.mkdirSync(distUploadsDir, { recursive: true });
 }
 
-// 2. Push uploads files to dist/uploads if missing
+// 2. Safely copy entire uploads directory recursively to dist/uploads
 if (fs.existsSync(uploadsDir)) {
   try {
-    for (const f of fs.readdirSync(uploadsDir)) {
-      const srcF = path.join(uploadsDir, f);
-      const dstF = path.join(distUploadsDir, f);
-      if (!fs.existsSync(dstF)) {
-        fs.copyFileSync(srcF, dstF);
-      }
-    }
+    fs.cpSync(uploadsDir, distUploadsDir, { recursive: true });
     copiedCount++;
   } catch (_) {}
 }

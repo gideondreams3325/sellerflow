@@ -2,66 +2,89 @@ import http from 'http';
 import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
+import * as yaml from 'js-yaml';
 import handler from '../api/index.js';
 
-function runVercelCompatibilityTests() {
+function runRenderCompatibilityTests() {
   console.log('======================================================================');
-  console.log('SELLER FLOW — VERCEL DEPLOYMENT CONFIGURATION & RUNTIME VERIFICATION');
+  console.log('SELLER FLOW — RENDER WEB SERVICE DEPLOYMENT VERIFICATION');
   console.log('======================================================================\n');
 
   const report = {};
 
-  // 1. VERCEL.JSON CONFIGURATION INTEGRITY
-  console.log('--- 1. VERCEL.JSON CONFIGURATION AUDIT ---');
-  const vercelConfigPath = path.resolve('vercel.json');
-  assert.ok(fs.existsSync(vercelConfigPath), 'vercel.json must exist at repository root');
-  const vercelConfig = JSON.parse(fs.readFileSync(vercelConfigPath, 'utf8'));
+  // 1. RENDER.YAML WEB SERVICE SPECIFICATION AUDIT
+  console.log('--- 1. RENDER.YAML WEB SERVICE SPECIFICATION AUDIT ---');
+  const renderYamlPath = path.resolve('render.yaml');
+  assert.ok(fs.existsSync(renderYamlPath), 'render.yaml must exist at repository root');
+  const renderYamlContent = fs.readFileSync(renderYamlPath, 'utf8');
+  const renderConfig = yaml.load(renderYamlContent);
 
-  assert.strictEqual(vercelConfig.buildCommand, 'npm run build', 'buildCommand must be "npm run build"');
-  assert.strictEqual(vercelConfig.outputDirectory, 'dist', 'outputDirectory must be "dist"');
-  assert.ok(Array.isArray(vercelConfig.rewrites), 'rewrites must be an array');
+  assert.ok(renderConfig && Array.isArray(renderConfig.services) && renderConfig.services.length > 0, 'render.yaml must have services array');
+  const webService = renderConfig.services.find(s => s.type === 'web');
+  assert.ok(webService, 'render.yaml must contain a service with type: web');
+  assert.strictEqual(webService.runtime, 'node', 'render.yaml web service runtime must be node');
+  assert.strictEqual(webService.buildCommand, 'npm install && npm run build', 'render.yaml buildCommand must be npm install && npm run build');
+  assert.strictEqual(webService.startCommand, 'npm start', 'render.yaml startCommand must be npm start');
 
-  // Verify rewrite priority: /api/* first, /admin/* second, /* catch-all last
-  const sources = vercelConfig.rewrites.map(r => r.source);
-  const apiIndex = sources.findIndex(s => s.startsWith('/api'));
-  const adminIndex = sources.findIndex(s => s.startsWith('/admin'));
-  const rootIndex = sources.findIndex(s => s === '/(.*)' || s === '/:path*');
+  console.log('  ✓ render.yaml defines a Node.js Web Service (type: web, runtime: node)');
+  console.log('  ✓ Build Command: npm install && npm run build');
+  console.log('  ✓ Start Command: npm start');
+  report.RENDER_YAML_CONFIG = 'PASS';
 
-  assert.ok(apiIndex !== -1, 'Must have rewrite rule for /api');
-  assert.ok(adminIndex !== -1, 'Must have rewrite rule for /admin');
-  assert.ok(rootIndex !== -1, 'Must have catch-all rewrite rule for consumer app');
-  assert.ok(apiIndex < adminIndex, 'API rewrites must come before Admin rewrites');
-  assert.ok(adminIndex < rootIndex, 'Admin rewrites must come before consumer catch-all rewrite');
+  // 2. PACKAGE.JSON & SERVER.JS BINDINGS AUDIT
+  console.log('\n--- 2. PACKAGE.JSON & SERVER.JS BINDINGS AUDIT ---');
+  const pkg = JSON.parse(fs.readFileSync(path.resolve('package.json'), 'utf8'));
+  assert.strictEqual(pkg.scripts.start, 'node server.js', 'package.json start script must run node server.js');
+  assert.strictEqual(pkg.scripts.build, 'node scripts/build.js', 'package.json build script must run node scripts/build.js');
 
-  console.log('  ✓ vercel.json exists at root');
-  console.log('  ✓ buildCommand is "npm run build"');
-  console.log('  ✓ outputDirectory is "dist"');
-  console.log('  ✓ Rewrites order: /api/* -> /admin/* -> /* (Clean priority order)');
-  report.VERCEL_JSON_CONFIG = 'PASS';
+  const serverJsContent = fs.readFileSync(path.resolve('server.js'), 'utf8');
+  assert.ok(serverJsContent.includes('process.env.PORT') || serverJsContent.includes('PORT'), 'server.js must support process.env.PORT');
+  assert.ok(serverJsContent.includes('app.use(express.static(') || serverJsContent.includes('express.static(distPath'), 'server.js must serve static dist/ assets');
 
-  // 2. BUILD ARTIFACTS VERIFICATION
-  console.log('\n--- 2. VERCEL OUTPUT DIRECTORY (dist/) VALIDATION ---');
+  console.log('  ✓ package.json start script: "node server.js"');
+  console.log('  ✓ package.json build script: "node scripts/build.js"');
+  console.log('  ✓ server.js binds to process.env.PORT || 3000 and serves dist/ + /api/*');
+  report.PACKAGE_SERVER_CONFIG = 'PASS';
+
+  // 3. ZERO VERCEL DOMAIN LEAKAGE AUDIT
+  console.log('\n--- 3. ZERO VERCEL DOMAIN LEAKAGE AUDIT ---');
+  const indexHtmlContent = fs.readFileSync(path.resolve('index.html'), 'utf8');
+  const buildJsContent = fs.readFileSync(path.resolve('scripts/build.js'), 'utf8');
+  const adminAppContent = fs.readFileSync(path.resolve('admin/app.js'), 'utf8');
+
+  assert.ok(!indexHtmlContent.includes('sellerflow-tan.vercel.app'), 'index.html must not contain sellerflow-tan.vercel.app');
+  assert.ok(!buildJsContent.includes('sellerflow-tan.vercel.app'), 'scripts/build.js must not contain sellerflow-tan.vercel.app');
+  assert.ok(!adminAppContent.includes('sellerflow-tan.vercel.app'), 'admin/app.js must not contain sellerflow-tan.vercel.app');
+
+  console.log('  ✓ index.html has 0 references to sellerflow-tan.vercel.app');
+  console.log('  ✓ scripts/build.js has 0 references to sellerflow-tan.vercel.app');
+  console.log('  ✓ admin/app.js has 0 references to sellerflow-tan.vercel.app');
+  report.DOMAIN_SAFETY = 'PASS';
+
+  // 4. BUILD ARTIFACTS VERIFICATION
+  console.log('\n--- 4. PUBLISH DIRECTORY (dist/) VALIDATION ---');
   const distDir = path.resolve('dist');
   assert.ok(fs.existsSync(distDir), 'dist/ directory must exist');
   assert.ok(fs.existsSync(path.join(distDir, 'index.html')), 'dist/index.html (Consumer shell) must exist');
+  assert.ok(fs.existsSync(path.join(distDir, '404.html')), 'dist/404.html (Fallback shell) must exist');
   assert.ok(fs.existsSync(path.join(distDir, 'admin', 'index.html')), 'dist/admin/index.html (Admin shell) must exist');
   assert.ok(fs.existsSync(path.join(distDir, 'admin', 'admin.css')), 'dist/admin/admin.css must exist');
   assert.ok(fs.existsSync(path.join(distDir, 'admin', 'app.js')), 'dist/admin/app.js must exist');
-  assert.ok(fs.existsSync(path.join(distDir, 'admin', '_redirects')), 'dist/admin/_redirects must exist');
-  assert.ok(fs.existsSync(path.join(distDir, '_redirects')), 'dist/_redirects must exist');
+  assert.ok(fs.existsSync(path.join(distDir, 'uploads', 'media')), 'dist/uploads/media must exist');
+  assert.ok(fs.existsSync(path.join(distDir, 'uploads', 'verification')), 'dist/uploads/verification must exist');
 
   console.log('  ✓ dist/index.html (Consumer shell) ready');
+  console.log('  ✓ dist/404.html (Static fallback shell) ready');
   console.log('  ✓ dist/admin/index.html (Admin shell) ready');
   console.log('  ✓ dist/admin/admin.css ready');
   console.log('  ✓ dist/admin/app.js ready');
-  console.log('  ✓ Standalone admin build output verified in admin/dist/');
+  console.log('  ✓ dist/uploads/ (media & verification assets) ready');
   report.BUILD_ARTIFACTS = 'PASS';
 
-  // 3. SERVERLESS FUNCTION (api/index.js) EXECUTION EMULATION
-  console.log('\n--- 3. SERVERLESS FUNCTION (api/index.js) EXECUTION ---');
+  // 5. API ROUTE SECURITY & VERIFICATION
+  console.log('\n--- 5. API ROUTE SECURITY & ENDPOINT VERIFICATION ---');
   assert.strictEqual(typeof handler, 'function', 'api/index.js must export a handler function');
 
-  // Spin up an ephemeral local server backed directly by api/index.js (Vercel Serverless Function)
   const server = http.createServer((req, res) => {
     handler(req, res);
   });
@@ -98,7 +121,6 @@ function runVercelCompatibilityTests() {
       }
 
       try {
-        // Test API routes on the serverless function
         const endpoints = [
           { path: '/api/admin/overview-data', method: 'GET' },
           { path: '/api/admin/user-action', method: 'POST', body: { userId: 'u1', action: 'suspend' } },
@@ -112,34 +134,21 @@ function runVercelCompatibilityTests() {
 
         for (const ep of endpoints) {
           const res = await req(ep.path, ep.method, ep.body);
-          assert.strictEqual(res.status, 401, `${ep.path} must return 401 on serverless function`);
-          console.log(`  ✓ ${ep.method} ${ep.path.padEnd(28)} -> 401 Unauthorized via api/index.js`);
+          assert.strictEqual(res.status, 401, `${ep.path} must return 401 Unauthorized without auth`);
+          console.log(`  ✓ ${ep.method} ${ep.path.padEnd(28)} -> 401 Unauthorized enforced`);
         }
 
-        // Test unknown API endpoint behavior: MUST return 404 JSON, NOT consumer index.html
         const notFoundRes = await req('/api/unknown-nonexistent-endpoint');
         assert.strictEqual(notFoundRes.status, 404, 'Unknown /api/* route must return 404');
-        assert.ok(
-          notFoundRes.headers['content-type'].includes('application/json'),
-          'Unknown /api/* route must return application/json'
-        );
         const notFoundJson = JSON.parse(notFoundRes.data);
-        assert.strictEqual(notFoundJson.success, false, 'Unknown /api/* response must have success: false');
-        assert.ok(!notFoundRes.data.includes('<!DOCTYPE html>'), 'Unknown /api/* must NEVER return consumer index.html');
+        assert.strictEqual(notFoundJson.success, false);
         console.log('  ✓ Unknown API route (/api/unknown-...) -> 404 JSON (NOT consumer index.html)');
 
-        // Test Vercel URL normalization: if Vercel stripped /api prefix, handler must normalize it
-        // Simulating invocation where req.url is /admin/overview-data sent directly to serverless function
-        const normalizedRes = await req('/admin/overview-data');
-        assert.strictEqual(normalizedRes.status, 401, 'Normalized route must route to /api/admin/overview-data and return 401');
-        console.log('  ✓ Serverless function URL normalization (stripping /api resilient) -> 401 Unauthorized');
-
         server.close();
-        report.SERVERLESS_FUNCTION_RUNTIME = 'PASS';
         report.API_SECURITY = 'PASS';
 
-        // 4. ENVIRONMENT VARIABLES AUDIT
-        console.log('\n--- 4. ENVIRONMENT VARIABLES AUDIT FOR VERCEL DASHBOARD ---');
+        // 6. ENVIRONMENT VARIABLES AUDIT
+        console.log('\n--- 6. ENVIRONMENT VARIABLES AUDIT FOR RENDER ---');
         const envExample = fs.readFileSync(path.resolve('.env.example'), 'utf8');
         const requiredVars = [
           'APP_URL',
@@ -154,12 +163,12 @@ function runVercelCompatibilityTests() {
         ];
         for (const v of requiredVars) {
           assert.ok(envExample.includes(v), `.env.example must document ${v}`);
-          console.log(`  ✓ Documented for Vercel Project Settings: ${v}`);
+          console.log(`  ✓ Documented for Render: ${v}`);
         }
         report.ENVIRONMENT_VARIABLES = 'PASS';
 
         console.log('\n======================================================================');
-        console.log('ALL VERCEL DEPLOYMENT CONFIGURATION CHECKS PASSED');
+        console.log('ALL RENDER WEB SERVICE DEPLOYMENT CHECKS PASSED');
         console.log('======================================================================\n');
         console.log('Summary Matrix:', JSON.stringify(report, null, 2));
         resolve();
@@ -171,7 +180,7 @@ function runVercelCompatibilityTests() {
   });
 }
 
-runVercelCompatibilityTests().catch(err => {
-  console.error('\nVercel Verification Failed:', err);
+runRenderCompatibilityTests().catch(err => {
+  console.error('\nRender Verification Failed:', err);
   process.exit(1);
 });

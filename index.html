@@ -3021,7 +3021,7 @@ function getAppUrl() {
   if (window.SELLERFLOW_APP_URL && typeof window.SELLERFLOW_APP_URL === 'string' && window.SELLERFLOW_APP_URL.startsWith('http')) {
     return window.SELLERFLOW_APP_URL.replace(/\/+$/, '');
   }
-  return 'https://sellerflow-tan.vercel.app';
+  return '';
 }
 window.getAppUrl = getAppUrl;
 
@@ -3035,12 +3035,12 @@ function getSfApiUrl(path) {
       return p;
     }
   }
-  const appBase = (typeof getAppUrl === 'function') ? getAppUrl() : 'https://sellerflow-tan.vercel.app';
+  const appBase = (typeof getAppUrl === 'function') ? getAppUrl() : '';
   const base = (window.__sfBackendUrl || appBase).replace(/\/+$/, '');
-  return base + p;
+  return base ? (base + p) : p;
 }
 window.getSfApiUrl = getSfApiUrl;
-window.__sfBackendUrl = (typeof getAppUrl === 'function') ? getAppUrl() : 'https://sellerflow-tan.vercel.app';
+window.__sfBackendUrl = (typeof getAppUrl === 'function') ? getAppUrl() : '';
 
 // Universal error sanitizer translating technical failures into useful SellerFlow messages
 function formatSellerFlowError(err, fallback = 'Unable to complete request. Please try again.') {
@@ -11103,7 +11103,7 @@ window.openVideoShareModal = async function(id, p) {
   
   // Bulletproof public URL calculation (ensures Android APK never shares dead localhost links)
   const publicBaseUrl = (typeof getAppUrl === 'function' ? getAppUrl() : null) ||
-                        (!location.origin.includes('localhost') ? location.origin : 'https://sellerflow-tan.vercel.app');
+                        (!location.origin.includes('localhost') ? location.origin : '');
   const cleanUrl = `${publicBaseUrl}/#post=${encodeURIComponent(postId)}`;
   
   // Format direct media URL if available

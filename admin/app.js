@@ -2982,7 +2982,7 @@ function getAdminAppUrl() {
   if (window.SELLERFLOW_APP_URL && typeof window.SELLERFLOW_APP_URL === 'string' && window.SELLERFLOW_APP_URL.startsWith('http')) {
     return window.SELLERFLOW_APP_URL.replace(/\/+$/, '');
   }
-  return 'https://sellerflow-tan.vercel.app';
+  return '';
 }
 
 // Safe Response.json wrapper
